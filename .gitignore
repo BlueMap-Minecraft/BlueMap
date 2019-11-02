@@ -1,0 +1,24 @@
+.gradle/
+.gradle/*
+*/.gradle/*
+
+build/
+build/*
+*/build/*
+
+.settings/
+.settings/*
+*/.settings/*
+
+bin/
+bin/*
+*/bin/*
+
+.classpath
+*/.classpath
+
+.project
+*/.project
+
+# exclude generated resource
+src/main/resources/webroot.zip

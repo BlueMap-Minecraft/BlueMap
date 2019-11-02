@@ -1,0 +1,452 @@
+{
+ "ocean": {
+  "id": 0,
+  "humidity": 0.5,
+  "temp": 0.5,
+  "watercolor": 4159204
+ },
+ "plains": {
+  "id": 1,
+  "humidity": 0.4,
+  "temp": 0.8,
+  "watercolor": 4159204
+ },
+ "desert": {
+  "id": 2,
+  "humidity": 0.0,
+  "temp": 2.0,
+  "watercolor": 4159204
+ },
+ "mountains": {
+  "id": 3,
+  "humidity": 0.3,
+  "temp": 0.2,
+  "watercolor": 4159204
+ },
+ "forest": {
+  "id": 4,
+  "humidity": 0.8,
+  "temp": 0.7,
+  "watercolor": 4159204
+ },
+ "taiga": {
+  "id": 5,
+  "humidity": 0.8,
+  "temp": 0.25,
+  "watercolor": 4159204
+ },
+ "swamp": {
+  "id": 6,
+  "humidity": 0.9,
+  "temp": 0.8,
+  "watercolor": 6388580
+ },
+ "river": {
+  "id": 7,
+  "humidity": 0.5,
+  "temp": 0.5,
+  "watercolor": 4159204
+ },
+ "nether": {
+  "id": 8,
+  "humidity": 0.0,
+  "temp": 2.0,
+  "watercolor": 4159204
+ },
+ "the_end": {
+  "id": 9,
+  "humidity": 0.5,
+  "temp": 0.5,
+  "watercolor": 4159204
+ },
+ "frozen_ocean": {
+  "id": 10,
+  "humidity": 0.5,
+  "temp": 0.0,
+  "watercolor": 3750089
+ },
+ "frozen_river": {
+  "id": 11,
+  "humidity": 0.5,
+  "temp": 0.0,
+  "watercolor": 3750089
+ },
+ "snowy_tundra": {
+  "id": 12,
+  "humidity": 0.5,
+  "temp": 0.0,
+  "watercolor": 4159204
+ },
+ "snowy_mountains": {
+  "id": 13,
+  "humidity": 0.5,
+  "temp": 0.0,
+  "watercolor": 4159204
+ },
+ "mushroom_fields": {
+  "id": 14,
+  "humidity": 1.0,
+  "temp": 0.9,
+  "watercolor": 4159204
+ },
+ "mushroom_field_shore": {
+  "id": 15,
+  "humidity": 1.0,
+  "temp": 0.9,
+  "watercolor": 4159204
+ },
+ "beach": {
+  "id": 16,
+  "humidity": 0.4,
+  "temp": 0.8,
+  "watercolor": 4159204
+ },
+ "desert_hills": {
+  "id": 17,
+  "humidity": 0.0,
+  "temp": 2.0,
+  "watercolor": 4159204
+ },
+ "wooded_hills": {
+  "id": 18,
+  "humidity": 0.8,
+  "temp": 0.7,
+  "watercolor": 4159204
+ },
+ "taiga_hills": {
+  "id": 19,
+  "humidity": 0.8,
+  "temp": 0.25,
+  "watercolor": 4159204
+ },
+ "mountain_edge": {
+  "id": 20,
+  "humidity": 0.3,
+  "temp": 0.2,
+  "watercolor": 4159204
+ },
+ "jungle": {
+  "id": 21,
+  "humidity": 0.9,
+  "temp": 0.95,
+  "watercolor": 4159204
+ },
+ "jungle_hills": {
+  "id": 22,
+  "humidity": 0.9,
+  "temp": 0.95,
+  "watercolor": 4159204
+ },
+ "jungle_edge": {
+  "id": 23,
+  "humidity": 0.8,
+  "temp": 0.95,
+  "watercolor": 4159204
+ },
+ "deep_ocean": {
+  "id": 24,
+  "humidity": 0.5,
+  "temp": 0.5,
+  "watercolor": 4159204
+ },
+ "stone_shore": {
+  "id": 25,
+  "humidity": 0.3,
+  "temp": 0.2,
+  "watercolor": 4159204
+ },
+ "snowy_beach": {
+  "id": 26,
+  "humidity": 0.3,
+  "temp": 0.05,
+  "watercolor": 4020182
+ },
+ "birch_forest": {
+  "id": 27,
+  "humidity": 0.6,
+  "temp": 0.6,
+  "watercolor": 4159204
+ },
+ "birch_forest_hills": {
+  "id": 28,
+  "humidity": 0.6,
+  "temp": 0.6,
+  "watercolor": 4159204
+ },
+ "dark_forest": {
+  "id": 29,
+  "humidity": 0.8,
+  "temp": 0.7,
+  "watercolor": 4159204
+ },
+ "snowy_taiga": {
+  "id": 30,
+  "humidity": 0.4,
+  "temp": -0.5,
+  "watercolor": 4020182
+ },
+ "snowy_taiga_hills": {
+  "id": 31,
+  "humidity": 0.4,
+  "temp": -0.5,
+  "watercolor": 4020182
+ },
+ "giant_tree_taiga": {
+  "id": 32,
+  "humidity": 0.8,
+  "temp": 0.3,
+  "watercolor": 4159204
+ },
+ "giant_tree_taiga_hills": {
+  "id": 33,
+  "humidity": 0.8,
+  "temp": 0.3,
+  "watercolor": 4159204
+ },
+ "wooded_mountains": {
+  "id": 34,
+  "humidity": 0.3,
+  "temp": 0.2,
+  "watercolor": 4159204
+ },
+ "savanna": {
+  "id": 35,
+  "humidity": 0.0,
+  "temp": 1.2,
+  "watercolor": 4159204
+ },
+ "savanna_plateau": {
+  "id": 36,
+  "humidity": 0.0,
+  "temp": 1.0,
+  "watercolor": 4159204
+ },
+ "badlands": {
+  "id": 37,
+  "humidity": 0.0,
+  "temp": 2.0,
+  "watercolor": 4159204
+ },
+ "wooded_badlands_plateau": {
+  "id": 38,
+  "humidity": 0.0,
+  "temp": 2.0,
+  "watercolor": 4159204
+ },
+ "badlands_plateau": {
+  "id": 39,
+  "humidity": 0.0,
+  "temp": 2.0,
+  "watercolor": 4159204
+ },
+ "small_end_islands": {
+  "id": 40,
+  "humidity": 0.5,
+  "temp": 0.5,
+  "watercolor": 4159204
+ },
+ "end_midlands": {
+  "id": 41,
+  "humidity": 0.5,
+  "temp": 0.5,
+  "watercolor": 4159204
+ },
+ "end_highlands": {
+  "id": 42,
+  "humidity": 0.5,
+  "temp": 0.5,
+  "watercolor": 4159204
+ },
+ "end_barrens": {
+  "id": 43,
+  "humidity": 0.5,
+  "temp": 0.5,
+  "watercolor": 4159204
+ },
+ "warm_ocean": {
+  "id": 44,
+  "humidity": 0.5,
+  "temp": 0.5,
+  "watercolor": 4445678
+ },
+ "lukewarm_ocean": {
+  "id": 45,
+  "humidity": 0.5,
+  "temp": 0.5,
+  "watercolor": 4566514
+ },
+ "cold_ocean": {
+  "id": 46,
+  "humidity": 0.5,
+  "temp": 0.5,
+  "watercolor": 4020182
+ },
+ "deep_warm_ocean": {
+  "id": 47,
+  "humidity": 0.5,
+  "temp": 0.5,
+  "watercolor": 4445678
+ },
+ "deep_lukewarm_ocean": {
+  "id": 48,
+  "humidity": 0.5,
+  "temp": 0.5,
+  "watercolor": 4566514
+ },
+ "deep_cold_ocean": {
+  "id": 49,
+  "humidity": 0.5,
+  "temp": 0.5,
+  "watercolor": 4020182
+ },
+ "deep_frozen_ocean": {
+  "id": 50,
+  "humidity": 0.5,
+  "temp": 0.5,
+  "watercolor": 3750089
+ },
+ "the_void": {
+  "id": 127,
+  "humidity": 0.5,
+  "temp": 0.5,
+  "watercolor": 4159204
+ },
+ "sunflower_plains": {
+  "id": 129,
+  "humidity": 0.4,
+  "temp": 0.8,
+  "watercolor": 4159204
+ },
+ "desert_lakes": {
+  "id": 130,
+  "humidity": 0.0,
+  "temp": 2.0,
+  "watercolor": 4159204
+ },
+ "gravelly_mountains": {
+  "id": 131,
+  "humidity": 0.3,
+  "temp": 0.2,
+  "watercolor": 4159204
+ },
+ "flower_forest": {
+  "id": 132,
+  "humidity": 0.8,
+  "temp": 0.7,
+  "watercolor": 4159204
+ },
+ "taiga_mountains": {
+  "id": 133,
+  "humidity": 0.8,
+  "temp": 0.25,
+  "watercolor": 4159204
+ },
+ "swamp_hills": {
+  "id": 134,
+  "humidity": 0.9,
+  "temp": 0.8,
+  "watercolor": 6388580
+ },
+ "ice_spikes": {
+  "id": 140,
+  "humidity": 0.5,
+  "temp": 0.0,
+  "watercolor": 4159204
+ },
+ "modified_jungle": {
+  "id": 149,
+  "humidity": 0.9,
+  "temp": 0.95,
+  "watercolor": 4159204
+ },
+ "modified_jungle_edge": {
+  "id": 151,
+  "humidity": 0.8,
+  "temp": 0.95,
+  "watercolor": 4159204
+ },
+ "tall_birch_forest": {
+  "id": 155,
+  "humidity": 0.6,
+  "temp": 0.6,
+  "watercolor": 4159204
+ },
+ "tall_birch_hills": {
+  "id": 156,
+  "humidity": 0.6,
+  "temp": 0.6,
+  "watercolor": 4159204
+ },
+ "dark_forest_hills": {
+  "id": 157,
+  "humidity": 0.8,
+  "temp": 0.7,
+  "watercolor": 4159204
+ },
+ "snowy_taiga_mountains": {
+  "id": 158,
+  "humidity": 0.4,
+  "temp": -0.5,
+  "watercolor": 4020182
+ },
+ "giant_spruce_taiga": {
+  "id": 160,
+  "humidity": 0.8,
+  "temp": 0.25,
+  "watercolor": 4159204
+ },
+ "giant_spruce_taiga_hills": {
+  "id": 161,
+  "humidity": 0.8,
+  "temp": 0.25,
+  "watercolor": 4159204
+ },
+ "modified_gravelly_mountains": {
+  "id": 162,
+  "humidity": 0.3,
+  "temp": 0.2,
+  "watercolor": 4159204
+ },
+ "shattered_savanna": {
+  "id": 163,
+  "humidity": 0.0,
+  "temp": 1.1,
+  "watercolor": 4159204
+ },
+ "shattered_savanna_plateau": {
+  "id": 164,
+  "humidity": 0.0,
+  "temp": 1.0,
+  "watercolor": 4159204
+ },
+ "eroded_badlands": {
+  "id": 165,
+  "humidity": 0.0,
+  "temp": 2.0,
+  "watercolor": 4159204
+ },
+ "modified_wooded_badlands_plateau": {
+  "id": 166,
+  "humidity": 0.0,
+  "temp": 2.0,
+  "watercolor": 4159204
+ },
+ "modified_badlands_plateau": {
+  "id": 167,
+  "humidity": 0.0,
+  "temp": 2.0,
+  "watercolor": 4159204
+ },
+ "bamboo_jungle": {
+  "id": 168,
+  "humidity": 0.9,
+  "temp": 0.95,
+  "watercolor": 4159204
+ },
+ "bamboo_jungle_hills": {
+  "id": 169,
+  "humidity": 0.9,
+  "temp": 0.95,
+  "watercolor": 4159204
+ }
+}

@@ -1,0 +1,290 @@
+html, body {
+    margin: 0;
+    padding: 0;
+
+	font-size: 15px;
+	line-height: 15px; 
+    font-family: Verdana,Helvetica,Arial,sans-serif;
+    
+	color: #333333;
+	background-color: #dddddd;
+}
+
+.box {
+    color: #333333;
+    background-color: white;
+    box-shadow: 0px 1px 4px 0px rgba(50, 50, 50, 0.8);
+}
+
+.button {
+    background-color: white;
+    cursor: pointer;
+}
+
+.button:hover {
+    background-color: #333333;
+    color: #dddddd;
+}
+
+.dropdown-container {
+    background-color: white;
+	position: relative;
+
+    transition: all 0.3s;
+}
+
+.dropdown-container:hover {
+    background-color: #dddddd;
+}
+
+.dropdown-container > .dropdown {
+    position: absolute;
+    background-color: white;
+    color: #333333;
+    width: 100%;
+
+	overflow: hidden;
+	
+	transition: all 0.3s;
+	max-height: 0px;
+}
+
+.dropdown-container:hover > .dropdown {
+    max-height: 200px;
+    border-color: #ddddddFF;
+}
+
+.dropdown-container > .dropdown > ul {
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+
+.dropdown-container > .dropdown > ul > li {
+	cursor: pointer;
+}
+
+.dropdown-container > .dropdown > ul > li:hover {
+	color: #dddddd;
+	background-color: #333333;
+}
+
+#alert-box {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-content: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    flex-direction: column;
+    pointer-events: none;
+}
+
+#alert-box h1 {
+    font-size: 1.4rem;
+    font-weight: bold;
+
+    margin: 0;
+    padding: 15px;
+    text-align: center;
+}
+
+#alert-box h2 {
+    font-size: 1.2rem;
+    font-weight: bold;
+
+    margin: 0;
+    padding: 15px 0 5px 0;
+    text-align: left;
+}
+
+#alert-box a {
+    color: #333333;
+    text-decoration: underline;
+}
+
+#alert-box a:hover {
+    color: #888888;
+}
+
+#alert-box .alert {
+    position: relative;
+    pointer-events: all;
+    margin: 10px;
+    padding: 10px;
+}
+
+#alert-box .alert .alert-close-button {
+    /*position: absolute;
+    top: 5px;
+    right: 5px;
+    */
+    margin: -10px -10px 0px 0px;
+    padding: 0 0 5px 5px;
+    float: right;
+    width: 15px;
+    height: 15px;
+    line-height: 15px;
+    font-weight: bold;
+    font-size: 15px;
+    color: #333333;
+}
+
+#alert-box .alert .alert-close-button::after {
+    content: 'x';
+}
+
+#alert-box .alert .alert-close-button:hover {
+    color: #dd3333;
+}
+
+#map-container {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    overflow: hidden;
+}
+
+#map-container canvas {
+    width: 100%;
+    height: 100%;
+}
+
+#bluemap-loading {
+    position: absolute;
+    width: 200px;
+    line-height: 20px;
+    padding: 20px 0;
+    top: calc(50% - 31px);
+    left: calc(50% - 101px);
+    text-align: center;
+}
+
+#bluemap-topright {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+
+    line-height: 30px;
+
+    display: flex;
+}
+
+#bluemap-topright > *:not(:last-child) {
+    border-right: solid 1px #dddddd;
+}
+
+#bluemap-topleft {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+
+    line-height: 30px;
+
+    display: flex;
+}
+
+#bluemap-topleft > *:not(:last-child) {
+    border-right: solid 1px #dddddd;
+}
+
+#bluemap-mapmenu {
+    width: 200px;
+}
+
+#bluemap-mapmenu .selection, #bluemap-mapmenu .dropdown li {
+    padding-left: 10px;
+}
+
+#bluemap-compass {
+    width: 30px;
+    height: 30px;
+}
+
+#bluemap-compass:hover #bluemap-compass-needle {
+    filter: invert(1);
+}
+
+.bluemap-position {
+    position: relative;
+
+    width: 60px;
+    height: 30px;
+    padding: 0 5px 0 25px;
+}
+
+.bluemap-position::before {
+    position: absolute;
+    left: 7px;
+    color: #888888;
+}
+
+.bluemap-position.pos-x::before {
+    content: "x:";
+}
+
+.bluemap-position.pos-y::before {
+    content: "y:";
+}
+
+.bluemap-position.pos-z::before {
+    content: "z:";
+}
+
+#bluemap-settings {
+    width: 30px;
+    height: 30px;
+}
+
+#bluemap-settings.active:not(:hover) {
+    background-color: #dddddd;
+}
+
+#bluemap-settings:hover > img {
+    filter: invert(1);
+}
+
+#bluemap-settings-container {
+    display: flex;
+    white-space: nowrap;
+}
+
+#bluemap-settings-quality {
+    width: 150px;
+    height: 30px;
+
+}
+
+#bluemap-settings-quality .selection, #bluemap-settings-quality .dropdown li {
+    padding-left: 10px;
+}
+
+#bluemap-settings-render-distance {
+    width: 180px;
+}
+
+#bluemap-settings-render-distance .selection {
+    padding-left: 10px;
+}
+
+#bluemap-settings-render-distance input {
+    width: calc(100% - 20px);
+    margin: 10px;
+    padding: 0;
+}
+
+#bluemap-info {
+    width: 30px;
+    height: 30px;
+    text-align: center;
+
+}
+
+#bluemap-info::after {
+    content: 'i';
+    font-weight: bold;
+}

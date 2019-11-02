@@ -1,0 +1,4 @@
+dependencies {
+    shadow "org.spongepowered:spongeapi:7.2.0-SNAPSHOT"
+    compile project(':BlueMapCore')
+}

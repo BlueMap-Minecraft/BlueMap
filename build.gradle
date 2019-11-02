@@ -1,0 +1,41 @@
+plugins {
+  id 'com.github.johnrengelman.shadow' version '5.1.0'
+  id 'java'
+}
+
+allprojects {
+	repositories {
+		mavenCentral()
+		maven { 
+			url 'https://jitpack.io'
+		}
+		maven {
+			name 'sponge'
+			url 'http://repo.spongepowered.org/maven'
+		}
+	}
+
+	compileJava.options.compilerArgs.add '-parameters'
+	compileTestJava.options.compilerArgs.add '-parameters'
+	
+	apply plugin: 'java'
+	apply plugin: 'com.github.johnrengelman.shadow'
+}
+
+dependencies {
+	compile project(':BlueMapCore')
+	compile project(':BlueMapCLI')
+	compile project(':BlueMapSponge')
+}
+
+shadowJar {
+	baseName = 'BlueMap'
+	version = '0.0.1'
+	classifier = null
+}
+
+jar {    
+    manifest {
+        attributes 'Main-Class' : "de.bluecolored.bluemap.cli.BlueMapCLI"
+    }
+}
