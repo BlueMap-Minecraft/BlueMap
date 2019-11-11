@@ -21,4 +21,4 @@ bin/*
 */.project
 
 # exclude generated resource
-src/main/resources/webroot.zip
+BlueMapCore/src/main/resources/webroot.zip
