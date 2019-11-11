@@ -25,7 +25,6 @@
 package de.bluecolored.bluemap.core.mca.extensions;
 
 import java.util.Collection;
-import java.util.Map.Entry;
 
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.Lists;
@@ -37,7 +36,12 @@ import de.bluecolored.bluemap.core.world.BlockState;
 public class DoublePlantExtension implements BlockStateExtension {
 
 	private static final Collection<String> AFFECTED_BLOCK_IDS = Lists.newArrayList(
-			"minecraft:double_plant"
+			"minecraft:sunflower",
+			"minecraft:lilac",
+			"minecraft:tall_grass",
+			"minecraft:large_fern",
+			"minecraft:rose_bush",
+			"minecraft:peony"
 		);
 	
 	@Override
@@ -45,12 +49,7 @@ public class DoublePlantExtension implements BlockStateExtension {
 		if (state.getProperties().get("half").equals("upper")) {
 			BlockState otherPlant = world.getBlockState(pos.add(Direction.DOWN.toVector()));
 			
-			//copy all properties from the other half
-			for (Entry<String, String> prop : otherPlant.getProperties().entrySet()) {
-				if (!state.getProperties().containsKey(prop.getKey())) {
-					state = state.with(prop.getKey(), prop.getValue());
-				}
-			}
+			return otherPlant.with("half", "upper");
 		}
 		
 		return state;

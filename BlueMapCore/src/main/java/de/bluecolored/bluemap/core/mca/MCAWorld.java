@@ -172,8 +172,10 @@ public class MCAWorld implements World {
 	private BlockState getExtendedBlockState(Chunk chunk, Vector3i pos) throws ChunkNotGeneratedException {
 		BlockState blockState = chunk.getBlockState(pos);
 		
-		for (BlockStateExtension ext : BLOCK_STATE_EXTENSIONS.get(blockState.getId())) {
-			blockState = ext.extend(this, pos, blockState);
+		if (chunk instanceof ChunkAnvil112) { // only use extensions if old format chunk (1.12) in the new format block-states are saved witch extensions
+			for (BlockStateExtension ext : BLOCK_STATE_EXTENSIONS.get(blockState.getFullId())) {
+				blockState = ext.extend(this, pos, blockState);
+			}
 		}
 		
 		return blockState;
@@ -312,6 +314,16 @@ public class MCAWorld implements World {
 	@Override
 	public Vector3i getSpawnPoint() {
 		return spawnPoint;
+	}
+	
+	@Override
+	public void invalidateChunkCache() {
+		CHUNK_CACHE.invalidateAll();
+	}
+	
+	@Override
+	public void invalidateChunkCache(Vector2i chunk) {
+		CHUNK_CACHE.invalidate(new WorldChunkHash(this, chunk));
 	}
 	
 	public BlockIdMapper getBlockIdMapper() {

@@ -74,7 +74,7 @@ public class ResourceModelBuilder {
 		BlockStateModel model = new BlockStateModel();
 		
 		for (WeighedArrayList<BlockModelResource> bmrList : resource.getModelResources()){
-			BlockModelResource bmr = bmrList.get((int) Math.floor(MathUtil.hashToFloat(context.getPosition(), 23489756) * (float) bmrList.size()));
+			BlockModelResource bmr = bmrList.get((int) Math.floor(MathUtil.hashToFloat(context.getPosition(), 23489756) * bmrList.size()));
 			
 			model.merge(fromModelResource(bmr));
 		}

@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.core.world;
 
 import com.flowpowered.math.vector.Vector3i;
+import com.google.common.base.MoreObjects;
 
 import de.bluecolored.bluemap.core.render.context.BlockContext;
 import de.bluecolored.bluemap.core.util.Direction;
@@ -86,6 +87,16 @@ public abstract class Block {
 			sunLight = (float) Math.max(neighbor.getSunLightLevel(), sunLight);
 			blockLight = (float) Math.max(neighbor.getBlockLightLevel(), blockLight);
 		}
+	}
+	
+	@Override
+	public String toString() {
+		return MoreObjects.toStringHelper(this)
+			.add("pos", getPosition())
+			.add("biome", getBiome())
+			.add("blocklight", getBlockLightLevel())
+			.add("sunlight", getSunLightLevel())
+			.toString();
 	}
 
 }

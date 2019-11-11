@@ -29,6 +29,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -49,6 +50,8 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.world.BlockState;
 
 public class ResourcePack {
+	
+	public static final String MINECRAFT_CLIENT_URL = "https://launcher.mojang.com/v1/objects/8c325a0c5bd674dd747d6ebaa4c791fd363ad8a9/client.jar";
 	
 	private Map<Path, Resource> resources;
 	
@@ -121,6 +124,13 @@ public class ResourcePack {
 				if (file.isDirectory()) continue;
 				
 				Path resourcePath = Paths.get("", file.getName().split("/"));
+				if (
+						!resourcePath.startsWith(Paths.get("assets", "minecraft", "blockstates")) &&
+						!resourcePath.startsWith(Paths.get("assets", "minecraft", "models", "block")) &&
+						!resourcePath.startsWith(Paths.get("assets", "minecraft", "textures", "block")) &&
+						!resourcePath.startsWith(Paths.get("assets", "minecraft", "textures", "colormap"))
+				) continue;
+				
 				InputStream fileInputStream = zipFile.getInputStream(file);
 				
 				ByteArrayOutputStream bos = new ByteArrayOutputStream(Math.max(8, (int) file.getSize()));
@@ -179,11 +189,10 @@ public class ResourcePack {
 		
 	}
 	
-	public static void createDefaultResource(File file) throws IOException {
-		if (!file.exists()) {
-			file.getParentFile().mkdirs();
-			FileUtils.copyURLToFile(ResourcePack.class.getResource("/DefaultResources.zip"), file, 10000, 10000);
-		}
+	public static void downloadDefaultResource(File file) throws IOException {
+		if (file.exists()) file.delete();
+		file.getParentFile().mkdirs();
+		FileUtils.copyURLToFile(new URL(MINECRAFT_CLIENT_URL), file, 10000, 10000);
 	}
 	
 }

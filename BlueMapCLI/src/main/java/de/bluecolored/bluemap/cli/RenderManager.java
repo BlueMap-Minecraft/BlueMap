@@ -135,7 +135,7 @@ public class RenderManager extends Thread {
 				String durationString = DurationFormatUtils.formatDurationWords(time, true, true);
 				double pct = (double)renderedTiles / (double)tileCount;
 				
-				long ert = (long)(((double) time / pct) * (1d - pct));
+				long ert = (long)((time / pct) * (1d - pct));
 				String ertDurationString = DurationFormatUtils.formatDurationWords(ert, true, true);
 				
 				Logger.global.logInfo("Rendered " + renderedTiles + " of " + tileCount + " tiles in " + durationString);

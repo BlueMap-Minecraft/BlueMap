@@ -38,7 +38,7 @@ public class StairShapeExtension implements BlockStateExtension {
 
 	private static final HashSet<String> AFFECTED_BLOCK_IDS = Sets.newHashSet(
 			"minecraft:oak_stairs",
-			"minecraft:stone_stairs",
+			"minecraft:cobblestone_stairs",
 			"minecraft:brick_stairs",
 			"minecraft:stone_brick_stairs",
 			"minecraft:nether_brick_stairs",
@@ -102,7 +102,7 @@ public class StairShapeExtension implements BlockStateExtension {
 	}
 	
 	private boolean isStairs(BlockState state) {
-		return AFFECTED_BLOCK_IDS.contains(state.getId());
+		return AFFECTED_BLOCK_IDS.contains(state.getFullId());
 	}
 	
 	private boolean isEqualStairs(BlockState stair1, BlockState stair2) {

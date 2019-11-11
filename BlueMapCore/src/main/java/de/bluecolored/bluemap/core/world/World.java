@@ -74,5 +74,25 @@ public interface World extends WorldChunk {
 	 * <i>(Be aware that the collection is not cached and recollected each time from the world-files!)</i>
 	 */
 	public Collection<Vector2i> getChunkList(long modifiedSince);
+
+	/**
+	 * Invalidates the complete chunk cache (if there is a cache), so that every chunk has to be reloaded from disk
+	 */
+	public void invalidateChunkCache();
+
+	/**
+	 * Invalidates the chunk from the chunk-cache (if there is a cache), so that the chunk has to be reloaded from disk
+	 */
+	public void invalidateChunkCache(Vector2i chunk);
+	
+	/**
+	 * Returns the ChunkPosition for a BlockPosition 
+	 */
+	public default Vector2i blockPosToChunkPos(Vector3i block) {
+		return new Vector2i(
+			block.getX() >> 4, 
+			block.getZ() >> 4
+		);
+	}
 	
 }

@@ -35,15 +35,15 @@ import de.bluecolored.bluemap.core.world.BlockState;
 public class SnowyExtension implements BlockStateExtension {
 
 	private static final Collection<String> AFFECTED_BLOCK_IDS = Lists.newArrayList(
-			"minecraft:grass",
-			"minecraft:dirt"
+			"minecraft:grass_block",
+			"minecraft:podzol"
 		);
 	
 	@Override
 	public BlockState extend(MCAWorld world, Vector3i pos, BlockState state) {
 		BlockState above = world.getBlockState(pos.add(0, 1, 0));
 
-		if (above.getId().equals("minecraft:snow_layer") || above.getId().equals("minecraft:snow")) {
+		if (above.getFullId().equals("minecraft:snow") || above.getFullId().equals("minecraft:snow_block")) {
 			return state.with("snowy", "true");
 		} else {
 			return state.with("snowy", "false");

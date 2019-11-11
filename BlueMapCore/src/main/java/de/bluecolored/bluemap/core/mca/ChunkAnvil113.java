@@ -74,7 +74,7 @@ class ChunkAnvil113 extends Chunk {
 			biomes = new int[bs.length];
 			
 			for (int i = 0; i < bs.length; i++) {
-				biomes[i] = bs[i];
+				biomes[i] = bs[i] & 0xFF;
 			}
 		}
 		else if (tag instanceof IntArrayTag) {

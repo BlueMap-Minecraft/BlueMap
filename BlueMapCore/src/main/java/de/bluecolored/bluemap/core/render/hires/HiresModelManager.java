@@ -153,8 +153,8 @@ public class HiresModelManager {
 	public Vector2i posToTile(Vector3d pos){
 		pos = pos.sub(new Vector3d(gridOrigin.getX(), 0.0, gridOrigin.getY()));
 		return Vector2i.from(
-				(int) Math.floor(pos.getX() / (double) getTileSize().getX()),
-				(int) Math.floor(pos.getZ() / (double) getTileSize().getY())  
+				(int) Math.floor(pos.getX() / getTileSize().getX()),
+				(int) Math.floor(pos.getZ() / getTileSize().getY())  
 			);
 	}
 	

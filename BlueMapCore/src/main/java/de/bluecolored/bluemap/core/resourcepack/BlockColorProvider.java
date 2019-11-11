@@ -226,7 +226,7 @@ public class BlockColorProvider {
 			throw new NoSuchElementException("No biome found with id: " + biomeId);
 		}
 		
-		float adjTemp = (float) GenericMath.clamp(bi.temp - (0.00166667 * (double) blocksAboveSeaLevel), 0d, 1d);
+		float adjTemp = (float) GenericMath.clamp(bi.temp - (0.00166667 * blocksAboveSeaLevel), 0d, 1d);
 		float adjHumidity = (float) GenericMath.clamp(bi.humidity, 0d, 1d) * adjTemp;
 		return new Vector2f(1 - adjTemp, 1 - adjHumidity);
 	}

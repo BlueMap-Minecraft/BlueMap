@@ -37,12 +37,14 @@ public interface ExtendedBlockContext extends BlockContext {
 	 * This returns neighbour blocks.<br>
 	 * The distance can not be larger than two blocks in each direction!<br>
 	 */
+	@Override
 	Block getRelativeBlock(Vector3i direction);
 
 	/**
 	 * This returns neighbour blocks.<br>
 	 * The distance can not be larger than two blocks in each direction!<br>
 	 */
+	@Override
 	default Block getRelativeBlock(int x, int y, int z){
 		return getRelativeBlock(new Vector3i(x, y, z));
 	}

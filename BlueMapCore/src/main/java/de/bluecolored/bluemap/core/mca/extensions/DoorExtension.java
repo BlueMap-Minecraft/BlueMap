@@ -37,7 +37,7 @@ import de.bluecolored.bluemap.core.world.BlockState;
 public class DoorExtension implements BlockStateExtension {
 
 	private static final Collection<String> AFFECTED_BLOCK_IDS = Lists.newArrayList(
-			"minecraft:wooden_door",
+			"minecraft:oak_door",
 			"minecraft:iron_door",
 			"minecraft:spruce_door",
 			"minecraft:birch_door",

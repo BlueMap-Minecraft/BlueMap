@@ -27,7 +27,10 @@ package de.bluecolored.bluemap.core.config;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -36,6 +39,7 @@ import org.apache.commons.io.FileUtils;
 import com.google.common.base.Preconditions;
 
 import de.bluecolored.bluemap.core.render.RenderSettings;
+import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.web.WebServerConfig;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
@@ -45,6 +49,8 @@ import ninja.leaping.configurate.loader.ConfigurationLoader;
 public class ConfigurationFile implements WebServerConfig {
 	
 	private String configVersion;
+	
+	private boolean downloadAccepted;
 	
 	private boolean webserverEnabled;
 	private int webserverPort;
@@ -66,10 +72,11 @@ public class ConfigurationFile implements WebServerConfig {
 		CommentedConfigurationNode rootNode = configLoader.load();
 		
 		configVersion = rootNode.getNode("version").getString("-");
+		downloadAccepted = rootNode.getNode("accept-download").getBoolean(false);
 		
 		loadWebConfig(rootNode.getNode("web"));
 
-		int defaultCount = (int) Math.max(Math.min((double) Runtime.getRuntime().availableProcessors() * 0.75, 16), 1);
+		int defaultCount = (int) Math.max(Math.min(Runtime.getRuntime().availableProcessors() * 0.75, 16), 1);
 		renderThreadCount = rootNode.getNode("renderThreadCount").getInt(defaultCount);
 		if (renderThreadCount <= 0) renderThreadCount = defaultCount;
 		
@@ -143,6 +150,10 @@ public class ConfigurationFile implements WebServerConfig {
 		return configVersion;
 	}
 	
+	public boolean isDownloadAccepted() {
+		return downloadAccepted;
+	}
+	
 	public int getRenderThreadCount() {
 		return renderThreadCount;
 	}
@@ -165,6 +176,12 @@ public class ConfigurationFile implements WebServerConfig {
 			configFile.getParentFile().mkdirs();
 			
 			FileUtils.copyURLToFile(ConfigurationFile.class.getResource("/bluemap.conf"), configFile, 10000, 10000);
+			
+			//replace placeholder
+			String content = new String(Files.readAllBytes(configFile.toPath()), StandardCharsets.UTF_8);
+			content = content.replaceAll("%resource-file%", ResourcePack.MINECRAFT_CLIENT_URL);
+			content = content.replaceAll("%date%", LocalDateTime.now().withNano(0).toString());
+			Files.write(configFile.toPath(), content.getBytes(StandardCharsets.UTF_8));
 		}
 		
 		return new ConfigurationFile(configFile);
@@ -226,7 +243,7 @@ public class ConfigurationFile implements WebServerConfig {
 			return name;
 		}
 		
-		public String getWorldId() {
+		public String getWorldPath() {
 			return world;
 		}
 

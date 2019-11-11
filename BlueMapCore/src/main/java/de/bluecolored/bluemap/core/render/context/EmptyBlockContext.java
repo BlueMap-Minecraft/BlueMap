@@ -162,6 +162,12 @@ public class EmptyBlockContext implements ExtendedBlockContext {
 		public Collection<Vector2i> getChunkList(long modifiedSince) {
 			return Collections.emptyList();
 		}
+
+		@Override
+		public void invalidateChunkCache() {}
+
+		@Override
+		public void invalidateChunkCache(Vector2i chunk) {}
 		
 	}
 

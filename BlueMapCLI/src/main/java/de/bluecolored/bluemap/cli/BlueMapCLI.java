@@ -250,7 +250,7 @@ public class BlueMapCLI {
 			throw new IOException("Failed to create temporary resource file!", e);
 		}
 		try {
-			ResourcePack.createDefaultResource(defaultResourceFile);
+			ResourcePack.downloadDefaultResource(defaultResourceFile);
 		} catch (IOException e) {
 			throw new IOException("Failed to create default resources!", e);
 		}

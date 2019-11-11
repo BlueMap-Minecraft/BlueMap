@@ -44,14 +44,14 @@ public class RedstoneExtension implements BlockStateExtension {
 
 	private static final Set<String> CONNECTIBLE = Sets.newHashSet(
 			"minecraft:redstone_wire",
-			"minecraft:unlit_redstone_torch",
+			"minecraft:redstone_wall_torch",
 			"minecraft:redstone_torch",
 			"minecraft:stone_button",
-			"minecraft:wooden_button",
+			"minecraft:oak_button",
 			"minecraft:stone_button",
 			"minecraft:lever",
 			"minecraft:stone_pressure_plate",
-			"minecraft:wooden_pressure_plate",
+			"minecraft:oak_pressure_plate",
 			"minecraft:light_weighted_pressure_plate",
 			"minecraft:heavy_weighted_pressure_plate"
 		);
@@ -69,7 +69,7 @@ public class RedstoneExtension implements BlockStateExtension {
 
 	private String connection(MCAWorld world, Vector3i pos, BlockState state, Direction direction) {
 		BlockState next = world.getBlockState(pos.add(direction.toVector()));
-		if (CONNECTIBLE.contains(next.getId())) return "side";
+		if (CONNECTIBLE.contains(next.getFullId())) return "side";
 		
 		//TODO: up
 		

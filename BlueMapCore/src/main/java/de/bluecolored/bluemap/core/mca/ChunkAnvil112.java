@@ -95,7 +95,7 @@ class ChunkAnvil112 extends Chunk {
 		int z = pos.getZ() & 0xF;
 		int biomeByteIndex = z * 16 + x;
 		
-		return biomeIdMapper.get(biomes[biomeByteIndex]);
+		return biomeIdMapper.get(biomes[biomeByteIndex] & 0xFF);
 	}
 
 	private class Section {
