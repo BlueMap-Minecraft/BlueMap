@@ -13,6 +13,10 @@ allprojects {
 			name 'sponge'
 			url 'http://repo.spongepowered.org/maven'
 		}
+		maven {
+			name 'CodeMC'
+			url 'https://repo.codemc.org/repository/maven-public'
+		}
 	}
 
 	compileJava.options.compilerArgs.add '-parameters'

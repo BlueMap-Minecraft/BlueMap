@@ -34,6 +34,7 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 
+import org.bstats.sponge.MetricsLite2;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.event.Listener;
@@ -80,6 +81,10 @@ public class SpongePlugin {
 	@Inject
 	@ConfigDir(sharedRoot = false)
 	private Path configurationDir;
+	
+	@SuppressWarnings("unused")
+	@Inject
+    private MetricsLite2 metrics;
 	
 	private ConfigurationFile config;
 	private ResourcePack resourcePack;

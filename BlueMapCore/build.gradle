@@ -7,7 +7,6 @@ dependencies {
     compile 'ninja.leaping.configurate:configurate-hocon:3.3'
     compile 'ninja.leaping.configurate:configurate-gson:3.3'
     compile 'com.github.Querz:NBT:4.0'
-	compile group: 'commons-cli', name: 'commons-cli', version: '1.4'
 }
 
 task zipWebroot(type: Zip) {
