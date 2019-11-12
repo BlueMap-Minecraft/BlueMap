@@ -33,6 +33,7 @@ import java.io.RandomAccessFile;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -44,6 +45,7 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
+import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.extensions.BlockStateExtension;
@@ -196,7 +198,7 @@ public class MCAWorld implements World {
 			Chunk chunk = CHUNK_CACHE.get(new WorldChunkHash(this, chunkPos), () -> this.loadChunk(chunkPos));
 			if (!chunk.isGenerated()) throw new ChunkNotGeneratedException();
 			return chunk;
-		} catch (ExecutionException e) {
+		} catch (UncheckedExecutionException | ExecutionException e) {
 			Throwable cause = e.getCause();
 			
 			if (cause instanceof IOException) {
@@ -260,6 +262,8 @@ public class MCAWorld implements World {
 	@Override
 	public Collection<Vector2i> getChunkList(long modifiedSinceMillis){
 		List<Vector2i> chunks = new ArrayList<>(10000);
+		
+		if (!getRegionFolder().toFile().isDirectory()) return Collections.emptyList();
 		
 		for (File file : getRegionFolder().toFile().listFiles()) {
 			if (!file.getName().endsWith(".mca")) continue;

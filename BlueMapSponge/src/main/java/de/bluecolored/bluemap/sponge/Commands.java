@@ -20,6 +20,7 @@ import org.spongepowered.api.text.action.TextActions;
 import org.spongepowered.api.text.format.TextColors;
 import org.spongepowered.api.world.Locatable;
 import org.spongepowered.api.world.Location;
+import org.spongepowered.api.world.storage.WorldProperties;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
@@ -150,11 +151,14 @@ public class Commands {
 			.child(createRemoveTaskCommand(), "remove")
 			.arguments(GenericArguments.optional(GenericArguments.world(Text.of("world"))))
 			.executor((source, args) -> {
-				org.spongepowered.api.world.World spongeWorld = args.<org.spongepowered.api.world.World>getOne("world").orElse(null);
+				WorldProperties spongeWorld = args.<WorldProperties>getOne("world").orElse(null);
+				
 				if (spongeWorld == null && source instanceof Locatable) {
 					Location<org.spongepowered.api.world.World> loc = ((Locatable) source).getLocation();
-					spongeWorld = loc.getExtent();
-				} else {
+					spongeWorld = loc.getExtent().getProperties();
+				}
+				
+				if (spongeWorld == null){
 					source.sendMessage(Text.of(TextColors.RED, "You have to define a world to render!"));
 					return CommandResult.empty();
 				}
