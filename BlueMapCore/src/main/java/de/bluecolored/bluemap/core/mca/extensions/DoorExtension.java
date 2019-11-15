@@ -50,7 +50,9 @@ public class DoorExtension implements BlockStateExtension {
 	public BlockState extend(MCAWorld world, Vector3i pos, BlockState state) {
 		BlockState otherDoor;
 		
-		if (state.getProperties().get("half").equals("lower")) {
+		boolean isLower = state.getProperties().get("half").equals("lower"); 
+		
+		if (isLower) {
 			otherDoor = world.getBlockState(pos.add(Direction.UP.toVector()));
 		} else {
 			otherDoor = world.getBlockState(pos.add(Direction.DOWN.toVector()));
@@ -58,7 +60,13 @@ public class DoorExtension implements BlockStateExtension {
 		
 		//copy all properties from the other door
 		for (Entry<String, String> prop : otherDoor.getProperties().entrySet()) {
-			if (!state.getProperties().containsKey(prop.getKey())) {
+			if (
+					!state.getProperties().containsKey(prop.getKey()) || 
+					(isLower && prop.getKey().equals("hinge")) || 
+					(isLower && prop.getKey().equals("powered")) || 
+					(!isLower && prop.getKey().equals("open")) ||
+					(!isLower && prop.getKey().equals("facing"))
+			) {
 				state = state.with(prop.getKey(), prop.getValue());
 			}
 		}
