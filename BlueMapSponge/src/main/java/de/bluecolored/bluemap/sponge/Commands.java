@@ -83,6 +83,14 @@ public class Commands {
 			.build();
 	}
 	
+	public CommandSpec createStandaloneReloadCommand() {
+		return CommandSpec.builder()
+				.description(Text.of("BlueMaps root command"))
+				.childArgumentParseExceptionFallback(false)
+				.child(createReloadCommand(), "reload")
+				.build();
+	}
+	
 	public CommandSpec createReloadCommand() {
 		return CommandSpec.builder()
 			.description(Text.of("Reloads all resources and configuration-files"))

@@ -34,7 +34,6 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
@@ -50,9 +49,7 @@ import org.spongepowered.api.event.game.GameReloadEvent;
 import org.spongepowered.api.event.game.state.GameStartingServerEvent;
 import org.spongepowered.api.event.game.state.GameStoppingEvent;
 import org.spongepowered.api.plugin.Plugin;
-import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.scheduler.SpongeExecutorService;
-import org.spongepowered.api.util.Tristate;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.google.common.collect.Lists;
@@ -140,6 +137,11 @@ public class SpongePlugin {
 		
 		if (!defaultResourceFile.exists()) {
 			handleMissingResources(defaultResourceFile, configFile);
+			unload();
+			
+			//only register reload command
+			Sponge.getCommandManager().register(this, new Commands(this).createStandaloneReloadCommand(), "bluemap");
+			
 			return;
 		}
 		
@@ -246,15 +248,10 @@ public class SpongePlugin {
 		//metrics
 		Sponge.getScheduler().createTaskBuilder()
 		.async()
-		.delay(0, TimeUnit.MINUTES)
+		.delay(1, TimeUnit.MINUTES)
 		.interval(30, TimeUnit.MINUTES)
 		.execute(() -> {
-			Optional<PluginContainer> plugin = Sponge.getPluginManager().fromInstance(this);
-			if (!plugin.isPresent()) return;
-			
-			Tristate metricsEnabled = Sponge.getMetricsConfigManager().getCollectionState(plugin.get());
-			if (metricsEnabled == Tristate.UNDEFINED) metricsEnabled = Sponge.getMetricsConfigManager().getGlobalCollectionState();
-			if (metricsEnabled == Tristate.TRUE) Metrics.sendReport("Sponge");
+			if (Sponge.getMetricsConfigManager().areMetricsEnabled(this)) Metrics.sendReport("Sponge");
 		})
 		.submit(this);
 		

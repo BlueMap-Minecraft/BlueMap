@@ -1,5 +1,5 @@
 dependencies {
-    shadow "org.spongepowered:spongeapi:7.2.0-SNAPSHOT"
+    shadow "org.spongepowered:spongeapi:7.1.0-SNAPSHOT"
     compile group: 'org.bstats', name: 'bstats-sponge-lite', version: '1.5'
     compile project(':BlueMapCore')
 }
