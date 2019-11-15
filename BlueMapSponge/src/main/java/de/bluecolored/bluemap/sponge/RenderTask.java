@@ -104,6 +104,8 @@ public class RenderTask {
 	 * It will resume as soon as a new ticket gets polled
 	 */
 	public void pause() {
+		if (firstTileTime < 0) return;
+		
 		synchronized (renderTiles) {
 			additionalRunTime += System.currentTimeMillis() - firstTileTime;
 			firstTileTime = -1;	

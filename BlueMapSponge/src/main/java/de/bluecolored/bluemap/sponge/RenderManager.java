@@ -94,6 +94,11 @@ public class RenderManager {
 	public boolean prioritizeRenderTask(RenderTask renderTask) {
 		synchronized (renderTasks) {
 			if (renderTasks.remove(renderTask)) {
+				
+				//pause first task
+				RenderTask currentFirst = renderTasks.peek();
+				if (currentFirst != null) currentFirst.pause();
+				
 				renderTasks.addFirst(renderTask);
 				return true;
 			}
