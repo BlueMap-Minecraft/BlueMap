@@ -1,5 +1,7 @@
 package de.bluecolored.bluemap.sponge;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -7,9 +9,13 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import com.flowpowered.math.vector.Vector2i;
+import com.google.common.collect.ListMultimap;
+import com.google.common.collect.MultimapBuilder;
 
 import de.bluecolored.bluemap.core.logger.Logger;
 
@@ -149,6 +155,79 @@ public class RenderManager {
 	
 	public boolean isRunning() {
 		return running;
+	}
+	
+	public void writeState(DataOutputStream out) throws IOException {
+		//prepare renderTickets
+		ListMultimap<MapType, Vector2i> tileMap = MultimapBuilder.hashKeys().arrayListValues().<MapType, Vector2i>build();
+		synchronized (renderTickets) {
+			for (RenderTicket ticket : renderTickets) {
+				tileMap.put(ticket.getMapType(), ticket.getTile());
+			}	
+		}
+		
+		//write renderTickets
+		Set<MapType> maps = tileMap.keySet();
+		out.writeInt(maps.size());
+		for (MapType map : maps) {
+			List<Vector2i> tiles = tileMap.get(map);
+			
+			out.writeUTF(map.getId());
+			out.writeInt(tiles.size());
+			for (Vector2i tile : tiles) {
+				out.writeInt(tile.getX());
+				out.writeInt(tile.getY());
+			}
+		}
+		
+		//write tasks
+		synchronized (renderTasks) {
+			out.writeInt(renderTasks.size());
+			for (RenderTask task : renderTasks) {
+				task.write(out);
+			}
+		}
+	}
+	
+	public void readState(DataInputStream in) throws IOException {
+		//read renderTickets
+		int mapCount = in.readInt();
+		for (int i = 0; i < mapCount; i++) {
+			String mapId = in.readUTF();
+			
+			MapType mapType = null;
+			for (MapType map : SpongePlugin.getInstance().getMapTypes()) {
+				if (map.getId().equals(mapId)) {
+					mapType = map;
+					break;
+				}
+			}
+			if (mapType == null) {
+				Logger.global.logWarning("Some render-tickets can not be loaded because the map (id: '" + mapId + "') does not exist anymore. They will be discarded.");
+			}
+			
+			int tileCount = in.readInt();
+			List<Vector2i> tiles = new ArrayList<>();
+			for (int j = 0; j < tileCount; j++) {
+				int x = in.readInt();
+				int y = in.readInt();
+				Vector2i tile = new Vector2i(x, y);
+				tiles.add(tile);
+			}
+			
+			createTickets(mapType, tiles);
+		}
+		
+		//read tasks
+		int taskCount = in.readInt();
+		for (int i = 0; i < taskCount; i++) {
+			try {
+				RenderTask task = RenderTask.read(in);
+				addRenderTask(task);
+			} catch (IOException ex) {
+				Logger.global.logWarning("A render-task can not be loaded. It will be discared. (Error message: " + ex.toString() + ")");
+			}
+		}
 	}
 	
 }

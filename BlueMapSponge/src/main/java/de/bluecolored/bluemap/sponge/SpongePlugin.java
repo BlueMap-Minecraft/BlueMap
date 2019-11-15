@@ -24,13 +24,21 @@
  */
 package de.bluecolored.bluemap.sponge;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import javax.inject.Inject;
 
@@ -42,15 +50,19 @@ import org.spongepowered.api.event.game.GameReloadEvent;
 import org.spongepowered.api.event.game.state.GameStartingServerEvent;
 import org.spongepowered.api.event.game.state.GameStoppingEvent;
 import org.spongepowered.api.plugin.Plugin;
+import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.scheduler.SpongeExecutorService;
+import org.spongepowered.api.util.Tristate;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.google.common.collect.Lists;
 
+import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.config.ConfigurationFile;
 import de.bluecolored.bluemap.core.config.ConfigurationFile.MapConfig;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
+import de.bluecolored.bluemap.core.metrics.Metrics;
 import de.bluecolored.bluemap.core.render.TileRenderer;
 import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.render.lowres.LowresModelManager;
@@ -74,7 +86,7 @@ public class SpongePlugin {
 
 	public static final String PLUGIN_ID = "bluemap";
 	public static final String PLUGIN_NAME = "BlueMap";
-	public static final String PLUGIN_VERSION = "0.0.0";
+	public static final String PLUGIN_VERSION = BlueMap.VERSION;
 
 	private static SpongePlugin instance;
 	
@@ -190,6 +202,20 @@ public class SpongePlugin {
 		renderManager = new RenderManager(config.getRenderThreadCount());
 		renderManager.start();
 		
+		//load render-manager state
+		try {
+			File saveFile = configurationDir.resolve("rmstate").toFile();
+			saveFile.getParentFile().mkdirs();
+			if (saveFile.exists()) {
+				try (DataInputStream in = new DataInputStream(new GZIPInputStream(new FileInputStream(saveFile)))) {
+					renderManager.readState(in);
+				}
+			}
+			saveFile.delete();
+		} catch (IOException ex) {
+			Logger.global.logError("Failed to load render-manager state!", ex);
+		}
+		
 		//start map updater
 		updateHandler = new MapUpdateHandler();
 		
@@ -217,6 +243,21 @@ public class SpongePlugin {
 			webServer.start();
 		}
 		
+		//metrics
+		Sponge.getScheduler().createTaskBuilder()
+		.async()
+		.delay(0, TimeUnit.MINUTES)
+		.interval(30, TimeUnit.MINUTES)
+		.execute(() -> {
+			Optional<PluginContainer> plugin = Sponge.getPluginManager().fromInstance(this);
+			if (!plugin.isPresent()) return;
+			
+			Tristate metricsEnabled = Sponge.getMetricsConfigManager().getCollectionState(plugin.get());
+			if (metricsEnabled == Tristate.UNDEFINED) metricsEnabled = Sponge.getMetricsConfigManager().getGlobalCollectionState();
+			if (metricsEnabled == Tristate.TRUE) Metrics.sendReport("Sponge");
+		})
+		.submit(this);
+		
 		loaded = true;
 	}
 	
@@ -228,13 +269,29 @@ public class SpongePlugin {
 		
 		//unregister listeners
 		if (updateHandler != null) Sponge.getEventManager().unregisterListeners(updateHandler);
-		updateHandler = null;
 		
 		//unregister commands
 		Sponge.getCommandManager().getOwnedBy(this).forEach(Sponge.getCommandManager()::removeMapping);
 		
 		//stop scheduled tasks
 		Sponge.getScheduler().getScheduledTasks(this).forEach(t -> t.cancel());
+		
+		//save render-manager state
+		if (updateHandler != null) updateHandler.flushTileBuffer(); //first write all buffered tiles to the render manager to save them too
+		if (renderManager != null) {
+			try {
+				File saveFile = configurationDir.resolve("rmstate").toFile();
+				saveFile.getParentFile().mkdirs();
+				if (saveFile.exists()) saveFile.delete();
+				saveFile.createNewFile();
+				
+				try (DataOutputStream out = new DataOutputStream(new GZIPOutputStream(new FileOutputStream(saveFile)))) {
+					renderManager.writeState(out);
+				}
+			} catch (IOException ex) {
+				Logger.global.logError("Failed to save render-manager state!", ex);
+			}
+		}
 		
 		//save renders
 		for (MapType map : maps.values()) {
@@ -244,13 +301,14 @@ public class SpongePlugin {
 		//clear resources and configs
 		renderManager = null;
 		webServer = null;
+		updateHandler = null;
 		resourcePack = null;
 		config = null;
 		maps.clear();
 		worlds.clear();
 		
 		loaded = false;
-	}
+	} 
 	
 	public synchronized void reload() throws IOException, NoSuchResourceException {
 		unload();

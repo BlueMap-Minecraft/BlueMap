@@ -111,4 +111,15 @@ public class MapUpdateHandler {
 		return updateBuffer.size();
 	}
 	
+	public void flushTileBuffer() {
+		RenderManager renderManager = SpongePlugin.getInstance().getRenderManager();
+		
+		synchronized (updateBuffer) {
+			for (MapType map : updateBuffer.keySet()) {
+				renderManager.createTickets(map, updateBuffer.get(map));
+			}
+			updateBuffer.clear();
+		}
+	}
+	
 }

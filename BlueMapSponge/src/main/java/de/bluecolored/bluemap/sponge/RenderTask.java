@@ -1,9 +1,14 @@
 package de.bluecolored.bluemap.sponge;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Deque;
+import java.util.List;
 import java.util.UUID;
 
 import com.flowpowered.math.vector.Vector2d;
@@ -21,8 +26,6 @@ public class RenderTask {
 	private long additionalRunTime;
 	private int renderedTiles;
 	
-	private UUID taskOwner;
-	
 	public RenderTask(String name, MapType mapType) {
 		this.uuid = UUID.randomUUID();
 		this.name = name;
@@ -31,7 +34,6 @@ public class RenderTask {
 		this.firstTileTime = -1;
 		this.additionalRunTime = 0;
 		this.renderedTiles = 0;
-		this.taskOwner = null;
 	}
 	
 	public void optimizeQueue() {
@@ -132,8 +134,54 @@ public class RenderTask {
 		return renderTiles.isEmpty();
 	}
 	
-	public UUID getTaskOwner() {
-		return taskOwner;
+	public void write(DataOutputStream out) throws IOException {
+		synchronized (renderTiles) {
+			pause();
+			
+			out.writeUTF(name);
+			out.writeUTF(mapType.getId());
+			
+			out.writeLong(additionalRunTime);
+			out.writeInt(renderedTiles);
+		
+			out.writeInt(renderTiles.size());
+			for (Vector2i tile : renderTiles) {
+				out.writeInt(tile.getX());
+				out.writeInt(tile.getY());
+			}
+		}
+	}
+	
+	public static RenderTask read(DataInputStream in) throws IOException {
+		String name = in.readUTF();
+		String mapId = in.readUTF();
+		
+		MapType mapType = null;
+		for (MapType map : SpongePlugin.getInstance().getMapTypes()) {
+			if (map.getId().equals(mapId)) {
+				mapType = map;
+				break;
+			}
+		}
+		if (mapType == null) throw new IOException("Map type with id '" + mapId + "' does not exist!");
+		
+		RenderTask task = new RenderTask(name, mapType);
+		
+		task.additionalRunTime = in.readLong();
+		task.renderedTiles = in.readInt();
+		
+		int tileCount = in.readInt();
+		List<Vector2i> tiles = new ArrayList<>();
+		for (int i = 0; i < tileCount; i++) {
+			int x = in.readInt();
+			int y = in.readInt();
+			Vector2i tile = new Vector2i(x, y);
+			tiles.add(tile);
+		}
+		
+		task.addTiles(tiles);
+		
+		return task;
 	}
 	
 }
