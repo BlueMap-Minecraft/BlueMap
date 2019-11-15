@@ -73,12 +73,17 @@ public class RenderManager extends Thread {
 				
 				if (v1Dist < v2Dist) return -1;
 				if (v1Dist > v2Dist) return 1;
+
+				if (v1SortGridPos.getY() < v2SortGridPos.getY()) return -1;
+				if (v1SortGridPos.getY() > v2SortGridPos.getY()) return 1;
+				if (v1SortGridPos.getX() < v2SortGridPos.getX()) return -1;
+				if (v1SortGridPos.getX() > v2SortGridPos.getX()) return 1;
 			}
 			
-			if (v1.getY() < v1.getY()) return -1;
-			if (v1.getY() > v1.getY()) return 1;
-			if (v1.getX() < v1.getX()) return -1;
-			if (v1.getX() > v1.getX()) return 1;
+			if (v1.getY() < v2.getY()) return -1;
+			if (v1.getY() > v2.getY()) return 1;
+			if (v1.getX() < v2.getX()) return -1;
+			if (v1.getX() > v2.getX()) return 1;
 			
 			return 0;
 		});
