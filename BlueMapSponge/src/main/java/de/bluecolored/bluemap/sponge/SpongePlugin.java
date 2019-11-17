@@ -56,7 +56,8 @@ import com.google.common.collect.Lists;
 
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.config.ConfigurationFile;
-import de.bluecolored.bluemap.core.config.ConfigurationFile.MapConfig;
+import de.bluecolored.bluemap.core.config.Configuration;
+import de.bluecolored.bluemap.core.config.Configuration.MapConfig;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.metrics.Metrics;
@@ -95,7 +96,7 @@ public class SpongePlugin {
 	@Inject
     private MetricsLite2 metrics;
 	
-	private ConfigurationFile config;
+	private Configuration config;
 	private ResourcePack resourcePack;
 
 	private Map<UUID, World> worlds;
@@ -129,10 +130,10 @@ public class SpongePlugin {
 		
 		//load configs
 		File configFile = getConfigPath().resolve("bluemap.conf").toFile();
-		config = ConfigurationFile.loadOrCreate(configFile);
+		config = ConfigurationFile.loadOrCreate(configFile).getConfig();
 		
 		//load resources
-		File defaultResourceFile = getConfigPath().resolve("resourcepacks").resolve("client.jar").toFile();
+		File defaultResourceFile = getConfigPath().resolve("resourcepacks").resolve("minecraft-client.jar").toFile();
 		File textureExportFile = config.getWebDataPath().resolve("textures.json").toFile();
 		
 		if (!defaultResourceFile.exists()) {
@@ -162,8 +163,8 @@ public class SpongePlugin {
 			try {
 				CompoundTag levelSponge = (CompoundTag) NBTUtil.readTag(new File(worldFolder, "level_sponge.dat"));
 				CompoundTag spongeData = levelSponge.getCompoundTag("SpongeData");
-				long least = spongeData.getLong("UUIDLeast");
 				long most = spongeData.getLong("UUIDMost");
+				long least = spongeData.getLong("UUIDLeast");
 				worldUUID = new UUID(most, least);
 			} catch (Exception e) {
 				Logger.global.logError("Failed to load map '" + id + "': Failed to read level_sponge.dat", e);
@@ -232,7 +233,7 @@ public class SpongePlugin {
 			webSettings.setName(map.getName(), map.getId());
 			webSettings.setFrom(map.getTileRenderer(), map.getId());
 		}
-		for (ConfigurationFile.MapConfig map : config.getMapConfigs()) {
+		for (MapConfig map : config.getMapConfigs()) {
 			webSettings.setHiresViewDistance(map.getHiresViewDistance(), map.getId());
 			webSettings.setLowresViewDistance(map.getLowresViewDistance(), map.getId());
 		}
