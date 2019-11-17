@@ -1,6 +1,6 @@
 plugins {
-	id 'com.github.johnrengelman.shadow' version '5.1.0'
 	id 'java'
+	id 'com.github.johnrengelman.shadow' version '5.1.0'
 }
 
 allprojects {
@@ -27,7 +27,6 @@ allprojects {
 }
 
 dependencies {
-	compile project(':BlueMapCore')
 	compile project(':BlueMapCLI')
 	compile project(':BlueMapSponge')
 }

@@ -1,0 +1,18 @@
+[
+    {
+        "modid": "bluemap",
+        "name": "BlueMap",
+        "version": "0.0.0",
+        "description": "A 3d-map of your Minecraft worlds view-able in your browser using three.js (WebGL)",
+        "url": "https://ore.spongepowered.org/Blue/BlueMap",
+        "authorList": [
+            "Blue (TBlueF, Lukas Rieger)"
+        ],
+        "dependencies": [
+            "spongeapi@7.1.0"
+        ],
+        "requiredMods": [
+            "spongeapi@7.1.0"
+        ]
+    }
+]
