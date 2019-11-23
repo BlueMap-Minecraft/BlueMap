@@ -43,6 +43,7 @@ public class Configuration implements WebServerConfig {
 private String version;
 	
 	private boolean downloadAccepted = false;
+	private boolean metricsEnabled = false;
 	
 	private boolean webserverEnabled = true;
 	private int webserverPort = 8100;
@@ -61,6 +62,7 @@ private String version;
 	public Configuration(ConfigurationNode node) throws IOException {
 		version = node.getNode("version").getString("-");
 		downloadAccepted = node.getNode("accept-download").getBoolean(false);
+		metricsEnabled = node.getNode("metrics").getBoolean(false);
 		
 		dataPath = toFolder(node.getNode("data").getString("data"));
 		
@@ -155,6 +157,10 @@ private String version;
 	
 	public boolean isDownloadAccepted() {
 		return downloadAccepted;
+	}
+	
+	public boolean isMetricsEnabled() {
+		return metricsEnabled;
 	}
 	
 	public int getRenderThreadCount() {

@@ -42,7 +42,7 @@ import de.bluecolored.bluemap.core.render.WorldTile;
 import de.bluecolored.bluemap.core.world.ChunkNotGeneratedException;
 import de.bluecolored.bluemap.core.world.World;
 
-public class RenderManager extends Thread {
+public class RenderTask {
 
 	private World world;
 	private TileRenderer tileRenderer;
@@ -54,11 +54,9 @@ public class RenderManager extends Thread {
 	
 	private Thread[] threads;
 	
-	private Runnable onFinished;
-	
-	public RenderManager(World world, TileRenderer tileRenderer, Collection<Vector2i> tilesToRender, int threadCount) {
-		this.world = world;
-		this.tileRenderer = tileRenderer;
+	public RenderTask(MapType map, Collection<Vector2i> tilesToRender, int threadCount) {
+		this.world = map.getWorld();
+		this.tileRenderer = map.getTileRenderer();
 		
 		//Sort the chunks to opimize the chunk-cache usage of MCAWorld and generate the world in a nicer order, so you can see the first results early in the web-map during render
 		Vector2d sortGridSize = new Vector2d(20, 20).div(tileRenderer.getHiresModelManager().getTileSize().toDouble().div(16)).ceil().max(1, 1); //Find a good grid size to match the MCAWorlds chunk-cache size of 500
@@ -96,14 +94,7 @@ public class RenderManager extends Thread {
 		
 	}
 	
-	public synchronized void start(Runnable onFinished) {
-		this.onFinished = onFinished;
-		
-		start();
-	}
-	
-	@Override
-	public void run() {
+	public void render() {
 		this.startTime = System.currentTimeMillis();
 		
 		for (int i = 0; i < threads.length; i++) {
@@ -154,8 +145,6 @@ public class RenderManager extends Thread {
 		}
 		
 		tileRenderer.save();
-		
-		onFinished.run();
 	}
 	
 	private void renderThread() {

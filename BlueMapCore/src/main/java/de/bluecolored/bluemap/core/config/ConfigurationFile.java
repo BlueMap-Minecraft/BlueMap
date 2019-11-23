@@ -52,16 +52,23 @@ public class ConfigurationFile {
 		CONFIG_PLACEHOLDERS.add(new Placeholder("minecraft-client-version", ResourcePack.MINECRAFT_CLIENT_VERSION));
 	}
 	
+	private File configFile;
 	private Configuration config;
 	
 	private ConfigurationFile(File configFile) throws IOException {
+		this.configFile = configFile;
+		
 		ConfigurationLoader<CommentedConfigurationNode> configLoader = HoconConfigurationLoader.builder()
 				.setFile(configFile)
 				.build();
 		
 		CommentedConfigurationNode rootNode = configLoader.load();
 		
-		config = new Configuration(rootNode);
+		this.config = new Configuration(rootNode);
+	}
+	
+	public File getFile() {
+		return configFile;
 	}
 	
 	public Configuration getConfig() {
