@@ -37,6 +37,7 @@ import org.apache.commons.io.FileUtils;
 
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
+import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.commented.CommentedConfigurationNode;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
@@ -55,16 +56,33 @@ public class ConfigurationFile {
 	private File configFile;
 	private Configuration config;
 	
-	private ConfigurationFile(File configFile) throws IOException {
+	private ConfigurationFile(File configFile, File defaultValuesFile) throws IOException {
 		this.configFile = configFile;
 		
 		ConfigurationLoader<CommentedConfigurationNode> configLoader = HoconConfigurationLoader.builder()
 				.setFile(configFile)
 				.build();
-		
 		CommentedConfigurationNode rootNode = configLoader.load();
 		
+		// fill defaults
+		ConfigurationLoader<CommentedConfigurationNode> defaultConfigLoader = HoconConfigurationLoader.builder()
+				.setFile(defaultValuesFile)
+				.build();
+		CommentedConfigurationNode defaultRootNode = defaultConfigLoader.load();
+		fillDefaults(rootNode, defaultRootNode);
+		
 		this.config = new Configuration(rootNode);
+	}
+	
+	private void fillDefaults(ConfigurationNode rootNode, ConfigurationNode defaultRootNode) {
+		setDefault(rootNode.getNode("metrics"), defaultRootNode.getNode("metrics").getValue());
+		setDefault(rootNode.getNode("data"), defaultRootNode.getNode("data").getValue());
+		setDefault(rootNode.getNode("renderThreadCount"), defaultRootNode.getNode("renderThreadCount").getValue());
+		rootNode.getNode("web").mergeValuesFrom(defaultRootNode.getNode("web"));
+	}
+	
+	private void setDefault(ConfigurationNode node, Object value) {
+		if (node.isVirtual()) node.setValue(value);
 	}
 	
 	public File getFile() {
@@ -80,20 +98,22 @@ public class ConfigurationFile {
 	}
 	
 	public static ConfigurationFile loadOrCreate(File configFile, URL defaultConfig) throws IOException {
+		File tempDefaultFile = File.createTempFile("bluemap-defaults", ".conf");
+		FileUtils.copyURLToFile(defaultConfig, tempDefaultFile, 10000, 10000);
+		
 		if (!configFile.exists()) {
 			configFile.getParentFile().mkdirs();
 			
-			FileUtils.copyURLToFile(defaultConfig, configFile, 10000, 10000);
-			
 			//replace placeholder
-			String content = new String(Files.readAllBytes(configFile.toPath()), StandardCharsets.UTF_8);
+			String content = new String(Files.readAllBytes(tempDefaultFile.toPath()), StandardCharsets.UTF_8);
 			for (Placeholder placeholder : CONFIG_PLACEHOLDERS) {
 				content = placeholder.apply(content);
 			}
+			
 			Files.write(configFile.toPath(), content.getBytes(StandardCharsets.UTF_8));
 		}
 		
-		return new ConfigurationFile(configFile);
+		return new ConfigurationFile(configFile, tempDefaultFile);
 	}
 	
 	public static void registerPlaceholder(Placeholder placeholder) {
