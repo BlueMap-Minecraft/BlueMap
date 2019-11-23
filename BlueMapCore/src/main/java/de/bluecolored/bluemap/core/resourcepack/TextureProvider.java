@@ -30,7 +30,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +43,7 @@ import com.flowpowered.math.vector.Vector4f;
 
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack.Resource;
 import de.bluecolored.bluemap.core.util.ConfigUtil;
+import de.bluecolored.bluemap.core.util.FileUtil;
 import de.bluecolored.bluemap.core.util.MathUtil;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.gson.GsonConfigurationLoader;
@@ -77,29 +77,34 @@ public class TextureProvider {
 	}
 	
 	public void generate(ResourcePack resources) throws IOException {
-		indexMap.clear();
-		textures.clear();
-
-		Path textureRoot = Paths.get("assets", "minecraft", "textures");
+		String[] texturesPathPattern = {"assets", ".*", "textures", "block", "*"}; 
+		
 		for (Entry<Path, Resource> entry : resources.getAllResources().entrySet()){
-			if (entry.getKey().startsWith(textureRoot) && entry.getKey().toString().endsWith(".png")){
-				BufferedImage image = ImageIO.read(entry.getValue().getStream());
-				if (image == null) throw new IOException("Failed to read Image: " + entry.getKey());
-				
-				String path = textureRoot.relativize(entry.getKey()).normalize().toString();
+			Path key = entry.getKey();
+			if (FileUtil.matchPath(key, texturesPathPattern) && key.toString().endsWith(".png")){
+				String path = key.subpath(3, key.getNameCount()).normalize().toString();
 				String id = path
 						.substring(0, path.length() - ".png".length())
 						.replace(File.separatorChar, '/');
+
+				BufferedImage image = ImageIO.read(entry.getValue().getStream());
+				if (image == null) throw new IOException("Failed to read Image: " + key);
 				
 				Texture texture = new Texture(id, image);
-				textures.add(texture);
-				indexMap.put(id, textures.size() - 1);
+				
+				//update if existing else add new
+				if (indexMap.containsKey(id)) {
+					int index = indexMap.get(id);
+					textures.set(index, texture);
+				} else {
+					textures.add(texture);
+					indexMap.put(id, textures.size() - 1);
+				}
 			}
 		}
 	}
 	
 	public void load(File file) throws IOException {
-		
 		indexMap.clear();
 		textures.clear();
 		

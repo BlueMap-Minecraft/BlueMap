@@ -47,10 +47,12 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.util.FileUtil;
 import de.bluecolored.bluemap.core.world.BlockState;
 
 public class ResourcePack {
-	
+
+	public static final String MINECRAFT_CLIENT_VERSION = "1.14.4";
 	public static final String MINECRAFT_CLIENT_URL = "https://launcher.mojang.com/v1/objects/8c325a0c5bd674dd747d6ebaa4c791fd363ad8a9/client.jar";
 	
 	private Map<Path, Resource> resources;
@@ -62,37 +64,31 @@ public class ResourcePack {
 	public ResourcePack(List<File> dataSources, File textureExportFile) throws IOException, NoSuchResourceException {
 		this.resources = new HashMap<>();
 		
-		load(dataSources);
+		//load resources in order
+		for (File resource : dataSources) overrideResourcesWith(resource);
 		
 		blockStateResourceCache = CacheBuilder.newBuilder()
 				.maximumSize(10000)
 				.build();
 		
 		textureProvider = new TextureProvider();
+		
 		if (textureExportFile.exists()){
 			textureProvider.load(textureExportFile);
-		} else {
-			textureProvider.generate(this);
-			textureProvider.save(textureExportFile);
 		}
+
+		textureProvider.generate(this); //if loaded add missing textures
+		textureProvider.save(textureExportFile);
 		
 		blockColorProvider = new BlockColorProvider(this);
 	}
 	
-	private void load(List<File> dataSources) throws IOException {
-		resources.clear();
-		
-		//load resourcepacks in order
-		for (File resourcePath : dataSources) overrideResourcesWith(resourcePath);
-	}
-	
-	private void overrideResourcesWith(File resourcePath){
-		if (resourcePath.isFile() && resourcePath.getName().endsWith(".zip") || resourcePath.getName().endsWith(".jar")){
-			overrideResourcesWithZipFile(resourcePath);
-			return;
+	private void overrideResourcesWith(File resource){
+		if (resource.isFile() && resource.getName().endsWith(".zip") || resource.getName().endsWith(".jar")){
+			overrideResourcesWithZipFile(resource);
+		} else {
+			overrideResourcesWith(resource, Paths.get(""));
 		}
-		
-		overrideResourcesWith(resourcePath, Paths.get(""));
 	}
 	
 	private void overrideResourcesWith(File resource, Path resourcePath){
@@ -103,7 +99,7 @@ public class ResourcePack {
 			return;
 		}
 		
-		if (resource.isFile()){
+		if (resource.isFile() && isActualResourcePath(resourcePath)){
 			try {
 				byte[] bytes = Files.readAllBytes(resource.toPath());
 				resources.put(resourcePath, new Resource(bytes));
@@ -124,15 +120,9 @@ public class ResourcePack {
 				if (file.isDirectory()) continue;
 				
 				Path resourcePath = Paths.get("", file.getName().split("/"));
-				if (
-						!resourcePath.startsWith(Paths.get("assets", "minecraft", "blockstates")) &&
-						!resourcePath.startsWith(Paths.get("assets", "minecraft", "models", "block")) &&
-						!resourcePath.startsWith(Paths.get("assets", "minecraft", "textures", "block")) &&
-						!resourcePath.startsWith(Paths.get("assets", "minecraft", "textures", "colormap"))
-				) continue;
+				if (!isActualResourcePath(resourcePath)) continue;
 				
 				InputStream fileInputStream = zipFile.getInputStream(file);
-				
 				ByteArrayOutputStream bos = new ByteArrayOutputStream(Math.max(8, (int) file.getSize()));
 				int bytesRead;
 				while ((bytesRead = fileInputStream.read(buffer)) != -1){
@@ -144,6 +134,17 @@ public class ResourcePack {
 		} catch (IOException e) {
 			Logger.global.logError("Failed to load resource: " + resourceFile, e);
 		}
+	}
+	
+	private boolean isActualResourcePath(Path path) {
+		String[] blockstatesPattern = {"assets", ".*", "blockstates", "*"};
+		String[] modelsPattern = {"assets", ".*", "models", "blocks?", "*"};
+		String[] texturesPattern = {"assets", ".*", "textures", "block|colormap", "*"};
+		
+		return 
+				FileUtil.matchPath(path, blockstatesPattern) || 
+				FileUtil.matchPath(path, modelsPattern) || 
+				FileUtil.matchPath(path, texturesPattern);
 	}
 	
 	public BlockStateResource getBlockStateResource(BlockState block) throws NoSuchResourceException, InvalidResourceDeclarationException {

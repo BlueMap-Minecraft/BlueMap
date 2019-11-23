@@ -92,6 +92,10 @@ private String version;
 		if (!file.exists() && !file.mkdirs()) throw new IOException("Invalid configuration: Folders to path '" + file.getAbsolutePath() + "' could not be created");
 		return file.toPath();
 	}
+
+	public Path getDataPath() {
+		return dataPath;
+	}
 	
 	public boolean isWebserverEnabled() {
 		return webserverEnabled;

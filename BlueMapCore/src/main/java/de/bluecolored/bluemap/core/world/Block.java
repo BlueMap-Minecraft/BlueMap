@@ -96,6 +96,7 @@ public abstract class Block {
 			.add("biome", getBiome())
 			.add("blocklight", getBlockLightLevel())
 			.add("sunlight", getSunLightLevel())
+			.add("state", getBlock())
 			.toString();
 	}
 

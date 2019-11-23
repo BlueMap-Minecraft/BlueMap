@@ -380,6 +380,8 @@ public class MCAWorld implements World {
 					levelData.getInt("SpawnZ")
 					);
 			
+
+			CHUNK_CACHE.invalidateAll();
 			return new MCAWorld(
 					worldFolder, 
 					uuid, 

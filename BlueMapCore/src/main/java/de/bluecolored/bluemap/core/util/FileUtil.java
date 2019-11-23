@@ -29,6 +29,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 import com.flowpowered.math.vector.Vector2i;
 
@@ -71,6 +72,32 @@ public class FileUtil {
 			sleepTime = (long) Math.min(Math.ceil(sleepTime * 1.5), 1000);
 			if (System.currentTimeMillis() > timeout) throw new InterruptedException();
 		}
+	}
+	
+	/**
+	 * The path-elements are being matched to the pattern-elements, 
+	 * each pattern-element can be a regex pattern to match against one path-element or "*" to represent any number of arbitrary elements (lazy: until the next pattern matches).
+	 */
+	public static boolean matchPath(Path path, String... pattern) {
+		int p = 0;
+		for (int i = 0; i < path.getNameCount(); i++) {
+			while (pattern[p].equals("*")) {
+				p++;
+				
+				if (pattern.length >= p) return true;
+			}
+
+			if (Pattern.matches(pattern[p], path.getName(i).toString())) {
+				p++;
+				continue;
+			}
+			
+			if (p > 0 && pattern[p-1].equals("*")) continue;
+			
+			return false;
+		}
+		
+		return true;
 	}
 	
 }

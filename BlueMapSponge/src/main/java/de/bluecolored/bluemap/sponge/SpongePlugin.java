@@ -31,8 +31,11 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
@@ -52,12 +55,11 @@ import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.scheduler.SpongeExecutorService;
 
 import com.flowpowered.math.vector.Vector2i;
-import com.google.common.collect.Lists;
 
 import de.bluecolored.bluemap.core.BlueMap;
-import de.bluecolored.bluemap.core.config.ConfigurationFile;
 import de.bluecolored.bluemap.core.config.Configuration;
 import de.bluecolored.bluemap.core.config.Configuration.MapConfig;
+import de.bluecolored.bluemap.core.config.ConfigurationFile;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.metrics.Metrics;
@@ -130,10 +132,10 @@ public class SpongePlugin {
 		
 		//load configs
 		File configFile = getConfigPath().resolve("bluemap.conf").toFile();
-		config = ConfigurationFile.loadOrCreate(configFile).getConfig();
+		config = ConfigurationFile.loadOrCreate(configFile, SpongePlugin.class.getResource("/bluemap-sponge.conf")).getConfig();
 		
 		//load resources
-		File defaultResourceFile = getConfigPath().resolve("resourcepacks").resolve("minecraft-client.jar").toFile();
+		File defaultResourceFile = config.getDataPath().resolve("minecraft-client-" + ResourcePack.MINECRAFT_CLIENT_VERSION + ".jar").toFile();
 		File textureExportFile = config.getWebDataPath().resolve("textures.json").toFile();
 		
 		if (!defaultResourceFile.exists()) {
@@ -146,7 +148,17 @@ public class SpongePlugin {
 			return;
 		}
 		
-		resourcePack = new ResourcePack(Lists.newArrayList(defaultResourceFile), textureExportFile);
+		//find more resource packs
+		File resourcePackFolder = getConfigPath().resolve("resourcepacks").toFile();
+		resourcePackFolder.mkdirs();
+		File[] resourcePacks = resourcePackFolder.listFiles();
+		Arrays.sort(resourcePacks);
+		
+		List<File> resources = new ArrayList<>(resourcePacks.length + 1);
+		resources.add(defaultResourceFile);
+		for (File file : resourcePacks) resources.add(file);
+
+		resourcePack = new ResourcePack(resources, textureExportFile);
 		
 		//load maps
 		for (MapConfig mapConfig : config.getMapConfigs()) {

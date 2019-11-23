@@ -97,6 +97,7 @@ public class Commands {
 			.permission("bluemap.reload")
 			.executor((source, args) -> {
 				try {
+					source.sendMessage(Text.of(TextColors.GOLD, "Reloading BlueMap..."));
 					plugin.reload();
 					
 					if (plugin.isLoaded()) {
