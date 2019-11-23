@@ -38,6 +38,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -123,12 +124,9 @@ public class SpongePlugin {
 		instance = this;
 	}
 	
-	public synchronized void load() throws IOException, NoSuchResourceException {
+	public synchronized void load() throws ExecutionException, IOException, NoSuchResourceException, InterruptedException {
 		if (loaded) return;
 		unload(); //ensure nothing is left running (from a failed load or something)
-		
-		//init commands
-		Sponge.getCommandManager().register(this, new Commands(this).createRootCommand(), "bluemap");
 		
 		//load configs
 		File configFile = getConfigPath().resolve("bluemap.conf").toFile();
@@ -143,7 +141,9 @@ public class SpongePlugin {
 			unload();
 			
 			//only register reload command
-			Sponge.getCommandManager().register(this, new Commands(this).createStandaloneReloadCommand(), "bluemap");
+			syncExecutor.submit(() -> //just to be save we do this on the server thread
+				Sponge.getCommandManager().register(this, new Commands(this).createStandaloneReloadCommand(), "bluemap")
+			).get();
 			
 			return;
 		}
@@ -232,7 +232,9 @@ public class SpongePlugin {
 		}
 		
 		//start map updater
-		updateHandler = new MapUpdateHandler();
+		syncExecutor.submit(() ->
+			this.updateHandler = new MapUpdateHandler()
+		).get();
 		
 		//create/update webfiles
 		WebFilesManager webFilesManager = new WebFilesManager(config.getWebRoot());
@@ -257,6 +259,11 @@ public class SpongePlugin {
 			webServer.updateWebfiles();
 			webServer.start();
 		}
+
+		//init commands
+		syncExecutor.submit(() -> //just to be save we do this on the server thread
+			Sponge.getCommandManager().register(this, new Commands(this).createRootCommand(), "bluemap")
+		).get();
 		
 		//metrics
 		Sponge.getScheduler().createTaskBuilder()
@@ -272,19 +279,24 @@ public class SpongePlugin {
 	}
 	
 	public synchronized void unload() {
+		try {
+			syncExecutor.submit(() -> { //just to be save we do this on the server thread
+				//unregister commands
+				Sponge.getCommandManager().getOwnedBy(this).forEach(Sponge.getCommandManager()::removeMapping);
+
+				//unregister listeners
+				if (updateHandler != null) Sponge.getEventManager().unregisterListeners(updateHandler);
+				
+				//stop scheduled tasks
+				Sponge.getScheduler().getScheduledTasks(this).forEach(t -> t.cancel());
+			}).get();
+		} catch (InterruptedException | ExecutionException unexpected) {
+			throw new RuntimeException("Unexpected exception!", unexpected); //should never happen
+		}
 		
 		//stop services
 		if (renderManager != null) renderManager.stop();
 		if (webServer != null) webServer.close();
-		
-		//unregister listeners
-		if (updateHandler != null) Sponge.getEventManager().unregisterListeners(updateHandler);
-		
-		//unregister commands
-		Sponge.getCommandManager().getOwnedBy(this).forEach(Sponge.getCommandManager()::removeMapping);
-		
-		//stop scheduled tasks
-		Sponge.getScheduler().getScheduledTasks(this).forEach(t -> t.cancel());
 		
 		//save render-manager state
 		if (updateHandler != null) updateHandler.flushTileBuffer(); //first write all buffered tiles to the render manager to save them too
@@ -320,7 +332,7 @@ public class SpongePlugin {
 		loaded = false;
 	} 
 	
-	public synchronized void reload() throws IOException, NoSuchResourceException {
+	public synchronized void reload() throws IOException, NoSuchResourceException, ExecutionException, InterruptedException {
 		unload();
 		load();
 	}
@@ -330,37 +342,42 @@ public class SpongePlugin {
 		syncExecutor = Sponge.getScheduler().createSyncExecutor(this);
 		asyncExecutor = Sponge.getScheduler().createAsyncExecutor(this);
 		
-		try {
-			load();
-			if (isLoaded()) Logger.global.logInfo("Loaded!");
-		} catch (IOException | NoSuchResourceException e) {
-			Logger.global.logError("Failed to load!", e);
-		}
+		asyncExecutor.execute(() -> {
+			try {
+				load();
+				if (isLoaded()) Logger.global.logInfo("Loaded!");
+			} catch (Exception e) {
+				Logger.global.logError("Failed to load!", e);
+			}
+		});
 	}
 
 	@Listener
 	public void onServerStop(GameStoppingEvent evt) {
-		unload();
-		Logger.global.logInfo("Saved and stopped!");
+		asyncExecutor.execute(() -> {
+			unload();
+			Logger.global.logInfo("Saved and stopped!");
+		});
 	}
 	
 	@Listener
 	public void onServerReload(GameReloadEvent evt) {
-		try {
-			reload();
-			Logger.global.logInfo("Reloaded!");
-		} catch (IOException | NoSuchResourceException e) {
-			Logger.global.logError("Failed to load!", e);
-		}
+		asyncExecutor.execute(() -> {
+			try {
+				Logger.global.logInfo("Reloading...");
+				reload();
+				Logger.global.logInfo("Reloaded!");
+			} catch (Exception e) {
+				Logger.global.logError("Failed to load!", e);
+			}
+		});
 	}
 	
 	private void handleMissingResources(File resourceFile, File configFile) {
 		if (config.isDownloadAccepted()) {
 			
 			//download file async
-			Sponge.getScheduler().createTaskBuilder()
-				.async()
-				.execute(() -> {
+			asyncExecutor.execute(() -> {
 					try {
 						Logger.global.logInfo("Downloading " + ResourcePack.MINECRAFT_CLIENT_URL + " to " + resourceFile + " ...");
 						ResourcePack.downloadDefaultResource(resourceFile);
@@ -369,20 +386,16 @@ public class SpongePlugin {
 						return;
 					}
 
-					//reload bluemap on server thread
-					Sponge.getScheduler().createTaskBuilder()
-					.execute(() -> {
-						try {
-							Logger.global.logInfo("Download finished! Reloading...");
-							reload();
-							Logger.global.logInfo("Reloaded!");
-						} catch (IOException | NoSuchResourceException e) {
-							Logger.global.logError("Failed to reload BlueMap!", e);
-						}
-					})
-					.submit(SpongePlugin.getInstance());
-				})
-				.submit(SpongePlugin.getInstance());
+					// and reload
+					Logger.global.logInfo("Download finished! Reloading...");
+					try {
+						reload();
+					} catch (Exception e) {
+						Logger.global.logError("Failed to reload Bluemap!", e);
+						return;
+					}
+					Logger.global.logInfo("Reloaded!");
+				});
 			
 		} else {
 			Logger.global.logWarning("BlueMap is missing important resources!");

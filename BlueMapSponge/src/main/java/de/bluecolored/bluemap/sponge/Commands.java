@@ -1,6 +1,5 @@
 package de.bluecolored.bluemap.sponge;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -28,7 +27,6 @@ import com.google.common.collect.Lists;
 
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
-import de.bluecolored.bluemap.core.resourcepack.NoSuchResourceException;
 import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.ChunkNotGeneratedException;
 import de.bluecolored.bluemap.core.world.World;
@@ -96,23 +94,26 @@ public class Commands {
 			.description(Text.of("Reloads all resources and configuration-files"))
 			.permission("bluemap.reload")
 			.executor((source, args) -> {
-				try {
 					source.sendMessage(Text.of(TextColors.GOLD, "Reloading BlueMap..."));
-					plugin.reload();
 					
-					if (plugin.isLoaded()) {
-						source.sendMessage(Text.of(TextColors.GREEN, "BlueMap reloaded!"));
-						return CommandResult.success();
-					} else {
-						source.sendMessage(Text.of(TextColors.RED, "Could not load BlueMap! See the console for details!"));
-						return CommandResult.empty();
-					}
-				} catch (IOException | NoSuchResourceException ex) {
-					Logger.global.logError("Failed to reload BlueMap!", ex);
-					
-					source.sendMessage(Text.of(TextColors.RED, "There was an error reloading BlueMap! See the console for details!"));
-					return CommandResult.empty();
-				}
+					plugin.getAsyncExecutor().submit(() -> {
+						try {
+							plugin.reload();
+							
+							if (plugin.isLoaded()) {
+								source.sendMessage(Text.of(TextColors.GREEN, "BlueMap reloaded!"));
+							} else {
+								source.sendMessage(Text.of(TextColors.RED, "Could not load BlueMap! See the console for details!"));
+							}
+	
+						} catch (Exception ex) {
+							Logger.global.logError("Failed to reload BlueMap!", ex);
+							
+							source.sendMessage(Text.of(TextColors.RED, "There was an error reloading BlueMap! See the console for details!"));
+						}
+					});
+
+					return CommandResult.success();
 			})
 			.build();
 	}
