@@ -215,7 +215,7 @@ public class SpongePlugin {
 		
 		//load render-manager state
 		try {
-			File saveFile = configurationDir.resolve("rmstate").toFile();
+			File saveFile = config.getDataPath().resolve("rmstate").toFile();
 			saveFile.getParentFile().mkdirs();
 			if (saveFile.exists()) {
 				try (DataInputStream in = new DataInputStream(new GZIPInputStream(new FileInputStream(saveFile)))) {
@@ -288,7 +288,7 @@ public class SpongePlugin {
 		if (updateHandler != null) updateHandler.flushTileBuffer(); //first write all buffered tiles to the render manager to save them too
 		if (renderManager != null) {
 			try {
-				File saveFile = configurationDir.resolve("rmstate").toFile();
+				File saveFile = config.getDataPath().resolve("rmstate").toFile();
 				saveFile.getParentFile().mkdirs();
 				if (saveFile.exists()) saveFile.delete();
 				saveFile.createNewFile();
