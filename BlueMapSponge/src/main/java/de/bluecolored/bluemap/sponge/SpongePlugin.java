@@ -140,11 +140,7 @@ public class SpongePlugin {
 			handleMissingResources(defaultResourceFile, configFile);
 			unload();
 			
-			//only register reload command
-			syncExecutor.submit(() -> //just to be save we do this on the server thread
-				Sponge.getCommandManager().register(this, new Commands(this).createStandaloneReloadCommand(), "bluemap")
-			).get();
-			
+			Sponge.getCommandManager().register(this, new Commands(this).createStandaloneReloadCommand(), "bluemap");
 			return;
 		}
 		
@@ -232,9 +228,7 @@ public class SpongePlugin {
 		}
 		
 		//start map updater
-		syncExecutor.submit(() ->
-			this.updateHandler = new MapUpdateHandler()
-		).get();
+		this.updateHandler = new MapUpdateHandler();
 		
 		//create/update webfiles
 		WebFilesManager webFilesManager = new WebFilesManager(config.getWebRoot());
@@ -261,9 +255,7 @@ public class SpongePlugin {
 		}
 
 		//init commands
-		syncExecutor.submit(() -> //just to be save we do this on the server thread
-			Sponge.getCommandManager().register(this, new Commands(this).createRootCommand(), "bluemap")
-		).get();
+		Sponge.getCommandManager().register(this, new Commands(this).createRootCommand(), "bluemap");
 		
 		//metrics
 		Sponge.getScheduler().createTaskBuilder()
@@ -279,20 +271,14 @@ public class SpongePlugin {
 	}
 	
 	public synchronized void unload() {
-		try {
-			syncExecutor.submit(() -> { //just to be save we do this on the server thread
-				//unregister commands
-				Sponge.getCommandManager().getOwnedBy(this).forEach(Sponge.getCommandManager()::removeMapping);
+		//unregister commands
+		Sponge.getCommandManager().getOwnedBy(this).forEach(Sponge.getCommandManager()::removeMapping);
 
-				//unregister listeners
-				if (updateHandler != null) Sponge.getEventManager().unregisterListeners(updateHandler);
-				
-				//stop scheduled tasks
-				Sponge.getScheduler().getScheduledTasks(this).forEach(t -> t.cancel());
-			}).get();
-		} catch (InterruptedException | ExecutionException unexpected) {
-			throw new RuntimeException("Unexpected exception!", unexpected); //should never happen
-		}
+		//unregister listeners
+		if (updateHandler != null) Sponge.getEventManager().unregisterListeners(updateHandler);
+
+		//stop scheduled tasks
+		Sponge.getScheduler().getScheduledTasks(this).forEach(t -> t.cancel());
 		
 		//stop services
 		if (renderManager != null) renderManager.stop();
@@ -354,10 +340,8 @@ public class SpongePlugin {
 
 	@Listener
 	public void onServerStop(GameStoppingEvent evt) {
-		asyncExecutor.execute(() -> {
-			unload();
-			Logger.global.logInfo("Saved and stopped!");
-		});
+		unload();
+		Logger.global.logInfo("Saved and stopped!");
 	}
 	
 	@Listener
