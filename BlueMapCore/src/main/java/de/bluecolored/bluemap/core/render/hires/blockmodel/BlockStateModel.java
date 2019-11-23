@@ -27,7 +27,7 @@ package de.bluecolored.bluemap.core.render.hires.blockmodel;
 import com.flowpowered.math.vector.Vector4f;
 
 import de.bluecolored.bluemap.core.model.Model;
-import de.bluecolored.bluemap.core.util.MathUtil;
+import de.bluecolored.bluemap.core.util.MathUtils;
 
 /**
  * A model with some extra information about the BlockState it represents
@@ -62,7 +62,7 @@ public class BlockStateModel extends Model {
 	}
 	
 	public void mergeMapColor(Vector4f mapColor) {		
-		this.mapColor = MathUtil.blendColors(this.mapColor, mapColor);
+		this.mapColor = MathUtils.blendColors(this.mapColor, mapColor);
 	}
 	
 }

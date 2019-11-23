@@ -42,8 +42,8 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3f;
 
 import de.bluecolored.bluemap.core.threejs.BufferGeometry;
-import de.bluecolored.bluemap.core.util.FileUtil;
-import de.bluecolored.bluemap.core.util.MathUtil;
+import de.bluecolored.bluemap.core.util.FileUtils;
+import de.bluecolored.bluemap.core.util.MathUtils;
 import de.bluecolored.bluemap.core.util.ModelUtils;
 
 public class LowresModel {
@@ -113,7 +113,7 @@ public class LowresModel {
 			}
 			
 			try {
-				FileUtil.waitForFile(file, 10, TimeUnit.SECONDS);
+				FileUtils.waitForFile(file, 10, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {
 				throw new IOException("Failed to get write-access to file: " + file, e);
 			}
@@ -163,7 +163,7 @@ public class LowresModel {
 				Vector3f p2 = new Vector3f(model.position[f + 3], model.position[f + 4], model.position[f + 5]);
 				Vector3f p3 = new Vector3f(model.position[f + 6], model.position[f + 7], model.position[f + 8]);
 				
-				Vector3f n = MathUtil.getSurfaceNormal(p1, p2, p3);
+				Vector3f n = MathUtils.getSurfaceNormal(p1, p2, p3);
 				
 				model.normal[f + 0] = n.getX();  model.normal[f + 1] = n.getY();  model.normal[f + 2] = n.getZ();
 				model.normal[f + 3] = n.getX();  model.normal[f + 4] = n.getY();  model.normal[f + 5] = n.getZ();

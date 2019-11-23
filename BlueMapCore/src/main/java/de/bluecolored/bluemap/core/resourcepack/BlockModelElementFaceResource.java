@@ -27,7 +27,7 @@ package de.bluecolored.bluemap.core.resourcepack;
 import com.flowpowered.math.vector.Vector3f;
 import com.flowpowered.math.vector.Vector4f;
 
-import de.bluecolored.bluemap.core.util.ConfigUtil;
+import de.bluecolored.bluemap.core.util.ConfigUtils;
 import de.bluecolored.bluemap.core.util.Direction;
 import ninja.leaping.configurate.ConfigurationNode;
 
@@ -49,7 +49,7 @@ public class BlockModelElementFaceResource {
 			this.uv = getDefaultUV(declaration.getKey().toString(), element.getFrom(), element.getTo());
 			
 			ConfigurationNode uv = declaration.getNode("uv");
-			if (!uv.isVirtual()) this.uv = ConfigUtil.readVector4f(declaration.getNode("uv"));
+			if (!uv.isVirtual()) this.uv = ConfigUtils.readVector4f(declaration.getNode("uv"));
 			
 			this.texture = declaration.getNode("texture").getString();
 			this.resolvedTexture = null;

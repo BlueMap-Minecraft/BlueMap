@@ -29,7 +29,7 @@ import com.flowpowered.math.matrix.Matrix3f;
 import com.flowpowered.math.vector.Vector2f;
 import com.flowpowered.math.vector.Vector3f;
 
-import de.bluecolored.bluemap.core.util.MathUtil;
+import de.bluecolored.bluemap.core.util.MathUtils;
 
 public class Face {
 	
@@ -202,7 +202,7 @@ public class Face {
 	}
 
 	public Vector3f getFaceNormal(){
-		return MathUtil.getSurfaceNormal(p1, p2, p3);
+		return MathUtils.getSurfaceNormal(p1, p2, p3);
 	}
 	
 	private void normlizeNormals(){

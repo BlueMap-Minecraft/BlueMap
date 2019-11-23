@@ -45,7 +45,7 @@ import de.bluecolored.bluemap.core.resourcepack.NoSuchTextureException;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resourcepack.TextureProvider.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
-import de.bluecolored.bluemap.core.util.MathUtil;
+import de.bluecolored.bluemap.core.util.MathUtils;
 import de.bluecolored.bluemap.core.util.WeighedArrayList;
 import de.bluecolored.bluemap.core.world.Block;
 
@@ -74,7 +74,7 @@ public class ResourceModelBuilder {
 		BlockStateModel model = new BlockStateModel();
 		
 		for (WeighedArrayList<BlockModelResource> bmrList : resource.getModelResources()){
-			BlockModelResource bmr = bmrList.get((int) Math.floor(MathUtil.hashToFloat(context.getPosition(), 23489756) * bmrList.size()));
+			BlockModelResource bmr = bmrList.get((int) Math.floor(MathUtils.hashToFloat(context.getPosition(), 23489756) * bmrList.size()));
 			
 			model.merge(fromModelResource(bmr));
 		}

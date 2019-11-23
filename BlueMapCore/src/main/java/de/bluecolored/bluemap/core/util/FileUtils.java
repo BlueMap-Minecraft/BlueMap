@@ -33,9 +33,9 @@ import java.util.regex.Pattern;
 
 import com.flowpowered.math.vector.Vector2i;
 
-public class FileUtil {
+public class FileUtils {
 
-	private FileUtil(){}
+	private FileUtils(){}
 	
 	public static File coordsToFile(Path root, Vector2i coords, String fileType){
 		String path = "x" + coords.getX() + "z" + coords.getY();

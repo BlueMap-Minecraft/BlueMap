@@ -29,9 +29,9 @@ import com.flowpowered.math.vector.Vector3f;
 import com.flowpowered.math.vector.Vector3i;
 import com.flowpowered.math.vector.Vector4f;
 
-public class MathUtil {
+public class MathUtils {
 
-	private MathUtil() {}
+	private MathUtils() {}
 	
 	public static Vector3d getSurfaceNormal(Vector3d p1, Vector3d p2, Vector3d p3){
 		Vector3d u = p2.sub(p1);

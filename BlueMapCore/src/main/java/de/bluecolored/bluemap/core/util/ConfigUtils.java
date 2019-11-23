@@ -34,9 +34,9 @@ import com.flowpowered.math.vector.Vector4i;
 
 import ninja.leaping.configurate.ConfigurationNode;
 
-public class ConfigUtil {
+public class ConfigUtils {
 
-	private ConfigUtil(){}
+	private ConfigUtils(){}
 	
 	public static Vector2i readVector2i(ConfigurationNode vectorNode){
 		if (vectorNode.hasListChildren()){

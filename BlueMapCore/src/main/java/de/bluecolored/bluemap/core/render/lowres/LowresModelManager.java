@@ -48,7 +48,7 @@ import com.flowpowered.math.vector.Vector4f;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.render.hires.HiresModel;
 import de.bluecolored.bluemap.core.threejs.BufferGeometry;
-import de.bluecolored.bluemap.core.util.FileUtil;
+import de.bluecolored.bluemap.core.util.FileUtils;
 
 public class LowresModelManager {
 	
@@ -167,7 +167,7 @@ public class LowresModelManager {
 	 * Returns the file for a tile
 	 */
 	public File getFile(Vector2i tile){
-		return FileUtil.coordsToFile(fileRoot, tile, "json.gz");
+		return FileUtils.coordsToFile(fileRoot, tile, "json.gz");
 	}
 	
 	private LowresModel getModel(UUID world, Vector2i tile) throws IOException {

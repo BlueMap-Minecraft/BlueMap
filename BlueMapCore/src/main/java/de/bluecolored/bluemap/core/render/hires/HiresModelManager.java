@@ -43,7 +43,7 @@ import de.bluecolored.bluemap.core.render.RenderSettings;
 import de.bluecolored.bluemap.core.render.WorldTile;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.AABB;
-import de.bluecolored.bluemap.core.util.FileUtil;
+import de.bluecolored.bluemap.core.util.FileUtils;
 import de.bluecolored.bluemap.core.world.ChunkNotGeneratedException;
 
 public class HiresModelManager {
@@ -162,7 +162,7 @@ public class HiresModelManager {
 	 * Returns the file for a tile
 	 */
 	public File getFile(Vector2i tilePos){
-		return FileUtil.coordsToFile(fileRoot, tilePos, "json.gz");
+		return FileUtils.coordsToFile(fileRoot, tilePos, "json.gz");
 	}
 	
 }

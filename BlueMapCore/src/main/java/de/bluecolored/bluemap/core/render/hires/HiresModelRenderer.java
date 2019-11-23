@@ -39,7 +39,7 @@ import de.bluecolored.bluemap.core.resourcepack.NoSuchResourceException;
 import de.bluecolored.bluemap.core.resourcepack.NoSuchTextureException;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.AABB;
-import de.bluecolored.bluemap.core.util.MathUtil;
+import de.bluecolored.bluemap.core.util.MathUtils;
 import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.ChunkNotGeneratedException;
 import de.bluecolored.bluemap.core.world.WorldChunk;
@@ -91,12 +91,12 @@ public class HiresModelRenderer {
 					
 					blockModel.translate(new Vector3f(x, y, z).sub(min.toFloat()));
 
-					color = MathUtil.overlayColors(blockModel.getMapColor(), color);
+					color = MathUtils.overlayColors(blockModel.getMapColor(), color);
 					
 					//TODO: quick hack to random offset grass
 					if (block.getBlock().getId().equals("grass")){
-						float dx = (MathUtil.hashToFloat(x, y, z, 123984) - 0.5f) * 0.75f;
-						float dz = (MathUtil.hashToFloat(x, y, z, 345542) - 0.5f) * 0.75f;
+						float dx = (MathUtils.hashToFloat(x, y, z, 123984) - 0.5f) * 0.75f;
+						float dz = (MathUtils.hashToFloat(x, y, z, 345542) - 0.5f) * 0.75f;
 						blockModel.translate(new Vector3f(dx, 0, dz));
 					}
 					

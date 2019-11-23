@@ -41,13 +41,11 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import org.apache.commons.io.FileUtils;
-
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.util.FileUtil;
+import de.bluecolored.bluemap.core.util.FileUtils;
 import de.bluecolored.bluemap.core.world.BlockState;
 
 public class ResourcePack {
@@ -142,9 +140,9 @@ public class ResourcePack {
 		String[] texturesPattern = {"assets", ".*", "textures", "block|colormap", "*"};
 		
 		return 
-				FileUtil.matchPath(path, blockstatesPattern) || 
-				FileUtil.matchPath(path, modelsPattern) || 
-				FileUtil.matchPath(path, texturesPattern);
+				FileUtils.matchPath(path, blockstatesPattern) || 
+				FileUtils.matchPath(path, modelsPattern) || 
+				FileUtils.matchPath(path, texturesPattern);
 	}
 	
 	public BlockStateResource getBlockStateResource(BlockState block) throws NoSuchResourceException, InvalidResourceDeclarationException {
@@ -193,7 +191,7 @@ public class ResourcePack {
 	public static void downloadDefaultResource(File file) throws IOException {
 		if (file.exists()) file.delete();
 		file.getParentFile().mkdirs();
-		FileUtils.copyURLToFile(new URL(MINECRAFT_CLIENT_URL), file, 10000, 10000);
+		org.apache.commons.io.FileUtils.copyURLToFile(new URL(MINECRAFT_CLIENT_URL), file, 10000, 10000);
 	}
 	
 }

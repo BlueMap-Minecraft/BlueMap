@@ -27,7 +27,7 @@ package de.bluecolored.bluemap.core.resourcepack;
 import com.flowpowered.math.vector.Vector3f;
 
 import de.bluecolored.bluemap.core.util.Axis;
-import de.bluecolored.bluemap.core.util.ConfigUtil;
+import de.bluecolored.bluemap.core.util.ConfigUtils;
 import ninja.leaping.configurate.ConfigurationNode;
 
 public class BlockModelElementResource {
@@ -49,13 +49,13 @@ public class BlockModelElementResource {
 		this.model = model;
 		
 		try {
-			this.from = ConfigUtil.readVector3f(declaration.getNode("from"));
-			this.to = ConfigUtil.readVector3f(declaration.getNode("to"));
+			this.from = ConfigUtils.readVector3f(declaration.getNode("from"));
+			this.to = ConfigUtils.readVector3f(declaration.getNode("to"));
 			
 			this.rotAngle = 0f;
 			ConfigurationNode rotation = declaration.getNode("rotation");
 			if (!rotation.isVirtual()){
-				this.rotOrigin = ConfigUtil.readVector3f(rotation.getNode("origin"));
+				this.rotOrigin = ConfigUtils.readVector3f(rotation.getNode("origin"));
 				this.rotAxis = Axis.fromString(rotation.getNode("axis").getString());
 				this.rotAngle = rotation.getNode("angle").getFloat();
 				this.rotRescale = rotation.getNode("rescale").getBoolean(false);

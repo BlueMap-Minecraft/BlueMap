@@ -42,9 +42,9 @@ import javax.imageio.ImageIO;
 import com.flowpowered.math.vector.Vector4f;
 
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack.Resource;
-import de.bluecolored.bluemap.core.util.ConfigUtil;
-import de.bluecolored.bluemap.core.util.FileUtil;
-import de.bluecolored.bluemap.core.util.MathUtil;
+import de.bluecolored.bluemap.core.util.ConfigUtils;
+import de.bluecolored.bluemap.core.util.FileUtils;
+import de.bluecolored.bluemap.core.util.MathUtils;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.gson.GsonConfigurationLoader;
 
@@ -81,7 +81,7 @@ public class TextureProvider {
 		
 		for (Entry<Path, Resource> entry : resources.getAllResources().entrySet()){
 			Path key = entry.getKey();
-			if (FileUtil.matchPath(key, texturesPathPattern) && key.toString().endsWith(".png")){
+			if (FileUtils.matchPath(key, texturesPathPattern) && key.toString().endsWith(".png")){
 				String path = key.subpath(3, key.getNameCount()).normalize().toString();
 				String id = path
 						.substring(0, path.length() - ".png".length())
@@ -117,7 +117,7 @@ public class TextureProvider {
 					n.getNode("id").getString(), 
 					n.getNode("texture").getString(), 
 					n.getNode("transparent").getBoolean(false),
-					ConfigUtil.readVector4f(n.getNode("color"))
+					ConfigUtils.readVector4f(n.getNode("color"))
 				);
 			
 			textures.add(t);
@@ -140,7 +140,7 @@ public class TextureProvider {
 			n.getNode("id").setValue(t.getId());
 			n.getNode("texture").setValue(t.getBase64());
 			n.getNode("transparent").setValue(t.isHalfTransparent());
-			ConfigUtil.writeVector4f(n.getNode("color"), t.getColor());
+			ConfigUtils.writeVector4f(n.getNode("color"), t.getColor());
 		}
 		
 		loader.save(node);
@@ -194,7 +194,7 @@ public class TextureProvider {
 			        double green = (double)((pixel >> 8) & 0xff) / (double) 0xff;
 			        double blue = (double)((pixel >> 0) & 0xff) / (double) 0xff;
 			        
-			        color = MathUtil.blendColors(new Vector4f(red, green, blue, alpha), color);
+			        color = MathUtils.blendColors(new Vector4f(red, green, blue, alpha), color);
 				}
 			}
 			
