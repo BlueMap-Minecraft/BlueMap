@@ -130,7 +130,7 @@ class ChunkAnvil112 extends Chunk {
 			int blockId = this.blocks[blockByteIndex] & 0xFF;
 			
 			if (this.add.length > 0) {
-				blockId = blockId & (getByteHalf(this.add[blockHalfByteIndex], largeHalf) << 8);
+				blockId = blockId | (getByteHalf(this.add[blockHalfByteIndex], largeHalf) << 8);
 			}
 			
 			int blockData = getByteHalf(this.data[blockHalfByteIndex], largeHalf);
