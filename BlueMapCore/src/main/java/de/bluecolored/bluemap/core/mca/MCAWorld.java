@@ -174,7 +174,7 @@ public class MCAWorld implements World {
 	private BlockState getExtendedBlockState(Chunk chunk, Vector3i pos) throws ChunkNotGeneratedException {
 		BlockState blockState = chunk.getBlockState(pos);
 		
-		if (chunk instanceof ChunkAnvil112) { // only use extensions if old format chunk (1.12) in the new format block-states are saved witch extensions
+		if (chunk instanceof ChunkAnvil112) { // only use extensions if old format chunk (1.12) in the new format block-states are saved with extensions
 			for (BlockStateExtension ext : BLOCK_STATE_EXTENSIONS.get(blockState.getFullId())) {
 				blockState = ext.extend(this, pos, blockState);
 			}
