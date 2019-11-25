@@ -54,6 +54,7 @@ import org.spongepowered.api.event.game.state.GameStartingServerEvent;
 import org.spongepowered.api.event.game.state.GameStoppingEvent;
 import org.spongepowered.api.plugin.Plugin;
 import org.spongepowered.api.scheduler.SpongeExecutorService;
+import org.spongepowered.api.world.storage.WorldProperties;
 
 import com.flowpowered.math.vector.Vector2i;
 
@@ -327,6 +328,11 @@ public class SpongePlugin {
 	public void onServerStart(GameStartingServerEvent evt) {
 		syncExecutor = Sponge.getScheduler().createSyncExecutor(this);
 		asyncExecutor = Sponge.getScheduler().createAsyncExecutor(this);
+		
+		//save all world properties to generate level_sponge.dat files
+		for (WorldProperties properties : Sponge.getServer().getAllWorldProperties()) {
+			Sponge.getServer().saveWorldProperties(properties);
+		}
 		
 		asyncExecutor.execute(() -> {
 			try {
