@@ -13,11 +13,6 @@ jobs:
         java-version: 1.8
     - name: Build with Gradle
       run: ./gradlew shadowJar
-      
-  artifact:
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
     - uses: actions/upload-artifact@v1
       with:
         name: artifact
