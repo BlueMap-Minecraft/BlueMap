@@ -1,12 +1,12 @@
 {
 	"default": "@foliage",
-	"minecraft:water" : "@water",
-	"minecraft:grass_block" : "@grass",
-	"minecraft:grass" : "@grass",
-	"minecraft:tall_grass" : "@grass",
-	"minecraft:fern" : "@grass",
-	"minecraft:large_fern" : "@grass",
-	"minecraft:redstone_wire" : "#ff0000",
-	"minecraft:birch_leaves" : "#86a863",
-	"minecraft:spruce_leaves" : "#51946b"
+	"minecraft:water": "@water",
+	"minecraft:grass_block": "@grass",
+	"minecraft:grass": "@grass",
+	"minecraft:tall_grass": "@grass",
+	"minecraft:fern": "@grass",
+	"minecraft:large_fern": "@grass",
+	"minecraft:redstone_wire": "#ff0000",
+	"minecraft:birch_leaves": "#86a863",
+	"minecraft:spruce_leaves": "#51946b"
 }

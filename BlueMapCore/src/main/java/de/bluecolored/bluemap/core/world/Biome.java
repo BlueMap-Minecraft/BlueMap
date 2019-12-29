@@ -96,9 +96,9 @@ public class Biome {
 		biome.ordinal = node.getNode("id").getInt(biome.ordinal);
 		biome.humidity = node.getNode("humidity").getFloat(biome.humidity);
 		biome.temp = node.getNode("temp").getFloat(biome.temp);
-		try { biome.waterColor = MathUtils.color3FromInt(ConfigUtils.readInt(node.getNode("watercolor"))); 				} catch (NumberFormatException ignored) {}
-		try { biome.overlayFoliageColor = MathUtils.color4FromInt(ConfigUtils.readInt(node.getNode("foliagecolor"))); 	} catch (NumberFormatException ignored) {}
-		try { biome.overlayGrassColor = MathUtils.color4FromInt(ConfigUtils.readInt(node.getNode("grasscolor"))); 		} catch (NumberFormatException ignored) {}
+		try { biome.waterColor = MathUtils.color3FromInt(ConfigUtils.readColorInt(node.getNode("watercolor"))); 				} catch (NumberFormatException ignored) {}
+		try { biome.overlayFoliageColor = MathUtils.color4FromInt(ConfigUtils.readColorInt(node.getNode("foliagecolor"))); 	} catch (NumberFormatException ignored) {}
+		try { biome.overlayGrassColor = MathUtils.color4FromInt(ConfigUtils.readColorInt(node.getNode("grasscolor"))); 		} catch (NumberFormatException ignored) {}
 		
 		return biome;
 	}

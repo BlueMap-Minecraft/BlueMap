@@ -133,12 +133,12 @@ public class ConfigUtils {
 	}
 	
 	/**
-	 * Returns an integer The value can be a normal integer, an integer in String-Format, or a string in hexadecimal format prefixed with #. 
+	 * Returns an color-integer. The value can be a normal integer, an integer in String-Format, or a string in hexadecimal format prefixed with # (css-style: e.g. #f16 becomes #ff1166). 
 	 * @param node The Configuration Node with the value
 	 * @return The parsed Integer
 	 * @throws NumberFormatException If the value is not formatted correctly or if there is no value present.
 	 */
-	public static int readInt(ConfigurationNode node) throws NumberFormatException {
+	public static int readColorInt(ConfigurationNode node) throws NumberFormatException {
 		Object value = node.getValue();
 
 		if (value == null) throw new NumberFormatException("No value!");
@@ -150,7 +150,11 @@ public class ConfigUtils {
 		String val = value.toString();
 
 		if (val.charAt(0) == '#') {
-			return Integer.parseInt(val.substring(1), 16);
+			val = val.substring(1);
+			if (val.length() == 3) val = "f" + val;
+			if (val.length() == 4) val = "" + val.charAt(0) + val.charAt(0) + val.charAt(1) + val.charAt(1) + val.charAt(2) + val.charAt(2) + val.charAt(3) + val.charAt(3);
+			if (val.length() == 6) val = "ff" + val;
+			return Integer.parseUnsignedInt(val, 16);
 		}
 		
 		return Integer.parseInt(val);

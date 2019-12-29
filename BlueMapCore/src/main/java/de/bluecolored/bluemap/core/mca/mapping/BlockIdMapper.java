@@ -42,7 +42,7 @@ public class BlockIdMapper {
 		mappings = new HashMap<>();
 		
 		GsonConfigurationLoader loader = GsonConfigurationLoader.builder()
-				.setURL(getClass().getResource("/blockIdMappings.json"))
+				.setURL(getClass().getResource("/blockIds.json"))
 				.build();
 		
 		ConfigurationNode node = loader.load();

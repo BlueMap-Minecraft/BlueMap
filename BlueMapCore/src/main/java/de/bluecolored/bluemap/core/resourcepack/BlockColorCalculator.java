@@ -84,7 +84,7 @@ public class BlockColorCalculator {
 				colorFunction = this::getWaterAverageColor;
 				break;
 			default:
-				final Vector3f color = MathUtils.color3FromInt(ConfigUtils.readInt(entry.getValue()));
+				final Vector3f color = MathUtils.color3FromInt(ConfigUtils.readColorInt(entry.getValue()));
 				colorFunction = context -> color;
 				break;
 			}
