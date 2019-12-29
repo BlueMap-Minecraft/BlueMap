@@ -22,31 +22,66 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.mca.mapping;
+package de.bluecolored.bluemap.core.resourcepack;
 
-public class LightData {
-	
-	public static final LightData ZERO = new LightData(0, 0);
-	public static final LightData FULL = new LightData(15, 15); 
-	
-	private final int skyLight, blockLight;
-	
-	public LightData(int skyLight, int blockLight) {		
-		this.skyLight = skyLight;
-		this.blockLight = blockLight;
-	}
+import com.flowpowered.math.vector.Vector4f;
 
-	public int getSkyLight() {
-		return skyLight;
+public class Texture {
+	
+	private final int id;
+	private final String path;
+	private Vector4f color;
+	private boolean isHalfTransparent;
+	private String texture;
+	
+	protected Texture(int id, String path, Vector4f color, boolean halfTransparent, String texture) {
+		this.id = id;
+		this.path = path;
+		this.color = color;
+		this.isHalfTransparent = halfTransparent;
+		this.texture = texture;
 	}
 	
-	public int getBlockLight() {
-		return blockLight;
+	public int getId() {
+		return id;
+	}
+	
+	public String getPath() {
+		return path;
+	}
+	
+	/**
+	 * Returns the calculated median color of the {@link Texture}.
+	 * @return The median color of this {@link Texture}
+	 */
+	public Vector4f getColor() {
+		return color;
+	}
+	
+	/**
+	 * Returns whether the {@link Texture} has half-transparent pixels or not.
+	 * @return <code>true</code> if the {@link Texture} has half-transparent pixels, <code>false</code> if not
+	 */
+	public boolean isHalfTransparent() {
+		return isHalfTransparent;
+	}
+	
+	public String getTexture() {
+		return texture;
 	}
 	
 	@Override
-	public String toString() {
-		return "LightData[B:" + getBlockLight() + "|S:" + getSkyLight() + "]";
+	public int hashCode() {
+		return id;
+	}
+	
+	@Override
+	public boolean equals(Object obj) {
+		if (obj instanceof Texture) {
+			return ((Texture) obj).getId() == id;
+		}
+		
+		return false;
 	}
 	
 }

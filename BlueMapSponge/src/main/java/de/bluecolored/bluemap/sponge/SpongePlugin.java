@@ -45,6 +45,7 @@ import java.util.zip.GZIPOutputStream;
 
 import javax.inject.Inject;
 
+import org.apache.commons.io.FileUtils;
 import org.bstats.sponge.MetricsLite2;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.config.ConfigDir;
@@ -68,7 +69,7 @@ import de.bluecolored.bluemap.core.metrics.Metrics;
 import de.bluecolored.bluemap.core.render.TileRenderer;
 import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.render.lowres.LowresModelManager;
-import de.bluecolored.bluemap.core.resourcepack.NoSuchResourceException;
+import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.web.BlueMapWebServer;
 import de.bluecolored.bluemap.core.web.WebFilesManager;
@@ -125,7 +126,7 @@ public class SpongePlugin {
 		instance = this;
 	}
 	
-	public synchronized void load() throws ExecutionException, IOException, NoSuchResourceException, InterruptedException {
+	public synchronized void load() throws ExecutionException, IOException, InterruptedException, ParseResourceException {
 		if (loaded) return;
 		unload(); //ensure nothing is left running (from a failed load or something)
 		
@@ -133,8 +134,14 @@ public class SpongePlugin {
 		File configFile = getConfigPath().resolve("bluemap.conf").toFile();
 		config = ConfigurationFile.loadOrCreate(configFile, SpongePlugin.class.getResource("/bluemap-sponge.conf")).getConfig();
 		
+		File blockColorsConfigFile = getConfigPath().resolve("blockColors.json").toFile();
+		if (!blockColorsConfigFile.exists()) {
+			FileUtils.copyURLToFile(SpongePlugin.class.getResource("/blockColors.json"), blockColorsConfigFile, 10000, 10000);
+		}
+		
 		//load resources
 		File defaultResourceFile = config.getDataPath().resolve("minecraft-client-" + ResourcePack.MINECRAFT_CLIENT_VERSION + ".jar").toFile();
+		File resourceExtensionsFile = config.getDataPath().resolve("resourceExtensions.zip").toFile();
 		File textureExportFile = config.getWebDataPath().resolve("textures.json").toFile();
 		
 		if (!defaultResourceFile.exists()) {
@@ -144,6 +151,9 @@ public class SpongePlugin {
 			Sponge.getCommandManager().register(this, new Commands(this).createStandaloneReloadCommand(), "bluemap");
 			return;
 		}
+
+		resourceExtensionsFile.delete();
+		FileUtils.copyURLToFile(SpongePlugin.class.getResource("/resourceExtensions.zip"), resourceExtensionsFile, 10000, 10000);
 		
 		//find more resource packs
 		File resourcePackFolder = getConfigPath().resolve("resourcepacks").toFile();
@@ -154,8 +164,13 @@ public class SpongePlugin {
 		List<File> resources = new ArrayList<>(resourcePacks.length + 1);
 		resources.add(defaultResourceFile);
 		for (File file : resourcePacks) resources.add(file);
-
-		resourcePack = new ResourcePack(resources, textureExportFile);
+		resources.add(resourceExtensionsFile);
+		
+		resourcePack = new ResourcePack();
+		if (textureExportFile.exists()) resourcePack.loadTextureFile(textureExportFile);
+		resourcePack.load(resources);
+		resourcePack.loadBlockColorConfig(blockColorsConfigFile);
+		resourcePack.saveTextureFile(textureExportFile);
 		
 		//load maps
 		for (MapConfig mapConfig : config.getMapConfigs()) {
@@ -319,7 +334,7 @@ public class SpongePlugin {
 		loaded = false;
 	} 
 	
-	public synchronized void reload() throws IOException, NoSuchResourceException, ExecutionException, InterruptedException {
+	public synchronized void reload() throws IOException, ExecutionException, InterruptedException, ParseResourceException {
 		unload();
 		load();
 	}

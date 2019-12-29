@@ -22,55 +22,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.util;
+package de.bluecolored.bluemap.core.resourcepack;
 
-import java.util.ArrayList;
-import java.util.List;
+public class ParseResourceException extends Exception {
+	private static final long serialVersionUID = -2857915193389089307L;
 
-public class WeighedArrayList<E> extends ArrayList<E> implements List<E> {
-	private static final long serialVersionUID = 1L;
-	
-	public WeighedArrayList() {}
-	
-	public WeighedArrayList(int capacity) {
-		super(capacity);
+	public ParseResourceException() {
+		super();
 	}
 	
-	/**
-	 * Adds the element weight times to this list.
-	 * @return Always true
-	 */
-	public void add(E e, int weight) {
-		for (int i = 0; i < weight; i++){
-			add(e);
-		}
+	public ParseResourceException(String message) {
+		super(message);
 	}
 	
-	/**
-	 * Removes the first weight number of items that equal o from this list.<br>
-	 * @return The number of elements removed.
-	 */
-	public int remove(Object o, int weight) {
-		int removed = 0;
-		if (o == null){
-			for (int i = 0; i < size(); i++){
-				if (get(i) == null){
-					remove(i);
-					removed++;
-					if (removed >= weight) break;
-				}
-			}
-		} else {
-			for (int i = 0; i < size(); i++){
-				if (o.equals(get(i))){
-					remove(i);
-					removed++;
-					if (removed >= weight) break;
-				}
-			}
-		}
-		
-		return removed;
+	public ParseResourceException(String message, Throwable cause) {
+		super(message, cause);
 	}
 	
 }

@@ -38,7 +38,7 @@ public class CachedBlock extends Block {
 	private World world;
 	private Vector3i position;
 	private double sunLight, blockLight;
-	private String biome;
+	private Biome biome;
 	
 	private boolean isCullingCached;
 	private boolean isCulling;
@@ -113,7 +113,7 @@ public class CachedBlock extends Block {
 	}
 
 	@Override
-	public String getBiome() {
+	public Biome getBiome() {
 		if (biome == null){
 			biome = block.getBiome();
 		}

@@ -28,127 +28,231 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Vector;
 
-import com.google.common.base.Preconditions;
+import org.apache.commons.lang3.StringUtils;
 
-import de.bluecolored.bluemap.core.util.WeighedArrayList;
+import com.flowpowered.math.vector.Vector2i;
+import com.flowpowered.math.vector.Vector3i;
+
+import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.resourcepack.fileaccess.FileAccess;
+import de.bluecolored.bluemap.core.util.MathUtils;
 import de.bluecolored.bluemap.core.world.BlockState;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.gson.GsonConfigurationLoader;
 
 public class BlockStateResource {
-	private BlockState block;
-	private Collection<WeighedArrayList<BlockModelResource>> modelResources; 
+
+	private List<Variant> variants = new ArrayList<>();
+	private Collection<Variant> multipart = new ArrayList<>();
 	
-	protected BlockStateResource(BlockState block, ResourcePack resources) throws NoSuchResourceException, InvalidResourceDeclarationException {
-		this.block = Preconditions.checkNotNull(block);
-		this.modelResources = new Vector<>();
+	private BlockStateResource() {}
+	
+	public Collection<TransformedBlockModelResource> getModels(BlockState blockState){
+		return getModels(blockState, Vector3i.ZERO);
+	}
+	
+	public Collection<TransformedBlockModelResource> getModels(BlockState blockState, Vector3i pos){
+		Collection<TransformedBlockModelResource> models = new ArrayList<>();
+		for (Variant variant : variants) {
+			if (variant.condition.matches(blockState)) {
+				models.add(variant.getModel(pos));
+				return models;
+			}
+		}
 		
-		try {
-			ConfigurationNode data = GsonConfigurationLoader.builder()
-					.setSource(() -> new BufferedReader(new InputStreamReader(resources.getResource(getResourcePath()), StandardCharsets.UTF_8)))
+		for (Variant variant : multipart) {
+			if (variant.condition.matches(blockState)) {
+				models.add(variant.getModel(pos));
+			}
+		}
+		
+		return models;
+	}
+	
+	private class Variant {
+		
+		private PropertyCondition condition = PropertyCondition.all();
+		private Collection<Weighted<TransformedBlockModelResource>> models = new ArrayList<>();
+		
+		private double totalWeight;
+		
+		private Variant() {}
+		
+		public TransformedBlockModelResource getModel(Vector3i pos) {
+			double selection = MathUtils.hashToFloat(pos, 827364) * totalWeight; //random based on position
+			for (Weighted<TransformedBlockModelResource> w : models) {
+				selection -= w.weight;
+				if (selection < 0) return w.value;
+			}
+			
+			throw new RuntimeException("This line should never be reached!");
+		}
+		
+		public void updateTotalWeight() {
+			totalWeight = 0d;
+			for (Weighted<?> w : models) {
+				totalWeight += w.weight;
+			}
+		}
+		
+	}
+	
+	private static class Weighted<T> {
+		
+		private T value;
+		private double weight;
+		
+		public Weighted(T value, double weight) {
+			this.value = value;
+			this.weight = weight;
+		}
+		
+	}
+
+	public static Builder builder(FileAccess sourcesAccess, ResourcePack resourcePack) {
+		return new Builder(sourcesAccess, resourcePack);
+	}
+	
+	public static class Builder {
+		private final FileAccess sourcesAccess;
+		private final ResourcePack resourcePack;
+		
+		private Builder(FileAccess sourcesAccess, ResourcePack resourcePack) {
+			this.sourcesAccess = sourcesAccess;
+			this.resourcePack = resourcePack;
+		}
+		
+		public BlockStateResource build(String blockstateFile) throws IOException {
+			BlockStateResource blockState = new BlockStateResource();
+			ConfigurationNode config = GsonConfigurationLoader.builder()
+					.setSource(() -> new BufferedReader(new InputStreamReader(sourcesAccess.readFile(blockstateFile), StandardCharsets.UTF_8)))
 					.build()
 					.load();
 			
-			load(data, resources);
-		} catch (IOException e) {
-			throw new NoSuchResourceException("There is no definition for resource-id: " + block.getId(), e);
-		} catch (NullPointerException e){
-			throw new InvalidResourceDeclarationException(e);
-		}
-		
-		this.modelResources = Collections.unmodifiableCollection(this.modelResources);
-	}
-	
-	private void load(ConfigurationNode data, ResourcePack resources) throws InvalidResourceDeclarationException {
-		
-		//load variants
-		ConfigurationNode variants = data.getNode("variants");
-		for (Entry<Object, ? extends ConfigurationNode> e : variants.getChildrenMap().entrySet()){
-			if (getBlock().checkVariantCondition(e.getKey().toString())){
-				addModelResource(e.getValue(), resources);
-				break;
-			}
-		}
-		
-		//load multipart
-		ConfigurationNode multipart = data.getNode("multipart");
-		for (ConfigurationNode part : multipart.getChildrenList()){
-			
-			ConfigurationNode when = part.getNode("when");
-			if (when.isVirtual() || checkMultipartCondition(when)){
-				addModelResource(part.getNode("apply"), resources);
-			}
-		}
-		
-	}
-	
-	private void addModelResource(ConfigurationNode n, ResourcePack resources) throws InvalidResourceDeclarationException {
-		WeighedArrayList<BlockModelResource> models = new WeighedArrayList<>();
-		
-		if (n.hasListChildren()){
-			
-			//if it is a weighted list of alternative models, select one by random and weight
-			List<? extends ConfigurationNode> cList = n.getChildrenList();
-			for (ConfigurationNode c : cList){
-				int weight = c.getNode("weight").getInt(1);
-				models.add(new BlockModelResource(this, c, resources), weight);
+			//create variants
+			for (Entry<Object, ? extends ConfigurationNode> entry : config.getNode("variants").getChildrenMap().entrySet()) {
+				String conditionString = entry.getKey().toString();
+				ConfigurationNode transformedModelNode = entry.getValue();
+				
+				Variant variant = blockState.new Variant();
+				variant.condition = parseConditionString(conditionString);
+				variant.models = loadModels(transformedModelNode, blockstateFile);
+				
+				variant.updateTotalWeight();
+				
+				blockState.variants.add(variant);
 			}
 			
-		} else {
-			models.add(new BlockModelResource(this, n, resources));
-		}
-		
-		modelResources.add(models);
-	}
-	
-	private boolean checkMultipartCondition(ConfigurationNode when){
-		ConfigurationNode or = when.getNode("OR");
-		if (!or.isVirtual()){
-			for (ConfigurationNode condition : or.getChildrenList()){
-				if (checkMultipartCondition(condition)) return true;
+			//create multipart
+			for (ConfigurationNode partNode : config.getNode("multipart").getChildrenList()) {
+				Variant variant = blockState.new Variant();
+				ConfigurationNode whenNode = partNode.getNode("when");
+				if (!whenNode.isVirtual()) {
+					variant.condition = parseCondition(whenNode);
+				}
+				variant.models = loadModels(partNode.getNode("apply"), blockstateFile);
+				
+				variant.updateTotalWeight();
+				
+				blockState.multipart.add(variant);
 			}
 			
-			return false;
+			return blockState;
 		}
 		
-		Map<String, String> blockProperties = getBlock().getProperties();
-		for (Entry<Object, ? extends ConfigurationNode> e : when.getChildrenMap().entrySet()){
-			String key = e.getKey().toString();
-			String[] values = e.getValue().getString().split("\\|");
+		private Collection<Weighted<TransformedBlockModelResource>> loadModels(ConfigurationNode node, String blockstateFile) {
+			Collection<Weighted<TransformedBlockModelResource>> models = new ArrayList<>();
 			
-			boolean found = false;
-			for (String value : values){
-				if (value.equals(blockProperties.get(key))){
-					found = true;
-					break;
+			if (node.hasListChildren()) {
+				for (ConfigurationNode modelNode : node.getChildrenList()) {
+					try {
+						models.add(loadModel(modelNode));
+					} catch (ParseResourceException ex) {
+						Logger.global.logWarning("Failed to load a model trying to parse " + blockstateFile + ": " + ex);
+					}
+				}
+			} else if (node.hasMapChildren()) {
+				try {
+					models.add(loadModel(node));
+				} catch (ParseResourceException ex) {
+					Logger.global.logWarning("Failed to load a model trying to parse " + blockstateFile + ": " + ex);
 				}
 			}
 			
-			if (!found) return false;
+			return models;
 		}
 		
-		return true;
-	}
+		private Weighted<TransformedBlockModelResource> loadModel(ConfigurationNode node) throws ParseResourceException {
+			String modelPath = node.getNode("model").getString();
+			if (modelPath == null) throw new ParseResourceException("No model defined!");
+			
+			modelPath = ResourcePack.namespacedToAbsoluteResourcePath(modelPath, "models") + ".json";
+			
+			BlockModelResource model = resourcePack.blockModelResources.get(modelPath);
+			if (model == null) {
+				try {
+					model = BlockModelResource.builder(sourcesAccess, resourcePack).build(modelPath);
+				} catch (IOException e) {
+					throw new ParseResourceException("Failed to load model " + modelPath, e);
+				}
+				
+				resourcePack.blockModelResources.put(modelPath, model);
+			}
+			
+			Vector2i rotation = new Vector2i(
+					node.getNode("x").getInt(0), 
+					node.getNode("y").getInt(0)
+				);
+			boolean uvLock = node.getNode("uvlock").getBoolean(false);
+			
+			TransformedBlockModelResource transformedModel = new TransformedBlockModelResource(rotation, uvLock, model);
+			return new Weighted<TransformedBlockModelResource>(transformedModel, node.getNode("weight").getDouble(1d));
+		}
 
-	public BlockState getBlock() {
-		return block;
+		private PropertyCondition parseCondition(ConfigurationNode conditionNode) {
+			List<PropertyCondition> andConditions = new ArrayList<>();
+			for (Entry<Object, ? extends ConfigurationNode> entry : conditionNode.getChildrenMap().entrySet()) {
+				String key = entry.getKey().toString();
+				if (key.equals("OR")) {
+					List<PropertyCondition> orConditions = new ArrayList<>();
+					for (ConfigurationNode orConditionNode : entry.getValue().getChildrenList()) {
+						orConditions.add(parseCondition(orConditionNode));
+					}
+					andConditions.add(PropertyCondition.or(orConditions.toArray(new PropertyCondition[orConditions.size()])));
+				} else {
+					String[] values = StringUtils.split(entry.getValue().getString(""), '|');
+					andConditions.add(PropertyCondition.property(key, values));
+				}
+			}
+			
+			return PropertyCondition.and(andConditions.toArray(new PropertyCondition[andConditions.size()]));
+		}
+		
+		private PropertyCondition parseConditionString(String conditionString) {
+			List<PropertyCondition> conditions = new ArrayList<>();
+			if (!conditionString.isEmpty() && !conditionString.equals("default")) {
+				String[] conditionSplit = StringUtils.split(conditionString, ',');
+				for (String element : conditionSplit) {
+					String[] keyval = StringUtils.split(element, "=", 2); //TODO what if it is wrong formatted?
+					conditions.add(PropertyCondition.property(keyval[0], keyval[1]));
+				}
+			}
+			
+			PropertyCondition condition;
+			if (conditions.isEmpty()) {
+				condition = PropertyCondition.all();
+			} else if (conditions.size() == 1) {
+				condition = conditions.get(0);
+			} else {
+				condition = PropertyCondition.and(conditions.toArray(new PropertyCondition[conditions.size()]));
+			}
+			
+			return condition;
+		}
 	}
-	
-	public Collection<WeighedArrayList<BlockModelResource>> getModelResources(){
-		return modelResources;
-	}
-	
-	private Path getResourcePath(){
-		return Paths.get("assets", block.getNamespace(), "blockstates", block.getId() + ".json");
-	}
-	
 }

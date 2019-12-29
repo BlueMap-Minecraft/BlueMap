@@ -132,4 +132,28 @@ public class ConfigUtils {
 		vectorNode.getAppendedNode().setValue(v.getW());
 	}
 	
+	/**
+	 * Returns an integer The value can be a normal integer, an integer in String-Format, or a string in hexadecimal format prefixed with #. 
+	 * @param node The Configuration Node with the value
+	 * @return The parsed Integer
+	 * @throws NumberFormatException If the value is not formatted correctly or if there is no value present.
+	 */
+	public static int readInt(ConfigurationNode node) throws NumberFormatException {
+		Object value = node.getValue();
+
+		if (value == null) throw new NumberFormatException("No value!");
+		
+		if (value instanceof Number) {
+			return ((Number) value).intValue();
+		}
+
+		String val = value.toString();
+
+		if (val.charAt(0) == '#') {
+			return Integer.parseInt(val.substring(1), 16);
+		}
+		
+		return Integer.parseInt(val);
+	}
+	
 }

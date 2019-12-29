@@ -24,20 +24,31 @@
  */
 package de.bluecolored.bluemap.core.resourcepack;
 
-public class NoSuchTextureException extends Exception {
-	private static final long serialVersionUID = 0L;
+import com.flowpowered.math.vector.Vector2i;
 
-	public NoSuchTextureException() {}
+public class TransformedBlockModelResource {
+
+	private Vector2i rotation = Vector2i.ZERO;
+	private boolean uvLock = false;
 	
-	public NoSuchTextureException(Throwable e) {
-		super(e);
+	private BlockModelResource model;
+
+	public TransformedBlockModelResource(Vector2i rotation, boolean uvLock, BlockModelResource model) {
+		this.model = model;
+		this.rotation = rotation;
+		this.uvLock = uvLock;
 	}
 	
-	public NoSuchTextureException(String message){
-		super(message);
+	public Vector2i getRotation() {
+		return rotation;
 	}
 	
-	public NoSuchTextureException(String message, Throwable e) {
-		super(message, e);
+	public boolean isUVLock() {
+		return uvLock;
 	}
+	
+	public BlockModelResource getModel() {
+		return model;
+	}
+	
 }

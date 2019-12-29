@@ -24,20 +24,9 @@
  */
 package de.bluecolored.bluemap.core.resourcepack;
 
-public class InvalidResourceDeclarationException extends Exception {
-	private static final long serialVersionUID = 0L;
+public enum ModelType {
 
-	public InvalidResourceDeclarationException() {}
+	NORMAL,
+	LIQUID;
 	
-	public InvalidResourceDeclarationException(Throwable e) {
-		super(e);
-	}
-	
-	public InvalidResourceDeclarationException(String message){
-		super(message);
-	}
-	
-	public InvalidResourceDeclarationException(String message, Throwable e) {
-		super(message, e);
-	}
 }

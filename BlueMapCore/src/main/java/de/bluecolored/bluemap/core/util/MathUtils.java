@@ -33,6 +33,13 @@ public class MathUtils {
 
 	private MathUtils() {}
 	
+	/**
+	 * Calculates the surface-normal of a plane spanned between three vectors.
+	 * @param p1 The first vector
+	 * @param p2 The second vector
+	 * @param p3 The third vector
+	 * @return The calculated normal
+	 */
 	public static Vector3d getSurfaceNormal(Vector3d p1, Vector3d p2, Vector3d p3){
 		Vector3d u = p2.sub(p1);
 		Vector3d v = p3.sub(p1);
@@ -44,6 +51,13 @@ public class MathUtils {
 		return new Vector3d(nX, nY, nZ);
 	}
 
+	/**
+	 * Calculates the surface-normal of a plane spanned between three vectors.
+	 * @param p1 The first vector
+	 * @param p2 The second vector
+	 * @param p3 The third vector
+	 * @return The calculated normal
+	 */
 	public static Vector3f getSurfaceNormal(Vector3f p1, Vector3f p2, Vector3f p3) {
 		Vector3f u = p2.sub(p1);
 		Vector3f v = p3.sub(p1);
@@ -58,18 +72,42 @@ public class MathUtils {
 		return n;
 	}
 
+
+	/**
+	 * Hashes the provided position to a random float between 0 and 1.<br>
+	 * <br>
+	 * <i>(Implementation adapted from https://github.com/SpongePowered/SpongeAPI/blob/ecd761a70219e467dea47a09fc310e8238e9911f/src/main/java/org/spongepowered/api/extra/skylands/SkylandsUtil.java)</i>
+	 * 
+	 * @param pos The position to hash
+	 * @param seed A seed for the hashing
+	 * @return The hashed value between 0 and 1
+	 */
 	public static float hashToFloat(Vector3i pos, long seed) {
 		return hashToFloat(pos.getX(), pos.getY(), pos.getZ(), seed);
 	}
 	
 	/**
-	 * Adapted from https://github.com/SpongePowered/SpongeAPI/blob/ecd761a70219e467dea47a09fc310e8238e9911f/src/main/java/org/spongepowered/api/extra/skylands/SkylandsUtil.java
+	 * Hashes the provided position to a random float between 0 and 1.<br>
+	 * <br>
+	 * <i>(Implementation adapted from https://github.com/SpongePowered/SpongeAPI/blob/ecd761a70219e467dea47a09fc310e8238e9911f/src/main/java/org/spongepowered/api/extra/skylands/SkylandsUtil.java)</i>
+	 * 
+	 * @param x The x component of the position
+	 * @param y The y component of the position
+	 * @param z The z component of the position
+	 * @param seed A seed for the hashing
+	 * @return The hashed value between 0 and 1
 	 */
 	public static float hashToFloat(int x, int y, int z, long seed) {
         final long hash = x * 73428767 ^ y * 9122569 ^ z * 4382893 ^ seed * 457;
         return (hash * (hash + 456149) & 0x00ffffff) / (float) 0x01000000;
     }
 
+	/**
+	 * Blends two colors, taking into account the alpha component 
+	 * @param top The top color
+	 * @param bottom The bottom color
+	 * @return The merged color
+	 */
 	public static Vector4f blendColors(Vector4f top, Vector4f bottom){
 		if (top.getW() > 0 && bottom.getW() > 0){
 			float a = 1 - (1 - top.getW()) * (1 - bottom.getW());
@@ -84,6 +122,12 @@ public class MathUtils {
 		}
 	}
 	
+	/**
+	 * Overlays two colors, taking into account the alpha component 
+	 * @param top The top color
+	 * @param bottom The bottom color
+	 * @return The merged color
+	 */
 	public static Vector4f overlayColors(Vector4f top, Vector4f bottom){
 		if (top.getW() > 0 && bottom.getW() > 0){
 			float p = (1 - top.getW()) * bottom.getW();
@@ -97,6 +141,33 @@ public class MathUtils {
 		} else {
 			return top;
 		}
+	}
+	
+	/**
+	 * Creates a {@link Vector3f} representing the color from the integer 
+	 * @param color The color-int
+	 * @return The color-Vector
+	 */
+	public static Vector3f color3FromInt(int color){
+		return new Vector3f(
+						(color >> 16) & 0xFF,
+						(color >> 8) & 0xFF,
+						color & 0xFF
+					).div(0xFF);
+	}
+	
+	/**
+	 * Creates a {@link Vector4f} representing the color from the integer 
+	 * @param color The color-int
+	 * @return The color-Vector
+	 */
+	public static Vector4f color4FromInt(int color){
+		return new Vector4f(
+						(color >> 16) & 0xFF,
+						(color >> 8) & 0xFF,
+						color & 0xFF,
+						(color >> 24) & 0xFF
+					).div(0xFF);
 	}
 	
 }

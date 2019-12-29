@@ -22,45 +22,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.mca.mapping;
+package de.bluecolored.bluemap.core.world;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map.Entry;
-
-import de.bluecolored.bluemap.core.world.Biome;
-import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.gson.GsonConfigurationLoader;
-
-public class BiomeIdMapper {
-
-	private HashMap<Integer, Biome> biomes;
+public class LightData {
 	
-	public BiomeIdMapper() throws IOException {
-		biomes = new HashMap<>();
-		
-		GsonConfigurationLoader loader = GsonConfigurationLoader.builder()
-				.setURL(getClass().getResource("/biomes.json"))
-				.build();
-		
-		ConfigurationNode node = loader.load();
+	public static final LightData ZERO = new LightData(0, 0);
+	public static final LightData FULL = new LightData(15, 15); 
+	
+	private final int skyLight, blockLight;
+	
+	public LightData(int skyLight, int blockLight) {		
+		this.skyLight = skyLight;
+		this.blockLight = blockLight;
+	}
 
-		for (Entry<Object, ? extends ConfigurationNode> e : node.getChildrenMap().entrySet()){
-			String id = e.getKey().toString();
-			Biome biome = Biome.create(id, e.getValue());
-			biomes.put(biome.getOrdinal(), biome);
-		}	
-		
+	public int getSkyLight() {
+		return skyLight;
 	}
 	
-	public Biome get(int id) {
-		Biome biome = biomes.get(id);
-		if (biome == null) return Biome.DEFAULT;
-		return biome;
+	public int getBlockLight() {
+		return blockLight;
 	}
 	
-	public static BiomeIdMapper create() throws IOException {
-		return new BiomeIdMapper();
+	@Override
+	public String toString() {
+		return "LightData[B:" + getBlockLight() + "|S:" + getSkyLight() + "]";
 	}
 	
 }

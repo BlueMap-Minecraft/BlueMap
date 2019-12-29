@@ -45,6 +45,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.apache.commons.io.FileUtils;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
@@ -59,7 +60,7 @@ import de.bluecolored.bluemap.core.metrics.Metrics;
 import de.bluecolored.bluemap.core.render.TileRenderer;
 import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.render.lowres.LowresModelManager;
-import de.bluecolored.bluemap.core.resourcepack.NoSuchResourceException;
+import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.web.BlueMapWebServer;
 import de.bluecolored.bluemap.core.web.WebSettings;
@@ -69,17 +70,19 @@ public class BlueMapCLI {
 
 	private ConfigurationFile configFile;
 	private Configuration config;
+	private File configFolder;
 	private ResourcePack resourcePack;
 	private boolean forceRender;
 	
-	public BlueMapCLI(ConfigurationFile configFile, boolean forceRender) {
+	public BlueMapCLI(ConfigurationFile configFile, File configFolder, boolean forceRender) {
 		this.configFile = configFile;
 		this.config = configFile.getConfig();
+		this.configFolder = configFolder;
 		this.forceRender = forceRender;
 		this.resourcePack = null;
 	}
 	
-	public void renderMaps() throws IOException, NoSuchResourceException {
+	public void renderMaps() throws IOException {
 		Preconditions.checkNotNull(resourcePack);
 		
 		config.getWebDataPath().toFile().mkdirs();
@@ -125,6 +128,10 @@ public class BlueMapCLI {
 			webSettings.setLowresViewDistance(map.getLowresViewDistance(), map.getId());
 		}
 		webSettings.save();
+
+		Logger.global.logInfo("Writing textures.json ...");
+		File textureExportFile = config.getWebDataPath().resolve("textures.json").toFile();
+		resourcePack.saveTextureFile(textureExportFile);
 
 		for (MapType map : maps.values()) {
 			Logger.global.logInfo("Rendering map '" + map.getId() + "' ...");
@@ -187,12 +194,23 @@ public class BlueMapCLI {
 		webserver.start();
 	}
 	
-	private boolean loadResources() throws IOException, NoSuchResourceException {
+	private boolean loadResources() throws IOException, ParseResourceException {
+		Logger.global.logInfo("Loading resources...");
+		
 		File defaultResourceFile = config.getDataPath().resolve("minecraft-client-" + ResourcePack.MINECRAFT_CLIENT_VERSION + ".jar").toFile();
+		File resourceExtensionsFile = config.getDataPath().resolve("resourceExtensions.zip").toFile();
 		File textureExportFile = config.getWebDataPath().resolve("textures.json").toFile();
 		
 		if (!defaultResourceFile.exists()) {
 			if (!handleMissingResources(defaultResourceFile)) return false;
+		}
+		
+		resourceExtensionsFile.delete();
+		FileUtils.copyURLToFile(BlueMapCLI.class.getResource("/resourceExtensions.zip"), resourceExtensionsFile, 10000, 10000);
+		
+		File blockColorsConfigFile = new File(configFolder, "blockColors.json");
+		if (!blockColorsConfigFile.exists()) {
+			FileUtils.copyURLToFile(BlueMapCLI.class.getResource("/blockColors.json"), blockColorsConfigFile, 10000, 10000);
 		}
 		
 		//find more resource packs
@@ -204,8 +222,13 @@ public class BlueMapCLI {
 		List<File> resources = new ArrayList<>(resourcePacks.length + 1);
 		resources.add(defaultResourceFile);
 		for (File file : resourcePacks) resources.add(file);
+		resources.add(resourceExtensionsFile);
 		
-		resourcePack = new ResourcePack(resources, textureExportFile);
+		resourcePack = new ResourcePack();
+		if (textureExportFile.exists()) resourcePack.loadTextureFile(textureExportFile);
+		resourcePack.load(resources);
+		resourcePack.loadBlockColorConfig(blockColorsConfigFile);
+		resourcePack.saveTextureFile(textureExportFile);
 		
 		return true;
 	}
@@ -228,7 +251,7 @@ public class BlueMapCLI {
 		}
 	}
 	
-	public static void main(String[] args) throws IOException, NoSuchResourceException {
+	public static void main(String[] args) throws IOException, ParseResourceException {
 		CommandLineParser parser = new DefaultParser();
 		
 		try {
@@ -241,11 +264,13 @@ public class BlueMapCLI {
 			}
 			
 			//load config
-			File configFile = new File("bluemap.conf").getAbsoluteFile();
+			File configFolder = new File(".");
 			if (cmd.hasOption("c")) {
-				configFile = new File(cmd.getOptionValue("c"));
-				configFile.getParentFile().mkdirs();
+				configFolder = new File(cmd.getOptionValue("c"));
+				configFolder.mkdirs();
 			}
+			
+			File configFile = new File(configFolder, "bluemap.conf");
 			
 			boolean configCreated = !configFile.exists();
 			
@@ -256,7 +281,7 @@ public class BlueMapCLI {
 				return;
 			}
 			
-			BlueMapCLI bluemap = new BlueMapCLI(config, cmd.hasOption("f"));
+			BlueMapCLI bluemap = new BlueMapCLI(config, configFolder, cmd.hasOption("f"));
 
 			if (config.getConfig().isWebserverEnabled()) {
 				//start webserver
@@ -294,8 +319,8 @@ public class BlueMapCLI {
 				Option.builder("c")
 				.longOpt("config")
 				.hasArg()
-				.argName("config-file")
-				.desc("Sets path of the configuration file to use")
+				.argName("config-folder")
+				.desc("Sets path of the folder containing the configuration-files to use (configurations will be generated here if they don't exist)")
 				.build()
 			);
 

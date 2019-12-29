@@ -34,9 +34,7 @@ import de.bluecolored.bluemap.core.render.WorldTile;
 import de.bluecolored.bluemap.core.render.context.SlicedWorldChunkBlockContext;
 import de.bluecolored.bluemap.core.render.hires.blockmodel.BlockStateModel;
 import de.bluecolored.bluemap.core.render.hires.blockmodel.BlockStateModelFactory;
-import de.bluecolored.bluemap.core.resourcepack.InvalidResourceDeclarationException;
 import de.bluecolored.bluemap.core.resourcepack.NoSuchResourceException;
-import de.bluecolored.bluemap.core.resourcepack.NoSuchTextureException;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.AABB;
 import de.bluecolored.bluemap.core.util.MathUtils;
@@ -84,9 +82,9 @@ public class HiresModelRenderer {
 					BlockStateModel blockModel;
 					try {
 						blockModel = modelFactory.createFrom(block.getBlock(), new SlicedWorldChunkBlockContext(chunk, new Vector3i(x, y, z), renderSettings.getSliceY()), renderSettings);
-					} catch (NoSuchResourceException | InvalidResourceDeclarationException | NoSuchTextureException e) {
+					} catch (NoSuchResourceException e) {
 						blockModel = new BlockStateModel();						
-						Logger.global.noFloodDebug(block.getBlock().getId() + "-hiresModelRenderer-blockmodelerr", "Failed to create BlockModel for BlockState: " + block.getBlock() + " (" + e.toString() + ")");
+						Logger.global.noFloodDebug(block.getBlock().getFullId() + "-hiresModelRenderer-blockmodelerr", "Failed to create BlockModel for BlockState: " + block.getBlock() + " (" + e.toString() + ")");
 					}
 					
 					blockModel.translate(new Vector3f(x, y, z).sub(min.toFloat()));

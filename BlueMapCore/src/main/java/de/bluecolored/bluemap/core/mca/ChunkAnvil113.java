@@ -32,8 +32,9 @@ import com.flowpowered.math.vector.Vector3i;
 
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.mapping.BiomeIdMapper;
-import de.bluecolored.bluemap.core.mca.mapping.LightData;
+import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.BlockState;
+import de.bluecolored.bluemap.core.world.LightData;
 import net.querz.nbt.ByteArrayTag;
 import net.querz.nbt.CompoundTag;
 import net.querz.nbt.IntArrayTag;
@@ -111,7 +112,7 @@ class ChunkAnvil113 extends Chunk {
 	}
 
 	@Override
-	public String getBiomeId(Vector3i pos) {
+	public Biome getBiome(Vector3i pos) {
 		int x = pos.getX() & 0xF; // Math.floorMod(pos.getX(), 16)
 		int z = pos.getZ() & 0xF;
 		int biomeByteIndex = z * 16 + x;
@@ -148,7 +149,7 @@ class ChunkAnvil113 extends Chunk {
 					if (stateTag.containsKey("Properties")) {
 						CompoundTag propertiesTag = stateTag.getCompoundTag("Properties");
 						for (Entry<String, Tag<?>> property : propertiesTag) {
-							properties.put(property.getKey(), ((StringTag) property.getValue()).getValue());
+							properties.put(property.getKey().toLowerCase(), ((StringTag) property.getValue()).getValue().toLowerCase());
 						}
 					}
 					

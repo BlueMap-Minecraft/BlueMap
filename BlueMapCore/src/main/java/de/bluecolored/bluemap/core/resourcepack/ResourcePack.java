@@ -24,174 +24,175 @@
  */
 package de.bluecolored.bluemap.core.resourcepack;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.Enumeration;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import javax.imageio.ImageIO;
 
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.util.FileUtils;
+import de.bluecolored.bluemap.core.resourcepack.BlockStateResource.Builder;
+import de.bluecolored.bluemap.core.resourcepack.fileaccess.CombinedFileAccess;
+import de.bluecolored.bluemap.core.resourcepack.fileaccess.FileAccess;
 import de.bluecolored.bluemap.core.world.BlockState;
 
+/**
+ * Represents all resources (BlockStates / BlockModels and Textures) that are loaded and used to generate map-models. 
+ */
 public class ResourcePack {
 
 	public static final String MINECRAFT_CLIENT_VERSION = "1.14.4";
 	public static final String MINECRAFT_CLIENT_URL = "https://launcher.mojang.com/v1/objects/8c325a0c5bd674dd747d6ebaa4c791fd363ad8a9/client.jar";
 	
-	private Map<Path, Resource> resources;
+	protected Map<String, BlockStateResource> blockStateResources;
+	protected Map<String, BlockModelResource> blockModelResources;
+	protected TextureGallery textures;
 	
-	private TextureProvider textureProvider;
-	private BlockColorProvider blockColorProvider;
-	private Cache<BlockState, BlockStateResource> blockStateResourceCache;
+	private BlockColorCalculator blockColorCalculator;
 	
-	public ResourcePack(List<File> dataSources, File textureExportFile) throws IOException, NoSuchResourceException {
-		this.resources = new HashMap<>();
-		
-		//load resources in order
-		for (File resource : dataSources) overrideResourcesWith(resource);
-		
-		blockStateResourceCache = CacheBuilder.newBuilder()
-				.maximumSize(10000)
-				.build();
-		
-		textureProvider = new TextureProvider();
-		
-		if (textureExportFile.exists()){
-			textureProvider.load(textureExportFile);
-		}
-
-		textureProvider.generate(this); //if loaded add missing textures
-		textureProvider.save(textureExportFile);
-		
-		blockColorProvider = new BlockColorProvider(this);
+	private BufferedImage foliageMap;
+	private BufferedImage grassMap;
+	
+	public ResourcePack() {
+		blockStateResources = new HashMap<>();
+		blockModelResources = new HashMap<>();
+		textures = new TextureGallery();
+		foliageMap = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+		foliageMap.setRGB(0, 0, 0xFF00FF00);
+		grassMap = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
+		grassMap.setRGB(0, 0, 0xFF00FF00);
+		blockColorCalculator = new BlockColorCalculator(foliageMap, grassMap);
 	}
 	
-	private void overrideResourcesWith(File resource){
-		if (resource.isFile() && resource.getName().endsWith(".zip") || resource.getName().endsWith(".jar")){
-			overrideResourcesWithZipFile(resource);
-		} else {
-			overrideResourcesWith(resource, Paths.get(""));
-		}
+	public void loadBlockColorConfig(File file) throws IOException {
+		blockColorCalculator.loadColorConfig(file);
 	}
 	
-	private void overrideResourcesWith(File resource, Path resourcePath){
-		if (resource.isDirectory()){
-			for (File childFile : resource.listFiles()){
-				overrideResourcesWith(childFile, resourcePath.resolve(childFile.getName()));
-			}
-			return;
-		}
-		
-		if (resource.isFile() && isActualResourcePath(resourcePath)){
-			try {
-				byte[] bytes = Files.readAllBytes(resource.toPath());
-				resources.put(resourcePath, new Resource(bytes));
-			} catch (IOException e) {
-				Logger.global.logError("Failed to load resource: " + resource, e);
-			}
-		}
+	/**
+	 * See {@link TextureGallery#loadTextureFile(File)}
+	 * @see TextureGallery#loadTextureFile(File)
+	 */
+	public void loadTextureFile(File file) throws IOException, ParseResourceException {
+		textures.loadTextureFile(file);
 	}
 	
-	private void overrideResourcesWithZipFile(File resourceFile){
-		try (
-			ZipFile zipFile = new ZipFile(resourceFile);
-		){
-			Enumeration<? extends ZipEntry> files = zipFile.entries();
-			byte[] buffer = new byte[1024];
-			while (files.hasMoreElements()){
-				ZipEntry file = files.nextElement();
-				if (file.isDirectory()) continue;
-				
-				Path resourcePath = Paths.get("", file.getName().split("/"));
-				if (!isActualResourcePath(resourcePath)) continue;
-				
-				InputStream fileInputStream = zipFile.getInputStream(file);
-				ByteArrayOutputStream bos = new ByteArrayOutputStream(Math.max(8, (int) file.getSize()));
-				int bytesRead;
-				while ((bytesRead = fileInputStream.read(buffer)) != -1){
-					bos.write(buffer, 0, bytesRead);
+	/**
+	 * See {@link TextureGallery#saveTextureFile(File)}
+	 * @see TextureGallery#saveTextureFile(File)
+	 */
+	public void saveTextureFile(File file) throws IOException {
+		textures.saveTextureFile(file);
+	}
+	
+	/**
+	 * Loads and generates all {@link BlockStateResource}s from the listed sources.
+	 * Resources from sources that are "later" (more to the end) in the list are overriding resources from sources "earlier" (more to the start/head) in the list.<br>
+	 * <br>
+	 * Any exceptions occurred while loading the resources are logged and ignored.
+	 *  
+	 * @param sources The list of {@link File} sources. Each can be a folder or any zip-compressed file. (E.g. .zip or .jar)
+	 */
+	public void load(Collection<File> sources) throws IOException {
+		load(sources.toArray(new File[sources.size()]));
+	}
+	
+	/**
+	 * Loads and generates all {@link BlockStateResource}s and {@link Texture}s from the listed sources.
+	 * Resources from sources that are "later" (more to the end) in the list are overriding resources from sources "earlier" (more to the start/head) in the list.<br>
+	 * <br>
+	 * Any exceptions occurred while loading the resources are logged and ignored.
+	 *  
+	 * @param sources The list of {@link File} sources. Each can be a folder or any zip-compressed file. (E.g. .zip or .jar)
+	 */
+	public void load(File... sources) {
+		try (CombinedFileAccess sourcesAccess = new CombinedFileAccess()){
+			for (File file : sources) {
+				try {
+					sourcesAccess.addFileAccess(FileAccess.of(file));
+				} catch (IOException e) {
+					Logger.global.logError("Failed to read ResourcePack: " + file, e);
 				}
-
-				resources.put(resourcePath, new Resource(bos.toByteArray()));
 			}
-		} catch (IOException e) {
-			Logger.global.logError("Failed to load resource: " + resourceFile, e);
-		}
-	}
-	
-	private boolean isActualResourcePath(Path path) {
-		String[] blockstatesPattern = {"assets", ".*", "blockstates", "*"};
-		String[] modelsPattern = {"assets", ".*", "models", "blocks?", "*"};
-		String[] texturesPattern = {"assets", ".*", "textures", "block|colormap", "*"};
-		
-		return 
-				FileUtils.matchPath(path, blockstatesPattern) || 
-				FileUtils.matchPath(path, modelsPattern) || 
-				FileUtils.matchPath(path, texturesPattern);
-	}
-	
-	public BlockStateResource getBlockStateResource(BlockState block) throws NoSuchResourceException, InvalidResourceDeclarationException {
-		BlockStateResource bsr = blockStateResourceCache.getIfPresent(block);
-		
-		if (bsr == null){
-			bsr = new BlockStateResource(block, this);
-			blockStateResourceCache.put(block, bsr);
-		}
-		
-		return bsr;
-	}
-	
-	public TextureProvider getTextureProvider(){
-		return textureProvider;
-	}
-	
-	public BlockColorProvider getBlockColorProvider(){
-		return blockColorProvider;
-	}
+			
+			textures.reloadAllTextures(sourcesAccess);
+			
+			Builder builder = BlockStateResource.builder(sourcesAccess, this);
+			
+			Collection<String> namespaces = sourcesAccess.listFolders("assets");
+			for (String namespaceRoot : namespaces) {
+				String namespace = namespaceRoot.substring("assets/".length());
+				Collection<String> blockstateFiles = sourcesAccess.listFiles(namespaceRoot + "/blockstates", true);
+				for (String blockstateFile : blockstateFiles) {
+					String filename = FileAccess.getFileName(blockstateFile);
+					if (!filename.endsWith(".json")) continue;
 
-	public Map<Path, Resource> getAllResources() {
-		return Collections.unmodifiableMap(resources);
-	}
-	
-	public InputStream getResource(Path resourcePath) throws NoSuchResourceException {
-		Resource resource = resources.get(resourcePath);
-		if (resource == null) throw new NoSuchResourceException("There is no resource with that path: " + resourcePath);
-		return resource.getStream();
-	}
-	
-	public class Resource {
-		
-		private byte[] data;
-		
-		public Resource(byte[] data) {
-			this.data = data;
+					try {
+						blockStateResources.put(namespace + ":" + filename.substring(0, filename.length() - 5), builder.build(blockstateFile));
+					} catch (IOException ex) {
+						Logger.global.logError("Failed to load blockstate: " + namespace + ":" + filename.substring(0, filename.length() - 5), ex);
+					}
+				}
+			}
+			
+			try {
+				foliageMap = ImageIO.read(sourcesAccess.readFile("assets/minecraft/textures/colormap/foliage.png"));
+				grassMap = ImageIO.read(sourcesAccess.readFile("assets/minecraft/textures/colormap/grass.png"));
+				
+				blockColorCalculator.setFoliageMap(foliageMap);
+				blockColorCalculator.setGrassMap(grassMap);
+			} catch (IOException ex) {
+				Logger.global.logError("Failed to load foliage- or grass-map!", ex);
+			}
+			
+		} catch (IOException ex) {
+			Logger.global.logError("Failed to close FileAccess!", ex);
 		}
-		
-		public InputStream getStream(){
-			return new ByteArrayInputStream(data);
-		}
-		
 	}
 	
+	/**
+	 * Returns a {@link BlockStateResource} for the given {@link BlockState} if found. 
+	 * @param state The {@link BlockState}
+	 * @return The {@link BlockStateResource}
+	 * @throws NoSuchResourceException If no resource is loaded for this {@link BlockState}
+	 */
+	public BlockStateResource getBlockStateResource(BlockState state) throws NoSuchResourceException {
+		BlockStateResource resource = blockStateResources.get(state.getFullId());
+		if (resource == null) throw new NoSuchResourceException("No resource for blockstate: " + state.getFullId());
+		return resource;
+	}
+	
+	public BlockColorCalculator getBlockColorCalculator() {
+		return blockColorCalculator;
+	}
+	
+	/**
+	 * Synchronously downloads the default minecraft resources from the mojang-servers.
+	 * @param file The file to save the downloaded resources to
+	 * @throws IOException If an IOException occurs during the download
+	 */
 	public static void downloadDefaultResource(File file) throws IOException {
 		if (file.exists()) file.delete();
 		file.getParentFile().mkdirs();
 		org.apache.commons.io.FileUtils.copyURLToFile(new URL(MINECRAFT_CLIENT_URL), file, 10000, 10000);
+	}
+	
+	protected static String namespacedToAbsoluteResourcePath(String namespacedPath, String resourceTypeFolder) {
+		String path = namespacedPath;
+		
+		int namespaceIndex = path.indexOf(':');
+		String namespace = "minecraft";
+		if (namespaceIndex != -1) {
+			namespace = path.substring(0, namespaceIndex);
+			path = path.substring(namespaceIndex + 1);
+		}
+		
+		path = "assets/" + namespace + "/" + resourceTypeFolder + "/" + FileAccess.normalize(path);
+		
+		return path;
 	}
 	
 }

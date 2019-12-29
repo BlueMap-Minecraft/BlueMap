@@ -30,9 +30,26 @@ public class PrintStreamLogger extends AbstractLogger {
 	
 	private PrintStream out, err;
 	
+	boolean isDebug;
+	
 	public PrintStreamLogger(PrintStream out, PrintStream err) {
 		this.out = out;
 		this.err = err;
+		this.isDebug = true;
+	}
+	
+	public PrintStreamLogger(PrintStream out, PrintStream err, boolean debug) {
+		this.out = out;
+		this.err = err;
+		this.isDebug = debug;
+	}
+	
+	public boolean isDebug() {
+		return isDebug;
+	}
+	
+	public void setDebug(boolean debug) {
+		this.isDebug = debug;
 	}
 	
 	@Override
@@ -53,7 +70,17 @@ public class PrintStreamLogger extends AbstractLogger {
 
 	@Override
 	public void logDebug(String message) {
-		out.println("[DEBUG] " + message);
+		if (isDebug) out.println("[DEBUG] " + message);
+	}
+	
+	@Override
+	public void noFloodDebug(String key, String message) {
+		if (isDebug) super.noFloodDebug(key, message);
+	}
+	
+	@Override
+	public void noFloodDebug(String message) {
+		if (isDebug) super.noFloodDebug(message);
 	}
 	
 }

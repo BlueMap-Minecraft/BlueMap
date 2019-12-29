@@ -27,20 +27,21 @@ package de.bluecolored.bluemap.core.mca;
 import com.flowpowered.math.vector.Vector3i;
 
 import de.bluecolored.bluemap.core.mca.mapping.BlockProperties;
-import de.bluecolored.bluemap.core.mca.mapping.LightData;
+import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.BlockState;
+import de.bluecolored.bluemap.core.world.LightData;
 
 public class MCABlock extends Block {
 
 	private MCAWorld world;
 	private BlockState blockState;
 	private LightData lightData;
-	private String biome;
+	private Biome biome;
 	private BlockProperties properties;
 	private Vector3i pos;
 	
-	public MCABlock(MCAWorld world, BlockState blockState, LightData lightData, String biome, BlockProperties properties, Vector3i pos) {
+	public MCABlock(MCAWorld world, BlockState blockState, LightData lightData, Biome biome, BlockProperties properties, Vector3i pos) {
 		this.world = world;
 		this.blockState = blockState;
 		this.lightData = lightData;
@@ -85,7 +86,7 @@ public class MCABlock extends Block {
 	}
 
 	@Override
-	public String getBiome() {
+	public Biome getBiome() {
 		return biome;
 	}
 	

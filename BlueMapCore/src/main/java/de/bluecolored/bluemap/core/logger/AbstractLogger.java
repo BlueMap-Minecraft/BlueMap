@@ -24,46 +24,63 @@
  */
 package de.bluecolored.bluemap.core.logger;
 
-import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
-import com.google.common.collect.Sets;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 
 public abstract class AbstractLogger extends Logger {
 
-	private Set<String> noFloodLog;
+	private static final Object DUMMY = new Object();
+	
+	private Cache<String, Object> noFloodCache;
 	
 	public AbstractLogger() {
-		noFloodLog = Sets.newConcurrentHashSet();
+		noFloodCache = CacheBuilder.newBuilder()
+				.concurrencyLevel(4)
+				.expireAfterWrite(1, TimeUnit.HOURS)
+				.maximumSize(10000)
+				.build();
 	}
 	
 	@Override
 	public void noFloodError(String key, String message, Throwable throwable){
-		if (noFloodLog.add(key)) logError(message, throwable);
+		if (check(key)) logError(message, throwable);
 	}
 
 	@Override
 	public void noFloodWarning(String key, String message){
-		if (noFloodLog.add(key)) logWarning(message);
+		if (check(key)) logWarning(message);
 	}
 
 	@Override
 	public void noFloodInfo(String key, String message){
-		if (noFloodLog.add(key)) logInfo(message);
+		if (check(key)) logInfo(message);
 	}
 
 	@Override
 	public void noFloodDebug(String key, String message){
-		if (noFloodLog.add(key)) logDebug(message);
+		if (check(key)) logDebug(message);
 	}
 	
 	@Override
 	public void clearNoFloodLog() {
-		noFloodLog.clear();
+		noFloodCache.invalidateAll();
+		noFloodCache.cleanUp();
 	}
 	
 	@Override
 	public void removeNoFloodKey(String key) {
-		noFloodLog.remove(key);
+		noFloodCache.invalidate(key);
+	}
+	
+	private boolean check(String key) {
+		if (noFloodCache.getIfPresent(key) == null) {
+			noFloodCache.put(key, DUMMY);
+			return true;
+		}
+		
+		return false;
 	}
 	
 }

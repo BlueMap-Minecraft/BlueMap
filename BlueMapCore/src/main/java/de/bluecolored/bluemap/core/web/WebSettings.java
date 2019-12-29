@@ -50,7 +50,7 @@ public class WebSettings {
 				.setFile(settingsFile)
 				.build();
 		
-		load();
+		rootNode = configLoader.createEmptyNode();
 	}
 	
 	public void load() throws IOException {

@@ -53,7 +53,17 @@ public class Slf4jLogger extends AbstractLogger {
 
 	@Override
 	public void logDebug(String message) {
-		out.debug(message);
+		if (out.isDebugEnabled()) out.debug(message);
+	}
+	
+	@Override
+	public void noFloodDebug(String message) {
+		if (out.isDebugEnabled()) super.noFloodDebug(message);
+	}
+	
+	@Override
+	public void noFloodDebug(String key, String message) {
+		if (out.isDebugEnabled()) super.noFloodDebug(key, message);
 	}
 	
 }

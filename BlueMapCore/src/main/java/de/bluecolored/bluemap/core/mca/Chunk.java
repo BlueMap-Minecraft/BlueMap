@@ -29,8 +29,9 @@ import java.io.IOException;
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 
-import de.bluecolored.bluemap.core.mca.mapping.LightData;
+import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.BlockState;
+import de.bluecolored.bluemap.core.world.LightData;
 import net.querz.nbt.CompoundTag;
 
 public abstract class Chunk {
@@ -63,7 +64,7 @@ public abstract class Chunk {
 	
 	public abstract LightData getLightData(Vector3i pos);
 	
-	public abstract String getBiomeId(Vector3i pos);
+	public abstract Biome getBiome(Vector3i pos);
 	
 	public static Chunk create(MCAWorld world, CompoundTag chunkTag) throws IOException {
 		int version = chunkTag.getInt("DataVersion");

@@ -51,6 +51,7 @@ public class BlockState {
 
 	private final String namespace;
 	private final String id;
+	private final String fullId;
 	private final Map<String, String> properties;
 
 	public BlockState(String id) {
@@ -73,6 +74,7 @@ public class BlockState {
 		
 		this.id = id;
 		this.namespace = namespace;
+		this.fullId = namespace + ":" + id;
 	}
 	
 	private BlockState(BlockState blockState, String withKey, String withValue) {
@@ -84,6 +86,7 @@ public class BlockState {
 		
 		this.id = blockState.getId();
 		this.namespace = blockState.getNamespace();
+		this.fullId = namespace + ":" + id;
 		this.properties = Collections.unmodifiableMap(props);
 	}
 
@@ -107,7 +110,7 @@ public class BlockState {
 	 * Returns the namespaced id of this blockstate
 	 */
 	public String getFullId() {
-		return getNamespace() + ":" + getId();
+		return fullId;
 	}
 	
 	/**

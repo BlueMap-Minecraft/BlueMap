@@ -16,5 +16,13 @@ task zipWebroot(type: Zip) {
    outputs.upToDateWhen { false }
 }
 
+task zipResourceExtensions(type: Zip) {
+   from fileTree('src/main/resourceExtensions')
+   archiveName 'resourceExtensions.zip'
+   destinationDir(file('/src/main/resources/'))
+   outputs.upToDateWhen { false }
+}
+
 //always update the zip before build
 compileJava.dependsOn(zipWebroot)
+compileJava.dependsOn(zipResourceExtensions)

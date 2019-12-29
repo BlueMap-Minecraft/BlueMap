@@ -33,6 +33,7 @@ import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 
 import de.bluecolored.bluemap.core.util.AABB;
+import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.World;
@@ -95,8 +96,8 @@ public class EmptyBlockContext implements ExtendedBlockContext {
 		}
 
 		@Override
-		public String getBiome() {
-			return "ocean";
+		public Biome getBiome() {
+			return Biome.DEFAULT;
 		}
 		
 	}

@@ -22,45 +22,44 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.mca.mapping;
+package de.bluecolored.bluemap.core.resourcepack.fileaccess;
 
+import java.io.Closeable;
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map.Entry;
+import java.io.InputStream;
+import java.util.Collection;
 
-import de.bluecolored.bluemap.core.world.Biome;
-import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.gson.GsonConfigurationLoader;
+public interface FileAccess extends Closeable, AutoCloseable {
 
-public class BiomeIdMapper {
-
-	private HashMap<Integer, Biome> biomes;
+	InputStream readFile(String path) throws FileNotFoundException, IOException;
 	
-	public BiomeIdMapper() throws IOException {
-		biomes = new HashMap<>();
-		
-		GsonConfigurationLoader loader = GsonConfigurationLoader.builder()
-				.setURL(getClass().getResource("/biomes.json"))
-				.build();
-		
-		ConfigurationNode node = loader.load();
+	Collection<String> listFiles(String path, boolean recursive);
 
-		for (Entry<Object, ? extends ConfigurationNode> e : node.getChildrenMap().entrySet()){
-			String id = e.getKey().toString();
-			Biome biome = Biome.create(id, e.getValue());
-			biomes.put(biome.getOrdinal(), biome);
-		}	
-		
+	Collection<String> listFolders(String path);
+	
+	static FileAccess of(File file) throws IOException {
+		if (file.isDirectory()) return new FolderFileAccess(file);
+		if (file.isFile()) return new ZipFileAccess(file);
+		throw new IOException("Unsupported file!");
 	}
 	
-	public Biome get(int id) {
-		Biome biome = biomes.get(id);
-		if (biome == null) return Biome.DEFAULT;
-		return biome;
+	static String getFileName(String path) {
+		String filename = path;
+		
+		int nameSplit = path.lastIndexOf('/');
+		if (nameSplit > -1) {
+			filename = path.substring(nameSplit + 1);
+		}
+		
+		return filename;
 	}
-	
-	public static BiomeIdMapper create() throws IOException {
-		return new BiomeIdMapper();
+
+	static String normalize(String path) {
+		if (path.charAt(path.length() - 1) == '/') path = path.substring(0, path.length() - 1);
+		if (path.charAt(0) == '/') path = path.substring(1);
+		return path;
 	}
 	
 }

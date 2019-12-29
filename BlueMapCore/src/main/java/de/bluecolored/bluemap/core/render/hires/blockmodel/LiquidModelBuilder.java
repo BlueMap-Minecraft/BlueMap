@@ -36,8 +36,9 @@ import de.bluecolored.bluemap.core.model.Face;
 import de.bluecolored.bluemap.core.model.Model;
 import de.bluecolored.bluemap.core.render.RenderSettings;
 import de.bluecolored.bluemap.core.render.context.ExtendedBlockContext;
-import de.bluecolored.bluemap.core.resourcepack.NoSuchTextureException;
-import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resourcepack.BlockColorCalculator;
+import de.bluecolored.bluemap.core.resourcepack.BlockModelResource;
+import de.bluecolored.bluemap.core.resourcepack.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.BlockState;
@@ -50,43 +51,73 @@ public class LiquidModelBuilder {
 	private static final HashSet<String> DEFAULT_WATERLOGGED_BLOCK_IDS = Sets.newHashSet(
 			"minecraft:seagrass",
 			"minecraft:tall_seagrass",
-			"minecraft:kelp"
+			"minecraft:kelp",
+			"minecraft:bubble_column"
 		);
 	
-	private BlockState blockState;
+	private BlockState liquidBlockState;
 	private ExtendedBlockContext context;
-	private ResourcePack resourcePack;
 	private RenderSettings renderSettings;
+	private BlockColorCalculator colorCalculator;
 	
-	private float[] heights;
-	
-	public LiquidModelBuilder(BlockState blockState, ExtendedBlockContext context, ResourcePack resourcePack, RenderSettings renderSettings) {
-		this.blockState = blockState;
+	public LiquidModelBuilder(RenderSettings renderSettings, ExtendedBlockContext context, BlockState liquidBlockState, BlockColorCalculator colorCalculator) {
 		this.context = context;
-		this.resourcePack = resourcePack;
 		this.renderSettings = renderSettings;
-		
-		this.heights = new float[]{14f, 14f, 14f, 14f};
+		this.liquidBlockState = liquidBlockState;
+		this.colorCalculator = colorCalculator;
 	}
 
-	public BlockStateModel build() throws NoSuchTextureException {
+	public BlockStateModel build(BlockState blockState, BlockModelResource bmr) {
 		if (this.renderSettings.isExcludeFacesWithoutSunlight() && context.getRelativeBlock(0, 0, 0).getSunLightLevel() == 0) return new BlockStateModel();
 		
 		int level = getLiquidLevel(blockState);
+		float[] heights = new float[]{16f, 16f, 16f, 16f};
 		
-		if (level >= 8 ||level == 0 && isLiquid(context.getRelativeBlock(0, 1, 0))){
-			this.heights = new float[]{16f, 16f, 16f, 16f};
-			return buildModel();
+		if (level < 8 && !(level == 0 && isLiquid(context.getRelativeBlock(0, 1, 0)))){
+			heights = new float[]{
+					getLiquidCornerHeight(-1, 0, -1),
+					getLiquidCornerHeight(-1, 0, 0),
+					getLiquidCornerHeight(0, 0, -1),
+					getLiquidCornerHeight(0, 0, 0)
+				};
 		}
 		
-		this.heights = new float[]{
-			getLiquidCornerHeight(-1, 0, -1),
-			getLiquidCornerHeight(-1, 0, 0),
-			getLiquidCornerHeight(0, 0, -1),
-			getLiquidCornerHeight(0, 0, 0)
-		};
+		BlockStateModel model = new BlockStateModel();
+		Texture texture = bmr.getTexture("still");
 		
-		return buildModel();
+		Vector3f[] c = new Vector3f[]{
+			new Vector3f( 0, 0, 0 ),
+			new Vector3f( 0, 0, 16 ),
+			new Vector3f( 16, 0, 0 ),
+			new Vector3f( 16, 0, 16 ),
+			new Vector3f( 0, heights[0], 0 ),
+			new Vector3f( 0, heights[1], 16 ),
+			new Vector3f( 16, heights[2], 0 ),
+			new Vector3f( 16, heights[3], 16 ),
+		};
+
+		int textureId = texture.getId();
+		Vector3f tintcolor = Vector3f.ONE;
+		if (liquidBlockState.getFullId().equals("minecraft:water")) {
+			tintcolor = colorCalculator.getWaterAverageColor(context);
+		}
+		
+		createElementFace(model, Direction.DOWN, c[0], c[2], c[3], c[1], tintcolor, textureId);
+		createElementFace(model, Direction.UP, c[5], c[7], c[6], c[4], tintcolor, textureId);
+		createElementFace(model, Direction.NORTH, c[2], c[0], c[4], c[6], tintcolor, textureId);
+		createElementFace(model, Direction.SOUTH, c[1], c[3], c[7], c[5], tintcolor, textureId);
+		createElementFace(model, Direction.WEST, c[0], c[1], c[5], c[4], tintcolor, textureId);
+		createElementFace(model, Direction.EAST, c[3], c[2], c[6], c[7], tintcolor, textureId);
+	
+		//scale down
+		model.transform(Matrix3f.createScaling(1f / 16f));
+
+		//calculate mapcolor
+		Vector4f mapcolor = texture.getColor();
+		mapcolor = mapcolor.mul(tintcolor.toVector4(0.5));
+		model.setMapColor(mapcolor);
+		
+		return model;
 	}
 	
 	private float getLiquidCornerHeight(int x, int y, int z){
@@ -133,9 +164,9 @@ public class LiquidModelBuilder {
 		return isLiquid(block.getBlock());
 	}
 	
-	private boolean isLiquid(BlockState blockstate){
-		if (blockstate.getId().equals(blockState.getId())) return true;
-		return LiquidModelBuilder.isWaterlogged(blockstate);
+	private boolean isLiquid(BlockState blockState){
+		if (blockState.getFullId().equals(liquidBlockState.getFullId())) return true;
+		return LiquidModelBuilder.isWaterlogged(blockState);
 	}
 	
 	private float getLiquidBaseHeight(BlockState block){
@@ -151,45 +182,7 @@ public class LiquidModelBuilder {
 		return 0;
 	}
 	
-	private BlockStateModel buildModel() throws NoSuchTextureException {
-		BlockStateModel model = new BlockStateModel();
-		
-		Vector3f[] c = new Vector3f[]{
-			new Vector3f( 0, 0, 0 ),
-			new Vector3f( 0, 0, 16 ),
-			new Vector3f( 16, 0, 0 ),
-			new Vector3f( 16, 0, 16 ),
-			new Vector3f( 0, heights[0], 0 ),
-			new Vector3f( 0, heights[1], 16 ),
-			new Vector3f( 16, heights[2], 0 ),
-			new Vector3f( 16, heights[3], 16 ),
-		};
-
-		int textureId = resourcePack.getTextureProvider().getTextureIndex("block/" + blockState.getId() + "_still");
-		Vector3f tintcolor = Vector3f.ONE;
-		if (blockState.getId().equals("water")) {
-			tintcolor = resourcePack.getBlockColorProvider().getBiomeWaterAverageColor(context);
-		}
-		
-		createElementFace(model, Direction.DOWN, c[0], c[2], c[3], c[1], tintcolor, textureId);
-		createElementFace(model, Direction.UP, c[5], c[7], c[6], c[4], tintcolor, textureId);
-		createElementFace(model, Direction.NORTH, c[2], c[0], c[4], c[6], tintcolor, textureId);
-		createElementFace(model, Direction.SOUTH, c[1], c[3], c[7], c[5], tintcolor, textureId);
-		createElementFace(model, Direction.WEST, c[0], c[1], c[5], c[4], tintcolor, textureId);
-		createElementFace(model, Direction.EAST, c[3], c[2], c[6], c[7], tintcolor, textureId);
-	
-		//scale down
-		model.transform(Matrix3f.createScaling(1f / 16f));
-
-		//calculate mapcolor
-		Vector4f mapcolor = resourcePack.getTextureProvider().getTexture("block/" + blockState.getId() + "_still").getColor();
-		mapcolor = mapcolor.mul(tintcolor.toVector4(1));
-		model.setMapColor(mapcolor);
-		
-		return model;
-	}
-	
-	private void createElementFace(Model model, Direction faceDir, Vector3f c0, Vector3f c1, Vector3f c2, Vector3f c3, Vector3f color, int textureId) throws NoSuchTextureException {
+	private void createElementFace(Model model, Direction faceDir, Vector3f c0, Vector3f c1, Vector3f c2, Vector3f c3, Vector3f color, int textureId) {
 		
 		//face culling
 		Block bl = context.getRelativeBlock(faceDir);

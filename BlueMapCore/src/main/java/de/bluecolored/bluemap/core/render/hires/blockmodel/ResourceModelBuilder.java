@@ -29,6 +29,7 @@ import com.flowpowered.math.imaginary.Complexf;
 import com.flowpowered.math.imaginary.Quaternionf;
 import com.flowpowered.math.matrix.Matrix3f;
 import com.flowpowered.math.vector.Vector2f;
+import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3f;
 import com.flowpowered.math.vector.Vector3i;
 import com.flowpowered.math.vector.Vector4f;
@@ -37,16 +38,12 @@ import de.bluecolored.bluemap.core.model.Face;
 import de.bluecolored.bluemap.core.render.RenderSettings;
 import de.bluecolored.bluemap.core.render.context.BlockContext;
 import de.bluecolored.bluemap.core.render.context.ExtendedBlockContext;
-import de.bluecolored.bluemap.core.resourcepack.BlockModelElementFaceResource;
-import de.bluecolored.bluemap.core.resourcepack.BlockModelElementResource;
+import de.bluecolored.bluemap.core.resourcepack.BlockColorCalculator;
 import de.bluecolored.bluemap.core.resourcepack.BlockModelResource;
-import de.bluecolored.bluemap.core.resourcepack.BlockStateResource;
-import de.bluecolored.bluemap.core.resourcepack.NoSuchTextureException;
-import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.resourcepack.TextureProvider.Texture;
+import de.bluecolored.bluemap.core.resourcepack.BlockModelResource.Element.Rotation;
+import de.bluecolored.bluemap.core.resourcepack.Texture;
+import de.bluecolored.bluemap.core.resourcepack.TransformedBlockModelResource;
 import de.bluecolored.bluemap.core.util.Direction;
-import de.bluecolored.bluemap.core.util.MathUtils;
-import de.bluecolored.bluemap.core.util.WeighedArrayList;
 import de.bluecolored.bluemap.core.world.Block;
 
 /**
@@ -58,49 +55,37 @@ public class ResourceModelBuilder {
 	private static final Vector3f NEG_HALF_3F = HALF_3F.negate();
 	private static final Vector2f HALF_2F = Vector2f.ONE.mul(0.5);
 	
-	private BlockStateResource resource;
 	private ExtendedBlockContext context;
-	private ResourcePack resourcePack;
 	private RenderSettings renderSettings;
+	private BlockColorCalculator colorCalculator;
 	
-	public ResourceModelBuilder(BlockStateResource resource, ExtendedBlockContext context, ResourcePack resourcePack, RenderSettings renderSettings) {
-		this.resource = resource;
+	public ResourceModelBuilder(RenderSettings renderSettings, ExtendedBlockContext context, BlockColorCalculator colorCalculator) {
 		this.context = context;
-		this.resourcePack = resourcePack;
 		this.renderSettings = renderSettings;
+		this.colorCalculator = colorCalculator;
 	}
-
-	public BlockStateModel build() throws NoSuchTextureException {
+	
+	public BlockStateModel build(TransformedBlockModelResource bmr) {
 		BlockStateModel model = new BlockStateModel();
 		
-		for (WeighedArrayList<BlockModelResource> bmrList : resource.getModelResources()){
-			BlockModelResource bmr = bmrList.get((int) Math.floor(MathUtils.hashToFloat(context.getPosition(), 23489756) * bmrList.size()));
-			
-			model.merge(fromModelResource(bmr));
+		for (BlockModelResource.Element element : bmr.getModel().getElements()){
+			model.merge(fromModelElementResource(element, bmr));
+		}
+		
+		if (!bmr.getRotation().equals(Vector2i.ZERO)) {
+			model.translate(NEG_HALF_3F);
+			model.rotate(Quaternionf.fromAxesAnglesDeg(
+					-bmr.getRotation().getX(),
+					-bmr.getRotation().getY(),
+					0
+				));
+			model.translate(HALF_3F);
 		}
 		
 		return model;
 	}
 	
-	private BlockStateModel fromModelResource(BlockModelResource bmr) throws NoSuchTextureException {
-		BlockStateModel model = new BlockStateModel();
-		
-		for (BlockModelElementResource bmer : bmr.getElements()){
-			model.merge(fromModelElementResource(bmer));
-		}
-		
-		model.translate(NEG_HALF_3F);
-		model.rotate(Quaternionf.fromAxesAnglesDeg(
-				-bmr.getXRot(),
-				-bmr.getYRot(),
-				0
-			));
-		model.translate(HALF_3F);
-		
-		return model;
-	}
-	
-	private BlockStateModel fromModelElementResource(BlockModelElementResource bmer) throws NoSuchTextureException {
+	private BlockStateModel fromModelElementResource(BlockModelResource.Element bmer, TransformedBlockModelResource bmr) {
 		BlockStateModel model = new BlockStateModel();
 		
 		//create faces
@@ -118,28 +103,31 @@ public class ResourceModelBuilder {
 			new Vector3f( max .getX(), max .getY(), max .getZ()),
 		};
 		
-		createElementFace(model, bmer.getDownFace(), Direction.DOWN, c[0], c[2], c[3], c[1]);
-		createElementFace(model, bmer.getUpFace(), Direction.UP, c[5], c[7], c[6], c[4]);
-		createElementFace(model, bmer.getNorthFace(), Direction.NORTH, c[2], c[0], c[4], c[6]);
-		createElementFace(model, bmer.getSouthFace(), Direction.SOUTH, c[1], c[3], c[7], c[5]);
-		createElementFace(model, bmer.getWestFace(), Direction.WEST, c[0], c[1], c[5], c[4]);
-		createElementFace(model, bmer.getEastFace(), Direction.EAST, c[3], c[2], c[6], c[7]);
+		createElementFace(model, bmr, bmer, Direction.DOWN, c[0], c[2], c[3], c[1]);
+		createElementFace(model, bmr, bmer, Direction.UP, c[5], c[7], c[6], c[4]);
+		createElementFace(model, bmr, bmer, Direction.NORTH, c[2], c[0], c[4], c[6]);
+		createElementFace(model, bmr, bmer, Direction.SOUTH, c[1], c[3], c[7], c[5]);
+		createElementFace(model, bmr, bmer, Direction.WEST, c[0], c[1], c[5], c[4]);
+		createElementFace(model, bmr, bmer, Direction.EAST, c[3], c[2], c[6], c[7]);
 
 		//rotate
-		if (bmer.isRotation()){
-			Vector3f translation = bmer.getRotationOrigin();
+		Rotation rotation = bmer.getRotation();
+		if (rotation.getAngle() != 0f){
+			Vector3f translation = rotation.getOrigin();
 			model.translate(translation.negate());
 			
+			Vector3f rotAxis = rotation.getAxis().toVector().toFloat();
+			
 			model.rotate(Quaternionf.fromAngleDegAxis(
-					bmer.getRotationAngle(),
-					bmer.getRotationAxis().toVector().toFloat()
+					rotation.getAngle(),
+					rotAxis
 				));
 
-			if (bmer.isRotationRescale()){
+			if (rotation.isRescale()){
 				Vector3f scale = 
 						Vector3f.ONE
-						.sub(bmer.getRotationAxis().toVector().toFloat())
-						.mul(Math.abs(TrigMath.sin(bmer.getRotationAngle() * TrigMath.DEG_TO_RAD)))
+						.sub(rotAxis)
+						.mul(Math.abs(TrigMath.sin(rotation.getAngle() * TrigMath.DEG_TO_RAD)))
 						.mul(1 - (TrigMath.SQRT_OF_TWO - 1))
 						.add(Vector3f.ONE);
 				model.transform(Matrix3f.createScaling(scale));
@@ -155,19 +143,20 @@ public class ResourceModelBuilder {
 		return model;
 	}
 	
-	private void createElementFace(BlockStateModel model, BlockModelElementFaceResource face, Direction faceDir, Vector3f c0, Vector3f c1, Vector3f c2, Vector3f c3) throws NoSuchTextureException {
+	private void createElementFace(BlockStateModel model, TransformedBlockModelResource modelResource, BlockModelResource.Element element, Direction faceDir, Vector3f c0, Vector3f c1, Vector3f c2, Vector3f c3) {
+		BlockModelResource.Element.Face face = element.getFaces().get(faceDir);
+		
 		if (face == null) return;
-		BlockModelResource m = face.getElement().getModel(); 
 		
 		//face culling
-		if (face.isCullface()){
-			Block b = getRotationRelativeBlock(m, face.getCullface());
+		if (face.getCullface() != null){
+			Block b = getRotationRelativeBlock(modelResource, face.getCullface());
 			if (b.isCullingNeighborFaces()) return;
 		}
 
 		//light calculation
-		Block b = getRotationRelativeBlock(m, faceDir);
-		BlockContext bContext = context.getRelativeView(getRotationRelativeDirectionVector(m, faceDir.toVector().toFloat()).toInt());
+		Block b = getRotationRelativeBlock(modelResource, faceDir);
+		BlockContext bContext = context.getRelativeView(getRotationRelativeDirectionVector(modelResource, faceDir.toVector().toFloat()).toInt());
 		float skyLight = b.getPassedSunLight(bContext);
 		
 		//filter out faces that are not skylighted
@@ -186,12 +175,13 @@ public class ResourceModelBuilder {
 		
 		//UV-Lock counter-rotation
 		int uvLockAngle = 0;
-		if (m.isUvLock()){
-			Quaternionf rot = Quaternionf.fromAxesAnglesDeg(m.getXRot(), m.getYRot(), 0);
+		Vector2i rotation = modelResource.getRotation();
+		if (modelResource.isUVLock()){
+			Quaternionf rot = Quaternionf.fromAxesAnglesDeg(rotation.getX(), rotation.getY(), 0);
 			uvLockAngle = (int) rot.getAxesAnglesDeg().dot(faceDir.toVector().toFloat());
 			
 			//TODO: my math has stopped working, there has to be a more consistent solution
-			if (m.getXRot() >= 180 && m.getYRot() != 90 && m.getYRot() != 270) uvLockAngle += 180;
+			if (rotation.getX() >= 180 && rotation.getY() != 90 && rotation.getY() != 270) uvLockAngle += 180;
 		}
 
 		//create both triangles
@@ -205,27 +195,25 @@ public class ResourceModelBuilder {
 		uvs = rotateUVOuter(uvs, uvLockAngle);
 		uvs = rotateUVInner(uvs, face.getRotation());
 		
-		String textureName = face.getResolvedTexture();
-		if (textureName == null) throw new NoSuchTextureException("There is no Texture-Definition for a face: " + faceDir + " of block: " + resource.getBlock());
-		
-		int textureId = resourcePack.getTextureProvider().getTextureIndex(textureName);
+		Texture texture = face.getTexture();
+		int textureId = texture.getId();
 		
 		Face f1 = new Face(c0, c1, c2, uvs[0], uvs[1], uvs[2], textureId);
 		Face f2 = new Face(c0, c2, c3, uvs[0], uvs[2], uvs[3], textureId);
 		
 		//calculate ao
 		double ao0 = 1d, ao1 = 1d, ao2 = 1d, ao3 = 1d;
-		if (renderSettings.getAmbientOcclusionStrenght() > 0f && m.isAmbientOcclusion()){
-			ao0 = testAo(m, c0, faceDir);
-			ao1 = testAo(m, c1, faceDir);
-			ao2 = testAo(m, c2, faceDir);
-			ao3 = testAo(m, c3, faceDir);
+		if (renderSettings.getAmbientOcclusionStrenght() > 0f && modelResource.getModel().isAmbientOcclusion()){
+			ao0 = testAo(modelResource, c0, faceDir);
+			ao1 = testAo(modelResource, c1, faceDir);
+			ao2 = testAo(modelResource, c2, faceDir);
+			ao3 = testAo(modelResource, c3, faceDir);
 		}
 		
 		//tint the face
 		Vector3f color = Vector3f.ONE;
 		if (face.isTinted()){
-			color = resourcePack.getBlockColorProvider().getBlockColor(context);
+			color = colorCalculator.getBlockColor(context); //TODO: cache this so we don't recalculate the tint color again for each face?
 		}
 	
 		color = color.mul(light);
@@ -251,50 +239,46 @@ public class ResourceModelBuilder {
 		model.addFace(f2);
 		
 		//if is top face set model-color
-		Vector3f dir = getRotationRelativeDirectionVector(m, faceDir.toVector().toFloat());
+		Vector3f dir = getRotationRelativeDirectionVector(modelResource, faceDir.toVector().toFloat());
 
-		BlockModelElementResource bmer = face.getElement();
-		if (bmer.isRotation()){
+		if (element.getRotation().getAngle() > 0){
 			Quaternionf rot = Quaternionf.fromAngleDegAxis(
-					bmer.getRotationAngle(),
-					bmer.getRotationAxis().toVector().toFloat()
+					element.getRotation().getAngle(),
+					element.getRotation().getAxis().toVector().toFloat()
 				);
 			dir = rot.rotate(dir);
 		}
 		
 		float a = dir.getY();
 		if (a > 0){
-			Texture t = resourcePack.getTextureProvider().getTexture(textureId);
-			if (t != null){
-				Vector4f c = t.getColor();
-				c = c.mul(color.toVector4(1f));
-				c = new Vector4f(c.getX(), c.getY(), c.getZ(), c.getW() * a);
-				model.mergeMapColor(c);
-			}
+			Vector4f c = texture.getColor();
+			c = c.mul(color.toVector4(1f));
+			c = new Vector4f(c.getX(), c.getY(), c.getZ(), c.getW() * a);
+			model.mergeMapColor(c);
 		}
 		
 	}
 	
-	private Block getRotationRelativeBlock(BlockModelResource model, Direction direction){
+	private Block getRotationRelativeBlock(TransformedBlockModelResource model, Direction direction){
 		return getRotationRelativeBlock(model, direction.toVector());
 	}
 	
-	private Block getRotationRelativeBlock(BlockModelResource model, Vector3i direction){
+	private Block getRotationRelativeBlock(TransformedBlockModelResource model, Vector3i direction){
 		Vector3i dir = getRotationRelativeDirectionVector(model, direction.toFloat()).round().toInt();
 		return context.getRelativeBlock(dir);
 	}
 	
-	private Vector3f getRotationRelativeDirectionVector(BlockModelResource model, Vector3f direction){
+	private Vector3f getRotationRelativeDirectionVector(TransformedBlockModelResource model, Vector3f direction){
 		Quaternionf rot = Quaternionf.fromAxesAnglesDeg(
-				-model.getXRot(),
-				-model.getYRot(),
+				-model.getRotation().getX(),
+				-model.getRotation().getY(),
 				0
 			);
 		Vector3f dir = rot.rotate(direction);
 		return dir;
 	}
 	
-	private double testAo(BlockModelResource model, Vector3f vertex, Direction dir){
+	private double testAo(TransformedBlockModelResource model, Vector3f vertex, Direction dir){
 		int occluding = 0;
 		
 		int x = 0;

@@ -64,11 +64,12 @@ import de.bluecolored.bluemap.core.mca.mapping.BiomeIdMapper;
 import de.bluecolored.bluemap.core.mca.mapping.BlockIdMapper;
 import de.bluecolored.bluemap.core.mca.mapping.BlockProperties;
 import de.bluecolored.bluemap.core.mca.mapping.BlockPropertyMapper;
-import de.bluecolored.bluemap.core.mca.mapping.LightData;
 import de.bluecolored.bluemap.core.util.AABB;
+import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.ChunkNotGeneratedException;
+import de.bluecolored.bluemap.core.world.LightData;
 import de.bluecolored.bluemap.core.world.World;
 import de.bluecolored.bluemap.core.world.WorldChunk;
 import net.querz.nbt.CompoundTag;
@@ -162,7 +163,7 @@ public class MCAWorld implements World {
 			Chunk chunk = getChunk(chunkPos);
 			BlockState blockState = getExtendedBlockState(chunk, pos);
 			LightData lightData = chunk.getLightData(pos);
-			String biome = chunk.getBiomeId(pos);
+			Biome biome = chunk.getBiome(pos);
 			BlockProperties properties = blockPropertyMapper.map(blockState);
 			return new MCABlock(this, blockState, lightData, biome, properties, pos);
 			

@@ -56,7 +56,7 @@ public abstract class Block {
 		return isCullingNeighborFaces();
 	}
 	
-	public abstract String getBiome();
+	public abstract Biome getBiome();
 
 	/**
 	 * This is internally used for light rendering
