@@ -1,0 +1,23 @@
+# Normalize as LF in the repository, OS native locally
+* text=auto
+
+*.bat text eol=crlf
+gradlew text eol=lf
+*.sh text eol=lf
+
+*.java text
+*.java diff=java
+
+# Binary files that should not be modified
+*.dat binary
+*.db binary
+*.icns binary
+*.ico binary
+*.jar binary
+*.jks binary
+*.jpg binary
+*.key binary
+*.png binary
+*.ttf binary
+*.wav binary
+JavaApplicationStub binary
