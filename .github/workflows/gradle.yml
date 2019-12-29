@@ -4,9 +4,7 @@ on: [push]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v1
     - name: Set up JDK 1.8
@@ -15,3 +13,11 @@ jobs:
         java-version: 1.8
     - name: Build with Gradle
       run: ./gradlew shadowJar
+      
+  artifact:
+    needs: build
+    steps:
+    - uses: actions/upload-artifact@v1
+      with:
+        name: artifact
+        path: build/libs/BlueMap.jar
