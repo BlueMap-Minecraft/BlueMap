@@ -12,14 +12,14 @@ dependencies {
 task zipWebroot(type: Zip) {
    from fileTree('src/main/webroot')
    archiveName 'webroot.zip'
-   destinationDir(file('/src/main/resources/'))
+   destinationDir(file('src/main/resources/'))
    outputs.upToDateWhen { false }
 }
 
 task zipResourceExtensions(type: Zip) {
    from fileTree('src/main/resourceExtensions')
    archiveName 'resourceExtensions.zip'
-   destinationDir(file('/src/main/resources/'))
+   destinationDir(file('src/main/resources/'))
    outputs.upToDateWhen { false }
 }
 
