@@ -180,23 +180,27 @@ public class BlockState {
 		return getId() + "[" + sj.toString() + "]";
 	}
 	
-	public static BlockState fromString(String serializedBlockState) {
-		Matcher m = BLOCKSTATE_SERIALIZATION_PATTERN.matcher(serializedBlockState);
-		m.find();
-
-		Map<String, String> pt = new HashMap<>();
-		String g2 = m.group(2);
-		if (g2 != null){
-			String[] propertyStrings = g2.trim().split(",");
-			for (String s : propertyStrings){
-				String[] kv = s.split("=", 2);
-				pt.put(kv[0], kv[1]);
+	public static BlockState fromString(String serializedBlockState) throws IllegalArgumentException {
+		try {
+			Matcher m = BLOCKSTATE_SERIALIZATION_PATTERN.matcher(serializedBlockState);
+			m.find();
+	
+			Map<String, String> pt = new HashMap<>();
+			String g2 = m.group(2);
+			if (g2 != null){
+				String[] propertyStrings = g2.trim().split(",");
+				for (String s : propertyStrings){
+					String[] kv = s.split("=", 2);
+					pt.put(kv[0], kv[1]);
+				}
 			}
+	
+			String blockId = m.group(1).trim();
+			
+			return new BlockState(blockId, pt);
+		} catch (Exception ex) {
+			throw new IllegalArgumentException("'" + serializedBlockState + "' could not be parsed to a BlockState!");
 		}
-
-		String blockId = m.group(1).trim();
-		
-		return new BlockState(blockId, pt);
 	}
 	
 }

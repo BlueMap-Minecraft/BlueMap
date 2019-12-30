@@ -60,13 +60,13 @@ import de.bluecolored.bluemap.core.mca.extensions.StairShapeExtension;
 import de.bluecolored.bluemap.core.mca.extensions.TripwireConnectExtension;
 import de.bluecolored.bluemap.core.mca.extensions.WallConnectExtension;
 import de.bluecolored.bluemap.core.mca.extensions.WoodenFenceConnectExtension;
-import de.bluecolored.bluemap.core.mca.mapping.BiomeIdMapper;
+import de.bluecolored.bluemap.core.mca.mapping.BiomeMapper;
 import de.bluecolored.bluemap.core.mca.mapping.BlockIdMapper;
-import de.bluecolored.bluemap.core.mca.mapping.BlockProperties;
-import de.bluecolored.bluemap.core.mca.mapping.BlockPropertyMapper;
+import de.bluecolored.bluemap.core.mca.mapping.BlockPropertiesMapper;
 import de.bluecolored.bluemap.core.util.AABB;
 import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.Block;
+import de.bluecolored.bluemap.core.world.BlockProperties;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.ChunkNotGeneratedException;
 import de.bluecolored.bluemap.core.world.LightData;
@@ -83,19 +83,7 @@ public class MCAWorld implements World {
 	private static final Cache<WorldChunkHash, Chunk> CHUNK_CACHE = CacheBuilder.newBuilder().maximumSize(500).build();	
 	private static final Multimap<String, BlockStateExtension> BLOCK_STATE_EXTENSIONS = MultimapBuilder.hashKeys().arrayListValues().build();
 
-	public static final BlockIdMapper DEFAULT_BLOCK_ID_MAPPER;
-	public static final BlockPropertyMapper DEFAULT_BLOCK_PROPERTY_MAPPER;
-	public static final BiomeIdMapper DEFAULT_BIOME_ID_MAPPER;
-	
 	static {
-		try {
-			DEFAULT_BLOCK_ID_MAPPER = BlockIdMapper.create();
-			DEFAULT_BLOCK_PROPERTY_MAPPER = BlockPropertyMapper.create();
-			DEFAULT_BIOME_ID_MAPPER = BiomeIdMapper.create();
-		} catch (IOException e) {
-			throw new RuntimeException("Failed to load essential resources!", e);
-		}
-		
 		registerBlockStateExtension(new SnowyExtension());
 		registerBlockStateExtension(new StairShapeExtension());
 		registerBlockStateExtension(new FireExtension());
@@ -117,8 +105,8 @@ public class MCAWorld implements World {
 	private Vector3i spawnPoint;
 
 	private BlockIdMapper blockIdMapper;
-	private BlockPropertyMapper blockPropertyMapper;
-	private BiomeIdMapper biomeIdMapper;
+	private BlockPropertiesMapper blockPropertiesMapper;
+	private BiomeMapper biomeMapper;
 	
 	private MCAWorld(
 			Path worldFolder, 
@@ -128,8 +116,8 @@ public class MCAWorld implements World {
 			int seaLevel, 
 			Vector3i spawnPoint, 
 			BlockIdMapper blockIdMapper,
-			BlockPropertyMapper blockPropertyMapper, 
-			BiomeIdMapper biomeIdMapper
+			BlockPropertiesMapper blockPropertiesMapper, 
+			BiomeMapper biomeMapper
 			) {
 		this.uuid = uuid;
 		this.worldFolder = worldFolder;
@@ -139,8 +127,8 @@ public class MCAWorld implements World {
 		this.spawnPoint = spawnPoint;
 		
 		this.blockIdMapper = blockIdMapper;
-		this.blockPropertyMapper = blockPropertyMapper;
-		this.biomeIdMapper = biomeIdMapper;
+		this.blockPropertiesMapper = blockPropertiesMapper;
+		this.biomeMapper = biomeMapper;
 	}
 
 	public BlockState getBlockState(Vector3i pos) {
@@ -164,7 +152,7 @@ public class MCAWorld implements World {
 			BlockState blockState = getExtendedBlockState(chunk, pos);
 			LightData lightData = chunk.getLightData(pos);
 			Biome biome = chunk.getBiome(pos);
-			BlockProperties properties = blockPropertyMapper.map(blockState);
+			BlockProperties properties = blockPropertiesMapper.get(blockState);
 			return new MCABlock(this, blockState, lightData, biome, properties, pos);
 			
 		} catch (IOException ex) {
@@ -335,24 +323,24 @@ public class MCAWorld implements World {
 		return blockIdMapper;
 	}
 	
-	public BlockPropertyMapper getBlockPropertyMapper() {
-		return blockPropertyMapper;
+	public BlockPropertiesMapper getBlockPropertiesMapper() {
+		return blockPropertiesMapper;
 	}
 	
-	public BiomeIdMapper getBiomeIdMapper() {
-		return biomeIdMapper;
+	public BiomeMapper getBiomeIdMapper() {
+		return biomeMapper;
 	}
 	
 	public void setBlockIdMapper(BlockIdMapper blockIdMapper) {
 		this.blockIdMapper = blockIdMapper;
 	}
 
-	public void setBlockPropertyMapper(BlockPropertyMapper blockPropertyMapper) {
-		this.blockPropertyMapper = blockPropertyMapper;
+	public void setBlockPropertiesMapper(BlockPropertiesMapper blockPropertiesMapper) {
+		this.blockPropertiesMapper = blockPropertiesMapper;
 	}
 
-	public void setBiomeIdMapper(BiomeIdMapper biomeIdMapper) {
-		this.biomeIdMapper = biomeIdMapper;
+	public void setBiomeMapper(BiomeMapper biomeMapper) {
+		this.biomeMapper = biomeMapper;
 	}
 
 	public Path getWorldFolder() {
@@ -367,7 +355,7 @@ public class MCAWorld implements World {
 		return getRegionFolder().resolve(MCAUtil.createNameFromRegionLocation(region.getX(), region.getY()));
 	}
 	
-	public static MCAWorld load(Path worldFolder, UUID uuid) throws IOException {
+	public static MCAWorld load(Path worldFolder, UUID uuid, BlockIdMapper blockIdMapper, BlockPropertiesMapper blockPropertiesMapper, BiomeMapper biomeIdMapper) throws IOException {
 		try {
 			CompoundTag level = (CompoundTag) NBTUtil.readTag(worldFolder.resolve("level.dat").toFile());
 			CompoundTag levelData = level.getCompoundTag("Data");
@@ -389,10 +377,10 @@ public class MCAWorld implements World {
 					name, 
 					worldHeight, 
 					seaLevel, 
-					spawnPoint, 
-					DEFAULT_BLOCK_ID_MAPPER,
-					DEFAULT_BLOCK_PROPERTY_MAPPER, 
-					DEFAULT_BIOME_ID_MAPPER
+					spawnPoint,
+					blockIdMapper,
+					blockPropertiesMapper,
+					biomeIdMapper
 					);
 		} catch (ClassCastException | NullPointerException ex) {
 			throw new IOException("Invaid level.dat format!", ex);

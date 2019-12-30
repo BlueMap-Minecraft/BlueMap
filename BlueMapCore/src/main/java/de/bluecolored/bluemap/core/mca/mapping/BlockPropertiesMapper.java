@@ -24,11 +24,12 @@
  */
 package de.bluecolored.bluemap.core.mca.mapping;
 
+import de.bluecolored.bluemap.core.world.BlockProperties;
 import de.bluecolored.bluemap.core.world.BlockState;
 
 @FunctionalInterface
-public interface BlockIdMapper {
-
-	BlockState get(int id, int meta);
+public interface BlockPropertiesMapper {
 	
+	BlockProperties get(BlockState blockState);
+
 }

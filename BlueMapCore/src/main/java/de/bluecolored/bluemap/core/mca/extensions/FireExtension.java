@@ -43,13 +43,13 @@ public class FireExtension implements BlockStateExtension {
 	public BlockState extend(MCAWorld world, Vector3i pos, BlockState state) {
 		BlockState below = world.getBlockState(pos.add(0, -1, 0));
 		
-		boolean isOnGround = world.getBlockPropertyMapper().map(below).isCulling();
+		boolean isOnGround = world.getBlockPropertiesMapper().get(below).isCulling();
 		for (Direction dir : Direction.values()) {
 			if (dir != Direction.DOWN) {
 				if (!isOnGround) {
 					BlockState neighbor = world.getBlockState(pos.add(dir.toVector()));
 
-					state = state.with(dir.name().toLowerCase(), String.valueOf(!world.getBlockPropertyMapper().map(neighbor).isCulling()));
+					state = state.with(dir.name().toLowerCase(), String.valueOf(!world.getBlockPropertiesMapper().get(neighbor).isCulling()));
 				} else {
 					state = state.with(dir.name().toLowerCase(), "false");
 				}

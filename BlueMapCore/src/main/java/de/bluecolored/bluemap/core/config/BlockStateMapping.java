@@ -22,45 +22,42 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.mca.mapping;
+package de.bluecolored.bluemap.core.config;
 
-import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map.Entry;
 
-import de.bluecolored.bluemap.core.world.Biome;
-import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.gson.GsonConfigurationLoader;
+import de.bluecolored.bluemap.core.world.BlockState;
 
-public class BiomeIdMapper {
-
-	private HashMap<Integer, Biome> biomes;
+class BlockStateMapping<T> {
+	private BlockState blockState;
+	private T mapping;
 	
-	public BiomeIdMapper() throws IOException {
-		biomes = new HashMap<>();
-		
-		GsonConfigurationLoader loader = GsonConfigurationLoader.builder()
-				.setURL(getClass().getResource("/biomes.json"))
-				.build();
-		
-		ConfigurationNode node = loader.load();
-
-		for (Entry<Object, ? extends ConfigurationNode> e : node.getChildrenMap().entrySet()){
-			String id = e.getKey().toString();
-			Biome biome = Biome.create(id, e.getValue());
-			biomes.put(biome.getOrdinal(), biome);
-		}	
-		
+	public BlockStateMapping(BlockState blockState, T mapping) {
+		this.blockState = blockState;
+		this.mapping = mapping;
 	}
 	
-	public Biome get(int id) {
-		Biome biome = biomes.get(id);
-		if (biome == null) return Biome.DEFAULT;
-		return biome;
+	/**
+	 * Returns true if the all the properties on this BlockMapping-key are the same in the provided BlockState.<br>
+	 * Properties that are not defined in this Mapping are ignored on the provided BlockState.<br>
+	 */
+	public boolean fitsTo(BlockState blockState){
+		if (!this.blockState.getId().equals(blockState.getId())) return false;
+		for (Entry<String, String> e : this.blockState.getProperties().entrySet()){
+			if (!e.getValue().equals(blockState.getProperties().get(e.getKey()))){
+				return false;
+			}
+		}
+		
+		return true;
 	}
 	
-	public static BiomeIdMapper create() throws IOException {
-		return new BiomeIdMapper();
+	public BlockState getBlockState(){
+		return blockState;
+	}
+	
+	public T getMapping(){
+		return mapping;
 	}
 	
 }

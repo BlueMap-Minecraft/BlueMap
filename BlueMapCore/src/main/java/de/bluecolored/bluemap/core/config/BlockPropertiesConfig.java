@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.mca.mapping;
+package de.bluecolored.bluemap.core.config;
 
 import java.io.IOException;
 import java.util.Map.Entry;
@@ -35,36 +35,34 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.Multimaps;
 
+import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.mca.mapping.BlockPropertiesMapper;
+import de.bluecolored.bluemap.core.world.BlockProperties;
 import de.bluecolored.bluemap.core.world.BlockState;
 import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.gson.GsonConfigurationLoader;
 
-public class BlockPropertyMapper {
-	
-	private static final BlockProperties DEFAULT_PROPERTIES = new BlockProperties(false, false, false);
+public class BlockPropertiesConfig implements BlockPropertiesMapper {
 	
 	private Multimap<String, BlockStateMapping<BlockProperties>> mappings;
 	private LoadingCache<BlockState, BlockProperties> mappingCache;
 	
-	private BlockPropertyMapper() throws IOException {
+	public BlockPropertiesConfig(ConfigurationNode node) throws IOException {
 		mappings = HashMultimap.create();
-		
-		GsonConfigurationLoader loader = GsonConfigurationLoader.builder()
-				.setURL(getClass().getResource("/blockProperties.json"))
-				.build();
-		
-		ConfigurationNode node = loader.load();
 		
 		for (Entry<Object, ? extends ConfigurationNode> e : node.getChildrenMap().entrySet()){
 			String key = e.getKey().toString();
-			BlockState bsKey = BlockState.fromString(key);
-			BlockProperties bsValue = new BlockProperties(
-					e.getValue().getNode("culling").getBoolean(false),
-					e.getValue().getNode("occluding").getBoolean(false),
-					e.getValue().getNode("flammable").getBoolean(false)
-				);
-			BlockStateMapping<BlockProperties> mapping = new BlockStateMapping<>(bsKey, bsValue);
-				mappings.put(bsKey.getId(), mapping);
+			try {
+				BlockState bsKey = BlockState.fromString(key);
+				BlockProperties bsValue = new BlockProperties(
+						e.getValue().getNode("culling").getBoolean(false),
+						e.getValue().getNode("occluding").getBoolean(false),
+						e.getValue().getNode("flammable").getBoolean(false)
+					);
+				BlockStateMapping<BlockProperties> mapping = new BlockStateMapping<>(bsKey, bsValue);
+					mappings.put(bsKey.getFullId(), mapping);
+			} catch (IllegalArgumentException ex) {
+				Logger.global.logWarning("Loading BlockPropertiesConfig: Failed to parse BlockState from key '" + key + "'");
+			}
 		}
 		
 		mappings = Multimaps.unmodifiableMultimap(mappings);
@@ -77,27 +75,24 @@ public class BlockPropertyMapper {
 				});
 	}
 	
-	public BlockProperties map(BlockState from){
+	@Override
+	public BlockProperties get(BlockState from){
 		try {
 			return mappingCache.get(from);
-		} catch (ExecutionException e) {
+		} catch (ExecutionException neverHappens) {
 			//should never happen, since the CacheLoader does not throw any exceptions
-			throw new RuntimeException("Unexpected error while trying to map a BlockState's properties", e.getCause());
+			throw new RuntimeException("Unexpected error while trying to map a BlockState's properties", neverHappens.getCause());
 		}
 	}
 
 	private BlockProperties mapNoCache(BlockState bs){
-		for (BlockStateMapping<BlockProperties> bm : mappings.get(bs.getId())){
+		for (BlockStateMapping<BlockProperties> bm : mappings.get(bs.getFullId())){
 			if (bm.fitsTo(bs)){
 				return bm.getMapping();
 			}
 		}
 		
-		return DEFAULT_PROPERTIES;
-	}
-	
-	public static BlockPropertyMapper create() throws IOException {
-		return new BlockPropertyMapper();
+		return BlockProperties.DEFAULT;
 	}
 	
 }

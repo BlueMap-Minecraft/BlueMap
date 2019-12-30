@@ -31,7 +31,7 @@ import java.util.Map.Entry;
 import com.flowpowered.math.vector.Vector3i;
 
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.mca.mapping.BiomeIdMapper;
+import de.bluecolored.bluemap.core.mca.mapping.BiomeMapper;
 import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.LightData;
@@ -44,7 +44,7 @@ import net.querz.nbt.Tag;
 import net.querz.nbt.mca.MCAUtil;
 
 class ChunkAnvil113 extends Chunk {
-	private BiomeIdMapper biomeIdMapper;
+	private BiomeMapper biomeIdMapper;
 
 	private boolean isGenerated;
 	private Section[] sections;

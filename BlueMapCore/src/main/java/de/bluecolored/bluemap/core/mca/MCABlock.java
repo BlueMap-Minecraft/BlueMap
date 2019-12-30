@@ -26,9 +26,9 @@ package de.bluecolored.bluemap.core.mca;
 
 import com.flowpowered.math.vector.Vector3i;
 
-import de.bluecolored.bluemap.core.mca.mapping.BlockProperties;
 import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.Block;
+import de.bluecolored.bluemap.core.world.BlockProperties;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.LightData;
 
@@ -83,6 +83,11 @@ public class MCABlock extends Block {
 	@Override
 	public boolean isOccludingNeighborFaces() {
 		return properties.isOccluding();
+	}
+	
+	@Override
+	public boolean isFlammable() {
+		return properties.isFlammable();
 	}
 
 	@Override

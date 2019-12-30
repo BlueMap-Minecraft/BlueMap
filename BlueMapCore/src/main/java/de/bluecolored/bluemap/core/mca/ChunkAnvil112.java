@@ -26,7 +26,7 @@ package de.bluecolored.bluemap.core.mca;
 
 import com.flowpowered.math.vector.Vector3i;
 
-import de.bluecolored.bluemap.core.mca.mapping.BiomeIdMapper;
+import de.bluecolored.bluemap.core.mca.mapping.BiomeMapper;
 import de.bluecolored.bluemap.core.mca.mapping.BlockIdMapper;
 import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.BlockState;
@@ -37,7 +37,7 @@ import net.querz.nbt.mca.MCAUtil;
 
 class ChunkAnvil112 extends Chunk {
 	private BlockIdMapper blockIdMapper;
-	private BiomeIdMapper biomeIdMapper;
+	private BiomeMapper biomeIdMapper;
 	
 	private boolean isGenerated;
 	private Section[] sections;

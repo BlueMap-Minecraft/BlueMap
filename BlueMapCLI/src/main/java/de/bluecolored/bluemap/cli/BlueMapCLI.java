@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.cli;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -51,9 +52,9 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.base.Preconditions;
 
-import de.bluecolored.bluemap.core.config.Configuration;
-import de.bluecolored.bluemap.core.config.Configuration.MapConfig;
-import de.bluecolored.bluemap.core.config.ConfigurationFile;
+import de.bluecolored.bluemap.core.config.ConfigManager;
+import de.bluecolored.bluemap.core.config.MainConfig;
+import de.bluecolored.bluemap.core.config.MainConfig.MapConfig;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.metrics.Metrics;
@@ -68,15 +69,13 @@ import de.bluecolored.bluemap.core.world.World;
 
 public class BlueMapCLI {
 
-	private ConfigurationFile configFile;
-	private Configuration config;
+	private ConfigManager configManager;
 	private File configFolder;
 	private ResourcePack resourcePack;
 	private boolean forceRender;
 	
-	public BlueMapCLI(ConfigurationFile configFile, File configFolder, boolean forceRender) {
-		this.configFile = configFile;
-		this.config = configFile.getConfig();
+	public BlueMapCLI(ConfigManager configManager, File configFolder, boolean forceRender) {
+		this.configManager = configManager;
 		this.configFolder = configFolder;
 		this.forceRender = forceRender;
 		this.resourcePack = null;
@@ -84,6 +83,8 @@ public class BlueMapCLI {
 	
 	public void renderMaps() throws IOException {
 		Preconditions.checkNotNull(resourcePack);
+		
+		MainConfig config = configManager.getMainConfig();
 		
 		config.getWebDataPath().toFile().mkdirs();
 		
@@ -96,7 +97,7 @@ public class BlueMapCLI {
 			}
 	
 			Logger.global.logInfo("Preparing renderer for map '" + mapConfig.getId() + "' ...");
-			World world = MCAWorld.load(mapPath.toPath(), UUID.randomUUID());
+			World world = MCAWorld.load(mapPath.toPath(), UUID.randomUUID(), configManager.getBlockIdConfig(), configManager.getBlockPropertiesConfig(), configManager.getBiomeConfig());
 			
 			HiresModelManager hiresModelManager = new HiresModelManager(
 					config.getWebDataPath().resolve("hires").resolve(mapConfig.getId()),
@@ -124,6 +125,7 @@ public class BlueMapCLI {
 			webSettings.setFrom(map.getTileRenderer(), map.getId());
 		}
 		for (MapConfig map : config.getMapConfigs()) {
+			if (!maps.containsKey(map.getId())) continue; //don't add not loaded maps
 			webSettings.setHiresViewDistance(map.getHiresViewDistance(), map.getId());
 			webSettings.setLowresViewDistance(map.getLowresViewDistance(), map.getId());
 		}
@@ -189,13 +191,15 @@ public class BlueMapCLI {
 	public void startWebserver() throws IOException {
 		Logger.global.logInfo("Starting webserver...");
 		
-		BlueMapWebServer webserver = new BlueMapWebServer(config);
+		BlueMapWebServer webserver = new BlueMapWebServer(configManager.getMainConfig());
 		webserver.updateWebfiles();
 		webserver.start();
 	}
 	
 	private boolean loadResources() throws IOException, ParseResourceException {
 		Logger.global.logInfo("Loading resources...");
+
+		MainConfig config = configManager.getMainConfig();
 		
 		File defaultResourceFile = config.getDataPath().resolve("minecraft-client-" + ResourcePack.MINECRAFT_CLIENT_VERSION + ".jar").toFile();
 		File resourceExtensionsFile = config.getDataPath().resolve("resourceExtensions.zip").toFile();
@@ -214,7 +218,7 @@ public class BlueMapCLI {
 		}
 		
 		//find more resource packs
-		File resourcePackFolder = configFile.getFile().toPath().resolveSibling("resourcepacks").toFile();
+		File resourcePackFolder = configFolder.toPath().resolve("resourcepacks").toFile();
 		resourcePackFolder.mkdirs();
 		File[] resourcePacks = resourcePackFolder.listFiles();
 		Arrays.sort(resourcePacks);
@@ -234,7 +238,7 @@ public class BlueMapCLI {
 	}
 	
 	private boolean handleMissingResources(File resourceFile) {
-		if (config.isDownloadAccepted()) {
+		if (configManager.getMainConfig().isDownloadAccepted()) {
 			try {
 				Logger.global.logInfo("Downloading " + ResourcePack.MINECRAFT_CLIENT_URL + " to " + resourceFile + " ...");
 				ResourcePack.downloadDefaultResource(resourceFile);
@@ -246,7 +250,7 @@ public class BlueMapCLI {
 		} else {
 			Logger.global.logWarning("BlueMap is missing important resources!");
 			Logger.global.logWarning("You need to accept the download of the required files in order of BlueMap to work!");
-			Logger.global.logWarning("Please check: " + configFile.getFile() + " and try again!");
+			Logger.global.logWarning("Please check " + configManager.getMainConfigFile() + " and try again!");
 			return false;
 		}
 	}
@@ -270,30 +274,37 @@ public class BlueMapCLI {
 				configFolder.mkdirs();
 			}
 			
-			File configFile = new File(configFolder, "bluemap.conf");
+			URL cliConfigUrl = BlueMapCLI.class.getResource("/bluemap-cli.conf");
+			URL cliDefaultsUrl = BlueMapCLI.class.getResource("/bluemap-cli-defaults.conf");
 			
-			boolean configCreated = !configFile.exists();
-			
-			ConfigurationFile config = ConfigurationFile.loadOrCreate(configFile, BlueMapCLI.class.getResource("/bluemap-cli.conf"));
+			ConfigManager config = new ConfigManager(configFolder, cliConfigUrl, cliDefaultsUrl);
+			boolean configCreated = !config.getMainConfigFile().exists();
+			config.loadOrCreateConfigs();
 			
 			if (configCreated) {
-				Logger.global.logInfo("No config file found! Created an example config here: " + configFile);
+				Logger.global.logInfo("No config file found! Created default configs here: " + configFolder);
 				return;
 			}
 			
 			BlueMapCLI bluemap = new BlueMapCLI(config, configFolder, cmd.hasOption("f"));
 
-			if (config.getConfig().isWebserverEnabled()) {
+			if (config.getMainConfig().isWebserverEnabled()) {
 				//start webserver
 				bluemap.startWebserver();
+
+				//wait a second to let the webserver start, looks nicer in the log
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException ignore) {}
 			}
 			
-			if (!config.getConfig().getMapConfigs().isEmpty()) {
+			
+			if (!config.getMainConfig().getMapConfigs().isEmpty()) {
 				//load resources
 				if (bluemap.loadResources()) {
 					
 					//metrics
-					if (config.getConfig().isMetricsEnabled()) Metrics.sendReportAsync("CLI");
+					if (config.getMainConfig().isMetricsEnabled()) Metrics.sendReportAsync("CLI");
 					
 					//render maps
 					bluemap.renderMaps();

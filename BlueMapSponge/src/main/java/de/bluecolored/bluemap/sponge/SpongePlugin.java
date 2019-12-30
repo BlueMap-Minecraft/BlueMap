@@ -30,6 +30,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -60,9 +61,9 @@ import org.spongepowered.api.world.storage.WorldProperties;
 import com.flowpowered.math.vector.Vector2i;
 
 import de.bluecolored.bluemap.core.BlueMap;
-import de.bluecolored.bluemap.core.config.Configuration;
-import de.bluecolored.bluemap.core.config.Configuration.MapConfig;
-import de.bluecolored.bluemap.core.config.ConfigurationFile;
+import de.bluecolored.bluemap.core.config.ConfigManager;
+import de.bluecolored.bluemap.core.config.MainConfig;
+import de.bluecolored.bluemap.core.config.MainConfig.MapConfig;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.metrics.Metrics;
@@ -101,7 +102,7 @@ public class SpongePlugin {
 	@Inject
     private MetricsLite2 metrics;
 	
-	private Configuration config;
+	private MainConfig config;
 	private ResourcePack resourcePack;
 
 	private Map<UUID, World> worlds;
@@ -131,8 +132,10 @@ public class SpongePlugin {
 		unload(); //ensure nothing is left running (from a failed load or something)
 		
 		//load configs
-		File configFile = getConfigPath().resolve("bluemap.conf").toFile();
-		config = ConfigurationFile.loadOrCreate(configFile, SpongePlugin.class.getResource("/bluemap-sponge.conf")).getConfig();
+		URL defaultSpongeConfig = SpongePlugin.class.getResource("/bluemap-sponge.conf");
+		URL spongeConfigDefaults = SpongePlugin.class.getResource("/bluemap-sponge-defaults.conf");
+		ConfigManager configManager = new ConfigManager(getConfigPath().toFile(), defaultSpongeConfig, spongeConfigDefaults);
+		config = configManager.getMainConfig();
 		
 		File blockColorsConfigFile = getConfigPath().resolve("blockColors.json").toFile();
 		if (!blockColorsConfigFile.exists()) {
@@ -145,7 +148,7 @@ public class SpongePlugin {
 		File textureExportFile = config.getWebDataPath().resolve("textures.json").toFile();
 		
 		if (!defaultResourceFile.exists()) {
-			handleMissingResources(defaultResourceFile, configFile);
+			handleMissingResources(defaultResourceFile, configManager.getMainConfigFile());
 			unload();
 			
 			Sponge.getCommandManager().register(this, new Commands(this).createStandaloneReloadCommand(), "bluemap");
@@ -198,7 +201,7 @@ public class SpongePlugin {
 			World world = worlds.get(worldUUID);
 			if (world == null) {
 				try {
-					world = MCAWorld.load(worldFolder.toPath(), worldUUID);
+					world = MCAWorld.load(worldFolder.toPath(), worldUUID, configManager.getBlockIdConfig(), configManager.getBlockPropertiesConfig(), configManager.getBiomeConfig());
 					worlds.put(worldUUID, world);
 				} catch (IOException e) {
 					Logger.global.logError("Failed to load map '" + id + "': Failed to read level.dat", e);
@@ -258,6 +261,7 @@ public class SpongePlugin {
 			webSettings.setFrom(map.getTileRenderer(), map.getId());
 		}
 		for (MapConfig map : config.getMapConfigs()) {
+			if (!maps.containsKey(map.getId())) continue; //don't add not loaded maps
 			webSettings.setHiresViewDistance(map.getHiresViewDistance(), map.getId());
 			webSettings.setLowresViewDistance(map.getLowresViewDistance(), map.getId());
 		}
@@ -378,7 +382,7 @@ public class SpongePlugin {
 		});
 	}
 	
-	private void handleMissingResources(File resourceFile, File configFile) {
+	private void handleMissingResources(File resourceFile, File mainConfigFile) {
 		if (config.isDownloadAccepted()) {
 			
 			//download file async
@@ -405,7 +409,7 @@ public class SpongePlugin {
 		} else {
 			Logger.global.logWarning("BlueMap is missing important resources!");
 			Logger.global.logWarning("You need to accept the download of the required files in order of BlueMap to work!");
-			Logger.global.logWarning("Please check: " + configFile);
+			Logger.global.logWarning("Please check: " + mainConfigFile);
 			Logger.global.logInfo("If you have changed the config you can simply reload the plugin using: /bluemap reload");
 		}
 	}

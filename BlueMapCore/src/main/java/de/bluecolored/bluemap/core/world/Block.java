@@ -51,6 +51,8 @@ public abstract class Block {
 	public abstract double getBlockLightLevel();
 
 	public abstract boolean isCullingNeighborFaces();
+
+	public abstract boolean isFlammable();
 	
 	public boolean isOccludingNeighborFaces(){
 		return isCullingNeighborFaces();

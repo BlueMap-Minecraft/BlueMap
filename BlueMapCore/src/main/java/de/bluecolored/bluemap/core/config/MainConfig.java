@@ -38,9 +38,9 @@ import de.bluecolored.bluemap.core.render.RenderSettings;
 import de.bluecolored.bluemap.core.web.WebServerConfig;
 import ninja.leaping.configurate.ConfigurationNode;
 
-public class Configuration implements WebServerConfig {
+public class MainConfig implements WebServerConfig {
 
-private String version;
+	private String version;
 	
 	private boolean downloadAccepted = false;
 	private boolean metricsEnabled = false;
@@ -59,8 +59,8 @@ private String version;
 	
 	private Collection<MapConfig> mapConfigs = new ArrayList<>();
 	
-	public Configuration(ConfigurationNode node) throws IOException {
-		version = node.getNode("version").getString("-");
+	public MainConfig(ConfigurationNode node) throws IOException {
+		version = node.getNode("version").getString();
 		downloadAccepted = node.getNode("accept-download").getBoolean(false);
 		metricsEnabled = node.getNode("metrics").getBoolean(false);
 		

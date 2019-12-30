@@ -96,6 +96,11 @@ public class EmptyBlockContext implements ExtendedBlockContext {
 		}
 
 		@Override
+		public boolean isFlammable() {
+			return false;
+		}
+
+		@Override
 		public Biome getBiome() {
 			return Biome.DEFAULT;
 		}

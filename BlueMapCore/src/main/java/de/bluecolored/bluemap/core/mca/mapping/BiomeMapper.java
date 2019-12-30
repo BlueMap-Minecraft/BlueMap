@@ -24,26 +24,11 @@
  */
 package de.bluecolored.bluemap.core.mca.mapping;
 
-public class BlockProperties {
+import de.bluecolored.bluemap.core.world.Biome;
 
-	private final boolean culling, occluding, flammable;
-	
-	public BlockProperties(boolean culling, boolean occluding, boolean flammable) {
-		this.culling = culling;
-		this.occluding = occluding;
-		this.flammable = flammable;
-	}
-	
-	public boolean isCulling() {
-		return culling;
-	}
-	
-	public boolean isOccluding() {
-		return occluding;
-	}
-	
-	public boolean isFlammable() {
-		return flammable;
-	}
+@FunctionalInterface
+public interface BiomeMapper {
+
+	Biome get(int id);
 	
 }

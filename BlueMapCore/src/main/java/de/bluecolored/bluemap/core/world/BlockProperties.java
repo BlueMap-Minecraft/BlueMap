@@ -22,13 +22,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.mca.mapping;
+package de.bluecolored.bluemap.core.world;
 
-import de.bluecolored.bluemap.core.world.BlockState;
+public class BlockProperties {
 
-@FunctionalInterface
-public interface BlockIdMapper {
-
-	BlockState get(int id, int meta);
+	public static final BlockProperties DEFAULT = new BlockProperties(false, false, false); 
+	
+	private final boolean culling, occluding, flammable;
+	
+	public BlockProperties(boolean culling, boolean occluding, boolean flammable) {
+		this.culling = culling;
+		this.occluding = occluding;
+		this.flammable = flammable;
+	}
+	
+	public boolean isCulling() {
+		return culling;
+	}
+	
+	public boolean isOccluding() {
+		return occluding;
+	}
+	
+	public boolean isFlammable() {
+		return flammable;
+	}
 	
 }

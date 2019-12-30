@@ -35,7 +35,7 @@ public abstract class ConnectSameOrFullBlockExtension extends ConnectExtension {
 	public boolean connectsTo(MCAWorld world, Vector3i pos, BlockState block) {
 		if (super.connectsTo(world, pos, block)) return true;
 		
-		return world.getBlockPropertyMapper().map(block).isCulling();
+		return world.getBlockPropertiesMapper().get(block).isCulling();
 	}
 
 }

@@ -22,42 +22,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.mca.mapping;
+package de.bluecolored.bluemap.core.config;
 
+import java.util.HashMap;
 import java.util.Map.Entry;
 
-import de.bluecolored.bluemap.core.world.BlockState;
+import de.bluecolored.bluemap.core.mca.mapping.BiomeMapper;
+import de.bluecolored.bluemap.core.world.Biome;
+import ninja.leaping.configurate.ConfigurationNode;
 
-class BlockStateMapping<T> {
-	private BlockState blockState;
-	private T mapping;
+public class BiomeConfig implements BiomeMapper {
+
+	private HashMap<Integer, Biome> biomes;
 	
-	public BlockStateMapping(BlockState blockState, T mapping) {
-		this.blockState = blockState;
-		this.mapping = mapping;
-	}
-	
-	/**
-	 * Returns true if the all the properties on this BlockMapping-key are the same in the provided BlockState.<br>
-	 * Properties that are not defined in this Mapping are ignored on the provided BlockState.<br>
-	 */
-	public boolean fitsTo(BlockState blockState){
-		if (!this.blockState.getId().equals(blockState.getId())) return false;
-		for (Entry<String, String> e : this.blockState.getProperties().entrySet()){
-			if (!e.getValue().equals(blockState.getProperties().get(e.getKey()))){
-				return false;
-			}
+	public BiomeConfig(ConfigurationNode node) {
+		biomes = new HashMap<>();
+
+		for (Entry<Object, ? extends ConfigurationNode> e : node.getChildrenMap().entrySet()){
+			String id = e.getKey().toString();
+			Biome biome = Biome.create(id, e.getValue());
+			biomes.put(biome.getOrdinal(), biome);
 		}
 		
-		return true;
 	}
 	
-	public BlockState getBlockState(){
-		return blockState;
-	}
-	
-	public T getMapping(){
-		return mapping;
+	@Override
+	public Biome get(int id) {
+		return biomes.getOrDefault(id, Biome.DEFAULT);
 	}
 	
 }
