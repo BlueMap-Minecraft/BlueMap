@@ -113,38 +113,52 @@ public class ConfigManager {
 		mainConfig = new MainConfig(loadOrCreate(getMainConfigFile(), defaultMainConfig, mainConfigDefaultValues, true));
 		
 		URL blockIdsConfigUrl = BlueMap.class.getResource("/blockIds.json");
-		blockIdConfig = new BlockIdConfig(loadOrCreate(getBlockIdConfigFile(), blockIdsConfigUrl, blockIdsConfigUrl, false));
+		blockIdConfig = new BlockIdConfig(loadOrCreate(getBlockIdConfigFile(), null, blockIdsConfigUrl, false), getLoader(makeAutogen(getBlockIdConfigFile())));
 		
 		URL blockPropertiesConfigUrl = BlueMap.class.getResource("/blockProperties.json");
-		blockPropertiesConfig = new BlockPropertiesConfig(loadOrCreate(getBlockPropertiesConfigFile(), blockPropertiesConfigUrl, blockPropertiesConfigUrl, false));
+		blockPropertiesConfig = new BlockPropertiesConfig(loadOrCreate(getBlockPropertiesConfigFile(), null, blockPropertiesConfigUrl, false), getLoader(makeAutogen(getBlockPropertiesConfigFile())));
 
 		URL biomeConfigUrl = BlueMap.class.getResource("/biomes.json");
-		biomeConfig = new BiomeConfig(loadOrCreate(getBiomeConfigFile(), biomeConfigUrl, biomeConfigUrl, false));
+		biomeConfig = new BiomeConfig(loadOrCreate(getBiomeConfigFile(), null, biomeConfigUrl, false), getLoader(makeAutogen(getBiomeConfigFile())));
 	}
 	
 	private ConfigurationNode loadOrCreate(File configFile, URL defaultConfig, URL defaultValues, boolean usePlaceholders) throws IOException {
 		
+		ConfigurationNode configNode;
 		if (!configFile.exists()) {
 			configFile.getParentFile().mkdirs();
 			
-			//load content of default config
-			String content;
-			try (BufferedReader reader = new BufferedReader(new InputStreamReader(defaultConfig.openStream(), StandardCharsets.UTF_8))){
-				content = reader.lines().collect(Collectors.joining("\n"));
-			}
-
-			//replace placeholders if enabled
-			if (usePlaceholders) {
-				for (Placeholder placeholder : CONFIG_PLACEHOLDERS) {
-					content = placeholder.apply(content);
+			if (defaultConfig != null) {
+				//load content of default config
+				String content;
+				try (BufferedReader reader = new BufferedReader(new InputStreamReader(defaultConfig.openStream(), StandardCharsets.UTF_8))){
+					content = reader.lines().collect(Collectors.joining("\n"));
 				}
+	
+				//replace placeholders if enabled
+				if (usePlaceholders) {
+					for (Placeholder placeholder : CONFIG_PLACEHOLDERS) {
+						content = placeholder.apply(content);
+					}
+				}
+	
+				//create the config file
+				Files.write(configFile.toPath(), content.getBytes(StandardCharsets.UTF_8));
+				
+				//load
+				configNode = getLoader(configFile).load();
+			} else {
+				//create empty config
+				ConfigurationLoader<? extends ConfigurationNode> loader = getLoader(configFile);
+				configNode = loader.createEmptyNode();
+				
+				//save to create file
+				loader.save(configNode);
 			}
-
-			//create the config file
-			Files.write(configFile.toPath(), content.getBytes(StandardCharsets.UTF_8));
+		} else {
+			//load config
+			configNode = getLoader(configFile).load();
 		}
-
-		ConfigurationNode configNode = getLoader(configFile).load();
 		
 		//populate missing values with default values
 		if (defaultValues != null) {
@@ -153,6 +167,12 @@ public class ConfigManager {
 		}
 		
 		return configNode;
+	}
+	
+	private File makeAutogen(File file) throws IOException {
+		File autogenFile = file.getCanonicalFile().toPath().getParent().resolve("generated").resolve(file.getName()).toFile();
+		autogenFile.getParentFile().mkdirs();
+		return autogenFile;
 	}
 	
 	private ConfigurationLoader<? extends ConfigurationNode> getLoader(URL url){

@@ -136,30 +136,38 @@ public class BlockStateResource {
 			
 			//create variants
 			for (Entry<Object, ? extends ConfigurationNode> entry : config.getNode("variants").getChildrenMap().entrySet()) {
-				String conditionString = entry.getKey().toString();
-				ConfigurationNode transformedModelNode = entry.getValue();
-				
-				Variant variant = blockState.new Variant();
-				variant.condition = parseConditionString(conditionString);
-				variant.models = loadModels(transformedModelNode, blockstateFile);
-				
-				variant.updateTotalWeight();
-				
-				blockState.variants.add(variant);
+				try {
+					String conditionString = entry.getKey().toString();
+					ConfigurationNode transformedModelNode = entry.getValue();
+					
+					Variant variant = blockState.new Variant();
+					variant.condition = parseConditionString(conditionString);
+					variant.models = loadModels(transformedModelNode, blockstateFile);
+					
+					variant.updateTotalWeight();
+					
+					blockState.variants.add(variant);
+				} catch (Exception ex) {
+					Logger.global.logWarning("Failed to parse a variant of " + blockstateFile + ": " + ex);
+				}
 			}
 			
 			//create multipart
 			for (ConfigurationNode partNode : config.getNode("multipart").getChildrenList()) {
-				Variant variant = blockState.new Variant();
-				ConfigurationNode whenNode = partNode.getNode("when");
-				if (!whenNode.isVirtual()) {
-					variant.condition = parseCondition(whenNode);
+				try {
+					Variant variant = blockState.new Variant();
+					ConfigurationNode whenNode = partNode.getNode("when");
+					if (!whenNode.isVirtual()) {
+						variant.condition = parseCondition(whenNode);
+					}
+					variant.models = loadModels(partNode.getNode("apply"), blockstateFile);
+					
+					variant.updateTotalWeight();
+					
+					blockState.multipart.add(variant);
+				} catch (Exception ex) {
+					Logger.global.logWarning("Failed to parse a multipart-part of " + blockstateFile + ": " + ex);
 				}
-				variant.models = loadModels(partNode.getNode("apply"), blockstateFile);
-				
-				variant.updateTotalWeight();
-				
-				blockState.multipart.add(variant);
 			}
 			
 			return blockState;
@@ -233,12 +241,13 @@ public class BlockStateResource {
 			return PropertyCondition.and(andConditions.toArray(new PropertyCondition[andConditions.size()]));
 		}
 		
-		private PropertyCondition parseConditionString(String conditionString) {
+		private PropertyCondition parseConditionString(String conditionString) throws IllegalArgumentException {
 			List<PropertyCondition> conditions = new ArrayList<>();
-			if (!conditionString.isEmpty() && !conditionString.equals("default")) {
+			if (!conditionString.isEmpty() && !conditionString.equals("default") && !conditionString.equals("normal")) {
 				String[] conditionSplit = StringUtils.split(conditionString, ',');
 				for (String element : conditionSplit) {
-					String[] keyval = StringUtils.split(element, "=", 2); //TODO what if it is wrong formatted?
+					String[] keyval = StringUtils.split(element, "=", 2);
+					if (keyval.length < 2) throw new IllegalArgumentException("Condition-String '" + conditionString + "' is invalid!");
 					conditions.add(PropertyCondition.property(keyval[0], keyval[1]));
 				}
 			}

@@ -33,20 +33,28 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.mapping.BlockPropertiesMapper;
 import de.bluecolored.bluemap.core.world.BlockProperties;
 import de.bluecolored.bluemap.core.world.BlockState;
 import ninja.leaping.configurate.ConfigurationNode;
+import ninja.leaping.configurate.loader.ConfigurationLoader;
 
 public class BlockPropertiesConfig implements BlockPropertiesMapper {
+	
+	private ConfigurationLoader<? extends ConfigurationNode> autopoulationConfigLoader;
 	
 	private Multimap<String, BlockStateMapping<BlockProperties>> mappings;
 	private LoadingCache<BlockState, BlockProperties> mappingCache;
 	
 	public BlockPropertiesConfig(ConfigurationNode node) throws IOException {
+		this(node, null);
+	}
+	
+	public BlockPropertiesConfig(ConfigurationNode node, ConfigurationLoader<? extends ConfigurationNode> autopoulationConfigLoader) throws IOException {
+		this.autopoulationConfigLoader = autopoulationConfigLoader;
+		
 		mappings = HashMultimap.create();
 		
 		for (Entry<Object, ? extends ConfigurationNode> e : node.getChildrenMap().entrySet()){
@@ -64,8 +72,6 @@ public class BlockPropertiesConfig implements BlockPropertiesMapper {
 				Logger.global.logWarning("Loading BlockPropertiesConfig: Failed to parse BlockState from key '" + key + "'");
 			}
 		}
-		
-		mappings = Multimaps.unmodifiableMultimap(mappings);
 		
 		mappingCache = CacheBuilder.newBuilder()
 				.concurrencyLevel(8)
@@ -89,6 +95,23 @@ public class BlockPropertiesConfig implements BlockPropertiesMapper {
 		for (BlockStateMapping<BlockProperties> bm : mappings.get(bs.getFullId())){
 			if (bm.fitsTo(bs)){
 				return bm.getMapping();
+			}
+		}
+		
+		if (autopoulationConfigLoader != null) {
+			mappings.put(bs.getFullId(), new BlockStateMapping<BlockProperties>(new BlockState(bs.getFullId()), BlockProperties.DEFAULT));
+			
+			synchronized (autopoulationConfigLoader) {
+				try {
+					ConfigurationNode node = autopoulationConfigLoader.load();
+					ConfigurationNode bpNode = node.getNode(bs.getFullId());
+					bpNode.getNode("culling").setValue(false);
+					bpNode.getNode("occluding").setValue(false);
+					bpNode.getNode("flammable").setValue(false);
+					autopoulationConfigLoader.save(node);
+				} catch (IOException ex) {
+					Logger.global.noFloodError("blockpropsconf-autopopulate-ioex", "Failed to auto-populate BlockPropertiesConfig!", ex);
+				}
 			}
 		}
 		

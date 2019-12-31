@@ -135,6 +135,7 @@ public class SpongePlugin {
 		URL defaultSpongeConfig = SpongePlugin.class.getResource("/bluemap-sponge.conf");
 		URL spongeConfigDefaults = SpongePlugin.class.getResource("/bluemap-sponge-defaults.conf");
 		ConfigManager configManager = new ConfigManager(getConfigPath().toFile(), defaultSpongeConfig, spongeConfigDefaults);
+		configManager.loadOrCreateConfigs();
 		config = configManager.getMainConfig();
 		
 		File blockColorsConfigFile = getConfigPath().resolve("blockColors.json").toFile();

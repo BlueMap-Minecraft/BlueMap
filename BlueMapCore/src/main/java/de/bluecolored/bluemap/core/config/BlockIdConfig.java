@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.core.config;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -32,12 +33,20 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.mapping.BlockIdMapper;
 import de.bluecolored.bluemap.core.world.BlockState;
 import ninja.leaping.configurate.ConfigurationNode;
+import ninja.leaping.configurate.loader.ConfigurationLoader;
 
 public class BlockIdConfig implements BlockIdMapper {
 
+	private ConfigurationLoader<? extends ConfigurationNode> autopoulationConfigLoader;
 	private Map<BlockIDMeta, BlockState> mappings;
-	
+
 	public BlockIdConfig(ConfigurationNode node) {
+		this(node, null);
+	}
+	
+	public BlockIdConfig(ConfigurationNode node, ConfigurationLoader<? extends ConfigurationNode> autopoulationConfigLoader) {
+		this.autopoulationConfigLoader = autopoulationConfigLoader;
+		
 		mappings = new HashMap<>(); 
 		
 		for (Entry<Object, ? extends ConfigurationNode> e : node.getChildrenMap().entrySet()){
@@ -69,10 +78,27 @@ public class BlockIdConfig implements BlockIdMapper {
 	
 	@Override
 	public BlockState get(int id, int meta) {
-		BlockState state = mappings.get(new BlockIDMeta(id, meta));
+		if (id == 0) return BlockState.AIR;
+		
+		BlockIDMeta idmeta = new BlockIDMeta(id, meta);
+		BlockState state = mappings.get(idmeta);
 		
 		if (state == null) {
 			state = mappings.getOrDefault(new BlockIDMeta(id, 0), BlockState.AIR); //meta-fallback
+			
+			if (autopoulationConfigLoader != null) {
+				mappings.put(idmeta, state);
+				
+				synchronized (autopoulationConfigLoader) {
+					try {
+						ConfigurationNode node = autopoulationConfigLoader.load();
+						node.getNode(id + ":" + meta).setValue(state.toString());
+						autopoulationConfigLoader.save(node);
+					} catch (IOException ex) {
+						Logger.global.noFloodError("blockidconf-autopopulate-ioex", "Failed to auto-populate BlockIdConfig!", ex);
+					}	
+				}
+			}
 		}
 		
 		return state;

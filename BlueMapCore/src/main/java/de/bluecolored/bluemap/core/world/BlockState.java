@@ -155,7 +155,7 @@ public class BlockState {
 	public boolean equals(Object obj) {
 		if (!(obj instanceof BlockState)) return false;
 		BlockState b = (BlockState) obj;
-		if (!Objects.equals(getId(), b.getId())) return false;
+		if (!Objects.equals(getFullId(), b.getFullId())) return false;
 		if (!Objects.equals(getProperties(), b.getProperties())) return false;
 		return true;
 	}
@@ -163,7 +163,7 @@ public class BlockState {
 	@Override
 	public int hashCode() {
 		if (!hashed){
-			hash = Objects.hash( getId(), getProperties() );
+			hash = Objects.hash( getFullId(), getProperties() );
 			hashed = true;
 		}
 		
@@ -177,7 +177,7 @@ public class BlockState {
 			sj.add(e.getKey() + "=" + e.getValue());
 		}
 		
-		return getId() + "[" + sj.toString() + "]";
+		return getFullId() + "[" + sj.toString() + "]";
 	}
 	
 	public static BlockState fromString(String serializedBlockState) throws IllegalArgumentException {

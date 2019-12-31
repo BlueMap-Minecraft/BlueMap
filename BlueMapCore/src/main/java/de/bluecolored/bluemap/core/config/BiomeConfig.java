@@ -24,18 +24,28 @@
  */
 package de.bluecolored.bluemap.core.config;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
+import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.mapping.BiomeMapper;
 import de.bluecolored.bluemap.core.world.Biome;
 import ninja.leaping.configurate.ConfigurationNode;
+import ninja.leaping.configurate.loader.ConfigurationLoader;
 
 public class BiomeConfig implements BiomeMapper {
 
+	private ConfigurationLoader<? extends ConfigurationNode> autopoulationConfigLoader;
 	private HashMap<Integer, Biome> biomes;
 	
 	public BiomeConfig(ConfigurationNode node) {
+		this(node, null);
+	}
+
+	public BiomeConfig(ConfigurationNode node, ConfigurationLoader<? extends ConfigurationNode> autopoulationConfigLoader) {
+		this.autopoulationConfigLoader = autopoulationConfigLoader;
+		
 		biomes = new HashMap<>();
 
 		for (Entry<Object, ? extends ConfigurationNode> e : node.getChildrenMap().entrySet()){
@@ -48,7 +58,27 @@ public class BiomeConfig implements BiomeMapper {
 	
 	@Override
 	public Biome get(int id) {
-		return biomes.getOrDefault(id, Biome.DEFAULT);
+		Biome biome = biomes.get(id);
+		
+		if (biome == null) {
+			if (autopoulationConfigLoader != null) {
+				biomes.put(id, Biome.DEFAULT);
+				
+				synchronized (autopoulationConfigLoader) {
+					try {
+						ConfigurationNode node = autopoulationConfigLoader.load();
+						node.getNode("unknown:" + id).getNode("id").setValue(id);
+						autopoulationConfigLoader.save(node);
+					} catch (IOException ex) {
+						Logger.global.noFloodError("biomeconf-autopopulate-ioex", "Failed to auto-populate BiomeConfig!", ex);
+					}
+				}
+			}
+			
+			return Biome.DEFAULT;
+		}
+		
+		return biome;
 	}
 	
 }
