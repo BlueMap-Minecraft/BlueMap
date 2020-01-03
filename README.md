@@ -1,4 +1,3 @@
-# BlueMap
 ![title-banner](https://bluecolored.de/paste/bluemap-title.jpg)
 
 BlueMap is a tool that generates 3d-maps of your Minecraft worlds and displays them in your browser. Take a look at [this demo](https://bluecolored.de/bluemap). It is really easy to set up - almost plug-and-play - if you use the integrated web-server (optional). 
