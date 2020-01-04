@@ -131,6 +131,9 @@ public class SpongePlugin {
 		if (loaded) return;
 		unload(); //ensure nothing is left running (from a failed load or something)
 		
+		//register reload command in case bluemap crashes during loading
+		Sponge.getCommandManager().register(this, new Commands(this).createStandaloneReloadCommand(), "bluemap");
+		
 		//load configs
 		URL defaultSpongeConfig = SpongePlugin.class.getResource("/bluemap-sponge.conf");
 		URL spongeConfigDefaults = SpongePlugin.class.getResource("/bluemap-sponge-defaults.conf");
@@ -151,7 +154,7 @@ public class SpongePlugin {
 		if (!defaultResourceFile.exists()) {
 			handleMissingResources(defaultResourceFile, configManager.getMainConfigFile());
 			unload();
-			
+
 			Sponge.getCommandManager().register(this, new Commands(this).createStandaloneReloadCommand(), "bluemap");
 			return;
 		}
@@ -183,7 +186,7 @@ public class SpongePlugin {
 			
 			File worldFolder = new File(mapConfig.getWorldPath());
 			if (!worldFolder.exists() || !worldFolder.isDirectory()) {
-				Logger.global.logError("Failed to load map '" + id + "': '" + worldFolder + "' does not exist or is no directory!", new IOException());
+				Logger.global.logError("Failed to load map '" + id + "': '" + worldFolder.getCanonicalPath() + "' does not exist or is no directory!", new IOException());
 				continue;
 			}
 			
@@ -276,6 +279,7 @@ public class SpongePlugin {
 		}
 
 		//init commands
+		Sponge.getCommandManager().getOwnedBy(this).forEach(Sponge.getCommandManager()::removeMapping);
 		Sponge.getCommandManager().register(this, new Commands(this).createRootCommand(), "bluemap");
 		
 		//metrics
@@ -410,7 +414,7 @@ public class SpongePlugin {
 		} else {
 			Logger.global.logWarning("BlueMap is missing important resources!");
 			Logger.global.logWarning("You need to accept the download of the required files in order of BlueMap to work!");
-			Logger.global.logWarning("Please check: " + mainConfigFile);
+			try { Logger.global.logWarning("Please check: " + mainConfigFile.getCanonicalPath()); } catch (IOException ignored) {}
 			Logger.global.logInfo("If you have changed the config you can simply reload the plugin using: /bluemap reload");
 		}
 	}

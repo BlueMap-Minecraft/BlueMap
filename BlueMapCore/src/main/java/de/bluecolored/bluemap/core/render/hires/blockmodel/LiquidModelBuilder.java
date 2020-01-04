@@ -72,6 +72,7 @@ public class LiquidModelBuilder {
 		
 		int level = getLiquidLevel(blockState);
 		float[] heights = new float[]{16f, 16f, 16f, 16f};
+		float coloralpha = 0.2f;
 		
 		if (level < 8 && !(level == 0 && isLiquid(context.getRelativeBlock(0, 1, 0)))){
 			heights = new float[]{
@@ -80,6 +81,8 @@ public class LiquidModelBuilder {
 					getLiquidCornerHeight(0, 0, -1),
 					getLiquidCornerHeight(0, 0, 0)
 				};
+
+			coloralpha = 0.8f;
 		}
 		
 		BlockStateModel model = new BlockStateModel();
@@ -114,7 +117,7 @@ public class LiquidModelBuilder {
 
 		//calculate mapcolor
 		Vector4f mapcolor = texture.getColor();
-		mapcolor = mapcolor.mul(tintcolor.toVector4(0.5));
+		mapcolor = mapcolor.mul(tintcolor.toVector4(coloralpha));
 		model.setMapColor(mapcolor);
 		
 		return model;

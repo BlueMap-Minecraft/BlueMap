@@ -31,8 +31,8 @@ import de.bluecolored.bluemap.core.world.BlockState;
 @FunctionalInterface
 public interface PropertyCondition {
 
-	static final PropertyCondition MATCH_ALL = state -> true;
-	static final PropertyCondition MATCH_NONE = state -> false; 
+	static final PropertyCondition MATCH_ALL = new All();
+	static final PropertyCondition MATCH_NONE = new None(); 
 	
 	boolean matches(BlockState state);
 	
@@ -90,6 +90,24 @@ public interface PropertyCondition {
 			for (PropertyCondition condition : conditions) {
 				if (condition.matches(state)) return true;
 			}
+			return false;
+		}
+		
+	}
+
+	class All implements PropertyCondition {
+
+		@Override
+		public boolean matches(BlockState state) {
+			return true;
+		}
+		
+	}
+	
+	class None implements PropertyCondition {
+
+		@Override
+		public boolean matches(BlockState state) {
 			return false;
 		}
 		

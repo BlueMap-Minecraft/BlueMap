@@ -31,6 +31,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
@@ -213,6 +214,8 @@ public class BlockModelResource {
 	}
 	
 	public static class Builder {
+
+		private static final String JSON_COMMENT = "__comment";
 		
 		private FileAccess sourcesAccess;
 		private ResourcePack resourcePack;
@@ -227,7 +230,12 @@ public class BlockModelResource {
 		}
 
 		public synchronized BlockModelResource build(String modelPath) throws IOException, ParseResourceException {
-			textures.clear();
+			return build(modelPath, Collections.emptyMap());
+		}
+		
+		public synchronized BlockModelResource build(String modelPath, Map<String, String> textures) throws IOException, ParseResourceException {
+			this.textures.clear();
+			this.textures.putAll(textures);
 			return buildNoReset(modelPath, true, modelPath);
 		}
 		
@@ -239,6 +247,8 @@ public class BlockModelResource {
 					.load();
 			
 			for (Entry<Object, ? extends ConfigurationNode> entry : config.getNode("textures").getChildrenMap().entrySet()) {
+				if (entry.getKey().equals(JSON_COMMENT)) continue;
+				
 				textures.putIfAbsent(entry.getKey().toString(), entry.getValue().getString(null));
 			}
 			

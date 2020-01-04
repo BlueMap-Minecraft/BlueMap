@@ -68,9 +68,10 @@ public class MainConfig implements WebServerConfig {
 		
 		loadWebConfig(node.getNode("web"));
 
-		int defaultCount = Runtime.getRuntime().availableProcessors();
-		renderThreadCount = node.getNode("renderThreadCount").getInt(defaultCount);
-		if (renderThreadCount <= 0) renderThreadCount = defaultCount;
+		int processors = Runtime.getRuntime().availableProcessors();
+		renderThreadCount = node.getNode("renderThreadCount").getInt(0);
+		if (renderThreadCount <= 0) renderThreadCount = processors + renderThreadCount;
+		if (renderThreadCount <= 0) renderThreadCount = 1;
 		
 		loadMapConfigs(node.getNode("maps"));
 	}

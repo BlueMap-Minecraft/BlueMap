@@ -38,6 +38,7 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.BlockStateResource.Builder;
 import de.bluecolored.bluemap.core.resourcepack.fileaccess.CombinedFileAccess;
 import de.bluecolored.bluemap.core.resourcepack.fileaccess.FileAccess;
+import de.bluecolored.bluemap.core.resourcepack.fileaccess.ResourcePackOldFormatFileAccess;
 import de.bluecolored.bluemap.core.world.BlockState;
 
 /**
@@ -109,14 +110,15 @@ public class ResourcePack {
 	 * @param sources The list of {@link File} sources. Each can be a folder or any zip-compressed file. (E.g. .zip or .jar)
 	 */
 	public void load(File... sources) {
-		try (CombinedFileAccess sourcesAccess = new CombinedFileAccess()){
+		try (CombinedFileAccess combinedSourcesAccess = new CombinedFileAccess()){
 			for (File file : sources) {
 				try {
-					sourcesAccess.addFileAccess(FileAccess.of(file));
+					combinedSourcesAccess.addFileAccess(FileAccess.of(file));
 				} catch (IOException e) {
 					Logger.global.logError("Failed to read ResourcePack: " + file, e);
 				}
 			}
+			FileAccess sourcesAccess = ResourcePackOldFormatFileAccess.from(combinedSourcesAccess);
 			
 			textures.reloadAllTextures(sourcesAccess);
 			
@@ -183,6 +185,8 @@ public class ResourcePack {
 	protected static String namespacedToAbsoluteResourcePath(String namespacedPath, String resourceTypeFolder) {
 		String path = namespacedPath;
 		
+		resourceTypeFolder = FileAccess.normalize(resourceTypeFolder);
+		
 		int namespaceIndex = path.indexOf(':');
 		String namespace = "minecraft";
 		if (namespaceIndex != -1) {
@@ -190,7 +194,11 @@ public class ResourcePack {
 			path = path.substring(namespaceIndex + 1);
 		}
 		
-		path = "assets/" + namespace + "/" + resourceTypeFolder + "/" + FileAccess.normalize(path);
+		if (resourceTypeFolder.isEmpty()) {
+			path = "assets/" + namespace + "/" + FileAccess.normalize(path);
+		} else {
+			path = "assets/" + namespace + "/" + resourceTypeFolder + "/" + FileAccess.normalize(path);			
+		}
 		
 		return path;
 	}

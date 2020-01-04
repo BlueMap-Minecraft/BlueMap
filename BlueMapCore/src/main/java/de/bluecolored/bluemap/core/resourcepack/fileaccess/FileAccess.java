@@ -57,7 +57,9 @@ public interface FileAccess extends Closeable, AutoCloseable {
 	}
 
 	static String normalize(String path) {
+		if (path.isEmpty()) return path;
 		if (path.charAt(path.length() - 1) == '/') path = path.substring(0, path.length() - 1);
+		if (path.isEmpty()) return path;
 		if (path.charAt(0) == '/') path = path.substring(1);
 		return path;
 	}

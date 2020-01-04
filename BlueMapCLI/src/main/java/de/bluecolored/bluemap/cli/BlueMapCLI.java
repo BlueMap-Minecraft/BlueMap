@@ -64,6 +64,7 @@ import de.bluecolored.bluemap.core.render.lowres.LowresModelManager;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.web.BlueMapWebServer;
+import de.bluecolored.bluemap.core.web.WebFilesManager;
 import de.bluecolored.bluemap.core.web.WebSettings;
 import de.bluecolored.bluemap.core.world.World;
 
@@ -192,7 +193,6 @@ public class BlueMapCLI {
 		Logger.global.logInfo("Starting webserver...");
 		
 		BlueMapWebServer webserver = new BlueMapWebServer(configManager.getMainConfig());
-		webserver.updateWebfiles();
 		webserver.start();
 	}
 	
@@ -240,7 +240,7 @@ public class BlueMapCLI {
 	private boolean handleMissingResources(File resourceFile) {
 		if (configManager.getMainConfig().isDownloadAccepted()) {
 			try {
-				Logger.global.logInfo("Downloading " + ResourcePack.MINECRAFT_CLIENT_URL + " to " + resourceFile + " ...");
+				Logger.global.logInfo("Downloading " + ResourcePack.MINECRAFT_CLIENT_URL + " to " + resourceFile.getCanonicalPath() + " ...");
 				ResourcePack.downloadDefaultResource(resourceFile);
 				return true;
 			} catch (IOException e) {
@@ -284,6 +284,12 @@ public class BlueMapCLI {
 			if (configCreated) {
 				Logger.global.logInfo("No config file found! Created default configs here: " + configFolder);
 				return;
+			}
+			
+			WebFilesManager webFilesManager = new WebFilesManager(config.getMainConfig().getWebRoot());
+			if (webFilesManager.needsUpdate()) {
+				Logger.global.logInfo("Updating webfiles in " + config.getMainConfig().getWebRoot().normalize() + "...");
+				webFilesManager.updateFiles();
 			}
 			
 			BlueMapCLI bluemap = new BlueMapCLI(config, configFolder, cmd.hasOption("f"));
@@ -352,7 +358,7 @@ public class BlueMapCLI {
 			
 			if (file.isFile()) {
 				try {
-					filename = "." + File.separator + new File("").getAbsoluteFile().toPath().relativize(file.toPath()).toString();
+					filename = "." + File.separator + new File("").getCanonicalFile().toPath().relativize(file.toPath()).toString();
 				} catch (IllegalArgumentException ex) {
 					filename = file.getAbsolutePath();
 				}
