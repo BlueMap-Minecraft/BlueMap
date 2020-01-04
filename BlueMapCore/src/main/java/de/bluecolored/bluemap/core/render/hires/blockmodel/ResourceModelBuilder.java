@@ -44,6 +44,7 @@ import de.bluecolored.bluemap.core.resourcepack.BlockModelResource.Element.Rotat
 import de.bluecolored.bluemap.core.resourcepack.Texture;
 import de.bluecolored.bluemap.core.resourcepack.TransformedBlockModelResource;
 import de.bluecolored.bluemap.core.util.Direction;
+import de.bluecolored.bluemap.core.util.Lazy;
 import de.bluecolored.bluemap.core.world.Block;
 
 /**
@@ -58,15 +59,19 @@ public class ResourceModelBuilder {
 	private ExtendedBlockContext context;
 	private RenderSettings renderSettings;
 	private BlockColorCalculator colorCalculator;
+	private Lazy<Vector3f> tintColor;
 	
 	public ResourceModelBuilder(RenderSettings renderSettings, ExtendedBlockContext context, BlockColorCalculator colorCalculator) {
 		this.context = context;
 		this.renderSettings = renderSettings;
 		this.colorCalculator = colorCalculator;
+		this.tintColor = new Lazy<>(() -> colorCalculator.getBlockColor(context));
 	}
 	
 	public BlockStateModel build(TransformedBlockModelResource bmr) {
 		BlockStateModel model = new BlockStateModel();
+		
+		colorCalculator.getBlockColor(context);
 		
 		for (BlockModelResource.Element element : bmr.getModel().getElements()){
 			model.merge(fromModelElementResource(element, bmr));
@@ -213,7 +218,7 @@ public class ResourceModelBuilder {
 		//tint the face
 		Vector3f color = Vector3f.ONE;
 		if (face.isTinted()){
-			color = colorCalculator.getBlockColor(context); //TODO: cache this so we don't recalculate the tint color again for each face?
+			color = tintColor.getValue();
 		}
 	
 		color = color.mul(light);
