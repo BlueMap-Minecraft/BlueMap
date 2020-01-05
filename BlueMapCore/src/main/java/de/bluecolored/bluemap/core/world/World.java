@@ -35,7 +35,7 @@ import com.flowpowered.math.vector.Vector3i;
  * <br>
  * <i>The implementation of this class has to be thread-save!</i><br>
  */
-public interface World extends WorldChunk {
+public interface World {
 
 	String getName();
 	
@@ -45,20 +45,28 @@ public interface World extends WorldChunk {
 	
 	Vector3i getSpawnPoint();
 	
-	/**
-	 * Returns itself
-	 */
-	@Override
-	default World getWorld() {
-		return this;
+	default int getMaxY() {
+		return 255;
+	}
+	
+	default int getMinY() {
+		return 0;
 	}
 	
 	/**
-	 * Always returns false
+	 * Returns the Block on the specified position.<br>
+	 * <br>
+	 * <i>(The implementation should not invoke the generation of new Terrain, it should rather throw a {@link ChunkNotGeneratedException} if a not generated block is requested)</i><br>
 	 */
-	@Override
-	default boolean isGenerated() {
-		return false;
+	Block getBlock(Vector3i pos) throws ChunkNotGeneratedException;
+	
+	/**
+	 * Returns the Block on the specified position.<br>
+	 * <br>
+	 * <i>(The implementation should not invoke the generation of new Terrain, it should rather throw a {@link ChunkNotGeneratedException} if a not generated block is requested)</i><br>
+	 */
+	default Block getBlock(int x, int y, int z) throws ChunkNotGeneratedException {
+		return getBlock(new Vector3i(x, y, z));
 	}
 	
 	/**
@@ -90,7 +98,7 @@ public interface World extends WorldChunk {
 	 */
 	public default Vector2i blockPosToChunkPos(Vector3i block) {
 		return new Vector2i(
-			block.getX() >> 4, 
+			block.getX() >> 4,
 			block.getZ() >> 4
 		);
 	}

@@ -121,6 +121,8 @@ class ChunkAnvil113 extends Chunk {
 	}
 	
 	private class Section {
+		private static final String AIR_ID = "minecraft:air";
+		
 		private int sectionY;
 		private byte[] blockLight;
 		private byte[] skyLight;
@@ -143,7 +145,12 @@ class ChunkAnvil113 extends Chunk {
 				for (int i = 0; i < this.palette.length; i++) {
 					CompoundTag stateTag = paletteTag.get(i);
 					
-					String id = stateTag.getString("Name");
+					String id = stateTag.getString("Name"); //shortcut to save time and memory
+					if (id.equals(AIR_ID)) {
+						palette[i] = BlockState.AIR;
+						continue;
+					}
+					
 					Map<String, String> properties = new HashMap<>();
 					
 					if (stateTag.containsKey("Properties")) {

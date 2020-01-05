@@ -29,15 +29,12 @@ import java.util.Collections;
 import java.util.UUID;
 
 import com.flowpowered.math.vector.Vector2i;
-import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 
-import de.bluecolored.bluemap.core.util.AABB;
 import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.World;
-import de.bluecolored.bluemap.core.world.WorldChunk;
 
 public class EmptyBlockContext implements ExtendedBlockContext {
 
@@ -109,39 +106,9 @@ public class EmptyBlockContext implements ExtendedBlockContext {
 	
 	private static class EmptyWorld implements World {
 
-		private AABB bounds;
-		
-		public EmptyWorld() {
-			this.bounds = new AABB(Vector3d.from(Double.POSITIVE_INFINITY), Vector3d.from(Double.NEGATIVE_INFINITY));
-		}
-		
-		public EmptyWorld(AABB bounds){
-			this.bounds = bounds;
-		}
-		
-		@Override
-		public World getWorld() {
-			return this;
-		}
-
 		@Override
 		public Block getBlock(Vector3i pos) {
 			return new AirBlock();
-		}
-
-		@Override
-		public AABB getBoundaries() {
-			return bounds;
-		}
-
-		@Override
-		public WorldChunk getWorldChunk(AABB boundaries) {
-			return new EmptyWorld(boundaries);
-		}
-
-		@Override
-		public boolean isGenerated() {
-			return false;
 		}
 
 		@Override

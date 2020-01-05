@@ -27,26 +27,48 @@ package de.bluecolored.bluemap.core.render.context;
 import com.flowpowered.math.vector.Vector3i;
 
 import de.bluecolored.bluemap.core.world.Block;
-import de.bluecolored.bluemap.core.world.WorldChunk;
+import de.bluecolored.bluemap.core.world.ChunkNotGeneratedException;
+import de.bluecolored.bluemap.core.world.World;
 
-public class SlicedWorldChunkBlockContext extends WorldChunkBlockContext {
+public class WorldBlockContext implements ExtendedBlockContext {
 
-	private int sliceY;
+	private Vector3i blockPos;
+	private World world;
 	
 	/**
-	 * Same as a {@link WorldChunkBlockContext} but if the requested Block is above the slice-value it will return air.
+	 * A BlockContext backed by a WorldChunk.
+	 * 
+	 * This Context assumes that the world-chunk is generated around that block-position.
+	 * If the given world chunk is not generated, using this context will result in a RuntimeException!
 	 */
-	public SlicedWorldChunkBlockContext(WorldChunk worldChunk, Vector3i blockPos, int sliceY) {
-		super(worldChunk, blockPos);
-		
-		this.sliceY = sliceY;
+	public WorldBlockContext(World world, Vector3i blockPos) {
+		this.blockPos = blockPos;
+		this.world = world;
+	}
+
+	@Override
+	public Vector3i getPosition() {
+		return blockPos;
 	}
 	
 	@Override
+	public Block getRelativeBlock(int x, int y, int z) {
+		Vector3i pos = blockPos.add(x, y, z);
+		return getBlock(pos);
+	}
+	
+	@Override
+	public Block getRelativeBlock(Vector3i direction) {
+		Vector3i pos = blockPos.add(direction);
+		return getBlock(pos);
+	}
+	
 	protected Block getBlock(Vector3i position) {
-		if (position.getY() > sliceY) return EmptyBlockContext.AIR_BLOCK;
-		
-		return super.getBlock(position);
+		try {
+			return world.getBlock(position);
+		} catch (ChunkNotGeneratedException ex) {
+			return EmptyBlockContext.AIR_BLOCK;
+		}
 	}
 	
 }

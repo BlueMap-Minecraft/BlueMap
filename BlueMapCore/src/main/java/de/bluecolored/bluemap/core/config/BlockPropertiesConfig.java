@@ -111,7 +111,7 @@ public class BlockPropertiesConfig implements BlockPropertiesMapper {
 			}
 		}
 		
-		BlockProperties generated = BlockProperties.DEFAULT;
+		BlockProperties generated = BlockProperties.SOLID;
 		
 		if (resourcePack != null) {
 			try {

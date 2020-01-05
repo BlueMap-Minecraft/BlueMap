@@ -136,6 +136,8 @@ public class BlockState {
 	
 	@Override
 	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		
 		if (!(obj instanceof BlockState)) return false;
 		BlockState b = (BlockState) obj;
 		if (!Objects.equals(getFullId(), b.getFullId())) return false;

@@ -115,12 +115,12 @@ public class HiresModelManager {
 	public AABB getTileRegion(WorldTile tile) {
 		Vector3i min = new Vector3i(
 				tile.getTile().getX() * tileSize.getX() + gridOrigin.getX(), 
-				tile.getWorld().getBoundaries().getMin().getFloorY(), 
+				0, 
 				tile.getTile().getY() * tileSize.getY() + gridOrigin.getY()
 			);
 		Vector3i max = min.add(
 				tileSize.getX() - 1,
-				tile.getWorld().getBoundaries().getMax().getFloorY(),
+				255,
 				tileSize.getY() - 1
 			);
 		return new AABB(min, max);

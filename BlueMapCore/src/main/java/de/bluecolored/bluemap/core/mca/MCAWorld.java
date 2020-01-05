@@ -63,7 +63,6 @@ import de.bluecolored.bluemap.core.mca.extensions.WoodenFenceConnectExtension;
 import de.bluecolored.bluemap.core.mca.mapping.BiomeMapper;
 import de.bluecolored.bluemap.core.mca.mapping.BlockIdMapper;
 import de.bluecolored.bluemap.core.mca.mapping.BlockPropertiesMapper;
-import de.bluecolored.bluemap.core.util.AABB;
 import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.BlockProperties;
@@ -71,7 +70,6 @@ import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.ChunkNotGeneratedException;
 import de.bluecolored.bluemap.core.world.LightData;
 import de.bluecolored.bluemap.core.world.World;
-import de.bluecolored.bluemap.core.world.WorldChunk;
 import net.querz.nbt.CompoundTag;
 import net.querz.nbt.NBTUtil;
 import net.querz.nbt.Tag;
@@ -100,7 +98,6 @@ public class MCAWorld implements World {
 	private final UUID uuid;
 	private final Path worldFolder;
 	private String name;
-	private AABB boundaries;
 	private int seaLevel;
 	private Vector3i spawnPoint;
 
@@ -122,7 +119,6 @@ public class MCAWorld implements World {
 		this.uuid = uuid;
 		this.worldFolder = worldFolder;
 		this.name = name;
-		this.boundaries = new AABB(new Vector3i(-10000000, 0, -10000000), new Vector3i(10000000, worldHeight, 10000000));
 		this.seaLevel = seaLevel;
 		this.spawnPoint = spawnPoint;
 		
@@ -145,6 +141,14 @@ public class MCAWorld implements World {
 	
 	@Override
 	public Block getBlock(Vector3i pos) throws ChunkNotGeneratedException {
+		if (pos.getY() < getMinY()) {
+			return new MCABlock(this, BlockState.AIR, LightData.ZERO, Biome.DEFAULT, BlockProperties.SOLID, pos);
+		}
+		
+		if (pos.getY() > getMaxY()) {
+			return new MCABlock(this, BlockState.AIR, LightData.FULL, Biome.DEFAULT, BlockProperties.TRANSPARENT, pos);
+		}
+		
 		try {
 			
 			Vector2i chunkPos = blockToChunk(pos);
@@ -170,16 +174,6 @@ public class MCAWorld implements World {
 		}
 		
 		return blockState;
-	}
-
-	@Override
-	public AABB getBoundaries() {
-		return boundaries;
-	}
-
-	@Override
-	public WorldChunk getWorldChunk(AABB boundaries) {
-		return new MCAWorldChunk(this, boundaries);
 	}
 	
 	public Chunk getChunk(Vector2i chunkPos) throws IOException, ChunkNotGeneratedException {

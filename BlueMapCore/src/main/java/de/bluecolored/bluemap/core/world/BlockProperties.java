@@ -26,7 +26,8 @@ package de.bluecolored.bluemap.core.world;
 
 public class BlockProperties {
 
-	public static final BlockProperties DEFAULT = new BlockProperties(true, true, false); 
+	public static final BlockProperties SOLID = new BlockProperties(true, true, false);
+	public static final BlockProperties TRANSPARENT = new BlockProperties(false, false, false);
 	
 	private final boolean culling, occluding, flammable;
 	

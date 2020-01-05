@@ -32,7 +32,7 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.render.RenderSettings;
 import de.bluecolored.bluemap.core.render.WorldTile;
 import de.bluecolored.bluemap.core.render.context.ExtendedBlockContext;
-import de.bluecolored.bluemap.core.render.context.SlicedWorldChunkBlockContext;
+import de.bluecolored.bluemap.core.render.context.SlicedWorldBlockContext;
 import de.bluecolored.bluemap.core.render.hires.blockmodel.BlockStateModel;
 import de.bluecolored.bluemap.core.render.hires.blockmodel.BlockStateModelFactory;
 import de.bluecolored.bluemap.core.resourcepack.NoSuchResourceException;
@@ -42,7 +42,7 @@ import de.bluecolored.bluemap.core.util.MathUtils;
 import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.ChunkNotGeneratedException;
-import de.bluecolored.bluemap.core.world.WorldChunk;
+import de.bluecolored.bluemap.core.world.World;
 
 public class HiresModelRenderer {
 
@@ -63,9 +63,7 @@ public class HiresModelRenderer {
 		min = new Vector3i(min.getX(), Math.max(min.getY(), renderSettings.getMinY()), min.getZ());
 		max = new Vector3i(max.getX(), Math.min(max.getY(), Math.min(renderSettings.getMaxY(), renderSettings.getSliceY())), max.getZ());
 		
-		WorldChunk chunk = tile.getWorld().getWorldChunk(region.expand(4, 0, 4));
-		
-		if (!chunk.isGenerated()) throw new ChunkNotGeneratedException();
+		World world = tile.getWorld();
 		
 		HiresModel model = new HiresModel(tile.getWorld().getUUID(), tile.getTile(), min, max);
 		
@@ -76,12 +74,12 @@ public class HiresModelRenderer {
 				Vector4f color = Vector4f.ZERO;
 				
 				for (int y = min.getY(); y <= max.getY(); y++){
-					Block block = chunk.getBlock(x, y, z);
+					Block block = world.getBlock(x, y, z);
 					if (block.getBlock().getId().equals("air")) continue;
 					
-					maxHeight = y;
+					if (!block.getBlock().equals(BlockState.AIR)) maxHeight = y;
 
-					ExtendedBlockContext context = new SlicedWorldChunkBlockContext(chunk, new Vector3i(x, y, z), renderSettings.getSliceY());
+					ExtendedBlockContext context = new SlicedWorldBlockContext(world, new Vector3i(x, y, z), renderSettings.getSliceY());
 					
 					BlockStateModel blockModel;
 					try {

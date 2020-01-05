@@ -27,53 +27,26 @@ package de.bluecolored.bluemap.core.render.context;
 import com.flowpowered.math.vector.Vector3i;
 
 import de.bluecolored.bluemap.core.world.Block;
-import de.bluecolored.bluemap.core.world.ChunkNotGeneratedException;
-import de.bluecolored.bluemap.core.world.WorldChunk;
+import de.bluecolored.bluemap.core.world.World;
 
-public class WorldChunkBlockContext implements ExtendedBlockContext {
+public class SlicedWorldBlockContext extends WorldBlockContext {
 
-	private Vector3i blockPos;
-	private WorldChunk chunk;
+	private int sliceY;
 	
 	/**
-	 * A BlockContext backed by a WorldChunk.
-	 * 
-	 * This Context assumes that the world-chunk is generated around that block-position.
-	 * If the given world chunk is not generated, using this context will result in a RuntimeException!
+	 * Same as a {@link WorldBlockContext} but if the requested Block is above the slice-value it will return air.
 	 */
-	public WorldChunkBlockContext(WorldChunk worldChunk, Vector3i blockPos) {
-		this.blockPos = blockPos;
-		this.chunk = worldChunk;
-	}
-
-	@Override
-	public Vector3i getPosition() {
-		return blockPos;
-	}
-	
-	@Override
-	public Block getRelativeBlock(int x, int y, int z) {
-		Vector3i pos = blockPos.add(x, y, z);
-		return getBlock(pos);
-	}
-	
-	@Override
-	public Block getRelativeBlock(Vector3i direction) {
-		Vector3i pos = blockPos.add(direction);
-		return getBlock(pos);
-	}
-	
-	protected Block getBlock(Vector3i position) {
-		if (!chunk.containsBlock(position)) {
-			return EmptyBlockContext.AIR_BLOCK;
-		}
+	public SlicedWorldBlockContext(World world, Vector3i blockPos, int sliceY) {
+		super(world, blockPos);
 		
-		try {
-			return chunk.getBlock(position);
-		} catch (ChunkNotGeneratedException e) {
-			//we assume the chunk being generated
-			throw new RuntimeException(e);
-		}
+		this.sliceY = sliceY;
+	}
+	
+	@Override
+	protected Block getBlock(Vector3i position) {
+		if (position.getY() > sliceY) return EmptyBlockContext.AIR_BLOCK;
+		
+		return super.getBlock(position);
 	}
 	
 }
