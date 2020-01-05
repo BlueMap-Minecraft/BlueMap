@@ -54,6 +54,9 @@ public class BlockModelResource {
 
 	private ModelType modelType = ModelType.NORMAL;
 	
+	private boolean culling = false;
+	private boolean occluding = false; 
+	
 	private boolean ambientOcclusion = true;
 	private Collection<Element> elements = new ArrayList<>();
 	private Map<String, Texture> textures = new HashMap<>();
@@ -66,6 +69,14 @@ public class BlockModelResource {
 	
 	public boolean isAmbientOcclusion() {
 		return ambientOcclusion;
+	}
+	
+	public boolean isCulling() {
+		return culling;
+	}
+	
+	public boolean isOccluding() {
+		return occluding;
 	}
 
 	public Collection<Element> getElements() {
@@ -82,7 +93,8 @@ public class BlockModelResource {
 		private Rotation rotation = new Rotation();
 		private boolean shade = true;
 		private EnumMap<Direction, Face> faces = new EnumMap<>(Direction.class);
-
+		private boolean fullCube = false;
+		
 		private Element() {}
 		
 		public Vector4f getDefaultUV(Direction face) {
@@ -136,6 +148,10 @@ public class BlockModelResource {
 
 		public boolean isShade() {
 			return shade;
+		}
+		
+		public boolean isFullCube() {
+			return fullCube;
 		}
 
 		public EnumMap<Direction, Face> getFaces() {
@@ -216,6 +232,8 @@ public class BlockModelResource {
 	public static class Builder {
 
 		private static final String JSON_COMMENT = "__comment";
+		private static final Vector3f FULL_CUBE_FROM = Vector3f.ZERO; 
+		private static final Vector3f FULL_CUBE_TO = new Vector3f(16f, 16f, 16f);
 		
 		private FileAccess sourcesAccess;
 		private ResourcePack resourcePack;
@@ -288,6 +306,35 @@ public class BlockModelResource {
 				}
 			}
 			
+			//check block properties
+			for (Element element : blockModel.elements) {
+				if (element.isFullCube()) {
+					blockModel.occluding = true;
+					
+					blockModel.culling = true;
+					for (Direction dir : Direction.values()) {
+						Face face = element.faces.get(dir);
+						if (face == null) {
+							blockModel.culling = false;
+							break;
+						}
+						
+						Texture texture = face.getTexture();
+						if (texture == null) {
+							blockModel.culling = false;
+							break;
+						}
+						
+						if (texture.getColor().getW() < 1) {
+							blockModel.culling = false;
+							break;
+						}
+					}
+					
+					break;
+				}
+			}
+			
 			return blockModel;
 		}
 		
@@ -297,7 +344,9 @@ public class BlockModelResource {
 			element.from = readVector3f(node.getNode("from"));
 			element.to = readVector3f(node.getNode("to"));
 			
-			element.shade = node.getNode("shade").getBoolean(false);
+			element.shade = node.getNode("shade").getBoolean(true);
+			
+			boolean fullElement = element.from.equals(FULL_CUBE_FROM) && element.to.equals(FULL_CUBE_TO);
 			
 			if (!node.getNode("rotation").isVirtual()) {
 				element.rotation.angle = node.getNode("rotation", "angle").getFloat(0);
@@ -306,6 +355,7 @@ public class BlockModelResource {
 				element.rotation.rescale = node.getNode("rotation", "rescale").getBoolean(false);
 			}
 			
+			boolean allDirs = true;
 			for (Direction direction : Direction.values()) {
 				ConfigurationNode faceNode = node.getNode("faces", direction.name().toLowerCase());
 				if (!faceNode.isVirtual()) {
@@ -315,8 +365,12 @@ public class BlockModelResource {
 					} catch (ParseResourceException | IOException ex) {
 						Logger.global.logDebug("Failed to parse an " + direction + " face for the model " + topModelPath + "! " + ex);
 					}
+				} else {
+					allDirs = false;
 				}
 			}
+			
+			if (fullElement && allDirs) element.fullCube = true;
 			
 			return element;
 		}

@@ -31,11 +31,14 @@ import java.util.concurrent.ExecutionException;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
 
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.mapping.BlockPropertiesMapper;
+import de.bluecolored.bluemap.core.resourcepack.NoSuchResourceException;
+import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resourcepack.TransformedBlockModelResource;
 import de.bluecolored.bluemap.core.world.BlockProperties;
 import de.bluecolored.bluemap.core.world.BlockState;
 import ninja.leaping.configurate.ConfigurationNode;
@@ -48,6 +51,8 @@ public class BlockPropertiesConfig implements BlockPropertiesMapper {
 	private Multimap<String, BlockStateMapping<BlockProperties>> mappings;
 	private LoadingCache<BlockState, BlockProperties> mappingCache;
 	
+	private ResourcePack resourcePack = null;
+	
 	public BlockPropertiesConfig(ConfigurationNode node) throws IOException {
 		this(node, null);
 	}
@@ -55,7 +60,7 @@ public class BlockPropertiesConfig implements BlockPropertiesMapper {
 	public BlockPropertiesConfig(ConfigurationNode node, ConfigurationLoader<? extends ConfigurationNode> autopoulationConfigLoader) throws IOException {
 		this.autopoulationConfigLoader = autopoulationConfigLoader;
 		
-		mappings = HashMultimap.create();
+		mappings = MultimapBuilder.hashKeys().arrayListValues().build();
 		
 		for (Entry<Object, ? extends ConfigurationNode> e : node.getChildrenMap().entrySet()){
 			String key = e.getKey().toString();
@@ -81,6 +86,14 @@ public class BlockPropertiesConfig implements BlockPropertiesMapper {
 				});
 	}
 	
+	/**
+	 * Sets the {@link ResourcePack} of this PropertyMapper, so it can generate better defaults if the mapping is missing 
+	 * @param resourcePack the {@link ResourcePack}
+	 */
+	public void setResourcePack(ResourcePack resourcePack) {
+		this.resourcePack = resourcePack;
+	}
+	
 	@Override
 	public BlockProperties get(BlockState from){
 		try {
@@ -98,16 +111,32 @@ public class BlockPropertiesConfig implements BlockPropertiesMapper {
 			}
 		}
 		
+		BlockProperties generated = BlockProperties.DEFAULT;
+		
+		if (resourcePack != null) {
+			try {
+				boolean culling = false;
+				boolean occluding = false;
+	
+				for(TransformedBlockModelResource model : resourcePack.getBlockStateResource(bs).getModels(bs)) {
+					culling = culling || model.getModel().isCulling();
+					occluding = occluding || model.getModel().isOccluding();
+					if (culling && occluding) break;
+				}
+				
+				generated = new BlockProperties(culling, occluding, generated.isFlammable());
+			} catch (NoSuchResourceException ignore) {} //ignoring this because it will be logged later again if we try to render that block
+		}
+		
+		mappings.put(bs.getFullId(), new BlockStateMapping<BlockProperties>(new BlockState(bs.getFullId()), generated));
 		if (autopoulationConfigLoader != null) {
-			mappings.put(bs.getFullId(), new BlockStateMapping<BlockProperties>(new BlockState(bs.getFullId()), BlockProperties.DEFAULT));
-			
 			synchronized (autopoulationConfigLoader) {
 				try {
 					ConfigurationNode node = autopoulationConfigLoader.load();
 					ConfigurationNode bpNode = node.getNode(bs.getFullId());
-					bpNode.getNode("culling").setValue(false);
-					bpNode.getNode("occluding").setValue(false);
-					bpNode.getNode("flammable").setValue(false);
+					bpNode.getNode("culling").setValue(generated.isCulling());
+					bpNode.getNode("occluding").setValue(generated.isOccluding());
+					bpNode.getNode("flammable").setValue(generated.isFlammable());
 					autopoulationConfigLoader.save(node);
 				} catch (IOException ex) {
 					Logger.global.noFloodError("blockpropsconf-autopopulate-ioex", "Failed to auto-populate BlockPropertiesConfig!", ex);
@@ -115,7 +144,7 @@ public class BlockPropertiesConfig implements BlockPropertiesMapper {
 			}
 		}
 		
-		return BlockProperties.DEFAULT;
+		return generated;
 	}
 	
 }

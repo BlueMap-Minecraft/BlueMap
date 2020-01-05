@@ -84,7 +84,7 @@ public class BlockIdConfig implements BlockIdMapper {
 		BlockState state = mappings.get(idmeta);
 		
 		if (state == null) {
-			state = mappings.getOrDefault(new BlockIDMeta(id, 0), BlockState.AIR); //meta-fallback
+			state = mappings.getOrDefault(new BlockIDMeta(id, 0), BlockState.MISSING); //meta-fallback
 			
 			if (autopoulationConfigLoader != null) {
 				mappings.put(idmeta, state);

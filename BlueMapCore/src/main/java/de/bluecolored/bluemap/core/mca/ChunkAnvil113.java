@@ -188,7 +188,7 @@ class ChunkAnvil113 extends Chunk {
 			
 			if (value >= palette.length) {
 				Logger.global.noFloodWarning("palettewarning", "Got palette value " + value + " but palette has size of " + palette.length + " (Future occasions of this error will not be logged)");
-				return BlockState.AIR;
+				return BlockState.MISSING;
 			}
 			
 			return palette[(int) value];

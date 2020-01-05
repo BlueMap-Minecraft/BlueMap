@@ -179,6 +179,8 @@ public class SpongePlugin {
 		resourcePack.loadBlockColorConfig(blockColorsConfigFile);
 		resourcePack.saveTextureFile(textureExportFile);
 		
+		configManager.getBlockPropertiesConfig().setResourcePack(resourcePack);
+		
 		//load maps
 		for (MapConfig mapConfig : config.getMapConfigs()) {
 			String id = mapConfig.getId();

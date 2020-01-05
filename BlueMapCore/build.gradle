@@ -8,6 +8,8 @@ dependencies {
     compile 'ninja.leaping.configurate:configurate-gson:3.3'
     compile 'ninja.leaping.configurate:configurate-yaml:3.3'
     compile 'com.github.Querz:NBT:4.0'
+    
+    testCompile 'junit:junit:4.12'
 }
 
 task zipWebroot(type: Zip) {

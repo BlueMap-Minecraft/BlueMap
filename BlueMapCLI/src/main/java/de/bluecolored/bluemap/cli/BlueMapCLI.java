@@ -90,7 +90,8 @@ public class BlueMapCLI {
 		config.getWebDataPath().toFile().mkdirs();
 		
 		Map<String, MapType> maps = new HashMap<>(); 
-		
+
+		configManager.getBlockPropertiesConfig().setResourcePack(resourcePack);
 		for (MapConfig mapConfig : config.getMapConfigs()) {
 			File mapPath = new File(mapConfig.getWorldPath());
 			if (!mapPath.exists() || !mapPath.isDirectory()) {

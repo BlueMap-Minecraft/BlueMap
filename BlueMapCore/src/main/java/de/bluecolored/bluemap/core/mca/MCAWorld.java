@@ -139,7 +139,7 @@ public class MCAWorld implements World {
 			return chunk.getBlockState(pos);
 			
 		} catch (Exception ex) {
-			return BlockState.AIR;
+			return BlockState.MISSING;
 		}
 	}
 	

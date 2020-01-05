@@ -11,6 +11,8 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
+    - name: Test with Gradle
+      run: ./gradlew test
     - name: Build with Gradle
       run: ./gradlew shadowJar
     - uses: actions/upload-artifact@v1

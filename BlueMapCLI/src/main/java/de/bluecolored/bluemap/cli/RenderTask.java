@@ -134,7 +134,9 @@ public class RenderTask {
 				long ert = (long)((time / pct) * (1d - pct));
 				String ertDurationString = DurationFormatUtils.formatDurationWords(ert, true, true);
 				
-				Logger.global.logInfo("Rendered " + renderedTiles + " of " + tileCount + " tiles in " + durationString);
+				double tps = renderedTiles / (time / 1000.0);
+				
+				Logger.global.logInfo("Rendered " + renderedTiles + " of " + tileCount + " tiles in " + durationString + " | " + GenericMath.round(tps, 3) + " tiles/s");
 				Logger.global.logInfo(GenericMath.round(pct * 100, 3) + "% | Estimated remaining time: " + ertDurationString);
 			}
 			

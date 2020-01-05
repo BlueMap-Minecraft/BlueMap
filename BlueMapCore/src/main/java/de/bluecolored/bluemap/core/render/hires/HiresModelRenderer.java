@@ -31,6 +31,7 @@ import com.flowpowered.math.vector.Vector4f;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.render.RenderSettings;
 import de.bluecolored.bluemap.core.render.WorldTile;
+import de.bluecolored.bluemap.core.render.context.ExtendedBlockContext;
 import de.bluecolored.bluemap.core.render.context.SlicedWorldChunkBlockContext;
 import de.bluecolored.bluemap.core.render.hires.blockmodel.BlockStateModel;
 import de.bluecolored.bluemap.core.render.hires.blockmodel.BlockStateModelFactory;
@@ -39,6 +40,7 @@ import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.AABB;
 import de.bluecolored.bluemap.core.util.MathUtils;
 import de.bluecolored.bluemap.core.world.Block;
+import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.ChunkNotGeneratedException;
 import de.bluecolored.bluemap.core.world.WorldChunk;
 
@@ -79,11 +81,19 @@ public class HiresModelRenderer {
 					
 					maxHeight = y;
 
+					ExtendedBlockContext context = new SlicedWorldChunkBlockContext(chunk, new Vector3i(x, y, z), renderSettings.getSliceY());
+					
 					BlockStateModel blockModel;
 					try {
-						blockModel = modelFactory.createFrom(block.getBlock(), new SlicedWorldChunkBlockContext(chunk, new Vector3i(x, y, z), renderSettings.getSliceY()), renderSettings);
+						blockModel = modelFactory.createFrom(block.getBlock(), context, renderSettings);
 					} catch (NoSuchResourceException e) {
-						blockModel = new BlockStateModel();						
+						try {
+							blockModel = modelFactory.createFrom(BlockState.MISSING, context, renderSettings);
+						} catch (NoSuchResourceException e2) {
+							e.addSuppressed(e2);
+							blockModel = new BlockStateModel();
+						}						
+						
 						Logger.global.noFloodDebug(block.getBlock().getFullId() + "-hiresModelRenderer-blockmodelerr", "Failed to create BlockModel for BlockState: " + block.getBlock() + " (" + e.toString() + ")");
 					}
 					

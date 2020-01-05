@@ -42,9 +42,10 @@ import java.util.StringJoiner;
  */
 public class BlockState {
 	
-	private static Pattern BLOCKSTATE_SERIALIZATION_PATTERN = Pattern.compile("^(.+?)(?:\\[(.+)\\])?$");
+	private static Pattern BLOCKSTATE_SERIALIZATION_PATTERN = Pattern.compile("^(.+?)(?:\\[(.*)\\])?$");
 	
 	public static final BlockState AIR = new BlockState("minecraft:air", Collections.emptyMap());
+	public static final BlockState MISSING = new BlockState("bluemap:missing", Collections.emptyMap());
 
 	private boolean hashed;
 	private int hash;
@@ -133,24 +134,6 @@ public class BlockState {
 		return new BlockState(this, property, value);
 	}
 	
-	public final boolean checkVariantCondition(String condition){
-		if (condition.isEmpty() || condition.equals("normal")) return true;
-
-		Map<String, String> blockProperties = getProperties();
-		String[] conditions = condition.split(",");
-		for (String c : conditions){
-			String[] kv = c.split("=", 2);
-			String key = kv[0];
-			String value = kv[1];
-			
-			if (!value.equals(blockProperties.get(key))){
-				return false;
-			}
-		}
-		
-		return true;
-	}
-	
 	@Override
 	public boolean equals(Object obj) {
 		if (!(obj instanceof BlockState)) return false;
@@ -187,7 +170,7 @@ public class BlockState {
 	
 			Map<String, String> pt = new HashMap<>();
 			String g2 = m.group(2);
-			if (g2 != null){
+			if (g2 != null && !g2.isEmpty()){
 				String[] propertyStrings = g2.trim().split(",");
 				for (String s : propertyStrings){
 					String[] kv = s.split("=", 2);
