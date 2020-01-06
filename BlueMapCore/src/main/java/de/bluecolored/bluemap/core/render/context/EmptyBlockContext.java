@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.core.render.context;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.UUID;
@@ -141,6 +142,11 @@ public class EmptyBlockContext implements ExtendedBlockContext {
 
 		@Override
 		public void invalidateChunkCache(Vector2i chunk) {}
+
+		@Override
+		public boolean isChunkGenerated(Vector2i chunkPos) throws IOException {
+			return false;
+		}
 		
 	}
 

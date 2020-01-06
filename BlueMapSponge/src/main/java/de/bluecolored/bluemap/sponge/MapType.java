@@ -31,7 +31,6 @@ import com.google.common.base.Preconditions;
 
 import de.bluecolored.bluemap.core.render.TileRenderer;
 import de.bluecolored.bluemap.core.render.WorldTile;
-import de.bluecolored.bluemap.core.world.ChunkNotGeneratedException;
 import de.bluecolored.bluemap.core.world.World;
 
 public class MapType {
@@ -69,7 +68,7 @@ public class MapType {
 		return tileRenderer;
 	}
 	
-	public void renderTile(Vector2i tile) throws IOException, ChunkNotGeneratedException {
+	public void renderTile(Vector2i tile) throws IOException {
 		getTileRenderer().render(new WorldTile(getWorld(), tile));
 	}
 	

@@ -29,7 +29,7 @@ import java.io.IOException;
 import de.bluecolored.bluemap.core.render.hires.HiresModel;
 import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.render.lowres.LowresModelManager;
-import de.bluecolored.bluemap.core.world.ChunkNotGeneratedException;
+import de.bluecolored.bluemap.core.util.AABB;
 
 public class TileRenderer {
 	private HiresModelManager hiresModelManager;
@@ -43,11 +43,14 @@ public class TileRenderer {
 	}
 	
 	/**
-	 * Renders the provided WorldTile
-	 * @throws ChunkNotGeneratedException if that WorldTile's WorldChunk is not fully generated
-	 * @throws IOException if a lowres-model that needs to be updated could not be loaded
+	 * Renders the provided WorldTile (only) if the world is generated
+	 * @throws IOException If an IO-Exception occurs during the render
 	 */
-	public void render(WorldTile tile) throws IOException, ChunkNotGeneratedException {
+	public void render(WorldTile tile) throws IOException {
+		//check if the region is generated before rendering, don't render if it's not generated 
+		AABB area = hiresModelManager.getTileRegion(tile);
+		if (!tile.getWorld().isAreaGenerated(area)) return;
+		
 		HiresModel hiresModel = hiresModelManager.render(tile, renderSettings);
 		lowresModelManager.render(hiresModel);
 	}

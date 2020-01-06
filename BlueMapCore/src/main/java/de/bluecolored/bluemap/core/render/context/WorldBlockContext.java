@@ -27,7 +27,6 @@ package de.bluecolored.bluemap.core.render.context;
 import com.flowpowered.math.vector.Vector3i;
 
 import de.bluecolored.bluemap.core.world.Block;
-import de.bluecolored.bluemap.core.world.ChunkNotGeneratedException;
 import de.bluecolored.bluemap.core.world.World;
 
 public class WorldBlockContext implements ExtendedBlockContext {
@@ -64,11 +63,7 @@ public class WorldBlockContext implements ExtendedBlockContext {
 	}
 	
 	protected Block getBlock(Vector3i position) {
-		try {
-			return world.getBlock(position);
-		} catch (ChunkNotGeneratedException ex) {
-			return EmptyBlockContext.AIR_BLOCK;
-		}
+		return world.getBlock(position);
 	}
 	
 }

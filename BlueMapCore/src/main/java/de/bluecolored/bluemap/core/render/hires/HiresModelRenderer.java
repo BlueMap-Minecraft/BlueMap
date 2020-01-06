@@ -41,7 +41,6 @@ import de.bluecolored.bluemap.core.util.AABB;
 import de.bluecolored.bluemap.core.util.MathUtils;
 import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.BlockState;
-import de.bluecolored.bluemap.core.world.ChunkNotGeneratedException;
 import de.bluecolored.bluemap.core.world.World;
 
 public class HiresModelRenderer {
@@ -56,7 +55,7 @@ public class HiresModelRenderer {
 		this.modelFactory = modelFactory;
 	}
 	
-	public HiresModel render(WorldTile tile, AABB region, RenderSettings renderSettings) throws ChunkNotGeneratedException {
+	public HiresModel render(WorldTile tile, AABB region, RenderSettings renderSettings) {
 		Vector3i min = region.getMin().toInt();
 		Vector3i max = region.getMax().toInt();
 		

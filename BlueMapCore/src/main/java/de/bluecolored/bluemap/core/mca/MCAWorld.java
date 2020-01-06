@@ -67,7 +67,6 @@ import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.BlockProperties;
 import de.bluecolored.bluemap.core.world.BlockState;
-import de.bluecolored.bluemap.core.world.ChunkNotGeneratedException;
 import de.bluecolored.bluemap.core.world.LightData;
 import de.bluecolored.bluemap.core.world.World;
 import net.querz.nbt.CompoundTag;
@@ -140,7 +139,7 @@ public class MCAWorld implements World {
 	}
 	
 	@Override
-	public Block getBlock(Vector3i pos) throws ChunkNotGeneratedException {
+	public Block getBlock(Vector3i pos) {
 		if (pos.getY() < getMinY()) {
 			return new MCABlock(this, BlockState.AIR, LightData.ZERO, Biome.DEFAULT, BlockProperties.SOLID, pos);
 		}
@@ -160,11 +159,11 @@ public class MCAWorld implements World {
 			return new MCABlock(this, blockState, lightData, biome, properties, pos);
 			
 		} catch (IOException ex) {
-			throw new ChunkNotGeneratedException(ex); // to resolve the error, act like the chunk has not been generated yet
+			throw new RuntimeException("Unexpected IO-Exception trying to read world-data!", ex);
 		}
 	}
 
-	private BlockState getExtendedBlockState(Chunk chunk, Vector3i pos) throws ChunkNotGeneratedException {
+	private BlockState getExtendedBlockState(Chunk chunk, Vector3i pos) {
 		BlockState blockState = chunk.getBlockState(pos);
 		
 		if (chunk instanceof ChunkAnvil112) { // only use extensions if old format chunk (1.12) in the new format block-states are saved with extensions
@@ -176,10 +175,9 @@ public class MCAWorld implements World {
 		return blockState;
 	}
 	
-	public Chunk getChunk(Vector2i chunkPos) throws IOException, ChunkNotGeneratedException {
+	public Chunk getChunk(Vector2i chunkPos) throws IOException {
 		try {
 			Chunk chunk = CHUNK_CACHE.get(new WorldChunkHash(this, chunkPos), () -> this.loadChunk(chunkPos));
-			if (!chunk.isGenerated()) throw new ChunkNotGeneratedException();
 			return chunk;
 		} catch (UncheckedExecutionException | ExecutionException e) {
 			Throwable cause = e.getCause();
@@ -187,16 +185,12 @@ public class MCAWorld implements World {
 			if (cause instanceof IOException) {
 				throw (IOException) cause;
 			}
-
-			else if (cause instanceof ChunkNotGeneratedException) {
-				throw (ChunkNotGeneratedException) cause;
-			}
 			
 			else throw new IOException(cause);
 		}
 	}
 	
-	private Chunk loadChunk(Vector2i chunkPos) throws IOException, ChunkNotGeneratedException {
+	private Chunk loadChunk(Vector2i chunkPos) throws IOException {
 		Vector2i regionPos = chunkToRegion(chunkPos);
 		Path regionPath = getMCAFilePath(regionPos);
 		
@@ -211,7 +205,9 @@ public class MCAWorld implements World {
 			offset *= 4096;
 			
 			int size = raf.readByte() * 4096;
-			if (size == 0) throw new ChunkNotGeneratedException();
+			if (size == 0) {
+				return Chunk.empty(this, chunkPos);
+			}
 			
 			raf.seek(offset + 4); // +4 skip chunk size
 			
@@ -232,14 +228,10 @@ public class MCAWorld implements World {
 		}
 	}
 	
-	public boolean isChunkGenerated(Vector2i chunkPos) {
-		try {
-			getChunk(chunkPos);
-		} catch (ChunkNotGeneratedException | IOException e) {
-			return false;
-		}
-		
-		return true;
+	@Override
+	public boolean isChunkGenerated(Vector2i chunkPos) throws IOException {
+		Chunk chunk = getChunk(chunkPos);
+		return chunk.isGenerated();
 	}
 	
 	@Override

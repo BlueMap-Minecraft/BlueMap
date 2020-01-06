@@ -39,6 +39,11 @@ public abstract class Chunk {
 	private final MCAWorld world;
 	private final Vector2i chunkPos;
 	
+	protected Chunk(MCAWorld world, Vector2i chunkPos) {
+		this.world = world;
+		this.chunkPos = chunkPos;
+	}
+	
 	protected Chunk(MCAWorld world, CompoundTag chunkTag) {
 		this.world = world;
 		
@@ -71,6 +76,10 @@ public abstract class Chunk {
 		
 		if (version <= 1343) return new ChunkAnvil112(world, chunkTag);
 		return new ChunkAnvil113(world, chunkTag);
+	}
+	
+	public static Chunk empty(MCAWorld world, Vector2i chunkPos) {
+		return new EmptyChunk(world, chunkPos);
 	}
 	
 }

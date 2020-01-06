@@ -63,6 +63,10 @@ class ChunkAnvil112 extends Chunk {
 		}
 		
 		biomes = levelData.getByteArray("Biomes");
+		
+		if (biomes == null || biomes.length == 0) {
+			biomes = new byte[2048];
+		}
 	}
 
 	@Override

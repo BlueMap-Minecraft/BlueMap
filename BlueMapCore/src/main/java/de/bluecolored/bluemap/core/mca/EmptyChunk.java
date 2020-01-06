@@ -22,70 +22,39 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.cli;
-
-import java.io.IOException;
+package de.bluecolored.bluemap.core.mca;
 
 import com.flowpowered.math.vector.Vector2i;
-import com.google.common.base.Preconditions;
+import com.flowpowered.math.vector.Vector3i;
 
-import de.bluecolored.bluemap.core.render.TileRenderer;
-import de.bluecolored.bluemap.core.render.WorldTile;
-import de.bluecolored.bluemap.core.world.World;
+import de.bluecolored.bluemap.core.world.Biome;
+import de.bluecolored.bluemap.core.world.BlockState;
+import de.bluecolored.bluemap.core.world.LightData;
 
-public class MapType {
+public class EmptyChunk extends Chunk {
 
-	private final String id;
-	private String name;
-	private World world;
-	private TileRenderer tileRenderer;
-	
-	public MapType(String id, String name, World world, TileRenderer tileRenderer) {
-		Preconditions.checkNotNull(id);
-		Preconditions.checkNotNull(name);
-		Preconditions.checkNotNull(world);
-		Preconditions.checkNotNull(tileRenderer);
-		
-		this.id = id;
-		this.name = name;
-		this.world = world;
-		this.tileRenderer = tileRenderer;
+	protected EmptyChunk(MCAWorld world, Vector2i chunkPos) {
+		super(world, chunkPos);
 	}
 
-	public String getId() {
-		return id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public World getWorld() {
-		return world;
-	}
-
-	public TileRenderer getTileRenderer() {
-		return tileRenderer;
-	}
-	
-	public void renderTile(Vector2i tile) throws IOException {
-		getTileRenderer().render(new WorldTile(getWorld(), tile));
-	}
-	
 	@Override
-	public int hashCode() {
-		return id.hashCode();
-	}
-	
-	@Override
-	public boolean equals(Object obj) {
-		if (obj != null && obj instanceof MapType) {
-			MapType that = (MapType) obj;
-			
-			return this.id.equals(that.id);
-		}
-		
+	public boolean isGenerated() {
 		return false;
+	}
+
+	@Override
+	public BlockState getBlockState(Vector3i pos) {
+		return BlockState.AIR;
+	}
+
+	@Override
+	public LightData getLightData(Vector3i pos) {
+		return LightData.ZERO;
+	}
+
+	@Override
+	public Biome getBiome(Vector3i pos) {
+		return Biome.DEFAULT;
 	}
 	
 }

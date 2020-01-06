@@ -24,11 +24,14 @@
  */
 package de.bluecolored.bluemap.core.world;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.UUID;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
+
+import de.bluecolored.bluemap.core.util.AABB;
 
 /**
  * Represents a World on the Server<br>
@@ -58,14 +61,14 @@ public interface World {
 	 * <br>
 	 * <i>(The implementation should not invoke the generation of new Terrain, it should rather throw a {@link ChunkNotGeneratedException} if a not generated block is requested)</i><br>
 	 */
-	Block getBlock(Vector3i pos) throws ChunkNotGeneratedException;
+	Block getBlock(Vector3i pos);
 	
 	/**
 	 * Returns the Block on the specified position.<br>
 	 * <br>
 	 * <i>(The implementation should not invoke the generation of new Terrain, it should rather throw a {@link ChunkNotGeneratedException} if a not generated block is requested)</i><br>
 	 */
-	default Block getBlock(int x, int y, int z) throws ChunkNotGeneratedException {
+	default Block getBlock(int x, int y, int z) {
 		return getBlock(new Vector3i(x, y, z));
 	}
 	
@@ -83,6 +86,45 @@ public interface World {
 	 */
 	public Collection<Vector2i> getChunkList(long modifiedSince);
 
+	/**
+	 * Returns true if and only if that chunk is fully generated and no world-generation or lighting has yet to be done.
+	 */
+	public boolean isChunkGenerated(Vector2i chunkPos) throws IOException;
+	
+	
+	/**
+	 * Returns true if and only if all chunks the given area is intersecting are fully generated and no world-generation or lighting has yet to be done.
+	 * @param area The area to check
+	 * @throws IOException 
+	 */
+	public default boolean isAreaGenerated(AABB area) throws IOException {
+		return isAreaGenerated(area.getMin().toInt(), area.getMax().toInt());
+	}
+	
+	/**
+	 * Returns true if and only if all chunks the given area is intersecting are fully generated and no world-generation or lighting has yet to be done.
+	 * @param area The area to check
+	 * @throws IOException 
+	 */
+	public default boolean isAreaGenerated(Vector3i blockMin, Vector3i blockMax) throws IOException {
+		return isAreaGenerated(blockPosToChunkPos(blockMin), blockPosToChunkPos(blockMax));
+	}
+	
+	/**
+	 * Returns true if and only if all chunks in the given range are fully generated and no world-generation or lighting has yet to be done.
+	 * @param area The area to check
+	 * @throws IOException 
+	 */
+	public default boolean isAreaGenerated(Vector2i chunkMin, Vector2i chunkMax) throws IOException {
+		for (int x = chunkMin.getX(); x <= chunkMax.getX(); x++) {
+			for (int z = chunkMin.getY(); z <= chunkMax.getY(); z++) {
+				if (!isChunkGenerated(new Vector2i(x, z))) return false;
+			}
+		}
+		
+		return true;
+	}
+	
 	/**
 	 * Invalidates the complete chunk cache (if there is a cache), so that every chunk has to be reloaded from disk
 	 */

@@ -21,6 +21,7 @@ import org.spongepowered.api.world.Locatable;
 import org.spongepowered.api.world.Location;
 import org.spongepowered.api.world.storage.WorldProperties;
 
+import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.Lists;
@@ -28,7 +29,6 @@ import com.google.common.collect.Lists;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.world.Block;
-import de.bluecolored.bluemap.core.world.ChunkNotGeneratedException;
 import de.bluecolored.bluemap.core.world.World;
 
 public class Commands {
@@ -45,20 +45,16 @@ public class Commands {
 		CommandSpec debugCommand = CommandSpec.builder()
 				.executor((source, args) -> {
 					if (source instanceof Locatable) {
-						try {
-							Location<org.spongepowered.api.world.World> loc = ((Locatable) source).getLocation();
-							UUID worldUuid = loc.getExtent().getUniqueId();
-							World world = plugin.getWorld(worldUuid);
-							Block block = world.getBlock(loc.getBlockPosition());
-							Block blockBelow = world.getBlock(loc.getBlockPosition().add(0, -1, 0));
-							
-							source.sendMessages(Lists.newArrayList(
-									Text.of("Block: " + block),
-									Text.of("Block below: " + blockBelow)
-								));
-						} catch (ChunkNotGeneratedException e) {
-							Logger.global.logError("Failed to debug!", e);
-						}
+						Location<org.spongepowered.api.world.World> loc = ((Locatable) source).getLocation();
+						UUID worldUuid = loc.getExtent().getUniqueId();
+						World world = plugin.getWorld(worldUuid);
+						Block block = world.getBlock(loc.getBlockPosition());
+						Block blockBelow = world.getBlock(loc.getBlockPosition().add(0, -1, 0));
+						
+						source.sendMessages(Lists.newArrayList(
+								Text.of("Block: " + block),
+								Text.of("Block below: " + blockBelow)
+							));
 					}
 					
 					return CommandResult.success();
@@ -266,10 +262,12 @@ public class Commands {
 			
 			long ert = (long)((time / pct) * (1d - pct));
 			String ertDurationString = DurationFormatUtils.formatDurationWords(ert, true, true);
+
+			double tps = task.getRenderedTileCount() / (time / 1000.0);
 			
 			lines.add(Text.of(TextColors.BLUE, "Current task:"));
 			lines.add(Text.of(" ", createCancelTaskText(task), TextColors.WHITE, " Task ", TextColors.GOLD, task.getName(), TextColors.WHITE, " for map ", TextActions.showText(Text.of(TextColors.WHITE, "World: ", TextColors.GOLD, task.getMapType().getWorld().getName())), TextColors.GOLD, task.getMapType().getName()));
-			lines.add(Text.of(TextColors.WHITE, " rendered ", TextColors.GOLD, task.getRenderedTileCount(), TextColors.WHITE, " tiles ", TextColors.GRAY, "(" + (Math.round(pct * 1000)/10.0) + "%)", TextColors.WHITE, " in ", TextColors.GOLD, durationString));
+			lines.add(Text.of(TextColors.WHITE, " rendered ", TextColors.GOLD, task.getRenderedTileCount(), TextColors.WHITE, " tiles ", TextColors.GRAY, "(" + (Math.round(pct * 1000)/10.0) + "% | " + GenericMath.round(tps, 1) + "t/s)", TextColors.WHITE, " in ", TextColors.GOLD, durationString));
 			lines.add(Text.of(TextColors.WHITE, " with ", TextColors.GOLD, task.getRemainingTileCount(), TextColors.WHITE, " tiles to go. ETA: ", TextColors.GOLD, ertDurationString));
 		}
 

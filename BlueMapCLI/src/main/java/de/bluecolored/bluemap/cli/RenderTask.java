@@ -39,7 +39,6 @@ import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.render.TileRenderer;
 import de.bluecolored.bluemap.core.render.WorldTile;
-import de.bluecolored.bluemap.core.world.ChunkNotGeneratedException;
 import de.bluecolored.bluemap.core.world.World;
 
 public class RenderTask {
@@ -163,7 +162,7 @@ public class RenderTask {
 				tileRenderer.render(tile);
 			} catch (IOException e) {
 				Logger.global.logError("Failed to render tile " + tilePos, e);
-			} catch (ChunkNotGeneratedException e) {}
+			}
 			
 			renderedTiles++;
 		}

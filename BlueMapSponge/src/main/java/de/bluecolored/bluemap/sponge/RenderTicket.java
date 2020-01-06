@@ -5,8 +5,6 @@ import java.util.Objects;
 
 import com.flowpowered.math.vector.Vector2i;
 
-import de.bluecolored.bluemap.core.world.ChunkNotGeneratedException;
-
 public class RenderTicket {
 	
 	private final MapType map;
@@ -22,12 +20,7 @@ public class RenderTicket {
 	
 	public synchronized void render() throws IOException {
 		if (!finished) {
-			
-			try {
-				map.renderTile(tile);
-			} catch (ChunkNotGeneratedException e) {
-				//ignore
-			}
+			map.renderTile(tile);
 			
 			finished = true;
 		}

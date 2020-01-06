@@ -81,7 +81,8 @@ class ChunkAnvil113 extends Chunk {
 		else if (tag instanceof IntArrayTag) {
 			biomes = ((IntArrayTag) tag).getValue(); 
 		}
-		else {
+		
+		if (biomes == null || biomes.length == 0) {
 			biomes = new int[2048];
 		}
 	}

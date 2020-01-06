@@ -44,7 +44,6 @@ import de.bluecolored.bluemap.core.render.WorldTile;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.AABB;
 import de.bluecolored.bluemap.core.util.FileUtils;
-import de.bluecolored.bluemap.core.world.ChunkNotGeneratedException;
 
 public class HiresModelManager {
 
@@ -74,7 +73,7 @@ public class HiresModelManager {
 	 * Renders the given world tile with the provided render-settings
 	 * @throws ChunkNotGeneratedException if a minecraft-chunk needed for thies tile is not yet generated
 	 */
-	public HiresModel render(WorldTile tile, RenderSettings renderSettings) throws ChunkNotGeneratedException {
+	public HiresModel render(WorldTile tile, RenderSettings renderSettings) {
 		HiresModel model = renderer.render(tile, getTileRegion(tile), renderSettings);
 		save(model);
 		return model;
