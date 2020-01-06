@@ -28,6 +28,7 @@ import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.file.Path;
@@ -225,6 +226,8 @@ public class MCAWorld implements World {
 				throw new IOException("invalid data tag: " + (tag == null ? "null" : tag.getClass().getName()));
 			}
 			
+		} catch (FileNotFoundException ex) {
+			return Chunk.empty(this, chunkPos);
 		}
 	}
 	

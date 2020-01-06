@@ -223,7 +223,7 @@ public class BlueMapCLI {
 		File resourcePackFolder = configFolder.toPath().resolve("resourcepacks").toFile();
 		resourcePackFolder.mkdirs();
 		File[] resourcePacks = resourcePackFolder.listFiles();
-		Arrays.sort(resourcePacks);
+		Arrays.sort(resourcePacks); //load resource packs in alphabetical order so you can reorder them by renaming
 		
 		List<File> resources = new ArrayList<>(resourcePacks.length + 1);
 		resources.add(defaultResourceFile);
