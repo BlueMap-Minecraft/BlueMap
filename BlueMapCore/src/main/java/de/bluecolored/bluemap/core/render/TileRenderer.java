@@ -34,12 +34,10 @@ import de.bluecolored.bluemap.core.util.AABB;
 public class TileRenderer {
 	private HiresModelManager hiresModelManager;
 	private LowresModelManager lowresModelManager;
-	private RenderSettings renderSettings;
 	
-	public TileRenderer(HiresModelManager hiresModelManager, LowresModelManager lowresModelManager, RenderSettings renderSettings) {
+	public TileRenderer(HiresModelManager hiresModelManager, LowresModelManager lowresModelManager) {
 		this.hiresModelManager = hiresModelManager;
 		this.lowresModelManager = lowresModelManager;
-		this.renderSettings = renderSettings.copy();
 	}
 	
 	/**
@@ -51,7 +49,7 @@ public class TileRenderer {
 		AABB area = hiresModelManager.getTileRegion(tile);
 		if (!tile.getWorld().isAreaGenerated(area)) return;
 		
-		HiresModel hiresModel = hiresModelManager.render(tile, renderSettings);
+		HiresModel hiresModel = hiresModelManager.render(tile);
 		lowresModelManager.render(hiresModel);
 	}
 	
@@ -68,10 +66,6 @@ public class TileRenderer {
 	
 	public LowresModelManager getLowresModelManager() {
 		return lowresModelManager;
-	}
-	
-	public RenderSettings getRenderSettings() {
-		return renderSettings;
 	}
 	
 }

@@ -218,6 +218,7 @@ public class SpongePlugin {
 			HiresModelManager hiresModelManager = new HiresModelManager(
 					config.getWebDataPath().resolve("hires").resolve(id),
 					resourcePack,
+					mapConfig,
 					new Vector2i(mapConfig.getHiresTileSize(), mapConfig.getHiresTileSize()),
 					getAsyncExecutor()
 					);
@@ -228,7 +229,7 @@ public class SpongePlugin {
 					new Vector2i(mapConfig.getLowresPointsPerHiresTile(), mapConfig.getLowresPointsPerHiresTile())
 					);
 			
-			TileRenderer tileRenderer = new TileRenderer(hiresModelManager, lowresModelManager, mapConfig);
+			TileRenderer tileRenderer = new TileRenderer(hiresModelManager, lowresModelManager);
 			
 			MapType mapType = new MapType(id, name, world, tileRenderer);
 			maps.put(id, mapType);

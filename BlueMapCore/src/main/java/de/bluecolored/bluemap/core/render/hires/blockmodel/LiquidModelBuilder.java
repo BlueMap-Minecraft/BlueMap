@@ -35,10 +35,10 @@ import com.google.common.collect.Sets;
 import de.bluecolored.bluemap.core.model.Face;
 import de.bluecolored.bluemap.core.model.Model;
 import de.bluecolored.bluemap.core.render.RenderSettings;
-import de.bluecolored.bluemap.core.render.context.ExtendedBlockContext;
 import de.bluecolored.bluemap.core.resourcepack.BlockColorCalculator;
 import de.bluecolored.bluemap.core.resourcepack.BlockModelResource;
 import de.bluecolored.bluemap.core.resourcepack.Texture;
+import de.bluecolored.bluemap.core.resourcepack.TransformedBlockModelResource;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.BlockState;
@@ -56,25 +56,29 @@ public class LiquidModelBuilder {
 		);
 	
 	private BlockState liquidBlockState;
-	private ExtendedBlockContext context;
+	private Block block;
 	private RenderSettings renderSettings;
 	private BlockColorCalculator colorCalculator;
 	
-	public LiquidModelBuilder(RenderSettings renderSettings, ExtendedBlockContext context, BlockState liquidBlockState, BlockColorCalculator colorCalculator) {
-		this.context = context;
+	public LiquidModelBuilder(Block block, BlockState liquidBlockState, RenderSettings renderSettings, BlockColorCalculator colorCalculator) {
+		this.block = block;
 		this.renderSettings = renderSettings;
 		this.liquidBlockState = liquidBlockState;
 		this.colorCalculator = colorCalculator;
 	}
 
-	public BlockStateModel build(BlockState blockState, BlockModelResource bmr) {
-		if (this.renderSettings.isExcludeFacesWithoutSunlight() && context.getRelativeBlock(0, 0, 0).getSunLightLevel() == 0) return new BlockStateModel();
+	public BlockStateModel build(TransformedBlockModelResource bmr) {
+		return build(bmr.getModel());
+	}
+	
+	public BlockStateModel build(BlockModelResource bmr) {
+		if (this.renderSettings.isExcludeFacesWithoutSunlight() && block.getSunLightLevel() == 0) return new BlockStateModel();
 		
-		int level = getLiquidLevel(blockState);
+		int level = getLiquidLevel(block.getBlock());
 		float[] heights = new float[]{16f, 16f, 16f, 16f};
 		float coloralpha = 0.2f;
 		
-		if (level < 8 && !(level == 0 && isLiquid(context.getRelativeBlock(0, 1, 0)))){
+		if (level < 8 && !(level == 0 && isLiquid(block.getRelativeBlock(0, 1, 0)))){
 			heights = new float[]{
 					getLiquidCornerHeight(-1, 0, -1),
 					getLiquidCornerHeight(-1, 0, 0),
@@ -102,7 +106,7 @@ public class LiquidModelBuilder {
 		int textureId = texture.getId();
 		Vector3f tintcolor = Vector3f.ONE;
 		if (liquidBlockState.getFullId().equals("minecraft:water")) {
-			tintcolor = colorCalculator.getWaterAverageColor(context);
+			tintcolor = colorCalculator.getWaterAverageColor(block);
 		}
 		
 		createElementFace(model, Direction.DOWN, c[0], c[2], c[3], c[1], tintcolor, textureId);
@@ -126,7 +130,7 @@ public class LiquidModelBuilder {
 	private float getLiquidCornerHeight(int x, int y, int z){
 		for (int ix = x; ix <= x+1; ix++){
 			for (int iz = z; iz<= z+1; iz++){
-				if (isLiquid(context.getRelativeBlock(ix, y+1, iz))){
+				if (isLiquid(block.getRelativeBlock(ix, y+1, iz))){
 					return 16f;
 				}
 			}
@@ -137,7 +141,7 @@ public class LiquidModelBuilder {
 		
 		for (int ix = x; ix <= x+1; ix++){
 			for (int iz = z; iz<= z+1; iz++){
-				Block b = context.getRelativeBlock(ix, y, iz);
+				Block b = block.getRelativeBlock(ix, y, iz);
 				if (isLiquid(b)){
 					if (getLiquidLevel(b.getBlock()) == 0) return 14f;
 					
@@ -158,8 +162,8 @@ public class LiquidModelBuilder {
 		return sumHeight / count;
 	}
 	
-	private boolean isLiquidBlockingBlock(Block b){
-		if (b.getBlock().getId().equals("air")) return false;
+	private boolean isLiquidBlockingBlock(Block block){
+		if (block.getBlock().equals(BlockState.AIR)) return false;
 		return true;
 	}
 
@@ -188,7 +192,7 @@ public class LiquidModelBuilder {
 	private void createElementFace(Model model, Direction faceDir, Vector3f c0, Vector3f c1, Vector3f c2, Vector3f c3, Vector3f color, int textureId) {
 		
 		//face culling
-		Block bl = context.getRelativeBlock(faceDir);
+		Block bl = block.getRelativeBlock(faceDir);
 		if (isLiquid(bl) || (faceDir != Direction.UP && bl.isCullingNeighborFaces())) return;
 		
 		//UV
@@ -212,7 +216,7 @@ public class LiquidModelBuilder {
 		if (renderSettings.getLightShadeMultiplier() > 0) {
 			light = 0f;
 			for (Direction d : Direction.values()){
-				Block b = context.getRelativeBlock(d.toVector());
+				Block b = block.getRelativeBlock(d.toVector());
 				float l = (float) (Math.max(b.getBlockLightLevel(), b.getSunLightLevel()) / 15f) * renderSettings.getLightShadeMultiplier() + (1 - renderSettings.getLightShadeMultiplier());
 				if (l > light) light = l;
 			}

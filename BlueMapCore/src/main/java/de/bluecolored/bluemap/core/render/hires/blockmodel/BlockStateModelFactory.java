@@ -25,43 +25,29 @@
 package de.bluecolored.bluemap.core.render.hires.blockmodel;
 
 import de.bluecolored.bluemap.core.render.RenderSettings;
-import de.bluecolored.bluemap.core.render.context.EmptyBlockContext;
-import de.bluecolored.bluemap.core.render.context.ExtendedBlockContext;
 import de.bluecolored.bluemap.core.resourcepack.BlockColorCalculator;
 import de.bluecolored.bluemap.core.resourcepack.BlockStateResource;
 import de.bluecolored.bluemap.core.resourcepack.NoSuchResourceException;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resourcepack.TransformedBlockModelResource;
+import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.BlockState;
 
 public class BlockStateModelFactory {
 
+	private RenderSettings renderSettings;
 	private ResourcePack resourcePack;
 	
-	public BlockStateModelFactory(ResourcePack resources) {
-		this.resourcePack = resources;
+	public BlockStateModelFactory(ResourcePack resourcePack, RenderSettings renderSettings) {
+		this.renderSettings = renderSettings;
+		this.resourcePack = resourcePack;
 	}
 
-	public BlockStateModel createFrom(BlockState blockState) throws NoSuchResourceException {
-		return createFrom(blockState, EmptyBlockContext.instance(), new RenderSettings() {
-			@Override
-			public float getLightShadeMultiplier() {
-				return 0;
-			}
-			
-			@Override
-			public boolean isExcludeFacesWithoutSunlight() {
-				return false;
-			}
-
-			@Override
-			public float getAmbientOcclusionStrenght() {
-				return 0;
-			}
-		});
+	public BlockStateModel createFrom(Block block) throws NoSuchResourceException {
+		return createFrom(block, block.getBlock());
 	}
 	
-	public BlockStateModel createFrom(BlockState blockState, ExtendedBlockContext context, RenderSettings renderSettings) throws NoSuchResourceException {
+	public BlockStateModel createFrom(Block block, BlockState blockState) throws NoSuchResourceException {
 		
 		//shortcut for air
 		if (
@@ -72,28 +58,28 @@ public class BlockStateModelFactory {
 			return new BlockStateModel();
 		}
 		
-		BlockStateModel model = createModel(blockState, context, renderSettings);
+		BlockStateModel model = createModel(block, blockState);
 		
 		// if block is waterlogged
 		if (LiquidModelBuilder.isWaterlogged(blockState)) {
-			model.merge(createModel(WATERLOGGED_BLOCKSTATE, context, renderSettings));
+			model.merge(createModel(block, WATERLOGGED_BLOCKSTATE));
 		}
 		
 		return model;
 	}
 
-	private BlockStateModel createModel(BlockState blockState, ExtendedBlockContext context, RenderSettings renderSettings) throws NoSuchResourceException {
+	private BlockStateModel createModel(Block block, BlockState blockState) throws NoSuchResourceException {
 		
 		BlockStateResource resource = resourcePack.getBlockStateResource(blockState);
 		BlockStateModel model = new BlockStateModel();
 		BlockColorCalculator colorCalculator = resourcePack.getBlockColorCalculator();
-		ResourceModelBuilder modelBuilder = new ResourceModelBuilder(renderSettings, context, colorCalculator);
-		LiquidModelBuilder liquidBuilder = new LiquidModelBuilder(renderSettings, context, blockState, colorCalculator);
+		ResourceModelBuilder modelBuilder = new ResourceModelBuilder(block, renderSettings, colorCalculator);
+		LiquidModelBuilder liquidBuilder = new LiquidModelBuilder(block, blockState, renderSettings, colorCalculator);
 		
-		for (TransformedBlockModelResource bmr : resource.getModels(blockState, context.getPosition())){
+		for (TransformedBlockModelResource bmr : resource.getModels(blockState, block.getPosition())){
 			switch (bmr.getModel().getType()){
 			case LIQUID:
-				model.merge(liquidBuilder.build(blockState, bmr.getModel()));
+				model.merge(liquidBuilder.build(bmr));
 				break;
 			default:
 				model.merge(modelBuilder.build(bmr));

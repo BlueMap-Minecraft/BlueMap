@@ -55,8 +55,8 @@ public class HiresModelManager {
 	
 	private ExecutorService savingExecutor;
 	
-	public HiresModelManager(Path fileRoot, ResourcePack resourcePack, Vector2i tileSize, ExecutorService savingExecutor) {
-		this(fileRoot, new HiresModelRenderer(resourcePack), tileSize, new Vector2i(2, 2), savingExecutor);
+	public HiresModelManager(Path fileRoot, ResourcePack resourcePack, RenderSettings renderSettings, Vector2i tileSize, ExecutorService savingExecutor) {
+		this(fileRoot, new HiresModelRenderer(resourcePack, renderSettings), tileSize, new Vector2i(2, 2), savingExecutor);
 	}
 	
 	public HiresModelManager(Path fileRoot, HiresModelRenderer renderer, Vector2i tileSize, Vector2i gridOrigin, ExecutorService savingExecutor) {
@@ -72,8 +72,8 @@ public class HiresModelManager {
 	/**
 	 * Renders the given world tile with the provided render-settings
 	 */
-	public HiresModel render(WorldTile tile, RenderSettings renderSettings) {
-		HiresModel model = renderer.render(tile, getTileRegion(tile), renderSettings);
+	public HiresModel render(WorldTile tile) {
+		HiresModel model = renderer.render(tile, getTileRegion(tile));
 		save(model);
 		return model;
 	}

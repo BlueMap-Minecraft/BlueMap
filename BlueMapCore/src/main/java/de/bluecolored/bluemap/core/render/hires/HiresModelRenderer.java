@@ -31,8 +31,6 @@ import com.flowpowered.math.vector.Vector4f;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.render.RenderSettings;
 import de.bluecolored.bluemap.core.render.WorldTile;
-import de.bluecolored.bluemap.core.render.context.ExtendedBlockContext;
-import de.bluecolored.bluemap.core.render.context.SlicedWorldBlockContext;
 import de.bluecolored.bluemap.core.render.hires.blockmodel.BlockStateModel;
 import de.bluecolored.bluemap.core.render.hires.blockmodel.BlockStateModelFactory;
 import de.bluecolored.bluemap.core.resourcepack.NoSuchResourceException;
@@ -45,17 +43,15 @@ import de.bluecolored.bluemap.core.world.World;
 
 public class HiresModelRenderer {
 
+	private RenderSettings renderSettings;
 	private BlockStateModelFactory modelFactory;
 	
-	public HiresModelRenderer(ResourcePack resourcePack) {
-		this(new BlockStateModelFactory(resourcePack));
+	public HiresModelRenderer(ResourcePack resourcePack, RenderSettings renderSettings) {
+		this.renderSettings = renderSettings;
+		this.modelFactory = new BlockStateModelFactory(resourcePack, renderSettings);
 	}
 	
-	public HiresModelRenderer(BlockStateModelFactory modelFactory) {
-		this.modelFactory = modelFactory;
-	}
-	
-	public HiresModel render(WorldTile tile, AABB region, RenderSettings renderSettings) {
+	public HiresModel render(WorldTile tile, AABB region) {
 		Vector3i min = region.getMin().toInt();
 		Vector3i max = region.getMax().toInt();
 		
@@ -78,14 +74,12 @@ public class HiresModelRenderer {
 					
 					if (!block.getBlock().equals(BlockState.AIR)) maxHeight = y;
 
-					ExtendedBlockContext context = new SlicedWorldBlockContext(world, new Vector3i(x, y, z), renderSettings.getSliceY());
-					
 					BlockStateModel blockModel;
 					try {
-						blockModel = modelFactory.createFrom(block.getBlock(), context, renderSettings);
+						blockModel = modelFactory.createFrom(block);
 					} catch (NoSuchResourceException e) {
 						try {
-							blockModel = modelFactory.createFrom(BlockState.MISSING, context, renderSettings);
+							blockModel = modelFactory.createFrom(block, BlockState.MISSING);
 						} catch (NoSuchResourceException e2) {
 							e.addSuppressed(e2);
 							blockModel = new BlockStateModel();

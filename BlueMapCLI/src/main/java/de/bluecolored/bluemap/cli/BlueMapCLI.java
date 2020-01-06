@@ -104,6 +104,7 @@ public class BlueMapCLI {
 			HiresModelManager hiresModelManager = new HiresModelManager(
 					config.getWebDataPath().resolve("hires").resolve(mapConfig.getId()),
 					resourcePack,
+					mapConfig,
 					new Vector2i(mapConfig.getHiresTileSize(), mapConfig.getHiresTileSize()),
 					ForkJoinPool.commonPool()
 					);
@@ -114,7 +115,7 @@ public class BlueMapCLI {
 					new Vector2i(mapConfig.getLowresPointsPerHiresTile(), mapConfig.getLowresPointsPerHiresTile())
 					);
 			
-			TileRenderer tileRenderer = new TileRenderer(hiresModelManager, lowresModelManager, mapConfig);
+			TileRenderer tileRenderer = new TileRenderer(hiresModelManager, lowresModelManager);
 			
 			MapType mapType = new MapType(mapConfig.getId(), mapConfig.getName(), world, tileRenderer);
 			maps.put(mapConfig.getId(), mapType);

@@ -27,7 +27,6 @@ package de.bluecolored.bluemap.core.world;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.base.MoreObjects;
 
-import de.bluecolored.bluemap.core.render.context.BlockContext;
 import de.bluecolored.bluemap.core.util.Direction;
 
 public abstract class Block {
@@ -64,8 +63,8 @@ public abstract class Block {
 	 * This is internally used for light rendering
 	 * It is basically the sun light that is projected onto adjacent faces
 	 */
-	public float getPassedSunLight(BlockContext context) {
-		if (sunLight < 0) calculateLight(context);
+	public float getPassedSunLight() {
+		if (sunLight < 0) calculateLight();
 		return sunLight;
 	}
 	
@@ -73,22 +72,36 @@ public abstract class Block {
 	 * This is internally used for light rendering
 	 * It is basically the block light that is projected onto adjacent faces
 	 */
-	public float getPassedBlockLight(BlockContext context) {
-		if (blockLight < 0) calculateLight(context);
+	public float getPassedBlockLight() {
+		if (blockLight < 0) calculateLight();
 		return blockLight;
 	}
 	
-	private void calculateLight(BlockContext context) {
+	private void calculateLight() {
 		sunLight = (float) getSunLightLevel();
 		blockLight = (float) getBlockLightLevel();
 		
 		if (blockLight > 0 || sunLight > 0) return;
 		
 		for (Direction direction : Direction.values()) {
-			Block neighbor = context.getRelativeBlock(direction);
+			Block neighbor = getRelativeBlock(direction);
 			sunLight = (float) Math.max(neighbor.getSunLightLevel(), sunLight);
 			blockLight = (float) Math.max(neighbor.getBlockLightLevel(), blockLight);
 		}
+	}
+	
+	public Block getRelativeBlock(int x, int y, int z) {
+		Vector3i pos = getPosition().add(x, y, z);
+		return getWorld().getBlock(pos);
+	}
+	
+	public Block getRelativeBlock(Vector3i direction) {
+		Vector3i pos = getPosition().add(direction);
+		return getWorld().getBlock(pos);
+	}
+	
+	public Block getRelativeBlock(Direction direction){
+		return getRelativeBlock(direction.toVector());
 	}
 	
 	@Override

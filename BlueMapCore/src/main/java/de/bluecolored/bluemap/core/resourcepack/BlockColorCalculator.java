@@ -38,7 +38,6 @@ import com.flowpowered.math.vector.Vector2f;
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3f;
 
-import de.bluecolored.bluemap.core.render.context.BlockContext;
 import de.bluecolored.bluemap.core.util.ConfigUtils;
 import de.bluecolored.bluemap.core.util.MathUtils;
 import de.bluecolored.bluemap.core.world.Biome;
@@ -51,7 +50,7 @@ public class BlockColorCalculator {
 	private BufferedImage foliageMap;
 	private BufferedImage grassMap;
 	
-	private Map<String, Function<BlockContext, Vector3f>> blockColorMap;
+	private Map<String, Function<Block, Vector3f>> blockColorMap;
 	
 	public BlockColorCalculator(BufferedImage foliageMap, BufferedImage grassMap) {
 		this.foliageMap = foliageMap;
@@ -72,7 +71,7 @@ public class BlockColorCalculator {
 			String key = entry.getKey().toString();
 			String value = entry.getValue().getString();
 			
-			Function<BlockContext, Vector3f> colorFunction;
+			Function<Block, Vector3f> colorFunction;
 			switch (value) {
 			case "@foliage":
 				colorFunction = this::getFoliageAverageColor;
@@ -93,35 +92,34 @@ public class BlockColorCalculator {
 		}
 	}
 	
-	public Vector3f getBlockColor(BlockContext context){
-		Block block = context.getRelativeBlock(0, 0, 0);
+	public Vector3f getBlockColor(Block block){
 		String blockId = block.getBlock().getFullId();
 		
-		Function<BlockContext, Vector3f> colorFunction = blockColorMap.get(blockId);
+		Function<Block, Vector3f> colorFunction = blockColorMap.get(blockId);
 		if (colorFunction == null) colorFunction = blockColorMap.get("default");
 		if (colorFunction == null) colorFunction = this::getFoliageAverageColor;
 		
-		return colorFunction.apply(context);
+		return colorFunction.apply(block);
 	}
 	
-	public Vector3f getWaterAverageColor(BlockContext context){
+	public Vector3f getWaterAverageColor(Block block){
 		Vector3f color = Vector3f.ZERO;
 		
 		for (int x = -1; x <= 1; x++){
 			for (int z = -1; z <= 1; z++){
-				color = color.add(context.getRelativeBlock(x, 0, z).getBiome().getWaterColor());
+				color = color.add(block.getRelativeBlock(x, 0, z).getBiome().getWaterColor());
 			}
 		}
 		
 		return color.div(9f);
 	}
 
-	public Vector3f getFoliageAverageColor(BlockContext context){
+	public Vector3f getFoliageAverageColor(Block block){
 		Vector3f color = Vector3f.ZERO;
 		
 		for (int x = -1; x <= 1; x++){
 			for (int z = -1; z <= 1; z++){
-				color = color.add(getFoliageColor(context.getRelativeBlock(x, 0, z)));
+				color = color.add(getFoliageColor(block.getRelativeBlock(x, 0, z)));
 			}
 		}
 		
@@ -140,12 +138,12 @@ public class BlockColorCalculator {
 		return mapColor.mul(1f - overlayAlpha).add(overlayColor.mul(overlayAlpha));
 	}
 
-	public Vector3f getGrassAverageColor(BlockContext context){
+	public Vector3f getGrassAverageColor(Block block){
 		Vector3f color = Vector3f.ZERO;
 		
 		for (int x = -1; x <= 1; x++){
 			for (int z = -1; z <= 1; z++){
-				color = color.add(getGrassColor(context.getRelativeBlock(x, 0, z)));
+				color = color.add(getGrassColor(block.getRelativeBlock(x, 0, z)));
 			}
 		}
 		

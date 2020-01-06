@@ -36,8 +36,6 @@ import com.flowpowered.math.vector.Vector4f;
 
 import de.bluecolored.bluemap.core.model.Face;
 import de.bluecolored.bluemap.core.render.RenderSettings;
-import de.bluecolored.bluemap.core.render.context.BlockContext;
-import de.bluecolored.bluemap.core.render.context.ExtendedBlockContext;
 import de.bluecolored.bluemap.core.resourcepack.BlockColorCalculator;
 import de.bluecolored.bluemap.core.resourcepack.BlockModelResource;
 import de.bluecolored.bluemap.core.resourcepack.BlockModelResource.Element.Rotation;
@@ -56,22 +54,18 @@ public class ResourceModelBuilder {
 	private static final Vector3f NEG_HALF_3F = HALF_3F.negate();
 	private static final Vector2f HALF_2F = Vector2f.ONE.mul(0.5);
 	
-	private ExtendedBlockContext context;
+	private Block block;
 	private RenderSettings renderSettings;
-	private BlockColorCalculator colorCalculator;
 	private Lazy<Vector3f> tintColor;
 	
-	public ResourceModelBuilder(RenderSettings renderSettings, ExtendedBlockContext context, BlockColorCalculator colorCalculator) {
-		this.context = context;
+	public ResourceModelBuilder(Block block, RenderSettings renderSettings, BlockColorCalculator colorCalculator) {
+		this.block = block;
 		this.renderSettings = renderSettings;
-		this.colorCalculator = colorCalculator;
-		this.tintColor = new Lazy<>(() -> colorCalculator.getBlockColor(context));
+		this.tintColor = new Lazy<>(() -> colorCalculator.getBlockColor(block));
 	}
 	
 	public BlockStateModel build(TransformedBlockModelResource bmr) {
 		BlockStateModel model = new BlockStateModel();
-		
-		colorCalculator.getBlockColor(context);
 		
 		for (BlockModelResource.Element element : bmr.getModel().getElements()){
 			model.merge(fromModelElementResource(element, bmr));
@@ -155,21 +149,20 @@ public class ResourceModelBuilder {
 		
 		//face culling
 		if (face.getCullface() != null){
-			Block b = getRotationRelativeBlock(modelResource, face.getCullface());
+			Block b = getRotationRelativeBlock(modelResource.getRotation(), face.getCullface());
 			if (b.isCullingNeighborFaces()) return;
 		}
 
 		//light calculation
-		Block b = getRotationRelativeBlock(modelResource, faceDir);
-		BlockContext bContext = context.getRelativeView(getRotationRelativeDirectionVector(modelResource, faceDir.toVector().toFloat()).toInt());
-		float skyLight = b.getPassedSunLight(bContext);
+		Block facedBlockNeighbor = getRotationRelativeBlock(modelResource.getRotation(), faceDir);
+		float skyLight = facedBlockNeighbor.getPassedSunLight();
 		
 		//filter out faces that are not skylighted
 		if (skyLight == 0f && renderSettings.isExcludeFacesWithoutSunlight()) return;
 
-		float light = 1;
+		float light = 1f;
 		if (renderSettings.getLightShadeMultiplier() > 0) {
-			float blockLight = b.getPassedBlockLight(bContext);
+			float blockLight = facedBlockNeighbor.getPassedBlockLight();
 			light = (Math.max(skyLight, blockLight) / 15f) * renderSettings.getLightShadeMultiplier() + (1 - renderSettings.getLightShadeMultiplier());
 			if (light > 1) light = 1;
 			if (light < 0) light = 0;
@@ -209,10 +202,10 @@ public class ResourceModelBuilder {
 		//calculate ao
 		double ao0 = 1d, ao1 = 1d, ao2 = 1d, ao3 = 1d;
 		if (renderSettings.getAmbientOcclusionStrenght() > 0f && modelResource.getModel().isAmbientOcclusion()){
-			ao0 = testAo(modelResource, c0, faceDir);
-			ao1 = testAo(modelResource, c1, faceDir);
-			ao2 = testAo(modelResource, c2, faceDir);
-			ao3 = testAo(modelResource, c3, faceDir);
+			ao0 = testAo(modelResource.getRotation(), c0, faceDir);
+			ao1 = testAo(modelResource.getRotation(), c1, faceDir);
+			ao2 = testAo(modelResource.getRotation(), c2, faceDir);
+			ao3 = testAo(modelResource.getRotation(), c3, faceDir);
 		}
 		
 		//tint the face
@@ -244,7 +237,7 @@ public class ResourceModelBuilder {
 		model.addFace(f2);
 		
 		//if is top face set model-color
-		Vector3f dir = getRotationRelativeDirectionVector(modelResource, faceDir.toVector().toFloat());
+		Vector3f dir = getRotationRelativeDirectionVector(modelResource.getRotation(), faceDir.toVector().toFloat());
 
 		if (element.getRotation().getAngle() > 0){
 			Quaternionf rot = Quaternionf.fromAngleDegAxis(
@@ -264,26 +257,26 @@ public class ResourceModelBuilder {
 		
 	}
 	
-	private Block getRotationRelativeBlock(TransformedBlockModelResource model, Direction direction){
-		return getRotationRelativeBlock(model, direction.toVector());
+	private Block getRotationRelativeBlock(Vector2i modelRotation, Direction direction){
+		return getRotationRelativeBlock(modelRotation, direction.toVector());
 	}
 	
-	private Block getRotationRelativeBlock(TransformedBlockModelResource model, Vector3i direction){
-		Vector3i dir = getRotationRelativeDirectionVector(model, direction.toFloat()).round().toInt();
-		return context.getRelativeBlock(dir);
+	private Block getRotationRelativeBlock(Vector2i modelRotation, Vector3i direction){
+		Vector3i dir = getRotationRelativeDirectionVector(modelRotation, direction.toFloat()).round().toInt();
+		return block.getRelativeBlock(dir);
 	}
 	
-	private Vector3f getRotationRelativeDirectionVector(TransformedBlockModelResource model, Vector3f direction){
+	private Vector3f getRotationRelativeDirectionVector(Vector2i modelRotation, Vector3f direction){
 		Quaternionf rot = Quaternionf.fromAxesAnglesDeg(
-				-model.getRotation().getX(),
-				-model.getRotation().getY(),
+				-modelRotation.getX(),
+				-modelRotation.getY(),
 				0
 			);
 		Vector3f dir = rot.rotate(direction);
 		return dir;
 	}
 	
-	private double testAo(TransformedBlockModelResource model, Vector3f vertex, Direction dir){
+	private double testAo(Vector2i modelRotation, Vector3f vertex, Direction dir){
 		int occluding = 0;
 		
 		int x = 0;
@@ -309,22 +302,22 @@ public class ResourceModelBuilder {
 
 		Vector3i rel = new Vector3i(x, y, 0);
 		if (rel.dot(dir.toVector()) > 0){
-			if (getRotationRelativeBlock(model, rel).isOccludingNeighborFaces()) occluding++;
+			if (getRotationRelativeBlock(modelRotation, rel).isOccludingNeighborFaces()) occluding++;
 		}
 		
 		rel = new Vector3i(x, 0, z);
 		if (rel.dot(dir.toVector()) > 0){
-			if (getRotationRelativeBlock(model, rel).isOccludingNeighborFaces()) occluding++;
+			if (getRotationRelativeBlock(modelRotation, rel).isOccludingNeighborFaces()) occluding++;
 		}
 		
 		rel = new Vector3i(0, y, z);
 		if (rel.dot(dir.toVector()) > 0){
-			if (getRotationRelativeBlock(model, rel).isOccludingNeighborFaces()) occluding++;
+			if (getRotationRelativeBlock(modelRotation, rel).isOccludingNeighborFaces()) occluding++;
 		}
 		
 		rel = new Vector3i(x, y, z);
 		if (rel.dot(dir.toVector()) > 0){
-			if (getRotationRelativeBlock(model, rel).isOccludingNeighborFaces()) occluding++;
+			if (getRotationRelativeBlock(modelRotation, rel).isOccludingNeighborFaces()) occluding++;
 		}
 		
 		if (occluding > 3)
