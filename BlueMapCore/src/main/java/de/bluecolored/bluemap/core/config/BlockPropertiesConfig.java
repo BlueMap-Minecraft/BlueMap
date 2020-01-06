@@ -53,11 +53,12 @@ public class BlockPropertiesConfig implements BlockPropertiesMapper {
 	
 	private ResourcePack resourcePack = null;
 	
-	public BlockPropertiesConfig(ConfigurationNode node) throws IOException {
-		this(node, null);
+	public BlockPropertiesConfig(ConfigurationNode node, ResourcePack resourcePack) throws IOException {
+		this(node, resourcePack, null);
 	}
 	
-	public BlockPropertiesConfig(ConfigurationNode node, ConfigurationLoader<? extends ConfigurationNode> autopoulationConfigLoader) throws IOException {
+	public BlockPropertiesConfig(ConfigurationNode node, ResourcePack resourcePack, ConfigurationLoader<? extends ConfigurationNode> autopoulationConfigLoader) throws IOException {
+		this.resourcePack = resourcePack;
 		this.autopoulationConfigLoader = autopoulationConfigLoader;
 		
 		mappings = MultimapBuilder.hashKeys().arrayListValues().build();
@@ -84,14 +85,6 @@ public class BlockPropertiesConfig implements BlockPropertiesMapper {
 				.build(new CacheLoader<BlockState, BlockProperties>(){
 					@Override public BlockProperties load(BlockState key) { return mapNoCache(key); }
 				});
-	}
-	
-	/**
-	 * Sets the {@link ResourcePack} of this PropertyMapper, so it can generate better defaults if the mapping is missing 
-	 * @param resourcePack the {@link ResourcePack}
-	 */
-	public void setResourcePack(ResourcePack resourcePack) {
-		this.resourcePack = resourcePack;
 	}
 	
 	@Override

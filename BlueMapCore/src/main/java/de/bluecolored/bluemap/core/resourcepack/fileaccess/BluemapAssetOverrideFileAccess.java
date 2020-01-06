@@ -27,44 +27,37 @@ package de.bluecolored.bluemap.core.resourcepack.fileaccess;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
-import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.StringUtils;
 
 /**
- * This {@link FileAccess} tries to make 1.12/1.13/1.14 ResourcePacks compatible with each other 
+ * This {@link FileAccess} maps its parent {@link FileAccess} to first look in assets/[namespace]/bluemap/... instead of assets/[namespace]/...
  */
-public class ResourcePackOldFormatFileAccess implements FileAccess {
+public class BluemapAssetOverrideFileAccess implements FileAccess {
 
-	private FileAccess parent;
+	public FileAccess parent;
 	
-	protected ResourcePackOldFormatFileAccess(FileAccess parent) {
+	public BluemapAssetOverrideFileAccess(FileAccess parent) {
 		this.parent = parent;
 	}
 	
 	@Override
-	public void close() throws IOException {
-		parent.close();
-	}
-
-	@Override
 	public InputStream readFile(String path) throws FileNotFoundException, IOException {
+		String[] pathParts = StringUtils.split(path, "/");
+		if (pathParts.length < 3 || !pathParts[0].equals("assets")) return parent.readFile(path);
+		
+		String[] newParts = new String[pathParts.length + 1];
+		System.arraycopy(pathParts, 0, newParts, 0, 2);
+		System.arraycopy(pathParts, 2, newParts, 3, pathParts.length - 2);
+		
+		newParts[2] = "bluemap";
+		String newPath = String.join("/", newParts);
+		
 		try {
-			return parent.readFile(path);
+			return parent.readFile(newPath);
 		} catch (FileNotFoundException ex) {
-			for (String altPath : otherPathsToTry(path)) {
-				try {
-					return parent.readFile(altPath);
-				} catch (FileNotFoundException ex2) {
-					ex.addSuppressed(ex2);
-				} catch (IOException ex2) {
-					ex.addSuppressed(ex2);
-					throw ex;
-				}
-			}
-			
-			throw ex;
+			return parent.readFile(path);
 		}
 	}
 
@@ -78,38 +71,9 @@ public class ResourcePackOldFormatFileAccess implements FileAccess {
 		return parent.listFolders(path);
 	}
 	
-	private Collection<String> otherPathsToTry(String path){
-		path = FileAccess.normalize(path);
-		List<String> paths = new ArrayList<>();
-		String[] parts = path.split(Pattern.quote("/"));
+	@Override
+	public void close() throws IOException {
+		parent.close();
+	}
 
-		//handle block/blocks folder-differences
-		if (parts.length >= 4 && parts[0].equals("assets") && parts[2].equals("models")) {
-			if (parts[3].equals("block")) {
-				parts[3] = "blocks";
-				paths.add(String.join("/", parts));
-			} else if (parts[3].equals("blocks")) {
-				parts[3] = "block";
-				paths.add(String.join("/", parts));
-			} else {
-				String[] newParts = new String[parts.length + 1];
-				System.arraycopy(parts, 0, newParts, 0, 3);
-				System.arraycopy(parts, 3, newParts, 4, parts.length - 3);
-				
-				newParts[3] = "blocks";
-				paths.add(String.join("/", newParts));
-	
-				newParts[3] = "block";
-				paths.add(String.join("/", newParts));
-			}
-		}
-		
-		return paths;
-	}
-	
-	public static ResourcePackOldFormatFileAccess from(FileAccess source) {
-		if (source instanceof ResourcePackOldFormatFileAccess) return (ResourcePackOldFormatFileAccess) source;
-		return new ResourcePackOldFormatFileAccess(source);
-	}
-	
 }

@@ -138,13 +138,8 @@ public class SpongePlugin {
 		URL defaultSpongeConfig = SpongePlugin.class.getResource("/bluemap-sponge.conf");
 		URL spongeConfigDefaults = SpongePlugin.class.getResource("/bluemap-sponge-defaults.conf");
 		ConfigManager configManager = new ConfigManager(getConfigPath().toFile(), defaultSpongeConfig, spongeConfigDefaults);
-		configManager.loadOrCreateConfigs();
+		configManager.loadMainConfig();
 		config = configManager.getMainConfig();
-		
-		File blockColorsConfigFile = getConfigPath().resolve("blockColors.json").toFile();
-		if (!blockColorsConfigFile.exists()) {
-			FileUtils.copyURLToFile(SpongePlugin.class.getResource("/blockColors.json"), blockColorsConfigFile, 10000, 10000);
-		}
 		
 		//load resources
 		File defaultResourceFile = config.getDataPath().resolve("minecraft-client-" + ResourcePack.MINECRAFT_CLIENT_VERSION + ".jar").toFile();
@@ -176,10 +171,9 @@ public class SpongePlugin {
 		resourcePack = new ResourcePack();
 		if (textureExportFile.exists()) resourcePack.loadTextureFile(textureExportFile);
 		resourcePack.load(resources);
-		resourcePack.loadBlockColorConfig(blockColorsConfigFile);
 		resourcePack.saveTextureFile(textureExportFile);
 		
-		configManager.getBlockPropertiesConfig().setResourcePack(resourcePack);
+		configManager.loadResourceConfigs(resourcePack);
 		
 		//load maps
 		for (MapConfig mapConfig : config.getMapConfigs()) {

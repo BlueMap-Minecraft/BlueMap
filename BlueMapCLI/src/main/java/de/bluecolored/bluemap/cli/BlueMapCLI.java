@@ -86,12 +86,12 @@ public class BlueMapCLI {
 		Preconditions.checkNotNull(resourcePack);
 		
 		MainConfig config = configManager.getMainConfig();
+		configManager.loadResourceConfigs(resourcePack);
 		
 		config.getWebDataPath().toFile().mkdirs();
 		
 		Map<String, MapType> maps = new HashMap<>(); 
 
-		configManager.getBlockPropertiesConfig().setResourcePack(resourcePack);
 		for (MapConfig mapConfig : config.getMapConfigs()) {
 			File mapPath = new File(mapConfig.getWorldPath());
 			if (!mapPath.exists() || !mapPath.isDirectory()) {
@@ -214,11 +214,6 @@ public class BlueMapCLI {
 		resourceExtensionsFile.delete();
 		FileUtils.copyURLToFile(BlueMapCLI.class.getResource("/resourceExtensions.zip"), resourceExtensionsFile, 10000, 10000);
 		
-		File blockColorsConfigFile = new File(configFolder, "blockColors.json");
-		if (!blockColorsConfigFile.exists()) {
-			FileUtils.copyURLToFile(BlueMapCLI.class.getResource("/blockColors.json"), blockColorsConfigFile, 10000, 10000);
-		}
-		
 		//find more resource packs
 		File resourcePackFolder = configFolder.toPath().resolve("resourcepacks").toFile();
 		resourcePackFolder.mkdirs();
@@ -233,7 +228,6 @@ public class BlueMapCLI {
 		resourcePack = new ResourcePack();
 		if (textureExportFile.exists()) resourcePack.loadTextureFile(textureExportFile);
 		resourcePack.load(resources);
-		resourcePack.loadBlockColorConfig(blockColorsConfigFile);
 		resourcePack.saveTextureFile(textureExportFile);
 		
 		return true;
@@ -281,7 +275,7 @@ public class BlueMapCLI {
 			
 			ConfigManager config = new ConfigManager(configFolder, cliConfigUrl, cliDefaultsUrl);
 			boolean configCreated = !config.getMainConfigFile().exists();
-			config.loadOrCreateConfigs();
+			config.loadMainConfig();
 			
 			if (configCreated) {
 				Logger.global.logInfo("No config file found! Created default configs here: " + configFolder);

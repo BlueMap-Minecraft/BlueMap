@@ -25,8 +25,11 @@
 package de.bluecolored.bluemap.core.resourcepack;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
@@ -34,11 +37,16 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
+import org.apache.commons.io.output.ByteArrayOutputStream;
+
+import com.google.common.collect.Multimap;
+import com.google.common.collect.MultimapBuilder;
+
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.BlockStateResource.Builder;
+import de.bluecolored.bluemap.core.resourcepack.fileaccess.BluemapAssetOverrideFileAccess;
 import de.bluecolored.bluemap.core.resourcepack.fileaccess.CombinedFileAccess;
 import de.bluecolored.bluemap.core.resourcepack.fileaccess.FileAccess;
-import de.bluecolored.bluemap.core.resourcepack.fileaccess.ResourcePackOldFormatFileAccess;
 import de.bluecolored.bluemap.core.world.BlockState;
 
 /**
@@ -49,6 +57,13 @@ public class ResourcePack {
 	public static final String MINECRAFT_CLIENT_VERSION = "1.14.4";
 	public static final String MINECRAFT_CLIENT_URL = "https://launcher.mojang.com/v1/objects/8c325a0c5bd674dd747d6ebaa4c791fd363ad8a9/client.jar";
 	
+	private static final String[] CONFIG_FILES = {
+		"blockColors.json",
+		"blockIds.json",
+		"blockProperties.json",
+		"biomes.json"
+	};
+	
 	protected Map<String, BlockStateResource> blockStateResources;
 	protected Map<String, BlockModelResource> blockModelResources;
 	protected TextureGallery textures;
@@ -57,6 +72,8 @@ public class ResourcePack {
 	
 	private BufferedImage foliageMap;
 	private BufferedImage grassMap;
+	
+	private Multimap<String, Resource> configs;
 	
 	public ResourcePack() {
 		blockStateResources = new HashMap<>();
@@ -67,10 +84,14 @@ public class ResourcePack {
 		grassMap = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
 		grassMap.setRGB(0, 0, 0xFF00FF00);
 		blockColorCalculator = new BlockColorCalculator(foliageMap, grassMap);
+		configs = MultimapBuilder.hashKeys().arrayListValues().build();
 	}
 	
-	public void loadBlockColorConfig(File file) throws IOException {
-		blockColorCalculator.loadColorConfig(file);
+	/**
+	 * Returns all config-files found in the namespaces of the ResourcePack with that filename
+	 */
+	public Collection<Resource> getConfigAdditions(String configFileName){
+		return configs.get(configFileName);
 	}
 	
 	/**
@@ -110,15 +131,16 @@ public class ResourcePack {
 	 * @param sources The list of {@link File} sources. Each can be a folder or any zip-compressed file. (E.g. .zip or .jar)
 	 */
 	public void load(File... sources) {
-		try (CombinedFileAccess combinedSourcesAccess = new CombinedFileAccess()){
+		try (CombinedFileAccess combinedSources = new CombinedFileAccess()){
 			for (File file : sources) {
 				try {
-					combinedSourcesAccess.addFileAccess(FileAccess.of(file));
+					combinedSources.addFileAccess(FileAccess.of(file));
 				} catch (IOException e) {
 					Logger.global.logError("Failed to read ResourcePack: " + file, e);
 				}
 			}
-			FileAccess sourcesAccess = ResourcePackOldFormatFileAccess.from(combinedSourcesAccess);
+			
+			FileAccess sourcesAccess = new BluemapAssetOverrideFileAccess(combinedSources);
 			
 			textures.reloadAllTextures(sourcesAccess);
 			
@@ -126,6 +148,7 @@ public class ResourcePack {
 			
 			Collection<String> namespaces = sourcesAccess.listFolders("assets");
 			for (String namespaceRoot : namespaces) {
+				//load blockstates
 				String namespace = namespaceRoot.substring("assets/".length());
 				Collection<String> blockstateFiles = sourcesAccess.listFiles(namespaceRoot + "/blockstates", true);
 				for (String blockstateFile : blockstateFiles) {
@@ -138,16 +161,31 @@ public class ResourcePack {
 						Logger.global.logError("Failed to load blockstate: " + namespace + ":" + filename.substring(0, filename.length() - 5), ex);
 					}
 				}
+				
+				//load configs
+				for (String configName : CONFIG_FILES) {
+					try {
+						Resource config = new Resource(sourcesAccess.readFile("assets/" + namespace + "/" + configName));
+						configs.put(configName, config);
+					} catch (FileNotFoundException ignore) {
+					} catch (IOException ex) {
+						Logger.global.logError("Failed to load config for " + namespace + ": " + configName, ex);
+					}
+				}
 			}
 			
 			try {
 				foliageMap = ImageIO.read(sourcesAccess.readFile("assets/minecraft/textures/colormap/foliage.png"));
-				grassMap = ImageIO.read(sourcesAccess.readFile("assets/minecraft/textures/colormap/grass.png"));
-				
-				blockColorCalculator.setFoliageMap(foliageMap);
-				blockColorCalculator.setGrassMap(grassMap);
+				blockColorCalculator.setFoliageMap(foliageMap);				
 			} catch (IOException ex) {
-				Logger.global.logError("Failed to load foliage- or grass-map!", ex);
+				Logger.global.logError("Failed to load foliagemap!", ex);
+			}
+
+			try {
+				grassMap = ImageIO.read(sourcesAccess.readFile("assets/minecraft/textures/colormap/grass.png"));
+				blockColorCalculator.setGrassMap(grassMap);	
+			} catch (IOException ex) {
+				Logger.global.logError("Failed to load grassmap!", ex);
 			}
 			
 		} catch (IOException ex) {
@@ -201,6 +239,31 @@ public class ResourcePack {
 		}
 		
 		return path;
+	}
+	
+	/**
+	 * Caches a full InputStream in a byte-array that can be read later
+	 */
+	public class Resource {
+		
+		private byte[] data;
+		
+		public Resource(InputStream data) throws FileNotFoundException, IOException {
+			try (ByteArrayOutputStream bout = new ByteArrayOutputStream()) {
+				bout.write(data);
+				this.data = bout.toByteArray();
+			} finally {
+				data.close();
+			}
+		}
+		
+		/**
+		 * Creates a new InputStream to read this resource
+		 */
+		public InputStream read() {
+			return new ByteArrayInputStream(this.data);
+		}
+		
 	}
 	
 }

@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.core.config;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -37,7 +38,9 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import de.bluecolored.bluemap.core.BlueMap;
+import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resourcepack.ResourcePack.Resource;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.gson.GsonConfigurationLoader;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
@@ -109,20 +112,103 @@ public class ConfigManager {
 		return new File(configFolder, "biomes.json");
 	}
 	
-	public void loadOrCreateConfigs() throws IOException {
-		mainConfig = new MainConfig(loadOrCreate(getMainConfigFile(), defaultMainConfig, mainConfigDefaultValues, true));
-		
-		URL blockIdsConfigUrl = BlueMap.class.getResource("/blockIds.json");
-		blockIdConfig = new BlockIdConfig(loadOrCreate(getBlockIdConfigFile(), null, blockIdsConfigUrl, false), getLoader(makeAutogen(getBlockIdConfigFile())));
-		
-		URL blockPropertiesConfigUrl = BlueMap.class.getResource("/blockProperties.json");
-		blockPropertiesConfig = new BlockPropertiesConfig(loadOrCreate(getBlockPropertiesConfigFile(), null, blockPropertiesConfigUrl, false), getLoader(makeAutogen(getBlockPropertiesConfigFile())));
-
-		URL biomeConfigUrl = BlueMap.class.getResource("/biomes.json");
-		biomeConfig = new BiomeConfig(loadOrCreate(getBiomeConfigFile(), null, biomeConfigUrl, false), getLoader(makeAutogen(getBiomeConfigFile())));
+	public File getBlockColorConfigFile() {
+		return new File(configFolder, "blockColors.json");
 	}
 	
-	private ConfigurationNode loadOrCreate(File configFile, URL defaultConfig, URL defaultValues, boolean usePlaceholders) throws IOException {
+	public void loadMainConfig() throws IOException {
+		mainConfig = new MainConfig(
+				loadOrCreate(
+						getMainConfigFile(), 
+						defaultMainConfig, 
+						mainConfigDefaultValues, 
+						true, 
+						true
+						)
+				);	
+	}
+	
+	public void loadResourceConfigs(ResourcePack resourcePack) throws IOException {
+		
+		//load blockColors.json from resources, config-folder and resourcepack
+		URL blockColorsConfigUrl = BlueMap.class.getResource("/blockColors.json");
+		ConfigurationNode blockColorsConfigNode = loadOrCreate(
+				getBlockColorConfigFile(), 
+				null, 
+				blockColorsConfigUrl, 
+				false,
+				false
+				);
+		blockColorsConfigNode = joinFromResourcePack(resourcePack, "blockColors.json", blockColorsConfigNode); 
+		resourcePack.getBlockColorCalculator().loadColorConfig(blockColorsConfigNode);
+
+		//load blockIds.json from resources, config-folder and resourcepack
+		URL blockIdsConfigUrl = BlueMap.class.getResource("/blockIds.json");
+		ConfigurationNode blockIdsConfigNode = loadOrCreate(
+						getBlockIdConfigFile(), 
+						null, 
+						blockIdsConfigUrl,
+						false,
+						false
+						);
+		blockIdsConfigNode = joinFromResourcePack(resourcePack, "blockIds.json", blockIdsConfigNode);
+		blockIdConfig = new BlockIdConfig(
+				blockIdsConfigNode, 
+				null //getLoader(makeAutogen(getBlockIdConfigFile()))
+				);
+
+		//load blockProperties.json from resources, config-folder and resourcepack
+		URL blockPropertiesConfigUrl = BlueMap.class.getResource("/blockProperties.json");
+		ConfigurationNode blockPropertiesConfigNode = loadOrCreate(
+						getBlockPropertiesConfigFile(), 
+						null,
+						blockPropertiesConfigUrl,
+						false, 
+						false
+						);
+		blockPropertiesConfigNode = joinFromResourcePack(resourcePack, "blockProperties.json", blockPropertiesConfigNode);
+		blockPropertiesConfig = new BlockPropertiesConfig(
+				blockPropertiesConfigNode,
+				resourcePack,
+				null //getLoader(makeAutogen(getBlockPropertiesConfigFile()))
+				);
+
+		//load biomes.json from resources, config-folder and resourcepack
+		URL biomeConfigUrl = BlueMap.class.getResource("/biomes.json");
+		ConfigurationNode biomeConfigNode = loadOrCreate(
+						getBiomeConfigFile(),
+						null, 
+						biomeConfigUrl,
+						false,
+						false
+						);
+		biomeConfigNode = joinFromResourcePack(resourcePack, "biomes.json", biomeConfigNode);
+		biomeConfig = new BiomeConfig(
+				biomeConfigNode,
+				null //getLoader(makeAutogen(getBiomeConfigFile()))
+				);
+	}
+	
+	private ConfigurationNode joinFromResourcePack(ResourcePack resourcePack, String configFileName, ConfigurationNode defaultConfig) {
+		ConfigurationNode joinedNode = null;
+		for (Resource resource : resourcePack.getConfigAdditions(configFileName)) {
+			try {
+				ConfigurationNode node = getLoader(configFileName, resource.read()).load();
+				if (joinedNode == null) joinedNode = node;
+				else joinedNode.mergeValuesFrom(node);
+			} catch (IOException ex) {
+				Logger.global.logWarning("Failed to load an additional " + configFileName + " from the resource-pack! " + ex);
+			}
+		}
+		
+		if (joinedNode == null) return defaultConfig;
+		
+		joinedNode.mergeValuesFrom(defaultConfig);
+		
+		return joinedNode;
+	}
+	
+	private ConfigurationNode loadOrCreate(File configFile, URL defaultConfig, URL defaultValues, boolean usePlaceholders, boolean generateEmptyConfig) throws IOException {
 		
 		ConfigurationNode configNode;
 		if (!configFile.exists()) {
@@ -153,7 +239,7 @@ public class ConfigManager {
 				configNode = loader.createEmptyNode();
 				
 				//save to create file
-				loader.save(configNode);
+				if (generateEmptyConfig) loader.save(configNode);
 			}
 		} else {
 			//load config
@@ -169,10 +255,20 @@ public class ConfigManager {
 		return configNode;
 	}
 	
+	/*
 	private File makeAutogen(File file) throws IOException {
 		File autogenFile = file.getCanonicalFile().toPath().getParent().resolve("generated").resolve(file.getName()).toFile();
 		autogenFile.getParentFile().mkdirs();
 		return autogenFile;
+	}
+	*/
+	
+	private ConfigurationLoader<? extends ConfigurationNode> getLoader(String filename, InputStream is){
+		BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
+		
+		if (filename.endsWith(".json")) return GsonConfigurationLoader.builder().setSource(() -> reader).build();
+		if (filename.endsWith(".yaml") || filename.endsWith(".yml")) return YAMLConfigurationLoader.builder().setSource(() -> reader).build();
+		else return HoconConfigurationLoader.builder().setSource(() -> reader).build();
 	}
 	
 	private ConfigurationLoader<? extends ConfigurationNode> getLoader(URL url){

@@ -26,7 +26,6 @@ package de.bluecolored.bluemap.core.resourcepack;
 
 import java.awt.Color;
 import java.awt.image.BufferedImage;
-import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
@@ -43,7 +42,6 @@ import de.bluecolored.bluemap.core.util.MathUtils;
 import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.Block;
 import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.gson.GsonConfigurationLoader;
 
 public class BlockColorCalculator {
 
@@ -59,13 +57,8 @@ public class BlockColorCalculator {
 		this.blockColorMap = new HashMap<>();
 	}
 	
-	public void loadColorConfig(File configFile) throws IOException {
+	public void loadColorConfig(ConfigurationNode colorConfig) throws IOException {
 		blockColorMap.clear();
-		
-		ConfigurationNode colorConfig = GsonConfigurationLoader.builder()
-				.setFile(configFile)
-				.build()
-				.load();
 		
 		for (Entry<Object, ? extends ConfigurationNode> entry : colorConfig.getChildrenMap().entrySet()){
 			String key = entry.getKey().toString();
