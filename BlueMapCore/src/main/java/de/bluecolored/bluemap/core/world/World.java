@@ -57,16 +57,12 @@ public interface World {
 	}
 	
 	/**
-	 * Returns the Block on the specified position.<br>
-	 * <br>
-	 * <i>(The implementation should not invoke the generation of new Terrain, it should rather throw a {@link ChunkNotGeneratedException} if a not generated block is requested)</i><br>
+	 * Returns the Block on the specified position or an air-block if the block is not generated yet.
 	 */
 	Block getBlock(Vector3i pos);
 	
 	/**
-	 * Returns the Block on the specified position.<br>
-	 * <br>
-	 * <i>(The implementation should not invoke the generation of new Terrain, it should rather throw a {@link ChunkNotGeneratedException} if a not generated block is requested)</i><br>
+	 * Returns the Block on the specified position or an air-block if the block is not generated yet.
 	 */
 	default Block getBlock(int x, int y, int z) {
 		return getBlock(new Vector3i(x, y, z));

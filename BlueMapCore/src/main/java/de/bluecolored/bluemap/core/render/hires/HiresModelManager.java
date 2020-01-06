@@ -71,7 +71,6 @@ public class HiresModelManager {
 	
 	/**
 	 * Renders the given world tile with the provided render-settings
-	 * @throws ChunkNotGeneratedException if a minecraft-chunk needed for thies tile is not yet generated
 	 */
 	public HiresModel render(WorldTile tile, RenderSettings renderSettings) {
 		HiresModel model = renderer.render(tile, getTileRegion(tile), renderSettings);
