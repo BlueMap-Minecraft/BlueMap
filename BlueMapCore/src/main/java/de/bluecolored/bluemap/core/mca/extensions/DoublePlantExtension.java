@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.core.mca.extensions;
 
 import java.util.Collection;
+import java.util.Objects;
 
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.Lists;
@@ -46,7 +47,7 @@ public class DoublePlantExtension implements BlockStateExtension {
 	
 	@Override
 	public BlockState extend(MCAWorld world, Vector3i pos, BlockState state) {
-		if (state.getProperties().get("half").equals("upper")) {
+		if (Objects.equals(state.getProperties().get("half"), "upper")) {
 			BlockState otherPlant = world.getBlockState(pos.add(Direction.DOWN.toVector()));
 			
 			return otherPlant.with("half", "upper");

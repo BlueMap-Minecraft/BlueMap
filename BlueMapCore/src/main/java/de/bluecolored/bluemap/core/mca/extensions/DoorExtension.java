@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.core.mca.extensions;
 
 import java.util.Collection;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.Lists;
@@ -50,7 +51,7 @@ public class DoorExtension implements BlockStateExtension {
 	public BlockState extend(MCAWorld world, Vector3i pos, BlockState state) {
 		BlockState otherDoor;
 		
-		boolean isLower = state.getProperties().get("half").equals("lower"); 
+		boolean isLower = Objects.equals(state.getProperties().get("half"), "lower"); 
 		
 		if (isLower) {
 			otherDoor = world.getBlockState(pos.add(Direction.UP.toVector()));

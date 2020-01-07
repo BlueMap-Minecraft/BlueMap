@@ -58,20 +58,28 @@ public class RedstoneExtension implements BlockStateExtension {
 	
 	@Override
 	public BlockState extend(MCAWorld world, Vector3i pos, BlockState state) {
+		BlockState up = world.getBlockState(pos.add(0, 1, 0));
+		boolean upBlocking = !up.equals(BlockState.AIR);
+		
 		state = state
-				.with("north", connection(world, pos, state, Direction.NORTH))
-				.with("east", connection(world, pos, state, Direction.EAST))
-				.with("south", connection(world, pos, state, Direction.SOUTH))
-				.with("west", connection(world, pos, state, Direction.WEST));
+				.with("north", connection(world, pos, upBlocking, Direction.NORTH))
+				.with("east", connection(world, pos, upBlocking, Direction.EAST))
+				.with("south", connection(world, pos, upBlocking, Direction.SOUTH))
+				.with("west", connection(world, pos, upBlocking, Direction.WEST));
 		
 		return state;
 	}
 
-	private String connection(MCAWorld world, Vector3i pos, BlockState state, Direction direction) {
-		BlockState next = world.getBlockState(pos.add(direction.toVector()));
+	private String connection(MCAWorld world, Vector3i pos, boolean upBlocking, Direction direction) {
+		Vector3i directionVector = direction.toVector();
+		
+		BlockState next = world.getBlockState(pos.add(directionVector));
 		if (CONNECTIBLE.contains(next.getFullId())) return "side";
 		
-		//TODO: up
+		if (!upBlocking) {
+			BlockState nextup = world.getBlockState(pos.add(directionVector.getX(), directionVector.getY() + 1, directionVector.getZ()));
+			if (nextup.getFullId().equals("minecraft:redstone_wire")) return "up";
+		}
 		
 		return "none";
 	}

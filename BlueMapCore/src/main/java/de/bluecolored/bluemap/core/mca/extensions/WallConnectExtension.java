@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.core.mca.extensions;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import com.flowpowered.math.vector.Vector3i;
@@ -37,7 +38,8 @@ import de.bluecolored.bluemap.core.world.BlockState;
 public class WallConnectExtension extends ConnectSameOrFullBlockExtension {
 
 	private static final HashSet<String> AFFECTED_BLOCK_IDS = Sets.newHashSet(
-			"minecraft:cobblestone_wall"
+			"minecraft:cobblestone_wall",
+			"minecraft:mossy_cobblestone_wall"
 		);
 	
 	@Override
@@ -45,9 +47,9 @@ public class WallConnectExtension extends ConnectSameOrFullBlockExtension {
 		state = super.extend(world, pos, state);
 		
 		if (
-				state.getProperties().get("north").equals(state.getProperties().get("south")) &&
-				state.getProperties().get("east").equals(state.getProperties().get("west")) &&
-				!state.getProperties().get("north").equals(state.getProperties().get("east")) &&
+				Objects.equals(state.getProperties().get("north"), state.getProperties().get("south")) &&
+				Objects.equals(state.getProperties().get("east"), state.getProperties().get("west")) &&
+				!Objects.equals(state.getProperties().get("north"), state.getProperties().get("east")) &&
 				!connectsTo(world, pos.add(Direction.UP.toVector()))
 		) {
 			return state.with("up", "false");
