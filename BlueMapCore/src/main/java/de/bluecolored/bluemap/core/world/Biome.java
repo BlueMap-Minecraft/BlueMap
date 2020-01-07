@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.core.world;
 
 import com.flowpowered.math.vector.Vector3f;
 import com.flowpowered.math.vector.Vector4f;
+import com.google.common.base.MoreObjects;
 
 import de.bluecolored.bluemap.core.util.ConfigUtils;
 import de.bluecolored.bluemap.core.util.MathUtils;
@@ -103,6 +104,17 @@ public class Biome {
 		return biome;
 	}
 	
-	
+	@Override
+	public String toString() {
+		return MoreObjects.toStringHelper(this)
+			.add("id", getId())
+			.add("ordinal", getOrdinal())
+			.add("humidity", getHumidity())
+			.add("temp", getTemp())
+			.add("waterColor", getWaterColor())
+			.add("overlayFoliageColor", getOverlayFoliageColor())
+			.add("overlayGrassColor", getOverlayGrassColor())
+			.toString();
+	}
 	
 }

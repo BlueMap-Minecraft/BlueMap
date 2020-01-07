@@ -43,7 +43,7 @@ import net.querz.nbt.StringTag;
 import net.querz.nbt.Tag;
 import net.querz.nbt.mca.MCAUtil;
 
-class ChunkAnvil113 extends Chunk {
+public class ChunkAnvil113 extends Chunk {
 	private BiomeMapper biomeIdMapper;
 
 	private boolean isGenerated;

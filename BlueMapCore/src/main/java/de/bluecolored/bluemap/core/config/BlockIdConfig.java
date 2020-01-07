@@ -66,7 +66,7 @@ public class BlockIdConfig implements BlockIdMapper {
 				
 				BlockIDMeta idmeta = new BlockIDMeta(blockId, blockMeta);
 				BlockState state = BlockState.fromString(value);
-				
+
 				if (blockId == 0) state = BlockState.AIR; //use the static field to increase render speed (== comparison)
 				
 				mappings.put(idmeta, state);
