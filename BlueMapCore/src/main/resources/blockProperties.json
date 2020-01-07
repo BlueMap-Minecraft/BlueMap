@@ -199,96 +199,6 @@
 		"occluding": true,
 		"flammable": true
 	},
-	"minecraft:stripped_spruce_log": {
-		"culling": true,
-		"occluding": true,
-		"flammable": true
-	},
-	"minecraft:stripped_birch_log": {
-		"culling": true,
-		"occluding": true,
-		"flammable": true
-	},
-	"minecraft:stripped_jungle_log": {
-		"culling": true,
-		"occluding": true,
-		"flammable": true
-	},
-	"minecraft:stripped_acacia_log": {
-		"culling": true,
-		"occluding": true,
-		"flammable": true
-	},
-	"minecraft:stripped_dark_oak_log": {
-		"culling": true,
-		"occluding": true,
-		"flammable": true
-	},
-	"minecraft:stripped_oak_log": {
-		"culling": true,
-		"occluding": true,
-		"flammable": true
-	},
-	"minecraft:oak_wood": {
-		"culling": true,
-		"occluding": true,
-		"flammable": true
-	},
-	"minecraft:spruce_wood": {
-		"culling": true,
-		"occluding": true,
-		"flammable": true
-	},
-	"minecraft:birch_wood": {
-		"culling": true,
-		"occluding": true,
-		"flammable": true
-	},
-	"minecraft:jungle_wood": {
-		"culling": true,
-		"occluding": true,
-		"flammable": true
-	},
-	"minecraft:acacia_wood": {
-		"culling": true,
-		"occluding": true,
-		"flammable": true
-	},
-	"minecraft:dark_oak_wood": {
-		"culling": true,
-		"occluding": true,
-		"flammable": true
-	},
-	"minecraft:stripped_oak_wood": {
-		"culling": true,
-		"occluding": true,
-		"flammable": true
-	},
-	"minecraft:stripped_spruce_wood": {
-		"culling": true,
-		"occluding": true,
-		"flammable": true
-	},
-	"minecraft:stripped_birch_wood": {
-		"culling": true,
-		"occluding": true,
-		"flammable": true
-	},
-	"minecraft:stripped_jungle_wood": {
-		"culling": true,
-		"occluding": true,
-		"flammable": true
-	},
-	"minecraft:stripped_acacia_wood": {
-		"culling": true,
-		"occluding": true,
-		"flammable": true
-	},
-	"minecraft:stripped_dark_oak_wood": {
-		"culling": true,
-		"occluding": true,
-		"flammable": true
-	},
 	"minecraft:oak_leaves": {
 		"culling": false,
 		"occluding": true,
@@ -324,11 +234,6 @@
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:wet_sponge": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
 	"minecraft:glass": {
 		"culling": false,
 		"occluding": false,
@@ -359,12 +264,12 @@
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:cut_sandstone": {
+	"minecraft:smooth_sandstone": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:note_block": {
+	"minecraft:noteblock": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
@@ -449,7 +354,7 @@
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:powered_rail": {
+	"minecraft:golden_rail": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
@@ -519,7 +424,7 @@
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:cobweb": {
+	"minecraft:web": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
@@ -538,16 +443,6 @@
 		"culling": false,
 		"occluding": false,
 		"flammable": true
-	},
-	"minecraft:seagrass": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:tall_seagrass": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
 	},
 	"minecraft:piston[facing=north,extended=true]": {
 		"culling": false,
@@ -654,7 +549,7 @@
 		"occluding": true,
 		"flammable": true
 	},
-	"minecraft:light_gray_wool": {
+	"minecraft:silver_wool": {
 		"culling": true,
 		"occluding": true,
 		"flammable": true
@@ -694,11 +589,6 @@
 		"occluding": true,
 		"flammable": true
 	},
-	"minecraft:moving_piston": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
 	"minecraft:dandelion": {
 		"culling": false,
 		"occluding": false,
@@ -719,7 +609,7 @@
 		"occluding": false,
 		"flammable": true
 	},
-	"minecraft:azure_bluet": {
+	"minecraft:houstonia": {
 		"culling": false,
 		"occluding": false,
 		"flammable": true
@@ -749,21 +639,6 @@
 		"occluding": false,
 		"flammable": true
 	},
-	"minecraft:cornflower": {
-		"culling": false,
-		"occluding": false,
-		"flammable": true
-	},
-	"minecraft:wither_rose": {
-		"culling": false,
-		"occluding": false,
-		"flammable": true
-	},
-	"minecraft:lily_of_the_valley": {
-		"culling": false,
-		"occluding": false,
-		"flammable": true
-	},
 	"minecraft:brown_mushroom": {
 		"culling": false,
 		"occluding": false,
@@ -784,7 +659,87 @@
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:bricks": {
+	"minecraft:stone_double_slab": {
+		"culling": true,
+		"occluding": true,
+		"flammable": false
+	},
+	"minecraft:sandstone_double_slab": {
+		"culling": true,
+		"occluding": true,
+		"flammable": false
+	},
+	"minecraft:wood_old_double_slab": {
+		"culling": true,
+		"occluding": true,
+		"flammable": false
+	},
+	"minecraft:cobblestone_double_slab": {
+		"culling": true,
+		"occluding": true,
+		"flammable": false
+	},
+	"minecraft:brick_double_slab": {
+		"culling": true,
+		"occluding": true,
+		"flammable": false
+	},
+	"minecraft:stone_brick_double_slab": {
+		"culling": true,
+		"occluding": true,
+		"flammable": false
+	},
+	"minecraft:nether_brick_double_slab": {
+		"culling": true,
+		"occluding": true,
+		"flammable": false
+	},
+	"minecraft:quartz_double_slab": {
+		"culling": true,
+		"occluding": true,
+		"flammable": false
+	},
+	"minecraft:stone_slab": {
+		"culling": false,
+		"occluding": false,
+		"flammable": false
+	},
+	"minecraft:sandstone_slab": {
+		"culling": false,
+		"occluding": false,
+		"flammable": false
+	},
+	"minecraft:wood_old_slab": {
+		"culling": false,
+		"occluding": false,
+		"flammable": false
+	},
+	"minecraft:cobblestone_slab": {
+		"culling": false,
+		"occluding": false,
+		"flammable": false
+	},
+	"minecraft:brick_slab": {
+		"culling": false,
+		"occluding": false,
+		"flammable": false
+	},
+	"minecraft:stone_brick_slab": {
+		"culling": false,
+		"occluding": false,
+		"flammable": false
+	},
+	"minecraft:nether_brick_slab": {
+		"culling": false,
+		"occluding": false,
+		"flammable": false
+	},
+	"minecraft:quartz_slab": {
+		"culling": false,
+		"occluding": false,
+		"flammable": false
+	},
+	"minecraft:brick_block": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
@@ -814,17 +769,12 @@
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:wall_torch": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
 	"minecraft:fire": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:spawner": {
+	"minecraft:mob_spawner": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
@@ -833,11 +783,6 @@
 		"culling": false,
 		"occluding": false,
 		"flammable": true
-	},
-	"minecraft:chest": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
 	},
 	"minecraft:redstone_wire": {
 		"culling": false,
@@ -874,37 +819,12 @@
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:oak_sign": {
-		"culling": false,
-		"occluding": false,
+	"minecraft:lit_furnace": {
+		"culling": true,
+		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:spruce_sign": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:birch_sign": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:acacia_sign": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:jungle_sign": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dark_oak_sign": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:oak_door": {
+	"minecraft:wooden_door": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
@@ -919,37 +839,7 @@
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:cobblestone_stairs": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:oak_wall_sign": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:spruce_wall_sign": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:birch_wall_sign": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:acacia_wall_sign": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:jungle_wall_sign": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dark_oak_wall_sign": {
+	"minecraft:stone_stairs": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
@@ -969,32 +859,7 @@
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:oak_pressure_plate": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:spruce_pressure_plate": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:birch_pressure_plate": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:jungle_pressure_plate": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:acacia_pressure_plate": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dark_oak_pressure_plate": {
+	"minecraft:wooden_pressure_plate": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
@@ -1004,12 +869,17 @@
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:redstone_torch": {
+	"minecraft:lit_redstone_ore": {
+		"culling": true,
+		"occluding": true,
+		"flammable": false
+	},
+	"minecraft:unlit_redstone_torch": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:redstone_wall_torch": {
+	"minecraft:redstone_torch": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
@@ -1019,42 +889,42 @@
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:snow[layers=1]": {
+	"minecraft:snow_layer[layers=1]": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:snow[layers=2]": {
+	"minecraft:snow_layer[layers=2]": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:snow[layers=3]": {
+	"minecraft:snow_layer[layers=3]": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:snow[layers=4]": {
+	"minecraft:snow_layer[layers=4]": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:snow[layers=5]": {
+	"minecraft:snow_layer[layers=5]": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:snow[layers=6]": {
+	"minecraft:snow_layer[layers=6]": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:snow[layers=7]": {
+	"minecraft:snow_layer[layers=7]": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:snow[layers=8]": {
+	"minecraft:snow_layer[layers=8]": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
@@ -1064,7 +934,7 @@
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:snow_block": {
+	"minecraft:snow": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
@@ -1079,7 +949,7 @@
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:sugar_cane": {
+	"minecraft:reeds": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
@@ -1089,7 +959,7 @@
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:oak_fence": {
+	"minecraft:fence": {
 		"culling": false,
 		"occluding": false,
 		"flammable": true
@@ -1114,17 +984,12 @@
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:nether_portal": {
+	"minecraft:portal": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:carved_pumpkin": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:jack_o_lantern": {
+	"minecraft:lit_pumpkin": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
@@ -1134,7 +999,12 @@
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:repeater": {
+	"minecraft:unpowered_repeater": {
+		"culling": false,
+		"occluding": false,
+		"flammable": false
+	},
+	"minecraft:powered_repeater": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
@@ -1179,7 +1049,7 @@
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:light_gray_stained_glass": {
+	"minecraft:silver_stained_glass": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
@@ -1219,82 +1089,57 @@
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:oak_trapdoor": {
+	"minecraft:trapdoor": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:spruce_trapdoor": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:birch_trapdoor": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:jungle_trapdoor": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:acacia_trapdoor": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dark_oak_trapdoor": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:stone_bricks": {
+	"minecraft:stone_monster_egg": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:mossy_stone_bricks": {
+	"minecraft:cobblestone_monster_egg": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:cracked_stone_bricks": {
+	"minecraft:stone_brick_monster_egg": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:chiseled_stone_bricks": {
+	"minecraft:mossy_brick_monster_egg": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:infested_stone": {
+	"minecraft:cracked_brick_monster_egg": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:infested_cobblestone": {
+	"minecraft:chiseled_brick_monster_egg": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:infested_stone_bricks": {
+	"minecraft:stonebrick": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:infested_mossy_stone_bricks": {
+	"minecraft:mossy_stonebrick": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:infested_cracked_stone_bricks": {
+	"minecraft:cracked_stonebrick": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:infested_chiseled_stone_bricks": {
+	"minecraft:chiseled_stonebrick": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
@@ -1309,11 +1154,6 @@
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:mushroom_stem": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
 	"minecraft:iron_bars": {
 		"culling": false,
 		"occluding": false,
@@ -1324,19 +1164,9 @@
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:melon": {
+	"minecraft:melon_block": {
 		"culling": true,
 		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:attached_pumpkin_stem": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:attached_melon_stem": {
-		"culling": false,
-		"occluding": false,
 		"flammable": false
 	},
 	"minecraft:pumpkin_stem": {
@@ -1354,7 +1184,7 @@
 		"occluding": false,
 		"flammable": true
 	},
-	"minecraft:oak_fence_gate": {
+	"minecraft:fence_gate": {
 		"culling": false,
 		"occluding": false,
 		"flammable": true
@@ -1374,12 +1204,12 @@
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:lily_pad": {
+	"minecraft:waterlily": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:nether_bricks": {
+	"minecraft:nether_brick": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
@@ -1414,11 +1244,6 @@
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:end_portal": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
 	"minecraft:end_portal_frame": {
 		"culling": false,
 		"occluding": false,
@@ -1439,6 +1264,71 @@
 		"occluding": true,
 		"flammable": false
 	},
+	"minecraft:lit_redstone_lamp": {
+		"culling": true,
+		"occluding": true,
+		"flammable": false
+	},
+	"minecraft:oak_double_slab": {
+		"culling": true,
+		"occluding": true,
+		"flammable": true
+	},
+	"minecraft:spruce_double_slab": {
+		"culling": true,
+		"occluding": true,
+		"flammable": true
+	},
+	"minecraft:birch_double_slab": {
+		"culling": true,
+		"occluding": true,
+		"flammable": true
+	},
+	"minecraft:jungle_double_slab": {
+		"culling": true,
+		"occluding": true,
+		"flammable": true
+	},
+	"minecraft:acacia_double_slab": {
+		"culling": true,
+		"occluding": true,
+		"flammable": true
+	},
+	"minecraft:dark_oak_double_slab": {
+		"culling": true,
+		"occluding": true,
+		"flammable": true
+	},
+	"minecraft:oak_slab": {
+		"culling": false,
+		"occluding": false,
+		"flammable": false
+	},
+	"minecraft:spruce_slab": {
+		"culling": false,
+		"occluding": false,
+		"flammable": false
+	},
+	"minecraft:birch_slab": {
+		"culling": false,
+		"occluding": false,
+		"flammable": false
+	},
+	"minecraft:jungle_slab": {
+		"culling": false,
+		"occluding": false,
+		"flammable": false
+	},
+	"minecraft:acacia_slab": {
+		"culling": false,
+		"occluding": false,
+		"flammable": false
+	},
+	"minecraft:dark_oak_slab": {
+		"culling": false,
+		"occluding": false,
+		"flammable": false
+	},
 	"minecraft:cocoa": {
 		"culling": false,
 		"occluding": false,
@@ -1452,11 +1342,6 @@
 	"minecraft:emerald_ore": {
 		"culling": true,
 		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:ender_chest": {
-		"culling": false,
-		"occluding": false,
 		"flammable": false
 	},
 	"minecraft:tripwire_hook": {
@@ -1514,126 +1399,6 @@
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:potted_oak_sapling": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:potted_spruce_sapling": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:potted_birch_sapling": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:potted_jungle_sapling": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:potted_acacia_sapling": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:potted_dark_oak_sapling": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:potted_fern": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:potted_dandelion": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:potted_poppy": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:potted_blue_orchid": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:potted_allium": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:potted_azure_bluet": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:potted_red_tulip": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:potted_orange_tulip": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:potted_white_tulip": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:potted_pink_tulip": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:potted_oxeye_daisy": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:potted_cornflower": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:potted_lily_of_the_valley": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:potted_wither_rose": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:potted_red_mushroom": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:potted_brown_mushroom": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:potted_dead_bush": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:potted_cactus": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
 	"minecraft:carrots": {
 		"culling": false,
 		"occluding": false,
@@ -1644,112 +1409,12 @@
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:oak_button": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:spruce_button": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:birch_button": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:jungle_button": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:acacia_button": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dark_oak_button": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:skeleton_skull": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:skeleton_wall_skull": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:wither_skeleton_skull": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:wither_skeleton_wall_skull": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:zombie_head": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:zombie_wall_head": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:player_head": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:player_wall_head": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:creeper_head": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:creeper_wall_head": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dragon_head": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dragon_wall_head": {
+	"minecraft:wooden_button": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
 	},
 	"minecraft:anvil": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:chipped_anvil": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:damaged_anvil": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:trapped_chest": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
@@ -1764,7 +1429,12 @@
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:comparator": {
+	"minecraft:unpowered_comparator": {
+		"culling": false,
+		"occluding": false,
+		"flammable": false
+	},
+	"minecraft:powered_comparator": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
@@ -1779,7 +1449,7 @@
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:nether_quartz_ore": {
+	"minecraft:quartz_ore": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
@@ -1799,7 +1469,7 @@
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:quartz_pillar": {
+	"minecraft:quartz_column": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
@@ -1819,82 +1489,82 @@
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:white_terracotta": {
+	"minecraft:white_stained_hardened_clay": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:orange_terracotta": {
+	"minecraft:orange_stained_hardened_clay": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:magenta_terracotta": {
+	"minecraft:magenta_stained_hardened_clay": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:light_blue_terracotta": {
+	"minecraft:light_blue_stained_hardened_clay": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:yellow_terracotta": {
+	"minecraft:yellow_stained_hardened_clay": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:lime_terracotta": {
+	"minecraft:lime_stained_hardened_clay": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:pink_terracotta": {
+	"minecraft:pink_stained_hardened_clay": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:gray_terracotta": {
+	"minecraft:gray_stained_hardened_clay": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:light_gray_terracotta": {
+	"minecraft:silver_stained_hardened_clay": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:cyan_terracotta": {
+	"minecraft:cyan_stained_hardened_clay": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:purple_terracotta": {
+	"minecraft:purple_stained_hardened_clay": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:blue_terracotta": {
+	"minecraft:blue_stained_hardened_clay": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:brown_terracotta": {
+	"minecraft:brown_stained_hardened_clay": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:green_terracotta": {
+	"minecraft:green_stained_hardened_clay": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:red_terracotta": {
+	"minecraft:red_stained_hardened_clay": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:black_terracotta": {
+	"minecraft:black_stained_hardened_clay": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
@@ -1939,7 +1609,7 @@
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:light_gray_stained_glass_pane": {
+	"minecraft:silver_stained_glass_pane": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
@@ -1989,12 +1659,7 @@
 		"occluding": false,
 		"flammable": true
 	},
-	"minecraft:slime_block": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:barrier": {
+	"minecraft:slime": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
@@ -2015,111 +1680,6 @@
 		"flammable": false
 	},
 	"minecraft:dark_prismarine": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:prismarine_stairs": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:prismarine_brick_stairs": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dark_prismarine_stairs": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:prismarine_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:prismarine_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:prismarine_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:prismarine_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:prismarine_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:prismarine_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:prismarine_brick_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:prismarine_brick_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:prismarine_brick_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:prismarine_brick_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:prismarine_brick_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:prismarine_brick_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:dark_prismarine_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dark_prismarine_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dark_prismarine_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dark_prismarine_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dark_prismarine_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:dark_prismarine_slab[waterlogged=false,type=double]": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
@@ -2174,7 +1734,7 @@
 		"occluding": false,
 		"flammable": true
 	},
-	"minecraft:light_gray_carpet": {
+	"minecraft:silver_carpet": {
 		"culling": false,
 		"occluding": false,
 		"flammable": true
@@ -2214,7 +1774,7 @@
 		"occluding": false,
 		"flammable": true
 	},
-	"minecraft:terracotta": {
+	"minecraft:hardened_clay": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
@@ -2234,17 +1794,7 @@
 		"occluding": false,
 		"flammable": true
 	},
-	"minecraft:lilac": {
-		"culling": false,
-		"occluding": false,
-		"flammable": true
-	},
-	"minecraft:rose_bush": {
-		"culling": false,
-		"occluding": false,
-		"flammable": true
-	},
-	"minecraft:peony": {
+	"minecraft:syringa": {
 		"culling": false,
 		"occluding": false,
 		"flammable": true
@@ -2254,167 +1804,27 @@
 		"occluding": false,
 		"flammable": true
 	},
-	"minecraft:large_fern": {
+	"minecraft:double_fern": {
 		"culling": false,
 		"occluding": false,
 		"flammable": true
 	},
-	"minecraft:white_banner": {
+	"minecraft:double_rose": {
 		"culling": false,
 		"occluding": false,
-		"flammable": false
+		"flammable": true
 	},
-	"minecraft:orange_banner": {
+	"minecraft:paeonia": {
 		"culling": false,
 		"occluding": false,
-		"flammable": false
+		"flammable": true
 	},
-	"minecraft:magenta_banner": {
+	"minecraft:double_plant": {
 		"culling": false,
 		"occluding": false,
-		"flammable": false
+		"flammable": true
 	},
-	"minecraft:light_blue_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:yellow_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:lime_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:pink_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:gray_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:light_gray_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:cyan_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:purple_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:blue_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:brown_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:green_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:red_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:black_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:white_wall_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:orange_wall_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:magenta_wall_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:light_blue_wall_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:yellow_wall_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:lime_wall_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:pink_wall_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:gray_wall_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:light_gray_wall_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:cyan_wall_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:purple_wall_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:blue_wall_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:brown_wall_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:green_wall_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:red_wall_banner": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:black_wall_banner": {
+	"minecraft:daylight_detector_inverted": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
@@ -2429,7 +1839,7 @@
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:cut_red_sandstone": {
+	"minecraft:smooth_red_sandstone": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
@@ -2442,591 +1852,6 @@
 	"minecraft:oak_slab[waterlogged=true,type=top]": {
 		"culling": false,
 		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:oak_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": true
-	},
-	"minecraft:oak_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:oak_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": true
-	},
-	"minecraft:oak_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:oak_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": true
-	},
-	"minecraft:spruce_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:spruce_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": true
-	},
-	"minecraft:spruce_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:spruce_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": true
-	},
-	"minecraft:spruce_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:spruce_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": true
-	},
-	"minecraft:birch_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:birch_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": true
-	},
-	"minecraft:birch_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:birch_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": true
-	},
-	"minecraft:birch_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:birch_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": true
-	},
-	"minecraft:jungle_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:jungle_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": true
-	},
-	"minecraft:jungle_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:jungle_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": true
-	},
-	"minecraft:jungle_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:jungle_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": true
-	},
-	"minecraft:acacia_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:acacia_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": true
-	},
-	"minecraft:acacia_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:acacia_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": true
-	},
-	"minecraft:acacia_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:acacia_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": true
-	},
-	"minecraft:dark_oak_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dark_oak_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": true
-	},
-	"minecraft:dark_oak_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dark_oak_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": true
-	},
-	"minecraft:dark_oak_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:dark_oak_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": true
-	},
-	"minecraft:stone_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:stone_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:stone_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:stone_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:stone_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:stone_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:smooth_stone_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:smooth_stone_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:smooth_stone_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:smooth_stone_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:smooth_stone_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:smooth_stone_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:sandstone_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:sandstone_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:sandstone_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:sandstone_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:sandstone_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:sandstone_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:cut_sandstone_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:cut_sandstone_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:cut_sandstone_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:cut_sandstone_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:cut_sandstone_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:cut_sandstone_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:petrified_oak_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:petrified_oak_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:petrified_oak_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:petrified_oak_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:petrified_oak_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:petrified_oak_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:cobblestone_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:cobblestone_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:cobblestone_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:cobblestone_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:cobblestone_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:cobblestone_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:brick_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:brick_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:brick_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:brick_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:brick_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:brick_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:stone_brick_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:stone_brick_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:stone_brick_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:stone_brick_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:stone_brick_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:stone_brick_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:nether_brick_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:nether_brick_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:nether_brick_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:nether_brick_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:nether_brick_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:nether_brick_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:quartz_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:quartz_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:quartz_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:quartz_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:quartz_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:quartz_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:red_sandstone_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:red_sandstone_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:red_sandstone_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:red_sandstone_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:red_sandstone_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:red_sandstone_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:cut_red_sandstone_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:cut_red_sandstone_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:cut_red_sandstone_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:cut_red_sandstone_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:cut_red_sandstone_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:cut_red_sandstone_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:purpur_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:purpur_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:purpur_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:purpur_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:purpur_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:purpur_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:smooth_stone": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:smooth_sandstone": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:smooth_quartz": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:smooth_red_sandstone": {
-		"culling": true,
-		"occluding": true,
 		"flammable": false
 	},
 	"minecraft:spruce_fence_gate": {
@@ -3134,7 +1959,7 @@
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:end_stone_bricks": {
+	"minecraft:end_bricks": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
@@ -3145,11 +1970,6 @@
 		"flammable": false
 	},
 	"minecraft:grass_path": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:end_gateway": {
 		"culling": false,
 		"occluding": false,
 		"flammable": false
@@ -3189,99 +2009,9 @@
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:structure_void": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
 	"minecraft:observer": {
 		"culling": true,
 		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:shulker_box": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:white_shulker_box": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:orange_shulker_box": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:magenta_shulker_box": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:light_blue_shulker_box": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:yellow_shulker_box": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:lime_shulker_box": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:pink_shulker_box": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:gray_shulker_box": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:light_gray_shulker_box": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:cyan_shulker_box": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:purple_shulker_box": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:blue_shulker_box": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:brown_shulker_box": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:green_shulker_box": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:red_shulker_box": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:black_shulker_box": {
-		"culling": false,
-		"occluding": false,
 		"flammable": false
 	},
 	"minecraft:white_glazed_terracotta": {
@@ -3324,7 +2054,7 @@
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:light_gray_glazed_terracotta": {
+	"minecraft:silver_glazed_terracotta": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
@@ -3404,7 +2134,7 @@
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:light_gray_concrete": {
+	"minecraft:silver_concrete": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
@@ -3484,7 +2214,7 @@
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:light_gray_concrete_powder": {
+	"minecraft:silver_concrete_powder": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
@@ -3524,879 +2254,9 @@
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:kelp": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:kelp_plant": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dried_kelp_block": {
-		"culling": true,
-		"occluding": true,
-		"flammable": true
-	},
-	"minecraft:turtle_egg": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dead_tube_coral_block": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:dead_brain_coral_block": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:dead_bubble_coral_block": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:dead_fire_coral_block": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:dead_horn_coral_block": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:tube_coral_block": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:brain_coral_block": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:bubble_coral_block": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:fire_coral_block": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:horn_coral_block": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:dead_tube_coral": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dead_brain_coral": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dead_bubble_coral": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dead_fire_coral": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dead_horn_coral": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:tube_coral": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:brain_coral": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:bubble_coral": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:fire_coral": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:horn_coral": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dead_tube_coral_fan": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dead_brain_coral_fan": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dead_bubble_coral_fan": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dead_fire_coral_fan": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dead_horn_coral_fan": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:tube_coral_fan": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:brain_coral_fan": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:bubble_coral_fan": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:fire_coral_fan": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:horn_coral_fan": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dead_tube_coral_wall_fan": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dead_brain_coral_wall_fan": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dead_bubble_coral_wall_fan": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dead_fire_coral_wall_fan": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:dead_horn_coral_wall_fan": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:tube_coral_wall_fan": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:brain_coral_wall_fan": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:bubble_coral_wall_fan": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:fire_coral_wall_fan": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:horn_coral_wall_fan": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:sea_pickle": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:blue_ice": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:conduit": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:bamboo_sapling": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:bamboo": {
-		"culling": false,
-		"occluding": false,
-		"flammable": true
-	},
-	"minecraft:potted_bamboo": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:void_air": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:cave_air": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:bubble_column": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:polished_granite_stairs": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:smooth_red_sandstone_stairs": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:mossy_stone_brick_stairs": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:polished_diorite_stairs": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:mossy_cobblestone_stairs": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:end_stone_brick_stairs": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:stone_stairs": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:smooth_sandstone_stairs": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:smooth_quartz_stairs": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:granite_stairs": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:andesite_stairs": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:red_nether_brick_stairs": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:polished_andesite_stairs": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:diorite_stairs": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:polished_granite_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:polished_granite_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:polished_granite_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:polished_granite_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:polished_granite_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:polished_granite_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:smooth_red_sandstone_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:smooth_red_sandstone_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:smooth_red_sandstone_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:smooth_red_sandstone_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:smooth_red_sandstone_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:smooth_red_sandstone_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:mossy_stone_brick_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:mossy_stone_brick_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:mossy_stone_brick_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:mossy_stone_brick_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:mossy_stone_brick_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:mossy_stone_brick_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:polished_diorite_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:polished_diorite_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:polished_diorite_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:polished_diorite_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:polished_diorite_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:polished_diorite_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:mossy_cobblestone_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:mossy_cobblestone_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:mossy_cobblestone_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:mossy_cobblestone_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:mossy_cobblestone_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:mossy_cobblestone_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:end_stone_brick_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:end_stone_brick_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:end_stone_brick_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:end_stone_brick_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:end_stone_brick_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:end_stone_brick_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:smooth_sandstone_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:smooth_sandstone_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:smooth_sandstone_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:smooth_sandstone_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:smooth_sandstone_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:smooth_sandstone_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:smooth_quartz_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:smooth_quartz_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:smooth_quartz_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:smooth_quartz_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:smooth_quartz_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:smooth_quartz_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:granite_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:granite_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:granite_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:granite_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:granite_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:granite_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:andesite_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:andesite_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:andesite_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:andesite_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:andesite_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:andesite_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:red_nether_brick_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:red_nether_brick_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:red_nether_brick_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:red_nether_brick_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:red_nether_brick_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:red_nether_brick_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:polished_andesite_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:polished_andesite_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:polished_andesite_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:polished_andesite_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:polished_andesite_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:polished_andesite_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:diorite_slab[waterlogged=true,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:diorite_slab[waterlogged=false,type=top]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:diorite_slab[waterlogged=true,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:diorite_slab[waterlogged=false,type=bottom]": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:diorite_slab[waterlogged=true,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:diorite_slab[waterlogged=false,type=double]": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:brick_wall": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:prismarine_wall": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:red_sandstone_wall": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:mossy_stone_brick_wall": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:granite_wall": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:stone_brick_wall": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:nether_brick_wall": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:andesite_wall": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:red_nether_brick_wall": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:sandstone_wall": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:end_stone_brick_wall": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:diorite_wall": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:scaffolding": {
-		"culling": false,
-		"occluding": false,
-		"flammable": true
-	},
-	"minecraft:loom": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:barrel": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:smoker": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:blast_furnace": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:cartography_table": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:fletching_table": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:grindstone": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:lectern": {
-		"culling": false,
-		"occluding": false,
-		"flammable": true
-	},
-	"minecraft:smithing_table": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:stonecutter": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:bell": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:lantern": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:campfire": {
-		"culling": false,
-		"occluding": false,
-		"flammable": false
-	},
-	"minecraft:sweet_berry_bush": {
-		"culling": false,
-		"occluding": false,
-		"flammable": true
-	},
 	"minecraft:structure_block": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
-	},
-	"minecraft:jigsaw": {
-		"culling": true,
-		"occluding": true,
-		"flammable": false
-	},
-	"minecraft:composter": {
-		"culling": false,
-		"occluding": false,
-		"flammable": true
 	}
 }
