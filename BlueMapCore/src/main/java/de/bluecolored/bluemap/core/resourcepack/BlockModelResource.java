@@ -388,7 +388,9 @@ public class BlockModelResource {
 					String dirString = node.getNode("cullface").getString();
 					if (dirString.equals("bottom")) dirString = "down";
 					if (dirString.equals("top")) dirString = "up";
-					face.cullface = Direction.fromString(dirString);
+					try {
+						face.cullface = Direction.fromString(dirString);
+					} catch (IllegalArgumentException ignore) {}
 				}
 				
 				return face;

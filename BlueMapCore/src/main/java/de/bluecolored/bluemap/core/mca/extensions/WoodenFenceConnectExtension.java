@@ -32,7 +32,7 @@ import com.google.common.collect.Sets;
 public class WoodenFenceConnectExtension extends ConnectSameOrFullBlockExtension {
 
 	private static final HashSet<String> AFFECTED_BLOCK_IDS = Sets.newHashSet(
-			"minecraft:oak_fence",
+			"minecraft:fence",
 			"minecraft:spruce_fence",
 			"minecraft:birch_fence",
 			"minecraft:jungle_fence",

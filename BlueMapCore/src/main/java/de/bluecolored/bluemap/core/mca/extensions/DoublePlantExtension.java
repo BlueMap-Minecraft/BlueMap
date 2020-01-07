@@ -36,12 +36,7 @@ import de.bluecolored.bluemap.core.world.BlockState;
 public class DoublePlantExtension implements BlockStateExtension {
 
 	private static final Collection<String> AFFECTED_BLOCK_IDS = Lists.newArrayList(
-			"minecraft:sunflower",
-			"minecraft:lilac",
-			"minecraft:tall_grass",
-			"minecraft:large_fern",
-			"minecraft:rose_bush",
-			"minecraft:peony"
+			"minecraft:double_plant"
 		);
 	
 	@Override

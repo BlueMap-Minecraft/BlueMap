@@ -93,7 +93,7 @@ public class HiresModelRenderer {
 					color = MathUtils.overlayColors(blockModel.getMapColor(), color);
 					
 					//TODO: quick hack to random offset grass
-					if (block.getBlock().getId().equals("grass")){
+					if (block.getBlock().getFullId().equals("minecraft:tall_grass")){
 						float dx = (MathUtils.hashToFloat(x, y, z, 123984) - 0.5f) * 0.75f;
 						float dz = (MathUtils.hashToFloat(x, y, z, 345542) - 0.5f) * 0.75f;
 						blockModel.translate(new Vector3f(dx, 0, dz));

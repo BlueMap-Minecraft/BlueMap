@@ -37,7 +37,8 @@ import de.bluecolored.bluemap.core.world.BlockState;
 public class WallConnectExtension extends ConnectSameOrFullBlockExtension {
 
 	private static final HashSet<String> AFFECTED_BLOCK_IDS = Sets.newHashSet(
-			"minecraft:cobblestone_wall"
+			"minecraft:cobblestone_wall",
+			"minecraft:mossy_cobblestone_wall"
 		);
 	
 	@Override

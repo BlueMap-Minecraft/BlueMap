@@ -105,9 +105,11 @@ public class LiquidModelBuilder {
 
 		int textureId = texture.getId();
 		Vector3f tintcolor = Vector3f.ONE;
+		/* Water is not tinted in 1.12 
 		if (liquidBlockState.getFullId().equals("minecraft:water")) {
 			tintcolor = colorCalculator.getWaterAverageColor(block);
 		}
+		*/
 		
 		createElementFace(model, Direction.DOWN, c[0], c[2], c[3], c[1], tintcolor, textureId);
 		createElementFace(model, Direction.UP, c[5], c[7], c[6], c[4], tintcolor, textureId);

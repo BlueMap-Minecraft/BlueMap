@@ -28,7 +28,7 @@ allprojects {
 
 dependencies {
 	compile project(':BlueMapCLI')
-	//compile project(':BlueMapSponge')
+	compile project(':BlueMapSponge')
 }
 
 shadowJar {

@@ -168,6 +168,9 @@ public class BlockStateResource {
 					String conditionString = entry.getKey().toString();
 					ConfigurationNode transformedModelNode = entry.getValue();
 
+					//some exceptions in 1.12 resource packs that we ignore
+					if (conditionString.equals("all") || conditionString.equals("map")) continue;
+					
 					Variant variant = blockState.new Variant();
 					variant.condition = parseConditionString(conditionString);
 					variant.models = loadModels(transformedModelNode, blockstateFile, null);
@@ -228,7 +231,7 @@ public class BlockStateResource {
 			if (namespacedModelPath == null)
 				throw new ParseResourceException("No model defined!");
 
-			String modelPath = ResourcePack.namespacedToAbsoluteResourcePath(namespacedModelPath, "models") + ".json";
+			String modelPath = ResourcePack.namespacedToAbsoluteResourcePath(namespacedModelPath, "models/block") + ".json";
 
 			BlockModelResource model = resourcePack.blockModelResources.get(modelPath);
 			if (model == null) {
@@ -274,6 +277,7 @@ public class BlockStateResource {
 
 		private PropertyCondition parseConditionString(String conditionString) throws IllegalArgumentException {
 			List<PropertyCondition> conditions = new ArrayList<>();
+			
 			if (!conditionString.isEmpty() && !conditionString.equals("default") && !conditionString.equals("normal")) {
 				String[] conditionSplit = StringUtils.split(conditionString, ',');
 				for (String element : conditionSplit) {

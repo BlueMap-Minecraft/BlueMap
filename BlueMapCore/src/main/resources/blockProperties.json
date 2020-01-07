@@ -39,7 +39,7 @@
 		"occluding": true,
 		"flammable": false
 	},
-	"minecraft:grass_block": {
+	"minecraft:grass": {
 		"culling": true,
 		"occluding": true,
 		"flammable": false
@@ -524,7 +524,7 @@
 		"occluding": false,
 		"flammable": false
 	},
-	"minecraft:grass": {
+	"minecraft:tall_grass": {
 		"culling": false,
 		"occluding": false,
 		"flammable": true
@@ -2249,7 +2249,7 @@
 		"occluding": false,
 		"flammable": true
 	},
-	"minecraft:tall_grass": {
+	"minecraft:double_grass": {
 		"culling": false,
 		"occluding": false,
 		"flammable": true
