@@ -88,7 +88,7 @@ public class Commands {
 			.child(createPauseRenderCommand(), "pause")
 			.child(createResumeRenderCommand(), "resume")
 			.child(createRenderCommand(), "render")
-			.child(debugCommand, "debug")
+			//.child(debugCommand, "debug")
 			.executor((source, args) -> {
 				source.sendMessages(createStatusMessage());
 				return CommandResult.success();
