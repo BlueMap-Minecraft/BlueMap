@@ -35,7 +35,7 @@ import net.querz.nbt.CompoundTag;
 import net.querz.nbt.ListTag;
 import net.querz.nbt.mca.MCAUtil;
 
-class ChunkAnvil112 extends Chunk {
+public class ChunkAnvil112 extends Chunk {
 	private BlockIdMapper blockIdMapper;
 	private BiomeMapper biomeIdMapper;
 	
@@ -84,6 +84,15 @@ class ChunkAnvil112 extends Chunk {
 		return section.getBlockState(pos);
 	}
 	
+	public String getBlockIdMeta(Vector3i pos) {
+		int sectionY = MCAUtil.blockToChunk(pos.getY());
+		
+		Section section = this.sections[sectionY];
+		if (section == null) return "0:0";
+		
+		return section.getBlockIdMeta(pos);
+	}
+	
 	@Override
 	public LightData getLightData(Vector3i pos) {
 		int sectionY = MCAUtil.blockToChunk(pos.getY());
@@ -119,7 +128,7 @@ class ChunkAnvil112 extends Chunk {
 			this.skyLight = sectionData.getByteArray("SkyLight");
 			this.data = sectionData.getByteArray("Data");
 		}
-		
+
 		public int getSectionY() {
 			return sectionY;
 		}
@@ -143,6 +152,25 @@ class ChunkAnvil112 extends Chunk {
 			BlockState blockState = blockIdMapper.get(blockId, blockData);
 			
 			return blockState;
+		}
+		
+		public String getBlockIdMeta(Vector3i pos) {
+			int x = pos.getX() & 0xF; // Math.floorMod(pos.getX(), 16)
+			int y = pos.getY() & 0xF;
+			int z = pos.getZ() & 0xF;
+			int blockByteIndex = y * 256 + z * 16 + x;
+			int blockHalfByteIndex = blockByteIndex >> 1; // blockByteIndex / 2 
+			boolean largeHalf = (blockByteIndex & 0x1) != 0; // (blockByteIndex % 2) == 0
+			
+			int blockId = this.blocks[blockByteIndex] & 0xFF;
+			
+			if (this.add.length > 0) {
+				blockId = blockId | (getByteHalf(this.add[blockHalfByteIndex], largeHalf) << 8);
+			}
+			
+			int blockData = getByteHalf(this.data[blockHalfByteIndex], largeHalf);
+			
+			return blockId + ":" + blockData;
 		}
 		
 		public LightData getLightData(Vector3i pos) {

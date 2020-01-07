@@ -1,5 +1,6 @@
 package de.bluecolored.bluemap.sponge;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -27,6 +28,9 @@ import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.Lists;
 
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.mca.Chunk;
+import de.bluecolored.bluemap.core.mca.ChunkAnvil112;
+import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.World;
@@ -51,9 +55,24 @@ public class Commands {
 						Block block = world.getBlock(loc.getBlockPosition());
 						Block blockBelow = world.getBlock(loc.getBlockPosition().add(0, -1, 0));
 						
+						String blockIdMeta = "";
+						String blockBelowIdMeta = "";
+						
+						if (world instanceof MCAWorld) {
+							try {
+								Chunk chunk = ((MCAWorld) world).getChunk(MCAWorld.blockToChunk(loc.getBlockPosition()));
+								if (chunk instanceof ChunkAnvil112) {
+									blockIdMeta = " (id:" + ((ChunkAnvil112) chunk).getBlockIdMeta(loc.getBlockPosition()) + ")";
+									blockBelowIdMeta = " (id:" + ((ChunkAnvil112) chunk).getBlockIdMeta(loc.getBlockPosition().add(0, -1, 0)) + ")";
+								}
+							} catch (IOException ex) {
+								Logger.global.logError("Failed to read chunk for debug!", ex);
+							}
+						}
+						
 						source.sendMessages(Lists.newArrayList(
-								Text.of("Block: " + block),
-								Text.of("Block below: " + blockBelow)
+								Text.of("Block: " + block + blockIdMeta),
+								Text.of("Block below: " + blockBelow + blockBelowIdMeta)
 							));
 					}
 					
@@ -69,7 +88,7 @@ public class Commands {
 			.child(createPauseRenderCommand(), "pause")
 			.child(createResumeRenderCommand(), "resume")
 			.child(createRenderCommand(), "render")
-			//.child(debugCommand, "debug")
+			.child(debugCommand, "debug")
 			.executor((source, args) -> {
 				source.sendMessages(createStatusMessage());
 				return CommandResult.success();
