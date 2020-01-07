@@ -35,7 +35,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
@@ -71,6 +73,7 @@ import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.LightData;
 import de.bluecolored.bluemap.core.world.World;
 import net.querz.nbt.CompoundTag;
+import net.querz.nbt.ListTag;
 import net.querz.nbt.NBTUtil;
 import net.querz.nbt.Tag;
 import net.querz.nbt.mca.CompressionType;
@@ -105,6 +108,8 @@ public class MCAWorld implements World {
 	private BlockPropertiesMapper blockPropertiesMapper;
 	private BiomeMapper biomeMapper;
 	
+	private Map<Integer, String> forgeBlockMappings;
+	
 	private MCAWorld(
 			Path worldFolder, 
 			UUID uuid, 
@@ -125,8 +130,10 @@ public class MCAWorld implements World {
 		this.blockIdMapper = blockIdMapper;
 		this.blockPropertiesMapper = blockPropertiesMapper;
 		this.biomeMapper = biomeMapper;
+		
+		this.forgeBlockMappings = new HashMap<>();
 	}
-
+	
 	public BlockState getBlockState(Vector3i pos) {
 		try {
 			
@@ -335,6 +342,10 @@ public class MCAWorld implements World {
 	public Path getWorldFolder() {
 		return worldFolder;
 	}
+
+	public String getForgeBlockIdMapping(int id) {
+		return forgeBlockMappings.get(id);
+	}
 	
 	private Path getRegionFolder() {
 		return worldFolder.resolve("region");
@@ -360,7 +371,8 @@ public class MCAWorld implements World {
 			
 
 			CHUNK_CACHE.invalidateAll();
-			return new MCAWorld(
+			
+			MCAWorld world = new MCAWorld(
 					worldFolder, 
 					uuid, 
 					name, 
@@ -371,6 +383,21 @@ public class MCAWorld implements World {
 					blockPropertiesMapper,
 					biomeIdMapper
 					);
+			
+			try {
+				ListTag<? extends Tag<?>> blockIdReg = level.getCompoundTag("FML").getCompoundTag("Registries").getCompoundTag("minecraft:blocks").getListTag("ids");
+				for (Tag<?> tag : blockIdReg) {
+					if (tag instanceof CompoundTag) {
+						CompoundTag entry = (CompoundTag) tag;
+						String blockId = entry.getString("K");
+						int numeralId = entry.getInt("V");
+						
+						world.forgeBlockMappings.put(numeralId, blockId);
+					}
+				}
+			} catch (NullPointerException ignore) {}
+			
+			return world;
 		} catch (ClassCastException | NullPointerException ex) {
 			throw new IOException("Invaid level.dat format!", ex);
 		}

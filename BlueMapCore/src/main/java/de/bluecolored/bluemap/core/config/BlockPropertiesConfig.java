@@ -68,8 +68,8 @@ public class BlockPropertiesConfig implements BlockPropertiesMapper {
 			try {
 				BlockState bsKey = BlockState.fromString(key);
 				BlockProperties bsValue = new BlockProperties(
-						e.getValue().getNode("culling").getBoolean(false),
-						e.getValue().getNode("occluding").getBoolean(false),
+						e.getValue().getNode("culling").getBoolean(true),
+						e.getValue().getNode("occluding").getBoolean(true),
 						e.getValue().getNode("flammable").getBoolean(false)
 					);
 				BlockStateMapping<BlockProperties> mapping = new BlockStateMapping<>(bsKey, bsValue);

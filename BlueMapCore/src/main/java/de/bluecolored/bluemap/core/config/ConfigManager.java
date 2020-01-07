@@ -154,7 +154,7 @@ public class ConfigManager {
 		blockIdsConfigNode = joinFromResourcePack(resourcePack, "blockIds.json", blockIdsConfigNode);
 		blockIdConfig = new BlockIdConfig(
 				blockIdsConfigNode, 
-				null //getLoader(makeAutogen(getBlockIdConfigFile()))
+				getLoader(makeAutogen(getBlockIdConfigFile()))
 				);
 
 		//load blockProperties.json from resources, config-folder and resourcepack
@@ -170,7 +170,7 @@ public class ConfigManager {
 		blockPropertiesConfig = new BlockPropertiesConfig(
 				blockPropertiesConfigNode,
 				resourcePack,
-				null //getLoader(makeAutogen(getBlockPropertiesConfigFile()))
+				getLoader(makeAutogen(getBlockPropertiesConfigFile()))
 				);
 
 		//load biomes.json from resources, config-folder and resourcepack
@@ -185,7 +185,7 @@ public class ConfigManager {
 		biomeConfigNode = joinFromResourcePack(resourcePack, "biomes.json", biomeConfigNode);
 		biomeConfig = new BiomeConfig(
 				biomeConfigNode,
-				null //getLoader(makeAutogen(getBiomeConfigFile()))
+				getLoader(makeAutogen(getBiomeConfigFile()))
 				);
 	}
 	
@@ -255,13 +255,11 @@ public class ConfigManager {
 		return configNode;
 	}
 	
-	/*
 	private File makeAutogen(File file) throws IOException {
-		File autogenFile = file.getCanonicalFile().toPath().getParent().resolve("generated").resolve(file.getName()).toFile();
+		File autogenFile = file.getCanonicalFile().toPath().getParent().resolve("missing-configs").resolve(file.getName()).toFile();
 		autogenFile.getParentFile().mkdirs();
 		return autogenFile;
 	}
-	*/
 	
 	private ConfigurationLoader<? extends ConfigurationNode> getLoader(String filename, InputStream is){
 		BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));

@@ -26,9 +26,10 @@ package de.bluecolored.bluemap.core.mca.mapping;
 
 import de.bluecolored.bluemap.core.world.BlockState;
 
-@FunctionalInterface
 public interface BlockIdMapper {
 
 	BlockState get(int id, int meta);
+
+	BlockState get(String id, int numeralId, int meta);
 	
 }
