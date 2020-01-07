@@ -46,6 +46,9 @@ public class Commands {
 	public CommandSpec createRootCommand() {
 		
 		CommandSpec debugCommand = CommandSpec.builder()
+				.permission("bluemap.debug")
+				.description(Text.of("Prints some debug info"))
+				.extendedDescription(Text.of("Prints some information about how bluemap sees the blocks at and below your position"))
 				.executor((source, args) -> {
 					if (source instanceof Locatable) {
 						Location<org.spongepowered.api.world.World> loc = ((Locatable) source).getLocation();
