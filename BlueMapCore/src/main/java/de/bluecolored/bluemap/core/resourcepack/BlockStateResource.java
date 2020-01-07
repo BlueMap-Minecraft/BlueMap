@@ -86,6 +86,11 @@ public class BlockStateResource {
 				models.add(variant.getModel(pos));
 			}
 		}
+		
+		//fallback to first variant
+		if (models.isEmpty() && !variants.isEmpty()) {
+			models.add(variants.get(0).getModel(pos));
+		}
 
 		return models;
 	}

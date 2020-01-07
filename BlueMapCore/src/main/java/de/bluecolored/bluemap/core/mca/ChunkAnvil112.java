@@ -149,9 +149,12 @@ public class ChunkAnvil112 extends Chunk {
 			
 			int blockData = getByteHalf(this.data[blockHalfByteIndex], largeHalf);
 			
-			BlockState blockState = blockIdMapper.get(blockId, blockData);
-			
-			return blockState;
+			String forgeIdMapping = getWorld().getForgeBlockIdMapping(blockId);
+			if (forgeIdMapping != null) {
+				return blockIdMapper.get(forgeIdMapping, blockId, blockData);
+			} else {
+				return blockIdMapper.get(blockId, blockData);
+			}
 		}
 		
 		public String getBlockIdMeta(Vector3i pos) {
@@ -169,8 +172,9 @@ public class ChunkAnvil112 extends Chunk {
 			}
 			
 			int blockData = getByteHalf(this.data[blockHalfByteIndex], largeHalf);
+			String forgeIdMapping = getWorld().getForgeBlockIdMapping(blockId);
 			
-			return blockId + ":" + blockData;
+			return blockId + ":" + blockData + " " + forgeIdMapping;
 		}
 		
 		public LightData getLightData(Vector3i pos) {

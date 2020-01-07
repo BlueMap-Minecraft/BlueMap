@@ -45,7 +45,6 @@ public class Commands {
 	
 	public CommandSpec createRootCommand() {
 		
-		@SuppressWarnings("unused")
 		CommandSpec debugCommand = CommandSpec.builder()
 				.executor((source, args) -> {
 					if (source instanceof Locatable) {
@@ -62,8 +61,8 @@ public class Commands {
 							try {
 								Chunk chunk = ((MCAWorld) world).getChunk(MCAWorld.blockToChunk(loc.getBlockPosition()));
 								if (chunk instanceof ChunkAnvil112) {
-									blockIdMeta = " (id:" + ((ChunkAnvil112) chunk).getBlockIdMeta(loc.getBlockPosition()) + ")";
-									blockBelowIdMeta = " (id:" + ((ChunkAnvil112) chunk).getBlockIdMeta(loc.getBlockPosition().add(0, -1, 0)) + ")";
+									blockIdMeta = " (" + ((ChunkAnvil112) chunk).getBlockIdMeta(loc.getBlockPosition()) + ")";
+									blockBelowIdMeta = " (" + ((ChunkAnvil112) chunk).getBlockIdMeta(loc.getBlockPosition().add(0, -1, 0)) + ")";
 								}
 							} catch (IOException ex) {
 								Logger.global.logError("Failed to read chunk for debug!", ex);
@@ -71,8 +70,8 @@ public class Commands {
 						}
 						
 						source.sendMessages(Lists.newArrayList(
-								Text.of("Block: " + block + blockIdMeta),
-								Text.of("Block below: " + blockBelow + blockBelowIdMeta)
+								Text.of(TextColors.GOLD, "Block at you: ", TextColors.RESET, block, TextColors.GRAY, blockIdMeta),
+								Text.of(TextColors.GOLD, "Block below you: ", TextColors.RESET, blockBelow, TextColors.GRAY, blockBelowIdMeta)
 							));
 					}
 					
@@ -88,7 +87,7 @@ public class Commands {
 			.child(createPauseRenderCommand(), "pause")
 			.child(createResumeRenderCommand(), "resume")
 			.child(createRenderCommand(), "render")
-			//.child(debugCommand, "debug")
+			.child(debugCommand, "debug")
 			.executor((source, args) -> {
 				source.sendMessages(createStatusMessage());
 				return CommandResult.success();
