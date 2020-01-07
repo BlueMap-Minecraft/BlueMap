@@ -75,7 +75,7 @@ command | permission | description
 *\[clickable command in /bluemap\]* | bluemap.rendertask.remove | removes the clicked render-task
 
 ## Todo / planned features
-Here is an *(surely incomplete)* list of things that i want to include in future versions. *(They are not in any specific order. There is no guarantee that any of those things will ever be included.)*
+Here is a *(surely incomplete)* list of things that i want to include in future versions. *(They are not in any specific order. There is no guarantee that any of those things will ever be included.)*
 
 - render tile-entities (chests, etc..)
 - render entities
