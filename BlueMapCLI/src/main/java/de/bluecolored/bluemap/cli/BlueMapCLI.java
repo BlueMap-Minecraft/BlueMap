@@ -109,7 +109,7 @@ public class BlueMapCLI {
 			}
 			
 			HiresModelManager hiresModelManager = new HiresModelManager(
-					config.getWebDataPath().resolve("hires").resolve(mapConfig.getId()),
+					config.getWebDataPath().resolve(mapConfig.getId()).resolve("hires"),
 					resourcePack,
 					mapConfig,
 					new Vector2i(mapConfig.getHiresTileSize(), mapConfig.getHiresTileSize()),
@@ -117,7 +117,7 @@ public class BlueMapCLI {
 					);
 			
 			LowresModelManager lowresModelManager = new LowresModelManager(
-					config.getWebDataPath().resolve("lowres").resolve(mapConfig.getId()), 
+					config.getWebDataPath().resolve(mapConfig.getId()).resolve("lowres"), 
 					new Vector2i(mapConfig.getLowresPointsPerLowresTile(), mapConfig.getLowresPointsPerLowresTile()),
 					new Vector2i(mapConfig.getLowresPointsPerHiresTile(), mapConfig.getLowresPointsPerHiresTile())
 					);
