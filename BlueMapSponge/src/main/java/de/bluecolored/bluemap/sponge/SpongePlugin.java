@@ -217,7 +217,7 @@ public class SpongePlugin {
 			}
 			
 			HiresModelManager hiresModelManager = new HiresModelManager(
-					config.getWebDataPath().resolve("hires").resolve(id),
+					config.getWebDataPath().resolve(id).resolve("hires"),
 					resourcePack,
 					mapConfig,
 					new Vector2i(mapConfig.getHiresTileSize(), mapConfig.getHiresTileSize()),
@@ -225,7 +225,7 @@ public class SpongePlugin {
 					);
 			
 			LowresModelManager lowresModelManager = new LowresModelManager(
-					config.getWebDataPath().resolve("lowres").resolve(id), 
+					config.getWebDataPath().resolve(id).resolve("lowres"), 
 					new Vector2i(mapConfig.getLowresPointsPerLowresTile(), mapConfig.getLowresPointsPerLowresTile()),
 					new Vector2i(mapConfig.getLowresPointsPerHiresTile(), mapConfig.getLowresPointsPerHiresTile())
 					);
