@@ -67,6 +67,7 @@ import de.bluecolored.bluemap.core.config.MainConfig.MapConfig;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.metrics.Metrics;
+import de.bluecolored.bluemap.core.render.RenderSettings;
 import de.bluecolored.bluemap.core.render.TileRenderer;
 import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.render.lowres.LowresModelManager;
@@ -75,6 +76,7 @@ import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.web.BlueMapWebServer;
 import de.bluecolored.bluemap.core.web.WebFilesManager;
 import de.bluecolored.bluemap.core.web.WebSettings;
+import de.bluecolored.bluemap.core.world.SlicedWorld;
 import de.bluecolored.bluemap.core.world.World;
 import net.querz.nbt.CompoundTag;
 import net.querz.nbt.NBTUtil;
@@ -209,6 +211,11 @@ public class SpongePlugin {
 				}
 			}
 			
+			//slice world to render edges if configured
+			if (mapConfig.isRenderEdges() && !(mapConfig.getMin().equals(RenderSettings.DEFAULT_MIN) && mapConfig.getMax().equals(RenderSettings.DEFAULT_MAX))) {
+				world = new SlicedWorld(world, mapConfig.getMin(), mapConfig.getMax());
+			}
+			
 			HiresModelManager hiresModelManager = new HiresModelManager(
 					config.getWebDataPath().resolve("hires").resolve(id),
 					resourcePack,
@@ -257,12 +264,16 @@ public class SpongePlugin {
 		}
 
 		WebSettings webSettings = new WebSettings(config.getWebDataPath().resolve("settings.json").toFile());
+		webSettings.setAllEnabled(false);
 		for (MapType map : maps.values()) {
+			webSettings.setEnabled(true, map.getId());
 			webSettings.setName(map.getName(), map.getId());
 			webSettings.setFrom(map.getTileRenderer(), map.getId());
 		}
+		int ordinal = 0;
 		for (MapConfig map : config.getMapConfigs()) {
 			if (!maps.containsKey(map.getId())) continue; //don't add not loaded maps
+			webSettings.setOrdinal(ordinal++, map.getId());
 			webSettings.setHiresViewDistance(map.getHiresViewDistance(), map.getId());
 			webSettings.setLowresViewDistance(map.getLowresViewDistance(), map.getId());
 		}

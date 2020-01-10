@@ -58,6 +58,7 @@ import de.bluecolored.bluemap.core.config.MainConfig.MapConfig;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.metrics.Metrics;
+import de.bluecolored.bluemap.core.render.RenderSettings;
 import de.bluecolored.bluemap.core.render.TileRenderer;
 import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.render.lowres.LowresModelManager;
@@ -66,6 +67,7 @@ import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.web.BlueMapWebServer;
 import de.bluecolored.bluemap.core.web.WebFilesManager;
 import de.bluecolored.bluemap.core.web.WebSettings;
+import de.bluecolored.bluemap.core.world.SlicedWorld;
 import de.bluecolored.bluemap.core.world.World;
 
 public class BlueMapCLI {
@@ -93,13 +95,18 @@ public class BlueMapCLI {
 		Map<String, MapType> maps = new HashMap<>(); 
 
 		for (MapConfig mapConfig : config.getMapConfigs()) {
-			File mapPath = new File(mapConfig.getWorldPath());
-			if (!mapPath.exists() || !mapPath.isDirectory()) {
-				throw new IOException("Save folder '" + mapPath + "' does not exist or is not a directory!");
+			File worldFolder = new File(mapConfig.getWorldPath());
+			if (!worldFolder.exists() || !worldFolder.isDirectory()) {
+				throw new IOException("Save folder '" + worldFolder + "' does not exist or is not a directory!");
 			}
 	
 			Logger.global.logInfo("Preparing renderer for map '" + mapConfig.getId() + "' ...");
-			World world = MCAWorld.load(mapPath.toPath(), UUID.randomUUID(), configManager.getBlockIdConfig(), configManager.getBlockPropertiesConfig(), configManager.getBiomeConfig());
+			World world = MCAWorld.load(worldFolder.toPath(), UUID.randomUUID(), configManager.getBlockIdConfig(), configManager.getBlockPropertiesConfig(), configManager.getBiomeConfig());
+			
+			//slice world to render edges if configured
+			if (mapConfig.isRenderEdges() && !(mapConfig.getMin().equals(RenderSettings.DEFAULT_MIN) && mapConfig.getMax().equals(RenderSettings.DEFAULT_MAX))) {
+				world = new SlicedWorld(world, mapConfig.getMin(), mapConfig.getMax());
+			}
 			
 			HiresModelManager hiresModelManager = new HiresModelManager(
 					config.getWebDataPath().resolve("hires").resolve(mapConfig.getId()),
@@ -123,12 +130,16 @@ public class BlueMapCLI {
 
 		Logger.global.logInfo("Writing settings.json ...");
 		WebSettings webSettings = new WebSettings(config.getWebDataPath().resolve("settings.json").toFile());
+		webSettings.setAllEnabled(false);
 		for (MapType map : maps.values()) {
+			webSettings.setEnabled(true, map.getId());
 			webSettings.setName(map.getName(), map.getId());
 			webSettings.setFrom(map.getTileRenderer(), map.getId());
 		}
+		int ordinal = 0;
 		for (MapConfig map : config.getMapConfigs()) {
 			if (!maps.containsKey(map.getId())) continue; //don't add not loaded maps
+			webSettings.setOrdinal(ordinal++, map.getId());
 			webSettings.setHiresViewDistance(map.getHiresViewDistance(), map.getId());
 			webSettings.setLowresViewDistance(map.getLowresViewDistance(), map.getId());
 		}
@@ -233,7 +244,7 @@ public class BlueMapCLI {
 		return true;
 	}
 	
-	private boolean handleMissingResources(File resourceFile) {
+	private boolean handleMissingResources(File resourceFile) throws IOException {
 		if (configManager.getMainConfig().isDownloadAccepted()) {
 			try {
 				Logger.global.logInfo("Downloading " + ResourcePack.MINECRAFT_CLIENT_URL + " to " + resourceFile.getCanonicalPath() + " ...");
@@ -246,7 +257,7 @@ public class BlueMapCLI {
 		} else {
 			Logger.global.logWarning("BlueMap is missing important resources!");
 			Logger.global.logWarning("You need to accept the download of the required files in order of BlueMap to work!");
-			Logger.global.logWarning("Please check " + configManager.getMainConfigFile() + " and try again!");
+			Logger.global.logWarning("Please check " + configManager.getMainConfigFile().getCanonicalPath() + " and try again!");
 			return false;
 		}
 	}
@@ -278,7 +289,7 @@ public class BlueMapCLI {
 			config.loadMainConfig();
 			
 			if (configCreated) {
-				Logger.global.logInfo("No config file found! Created default configs here: " + configFolder);
+				Logger.global.logInfo("No config file found! Created default configs here: " + config.getMainConfigFile().getCanonicalPath());
 				return;
 			}
 			

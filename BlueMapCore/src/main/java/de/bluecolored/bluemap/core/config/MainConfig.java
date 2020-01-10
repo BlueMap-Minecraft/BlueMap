@@ -30,11 +30,13 @@ import java.net.InetAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
+import com.flowpowered.math.vector.Vector3i;
 import com.google.common.base.Preconditions;
 
 import de.bluecolored.bluemap.core.render.RenderSettings;
+import de.bluecolored.bluemap.core.util.ConfigUtils;
 import de.bluecolored.bluemap.core.web.WebServerConfig;
 import ninja.leaping.configurate.ConfigurationNode;
 
@@ -57,51 +59,65 @@ public class MainConfig implements WebServerConfig {
 	
 	private int renderThreadCount = 0;
 	
-	private Collection<MapConfig> mapConfigs = new ArrayList<>();
+	private List<MapConfig> mapConfigs = new ArrayList<>();
 	
-	public MainConfig(ConfigurationNode node) throws IOException {
-		version = node.getNode("version").getString();
+	public MainConfig(ConfigurationNode node) throws OutdatedConfigException, IOException {
+		checkOutdated(node);
+		
+		//acceppt-download
 		downloadAccepted = node.getNode("accept-download").getBoolean(false);
-		metricsEnabled = node.getNode("metrics").getBoolean(false);
-		
-		dataPath = toFolder(node.getNode("data").getString("data"));
-		
-		loadWebConfig(node.getNode("web"));
 
+		//renderThreadCount
 		int processors = Runtime.getRuntime().availableProcessors();
 		renderThreadCount = node.getNode("renderThreadCount").getInt(0);
 		if (renderThreadCount <= 0) renderThreadCount = processors + renderThreadCount;
 		if (renderThreadCount <= 0) renderThreadCount = 1;
 		
+		//metrics
+		metricsEnabled = node.getNode("metrics").getBoolean(false);
+		
+		//data
+		dataPath = toFolder(node.getNode("data").getString("data"));
+
+		//webroot
+		String webRootString = node.getNode("webroot").getString();
+		if (webserverEnabled && webRootString == null) throw new IOException("Invalid configuration: Node webroot is not defined");
+		webRoot = toFolder(webRootString);
+		
+		//webdata
+		String webDataString = node.getNode("webdata").getString();
+		if (webDataString != null) 
+			webDataPath = toFolder(webDataString);
+		else
+			webDataPath = webRoot.resolve("data");
+		
+		//webserver
+		loadWebConfig(node.getNode("webserver"));
+		
+		//maps
 		loadMapConfigs(node.getNode("maps"));
 	}
-	
+
 	private void loadWebConfig(ConfigurationNode node) throws IOException {
+		//enabled
 		webserverEnabled = node.getNode("enabled").getBoolean(false);
-		
-		String webRootString = node.getNode("webroot").getString();
-		if (webserverEnabled && webRootString == null) throw new IOException("Invalid configuration: Node web.webroot is not defined");
-		webRoot = toFolder(webRootString);
 
 		if (webserverEnabled) {
-			webserverPort = node.getNode("port").getInt(8100);
-			webserverMaxConnections = node.getNode("maxConnectionCount").getInt(100);
-			
+			//ip
 			String webserverBindAdressString = node.getNode("ip").getString("");
 			if (webserverBindAdressString.isEmpty()) {
 				webserverBindAdress = InetAddress.getLocalHost();
 			} else {
 				webserverBindAdress = InetAddress.getByName(webserverBindAdressString);
 			}
+			
+			//port
+			webserverPort = node.getNode("port").getInt(8100);
+			
+			//maxConnectionCount
+			webserverMaxConnections = node.getNode("maxConnectionCount").getInt(100);
 		}
 		
-		String webDataString = node.getNode("web-data").getString(node.getNode("data").getString());
-		if (webDataString != null) 
-			webDataPath = toFolder(webDataString);
-		else if (webRoot != null)
-			webDataPath = webRoot.resolve("data");
-		else
-			throw new IOException("Invalid configuration: Node web.data is not defined in config");
 	}
 	
 	private void loadMapConfigs(ConfigurationNode node) throws IOException {
@@ -168,7 +184,7 @@ public class MainConfig implements WebServerConfig {
 		return renderThreadCount;
 	}
 	
-	public Collection<MapConfig> getMapConfigs(){
+	public List<MapConfig> getMapConfigs(){
 		return mapConfigs;
 	}
 	
@@ -182,7 +198,8 @@ public class MainConfig implements WebServerConfig {
 		private float ambientOcclusion;
 		private float lighting;
 		
-		private int maxY, minY, sliceY;
+		private Vector3i min, max;
+		private boolean renderEdges;
 		
 		private int hiresTileSize;
 		private float hiresViewDistance;
@@ -203,17 +220,24 @@ public class MainConfig implements WebServerConfig {
 			this.renderCaves = node.getNode("renderCaves").getBoolean(false);
 			this.ambientOcclusion = node.getNode("ambientOcclusion").getFloat(0.25f);
 			this.lighting = node.getNode("lighting").getFloat(0.8f);
+
+			int minX = node.getNode("minX").getInt(RenderSettings.super.getMin().getX());
+			int maxX = node.getNode("maxX").getInt(RenderSettings.super.getMax().getX());
+			int minZ = node.getNode("minZ").getInt(RenderSettings.super.getMin().getZ());
+			int maxZ = node.getNode("maxZ").getInt(RenderSettings.super.getMax().getZ());
+			int minY = node.getNode("minY").getInt(RenderSettings.super.getMin().getY());
+			int maxY = node.getNode("maxY").getInt(RenderSettings.super.getMax().getY());
+			this.min = new Vector3i(minX, minY, minZ);
+			this.max = new Vector3i(maxX, maxY, maxZ);
 			
-			this.maxY = node.getNode("maxY").getInt(RenderSettings.super.getMaxY());
-			this.minY = node.getNode("minY").getInt(RenderSettings.super.getMinY());
-			this.sliceY = node.getNode("sliceY").getInt(RenderSettings.super.getSliceY());
+			this.renderEdges = node.getNode("renderEdges").getBoolean(true);
 			
 			this.hiresTileSize = node.getNode("hires", "tileSize").getInt(32);
-			this.hiresViewDistance = node.getNode("hires", "viewDistance").getFloat(3.5f);
+			this.hiresViewDistance = node.getNode("hires", "viewDistance").getFloat(4.5f);
 			
 			this.lowresPointsPerHiresTile = node.getNode("lowres", "pointsPerHiresTile").getInt(4);
 			this.lowresPointsPerLowresTile = node.getNode("lowres", "pointsPerLowresTile").getInt(50);
-			this.lowresViewDistance = node.getNode("lowres", "viewDistance").getFloat(4f);
+			this.lowresViewDistance = node.getNode("lowres", "viewDistance").getFloat(7f);
 			
 			//check valid configuration values
 			double blocksPerPoint = (double) this.hiresTileSize / (double) this.lowresPointsPerHiresTile;
@@ -272,20 +296,33 @@ public class MainConfig implements WebServerConfig {
 		}
 		
 		@Override
-		public int getMaxY() {
-			return maxY;
+		public Vector3i getMin() {
+			return min;
 		}
 		
 		@Override
-		public int getMinY() {
-			return minY;
+		public Vector3i getMax() {
+			return max;
 		}
 		
 		@Override
-		public int getSliceY() {
-			return sliceY;
+		public boolean isRenderEdges() {
+			return renderEdges;
 		}
 		
+	}
+
+	private void checkOutdated(ConfigurationNode node) throws OutdatedConfigException {
+		// check for config-nodes from version 0.1.x
+		assertNotPresent(node.getNode("version"));
+		assertNotPresent(node.getNode("web"));
+		for (ConfigurationNode map : node.getNode("maps").getChildrenList()) {
+			assertNotPresent(map.getNode("sliceY"));
+		}
+	}
+	
+	private void assertNotPresent(ConfigurationNode node) throws OutdatedConfigException {
+		if (!node.isVirtual()) throw new OutdatedConfigException("Configurtion-node '" + ConfigUtils.nodePathToString(node) + "' is no longer used, please update your configuration!");
 	}
 	
 }

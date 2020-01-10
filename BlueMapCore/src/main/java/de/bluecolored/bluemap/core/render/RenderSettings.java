@@ -24,7 +24,12 @@
  */
 package de.bluecolored.bluemap.core.render;
 
+import com.flowpowered.math.vector.Vector3i;
+
 public interface RenderSettings {
+	
+	static final Vector3i DEFAULT_MIN = Vector3i.from(Integer.MIN_VALUE);
+	static final Vector3i DEFAULT_MAX = Vector3i.from(Integer.MAX_VALUE);
 	
 	/**
 	 * The strenght of ao-shading calculated for each vertex.<br>
@@ -49,39 +54,38 @@ public interface RenderSettings {
 	default float getLightShadeMultiplier() {
 		return 0.8f;
 	}
-	
-	/**
-	 * The maximum height of rendered blocks
-	 */
-	default int getMaxY() {
-		return Integer.MAX_VALUE;
-	}
 
 	/**
-	 * The minimum height of rendered blocks
+	 * The minimum position of blocks to render
 	 */
-	default int getMinY() {
-		return 0;
+	default Vector3i getMin() {
+		return DEFAULT_MIN;
 	}
+	
+	/**
+	 * The maximum position of blocks to render
+	 */
+	default Vector3i getMax() {
+		return DEFAULT_MAX;
+	}
+
 	
 	/**
 	 * The same as the maximum height, but blocks that are above this value are treated as AIR.<br>
 	 * This leads to the top-faces being rendered instead of them being culled.
 	 */
-	default int getSliceY() {
-		return Integer.MAX_VALUE;
+	default boolean isRenderEdges() {
+		return true;
 	}
 	
-	
-
 	default RenderSettings copy() {
 		return new StaticRenderSettings(
 				getAmbientOcclusionStrenght(),
 				isExcludeFacesWithoutSunlight(),
 				getLightShadeMultiplier(),
-				getMaxY(),
-				getMinY(),
-				getSliceY()
+				getMin(),
+				getMax(),
+				isRenderEdges()
 			);
 	}
 	

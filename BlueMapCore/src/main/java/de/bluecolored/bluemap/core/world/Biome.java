@@ -37,7 +37,7 @@ public class Biome {
 	public static final Biome DEFAULT = new Biome();
 	
 	private String id = "ocean";
-	private int ordinal = 0;
+	private int numeralId = 0;
 	private float humidity = 0.5f;
 	private float temp = 0.5f;
 	private Vector3f waterColor = MathUtils.color3FromInt(4159204);
@@ -47,16 +47,16 @@ public class Biome {
 	
 	private Biome() {}
 	
-	public Biome(String id, int ordinal, float humidity, float temp, Vector3f waterColor) {
+	public Biome(String id, int numeralId, float humidity, float temp, Vector3f waterColor) {
 		this.id = id;
-		this.ordinal = ordinal;
+		this.numeralId = numeralId;
 		this.humidity = humidity;
 		this.temp = temp;
 		this.waterColor = waterColor;
 	}
 	
-	public Biome(String id, int ordinal, float humidity, float temp, Vector3f waterColor, Vector4f overlayFoliageColor, Vector4f overlayGrassColor) {
-		this (id, ordinal, humidity, temp, waterColor);
+	public Biome(String id, int numeralId, float humidity, float temp, Vector3f waterColor, Vector4f overlayFoliageColor, Vector4f overlayGrassColor) {
+		this (id, numeralId, humidity, temp, waterColor);
 		
 		this.overlayFoliageColor = overlayFoliageColor;
 		this.overlayGrassColor = overlayGrassColor;
@@ -66,8 +66,8 @@ public class Biome {
 		return id;
 	}
 
-	public int getOrdinal() {
-		return ordinal;
+	public int getNumeralId() {
+		return numeralId;
 	}
 
 	public float getHumidity() {
@@ -94,7 +94,7 @@ public class Biome {
 		Biome biome = new Biome();
 		
 		biome.id = id;
-		biome.ordinal = node.getNode("id").getInt(biome.ordinal);
+		biome.numeralId = node.getNode("id").getInt(biome.numeralId);
 		biome.humidity = node.getNode("humidity").getFloat(biome.humidity);
 		biome.temp = node.getNode("temp").getFloat(biome.temp);
 		try { biome.waterColor = MathUtils.color3FromInt(ConfigUtils.readColorInt(node.getNode("watercolor"))); 				} catch (NumberFormatException ignored) {}
@@ -108,7 +108,7 @@ public class Biome {
 	public String toString() {
 		return MoreObjects.toStringHelper(this)
 			.add("id", getId())
-			.add("ordinal", getOrdinal())
+			.add("numeralId", getNumeralId())
 			.add("humidity", getHumidity())
 			.add("temp", getTemp())
 			.add("waterColor", getWaterColor())

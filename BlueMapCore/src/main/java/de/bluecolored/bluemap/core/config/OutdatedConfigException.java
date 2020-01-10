@@ -22,62 +22,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.render;
+package de.bluecolored.bluemap.core.config;
 
-import com.flowpowered.math.vector.Vector3i;
+import java.io.IOException;
 
-public class StaticRenderSettings implements RenderSettings {
+public class OutdatedConfigException extends IOException {
+	private static final long serialVersionUID = -942567050110586060L;
+
+	public OutdatedConfigException() {}
 	
-	private float ambientOcclusion;
-	private boolean excludeFacesWithoutSunlight;
-	private float lightShade;
-	private Vector3i min, max;
-	private boolean renderEdges;
-	
-	public StaticRenderSettings(
-			float ambientOcclusion,
-			boolean excludeFacesWithoutSunlight,
-			float ligheShade,
-			Vector3i min,
-			Vector3i max,
-			boolean renderEdges
-			) {
-		this.ambientOcclusion = ambientOcclusion;
-		this.excludeFacesWithoutSunlight = excludeFacesWithoutSunlight;
-		this.lightShade = ligheShade;
-		this.min = min;
-		this.max = max;
-		this.renderEdges = renderEdges;
-	}
-
-	@Override
-	public float getAmbientOcclusionStrenght() {
-		return ambientOcclusion;
-	}
-
-	@Override
-	public boolean isExcludeFacesWithoutSunlight() {
-		return excludeFacesWithoutSunlight;
-	}
-
-	@Override
-	public float getLightShadeMultiplier() {
-		return lightShade;
+	public OutdatedConfigException(String message) {
+		super(message);
 	}
 	
-	@Override
-	public Vector3i getMin() {
-		return min;
-	}
-	
-	@Override
-	public Vector3i getMax() {
-		return max;
-	}
-	
-	@Override
-	public boolean isRenderEdges() {
-		return renderEdges;
+	public OutdatedConfigException(String message, Throwable cause) {
+		super(message, cause);
 	}
 	
 }

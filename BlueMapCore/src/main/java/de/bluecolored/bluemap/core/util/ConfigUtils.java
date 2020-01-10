@@ -160,4 +160,13 @@ public class ConfigUtils {
 		return Integer.parseInt(val);
 	}
 	
+	public static String nodePathToString(ConfigurationNode node) {
+		Object[] keys = node.getPath();
+		String[] stringKeys = new String[keys.length];
+		for (int i = 0; i < keys.length; i++) {
+			stringKeys[i] = keys[i].toString();
+		}
+		return String.join(".", stringKeys);
+	}
+	
 }

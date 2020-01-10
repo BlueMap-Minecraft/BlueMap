@@ -26,6 +26,8 @@ package de.bluecolored.bluemap.core.web;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 import com.flowpowered.math.vector.Vector2i;
 
@@ -50,7 +52,7 @@ public class WebSettings {
 				.setFile(settingsFile)
 				.build();
 		
-		rootNode = configLoader.createEmptyNode();
+		load();
 	}
 	
 	public void load() throws IOException {
@@ -73,7 +75,7 @@ public class WebSettings {
 		return rootNode.getNode(path).getString();
 	}
 	
-	public long getInt(Object... path) {
+	public int getInt(Object... path) {
 		return rootNode.getNode(path).getInt();
 	}
 	
@@ -81,12 +83,26 @@ public class WebSettings {
 		return rootNode.getNode(path).getLong();
 	}
 	
-	public double getFloat(Object... path) {
+	public float getFloat(Object... path) {
 		return rootNode.getNode(path).getFloat();
 	}
 	
 	public double getDouble(Object... path) {
 		return rootNode.getNode(path).getDouble();
+	}
+	
+	public Collection<String> getMapIds() {
+		return rootNode.getChildrenMap().keySet().stream().map(o -> o.toString()).collect(Collectors.toSet());
+	}
+	
+	public void setAllEnabled(boolean enabled) {
+		for (ConfigurationNode mapNode : rootNode.getChildrenMap().values()) {
+			mapNode.getNode("enabled").setValue(enabled);
+		}
+	}
+	
+	public void setEnabled(boolean enabled, String mapId) {
+		set(enabled, mapId, "enabled");
 	}
 	
 	public void setFrom(TileRenderer tileRenderer, String mapId) {
@@ -119,6 +135,14 @@ public class WebSettings {
 	
 	public void setLowresViewDistance(float lowresViewDistance, String mapId) {
 		set(lowresViewDistance, mapId, "lowres", "viewDistance");
+	}
+	
+	public void setOrdinal(int ordinal, String mapId) {
+		set(ordinal, mapId, "ordinal");
+	}
+	
+	public int getOrdinal(String mapId) {
+		return getInt(mapId, "ordinal");
 	}
 	
 	public void setName(String name, String mapId) {

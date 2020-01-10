@@ -233,10 +233,16 @@ BlueMap.prototype.loadSettings = function (callback) {
 		
 		scope.maps = [];
 		for (map in scope.settings){
-			if (scope.settings.hasOwnProperty(map)){
+			if (scope.settings.hasOwnProperty(map) && scope.settings[map].enabled){
 				scope.maps.push(map);
 			}
 		}
+		
+		scope.maps.sort(function (map1, map2) {
+			var sort = scope.settings[map1].ordinal - scope.settings[map2].ordinal;
+			if (isNaN(sort)) return 0;
+			return sort;
+		});
 		
 		scope.map = scope.maps[0];
 		

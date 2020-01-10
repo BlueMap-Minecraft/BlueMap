@@ -60,7 +60,9 @@ public class HiresModel extends Model {
 	}
 	
 	public Vector4f getColor(int x, int z){
-		return colors[x - blockMin.getX()][z - blockMin.getZ()];
+		Vector4f color = colors[x - blockMin.getX()][z - blockMin.getZ()];
+		if (color == null) return Vector4f.ZERO;
+		return color;
 	}
 	
 	public void setHeight(int x, int z, int height){

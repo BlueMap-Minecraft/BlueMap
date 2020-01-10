@@ -86,7 +86,7 @@ public class BlockColorCalculator {
 	}
 	
 	public Vector3f getBlockColor(Block block){
-		String blockId = block.getBlock().getFullId();
+		String blockId = block.getBlockState().getFullId();
 		
 		Function<Block, Vector3f> colorFunction = blockColorMap.get(blockId);
 		if (colorFunction == null) colorFunction = blockColorMap.get("default");
