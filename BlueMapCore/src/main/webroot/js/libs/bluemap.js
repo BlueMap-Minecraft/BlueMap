@@ -391,7 +391,7 @@ BlueMap.prototype.loadLowresMaterial = function (callback) {
 BlueMap.prototype.loadHiresTile = function (tileX, tileZ, callback, onError) {
 	let scope = this;
 
-	let path = this.dataRoot + "hires/" + this.map + "/";
+	let path = this.dataRoot + this.map + "/hires/";
 	path += BlueMap.utils.pathFromCoords(tileX, tileZ);
 	path += ".json";
 
@@ -416,7 +416,7 @@ BlueMap.prototype.loadHiresTile = function (tileX, tileZ, callback, onError) {
 BlueMap.prototype.loadLowresTile = function (tileX, tileZ, callback, onError) {
 	let scope = this;
 
-	let path = this.dataRoot + "lowres/" + this.map + "/";
+	let path = this.dataRoot + this.map + "/lowres/";
 	path += BlueMap.utils.pathFromCoords(tileX, tileZ);
 	path += ".json";
 
@@ -979,6 +979,7 @@ BlueMap.Module.MapMenu = function (blueMap) {
 	
 	for (mapId in maps) {
 		if (!maps.hasOwnProperty(mapId)) continue;
+		if (!maps.enabled) continue;
 		
 		let map = maps[mapId];
 		$('<li map="' + mapId + '">' + map.name + '</li>').appendTo(this.maplist);
