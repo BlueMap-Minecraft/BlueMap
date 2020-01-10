@@ -51,7 +51,7 @@ public class BiomeConfig implements BiomeMapper {
 		for (Entry<Object, ? extends ConfigurationNode> e : node.getChildrenMap().entrySet()){
 			String id = e.getKey().toString();
 			Biome biome = Biome.create(id, e.getValue());
-			biomes.put(biome.getOrdinal(), biome);
+			biomes.put(biome.getNumeralId(), biome);
 		}
 		
 	}

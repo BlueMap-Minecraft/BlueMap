@@ -29,35 +29,65 @@ import com.google.common.base.MoreObjects;
 
 import de.bluecolored.bluemap.core.util.Direction;
 
-public abstract class Block {
+public class Block {
 
+	private World world;
+	private BlockState blockState;
+	private LightData lightData;
+	private Biome biome;
+	private BlockProperties properties;
+	private Vector3i pos;
+	
 	private float sunLight;
 	private float blockLight;
 	
-	public Block() {
-		sunLight = -1;
-		blockLight = -1;
+	public Block(World world, BlockState blockState, LightData lightData, Biome biome, BlockProperties properties, Vector3i pos) {
+		this.world = world;
+		this.blockState = blockState;
+		this.lightData = lightData;
+		this.biome = biome;
+		this.properties = properties;
+		this.pos = pos;
+		
+		this.sunLight = -1;
+		this.blockLight = -1;
 	}
 	
-	public abstract BlockState getBlock();
+	public BlockState getBlockState() {
+		return blockState;
+	}
 	
-	public abstract World getWorld();
+	public World getWorld() {
+		return world;
+	}
 	
-	public abstract Vector3i getPosition();
+	public Vector3i getPosition() {
+		return pos;
+	}
 	
-	public abstract double getSunLightLevel();
+	public double getSunLightLevel() {
+		return lightData.getSkyLight();
+	}
 	
-	public abstract double getBlockLightLevel();
+	public double getBlockLightLevel() {
+		return lightData.getBlockLight();
+	}
 
-	public abstract boolean isCullingNeighborFaces();
+	public boolean isCullingNeighborFaces() {
+		return properties.isCulling();
+	}
 
-	public abstract boolean isFlammable();
+	public boolean isFlammable() {
+		return properties.isFlammable();
+	}
 	
 	public boolean isOccludingNeighborFaces(){
-		return isCullingNeighborFaces();
+		return properties.isOccluding();
 	}
 	
-	public abstract Biome getBiome();
+	public Biome getBiome() {
+		return biome;
+	}
 
 	/**
 	 * This is internally used for light rendering
@@ -104,6 +134,33 @@ public abstract class Block {
 		return getRelativeBlock(direction.toVector());
 	}
 	
+	public void setWorld(World world) {
+		this.world = world;
+	}
+
+	public void setBlockState(BlockState blockState) {
+		this.blockState = blockState;
+	}
+
+	public void setLightData(LightData lightData) {
+		this.lightData = lightData;
+		
+		this.blockLight = -1f;
+		this.sunLight = -1f;
+	}
+
+	public void setBiome(Biome biome) {
+		this.biome = biome;
+	}
+
+	public void setProperties(BlockProperties properties) {
+		this.properties = properties;
+	}
+
+	public void setPos(Vector3i pos) {
+		this.pos = pos;
+	}
+
 	@Override
 	public String toString() {
 		return MoreObjects.toStringHelper(this)
@@ -111,7 +168,7 @@ public abstract class Block {
 			.add("biome", getBiome())
 			.add("blocklight", getBlockLightLevel())
 			.add("sunlight", getSunLightLevel())
-			.add("state", getBlock())
+			.add("state", getBlockState())
 			.toString();
 	}
 

@@ -149,11 +149,11 @@ public class MCAWorld implements World {
 	@Override
 	public Block getBlock(Vector3i pos) {
 		if (pos.getY() < getMinY()) {
-			return new MCABlock(this, BlockState.AIR, LightData.ZERO, Biome.DEFAULT, BlockProperties.SOLID, pos);
+			return new Block(this, BlockState.AIR, LightData.ZERO, Biome.DEFAULT, BlockProperties.TRANSPARENT, pos);
 		}
 		
 		if (pos.getY() > getMaxY()) {
-			return new MCABlock(this, BlockState.AIR, LightData.FULL, Biome.DEFAULT, BlockProperties.TRANSPARENT, pos);
+			return new Block(this, BlockState.AIR, LightData.FULL, Biome.DEFAULT, BlockProperties.TRANSPARENT, pos);
 		}
 		
 		try {
@@ -164,7 +164,7 @@ public class MCAWorld implements World {
 			LightData lightData = chunk.getLightData(pos);
 			Biome biome = chunk.getBiome(pos);
 			BlockProperties properties = blockPropertiesMapper.get(blockState);
-			return new MCABlock(this, blockState, lightData, biome, properties, pos);
+			return new Block(this, blockState, lightData, biome, properties, pos);
 			
 		} catch (IOException ex) {
 			throw new RuntimeException("Unexpected IO-Exception trying to read world-data!", ex);

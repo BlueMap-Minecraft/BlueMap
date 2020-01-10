@@ -52,6 +52,7 @@ public class LiquidModelBuilder {
 			"minecraft:seagrass",
 			"minecraft:tall_seagrass",
 			"minecraft:kelp",
+			"minecraft:kelp_plant",
 			"minecraft:bubble_column"
 		);
 	
@@ -74,7 +75,7 @@ public class LiquidModelBuilder {
 	public BlockStateModel build(BlockModelResource bmr) {
 		if (this.renderSettings.isExcludeFacesWithoutSunlight() && block.getSunLightLevel() == 0) return new BlockStateModel();
 		
-		int level = getLiquidLevel(block.getBlock());
+		int level = getLiquidLevel(block.getBlockState());
 		float[] heights = new float[]{16f, 16f, 16f, 16f};
 		float coloralpha = 0.2f;
 		
@@ -143,9 +144,9 @@ public class LiquidModelBuilder {
 			for (int iz = z; iz<= z+1; iz++){
 				Block b = block.getRelativeBlock(ix, y, iz);
 				if (isLiquid(b)){
-					if (getLiquidLevel(b.getBlock()) == 0) return 14f;
+					if (getLiquidLevel(b.getBlockState()) == 0) return 14f;
 					
-					sumHeight += getLiquidBaseHeight(b.getBlock());
+					sumHeight += getLiquidBaseHeight(b.getBlockState());
 					count++;
 				} 
 				
@@ -163,12 +164,12 @@ public class LiquidModelBuilder {
 	}
 	
 	private boolean isLiquidBlockingBlock(Block block){
-		if (block.getBlock().equals(BlockState.AIR)) return false;
+		if (block.getBlockState().equals(BlockState.AIR)) return false;
 		return true;
 	}
 
 	private boolean isLiquid(Block block){
-		return isLiquid(block.getBlock());
+		return isLiquid(block.getBlockState());
 	}
 	
 	private boolean isLiquid(BlockState blockState){

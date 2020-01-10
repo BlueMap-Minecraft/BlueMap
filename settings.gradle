@@ -1,8 +1,8 @@
 rootProject.name = 'BlueMap'
 include ':BlueMapCore'
 include ':BlueMapCLI'
-//include ':BlueMapSponge'
+include ':BlueMapSponge'
 
 project(':BlueMapCore').projectDir = "$rootDir/BlueMapCore" as File
 project(':BlueMapCLI').projectDir = "$rootDir/BlueMapCLI" as File
-//project(':BlueMapSponge').projectDir = "$rootDir/BlueMapSponge" as File
+project(':BlueMapSponge').projectDir = "$rootDir/BlueMapSponge" as File

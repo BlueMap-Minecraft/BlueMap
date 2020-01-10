@@ -44,7 +44,7 @@ public class BlockStateModelFactory {
 	}
 
 	public BlockStateModel createFrom(Block block) throws NoSuchResourceException {
-		return createFrom(block, block.getBlock());
+		return createFrom(block, block.getBlockState());
 	}
 	
 	public BlockStateModel createFrom(Block block, BlockState blockState) throws NoSuchResourceException {

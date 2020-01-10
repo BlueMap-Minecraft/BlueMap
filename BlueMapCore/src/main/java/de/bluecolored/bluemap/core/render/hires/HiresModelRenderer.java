@@ -52,15 +52,15 @@ public class HiresModelRenderer {
 	}
 	
 	public HiresModel render(WorldTile tile, AABB region) {
-		Vector3i min = region.getMin().toInt();
-		Vector3i max = region.getMax().toInt();
+		Vector3i modelMin = region.getMin().toInt();
+		Vector3i modelMax = region.getMax().toInt();
 		
-		min = new Vector3i(min.getX(), Math.max(min.getY(), renderSettings.getMinY()), min.getZ());
-		max = new Vector3i(max.getX(), Math.min(max.getY(), Math.min(renderSettings.getMaxY(), renderSettings.getSliceY())), max.getZ());
+		Vector3i min = modelMin.max(renderSettings.getMin());
+		Vector3i max = modelMax.min(renderSettings.getMax());
 		
 		World world = tile.getWorld();
 		
-		HiresModel model = new HiresModel(tile.getWorld().getUUID(), tile.getTile(), min, max);
+		HiresModel model = new HiresModel(tile.getWorld().getUUID(), tile.getTile(), modelMin, modelMax);
 		
 		for (int x = min.getX(); x <= max.getX(); x++){
 			for (int z = min.getZ(); z <= max.getZ(); z++){
@@ -70,9 +70,9 @@ public class HiresModelRenderer {
 				
 				for (int y = min.getY(); y <= max.getY(); y++){
 					Block block = world.getBlock(x, y, z);
-					if (block.getBlock().getId().equals("air")) continue;
+					if (block.getBlockState().equals(BlockState.AIR)) continue;
 					
-					if (!block.getBlock().equals(BlockState.AIR)) maxHeight = y;
+					maxHeight = y;
 
 					BlockStateModel blockModel;
 					try {
@@ -85,15 +85,15 @@ public class HiresModelRenderer {
 							blockModel = new BlockStateModel();
 						}						
 						
-						Logger.global.noFloodDebug(block.getBlock().getFullId() + "-hiresModelRenderer-blockmodelerr", "Failed to create BlockModel for BlockState: " + block.getBlock() + " (" + e.toString() + ")");
+						Logger.global.noFloodDebug(block.getBlockState().getFullId() + "-hiresModelRenderer-blockmodelerr", "Failed to create BlockModel for BlockState: " + block.getBlockState() + " (" + e.toString() + ")");
 					}
 					
-					blockModel.translate(new Vector3f(x, y, z).sub(min.toFloat()));
+					blockModel.translate(new Vector3f(x, y, z).sub(modelMin.toFloat()));
 
 					color = MathUtils.overlayColors(blockModel.getMapColor(), color);
 					
 					//TODO: quick hack to random offset grass
-					if (block.getBlock().getId().equals("grass")){
+					if (block.getBlockState().getFullId().equals("minecraft:grass")){
 						float dx = (MathUtils.hashToFloat(x, y, z, 123984) - 0.5f) * 0.75f;
 						float dz = (MathUtils.hashToFloat(x, y, z, 345542) - 0.5f) * 0.75f;
 						blockModel.translate(new Vector3f(dx, 0, dz));
