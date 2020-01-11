@@ -1,0 +1,17 @@
+repositories {
+		maven {
+		url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
+
+		// As of Gradle 5.1, you can limit this to only those
+		// dependencies you expect from it
+		content {
+			includeGroup 'org.bukkit'
+		}
+	}
+}
+
+dependencies {
+    shadow "org.bukkit:bukkit:1.14.4-R0.1-SNAPSHOT"
+    //compile group: 'org.bstats', name: 'bstats-sponge-lite', version: '1.5'
+    compile project(':BlueMapCore')
+}
