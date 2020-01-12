@@ -289,7 +289,7 @@ public class BlueMapCLI {
 			config.loadMainConfig();
 			
 			if (configCreated) {
-				Logger.global.logInfo("No config file found! Created default configs here: " + config.getMainConfigFile().getCanonicalPath());
+				Logger.global.logInfo("No config file found! Created default config here: " + config.getMainConfigFile().getCanonicalPath());
 				return;
 			}
 			
