@@ -99,9 +99,9 @@ public class BlockIdConfig implements BlockIdMapper {
 		if (state == null) {
 			state = numeralMappings.getOrDefault(new BlockNumeralIDMeta(numeralId, 0), BlockState.MISSING); //meta-fallback
 			
+			numeralMappings.put(numidmeta, state);
+			
 			if (autopoulationConfigLoader != null) {
-				numeralMappings.put(numidmeta, state);
-				
 				synchronized (autopoulationConfigLoader) {
 					try {
 						ConfigurationNode node = autopoulationConfigLoader.load();
@@ -134,10 +134,10 @@ public class BlockIdConfig implements BlockIdMapper {
 					if (state == null) state = new BlockState(id);
 				}
 				
+				idMappings.put(idmeta, state);
+				numeralMappings.put(numidmeta, state);
+				
 				if (autopoulationConfigLoader != null) {
-					idMappings.put(idmeta, state);
-					numeralMappings.put(numidmeta, state);
-					
 					synchronized (autopoulationConfigLoader) {
 						try {
 							ConfigurationNode node = autopoulationConfigLoader.load();
