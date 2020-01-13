@@ -34,6 +34,9 @@ import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.World;
+import de.bluecolored.bluemap.plugin.MapType;
+import de.bluecolored.bluemap.plugin.RenderManager;
+import de.bluecolored.bluemap.plugin.RenderTask;
 
 public class Commands {
 	

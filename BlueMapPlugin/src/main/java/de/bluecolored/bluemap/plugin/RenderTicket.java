@@ -1,4 +1,4 @@
-package de.bluecolored.bluemap.sponge;
+package de.bluecolored.bluemap.plugin;
 
 import java.io.IOException;
 import java.util.Objects;

@@ -1,48 +1,32 @@
-package de.bluecolored.bluemap.sponge;
+package de.bluecolored.bluemap.plugin;
 
 import java.util.Iterator;
-import java.util.Optional;
 import java.util.UUID;
-
-import org.spongepowered.api.Sponge;
-import org.spongepowered.api.block.BlockSnapshot;
-import org.spongepowered.api.data.Transaction;
-import org.spongepowered.api.event.Listener;
-import org.spongepowered.api.event.Order;
-import org.spongepowered.api.event.block.ChangeBlockEvent;
-import org.spongepowered.api.event.filter.type.Exclude;
-import org.spongepowered.api.event.world.SaveWorldEvent;
-import org.spongepowered.api.event.world.chunk.PopulateChunkEvent;
-import org.spongepowered.api.world.Location;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 
-import de.bluecolored.bluemap.plugin.MapType;
-import de.bluecolored.bluemap.plugin.RenderManager;
+import de.bluecolored.bluemap.plugin.serverinterface.ServerEventListener;
 
-public class MapUpdateHandler {
+public class MapUpdateHandler implements ServerEventListener {
 
 	public Multimap<MapType, Vector2i> updateBuffer;
 	
 	public MapUpdateHandler() {
 		updateBuffer = MultimapBuilder.hashKeys().hashSetValues().build();
-		
-		Sponge.getEventManager().registerListeners(SpongePlugin.getInstance(), this);
 	}
 	
-	@Listener(order = Order.POST)
-	public void onWorldSave(SaveWorldEvent.Post evt) {
-		UUID worldUuid = evt.getTargetWorld().getUniqueId();
-		RenderManager renderManager = SpongePlugin.getInstance().getRenderManager();
+	@Override
+	public void onWorldSaveToDisk(UUID world) {
+		RenderManager renderManager = Plugin.getInstance().getRenderManager();
 		
 		synchronized (updateBuffer) {
 			Iterator<MapType> iterator = updateBuffer.keys().iterator();
 			while (iterator.hasNext()) {
 				MapType map = iterator.next();
-				if (map.getWorld().getUUID().equals(worldUuid)) {
+				if (map.getWorld().getUUID().equals(world)) {
 					renderManager.createTickets(map, updateBuffer.get(map));
 					iterator.remove();
 				}
@@ -51,27 +35,17 @@ public class MapUpdateHandler {
 		}
 	}
 	
-	@Listener(order = Order.POST)
-	@Exclude({ChangeBlockEvent.Post.class, ChangeBlockEvent.Pre.class, ChangeBlockEvent.Modify.class})
-	public void onBlockChange(ChangeBlockEvent evt) {
+	@Override
+	public void onBlockChange(UUID world, Vector3i blockPos) {
 		synchronized (updateBuffer) {
-			for (Transaction<BlockSnapshot> tr : evt.getTransactions()) {
-				if (!tr.isValid()) continue;
-				
-				Optional<Location<org.spongepowered.api.world.World>> ow = tr.getFinal().getLocation();
-				if (ow.isPresent()) {
-					updateBlock(ow.get().getExtent().getUniqueId(), ow.get().getPosition().toInt());
-				}
-			}
+			updateBlock(world, blockPos);
 		}
 	}
 	
-	@Listener(order = Order.POST)
-	public void onChunkPopulate(PopulateChunkEvent.Post evt) {
-		UUID world = evt.getTargetChunk().getWorld().getUniqueId();
-		
-		int x = evt.getTargetChunk().getPosition().getX();
-		int z = evt.getTargetChunk().getPosition().getZ();
+	@Override
+	public void onChunkFinishedGeneration(UUID world, Vector2i chunkPos) {
+		int x = chunkPos.getX();
+		int z = chunkPos.getY();
 		
 		// also update the chunks around, because they might be modified or not rendered yet due to finalizations
 		for (int dx = -1; dx <= 1; dx++) {
@@ -99,7 +73,7 @@ public class MapUpdateHandler {
 	
 	private void updateBlock(UUID world, Vector3i pos){
 		synchronized (updateBuffer) {
-			for (MapType mapType : SpongePlugin.getInstance().getMapTypes()) {
+			for (MapType mapType : Plugin.getInstance().getMapTypes()) {
 				if (mapType.getWorld().getUUID().equals(world)) {
 					mapType.getWorld().invalidateChunkCache(mapType.getWorld().blockPosToChunkPos(pos));
 					
@@ -115,7 +89,7 @@ public class MapUpdateHandler {
 	}
 	
 	public void flushTileBuffer() {
-		RenderManager renderManager = SpongePlugin.getInstance().getRenderManager();
+		RenderManager renderManager = Plugin.getInstance().getRenderManager();
 		
 		synchronized (updateBuffer) {
 			for (MapType map : updateBuffer.keySet()) {
