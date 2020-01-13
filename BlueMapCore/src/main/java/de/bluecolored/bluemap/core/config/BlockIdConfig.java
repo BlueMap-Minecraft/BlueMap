@@ -25,9 +25,11 @@
 package de.bluecolored.bluemap.core.config;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+
+import com.google.common.base.Preconditions;
 
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.mapping.BlockIdMapper;
@@ -48,8 +50,8 @@ public class BlockIdConfig implements BlockIdMapper {
 	public BlockIdConfig(ConfigurationNode node, ConfigurationLoader<? extends ConfigurationNode> autopoulationConfigLoader) {
 		this.autopoulationConfigLoader = autopoulationConfigLoader;
 		
-		numeralMappings = new HashMap<>(); 
-		idMappings = new HashMap<>(); 
+		numeralMappings = new ConcurrentHashMap<>(200, 0.5f, 8); 
+		idMappings = new ConcurrentHashMap<>(200, 0.5f, 8); 
 		
 		for (Entry<Object, ? extends ConfigurationNode> e : node.getChildrenMap().entrySet()){
 			String key = e.getKey().toString();
@@ -135,7 +137,7 @@ public class BlockIdConfig implements BlockIdMapper {
 				}
 				
 				idMappings.put(idmeta, state);
-				numeralMappings.put(numidmeta, state);
+				Preconditions.checkArgument(numeralMappings.put(numidmeta, state) == null);
 				
 				if (autopoulationConfigLoader != null) {
 					synchronized (autopoulationConfigLoader) {

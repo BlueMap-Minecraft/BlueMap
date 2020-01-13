@@ -33,6 +33,7 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
+import com.google.common.collect.Multimaps;
 
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.mapping.BlockPropertiesMapper;
@@ -61,7 +62,7 @@ public class BlockPropertiesConfig implements BlockPropertiesMapper {
 		this.resourcePack = resourcePack;
 		this.autopoulationConfigLoader = autopoulationConfigLoader;
 		
-		mappings = MultimapBuilder.hashKeys().arrayListValues().build();
+		mappings = Multimaps.synchronizedListMultimap(MultimapBuilder.hashKeys().arrayListValues().build());
 		
 		for (Entry<Object, ? extends ConfigurationNode> e : node.getChildrenMap().entrySet()){
 			String key = e.getKey().toString();

@@ -25,8 +25,9 @@
 package de.bluecolored.bluemap.core.config;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
 
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.mapping.BiomeMapper;
@@ -37,7 +38,7 @@ import ninja.leaping.configurate.loader.ConfigurationLoader;
 public class BiomeConfig implements BiomeMapper {
 
 	private ConfigurationLoader<? extends ConfigurationNode> autopoulationConfigLoader;
-	private HashMap<Integer, Biome> biomes;
+	private Map<Integer, Biome> biomes;
 	
 	public BiomeConfig(ConfigurationNode node) {
 		this(node, null);
@@ -46,7 +47,7 @@ public class BiomeConfig implements BiomeMapper {
 	public BiomeConfig(ConfigurationNode node, ConfigurationLoader<? extends ConfigurationNode> autopoulationConfigLoader) {
 		this.autopoulationConfigLoader = autopoulationConfigLoader;
 		
-		biomes = new HashMap<>();
+		biomes = new ConcurrentHashMap<>(200, 0.5f, 8);
 
 		for (Entry<Object, ? extends ConfigurationNode> e : node.getChildrenMap().entrySet()){
 			String id = e.getKey().toString();
