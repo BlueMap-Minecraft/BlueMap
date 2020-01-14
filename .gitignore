@@ -20,6 +20,9 @@ bin/*
 .project
 */.project
 
+node_modules/
+package-lock.json
+
 # exclude generated resource
 BlueMapCore/src/main/resources/webroot.zip
 BlueMapCore/src/main/resources/resourceExtensions.zip

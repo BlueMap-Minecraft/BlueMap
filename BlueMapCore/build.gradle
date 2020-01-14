@@ -1,22 +1,47 @@
+plugins {
+   id 'com.moowork.node' version '1.3.1'
+}
+
 dependencies {
-    compile 'com.google.guava:guava:21.0'
-    compile 'com.google.code.gson:gson:2.8.0'
-    compile 'org.apache.commons:commons-lang3:3.5'
-    compile group: 'commons-io', name: 'commons-io', version: '2.6'
-    compile 'com.flowpowered:flow-math:1.0.3'
-    compile 'ninja.leaping.configurate:configurate-hocon:3.3'
-    compile 'ninja.leaping.configurate:configurate-gson:3.3'
-    compile 'ninja.leaping.configurate:configurate-yaml:3.3'
-    compile 'com.github.Querz:NBT:4.0'
-    
-    testCompile 'junit:junit:4.12'
+   compile 'com.google.guava:guava:21.0'
+   compile 'com.google.code.gson:gson:2.8.0'
+   compile 'org.apache.commons:commons-lang3:3.5'
+   compile group: 'commons-io', name: 'commons-io', version: '2.6'
+   compile 'com.flowpowered:flow-math:1.0.3'
+   compile 'ninja.leaping.configurate:configurate-hocon:3.3'
+   compile 'ninja.leaping.configurate:configurate-gson:3.3'
+   compile 'ninja.leaping.configurate:configurate-yaml:3.3'
+   compile 'com.github.Querz:NBT:4.0'
+
+   testCompile 'junit:junit:4.12'
+}
+
+node {
+  version = '12.14.1'
+  download = true
+}
+
+task cleanWebroot(type: Delete) {
+  delete 'build/generated/webroot/'
+}
+
+// Run WebPack build to generate resources into the generated resources
+task webpackWebroot(type: NpmTask) {
+  args = ['run', 'build']
 }
 
 task zipWebroot(type: Zip) {
-   from fileTree('src/main/webroot')
+   from fileTree('build/generated/webroot/')
    archiveName 'webroot.zip'
    destinationDir(file('src/main/resources/'))
    outputs.upToDateWhen { false }
+}
+
+// removes tmp build directory, build project with webpack, zip contents for the shaded jar
+task buildWebroot {
+   dependsOn 'cleanWebroot'
+   dependsOn 'webpackWebroot'
+   dependsOn 'zipWebroot'
 }
 
 task zipResourceExtensions(type: Zip) {
@@ -27,5 +52,5 @@ task zipResourceExtensions(type: Zip) {
 }
 
 //always update the zip before build
-compileJava.dependsOn(zipWebroot)
-compileJava.dependsOn(zipResourceExtensions)
+processResources.dependsOn(buildWebroot)
+processResources.dependsOn(zipResourceExtensions)

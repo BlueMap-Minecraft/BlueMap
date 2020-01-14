@@ -22,7 +22,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-BlueMap = function (element, dataRoot) {
+import $ from "jquery";
+import * as THREE from "three";
+
+import GEAR from "../../assets/gear.svg";
+import COMPASS from "../../assets/compass.svg";
+
+import SKYBOX_NORTH from "../../assets/skybox/north.png";
+import SKYBOX_SOUTH from "../../assets/skybox/south.png";
+import SKYBOX_EAST from "../../assets/skybox/east.png";
+import SKYBOX_WEST from "../../assets/skybox/west.png";
+import SKYBOX_UP from "../../assets/skybox/up.png";
+import SKYBOX_DOWN from "../../assets/skybox/down.png";
+
+const BlueMap = function (element, dataRoot) {
 	this.element = element;
 	this.dataRoot = dataRoot;
 
@@ -78,10 +91,10 @@ BlueMap.prototype.initModules = function () {
 BlueMap.prototype.changeMap = function (map) {
 	this.hiresTileManager.close();
 	this.lowresTileManager.close();
-	
+
 	this.map = map;
 	this.controls.resetPosition();
-	
+
 	this.lowresTileManager = new BlueMap.TileManager(
 		this,
 		this.settings[this.map]["lowres"]["viewDistance"],
@@ -99,7 +112,7 @@ BlueMap.prototype.changeMap = function (map) {
 		this.settings[this.map]["hires"]["tileSize"],
 		{x: 0, z: 0}
 	);
-	
+
 	this.lowresTileManager.update();
 	this.hiresTileManager.update();
 
@@ -213,7 +226,7 @@ BlueMap.prototype.render = function () {
 BlueMap.prototype.handleContainerResize = function () {
 	this.camera.aspect = this.element.clientWidth / this.element.clientHeight;
 	this.camera.updateProjectionMatrix();
-	
+
 	this.skyboxCamera.aspect = this.element.clientWidth / this.element.clientHeight;
 	this.skyboxCamera.updateProjectionMatrix();
 
@@ -230,22 +243,22 @@ BlueMap.prototype.loadSettings = function (callback) {
 
 	this.fileLoader.load(this.dataRoot + "settings.json", function (settings) {
 		scope.settings = JSON.parse(settings);
-		
+
 		scope.maps = [];
-		for (map in scope.settings){
+		for (let map in scope.settings){
 			if (scope.settings.hasOwnProperty(map) && scope.settings[map].enabled){
 				scope.maps.push(map);
 			}
 		}
-		
+
 		scope.maps.sort(function (map1, map2) {
 			var sort = scope.settings[map1].ordinal - scope.settings[map2].ordinal;
 			if (isNaN(sort)) return 0;
 			return sort;
 		});
-		
+
 		scope.map = scope.maps[0];
-		
+
 		callback.call(scope);
 	});
 };
@@ -267,7 +280,7 @@ BlueMap.prototype.initStage = function () {
 
 	this.camera = new THREE.PerspectiveCamera(75, this.element.scrollWidth / this.element.scrollHeight, 0.1, 10000);
 	this.camera.updateProjectionMatrix();
-	
+
 	this.skyboxCamera = this.camera.clone();
 	this.skyboxCamera.updateProjectionMatrix();
 
@@ -275,7 +288,7 @@ BlueMap.prototype.initStage = function () {
 	this.skyboxScene.ambient = new THREE.AmbientLight(0xffffff, 1);
 	this.skyboxScene.add(this.skyboxScene.ambient);
 	this.skyboxScene.add(this.createSkybox());
-	
+
 	this.lowresScene = new THREE.Scene();
 	this.lowresScene.ambient = new THREE.AmbientLight(0xffffff, 0.6);
 	this.lowresScene.add(this.lowresScene.ambient);
@@ -302,27 +315,27 @@ BlueMap.prototype.createSkybox = function(){
 	let geometry = new THREE.CubeGeometry(10, 10, 10);
 	let material = [
 		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load('assets/skybox/south.png'),
+			map: new THREE.TextureLoader().load(SKYBOX_SOUTH),
 			side: THREE.BackSide
 		}),
 		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load('assets/skybox/north.png'),
+			map: new THREE.TextureLoader().load(SKYBOX_NORTH),
 			side: THREE.BackSide
 		}),
 		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load('assets/skybox/up.png'),
+			map: new THREE.TextureLoader().load(SKYBOX_UP),
 			side: THREE.BackSide
 		}),
 		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load('assets/skybox/down.png'),
+			map: new THREE.TextureLoader().load(SKYBOX_DOWN),
 			side: THREE.BackSide
 		}),
 		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load('assets/skybox/east.png'),
+			map: new THREE.TextureLoader().load(SKYBOX_EAST),
 			side: THREE.BackSide
 		}),
 		new THREE.MeshBasicMaterial({
-			map: new THREE.TextureLoader().load('assets/skybox/west.png'),
+			map: new THREE.TextureLoader().load(SKYBOX_WEST),
 			side: THREE.BackSide
 		})
 	];
@@ -441,14 +454,14 @@ BlueMap.prototype.loadLowresTile = function (tileX, tileZ, callback, onError) {
 // ###### UI ######
 
 BlueMap.prototype.alert = function (content) {
-	let alertBox = $('#alert-box');
+	let alertBox = $("#alert-box");
 	if (alertBox.length === 0){
 		alertBox = $('<div id="alert-box"></div>').appendTo(this.element);
 	}
 
 	let displayAlert = function(){
-		let alert = $('<div class="alert box" style="display: none;"><div class="alert-close-button"></div>' + content + '</div>').appendTo(alertBox);
-		alert.find('.alert-close-button').click(function(){
+		let alert = $('<div class="alert box" style="display: none;"><div class="alert-close-button"></div>' + content + "</div>").appendTo(alertBox);
+		alert.find(".alert-close-button").click(function(){
 			alert.fadeOut(200, function(){
 				alert.remove();
 			});
@@ -456,10 +469,10 @@ BlueMap.prototype.alert = function (content) {
 		alert.fadeIn(200);
 	};
 
-	let oldAlerts = alertBox.find('.alert');
+	let oldAlerts = alertBox.find(".alert");
 	if (oldAlerts.length > 0){
 		alertBox.fadeOut(200, function () {
-			alertBox.html('');
+			alertBox.html("");
 			alertBox.show();
 			displayAlert();
 		})
@@ -498,7 +511,7 @@ BlueMap.TileManager.prototype.setPosition = function (center) {
 BlueMap.TileManager.prototype.update = function () {
 	if (this.closed) return;
 
-	//free a loader so if there was an error loading a tile we don't get stuck forever with the blocked loading process
+	//free a loader so if there was an error loading a tile we don"t get stuck forever with the blocked loading process
 	this.currentlyLoading--;
 	if (this.currentlyLoading < 0) this.currentlyLoading = 0;
 
@@ -545,7 +558,7 @@ BlueMap.TileManager.prototype.close = function () {
 
 BlueMap.TileManager.prototype.loadCloseTiles = function () {
 	if (this.closed) return;
-	
+
 	let scope = this;
 
 	if (this.currentlyLoading < 8) {
@@ -582,7 +595,7 @@ BlueMap.TileManager.prototype.loadNextTile = function () {
 
 BlueMap.TileManager.prototype.tryLoadTile = function (x, z) {
 	if (this.closed) return;
-	
+
 	let scope = this;
 
 	let tileHash = BlueMap.utils.hashTile(x, z);
@@ -701,7 +714,7 @@ BlueMap.Controls = function (camera, element, heightScene) {
 
 	this.raycaster = new THREE.Raycaster();
 	this.rayDirection = new THREE.Vector3(0, -1, 0);
-	
+
 	this.resetPosition();
 
 	this.mouse = new THREE.Vector2(0, 0);
@@ -732,25 +745,25 @@ BlueMap.Controls = function (camera, element, heightScene) {
 	this.state = this.STATES.NONE;
 
 	let canvas = $(this.element).find("canvas").get(0);
-	window.addEventListener('contextmenu', function (e) {
+	window.addEventListener("contextmenu", function (e) {
 		e.preventDefault();
 	}, false);
-	canvas.addEventListener('mousedown', function (e) {
+	canvas.addEventListener("mousedown", function (e) {
 		scope.onMouseDown(e);
 	}, false);
-	window.addEventListener('mousemove', function (e) {
+	window.addEventListener("mousemove", function (e) {
 		scope.onMouseMove(e);
 	}, false);
-	window.addEventListener('mouseup', function (e) {
+	window.addEventListener("mouseup", function (e) {
 		scope.onMouseUp(e);
 	}, false);
-	canvas.addEventListener('wheel', function (e) {
+	canvas.addEventListener("wheel", function (e) {
 		scope.onMouseWheel(e);
 	}, false);
-	window.addEventListener('keydown', function (e) {
+	window.addEventListener("keydown", function (e) {
 		scope.onKeyDown(e);
 	}, false);
-	window.addEventListener('keyup', function (e) {
+	window.addEventListener("keyup", function (e) {
 		scope.onKeyUp(e);
 	}, false);
 
@@ -777,12 +790,12 @@ BlueMap.Controls.prototype.update = function () {
 	this.updateMouseMoves();
 
 	let changed = false;
-	
+
 	let zoomLerp = (this.distance - 100) / 200;
 	if (zoomLerp < 0) zoomLerp = 0;
 	if (zoomLerp > 1) zoomLerp = 1;
 	this.targetPosition.y = 300 * zoomLerp + this.minHeight * (1 - zoomLerp);
-	
+
 	this.position.x += (this.targetPosition.x - this.position.x) * this.settings.move.smooth;
 	this.position.y += (this.targetPosition.y - this.position.y) * this.settings.move.smoothY;
 	this.position.z += (this.targetPosition.z - this.position.z) * this.settings.move.smooth;
@@ -803,7 +816,7 @@ BlueMap.Controls.prototype.update = function () {
 	let last = this.camera.position.x + this.camera.position.y + this.camera.position.z;
 	this.orbitRot.set(this.angle, this.direction, 0);
 	this.cameraPosDelta.set(0, this.distance, 0).applyEuler(this.orbitRot);
-	
+
 	this.camera.position.set(this.position.x + this.cameraPosDelta.x, this.position.y + this.cameraPosDelta.y, this.position.z + this.cameraPosDelta.z);
 	let move = last - (this.camera.position.x + this.camera.position.y + this.camera.position.z);
 
@@ -812,7 +825,7 @@ BlueMap.Controls.prototype.update = function () {
 	if (changed) {
 		this.camera.lookAt(this.position);
 		this.camera.updateProjectionMatrix();
-		
+
 		this.updateHeights();
 	}
 
@@ -821,7 +834,7 @@ BlueMap.Controls.prototype.update = function () {
 
 BlueMap.Controls.prototype.updateHeights = function(){
 		//TODO: this can be performance-improved by only intersecting the correct tile?
-		
+
 		let rayStart = new THREE.Vector3(this.targetPosition.x, 300, this.targetPosition.z);
 		this.raycaster.set(rayStart, this.rayDirection);
 		this.raycaster.near = 1;
@@ -967,33 +980,33 @@ BlueMap.Module = {
 // ###### Modules.MapMenu ######
 BlueMap.Module.MapMenu = function (blueMap) {
 	let scope = this;
-	
+
 	this.bluemap = blueMap;
 	let maps = this.bluemap.settings;
-	
+
 	$("#bluemap-mapmenu").remove();
-	this.element = $('<div id="bluemap-mapmenu" class="dropdown-container"><span class="selection">' + maps[this.bluemap.map].name + '</span></div>').appendTo(BlueMap.Module.getTopLeftElement(blueMap));
-	
+	this.element = $('<div id="bluemap-mapmenu" class="dropdown-container"><span class="selection">' + maps[this.bluemap.map].name + "</span></div>").appendTo(BlueMap.Module.getTopLeftElement(blueMap));
+
 	let dropdown = $('<div class="dropdown"></div>').appendTo(this.element);
-	this.maplist = $('<ul></ul>').appendTo(dropdown);
-	
-	for (mapId in maps) {
+	this.maplist = $("<ul></ul>").appendTo(dropdown);
+
+	for (let mapId in maps) {
 		if (!maps.hasOwnProperty(mapId)) continue;
 		if (!maps.enabled) continue;
-		
+
 		let map = maps[mapId];
-		$('<li map="' + mapId + '">' + map.name + '</li>').appendTo(this.maplist);
+		$('<li map="" + mapId + "">' + map.name + "</li>").appendTo(this.maplist);
 	}
-	
-	this.maplist.find('li[map=' + this.bluemap.map + ']').hide();
-	this.maplist.find('li[map]').click(function (e) {
-		let map = $(this).attr('map');
+
+	this.maplist.find("li[map=" + this.bluemap.map + "]").hide();
+	this.maplist.find("li[map]").click(function (e) {
+		let map = $(this).attr("map");
 		scope.bluemap.changeMap(map);
 	});
 
-	$(document).on('bluemap-map-change', function(){
-		scope.maplist.find('li').show();
-		scope.maplist.find('li[map=' + scope.bluemap.map + ']').hide();
+	$(document).on("bluemap-map-change", function(){
+		scope.maplist.find("li").show();
+		scope.maplist.find("li[map=" + scope.bluemap.map + "]").hide();
 
 		scope.element.find(".selection").html(scope.bluemap.settings[scope.bluemap.map].name);
 	});
@@ -1006,10 +1019,10 @@ BlueMap.Module.Compass = function (blueMap) {
 	this.blueMap = blueMap;
 
 	$("#bluemap-compass").remove();
-	this.element = $('<div id="bluemap-compass" class="button"><img id="bluemap-compass-needle" src="assets/compass.svg" /></div>').appendTo(BlueMap.Module.getTopLeftElement(blueMap));
-	this.needle = $('#bluemap-compass-needle');
+	this.element = $(`<div id="bluemap-compass" class="button"><img id="bluemap-compass-needle" src="${COMPASS}" /></div>`).appendTo(BlueMap.Module.getTopLeftElement(blueMap));
+	this.needle = $("#bluemap-compass-needle");
 
-	$(document).on('bluemap-update-frame', function (){
+	$(document).on("bluemap-update-frame", function (){
 		scope.needle.css("transform", "rotate(" + scope.blueMap.controls.direction + "rad)");
 	});
 
@@ -1034,7 +1047,7 @@ BlueMap.Module.Position = function (blueMap) {
 	//this.elementY = $('<div class="bluemap-position pos-y">0</div>').appendTo(parent);
 	this.elementZ = $('<div class="bluemap-position pos-z">0</div>').appendTo(parent);
 
-	$(document).on('bluemap-update-frame', function (){
+	$(document).on("bluemap-update-frame", function (){
 		scope.elementX.html(Math.floor(scope.blueMap.controls.targetPosition.x));
 		//scope.elementY.html(scope.blueMap.controls.targetPosition.y === 0 ? "-" : Math.floor(scope.blueMap.controls.targetPosition.y));
 		scope.elementZ.html(Math.floor(scope.blueMap.controls.targetPosition.z));
@@ -1051,9 +1064,9 @@ BlueMap.Module.Settings = function (blueMap) {
 
 	$("#bluemap-settings").remove();
 	this.elementMenu = $('<div id="bluemap-settings-container" style="display: none"></div>').appendTo(parent);
-	this.elementSettings = $('<div id="bluemap-settings" class="button"><img src="assets/gear.svg" /></div>').appendTo(parent);
+	this.elementSettings = $(`<div id="bluemap-settings" class="button"><img src="${GEAR}" /></div>`).appendTo(parent);
 	this.elementSettings.click(function(){
-		if (scope.elementMenu.css('display') === "none"){
+		if (scope.elementMenu.css("display") === "none"){
 			scope.elementSettings.addClass("active");
 		} else {
 			scope.elementSettings.removeClass("active");
@@ -1079,10 +1092,10 @@ BlueMap.Module.Settings = function (blueMap) {
 		let desc = $(this).html();
 		scope.blueMap.quality = parseFloat($(this).attr("quality"));
 
-		scope.elementQuality.find('li').show();
-		scope.elementQuality.find('li[quality=\'' + scope.blueMap.quality + '\']').hide();
+		scope.elementQuality.find("li").show();
+		scope.elementQuality.find("li[quality=\"" + scope.blueMap.quality + "\"]").hide();
 
-		scope.elementQuality.find('.selection > span').html(desc);
+		scope.elementQuality.find(".selection > span").html(desc);
 
 		scope.blueMap.handleContainerResize();
 	});
@@ -1116,7 +1129,7 @@ BlueMap.Module.Settings = function (blueMap) {
 		);
 
 		let slider = scope.elementRenderDistance.find("input");
-		slider.on('change input', function(e){
+		slider.on("change input", function(e){
 			scope.blueMap.hiresTileManager.viewDistance = scope.pctToRenderDistance(parseFloat(slider.val()), scope.defaultHighRes);
 			scope.blueMap.lowresTileManager.viewDistance = scope.pctToRenderDistance(parseFloat(slider.val()), scope.defaultLowRes);
 			scope.elementRenderDistance.find(".selection > span").html(Math.round(scope.blueMap.hiresTileManager.viewDistance * 10) / 10);
@@ -1133,7 +1146,7 @@ BlueMap.Module.Settings = function (blueMap) {
 
 	scope.init();
 
-	$(document).on('bluemap-map-change', this.init);
+	$(document).on("bluemap-map-change", this.init);
 };
 
 // ###### Modules.Info ######
@@ -1164,7 +1177,7 @@ BlueMap.Module.Info = function (blueMap) {
 BlueMap.utils = {};
 
 BlueMap.utils.stringToImage = function (string) {
-	let image = document.createElementNS('http://www.w3.org/1999/xhtml', 'img');
+	let image = document.createElementNS("http://www.w3.org/1999/xhtml", "img");
 	image.src = string;
 	return image;
 };
@@ -1206,3 +1219,5 @@ BlueMap.utils.Vector2 = {};
 BlueMap.utils.Vector2.ZERO = new THREE.Vector2(0, 0);
 BlueMap.utils.Vector3 = {};
 BlueMap.utils.Vector3.ZERO = new THREE.Vector3(0, 0);
+
+export default BlueMap;
