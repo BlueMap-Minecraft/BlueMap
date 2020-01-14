@@ -30,93 +30,93 @@ import { getTopRightElement } from './Module.js';
 import GEAR from '../../../assets/gear.svg';
 
 export default class Settings {
-  constructor(blueMap) {
-    this.blueMap = blueMap;
-    const parent = getTopRightElement(blueMap);
+	constructor(blueMap) {
+		this.blueMap = blueMap;
+		const parent = getTopRightElement(blueMap);
 
-    $('#bluemap-settings').remove();
-    this.elementMenu = $('<div id="bluemap-settings-container" style="display: none"></div>').appendTo(parent);
-    this.elementSettings = $(`<div id="bluemap-settings" class="button"><img src="${GEAR}" /></div>`).appendTo(parent);
-    this.elementSettings.click(this.onSettingsClick);
+		$('#bluemap-settings').remove();
+		this.elementMenu = $('<div id="bluemap-settings-container" style="display: none"></div>').appendTo(parent);
+		this.elementSettings = $(`<div id="bluemap-settings" class="button"><img src="${GEAR}" /></div>`).appendTo(parent);
+		this.elementSettings.click(this.onSettingsClick);
 
-    /* Quality */
+		/* Quality */
 
-    this.elementQuality = $(
-      '<div id="bluemap-settings-quality" class="dropdown-container"><span class="selection">Quality: <span>Normal</span></span><div class="dropdown"><ul>' +
-      '<li quality="2">High</li>' +
-      '<li quality="1" style="display: none">Normal</li>' +
-      '<li quality="0.75">Fast</li>' +
-      '</ul></div></div>'
-    ).prependTo(this.elementMenu);
+		this.elementQuality = $(
+			'<div id="bluemap-settings-quality" class="dropdown-container"><span class="selection">Quality: <span>Normal</span></span><div class="dropdown"><ul>' +
+			'<li quality="2">High</li>' +
+			'<li quality="1" style="display: none">Normal</li>' +
+			'<li quality="0.75">Fast</li>' +
+			'</ul></div></div>'
+		).prependTo(this.elementMenu);
 
-    this.elementQuality.find('li[quality]').click(this.onQualityClick);
-    this.elementRenderDistance = $('<div id="bluemap-settings-render-distance" class="dropdown-container"></div>').prependTo(this.elementMenu);
+		this.elementQuality.find('li[quality]').click(this.onQualityClick);
+		this.elementRenderDistance = $('<div id="bluemap-settings-render-distance" class="dropdown-container"></div>').prependTo(this.elementMenu);
 
-    this.init();
+		this.init();
 
-    $(document).on('bluemap-map-change', this.init);
-  }
+		$(document).on('bluemap-map-change', this.init);
+	}
 
-  init = () => {
-    this.defaultHighRes = this.blueMap.hiresTileManager.viewDistance;
-    this.defaultLowRes = this.blueMap.lowresTileManager.viewDistance;
+	init = () => {
+		this.defaultHighRes = this.blueMap.hiresTileManager.viewDistance;
+		this.defaultLowRes = this.blueMap.lowresTileManager.viewDistance;
 
-    this.elementRenderDistance.html(
-      '<span class="selection">View Distance: <span>' + this.blueMap.hiresTileManager.viewDistance + '</span></span>' +
-      '<div class="dropdown">' +
-      '<input type="range" min="0" max="100" step="1" value="' + this.renderDistanceToPct(this.blueMap.hiresTileManager.viewDistance, this.defaultHighRes) + '" />' +
-      '</div>'
-    );
+		this.elementRenderDistance.html(
+			'<span class="selection">View Distance: <span>' + this.blueMap.hiresTileManager.viewDistance + '</span></span>' +
+			'<div class="dropdown">' +
+			'<input type="range" min="0" max="100" step="1" value="' + this.renderDistanceToPct(this.blueMap.hiresTileManager.viewDistance, this.defaultHighRes) + '" />' +
+			'</div>'
+		);
 
-    this.slider = this.elementRenderDistance.find('input');
-    this.slider.on('change input', this.onViewDistanceSlider);
-  };
+		this.slider = this.elementRenderDistance.find('input');
+		this.slider.on('change input', this.onViewDistanceSlider);
+	};
 
-  onViewDistanceSlider = () => {
-    this.blueMap.hiresTileManager.viewDistance = this.pctToRenderDistance(parseFloat(this.slider.val()), this.defaultHighRes);
-    this.blueMap.lowresTileManager.viewDistance = this.pctToRenderDistance(parseFloat(this.slider.val()), this.defaultLowRes);
-    this.elementRenderDistance.find('.selection > span').html(Math.round(this.blueMap.hiresTileManager.viewDistance * 10) / 10);
+	onViewDistanceSlider = () => {
+		this.blueMap.hiresTileManager.viewDistance = this.pctToRenderDistance(parseFloat(this.slider.val()), this.defaultHighRes);
+		this.blueMap.lowresTileManager.viewDistance = this.pctToRenderDistance(parseFloat(this.slider.val()), this.defaultLowRes);
+		this.elementRenderDistance.find('.selection > span').html(Math.round(this.blueMap.hiresTileManager.viewDistance * 10) / 10);
 
-    this.blueMap.lowresTileManager.update();
-    this.blueMap.hiresTileManager.update();
-  };
+		this.blueMap.lowresTileManager.update();
+		this.blueMap.hiresTileManager.update();
+	};
 
-  onQualityClick = (event) => {
-    const target = event.target
-    const desc = $(target).html();
-    this.blueMap.quality = parseFloat($(target).attr("quality"));
+	onQualityClick = (event) => {
+		const target = event.target
+		const desc = $(target).html();
+		this.blueMap.quality = parseFloat($(target).attr("quality"));
 
-    this.elementQuality.find('li').show();
-    this.elementQuality.find(`li[quality="${this.blueMap.quality}"]`).hide();
+		this.elementQuality.find('li').show();
+		this.elementQuality.find(`li[quality="${this.blueMap.quality}"]`).hide();
 
-    this.elementQuality.find('.selection > span').html(desc);
+		this.elementQuality.find('.selection > span').html(desc);
 
-    this.blueMap.handleContainerResize();
-  };
+		this.blueMap.handleContainerResize();
+	};
 
-  onSettingsClick = () => {
-    if (this.elementMenu.css('display') === 'none'){
-      this.elementSettings.addClass('active');
-    } else {
-      this.elementSettings.removeClass('active');
-    }
+	onSettingsClick = () => {
+		if (this.elementMenu.css('display') === 'none'){
+			this.elementSettings.addClass('active');
+		} else {
+			this.elementSettings.removeClass('active');
+		}
 
-    this.elementMenu.animate({
-      width: 'toggle'
-    }, 200);
-  }
+		this.elementMenu.animate({
+			width: 'toggle'
+		}, 200);
+	}
 
-  pctToRenderDistance(value, defaultValue) {
-    let max = defaultValue * 5;
-    if (max > 20) max = 20;
+	pctToRenderDistance(value, defaultValue) {
+		let max = defaultValue * 5;
+		if (max > 20) max = 20;
 
-    return Math3.mapLinear(value, 0, 100, 1, max);
-  }
+		return Math3.mapLinear(value, 0, 100, 1, max);
+	}
 
-  renderDistanceToPct(value, defaultValue) {
-    let max = defaultValue * 5;
-    if (max > 20) max = 20;
+	renderDistanceToPct(value, defaultValue) {
+		let max = defaultValue * 5;
+		if (max > 20) max = 20;
 
-    return Math3.mapLinear(value, 1, max, 0, 100);
-  }
+		return Math3.mapLinear(value, 1, max, 0, 100);
+	}
 }

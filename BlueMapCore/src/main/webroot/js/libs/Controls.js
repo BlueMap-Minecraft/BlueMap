@@ -24,11 +24,11 @@
  */
 import $ from 'jquery';
 import {
-  Euler,
-  Raycaster,
-  Vector2,
-  Vector3,
-  MOUSE
+	Euler,
+	Raycaster,
+	Vector2,
+	Vector3,
+	MOUSE
 } from 'three';
 
 import { Vector2_ZERO } from './utils.js';

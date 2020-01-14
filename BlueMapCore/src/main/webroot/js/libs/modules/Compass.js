@@ -29,25 +29,25 @@ import { getTopLeftElement } from './Module.js';
 import COMPASS from '../../../assets/compass.svg';
 
 export default class Compass {
-  constructor(blueMap) {
-    this.blueMap = blueMap;
+	constructor(blueMap) {
+		this.blueMap = blueMap;
 
-    $('#bluemap-compass').remove();
-    this.element = $(`<div id="bluemap-compass" class="button"><img id="bluemap-compass-needle" src="${COMPASS}" /></div>`).appendTo(getTopLeftElement(blueMap));
-    this.needle = $('#bluemap-compass-needle');
+		$('#bluemap-compass').remove();
+		this.element = $(`<div id="bluemap-compass" class="button"><img id="bluemap-compass-needle" src="${COMPASS}" /></div>`).appendTo(getTopLeftElement(blueMap));
+		this.needle = $('#bluemap-compass-needle');
 
-    $(document).on('bluemap-update-frame', this.onBlueMapUpdateFrame);
-    $(this.element).click(this.onClick);
-  }
+		$(document).on('bluemap-update-frame', this.onBlueMapUpdateFrame);
+		$(this.element).click(this.onClick);
+	}
 
-  onBlueMapUpdateFrame = () => {
-    this.needle.css('transform', `rotate(${this.blueMap.controls.direction}rad)`);
-  }
+	onBlueMapUpdateFrame = () => {
+		this.needle.css('transform', `rotate(${this.blueMap.controls.direction}rad)`);
+	}
 
-  onClick = () => {
-    this.blueMap.controls.targetDirection = 0;
-    this.blueMap.controls.direction = this.blueMap.controls.direction % (Math.PI * 2);
-    if (this.blueMap.controls.direction < -Math.PI) this.blueMap.controls.direction += Math.PI * 2;
-    if (this.blueMap.controls.direction > Math.PI) this.blueMap.controls.direction -= Math.PI * 2;
-  }
+	onClick = () => {
+		this.blueMap.controls.targetDirection = 0;
+		this.blueMap.controls.direction = this.blueMap.controls.direction % (Math.PI * 2);
+		if (this.blueMap.controls.direction < -Math.PI) this.blueMap.controls.direction += Math.PI * 2;
+		if (this.blueMap.controls.direction > Math.PI) this.blueMap.controls.direction -= Math.PI * 2;
+	}
 }

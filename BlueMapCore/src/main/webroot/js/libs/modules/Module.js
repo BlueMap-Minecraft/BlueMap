@@ -27,21 +27,21 @@ import $ from 'jquery';
 // ###### Modules ######
 
 export const getTopRightElement = blueMap => {
-  let element = $('#bluemap-topright');
+	let element = $('#bluemap-topright');
 
-  if (element.length === 0){
-    element = $('<div id="bluemap-topright" class="box"></div>').appendTo(blueMap.element);
-  }
+	if (element.length === 0){
+		element = $('<div id="bluemap-topright" class="box"></div>').appendTo(blueMap.element);
+	}
 
-  return element;
+	return element;
 };
 
 export const getTopLeftElement = blueMap => {
-  let element = $('#bluemap-topleft');
+	let element = $('#bluemap-topleft');
 
-  if (element.length === 0){
-    element = $('<div id="bluemap-topleft" class="box"></div>').appendTo(blueMap.element);
-  }
+	if (element.length === 0){
+		element = $('<div id="bluemap-topleft" class="box"></div>').appendTo(blueMap.element);
+	}
 
-  return element;
+	return element;
 };

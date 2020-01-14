@@ -27,37 +27,37 @@ import $ from 'jquery';
 import { getTopLeftElement } from './Module.js';
 
 export default class MapMenu {
-  constructor(blueMap) {
-    this.bluemap = blueMap;
-    const maps = this.bluemap.settings;
+	constructor(blueMap) {
+		this.bluemap = blueMap;
+		const maps = this.bluemap.settings;
 
-    $('#bluemap-mapmenu').remove();
-    this.element = $(`<div id="bluemap-mapmenu" class="dropdown-container"><span class="selection">${maps[this.bluemap.map].name}</span></div>`).appendTo(getTopLeftElement(blueMap));
+		$('#bluemap-mapmenu').remove();
+		this.element = $(`<div id="bluemap-mapmenu" class="dropdown-container"><span class="selection">${maps[this.bluemap.map].name}</span></div>`).appendTo(getTopLeftElement(blueMap));
 
-    const dropdown = $('<div class="dropdown"></div>').appendTo(this.element);
-    this.maplist = $('<ul></ul>').appendTo(dropdown);
+		const dropdown = $('<div class="dropdown"></div>').appendTo(this.element);
+		this.maplist = $('<ul></ul>').appendTo(dropdown);
 
-    for (let mapId in maps) {
-      if (!maps.hasOwnProperty(mapId)) continue;
-      if (!maps.enabled) continue;
+		for (let mapId in maps) {
+			if (!maps.hasOwnProperty(mapId)) continue;
+			if (!maps.enabled) continue;
 
-      const map = maps[mapId];
-      $(`<li map="${mapId}">${map.name}</li>`).appendTo(this.maplist);
-    }
+			const map = maps[mapId];
+			$(`<li map="${mapId}">${map.name}</li>`).appendTo(this.maplist);
+		}
 
-    this.maplist.find('li[map=' + this.bluemap.map + ']').hide();
-    this.maplist.find('li[map]').click(this.onMapClick);
-    $(document).on('bluemap-map-change', this.onBlueMapMapChange);
-  }
+		this.maplist.find('li[map=' + this.bluemap.map + ']').hide();
+		this.maplist.find('li[map]').click(this.onMapClick);
+		$(document).on('bluemap-map-change', this.onBlueMapMapChange);
+	}
 
-  onMapClick = event => {
-    const map = $(this).attr('map');
-    this.bluemap.changeMap(map);
-  }
+	onMapClick = event => {
+		const map = $(this).attr('map');
+		this.bluemap.changeMap(map);
+	}
 
-  onBlueMapMapChange = () => {
-    this.maplist.find('li').show();
-    this.maplist.find('li[map=' + this.bluemap.map + ']').hide();
-    this.element.find('.selection').html(this.bluemap.settings[this.bluemap.map].name);
-  }
+	onBlueMapMapChange = () => {
+		this.maplist.find('li').show();
+		this.maplist.find('li[map=' + this.bluemap.map + ']').hide();
+		this.element.find('.selection').html(this.bluemap.settings[this.bluemap.map].name);
+	}
 }

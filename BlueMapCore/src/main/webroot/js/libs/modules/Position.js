@@ -27,21 +27,21 @@ import $ from 'jquery';
 import { getTopLeftElement } from './Module.js';
 
 export default class Position {
-  constructor(blueMap) {
-    this.blueMap = blueMap;
-    const parent = getTopLeftElement(blueMap);
+	constructor(blueMap) {
+		this.blueMap = blueMap;
+		const parent = getTopLeftElement(blueMap);
 
-    $('.bluemap-position').remove();
-    this.elementX = $('<div class="bluemap-position pos-x">0</div>').appendTo(parent);
-    //this.elementY = $('<div class="bluemap-position pos-y">0</div>').appendTo(parent);
-    this.elementZ = $('<div class="bluemap-position pos-z">0</div>').appendTo(parent);
+		$('.bluemap-position').remove();
+		this.elementX = $('<div class="bluemap-position pos-x">0</div>').appendTo(parent);
+		//this.elementY = $('<div class="bluemap-position pos-y">0</div>').appendTo(parent);
+		this.elementZ = $('<div class="bluemap-position pos-z">0</div>').appendTo(parent);
 
-    $(document).on('bluemap-update-frame', this.onBlueMapUpdateFrame);
-  }
+		$(document).on('bluemap-update-frame', this.onBlueMapUpdateFrame);
+	}
 
-  onBlueMapUpdateFrame = () => {
-    this.elementX.html(Math.floor(this.blueMap.controls.targetPosition.x));
-    //this.elementY.html(this.blueMap.controls.targetPosition.y === 0 ? "-" : Math.floor(this.blueMap.controls.targetPosition.y));
-    this.elementZ.html(Math.floor(this.blueMap.controls.targetPosition.z));
-  }
+	onBlueMapUpdateFrame = () => {
+		this.elementX.html(Math.floor(this.blueMap.controls.targetPosition.x));
+		//this.elementY.html(this.blueMap.controls.targetPosition.y === 0 ? "-" : Math.floor(this.blueMap.controls.targetPosition.y));
+		this.elementZ.html(Math.floor(this.blueMap.controls.targetPosition.z));
+	}
 }

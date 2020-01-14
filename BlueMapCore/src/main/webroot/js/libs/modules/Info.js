@@ -27,23 +27,23 @@ import $ from 'jquery';
 import { getTopRightElement } from './Module.js';
 
 export default class Info {
-  constructor(blueMap) {
-    this.blueMap = blueMap;
-    const parent = getTopRightElement(blueMap);
-    $('#bluemap-info').remove();
-    this.elementInfo = $('<div id="bluemap-info" class="button"></div>').appendTo(parent);
-    this.elementInfo.click(this.onClick);
-  }
+	constructor(blueMap) {
+		this.blueMap = blueMap;
+		const parent = getTopRightElement(blueMap);
+		$('#bluemap-info').remove();
+		this.elementInfo = $('<div id="bluemap-info" class="button"></div>').appendTo(parent);
+		this.elementInfo.click(this.onClick);
+	}
 
-  onClick = () => {
-    this.blueMap.alert(
-      '<h1>Info</h1>' +
-      'Visit BlueMap on <a href="https://github.com/BlueMap-Minecraft">GitHub</a>!<br>' +
-      'BlueMap works best with <a href="https://www.google.com/chrome/">Chrome</a>.<br>' +
-      '<h2>Controls</h2>' +
-      'Leftclick-drag with your mouse or use the arrow-keys to navigate.<br>' +
-      'Rightclick-drag with your mouse to rotate your view.<br>' +
-      'Scroll to zoom.<br>'
-    );
-  }
+	onClick = () => {
+		this.blueMap.alert(
+			'<h1>Info</h1>' +
+			'Visit BlueMap on <a href="https://github.com/BlueMap-Minecraft">GitHub</a>!<br>' +
+			'BlueMap works best with <a href="https://www.google.com/chrome/">Chrome</a>.<br>' +
+			'<h2>Controls</h2>' +
+			'Leftclick-drag with your mouse or use the arrow-keys to navigate.<br>' +
+			'Rightclick-drag with your mouse to rotate your view.<br>' +
+			'Scroll to zoom.<br>'
+		);
+	}
 }

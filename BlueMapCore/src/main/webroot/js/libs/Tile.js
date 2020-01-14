@@ -24,36 +24,36 @@
  */
 
 export default class Tile {
-  isLoading = false;
-  disposed = false;
-  model = null;
+	isLoading = false;
+	disposed = false;
+	model = null;
 
-  constructor(scene, x, z) {
-    this.scene = scene;
-    this.x = x;
-    this.z = z;
-  }
+	constructor(scene, x, z) {
+		this.scene = scene;
+		this.x = x;
+		this.z = z;
+	}
 
-  setModel(model) {
-    this.disposeModel();
+	setModel(model) {
+		this.disposeModel();
 
-    if (model) {
-      this.model = model;
-      this.scene.add(model);
+		if (model) {
+			this.model = model;
+			this.scene.add(model);
 
-      //console.log("Added tile:", this.x, this.z);
-    }
-  }
+			//console.log("Added tile:", this.x, this.z);
+		}
+	}
 
-  disposeModel() {
-    this.disposed = true;
+	disposeModel() {
+		this.disposed = true;
 
-    if (this.model) {
-      this.scene.remove(this.model);
-      this.model.geometry.dispose();
-      delete this.model;
+		if (this.model) {
+			this.scene.remove(this.model);
+			this.model.geometry.dispose();
+			delete this.model;
 
-      //console.log("Removed tile:", this.x, this.z);
-    }
-  }
+			//console.log("Removed tile:", this.x, this.z);
+		}
+	}
 }
