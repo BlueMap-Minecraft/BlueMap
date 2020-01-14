@@ -1,6 +1,6 @@
 ![title-banner](https://bluecolored.de/paste/bluemap-title.jpg)
 
-BlueMap is a tool that generates 3d-maps of your Minecraft worlds and displays them in your browser. Take a look at [this demo](https://bluecolored.de/bluemap). It is really easy to set up - almost plug-and-play - if you use the integrated web-server (optional). 
+BlueMap is a tool that generates 3d-maps of your Minecraft worlds and displays them in your browser. Take a look at [this demo](https://bluecolored.de/bluemap). It is really easy to set up - almost plug-and-play - if you use the integrated web-server (optional).
 
 The Sponge-Plugin automatically updates your map as soon as something changes in your world, as well as rendering newly generated terrain and managing the render-tasks.
 
@@ -15,21 +15,21 @@ Easy:
 `git clone https://github.com/BlueMap-Minecraft/BlueMap.git`
 
 ### Build
-In order to build BlueMap you simply need to run the `./gradlew shadowJar` command.
+In order to build BlueMap you simply need to run the `./gradlew build` command.
 You can find the compiled JAR file in `./build/libs`
 
 ### Issues / Suggestions
 You found a bug, have another issue or a suggestion? Please create an issue [here](https://github.com/BlueMap-Minecraft/BlueMap/issues)!
 
 ### Contributing
-You are welcome to contribute!  
+You are welcome to contribute!
 Just create a pull request with your changes :)
 
 ## Using the CLI
 BlueMap can be used on the command-line, to render your Minecraft-Worlds *(Currently supported versions: 1.12 - 1.14)*.
 
 Use `java -jar bluemap.jar` and BlueMap will generate a default config in the current working directory. You then can configure your maps and even the webserver as you wish. Then, re-run the command and BlueMap will render all the configured maps for you and start the webserver if you turned it on in the config.
-To only run the webserver, just don't define any maps in the config. 
+To only run the webserver, just don't define any maps in the config.
 
 You can use `-c <config-file>` on the command-line to define a different configuration-file.
 
@@ -39,7 +39,7 @@ BlueMap is mostly plug-and-play. Just install it like every other Sponge-Plugin 
 
 **Before BlueMap can render anything,** it needs one more thing: resources! To render all the block-models, BlueMap makes use of the default minecraft-resources. Since they are property of mojang i can not include them in the plugin. Fortunately BlueMap can download them from mojangs servers for you, but you need to explicitly agree to this in the config! Simply change the `accept-download: false` setting to `accept-download: true`, and run the `/bluemap reload` command.
 
-After downloading the resources, BlueMap will start updating the configured worlds. To render the whole world for a start, you can use this command `/bluemap render [world]`. 
+After downloading the resources, BlueMap will start updating the configured worlds. To render the whole world for a start, you can use this command `/bluemap render [world]`.
 
 Then, head over to `http://<your-server-ip>:8100/` and you should see your map! *(If there is only black, you might have to wait a little until BlueMap has rendered enough of the map. You can also try to zoom in: the hires-models are saved first)*
 

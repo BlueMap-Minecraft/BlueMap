@@ -39,6 +39,7 @@ task zipWebroot(type: Zip) {
 
 // removes tmp build directory, build project with webpack, zip contents for the shaded jar
 task buildWebroot {
+   dependsOn 'npmInstall'
    dependsOn 'cleanWebroot'
    dependsOn 'webpackWebroot'
    dependsOn 'zipWebroot'

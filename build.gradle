@@ -1,12 +1,12 @@
 plugins {
 	id 'java'
-	id 'com.github.johnrengelman.shadow' version '5.1.0'
+	id 'com.github.johnrengelman.shadow' version '1.2.4'
 }
 
 allprojects {
 	repositories {
 		mavenCentral()
-		maven { 
+		maven {
 			url 'https://jitpack.io'
 		}
 		maven {
@@ -21,7 +21,7 @@ allprojects {
 
 	compileJava.options.compilerArgs.add '-parameters'
 	compileTestJava.options.compilerArgs.add '-parameters'
-	
+
 	apply plugin: 'java'
 	apply plugin: 'com.github.johnrengelman.shadow'
 }
@@ -31,13 +31,13 @@ dependencies {
 	//compile project(':BlueMapSponge')
 }
 
-shadowJar {
+assemble.dependsOn shadowJar {
 	baseName = 'BlueMap'
 	version = null
 	classifier = null
 }
 
-jar {    
+jar {
 	manifest {
 		attributes 'Main-Class' : "de.bluecolored.bluemap.cli.BlueMapCLI"
 	}
