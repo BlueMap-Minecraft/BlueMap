@@ -38,6 +38,12 @@ module.exports = {
   },
   module: {
     rules: [
+      // Transpile JavaScript source files using TypeScript engine
+      {
+        test: /\.(js|ts)$/,
+        include: /src/,
+        use: 'ts-loader',
+      },
       // Just import normal css files
       {
         test: /\.css$/,
