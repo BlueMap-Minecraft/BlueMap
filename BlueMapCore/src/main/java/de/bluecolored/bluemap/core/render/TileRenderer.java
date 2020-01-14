@@ -34,38 +34,38 @@ import de.bluecolored.bluemap.core.util.AABB;
 public class TileRenderer {
 	private HiresModelManager hiresModelManager;
 	private LowresModelManager lowresModelManager;
-	
+
 	public TileRenderer(HiresModelManager hiresModelManager, LowresModelManager lowresModelManager) {
 		this.hiresModelManager = hiresModelManager;
 		this.lowresModelManager = lowresModelManager;
 	}
-	
+
 	/**
 	 * Renders the provided WorldTile (only) if the world is generated
 	 * @throws IOException If an IO-Exception occurs during the render
 	 */
 	public void render(WorldTile tile) throws IOException {
-		//check if the region is generated before rendering, don't render if it's not generated 
+		//check if the region is generated before rendering, don't render if it's not generated
 		AABB area = hiresModelManager.getTileRegion(tile);
 		if (!tile.getWorld().isAreaGenerated(area)) return;
-		
+
 		HiresModel hiresModel = hiresModelManager.render(tile);
 		lowresModelManager.render(hiresModel);
 	}
-	
+
 	/**
 	 * Saves changes to disk
 	 */
 	public void save(){
 		lowresModelManager.save();
 	}
-	
+
 	public HiresModelManager getHiresModelManager() {
 		return hiresModelManager;
 	}
-	
+
 	public LowresModelManager getLowresModelManager() {
 		return lowresModelManager;
 	}
-	
+
 }
