@@ -41,7 +41,7 @@ export default class Position {
 
 	onBlueMapUpdateFrame = () => {
 		this.elementX.html(Math.floor(this.blueMap.controls.targetPosition.x));
-		//this.elementY.html(this.blueMap.controls.targetPosition.y === 0 ? "-" : Math.floor(this.blueMap.controls.targetPosition.y));
+		//this.elementY.html(this.blueMap.controls.targetPosition.y === 0 ? '-' : Math.floor(this.blueMap.controls.targetPosition.y));
 		this.elementZ.html(Math.floor(this.blueMap.controls.targetPosition.z));
 	}
 }

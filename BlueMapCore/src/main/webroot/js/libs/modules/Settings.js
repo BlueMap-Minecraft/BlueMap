@@ -84,7 +84,7 @@ export default class Settings {
 	onQualityClick = (event) => {
 		const target = event.target
 		const desc = $(target).html();
-		this.blueMap.quality = parseFloat($(target).attr("quality"));
+		this.blueMap.quality = parseFloat($(target).attr('quality'));
 
 		this.elementQuality.find('li').show();
 		this.elementQuality.find(`li[quality="${this.blueMap.quality}"]`).hide();

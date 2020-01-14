@@ -59,7 +59,7 @@ export default class TileManager {
 	update() {
 		if (this.closed) return;
 
-		//free a loader so if there was an error loading a tile we don"t get stuck forever with the blocked loading process
+		// free a loader so if there was an error loading a tile we don't get stuck forever with the blocked loading process
 		this.currentlyLoading--;
 		if (this.currentlyLoading < 0) this.currentlyLoading = 0;
 

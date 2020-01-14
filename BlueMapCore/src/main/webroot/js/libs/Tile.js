@@ -41,7 +41,7 @@ export default class Tile {
 			this.model = model;
 			this.scene.add(model);
 
-			//console.log("Added tile:", this.x, this.z);
+			//console.log('Added tile:', this.x, this.z);
 		}
 	}
 
@@ -53,7 +53,7 @@ export default class Tile {
 			this.model.geometry.dispose();
 			delete this.model;
 
-			//console.log("Removed tile:", this.x, this.z);
+			//console.log('Removed tile:', this.x, this.z);
 		}
 	}
 }
