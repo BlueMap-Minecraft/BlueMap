@@ -138,7 +138,7 @@ export default class TileManager {
 	}
 
 	tryLoadTile(x, z) {
-		if (this.closed) return;
+		if (this.closed) return false;
 
 		let tileHash = hashTile(x, z);
 
@@ -152,31 +152,32 @@ export default class TileManager {
 
 		this.tiles[tileHash] = tile;
 
-		this.tileLoader.call(this.blueMap, x, z, model => {
-			tile.isLoading = false;
+		this.tileLoader.call(this.blueMap, x, z)
+			.then(model => {
+				tile.isLoading = false;
 
-			if (tile.disposed || this.closed) {
-				model.geometry.dispose();
+				if (tile.disposed || this.closed) {
+					model.geometry.dispose();
+					tile.disposeModel();
+					delete this.tiles[tileHash];
+					return;
+				}
+
+				this.tiles[tileHash] = tile;
+				tile.setModel(model);
+
+				this.blueMap.updateFrame = true;
+
+				this.currentlyLoading--;
+				if (this.currentlyLoading < 0) this.currentlyLoading = 0;
+			}).catch(error => {
+				tile.isLoading = false;
 				tile.disposeModel();
-				delete this.tiles[tileHash];
-				return;
-			}
 
-			this.tiles[tileHash] = tile;
-			tile.setModel(model);
+				this.currentlyLoading--;
 
-			this.blueMap.updateFrame = true;
-
-			this.currentlyLoading--;
-			if (this.currentlyLoading < 0) this.currentlyLoading = 0;
-		}, error => {
-			tile.isLoading = false;
-			tile.disposeModel();
-
-			this.currentlyLoading--;
-
-			//console.log("Failed to load tile: ", x, z);
-		});
+				//console.log("Failed to load tile: ", x, z);
+			});
 
 		return true;
 	}

@@ -79,7 +79,7 @@ export default class BlueMap {
 		this.locationHash = '';
 		this.controls = new Controls(this.camera, this.element, this.hiresScene);
 
-		this.loadSettings(() => {
+		this.loadSettings().then(async () => {
 			this.lowresTileManager = new TileManager(
 				this,
 				this.settings[this.map]['lowres']['viewDistance'],
@@ -98,12 +98,11 @@ export default class BlueMap {
 				{x: 0, z: 0}
 			);
 
-			this.loadHiresMaterial(() => {
-				this.loadLowresMaterial(() => {
-					this.initModules();
-					this.start();
-				});
-			});
+			await this.loadHiresMaterial();
+			await this.loadLowresMaterial();
+
+			this.initModules();
+			this.start();
 		});
 	}
 
@@ -257,28 +256,26 @@ export default class BlueMap {
 		this.updateFrame = true;
 	}
 
-	loadSettings(callback) {
-		let scope = this;
-
-		this.fileLoader.load(this.dataRoot + 'settings.json', settings => {
-			scope.settings = JSON.parse(settings);
-
-			scope.maps = [];
-			for (let map in scope.settings) {
-				if (scope.settings.hasOwnProperty(map) && scope.settings[map].enabled){
-					scope.maps.push(map);
+	async loadSettings() {
+		return new Promise(resolve => {
+			this.fileLoader.load(this.dataRoot + 'settings.json', settings => {
+				this.settings = JSON.parse(settings);
+				this.maps = [];
+				for (let map in this.settings) {
+					if (this.settings.hasOwnProperty(map) && this.settings[map].enabled){
+						this.maps.push(map);
+					}
 				}
-			}
 
-			scope.maps.sort((map1, map2) => {
-				var sort = scope.settings[map1].ordinal - scope.settings[map2].ordinal;
-				if (isNaN(sort)) return 0;
-				return sort;
+				this.maps.sort((map1, map2) => {
+					var sort = this.settings[map1].ordinal - this.settings[map2].ordinal;
+					if (isNaN(sort)) return 0;
+					return sort;
+				});
+
+				this.map = this.maps[0];
+				resolve();
 			});
-
-			scope.map = scope.maps[0];
-
-			callback.call(scope);
 		});
 	}
 
@@ -357,53 +354,53 @@ export default class BlueMap {
 		return new Mesh(geometry, material);
 	}
 
-	loadHiresMaterial(callback) {
-		let scope = this;
+	async loadHiresMaterial() {
+		return new Promise(resolve => {
+			this.fileLoader.load(this.dataRoot + 'textures.json', textures => {
+				textures = JSON.parse(textures);
 
-		this.fileLoader.load(this.dataRoot + 'textures.json', textures => {
-			textures = JSON.parse(textures);
+				let materials = [];
+				for (let i = 0; i < textures['textures'].length; i++) {
+					let t = textures['textures'][i];
 
-			let materials = [];
-			for (let i = 0; i < textures['textures'].length; i++) {
-				let t = textures['textures'][i];
+					let material = new MeshLambertMaterial({
+						transparent: t['transparent'],
+						alphaTest: 0.01,
+						depthWrite: true,
+						depthTest: true,
+						blending: NormalBlending,
+						vertexColors: VertexColors,
+						side: FrontSide,
+						wireframe: false
+					});
 
-				let material = new MeshLambertMaterial({
-					transparent: t['transparent'],
-					alphaTest: 0.01,
-					depthWrite: true,
-					depthTest: true,
-					blending: NormalBlending,
-					vertexColors: VertexColors,
-					side: FrontSide,
-					wireframe: false
-				});
+					let texture = new Texture();
+					texture.image = stringToImage(t['texture']);
 
-				let texture = new Texture();
-				texture.image = stringToImage(t['texture']);
+					texture.premultiplyAlpha = false;
+					texture.generateMipmaps = false;
+					texture.magFilter = NearestFilter;
+					texture.minFilter = NearestFilter;
+					texture.wrapS = ClampToEdgeWrapping;
+					texture.wrapT = ClampToEdgeWrapping;
+					texture.flipY = false;
+					texture.needsUpdate = true;
+					texture.flatShading = true;
 
-				texture.premultiplyAlpha = false;
-				texture.generateMipmaps = false;
-				texture.magFilter = NearestFilter;
-				texture.minFilter = NearestFilter;
-				texture.wrapS = ClampToEdgeWrapping;
-				texture.wrapT = ClampToEdgeWrapping;
-				texture.flipY = false;
-				texture.needsUpdate = true;
-				texture.flatShading = true;
+					material.map = texture;
+					material.needsUpdate = true;
 
-				material.map = texture;
-				material.needsUpdate = true;
+					materials[i] = material;
+				}
 
-				materials[i] = material;
-			}
+				this.hiresMaterial = materials;
 
-			scope.hiresMaterial = materials;
-
-			callback.call(scope);
+				resolve();
+			});
 		});
 	}
 
-	loadLowresMaterial(callback) {
+	async loadLowresMaterial() {
 		this.lowresMaterial = new MeshLambertMaterial({
 			transparent: false,
 			depthWrite: true,
@@ -412,52 +409,48 @@ export default class BlueMap {
 			side: FrontSide,
 			wireframe: false
 		});
-
-		callback.call(this);
 	}
 
-	loadHiresTile(tileX, tileZ, callback, onError) {
+	async loadHiresTile(tileX, tileZ) {
 		let path = this.dataRoot + this.map + '/hires/';
 		path += pathFromCoords(tileX, tileZ);
 		path += '.json';
 
-		this.bufferGeometryLoader.load(path, geometry => {
-			let object = new Mesh(geometry, this.hiresMaterial);
+		return new Promise((resolve, reject) => {
+			this.bufferGeometryLoader.load(path, geometry => {
+				let object = new Mesh(geometry, this.hiresMaterial);
 
-			let tileSize = this.settings[this.map]['hires']['tileSize'];
-			let translate = this.settings[this.map]['hires']['translate'];
-			let scale = this.settings[this.map]['hires']['scale'];
-			object.position.set(tileX * tileSize.x + translate.x, 0, tileZ * tileSize.z + translate.z);
-			object.scale.set(scale.x, 1, scale.z);
+				let tileSize = this.settings[this.map]['hires']['tileSize'];
+				let translate = this.settings[this.map]['hires']['translate'];
+				let scale = this.settings[this.map]['hires']['scale'];
+				object.position.set(tileX * tileSize.x + translate.x, 0, tileZ * tileSize.z + translate.z);
+				object.scale.set(scale.x, 1, scale.z);
 
-			callback.call(this, object);
-		}, () => {
-
-		}, error => {
-			onError.call(this, error);
+				resolve(object);
+			}, () => {
+			}, reject);
 		});
 	}
 
-	loadLowresTile(tileX, tileZ, callback, onError) {
+	async loadLowresTile(tileX, tileZ) {
 		let path = this.dataRoot + this.map + '/lowres/';
 		path += pathFromCoords(tileX, tileZ);
 		path += '.json';
 
-		this.bufferGeometryLoader.load(path, geometry => {
-			let object = new Mesh(geometry, this.lowresMaterial);
+		return new Promise((reslove, reject) => {
+			this.bufferGeometryLoader.load(path, geometry => {
+				let object = new Mesh(geometry, this.lowresMaterial);
 
-			let tileSize = this.settings[this.map]['lowres']['tileSize'];
-			let translate = this.settings[this.map]['lowres']['translate'];
-			let scale = this.settings[this.map]['lowres']['scale'];
-			object.position.set(tileX * tileSize.x + translate.x, 0, tileZ * tileSize.z + translate.z);
-			object.scale.set(scale.x, 1, scale.z);
+				let tileSize = this.settings[this.map]['lowres']['tileSize'];
+				let translate = this.settings[this.map]['lowres']['translate'];
+				let scale = this.settings[this.map]['lowres']['scale'];
+				object.position.set(tileX * tileSize.x + translate.x, 0, tileZ * tileSize.z + translate.z);
+				object.scale.set(scale.x, 1, scale.z);
 
-			callback.call(this, object);
-		}, () => {
-
-		}, error => {
-			onError.call(this, error);
-		});
+				reslove(object);
+			}, () => {
+			}, reject);
+		})
 	}
 
 	// ###### UI ######
