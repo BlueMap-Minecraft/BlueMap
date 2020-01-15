@@ -1,0 +1,42 @@
+{
+  "name": "bluemap",
+  "description": "BlueMap is a tool that generates 3d-maps of your Minecraft worlds and displays them in your browser.",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BlueMap-Minecraft/BlueMap.git"
+  },
+  "keywords": [
+    "minecraft"
+  ],
+  "author": "Blue",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/BlueMap-Minecraft/BlueMap/issues"
+  },
+  "homepage": "https://github.com/BlueMap-Minecraft/BlueMap#readme",
+  "dependencies": {
+    "jquery": "^3.4.1",
+    "three": "^0.94.0"
+  },
+  "devDependencies": {
+    "css-loader": "^3.4.2",
+    "fibers": "^4.0.2",
+    "file-loader": "^5.0.2",
+    "html-webpack-plugin": "^3.2.0",
+    "mini-css-extract-plugin": "^0.9.0",
+    "node-sass": "^4.13.0",
+    "sass": "^1.24.4",
+    "sass-loader": "^8.0.2",
+    "ts-loader": "^6.2.1",
+    "typescript": "^3.7.4",
+    "webpack": "^4.41.5",
+    "webpack-cli": "^3.3.10",
+    "webpack-dev-server": "^3.10.1"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack --mode production",
+    "start": "webpack-dev-server --watch --mode development"
+  }
+}
