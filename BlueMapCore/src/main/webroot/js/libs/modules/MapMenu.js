@@ -39,9 +39,9 @@ export default class MapMenu {
 
 		for (let mapId in maps) {
 			if (!maps.hasOwnProperty(mapId)) continue;
-			if (!maps.enabled) continue;
-
 			const map = maps[mapId];
+			if (!map.enabled) continue;
+
 			$(`<li map="${mapId}">${map.name}</li>`).appendTo(this.maplist);
 		}
 
@@ -51,7 +51,7 @@ export default class MapMenu {
 	}
 
 	onMapClick = event => {
-		const map = $(this).attr('map');
+		const map = $(event.target).attr('map');
 		this.bluemap.changeMap(map);
 	}
 
