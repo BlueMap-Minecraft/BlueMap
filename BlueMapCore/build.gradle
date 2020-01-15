@@ -21,6 +21,12 @@ node {
   download = true
 }
 
+task fixPackageLock() {
+  if (!file("./package-lock.json").exists()) {
+    file("./package-lock.json").text = ""
+  }
+}
+
 task cleanWebroot(type: Delete) {
   delete 'build/generated/webroot/'
 }
@@ -39,6 +45,7 @@ task zipWebroot(type: Zip) {
 
 // removes tmp build directory, build project with webpack, zip contents for the shaded jar
 task buildWebroot {
+   dependsOn 'fixPackageLock'
    dependsOn 'npmInstall'
    dependsOn 'cleanWebroot'
    dependsOn 'webpackWebroot'
