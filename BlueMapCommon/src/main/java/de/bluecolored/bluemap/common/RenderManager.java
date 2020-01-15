@@ -1,4 +1,4 @@
-package de.bluecolored.bluemap.plugin;
+package de.bluecolored.bluemap.common;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;

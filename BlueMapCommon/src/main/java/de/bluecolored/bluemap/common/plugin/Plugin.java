@@ -1,24 +1,31 @@
-package de.bluecolored.bluemap.plugin;
+package de.bluecolored.bluemap.common.plugin;
 
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.io.FileUtils;
-import org.spongepowered.api.Sponge;
 
 import com.flowpowered.math.vector.Vector2i;
 
+import de.bluecolored.bluemap.common.MapType;
+import de.bluecolored.bluemap.common.RenderManager;
+import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.config.ConfigManager;
 import de.bluecolored.bluemap.core.config.MainConfig;
@@ -30,18 +37,13 @@ import de.bluecolored.bluemap.core.render.RenderSettings;
 import de.bluecolored.bluemap.core.render.TileRenderer;
 import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.render.lowres.LowresModelManager;
+import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.web.BlueMapWebServer;
 import de.bluecolored.bluemap.core.web.WebFilesManager;
 import de.bluecolored.bluemap.core.web.WebSettings;
 import de.bluecolored.bluemap.core.world.SlicedWorld;
 import de.bluecolored.bluemap.core.world.World;
-import de.bluecolored.bluemap.plugin.serverinterface.ServerInterface;
-import de.bluecolored.bluemap.sponge.Commands;
-import de.bluecolored.bluemap.sponge.MapUpdateHandler;
-import de.bluecolored.bluemap.sponge.SpongePlugin;
-import net.querz.nbt.CompoundTag;
-import net.querz.nbt.NBTUtil;
 
 public class Plugin {
 
@@ -50,6 +52,9 @@ public class Plugin {
 	public static final String PLUGIN_VERSION = BlueMap.VERSION;
 
 	private static Plugin instance;
+	
+	private String implementationType;
+	
 	private ServerInterface serverInterface;
 	
 	private MainConfig config;
@@ -63,23 +68,28 @@ public class Plugin {
 	private RenderManager renderManager;
 	private BlueMapWebServer webServer;
 	
+	private Thread metricsThread;
+	
 	private boolean loaded = false;
 
-	public Plugin() {
+	public Plugin(String implementationType, ServerInterface serverInterface) {
+		this.implementationType = implementationType.toLowerCase();
+		this.serverInterface = serverInterface;
+		
+		this.maps = new HashMap<>();
+		this.worlds = new HashMap<>();
+		
 		instance = this;
 	}
 	
-	public synchronized void load() {
+	public synchronized void load() throws IOException, ParseResourceException {
 		if (loaded) return;
 		unload(); //ensure nothing is left running (from a failed load or something)
 		
-		//register reload command in case bluemap crashes during loading
-		Sponge.getCommandManager().register(this, new Commands(this).createStandaloneReloadCommand(), "bluemap");
-		
 		//load configs
-		URL defaultSpongeConfig = SpongePlugin.class.getResource("/bluemap-sponge.conf");
-		URL spongeConfigDefaults = SpongePlugin.class.getResource("/bluemap-sponge-defaults.conf");
-		ConfigManager configManager = new ConfigManager(getConfigPath().toFile(), defaultSpongeConfig, spongeConfigDefaults);
+		URL defaultSpongeConfig = Plugin.class.getResource("/bluemap-" + implementationType + ".conf");
+		URL spongeConfigDefaults = Plugin.class.getResource("/bluemap-" + implementationType + "-defaults.conf");
+		ConfigManager configManager = new ConfigManager(serverInterface.getConfigFolder(), defaultSpongeConfig, spongeConfigDefaults);
 		configManager.loadMainConfig();
 		config = configManager.getMainConfig();
 		
@@ -89,18 +99,32 @@ public class Plugin {
 		File textureExportFile = config.getWebDataPath().resolve("textures.json").toFile();
 		
 		if (!defaultResourceFile.exists()) {
-			handleMissingResources(defaultResourceFile, configManager.getMainConfigFile());
-			unload();
-
-			Sponge.getCommandManager().register(this, new Commands(this).createStandaloneReloadCommand(), "bluemap");
-			return;
+			if (config.isDownloadAccepted()) {
+				
+				//download file
+				try {
+					Logger.global.logInfo("Downloading " + ResourcePack.MINECRAFT_CLIENT_URL + " to " + defaultResourceFile + " ...");
+					ResourcePack.downloadDefaultResource(defaultResourceFile);
+				} catch (IOException e) {
+					Logger.global.logError("Failed to download resources!", e);
+					return;
+				}
+				
+			} else {
+				Logger.global.logWarning("BlueMap is missing important resources!");
+				Logger.global.logWarning("You need to accept the download of the required files in order of BlueMap to work!");
+				try { Logger.global.logWarning("Please check: " + configManager.getMainConfigFile().getCanonicalPath()); } catch (IOException ignored) {}
+				Logger.global.logInfo("If you have changed the config you can simply reload the plugin using: /bluemap reload");
+				
+				return;
+			}
 		}
 
 		resourceExtensionsFile.delete();
-		FileUtils.copyURLToFile(SpongePlugin.class.getResource("/resourceExtensions.zip"), resourceExtensionsFile, 10000, 10000);
+		FileUtils.copyURLToFile(Plugin.class.getResource("/resourceExtensions.zip"), resourceExtensionsFile, 10000, 10000);
 		
 		//find more resource packs
-		File resourcePackFolder = getConfigPath().resolve("resourcepacks").toFile();
+		File resourcePackFolder = new File(serverInterface.getConfigFolder(), "resourcepacks");
 		resourcePackFolder.mkdirs();
 		File[] resourcePacks = resourcePackFolder.listFiles();
 		Arrays.sort(resourcePacks); //load resource packs in alphabetical order so you can reorder them by renaming
@@ -130,13 +154,9 @@ public class Plugin {
 			
 			UUID worldUUID;
 			try {
-				CompoundTag levelSponge = (CompoundTag) NBTUtil.readTag(new File(worldFolder, "level_sponge.dat"));
-				CompoundTag spongeData = levelSponge.getCompoundTag("SpongeData");
-				long most = spongeData.getLong("UUIDMost");
-				long least = spongeData.getLong("UUIDLeast");
-				worldUUID = new UUID(most, least);
-			} catch (Exception e) {
-				Logger.global.logError("Failed to load map '" + id + "': Failed to read level_sponge.dat", e);
+				worldUUID = serverInterface.getUUIDForWorld(worldFolder);
+			} catch (IOException e) {
+				Logger.global.logError("Failed to load map '" + id + "': Failed to get UUID for the world!", e);
 				continue;
 			}
 			
@@ -161,7 +181,7 @@ public class Plugin {
 					resourcePack,
 					mapConfig,
 					new Vector2i(mapConfig.getHiresTileSize(), mapConfig.getHiresTileSize()),
-					getAsyncExecutor()
+					ForkJoinPool.commonPool()
 					);
 			
 			LowresModelManager lowresModelManager = new LowresModelManager(
@@ -196,6 +216,7 @@ public class Plugin {
 		
 		//start map updater
 		this.updateHandler = new MapUpdateHandler();
+		serverInterface.registerListener(updateHandler);
 		
 		//create/update webfiles
 		WebFilesManager webFilesManager = new WebFilesManager(config.getWebRoot());
@@ -225,29 +246,73 @@ public class Plugin {
 			webServer.updateWebfiles();
 			webServer.start();
 		}
-
-		//init commands
-		Sponge.getCommandManager().getOwnedBy(this).forEach(Sponge.getCommandManager()::removeMapping);
-		Sponge.getCommandManager().register(this, new Commands(this).createRootCommand(), "bluemap");
 		
 		//metrics
-		Sponge.getScheduler().createTaskBuilder()
-		.async()
-		.delay(1, TimeUnit.MINUTES)
-		.interval(30, TimeUnit.MINUTES)
-		.execute(() -> {
-			if (Sponge.getMetricsConfigManager().areMetricsEnabled(this)) Metrics.sendReport("Sponge");
-		})
-		.submit(this);
-		
+		metricsThread = new Thread(() -> {
+			try {
+				Thread.sleep(TimeUnit.MINUTES.toMillis(1));
+				
+				while (true) {
+					if (serverInterface.isMetricsEnabled(config.isMetricsEnabled())) Metrics.sendReport("Sponge");
+					Thread.sleep(TimeUnit.MINUTES.toMillis(30));
+				}
+			} catch (InterruptedException ex){
+				return;
+			}
+		});
+		metricsThread.start();
+
 		loaded = true;
 	}
 	
 	public synchronized void unload() {
 		
+		//unregister listeners
+		serverInterface.unregisterAllListeners();
+
+		//stop scheduled threads
+		if (metricsThread != null) metricsThread.interrupt();
+		metricsThread = null;
+		
+		//stop services
+		if (renderManager != null) renderManager.stop();
+		if (webServer != null) webServer.close();
+		
+		//save render-manager state
+		if (updateHandler != null) updateHandler.flushTileBuffer(); //first write all buffered tiles to the render manager to save them too
+		if (renderManager != null) {
+			try {
+				File saveFile = config.getDataPath().resolve("rmstate").toFile();
+				saveFile.getParentFile().mkdirs();
+				if (saveFile.exists()) saveFile.delete();
+				saveFile.createNewFile();
+				
+				try (DataOutputStream out = new DataOutputStream(new GZIPOutputStream(new FileOutputStream(saveFile)))) {
+					renderManager.writeState(out);
+				}
+			} catch (IOException ex) {
+				Logger.global.logError("Failed to save render-manager state!", ex);
+			}
+		}
+		
+		//save renders
+		for (MapType map : maps.values()) {
+			map.getTileRenderer().save();
+		}
+		
+		//clear resources and configs
+		renderManager = null;
+		webServer = null;
+		updateHandler = null;
+		resourcePack = null;
+		config = null;
+		maps.clear();
+		worlds.clear();
+		
+		loaded = false;
 	}
 
-	public synchronized void reload() {
+	public synchronized void reload() throws IOException, ParseResourceException {
 		unload();
 		load();
 	}

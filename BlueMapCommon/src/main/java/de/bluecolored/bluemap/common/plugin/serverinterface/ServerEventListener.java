@@ -1,4 +1,4 @@
-package de.bluecolored.bluemap.plugin.serverinterface;
+package de.bluecolored.bluemap.common.plugin.serverinterface;
 
 import java.util.UUID;
 

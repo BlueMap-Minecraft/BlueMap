@@ -3,10 +3,8 @@ package de.bluecolored.bluemap.sponge;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -24,9 +22,12 @@ import org.spongepowered.api.world.storage.WorldProperties;
 
 import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector2i;
-import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.Lists;
 
+import de.bluecolored.bluemap.common.MapType;
+import de.bluecolored.bluemap.common.RenderManager;
+import de.bluecolored.bluemap.common.RenderTask;
+import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.Chunk;
 import de.bluecolored.bluemap.core.mca.ChunkAnvil112;
@@ -34,16 +35,15 @@ import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.World;
-import de.bluecolored.bluemap.plugin.MapType;
-import de.bluecolored.bluemap.plugin.RenderManager;
-import de.bluecolored.bluemap.plugin.RenderTask;
 
 public class Commands {
 	
 	private SpongePlugin plugin;
+	private Plugin bluemap;
 	
 	public Commands(SpongePlugin plugin) {
 		this.plugin = plugin;
+		this.bluemap = plugin.getBlueMap();
 	}
 	
 	public CommandSpec createRootCommand() {
@@ -56,7 +56,7 @@ public class Commands {
 					if (source instanceof Locatable) {
 						Location<org.spongepowered.api.world.World> loc = ((Locatable) source).getLocation();
 						UUID worldUuid = loc.getExtent().getUniqueId();
-						World world = plugin.getWorld(worldUuid);
+						World world = bluemap.getWorld(worldUuid);
 						Block block = world.getBlock(loc.getBlockPosition());
 						Block blockBelow = world.getBlock(loc.getBlockPosition().add(0, -1, 0));
 						
@@ -118,9 +118,9 @@ public class Commands {
 					
 					plugin.getAsyncExecutor().submit(() -> {
 						try {
-							plugin.reload();
+							bluemap.reload();
 							
-							if (plugin.isLoaded()) {
+							if (bluemap.isLoaded()) {
 								source.sendMessage(Text.of(TextColors.GREEN, "BlueMap reloaded!"));
 							} else {
 								source.sendMessage(Text.of(TextColors.RED, "Could not load BlueMap! See the console for details!"));
@@ -143,8 +143,8 @@ public class Commands {
 			.description(Text.of("Pauses all rendering"))
 			.permission("bluemap.pause")
 			.executor((source, args) -> {
-				if (plugin.getRenderManager().isRunning()) {
-					plugin.getRenderManager().stop();
+				if (bluemap.getRenderManager().isRunning()) {
+					bluemap.getRenderManager().stop();
 					source.sendMessage(Text.of(TextColors.GREEN, "BlueMap rendering paused!"));
 					return CommandResult.success();
 				} else {
@@ -160,8 +160,8 @@ public class Commands {
 			.description(Text.of("Resumes all paused rendering"))
 			.permission("bluemap.resume")
 			.executor((source, args) -> {
-				if (!plugin.getRenderManager().isRunning()) {
-					plugin.getRenderManager().start();
+				if (!bluemap.getRenderManager().isRunning()) {
+					bluemap.getRenderManager().start();
 					source.sendMessage(Text.of(TextColors.GREEN, "BlueMap renders resumed!"));
 					return CommandResult.success();
 				} else {
@@ -193,7 +193,7 @@ public class Commands {
 					return CommandResult.empty();
 				}
 
-				World world = plugin.getWorld(spongeWorld.getUniqueId());
+				World world = bluemap.getWorld(spongeWorld.getUniqueId());
 				if (world == null) {
 					source.sendMessage(Text.of(TextColors.RED, "This world is not loaded with BlueMap! Maybe it is not configured?"));
 				}
@@ -222,9 +222,9 @@ public class Commands {
 					return CommandResult.empty();
 				}
 				
-				for (RenderTask task : plugin.getRenderManager().getRenderTasks()) {
+				for (RenderTask task : bluemap.getRenderManager().getRenderTasks()) {
 					if (task.getUuid().equals(uuid.get())) {
-						plugin.getRenderManager().prioritizeRenderTask(task);
+						bluemap.getRenderManager().prioritizeRenderTask(task);
 						break;
 					}
 				}
@@ -247,9 +247,9 @@ public class Commands {
 					return CommandResult.empty();
 				}
 				
-				for (RenderTask task : plugin.getRenderManager().getRenderTasks()) {
+				for (RenderTask task : bluemap.getRenderManager().getRenderTasks()) {
 					if (task.getUuid().equals(uuid.get())) {
-						plugin.getRenderManager().removeRenderTask(task);
+						bluemap.getRenderManager().removeRenderTask(task);
 						break;
 					}
 				}
@@ -263,7 +263,7 @@ public class Commands {
 	private List<Text> createStatusMessage(){
 		List<Text> lines = new ArrayList<>();
 		
-		RenderManager renderer = plugin.getRenderManager();
+		RenderManager renderer = bluemap.getRenderManager();
 		
 		lines.add(Text.EMPTY);
 		lines.add(Text.of(TextColors.BLUE, "Tile-Updates:"));
@@ -274,7 +274,7 @@ public class Commands {
 			lines.add(Text.of(TextColors.WHITE, " Render-Threads are ", Text.of(TextActions.runCommand("/bluemap resume"), TextActions.showText(Text.of("click to resume rendering")), TextColors.RED, "paused"), TextColors.GRAY, "!"));
 		}
 		
-		lines.add(Text.of(TextColors.WHITE, " Scheduled tile-updates: ", Text.of(TextActions.showText(Text.of("tiles waiting for a free render-thread")), TextColors.GOLD, renderer.getQueueSize()), Text.of(TextActions.showText(Text.of("tiles waiting for world-save")), TextColors.GRAY, " + " + plugin.getUpdateHandler().getUpdateBufferCount())));
+		lines.add(Text.of(TextColors.WHITE, " Scheduled tile-updates: ", Text.of(TextActions.showText(Text.of("tiles waiting for a free render-thread")), TextColors.GOLD, renderer.getQueueSize()), Text.of(TextActions.showText(Text.of("tiles waiting for world-save")), TextColors.GRAY, " + " + bluemap.getUpdateHandler().getUpdateBufferCount())));
 		
 		RenderTask[] tasks = renderer.getRenderTasks();
 		if (tasks.length > 0) {
@@ -319,25 +319,18 @@ public class Commands {
 		Collection<Vector2i> chunks = world.getChunkList();
 		source.sendMessage(Text.of(TextColors.GREEN, chunks.size() + " chunks found!"));
 		
-		for (MapType map : SpongePlugin.getInstance().getMapTypes()) {
+		for (MapType map : bluemap.getMapTypes()) {
 			if (!map.getWorld().getUUID().equals(world.getUUID())) continue;
 
 			source.sendMessage(Text.of(TextColors.GOLD, "Collecting tiles for map '" + map.getId() + "'"));
 			
 			HiresModelManager hmm = map.getTileRenderer().getHiresModelManager();
-			Set<Vector2i> tiles = new HashSet<>();
-			for (Vector2i chunk : chunks) {
-				Vector3i minBlockPos = new Vector3i(chunk.getX() * 16, 0, chunk.getY() * 16);
-				tiles.add(hmm.posToTile(minBlockPos));
-				tiles.add(hmm.posToTile(minBlockPos.add(0, 0, 15)));
-				tiles.add(hmm.posToTile(minBlockPos.add(15, 0, 0)));
-				tiles.add(hmm.posToTile(minBlockPos.add(15, 0, 15)));
-			}
+			Collection<Vector2i> tiles = hmm.getTilesForChunks(chunks);
 
 			RenderTask task = new RenderTask("world-render", map);
 			task.addTiles(tiles);
 			task.optimizeQueue();
-			plugin.getRenderManager().addRenderTask(task);
+			bluemap.getRenderManager().addRenderTask(task);
 			
 			source.sendMessage(Text.of(TextColors.GREEN, tiles.size() + " tiles found! Task created."));
 		}
