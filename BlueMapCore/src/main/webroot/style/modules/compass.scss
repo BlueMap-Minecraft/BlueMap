@@ -1,0 +1,8 @@
+#bluemap-compass {
+    width: 30px;
+    height: 30px;
+
+    &:hover #bluemap-compass-needle {
+        filter: invert(1);
+    }
+}

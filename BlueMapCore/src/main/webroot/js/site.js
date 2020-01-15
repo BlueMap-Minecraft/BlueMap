@@ -1,6 +1,8 @@
-// global variable to enable access through browser console
-var blueMap;
+import $ from 'jquery';
+import BlueMap from './libs/BlueMap.js';
 
-$(document).ready(function () {
-	blueMap = new BlueMap($("#map-container")[0], "data/");
+import '../style/style.scss';
+
+$(document).ready(() => {
+	window.blueMap = new BlueMap($('#map-container')[0], 'data/');
 });

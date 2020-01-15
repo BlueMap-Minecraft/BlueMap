@@ -6,7 +6,7 @@ plugins {
 allprojects {
 	repositories {
 		mavenCentral()
-		maven { 
+		maven {
 			url 'https://jitpack.io'
 		}
 		maven {
@@ -21,7 +21,7 @@ allprojects {
 
 	compileJava.options.compilerArgs.add '-parameters'
 	compileTestJava.options.compilerArgs.add '-parameters'
-	
+
 	apply plugin: 'java'
 	apply plugin: 'com.github.johnrengelman.shadow'
 }
@@ -32,15 +32,15 @@ dependencies {
 	compile project(':BlueMapSponge')
 }
 
-shadowJar {
+assemble.dependsOn shadowJar {
 	relocate 'org.bstats.bukkit', 'de.bluecolored.bluemap.bstats.bukkit'
-
+	
 	baseName = 'BlueMap'
 	version = null
 	classifier = null
 }
 
-jar {    
+jar {
 	manifest {
 		attributes 'Main-Class' : "de.bluecolored.bluemap.cli.BlueMapCLI"
 	}

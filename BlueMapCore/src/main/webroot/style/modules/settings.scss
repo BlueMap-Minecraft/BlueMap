@@ -1,0 +1,41 @@
+#bluemap-settings {
+  width: 30px;
+  height: 30px;
+}
+
+#bluemap-settings.active:not(:hover) {
+  background-color: #dddddd;
+}
+
+#bluemap-settings:hover > img {
+  filter: invert(1);
+}
+
+#bluemap-settings-container {
+  display: flex;
+  white-space: nowrap;
+}
+
+#bluemap-settings-quality {
+  width: 150px;
+  height: 30px;
+
+}
+
+#bluemap-settings-quality .selection, #bluemap-settings-quality .dropdown li {
+  padding-left: 10px;
+}
+
+#bluemap-settings-render-distance {
+  width: 180px;
+}
+
+#bluemap-settings-render-distance .selection {
+  padding-left: 10px;
+}
+
+#bluemap-settings-render-distance input {
+  width: calc(100% - 20px);
+  margin: 10px;
+  padding: 0;
+}
