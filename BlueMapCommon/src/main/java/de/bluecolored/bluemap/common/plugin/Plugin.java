@@ -56,6 +56,7 @@ public class Plugin {
 	private String implementationType;
 	
 	private ServerInterface serverInterface;
+	private Commands commands;
 	
 	private MainConfig config;
 	private ResourcePack resourcePack;
@@ -74,7 +75,9 @@ public class Plugin {
 
 	public Plugin(String implementationType, ServerInterface serverInterface) {
 		this.implementationType = implementationType.toLowerCase();
+		
 		this.serverInterface = serverInterface;
+		this.commands = new Commands(this);
 		
 		this.maps = new HashMap<>();
 		this.worlds = new HashMap<>();
@@ -319,6 +322,10 @@ public class Plugin {
 	
 	public ServerInterface getServerInterface() {
 		return serverInterface;
+	}
+	
+	public Commands getCommands() {
+		return commands;
 	}
 	
 	public MainConfig getMainConfig() {

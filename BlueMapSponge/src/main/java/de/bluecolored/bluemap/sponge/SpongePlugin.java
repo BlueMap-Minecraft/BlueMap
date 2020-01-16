@@ -85,7 +85,7 @@ public class SpongePlugin implements ServerInterface {
 			Sponge.getServer().saveWorldProperties(properties);
 		}
 		
-		Sponge.getCommandManager().register(this, new Commands(this).createRootCommand(), "bluemap");
+		Sponge.getCommandManager().register(this, new SpongeCommands(bluemap.getCommands()).createRootCommand(), "bluemap");
 		
 		asyncExecutor.execute(() -> {
 			try {
@@ -144,14 +144,6 @@ public class SpongePlugin implements ServerInterface {
 	@Override
 	public File getConfigFolder() {
 		return configurationDir.toFile();
-	}
-	
-	public SpongeExecutorService getAsyncExecutor() {
-		return asyncExecutor;
-	}
-
-	public Plugin getBlueMap() {
-		return bluemap;
 	}
 	
 }

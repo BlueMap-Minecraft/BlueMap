@@ -14,25 +14,29 @@ public class Text {
 	private String clickCommand;
 	private List<Text> children = new ArrayList<>();
 	
-	public void setHoverText(Text hoverText) {
+	public Text setHoverText(Text hoverText) {
 		this.hoverText = hoverText;
+		
+		return this;
 	}
 	
-	public void setClickCommand(String clickCommand) {
+	public Text setClickCommand(String clickCommand) {
 		this.clickCommand = clickCommand;
+		
+		return this;
 	}
 	
-	public void addChild(Text child) {
+	public Text addChild(Text child) {
 		children.add(child);
+		
+		return this;
 	}
 	
 	public String toJSONString() {
 		StringBuilder sb = new StringBuilder();
 		sb.append("{");
 		
-		if (!content.isEmpty()) {
-			sb.append(quote("text")).append(":").append(quote(content)).append(',');
-		}
+		sb.append(quote("text")).append(":").append(quote(content)).append(',');
 
 		if (color != null) {
 			sb.append(quote("color")).append(":").append(quote(color.getId())).append(',');
@@ -46,23 +50,23 @@ public class Text {
 			sb.append(quote("hoverEvent")).append(":{");
 			sb.append(quote("action")).append(":").append(quote("show_text")).append(',');
 			sb.append(quote("value")).append(":").append(quote(hoverText.toFormattingCodedString('§')));
-			sb.append("}");
+			sb.append("},");
 		}
 
 		if (clickCommand != null) {
 			sb.append(quote("clickEvent")).append(":{");
 			sb.append(quote("action")).append(":").append(quote("run_command")).append(',');
 			sb.append(quote("value")).append(":").append(quote(clickCommand));
-			sb.append("}");
+			sb.append("},");
 		}
 		
 		if (!children.isEmpty()) {
-			sb.append(quote("")).append(":[");
+			sb.append(quote("extra")).append(":[");
 			for (Text child : children) {
 				sb.append(child.toJSONString()).append(',');
 			}
 			sb.deleteCharAt(sb.length() - 1); //delete last ,
-			sb.append("]");
+			sb.append("],");
 		}
 		
 		if (sb.charAt(sb.length() - 1) == ',') sb.deleteCharAt(sb.length() - 1);  //delete last ,
@@ -87,7 +91,8 @@ public class Text {
 		}
 		
 		for (Text child : children) {
-			sb.append(escapeChar).append('r').append(child.withParentFormat(this).toFormattingCodedString(escapeChar));
+			if (sb.length() > 0) sb.append(escapeChar).append('r');
+			sb.append(child.withParentFormat(this).toFormattingCodedString(escapeChar));
 		}
 		
 		return sb.toString();
@@ -126,7 +131,7 @@ public class Text {
 	private String escape(String value) {
 		value = value.replace("\\", "\\\\");
 		value = value.replace("\"", "\\\"");
-		value = value.replace("§", "\\u00a76");
+		value = value.replace("§", "\\u00a7");
 		value = value.replace("\n", "\\n");
 		return value;
 	}
@@ -194,7 +199,7 @@ public class Text {
 		}
 		
 		if (text.children.isEmpty()) return text;
-		if (text.children.size() == 1) return text.children.get(1);
+		if (text.children.size() == 1) return text.children.get(0);
 		
 		return text;
 	}

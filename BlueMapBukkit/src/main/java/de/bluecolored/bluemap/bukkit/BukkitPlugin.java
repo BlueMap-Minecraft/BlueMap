@@ -17,14 +17,14 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface {
 	
 	private Plugin bluemap;
 	private EventForwarder eventForwarder;
-	private Commands commands;
+	private BukkitCommands commands;
 	
 	public BukkitPlugin() {
 		Logger.global = new JavaLogger(getLogger());
 
 		this.eventForwarder = new EventForwarder();
-		this.commands = new Commands(this);
 		this.bluemap = new Plugin("bukkit", this);
+		this.commands = new BukkitCommands(bluemap.getCommands());
 	}
 	
 	@Override
@@ -64,16 +64,18 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface {
 
 	@Override
 	public UUID getUUIDForWorld(File worldFolder) throws IOException {
+		worldFolder = worldFolder.getCanonicalFile();
 		for (World world : getServer().getWorlds()) {
-			if (worldFolder.equals(world.getWorldFolder())) return world.getUID();
+			Logger.global.logInfo("Found world-folder: " + world.getWorldFolder().getCanonicalPath());
+			if (worldFolder.equals(world.getWorldFolder().getCanonicalFile())) return world.getUID();
 		}
 		
-		throw new IOException("There is no world with this folder loaded!");
+		throw new IOException("There is no world with this folder loaded: " + worldFolder.getCanonicalPath());
 	}
 
 	@Override
 	public File getConfigFolder() {
-		return getConfigFolder();
+		return getDataFolder();
 	}
 	
 	public Plugin getBlueMap() {
