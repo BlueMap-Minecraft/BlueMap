@@ -101,10 +101,10 @@ export default class Controls {
 		window.addEventListener('contextmenu', event => {
 			event.preventDefault();
 		}, false);
-		canvas.addEventListener('mousedown', this.onMouseDown, false);
 		window.addEventListener('mousemove', this.onMouseMove, false);
-		window.addEventListener('mouseup', this.onMouseUp, false);
-		canvas.addEventListener('wheel', this.onMouseWheel, false);
+		canvas.addEventListener('mousedown', this.onMouseDown, false);
+		canvas.addEventListener('mouseup', this.onMouseUp, false);
+		canvas.addEventListener('wheel', this.onMouseWheel, { passive: true });
 		window.addEventListener('keydown', this.onKeyDown, false);
 		window.addEventListener('keyup', this.onKeyUp, false);
 
@@ -291,7 +291,7 @@ export default class Controls {
 		this.keyStates[event.keyCode] = true;
 	}
 
-	onKeyUp = e => {
+	onKeyUp = event => {
 		this.keyStates[event.keyCode] = false;
 	}
 }

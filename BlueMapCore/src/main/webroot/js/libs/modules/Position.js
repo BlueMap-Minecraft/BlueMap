@@ -29,19 +29,43 @@ import { getTopLeftElement } from './Module.js';
 export default class Position {
 	constructor(blueMap) {
 		this.blueMap = blueMap;
-		const parent = getTopLeftElement(blueMap);
 
 		$('.bluemap-position').remove();
-		this.elementX = $('<div class="bluemap-position pos-x">0</div>').appendTo(parent);
-		//this.elementY = $('<div class="bluemap-position pos-y">0</div>').appendTo(parent);
-		this.elementZ = $('<div class="bluemap-position pos-z">0</div>').appendTo(parent);
+		this.elements = [
+			this.createPositionElement('x'),
+			null,//this.elementY = this.createPositionElement('y');
+			this.createPositionElement('z'),
+		];
 
 		$(document).on('bluemap-update-frame', this.onBlueMapUpdateFrame);
 	}
 
-	onBlueMapUpdateFrame = () => {
-		this.elementX.html(Math.floor(this.blueMap.controls.targetPosition.x));
-		//this.elementY.html(this.blueMap.controls.targetPosition.y === 0 ? '-' : Math.floor(this.blueMap.controls.targetPosition.y));
-		this.elementZ.html(Math.floor(this.blueMap.controls.targetPosition.z));
+	/** Creates the position display */
+	createPositionElement(type) {
+		const parent = getTopLeftElement(this.blueMap);
+		const element = $(`<div class="bluemap-position" data-pos="${type}"><input type="number" value="0" /></div>`)
+			.appendTo(parent)
+			.children()
+			.first();
+		element.on('input', this.onInput(type));
+		return element;
 	}
+
+	onInput = type => event => {
+		const value = Number(event.target.value);
+		if (!isNaN(value)) {
+			this.blueMap.controls.targetPosition[type] = value;
+		}
+	};
+
+	onBlueMapUpdateFrame = () => {
+		const { x, y, z } = this.blueMap.controls.targetPosition;
+		const values = [ z, y, x ];
+		for (let element of this.elements) {
+			const value = Math.floor(values.pop());
+			if (element) {
+				element.val(value);
+			}
+		}
+	};
 }
