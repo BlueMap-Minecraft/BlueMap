@@ -3,12 +3,12 @@
 
   input {
     width: 60px;
-    height: 30px;
+    height: 100%;
     border: none;
     outline: none;
     background: transparent;
     padding: 0 5px 0 25px;
-    font-family: Verdana,Helvetica,Arial,sans-serif;
+    font-family: inherit;
   }
 
   &[data-pos]::before {
