@@ -1,0 +1,21 @@
+.bluemap-position {
+  position: relative;
+
+  input {
+    width: 60px;
+    height: 30px;
+    border: none;
+    outline: none;
+    background: transparent;
+    padding: 0 5px 0 25px;
+    font-family: Verdana,Helvetica,Arial,sans-serif;
+  }
+
+  &[data-pos]::before {
+    position: absolute;
+    left: 7px;
+    color: #888888;
+    content: attr(data-pos)':';
+  }
+}
+

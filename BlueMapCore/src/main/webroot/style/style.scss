@@ -2,6 +2,7 @@
 @import "./modules/compass.scss";
 @import "./modules/info.scss";
 @import "./modules/mapmenu.scss";
+@import "./modules/position.scss";
 @import "./modules/settings.scss";
 
 html, body {
@@ -124,30 +125,4 @@ html, body {
 
 #bluemap-topleft > *:not(:last-child) {
     border-right: solid 1px #dddddd;
-}
-
-.bluemap-position {
-    position: relative;
-
-    width: 60px;
-    height: 30px;
-    padding: 0 5px 0 25px;
-}
-
-.bluemap-position::before {
-    position: absolute;
-    left: 7px;
-    color: #888888;
-}
-
-.bluemap-position.pos-x::before {
-    content: "x:";
-}
-
-.bluemap-position.pos-y::before {
-    content: "y:";
-}
-
-.bluemap-position.pos-z::before {
-    content: "z:";
 }
