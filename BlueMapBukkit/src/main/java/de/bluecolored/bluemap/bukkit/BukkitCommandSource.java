@@ -17,15 +17,17 @@ public class BukkitCommandSource implements CommandSource {
 
 	@Override
 	public void sendMessage(Text text) {
-		if (delegate instanceof Player) {
-			Player player = (Player) delegate;
+		Bukkit.getScheduler().runTask(BukkitPlugin.getInstance(), () -> {
+			if (delegate instanceof Player) {
+				Player player = (Player) delegate;
+				
+				//kinda hacky but works 
+				Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "tellraw " + player.getName() + " " + text.toJSONString());
+				return;
+			}
 			
-			//kinda hacky but works 
-			Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "tellraw " + player.getName() + " " + text.toJSONString());
-			return;
-		}
-		
-		delegate.sendMessage(text.toFormattingCodedString('§'));
+			delegate.sendMessage(text.toFormattingCodedString('§'));
+		});
 	}
 	
 }

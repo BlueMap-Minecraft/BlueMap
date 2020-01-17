@@ -3,8 +3,12 @@ package de.bluecolored.bluemap.bukkit;
 import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 import org.bstats.bukkit.MetricsLite;
+import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -14,6 +18,8 @@ import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.logger.Logger;
 
 public class BukkitPlugin extends JavaPlugin implements ServerInterface {
+	
+	private static BukkitPlugin instance;
 	
 	private Plugin bluemap;
 	private EventForwarder eventForwarder;
@@ -25,6 +31,8 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface {
 		this.eventForwarder = new EventForwarder();
 		this.bluemap = new Plugin("bukkit", this);
 		this.commands = new BukkitCommands(bluemap.getCommands());
+		
+		BukkitPlugin.instance = this;
 	}
 	
 	@Override
@@ -64,9 +72,30 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface {
 
 	@Override
 	public UUID getUUIDForWorld(File worldFolder) throws IOException {
-		worldFolder = worldFolder.getCanonicalFile();
+		final File normalizedWorldFolder = worldFolder.getCanonicalFile();
+
+		Future<UUID> futureUUID;
+		if (!Bukkit.isPrimaryThread()) {
+			futureUUID = Bukkit.getScheduler().callSyncMethod(BukkitPlugin.getInstance(), () -> getUUIDForWorldSync(normalizedWorldFolder));
+		} else {
+			futureUUID = CompletableFuture.completedFuture(getUUIDForWorldSync(normalizedWorldFolder));
+		}
+		
+		try {
+			return futureUUID.get();
+		} catch (InterruptedException e) {
+			throw new IOException(e);
+		} catch (ExecutionException e) {
+			if (e.getCause() instanceof IOException) {
+				throw (IOException) e.getCause();
+			} else {
+				throw new IOException(e);
+			}
+		}
+	}
+	
+	private UUID getUUIDForWorldSync (File worldFolder) throws IOException {
 		for (World world : getServer().getWorlds()) {
-			Logger.global.logInfo("Found world-folder: " + world.getWorldFolder().getCanonicalPath());
 			if (worldFolder.equals(world.getWorldFolder().getCanonicalFile())) return world.getUID();
 		}
 		
@@ -82,4 +111,8 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface {
 		return bluemap;
 	}
 
+	public static BukkitPlugin getInstance() {
+		return instance;
+	}
+	
 }
