@@ -103,7 +103,7 @@ export default class Controls {
 		}, false);
 		window.addEventListener('mousemove', this.onMouseMove, false);
 		canvas.addEventListener('mousedown', this.onMouseDown, false);
-		canvas.addEventListener('mouseup', this.onMouseUp, false);
+		window.addEventListener('mouseup', this.onMouseUp, false); //this is on the window instead of the canvas, so if we drag out of the canvas and release the mouse it actually gets released
 		canvas.addEventListener('wheel', this.onMouseWheel, { passive: true });
 		window.addEventListener('keydown', this.onKeyDown, false);
 		window.addEventListener('keyup', this.onKeyUp, false);
@@ -197,7 +197,7 @@ export default class Controls {
 					this.minHeight = intersects[0].point.y;
 				}
 			}
-	};
+	}
 
 	updateMouseMoves = () => {
 		this.deltaMouse.set(this.lastMouse.x - this.mouse.x, this.lastMouse.y - this.mouse.y);
@@ -249,7 +249,7 @@ export default class Controls {
 
 		if (this.targetDistance < this.settings.zoom.min) this.targetDistance = this.settings.zoom.min;
 		if (this.targetDistance > this.settings.zoom.max) this.targetDistance = this.settings.zoom.max;
-	}
+	};
 
 	onMouseMove = event => {
 		this.mouse.set(event.clientX, event.clientY);
@@ -257,10 +257,12 @@ export default class Controls {
 		if (this.state !== Controls.STATES.NONE){
 			event.preventDefault();
 		}
-	}
+	};
 
 	onMouseDown = event => {
 		if (this.state !== Controls.STATES.NONE) return;
+
+		$(":focus").blur();
 
 		switch (event.button) {
 			case Controls.KEYS.MOVE :
@@ -272,7 +274,7 @@ export default class Controls {
 				event.preventDefault();
 				break;
 		}
-	}
+	};
 
 	onMouseUp = event => {
 		if (this.state === Controls.STATES.NONE) return;
@@ -285,13 +287,13 @@ export default class Controls {
 				if (this.state === Controls.STATES.ORBIT) this.state = Controls.STATES.NONE;
 				break;
 		}
-	}
+	};
 
 	onKeyDown = event => {
 		this.keyStates[event.keyCode] = true;
-	}
+	};
 
 	onKeyUp = event => {
 		this.keyStates[event.keyCode] = false;
-	}
+	};
 }

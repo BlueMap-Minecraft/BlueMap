@@ -53,11 +53,11 @@ export default class MapMenu {
 	onMapClick = event => {
 		const map = $(event.target).attr('map');
 		this.bluemap.changeMap(map);
-	}
+	};
 
 	onBlueMapMapChange = () => {
 		this.maplist.find('li').show();
 		this.maplist.find('li[map=' + this.bluemap.map + ']').hide();
 		this.element.find('.selection').html(this.bluemap.settings[this.bluemap.map].name);
-	}
+	};
 }

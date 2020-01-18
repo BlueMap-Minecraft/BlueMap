@@ -43,13 +43,13 @@ export default class Settings {
 
 		this.elementQuality = $(
 			'<div id="bluemap-settings-quality" class="dropdown-container"><span class="selection">Quality: <span>Normal</span></span><div class="dropdown"><ul>' +
-			'<li quality="2">High</li>' +
-			'<li quality="1" style="display: none">Normal</li>' +
-			'<li quality="0.75">Fast</li>' +
+			'<li data-quality="2">High</li>' +
+			'<li data-quality="1" style="display: none">Normal</li>' +
+			'<li data-quality="0.75">Fast</li>' +
 			'</ul></div></div>'
 		).prependTo(this.elementMenu);
 
-		this.elementQuality.find('li[quality]').click(this.onQualityClick);
+		this.elementQuality.find('li[data-quality]').click(this.onQualityClick);
 		this.elementRenderDistance = $('<div id="bluemap-settings-render-distance" class="dropdown-container"></div>').prependTo(this.elementMenu);
 
 		this.init();
@@ -84,10 +84,10 @@ export default class Settings {
 	onQualityClick = (event) => {
 		const target = event.target
 		const desc = $(target).html();
-		this.blueMap.quality = parseFloat($(target).attr('quality'));
+		this.blueMap.quality = parseFloat($(target).attr('data-quality'));
 
 		this.elementQuality.find('li').show();
-		this.elementQuality.find(`li[quality="${this.blueMap.quality}"]`).hide();
+		this.elementQuality.find(`li[data-quality="${this.blueMap.quality}"]`).hide();
 
 		this.elementQuality.find('.selection > span').html(desc);
 
@@ -104,7 +104,7 @@ export default class Settings {
 		this.elementMenu.animate({
 			width: 'toggle'
 		}, 200);
-	}
+	};
 
 	pctToRenderDistance(value, defaultValue) {
 		let max = defaultValue * 5;

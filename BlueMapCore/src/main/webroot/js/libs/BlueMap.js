@@ -205,7 +205,9 @@ export default class BlueMap {
 		setTimeout(this.update, 1000);
 
 		this.lowresTileManager.setPosition(this.controls.targetPosition);
-		this.hiresTileManager.setPosition(this.controls.targetPosition);
+		if (this.camera.position.y < 400) {
+			this.hiresTileManager.setPosition(this.controls.targetPosition);
+		}
 
 		this.locationHash =
 			'#' + this.map
@@ -239,7 +241,7 @@ export default class BlueMap {
 			this.renderer.clearDepth();
 			this.renderer.render(this.hiresScene, this.camera, this.renderer.getRenderTarget(), false);
 		}
-	}
+	};
 
 	handleContainerResize = () => {
 		this.camera.aspect = this.element.clientWidth / this.element.clientHeight;
@@ -254,7 +256,7 @@ export default class BlueMap {
 			.css('height', this.element.clientHeight);
 
 		this.updateFrame = true;
-	}
+	};
 
 	async loadSettings() {
 		return new Promise(resolve => {
@@ -455,19 +457,28 @@ export default class BlueMap {
 
 	// ###### UI ######
 
-	alert(content) {
+	toggleAlert(id, content) {
 		let alertBox = $('#alert-box');
 		if (alertBox.length === 0){
 			alertBox = $('<div id="alert-box"></div>').appendTo(this.element);
 		}
 
 		let displayAlert = () => {
-			let alert = $(`<div class="alert box" style="display: none;"><div class="alert-close-button"></div>${content}</div>`).appendTo(alertBox);
+			let alert = $(`<div class="alert box" data-alert-id="${id}" style="display: none;"><div class="alert-close-button"></div>${content}</div>`).appendTo(alertBox);
 			alert.find('.alert-close-button').click(() => {
 				alert.fadeOut(200, () => alert.remove());
 			});
 			alert.fadeIn(200);
 		};
+
+		let sameAlert = alertBox.find(`.alert[data-alert-id=${id}]`);
+		if (sameAlert.length > 0){
+			alertBox.fadeOut(200, () => {
+				alertBox.html('');
+				alertBox.show();
+			});
+			return;
+		}
 
 		let oldAlerts = alertBox.find('.alert');
 		if (oldAlerts.length > 0){
@@ -476,8 +487,9 @@ export default class BlueMap {
 				alertBox.show();
 				displayAlert();
 			});
-		} else {
-			displayAlert();
+			return;
 		}
+
+		displayAlert();
 	}
 }
