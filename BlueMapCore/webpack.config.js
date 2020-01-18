@@ -23,6 +23,7 @@ module.exports = {
     compress: true,
     port: 8080,
     hot: true,
+    host: "192.168.178.22"
   },
   plugins: [
     new MiniCssExtractPlugin({

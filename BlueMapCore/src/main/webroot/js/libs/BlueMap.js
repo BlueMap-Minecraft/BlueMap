@@ -69,6 +69,7 @@ export default class BlueMap {
 		this.dataRoot = dataRoot;
 
 		this.loadingNoticeElement = $('<div id="bluemap-loading" class="box">loading...</div>').appendTo($(this.element));
+		window.onerror = this.onLoadError;
 
 		this.fileLoader = new FileLoader();
 		this.blobLoader = new FileLoader();
@@ -105,7 +106,7 @@ export default class BlueMap {
 
 			this.initModules();
 			this.start();
-		});
+		}).catch(error => this.onLoadError(error.toString()));
 	}
 
 	initModules() {
@@ -363,7 +364,6 @@ export default class BlueMap {
 		return new Promise(resolve => {
 			this.fileLoader.load(this.dataRoot + 'textures.json', textures => {
 				textures = JSON.parse(textures);
-
 				let materials = [];
 				for (let i = 0; i < textures['textures'].length; i++) {
 					let t = textures['textures'][i];
@@ -399,7 +399,6 @@ export default class BlueMap {
 				}
 
 				this.hiresMaterial = materials;
-
 				resolve();
 			});
 		});
@@ -458,6 +457,17 @@ export default class BlueMap {
 		})
 	}
 
+	onLoadError = (message, url, line, col) => {
+		this.loadingNoticeElement.remove();
+
+		this.toggleAlert(undefined, `
+		<div style="max-width: 500px">
+			<h1>Error</h1>
+			<p style="color: red; font-family: monospace">${message}</p>
+		</div>
+		`);
+	};
+
 	// ###### UI ######
 
 	toggleAlert(id, content) {
@@ -474,13 +484,15 @@ export default class BlueMap {
 			alert.fadeIn(200);
 		};
 
-		let sameAlert = alertBox.find(`.alert[data-alert-id=${id}]`);
-		if (sameAlert.length > 0){
-			alertBox.fadeOut(200, () => {
-				alertBox.html('');
-				alertBox.show();
-			});
-			return;
+		if (id !== undefined) {
+			let sameAlert = alertBox.find(`.alert[data-alert-id=${id}]`);
+			if (sameAlert.length > 0) {
+				alertBox.fadeOut(200, () => {
+					alertBox.html('');
+					alertBox.show();
+				});
+				return;
+			}
 		}
 
 		let oldAlerts = alertBox.find('.alert');
