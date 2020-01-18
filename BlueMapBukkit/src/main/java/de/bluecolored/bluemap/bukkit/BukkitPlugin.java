@@ -39,6 +39,11 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface {
 	public void onEnable() {
 		new MetricsLite(this);
 		
+		//save world so the level.dat is present on new worlds
+		for (World world : getServer().getWorlds()) {
+			world.save();
+		}
+		
 		getServer().getPluginManager().registerEvents(eventForwarder, this);
 		getCommand("bluemap").setExecutor(commands);
 		
