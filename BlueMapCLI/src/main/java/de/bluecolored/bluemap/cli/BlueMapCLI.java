@@ -166,8 +166,7 @@ public class BlueMapCLI {
 			}
 			
 			if (tiles.isEmpty()) {
-				Logger.global.logInfo("Render finished!");
-				return;
+				continue;
 			}
 		
 			Logger.global.logInfo("Starting Render...");
