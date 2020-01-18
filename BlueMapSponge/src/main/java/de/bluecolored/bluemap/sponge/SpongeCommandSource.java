@@ -22,50 +22,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-import $ from 'jquery';
+package de.bluecolored.bluemap.sponge;
 
-import { getTopLeftElement } from './Module.js';
+import org.spongepowered.api.text.serializer.TextSerializers;
 
-export default class Position {
-	constructor(blueMap) {
-		this.blueMap = blueMap;
+import de.bluecolored.bluemap.common.plugin.serverinterface.CommandSource;
+import de.bluecolored.bluemap.common.plugin.text.Text;
 
-		$('.bluemap-position').remove();
-		this.elements = [
-			this.createPositionElement('x'),
-			null,//this.elementY = this.createPositionElement('y');
-			this.createPositionElement('z'),
-		];
+public class SpongeCommandSource implements CommandSource {
 
-		$(document).on('bluemap-update-frame', this.onBlueMapUpdateFrame);
+	private org.spongepowered.api.command.CommandSource delegate;
+	
+	public SpongeCommandSource(org.spongepowered.api.command.CommandSource delegate) {
+		this.delegate = delegate;
+	}
+	
+	@Override
+	public void sendMessage(Text text) {
+		org.spongepowered.api.text.Text spongeText = TextSerializers.JSON.deserializeUnchecked(text.toJSONString());
+		delegate.sendMessage(spongeText);
 	}
 
-	/** Creates the position display */
-	createPositionElement(type) {
-		const parent = getTopLeftElement(this.blueMap);
-		const element = $(`<div class="bluemap-position" data-pos="${type}"><input type="number" value="0" /></div>`)
-			.appendTo(parent)
-			.children()
-			.first();
-		element.on('input', this.onInput(type));
-		return element;
-	}
-
-	onInput = type => event => {
-		const value = Number(event.target.value);
-		if (!isNaN(value)) {
-			this.blueMap.controls.targetPosition[type] = value;
-		}
-	};
-
-	onBlueMapUpdateFrame = () => {
-		const { x, y, z } = this.blueMap.controls.targetPosition;
-		const values = [ z, y, x ];
-		for (let element of this.elements) {
-			const value = Math.floor(values.pop());
-			if (element) {
-				element.val(value);
-			}
-		}
-	};
 }

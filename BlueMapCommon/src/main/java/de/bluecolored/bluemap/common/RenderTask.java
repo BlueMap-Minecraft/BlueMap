@@ -1,4 +1,4 @@
-package de.bluecolored.bluemap.sponge;
+package de.bluecolored.bluemap.common;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -159,12 +159,12 @@ public class RenderTask {
 		}
 	}
 	
-	public static RenderTask read(DataInputStream in) throws IOException {
+	public static RenderTask read(DataInputStream in, Collection<MapType> mapTypes) throws IOException {
 		String name = in.readUTF();
 		String mapId = in.readUTF();
 		
 		MapType mapType = null;
-		for (MapType map : SpongePlugin.getInstance().getMapTypes()) {
+		for (MapType map : mapTypes) {
 			if (map.getId().equals(mapId)) {
 				mapType = map;
 				break;

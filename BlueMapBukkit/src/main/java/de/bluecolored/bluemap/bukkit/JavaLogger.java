@@ -22,70 +22,49 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.sponge;
+package de.bluecolored.bluemap.bukkit;
 
-import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-import com.flowpowered.math.vector.Vector2i;
-import com.google.common.base.Preconditions;
+import de.bluecolored.bluemap.core.logger.AbstractLogger;
 
-import de.bluecolored.bluemap.core.render.TileRenderer;
-import de.bluecolored.bluemap.core.render.WorldTile;
-import de.bluecolored.bluemap.core.world.World;
+public class JavaLogger extends AbstractLogger {
 
-public class MapType {
-
-	private final String id;
-	private String name;
-	private World world;
-	private TileRenderer tileRenderer;
+	private Logger out;
 	
-	public MapType(String id, String name, World world, TileRenderer tileRenderer) {
-		Preconditions.checkNotNull(id);
-		Preconditions.checkNotNull(name);
-		Preconditions.checkNotNull(world);
-		Preconditions.checkNotNull(tileRenderer);
-		
-		this.id = id;
-		this.name = name;
-		this.world = world;
-		this.tileRenderer = tileRenderer;
+	public JavaLogger(Logger out) {
+		this.out = out;
 	}
 
-	public String getId() {
-		return id;
+	@Override
+	public void logError(String message, Throwable throwable) {
+		out.log(Level.SEVERE, message, throwable);
 	}
 
-	public String getName() {
-		return name;
+	@Override
+	public void logWarning(String message) {
+		out.log(Level.WARNING, message);
 	}
 
-	public World getWorld() {
-		return world;
+	@Override
+	public void logInfo(String message) {
+		out.log(Level.INFO, message);
 	}
 
-	public TileRenderer getTileRenderer() {
-		return tileRenderer;
-	}
-	
-	public void renderTile(Vector2i tile) throws IOException {
-		getTileRenderer().render(new WorldTile(getWorld(), tile));
+	@Override
+	public void logDebug(String message) {
+		if (out.isLoggable(Level.FINE)) out.log(Level.FINE, message);
 	}
 	
 	@Override
-	public int hashCode() {
-		return id.hashCode();
+	public void noFloodDebug(String message) {
+		if (out.isLoggable(Level.FINE)) super.noFloodDebug(message);
 	}
 	
 	@Override
-	public boolean equals(Object obj) {
-		if (obj != null && obj instanceof MapType) {
-			MapType that = (MapType) obj;
-			
-			return this.id.equals(that.id);
-		}
-		
-		return false;
+	public void noFloodDebug(String key, String message) {
+		if (out.isLoggable(Level.FINE)) super.noFloodDebug(key, message);
 	}
 	
 }

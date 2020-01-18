@@ -31,10 +31,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
@@ -49,7 +47,6 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.FileUtils;
 
 import com.flowpowered.math.vector.Vector2i;
-import com.flowpowered.math.vector.Vector3i;
 import com.google.common.base.Preconditions;
 
 import de.bluecolored.bluemap.core.config.ConfigManager;
@@ -162,14 +159,7 @@ public class BlueMapCLI {
 			}
 			
 			HiresModelManager hiresModelManager = map.getTileRenderer().getHiresModelManager();
-			Set<Vector2i> tiles = new HashSet<>();
-			for (Vector2i chunk : chunks) {
-				Vector3i minBlockPos = new Vector3i(chunk.getX() * 16, 0, chunk.getY() * 16);
-				tiles.add(hiresModelManager.posToTile(minBlockPos));
-				tiles.add(hiresModelManager.posToTile(minBlockPos.add(0, 0, 15)));
-				tiles.add(hiresModelManager.posToTile(minBlockPos.add(15, 0, 0)));
-				tiles.add(hiresModelManager.posToTile(minBlockPos.add(15, 0, 15)));
-			}
+			Collection<Vector2i> tiles = hiresModelManager.getTilesForChunks(chunks);
 			Logger.global.logInfo("Found " + tiles.size() + " tiles to render! (" + chunks.size() + " chunks)");
 			if (!forceRender && chunks.size() == 0) {
 				Logger.global.logInfo("(This is normal if nothing has changed in the world since the last render. Use -f on the command-line to force a render of all chunks)");
