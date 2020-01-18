@@ -1,0 +1,15 @@
+repositories {
+		maven {
+		url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
+
+		content {
+			includeGroup 'org.bukkit'
+		}
+	}
+}
+
+dependencies {
+    shadow "org.bukkit:bukkit:1.14.4-R0.1-SNAPSHOT"
+    compile group: 'org.bstats', name: 'bstats-bukkit-lite', version: '1.5'
+    compile project(':BlueMapCommon')
+}

@@ -385,7 +385,10 @@ public class MCAWorld implements World {
 					);
 			
 			try {
-				ListTag<? extends Tag<?>> blockIdReg = level.getCompoundTag("FML").getCompoundTag("Registries").getCompoundTag("minecraft:blocks").getListTag("ids");
+				CompoundTag fmlTag = level.getCompoundTag("FML");
+				if (fmlTag == null) fmlTag = level.getCompoundTag("fml");
+				
+				ListTag<? extends Tag<?>> blockIdReg = fmlTag.getCompoundTag("Registries").getCompoundTag("minecraft:blocks").getListTag("ids");
 				for (Tag<?> tag : blockIdReg) {
 					if (tag instanceof CompoundTag) {
 						CompoundTag entry = (CompoundTag) tag;

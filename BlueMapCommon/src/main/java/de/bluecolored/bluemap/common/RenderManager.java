@@ -1,4 +1,4 @@
-package de.bluecolored.bluemap.sponge;
+package de.bluecolored.bluemap.common;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -194,14 +194,14 @@ public class RenderManager {
 		}
 	}
 	
-	public void readState(DataInputStream in) throws IOException {
+	public void readState(DataInputStream in, Collection<MapType> mapTypes) throws IOException {
 		//read renderTickets
 		int mapCount = in.readInt();
 		for (int i = 0; i < mapCount; i++) {
 			String mapId = in.readUTF();
 			
 			MapType mapType = null;
-			for (MapType map : SpongePlugin.getInstance().getMapTypes()) {
+			for (MapType map : mapTypes) {
 				if (map.getId().equals(mapId)) {
 					mapType = map;
 					break;
@@ -227,7 +227,7 @@ public class RenderManager {
 		int taskCount = in.readInt();
 		for (int i = 0; i < taskCount; i++) {
 			try {
-				RenderTask task = RenderTask.read(in);
+				RenderTask task = RenderTask.read(in, mapTypes);
 				addRenderTask(task);
 			} catch (IOException ex) {
 				Logger.global.logWarning("A render-task can not be loaded. It will be discared. (Error message: " + ex.toString() + ")");
