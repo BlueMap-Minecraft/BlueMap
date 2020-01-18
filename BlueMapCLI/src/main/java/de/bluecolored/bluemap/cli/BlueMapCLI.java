@@ -116,7 +116,8 @@ public class BlueMapCLI {
 			LowresModelManager lowresModelManager = new LowresModelManager(
 					config.getWebDataPath().resolve(mapConfig.getId()).resolve("lowres"), 
 					new Vector2i(mapConfig.getLowresPointsPerLowresTile(), mapConfig.getLowresPointsPerLowresTile()),
-					new Vector2i(mapConfig.getLowresPointsPerHiresTile(), mapConfig.getLowresPointsPerHiresTile())
+					new Vector2i(mapConfig.getLowresPointsPerHiresTile(), mapConfig.getLowresPointsPerHiresTile()),
+					mapConfig.useGzipCompression()
 					);
 			
 			TileRenderer tileRenderer = new TileRenderer(hiresModelManager, lowresModelManager);
