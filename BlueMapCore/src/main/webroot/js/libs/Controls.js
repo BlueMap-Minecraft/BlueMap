@@ -113,6 +113,10 @@ export default class Controls {
 		this.camera.updateProjectionMatrix();
 	}
 
+	setTileSize(tileSize) {
+		this.tileSize = tileSize;
+	}
+
 	resetPosition() {
 		this.position = new Vector3(0, 70, 0);
 		this.targetPosition = new Vector3(0, 70, 0);
@@ -174,13 +178,25 @@ export default class Controls {
 	}
 
 	updateHeights() {
-			//TODO: this can be performance-improved by only intersecting the correct tile?
+			function between(n, min, max) {
+				return n >= min && n < max;
+			}
+
+			let inTile = (pos, thisPos) => {
+				return between(pos.x, thisPos.x - this.tileSize.x, thisPos.x) &&
+						between(pos.z, thisPos.z - this.tileSize.z, thisPos.z);
+			};
+
+			let tileChildren = (targetPos) => {
+				return this.heightScene.children.filter(child => inTile(child.position, targetPos))
+			};
 
 			let rayStart = new Vector3(this.targetPosition.x, 300, this.targetPosition.z);
 			this.raycaster.set(rayStart, this.rayDirection);
 			this.raycaster.near = 1;
 			this.raycaster.far = 300;
-			let intersects = this.raycaster.intersectObjects(this.heightScene.children);
+			let intersects = this.raycaster.intersectObjects(tileChildren(this.targetPosition));
+
 			if (intersects.length > 0){
 				this.minHeight = intersects[0].point.y;
 				//this.targetPosition.y = this.minHeight;
@@ -191,7 +207,7 @@ export default class Controls {
 			rayStart.set(this.camera.position.x, 300, this.camera.position.z);
 			this.raycaster.set(rayStart, this.rayDirection);
 			intersects.length = 0;
-			intersects = this.raycaster.intersectObjects(this.heightScene.children);
+			intersects = this.raycaster.intersectObjects(tileChildren(this.camera.position));
 			if (intersects.length > 0){
 				if (intersects[0].point.y > this.minHeight){
 					this.minHeight = intersects[0].point.y;

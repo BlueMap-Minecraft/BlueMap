@@ -80,6 +80,8 @@ export default class BlueMap {
 		this.controls = new Controls(this.camera, this.element, this.hiresScene);
 
 		this.loadSettings().then(async () => {
+			this.controls.setTileSize(this.settings[this.map]['hires']['tileSize']);
+
 			this.lowresTileManager = new TileManager(
 				this,
 				this.settings[this.map]['lowres']['viewDistance'],
@@ -120,6 +122,7 @@ export default class BlueMap {
 		this.lowresTileManager.close();
 
 		this.map = map;
+		this.controls.setTileSize(this.settings[this.map]['hires']['tileSize']);
 		this.controls.resetPosition();
 
 		this.lowresTileManager = new TileManager(
