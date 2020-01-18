@@ -201,6 +201,8 @@ public class MainConfig implements WebServerConfig {
 		private Vector3i min, max;
 		private boolean renderEdges;
 		
+		private boolean useGzip;
+		
 		private int hiresTileSize;
 		private float hiresViewDistance;
 		
@@ -231,6 +233,8 @@ public class MainConfig implements WebServerConfig {
 			this.max = new Vector3i(maxX, maxY, maxZ);
 			
 			this.renderEdges = node.getNode("renderEdges").getBoolean(true);
+
+			this.renderEdges = node.getNode("useCompression").getBoolean(true);
 			
 			this.hiresTileSize = node.getNode("hires", "tileSize").getInt(32);
 			this.hiresViewDistance = node.getNode("hires", "viewDistance").getFloat(4.5f);
@@ -308,6 +312,11 @@ public class MainConfig implements WebServerConfig {
 		@Override
 		public boolean isRenderEdges() {
 			return renderEdges;
+		}
+		
+		@Override
+		public boolean useGzipCompression() {
+			return useGzip;
 		}
 		
 	}

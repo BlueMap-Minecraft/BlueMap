@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.core.render.hires;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -58,11 +59,13 @@ public class HiresModelManager {
 	
 	private ExecutorService savingExecutor;
 	
+	private boolean useGzip;
+	
 	public HiresModelManager(Path fileRoot, ResourcePack resourcePack, RenderSettings renderSettings, Vector2i tileSize, ExecutorService savingExecutor) {
-		this(fileRoot, new HiresModelRenderer(resourcePack, renderSettings), tileSize, new Vector2i(2, 2), savingExecutor);
+		this(fileRoot, new HiresModelRenderer(resourcePack, renderSettings), tileSize, new Vector2i(2, 2), savingExecutor, renderSettings.useGzipCompression());
 	}
 	
-	public HiresModelManager(Path fileRoot, HiresModelRenderer renderer, Vector2i tileSize, Vector2i gridOrigin, ExecutorService savingExecutor) {
+	public HiresModelManager(Path fileRoot, HiresModelRenderer renderer, Vector2i tileSize, Vector2i gridOrigin, ExecutorService savingExecutor, boolean useGzip) {
 		this.fileRoot = fileRoot;
 		this.renderer = renderer;
 		
@@ -70,6 +73,7 @@ public class HiresModelManager {
 		this.gridOrigin = gridOrigin;
 		
 		this.savingExecutor = savingExecutor;
+		this.useGzip = useGzip;
 	}
 	
 	/**
@@ -87,7 +91,7 @@ public class HiresModelManager {
 	}
 	
 	private void save(HiresModel model, String modelJson){
-		File file = getFile(model.getTile());
+		File file = getFile(model.getTile(), useGzip);
 		
 		try {
 			if (!file.exists()){
@@ -95,9 +99,9 @@ public class HiresModelManager {
 				file.createNewFile();
 			}
 	
-			FileOutputStream fos = new FileOutputStream(file);
-			GZIPOutputStream zos = new GZIPOutputStream(fos); 
-			OutputStreamWriter osw = new OutputStreamWriter(zos, StandardCharsets.UTF_8);
+			OutputStream os = new FileOutputStream(file);
+			if (useGzip) os = new GZIPOutputStream(os);
+			OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
 			try (
 				PrintWriter pw = new PrintWriter(osw);
 			){
@@ -185,8 +189,8 @@ public class HiresModelManager {
 	/**
 	 * Returns the file for a tile
 	 */
-	public File getFile(Vector2i tilePos){
-		return FileUtils.coordsToFile(fileRoot, tilePos, "json.gz");
+	public File getFile(Vector2i tilePos, boolean gzip){
+		return FileUtils.coordsToFile(fileRoot, tilePos, "json" + (gzip ? ".gz" : ""));
 	}
 	
 }
