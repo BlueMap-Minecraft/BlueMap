@@ -38,6 +38,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -160,9 +161,21 @@ public class BlueMapWebRequestHandler implements HttpRequestHandler {
 			} catch (IllegalArgumentException e){}
 		}
 		
-
+		//check ETag
+		String eTag = Long.toHexString(file.length()) + Integer.toHexString(file.hashCode()) + Long.toHexString(lastModified);
+		Set<String> etagStringSet = request.getHeader("If-None-Match");
+		if (!etagStringSet.isEmpty()){
+			if(etagStringSet.iterator().next().equals(eTag)) {
+				return new HttpResponse(HttpStatusCode.NOT_MODIFIED);
+			}
+		}
+		
+		//create response
 		HttpResponse response = new HttpResponse(HttpStatusCode.OK);
+		response.addHeader("ETag", eTag);
 		if (lastModified > 0) response.addHeader("Last-Modified", timestampToString(lastModified));
+		response.addHeader("Cache-Control", "public");
+		response.addHeader("Cache-Control", "max-age=" + TimeUnit.HOURS.toSeconds(1));
 		
 		//add content type header
 		String filetype = file.getName().toString();
