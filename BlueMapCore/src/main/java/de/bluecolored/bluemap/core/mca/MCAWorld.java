@@ -360,9 +360,9 @@ public class MCAWorld implements World {
 			File levelFile = new File(worldFolder.toFile(), "level.dat");
 			if (!levelFile.exists()) {
 				levelFile = new File(worldFolder.toFile().getParentFile(), "level.dat");
-			}
-			if (!levelFile.exists()) {
-				throw new FileNotFoundException("Could not find a level.dat file for this world!");
+				if (!levelFile.exists()) {
+					throw new FileNotFoundException("Could not find a level.dat file for this world!");
+				}
 			}
 			
 			CompoundTag level = (CompoundTag) NBTUtil.readTag(levelFile);
