@@ -343,12 +343,17 @@ export default class Controls {
 	};
 
 	onTouchDown = event => {
+		if (event.pointerType === "mouse") return;
+
+		$(":focus").blur();
+
 		this.touchStart.x = this.targetPosition.x;
 		this.touchStart.y = this.targetPosition.z;
 		this.state = Controls.STATES.MOVE;
 	};
 
 	onTouchMove = event => {
+		if (event.pointerType === "mouse") return;
 		if (this.state !== Controls.STATES.MOVE) return;
 
 		this.touchDelta.x = event.deltaX;
@@ -363,6 +368,8 @@ export default class Controls {
 	};
 
 	onTouchUp = event => {
+		if (event.pointerType === "mouse") return;
+
 		this.state = Controls.STATES.NONE;
 	};
 

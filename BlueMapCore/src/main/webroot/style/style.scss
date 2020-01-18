@@ -10,17 +10,21 @@ html, body {
     padding: 0;
 
 	font-size: 15px;
-	line-height: 15px;
+	line-height: 1rem;
     font-family: Verdana,Helvetica,Arial,sans-serif;
 
 	color: #333333;
 	background-color: #dddddd;
+
+    @media (max-width: 900px) {
+        font-size: 17px;
+    }
 }
 
 .box {
     color: #333333;
     background-color: white;
-    box-shadow: 0px 1px 4px 0px rgba(50, 50, 50, 0.8);
+    box-shadow: 0 1px 4px 0 rgba(50, 50, 50, 0.8);
 }
 
 .button {
@@ -37,7 +41,7 @@ html, body {
     background-color: white;
 	position: relative;
 
-    transition: all 0.3s;
+    transition: background-color 0.3s;
 }
 
 .dropdown-container:hover {
@@ -53,7 +57,7 @@ html, body {
 	overflow: hidden;
 
 	transition: all 0.3s;
-	max-height: 0px;
+	max-height: 0;
 }
 
 .dropdown-container:hover > .dropdown {
@@ -104,9 +108,15 @@ html, body {
     top: 10px;
     right: 10px;
 
-    line-height: 30px;
+    line-height: 2rem;
 
     display: flex;
+
+    @media (max-width: 900px) {
+        display: none;
+    }
+
+
 }
 
 #bluemap-topright > *:not(:last-child) {
@@ -118,9 +128,34 @@ html, body {
     top: 10px;
     left: 10px;
 
-    line-height: 30px;
+    line-height: 2rem;
+
+    white-space: nowrap;
 
     display: flex;
+  
+    @media (max-width: 900px) {
+        top: 0;
+        left: 0;
+        width: 100%;
+
+        >:last-child {
+            flex-grow: 1;
+        }
+    }
+
+    @media (max-width: 500px) {
+        flex-wrap: wrap;
+
+        > :not(:first-child) {
+            flex-grow: 1;
+        }
+
+        >:last-child {
+            width: 100%;
+            border-top: solid 1px #dddddd;
+        }
+    }
 }
 
 #bluemap-topleft > *:not(:last-child) {
