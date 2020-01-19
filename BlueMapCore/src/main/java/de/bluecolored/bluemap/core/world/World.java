@@ -94,7 +94,7 @@ public interface World {
 	 * @throws IOException 
 	 */
 	public default boolean isAreaGenerated(AABB area) throws IOException {
-		return isAreaGenerated(area.getMin().toInt(), area.getMax().toInt());
+		return isAreaGenerated(area.getMin(), area.getMax());
 	}
 	
 	/**
