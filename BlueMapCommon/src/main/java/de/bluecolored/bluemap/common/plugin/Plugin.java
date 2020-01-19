@@ -190,7 +190,8 @@ public class Plugin {
 			LowresModelManager lowresModelManager = new LowresModelManager(
 					config.getWebDataPath().resolve(id).resolve("lowres"), 
 					new Vector2i(mapConfig.getLowresPointsPerLowresTile(), mapConfig.getLowresPointsPerLowresTile()),
-					new Vector2i(mapConfig.getLowresPointsPerHiresTile(), mapConfig.getLowresPointsPerHiresTile())
+					new Vector2i(mapConfig.getLowresPointsPerHiresTile(), mapConfig.getLowresPointsPerHiresTile()),
+					mapConfig.useGzipCompression()
 					);
 			
 			TileRenderer tileRenderer = new TileRenderer(hiresModelManager, lowresModelManager);

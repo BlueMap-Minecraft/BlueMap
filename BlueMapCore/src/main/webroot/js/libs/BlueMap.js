@@ -69,6 +69,7 @@ export default class BlueMap {
 		this.dataRoot = dataRoot;
 
 		this.loadingNoticeElement = $('<div id="bluemap-loading" class="box">loading...</div>').appendTo($(this.element));
+		window.onerror = this.onLoadError;
 
 		this.fileLoader = new FileLoader();
 		this.blobLoader = new FileLoader();
@@ -80,6 +81,8 @@ export default class BlueMap {
 		this.controls = new Controls(this.camera, this.element, this.hiresScene);
 
 		this.loadSettings().then(async () => {
+			this.controls.setTileSize(this.settings[this.map]['hires']['tileSize']);
+
 			this.lowresTileManager = new TileManager(
 				this,
 				this.settings[this.map]['lowres']['viewDistance'],
@@ -103,7 +106,7 @@ export default class BlueMap {
 
 			this.initModules();
 			this.start();
-		});
+		}).catch(error => this.onLoadError(error.toString()));
 	}
 
 	initModules() {
@@ -120,6 +123,7 @@ export default class BlueMap {
 		this.lowresTileManager.close();
 
 		this.map = map;
+		this.controls.setTileSize(this.settings[this.map]['hires']['tileSize']);
 		this.controls.resetPosition();
 
 		this.lowresTileManager = new TileManager(
@@ -205,7 +209,9 @@ export default class BlueMap {
 		setTimeout(this.update, 1000);
 
 		this.lowresTileManager.setPosition(this.controls.targetPosition);
-		this.hiresTileManager.setPosition(this.controls.targetPosition);
+		if (this.camera.position.y < 400) {
+			this.hiresTileManager.setPosition(this.controls.targetPosition);
+		}
 
 		this.locationHash =
 			'#' + this.map
@@ -239,7 +245,7 @@ export default class BlueMap {
 			this.renderer.clearDepth();
 			this.renderer.render(this.hiresScene, this.camera, this.renderer.getRenderTarget(), false);
 		}
-	}
+	};
 
 	handleContainerResize = () => {
 		this.camera.aspect = this.element.clientWidth / this.element.clientHeight;
@@ -254,7 +260,7 @@ export default class BlueMap {
 			.css('height', this.element.clientHeight);
 
 		this.updateFrame = true;
-	}
+	};
 
 	async loadSettings() {
 		return new Promise(resolve => {
@@ -358,7 +364,6 @@ export default class BlueMap {
 		return new Promise(resolve => {
 			this.fileLoader.load(this.dataRoot + 'textures.json', textures => {
 				textures = JSON.parse(textures);
-
 				let materials = [];
 				for (let i = 0; i < textures['textures'].length; i++) {
 					let t = textures['textures'][i];
@@ -394,7 +399,6 @@ export default class BlueMap {
 				}
 
 				this.hiresMaterial = materials;
-
 				resolve();
 			});
 		});
@@ -453,21 +457,43 @@ export default class BlueMap {
 		})
 	}
 
+	onLoadError = (message, url, line, col) => {
+		this.loadingNoticeElement.remove();
+
+		this.toggleAlert(undefined, `
+		<div style="max-width: 500px">
+			<h1>Error</h1>
+			<p style="color: red; font-family: monospace">${message}</p>
+		</div>
+		`);
+	};
+
 	// ###### UI ######
 
-	alert(content) {
+	toggleAlert(id, content) {
 		let alertBox = $('#alert-box');
 		if (alertBox.length === 0){
 			alertBox = $('<div id="alert-box"></div>').appendTo(this.element);
 		}
 
 		let displayAlert = () => {
-			let alert = $(`<div class="alert box" style="display: none;"><div class="alert-close-button"></div>${content}</div>`).appendTo(alertBox);
+			let alert = $(`<div class="alert box" data-alert-id="${id}" style="display: none;"><div class="alert-close-button"></div>${content}</div>`).appendTo(alertBox);
 			alert.find('.alert-close-button').click(() => {
 				alert.fadeOut(200, () => alert.remove());
 			});
 			alert.fadeIn(200);
 		};
+
+		if (id !== undefined) {
+			let sameAlert = alertBox.find(`.alert[data-alert-id=${id}]`);
+			if (sameAlert.length > 0) {
+				alertBox.fadeOut(200, () => {
+					alertBox.html('');
+					alertBox.show();
+				});
+				return;
+			}
+		}
 
 		let oldAlerts = alertBox.find('.alert');
 		if (oldAlerts.length > 0){
@@ -476,8 +502,9 @@ export default class BlueMap {
 				alertBox.show();
 				displayAlert();
 			});
-		} else {
-			displayAlert();
+			return;
 		}
+
+		displayAlert();
 	}
 }

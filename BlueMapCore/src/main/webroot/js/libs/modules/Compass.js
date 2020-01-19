@@ -42,12 +42,12 @@ export default class Compass {
 
 	onBlueMapUpdateFrame = () => {
 		this.needle.css('transform', `rotate(${this.blueMap.controls.direction}rad)`);
-	}
+	};
 
 	onClick = () => {
 		this.blueMap.controls.targetDirection = 0;
 		this.blueMap.controls.direction = this.blueMap.controls.direction % (Math.PI * 2);
 		if (this.blueMap.controls.direction < -Math.PI) this.blueMap.controls.direction += Math.PI * 2;
 		if (this.blueMap.controls.direction > Math.PI) this.blueMap.controls.direction -= Math.PI * 2;
-	}
+	};
 }

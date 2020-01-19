@@ -78,6 +78,13 @@ public interface RenderSettings {
 		return true;
 	}
 	
+	/**
+	 * If gzip compression will be used to compress the generated files
+	 */
+	default boolean useGzipCompression() {
+		return true;
+	}
+	
 	default RenderSettings copy() {
 		return new StaticRenderSettings(
 				getAmbientOcclusionStrenght(),

@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.core.render.lowres;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -58,14 +59,18 @@ public class LowresModelManager {
 	private Vector2i pointsPerHiresTile;
 	
 	private Map<File, CachedModel> models;
+	
+	private boolean useGzip;
 		
-	public LowresModelManager(Path fileRoot, Vector2i gridSize, Vector2i pointsPerHiresTile) {
+	public LowresModelManager(Path fileRoot, Vector2i gridSize, Vector2i pointsPerHiresTile, boolean useGzip) {
 		this.fileRoot = fileRoot;
 		
 		this.gridSize = gridSize;
 		this.pointsPerHiresTile = pointsPerHiresTile;
 		
 		models = new ConcurrentHashMap<>();
+		
+		this.useGzip = useGzip;
 	}
 	
 	/**
@@ -166,13 +171,13 @@ public class LowresModelManager {
 	/**
 	 * Returns the file for a tile
 	 */
-	public File getFile(Vector2i tile){
-		return FileUtils.coordsToFile(fileRoot, tile, "json.gz");
+	public File getFile(Vector2i tile, boolean useGzip){
+		return FileUtils.coordsToFile(fileRoot, tile, "json" + (useGzip ? ".gz" : ""));
 	}
 	
 	private LowresModel getModel(UUID world, Vector2i tile) throws IOException {
 		
-		File modelFile = getFile(tile);
+		File modelFile = getFile(tile, useGzip);
 		CachedModel model = models.get(modelFile);
 
 		if (model == null){
@@ -181,11 +186,10 @@ public class LowresModelManager {
 				if (model == null){
 					if (modelFile.exists()){
 
-						FileInputStream fis = new FileInputStream(modelFile);
-						try(
-							GZIPInputStream zis = new GZIPInputStream(fis);
-						){
-							String json = IOUtils.toString(zis, StandardCharsets.UTF_8);	
+						InputStream is = new FileInputStream(modelFile);
+						if (useGzip) is = new GZIPInputStream(is);
+						try {
+							String json = IOUtils.toString(is, StandardCharsets.UTF_8);	
 							
 							try {
 								model = new CachedModel(world, tile, BufferGeometry.fromJson(json));
@@ -194,6 +198,8 @@ public class LowresModelManager {
 								//gridFile.renameTo(gridFile.toPath().getParent().resolve(gridFile.getName() + ".broken").toFile());
 								modelFile.delete();
 							}
+						} finally {
+							is.close();
 						}
 						
 					}
@@ -238,10 +244,10 @@ public class LowresModelManager {
 	}
 	
 	private synchronized void saveAndRemoveModel(CachedModel model) {
-		File modelFile = getFile(model.getTile());
+		File modelFile = getFile(model.getTile(), useGzip);
 		models.remove(modelFile);
 		try {
-			model.save(modelFile, false);
+			model.save(modelFile, false, useGzip);
 			//logger.logDebug("Saved and unloaded lowres tile: " + model.getTile());
 		} catch (IOException ex) {
 			Logger.global.logError("Failed to save and unload lowres-model: " + modelFile, ex);
@@ -249,9 +255,9 @@ public class LowresModelManager {
 	}
 	
 	private void saveModel(CachedModel model) {
-		File modelFile = getFile(model.getTile());
+		File modelFile = getFile(model.getTile(), useGzip);
 		try {
-			model.save(modelFile, false);
+			model.save(modelFile, false, useGzip);
 			//logger.logDebug("Saved lowres tile: " + model.getTile());
 		} catch (IOException ex) {
 			Logger.global.logError("Failed to save lowres-model: " + modelFile, ex);

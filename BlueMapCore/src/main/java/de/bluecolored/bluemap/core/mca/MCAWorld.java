@@ -357,7 +357,15 @@ public class MCAWorld implements World {
 	
 	public static MCAWorld load(Path worldFolder, UUID uuid, BlockIdMapper blockIdMapper, BlockPropertiesMapper blockPropertiesMapper, BiomeMapper biomeIdMapper) throws IOException {
 		try {
-			CompoundTag level = (CompoundTag) NBTUtil.readTag(worldFolder.resolve("level.dat").toFile());
+			File levelFile = new File(worldFolder.toFile(), "level.dat");
+			if (!levelFile.exists()) {
+				levelFile = new File(worldFolder.toFile().getParentFile(), "level.dat");
+				if (!levelFile.exists()) {
+					throw new FileNotFoundException("Could not find a level.dat file for this world!");
+				}
+			}
+			
+			CompoundTag level = (CompoundTag) NBTUtil.readTag(levelFile);
 			CompoundTag levelData = level.getCompoundTag("Data");
 			
 			String name = levelData.getString("LevelName");

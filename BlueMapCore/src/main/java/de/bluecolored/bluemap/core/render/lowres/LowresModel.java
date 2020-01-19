@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.core.render.lowres;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
@@ -95,7 +96,7 @@ public class LowresModel {
 	 * Saves this model to its file
 	 * @param force if this is false, the model is only saved if it has any changes
 	 */
-	public void save(File file, boolean force) throws IOException {
+	public void save(File file, boolean force, boolean useGzip) throws IOException {
 		if (!force && !hasUnsavedChanges) return;
 		this.hasUnsavedChanges = false;
 
@@ -118,9 +119,9 @@ public class LowresModel {
 				throw new IOException("Failed to get write-access to file: " + file, e);
 			}
 
-			FileOutputStream fos = new FileOutputStream(file);
-			GZIPOutputStream zos = new GZIPOutputStream(fos);
-			OutputStreamWriter osw = new OutputStreamWriter(zos, StandardCharsets.UTF_8);
+			OutputStream os = new FileOutputStream(file);
+			if (useGzip) os = new GZIPOutputStream(os);
+			OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
 			try (
 				PrintWriter pw = new PrintWriter(osw);
 			){

@@ -36,7 +36,7 @@ export default class Info {
 	}
 
 	onClick = () => {
-		this.blueMap.alert(
+		this.blueMap.toggleAlert('bluemap-info',
 			'<h1>Info</h1>' +
 			'Visit BlueMap on <a href="https://github.com/BlueMap-Minecraft">GitHub</a>!<br>' +
 			'BlueMap works best with <a href="https://www.google.com/chrome/">Chrome</a>.<br>' +
@@ -45,5 +45,5 @@ export default class Info {
 			'Rightclick-drag with your mouse to rotate your view.<br>' +
 			'Scroll to zoom.<br>'
 		);
-	}
+	};
 }

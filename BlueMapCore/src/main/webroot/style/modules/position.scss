@@ -2,13 +2,24 @@
   position: relative;
 
   input {
-    width: 60px;
+    width: 4rem;
     height: 100%;
     border: none;
     outline: none;
     background: transparent;
     padding: 0 5px 0 25px;
-    font-family: inherit;
+    font: inherit;
+    color: inherit;
+
+    // remove number spinner firefox
+    -moz-appearance:textfield;
+
+    // remove number spinner webkit
+    &::-webkit-inner-spin-button,
+    &::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
   }
 
   &[data-pos]::before {

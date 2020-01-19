@@ -30,6 +30,7 @@ import {
 	Vector3,
 	MOUSE
 } from 'three';
+import Hammer from 'hammerjs';
 
 import { Vector2_ZERO } from './utils.js';
 
@@ -94,23 +95,63 @@ export default class Controls {
 		this.cameraPosDelta = new Vector3(0, 0, 0);
 		this.moveDelta = new Vector2(0, 0);
 
-		this.keyStates = {}
+		this.touchStart = new Vector2(0, 0);
+		this.touchDelta = new Vector2(0, 0);
+
+		this.keyStates = {};
 		this.state = Controls.STATES.NONE;
 
 		let canvas = $(this.element).find('canvas').get(0);
+
+		// mouse events
 		window.addEventListener('contextmenu', event => {
 			event.preventDefault();
 		}, false);
 		window.addEventListener('mousemove', this.onMouseMove, false);
 		canvas.addEventListener('mousedown', this.onMouseDown, false);
-		canvas.addEventListener('mouseup', this.onMouseUp, false);
+		window.addEventListener('mouseup', this.onMouseUp, false); //this is on the window instead of the canvas, so if we drag out of the canvas and release the mouse it actually gets released
 		canvas.addEventListener('wheel', this.onMouseWheel, { passive: true });
 		window.addEventListener('keydown', this.onKeyDown, false);
 		window.addEventListener('keyup', this.onKeyUp, false);
 
+		// touch events
+		this.hammer = new Hammer.Manager(canvas);
+		let touchMove = new Hammer.Pan({ event: 'move', direction: Hammer.DIRECTION_ALL, threshold: 0 });
+		let touchTilt =  new Hammer.Pan({ event: 'tilt', direction: Hammer.DIRECTION_VERTICAL, pointers: 2, threshold: 0 });
+		let touchRotate = new Hammer.Rotate({ event: 'rotate', pointers: 2, threshold: 10 });
+		let touchZoom = new Hammer.Pinch({ event: 'zoom', pointers: 2, threshold: 0 });
+
+		touchTilt.recognizeWith(touchRotate);
+		touchTilt.recognizeWith(touchZoom);
+		touchRotate.recognizeWith(touchZoom);
+
+		this.hammer.add( touchMove );
+		this.hammer.add( touchTilt );
+		this.hammer.add( touchRotate );
+		this.hammer.add( touchZoom );
+
+		this.hammer.on('movestart', this.onTouchDown);
+		this.hammer.on('movemove', this.onTouchMove);
+		this.hammer.on('moveend', this.onTouchUp);
+		this.hammer.on('movecancel', this.onTouchUp);
+		this.hammer.on('tiltstart', this.onTouchTiltDown);
+		this.hammer.on('tiltmove', this.onTouchTiltMove);
+		this.hammer.on('tiltend', this.onTouchTiltUp);
+		this.hammer.on('tiltcancel', this.onTouchTiltUp);
+		this.hammer.on('rotatestart', this.onTouchRotateDown);
+		this.hammer.on('rotatemove', this.onTouchRotateMove);
+		this.hammer.on('rotateend', this.onTouchRotateUp);
+		this.hammer.on('rotatecancel', this.onTouchRotateUp);
+		this.hammer.on('zoomstart', this.onTouchZoomDown);
+		this.hammer.on('zoommove', this.onTouchZoomMove);
+
 		this.camera.position.set(0, 1000, 0);
 		this.camera.lookAt(this.position);
 		this.camera.updateProjectionMatrix();
+	}
+
+	setTileSize(tileSize) {
+		this.tileSize = tileSize;
 	}
 
 	resetPosition() {
@@ -174,13 +215,25 @@ export default class Controls {
 	}
 
 	updateHeights() {
-			//TODO: this can be performance-improved by only intersecting the correct tile?
+			function between(n, min, max) {
+				return n >= min && n < max;
+			}
+
+			let inTile = (pos, thisPos) => {
+				return between(pos.x, thisPos.x - this.tileSize.x, thisPos.x) &&
+						between(pos.z, thisPos.z - this.tileSize.z, thisPos.z);
+			};
+
+			let tileChildren = (targetPos) => {
+				return this.heightScene.children.filter(child => inTile(child.position, targetPos))
+			};
 
 			let rayStart = new Vector3(this.targetPosition.x, 300, this.targetPosition.z);
 			this.raycaster.set(rayStart, this.rayDirection);
 			this.raycaster.near = 1;
 			this.raycaster.far = 300;
-			let intersects = this.raycaster.intersectObjects(this.heightScene.children);
+			let intersects = this.raycaster.intersectObjects(tileChildren(this.targetPosition));
+
 			if (intersects.length > 0){
 				this.minHeight = intersects[0].point.y;
 				//this.targetPosition.y = this.minHeight;
@@ -191,19 +244,16 @@ export default class Controls {
 			rayStart.set(this.camera.position.x, 300, this.camera.position.z);
 			this.raycaster.set(rayStart, this.rayDirection);
 			intersects.length = 0;
-			intersects = this.raycaster.intersectObjects(this.heightScene.children);
+			intersects = this.raycaster.intersectObjects(tileChildren(this.camera.position));
 			if (intersects.length > 0){
 				if (intersects[0].point.y > this.minHeight){
 					this.minHeight = intersects[0].point.y;
 				}
 			}
-	};
+	}
 
 	updateMouseMoves = () => {
 		this.deltaMouse.set(this.lastMouse.x - this.mouse.x, this.lastMouse.y - this.mouse.y);
-
-		this.moveDelta.x = 0;
-		this.moveDelta.y = 0;
 
 		if (this.keyStates[Controls.KEYS.UP]){
 			this.moveDelta.y -= 20;
@@ -238,6 +288,9 @@ export default class Controls {
 		}
 
 		this.lastMouse.copy(this.mouse);
+
+		this.moveDelta.x = 0;
+		this.moveDelta.y = 0;
 	};
 
 	onMouseWheel = event => {
@@ -249,7 +302,7 @@ export default class Controls {
 
 		if (this.targetDistance < this.settings.zoom.min) this.targetDistance = this.settings.zoom.min;
 		if (this.targetDistance > this.settings.zoom.max) this.targetDistance = this.settings.zoom.max;
-	}
+	};
 
 	onMouseMove = event => {
 		this.mouse.set(event.clientX, event.clientY);
@@ -257,10 +310,12 @@ export default class Controls {
 		if (this.state !== Controls.STATES.NONE){
 			event.preventDefault();
 		}
-	}
+	};
 
 	onMouseDown = event => {
 		if (this.state !== Controls.STATES.NONE) return;
+
+		$(":focus").blur();
 
 		switch (event.button) {
 			case Controls.KEYS.MOVE :
@@ -272,7 +327,7 @@ export default class Controls {
 				event.preventDefault();
 				break;
 		}
-	}
+	};
 
 	onMouseUp = event => {
 		if (this.state === Controls.STATES.NONE) return;
@@ -285,13 +340,91 @@ export default class Controls {
 				if (this.state === Controls.STATES.ORBIT) this.state = Controls.STATES.NONE;
 				break;
 		}
-	}
+	};
+
+	onTouchDown = event => {
+		if (event.pointerType === "mouse") return;
+
+		$(":focus").blur();
+
+		this.touchStart.x = this.targetPosition.x;
+		this.touchStart.y = this.targetPosition.z;
+		this.state = Controls.STATES.MOVE;
+	};
+
+	onTouchMove = event => {
+		if (event.pointerType === "mouse") return;
+		if (this.state !== Controls.STATES.MOVE) return;
+
+		this.touchDelta.x = event.deltaX;
+		this.touchDelta.y = event.deltaY;
+
+		if (this.touchDelta.x !== 0 || this.touchDelta.y !== 0) {
+			this.touchDelta.rotateAround(Vector2_ZERO, -this.direction);
+
+			this.targetPosition.x = this.touchStart.x - (this.touchDelta.x * this.distance / this.element.clientHeight * this.settings.move.speed);
+			this.targetPosition.z = this.touchStart.y - (this.touchDelta.y * this.distance / this.element.clientHeight * this.settings.move.speed);
+		}
+	};
+
+	onTouchUp = event => {
+		if (event.pointerType === "mouse") return;
+
+		this.state = Controls.STATES.NONE;
+	};
+
+	onTouchTiltDown = event => {
+		this.touchTiltStart = this.targetAngle;
+		this.state = Controls.STATES.ORBIT;
+	};
+
+	onTouchTiltMove = event => {
+		if (this.state !== Controls.STATES.ORBIT) return;
+
+		this.targetAngle = this.touchTiltStart - (event.deltaY / this.element.clientHeight * Math.PI);
+	};
+
+	onTouchTiltUp = event => {
+		this.state = Controls.STATES.NONE;
+	};
+
+	onTouchRotateDown = event => {
+		this.lastTouchRotation = event.rotation;
+		this.state = Controls.STATES.ORBIT;
+	};
+
+	onTouchRotateMove = event => {
+		if (this.state !== Controls.STATES.ORBIT) return;
+
+		let delta = event.rotation - this.lastTouchRotation;
+		this.lastTouchRotation = event.rotation;
+		if (delta > 180) delta -= 360;
+		if (delta < -180) delta += 360;
+
+		this.targetDirection += (delta * (Math.PI / 180)) * 1.4;
+	};
+
+	onTouchRotateUp = event => {
+		this.state = Controls.STATES.NONE;
+	};
+
+
+	onTouchZoomDown = event => {
+		this.touchZoomStart = this.targetDistance;
+	};
+
+	onTouchZoomMove = event => {
+		this.targetDistance = this.touchZoomStart / event.scale;
+
+		if (this.targetDistance < this.settings.zoom.min) this.targetDistance = this.settings.zoom.min;
+		if (this.targetDistance > this.settings.zoom.max) this.targetDistance = this.settings.zoom.max;
+	};
 
 	onKeyDown = event => {
 		this.keyStates[event.keyCode] = true;
-	}
+	};
 
 	onKeyUp = event => {
 		this.keyStates[event.keyCode] = false;
-	}
+	};
 }
