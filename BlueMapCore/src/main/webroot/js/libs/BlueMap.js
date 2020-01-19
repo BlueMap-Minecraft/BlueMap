@@ -88,7 +88,10 @@ export default class BlueMap {
 
 			this.initModules();
 			this.start();
-		}).catch(error => this.onLoadError(error.toString()));
+		}).catch(error => {
+			this.onLoadError(error.toString())
+			console.error(error);
+		});
 	}
 
 	initModules() {
