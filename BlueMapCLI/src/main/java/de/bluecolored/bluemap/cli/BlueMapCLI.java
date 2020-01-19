@@ -45,10 +45,15 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 
+import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector2i;
 import com.google.common.base.Preconditions;
 
+import de.bluecolored.bluemap.common.MapType;
+import de.bluecolored.bluemap.common.RenderManager;
+import de.bluecolored.bluemap.common.RenderTask;
 import de.bluecolored.bluemap.core.config.ConfigManager;
 import de.bluecolored.bluemap.core.config.MainConfig;
 import de.bluecolored.bluemap.core.config.MainConfig.MapConfig;
@@ -147,6 +152,9 @@ public class BlueMapCLI {
 		File textureExportFile = config.getWebDataPath().resolve("textures.json").toFile();
 		resourcePack.saveTextureFile(textureExportFile);
 
+		RenderManager renderManager = new RenderManager(config.getRenderThreadCount());
+		renderManager.start();
+		
 		for (MapType map : maps.values()) {
 			Logger.global.logInfo("Rendering map '" + map.getId() + "' ...");
 			Logger.global.logInfo("Collecting tiles to render...");
@@ -173,8 +181,46 @@ public class BlueMapCLI {
 			Logger.global.logInfo("Starting Render...");
 			long starttime = System.currentTimeMillis();
 			
-			RenderTask task = new RenderTask(map, tiles, config.getRenderThreadCount());
-			task.render();
+			RenderTask task = new RenderTask("Map-Render: " + map.getName(), map);
+			task.addTiles(tiles);
+			task.optimizeQueue();
+			
+			renderManager.addRenderTask(task);
+			
+			long lastLogUpdate = System.currentTimeMillis();
+			long lastSave = lastLogUpdate;
+			
+			while(!task.isFinished()) {
+				try {
+					Thread.sleep(200);
+				} catch (InterruptedException e) {}
+				
+				long now = System.currentTimeMillis();
+				
+				if (lastLogUpdate < now - 10000) { // print update all 10 seconds
+					lastLogUpdate = now;
+					long time = task.getActiveTime();
+					
+					String durationString = DurationFormatUtils.formatDurationWords(time, true, true);
+					int tileCount = task.getRemainingTileCount() + task.getRenderedTileCount();
+					double pct = (double)task.getRenderedTileCount() / (double) tileCount;
+					
+					long ert = (long)((time / pct) * (1d - pct));
+					String ertDurationString = DurationFormatUtils.formatDurationWords(ert, true, true);
+					
+					double tps = task.getRenderedTileCount() / (time / 1000.0);
+					
+					Logger.global.logInfo("Rendered " + task.getRenderedTileCount() + " of " + tileCount + " tiles in " + durationString + " | " + GenericMath.round(tps, 3) + " tiles/s");
+					Logger.global.logInfo(GenericMath.round(pct * 100, 3) + "% | Estimated remaining time: " + ertDurationString);
+				}
+				
+				if (lastSave < now - 5 * 60000) { // save every 5 minutes
+					lastSave = now;
+					map.getTileRenderer().save();
+				}
+			}
+
+			map.getTileRenderer().save();
 	
 			try {
 				webSettings.set(starttime, map.getId(), "last-render");
@@ -184,6 +230,8 @@ public class BlueMapCLI {
 			}
 		}
 
+		renderManager.stop();
+		
 		Logger.global.logInfo("Waiting for all threads to quit...");
 		if (!ForkJoinPool.commonPool().awaitQuiescence(30, TimeUnit.SECONDS)) {
 			Logger.global.logWarning("Some save-threads are taking very long to exit (>30s), they will be ignored.");
