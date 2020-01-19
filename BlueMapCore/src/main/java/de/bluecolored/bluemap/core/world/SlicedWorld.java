@@ -132,7 +132,7 @@ public class SlicedWorld implements World {
 	
 	@Override
 	public boolean isAreaGenerated(AABB area) throws IOException {
-		if (!isInside(blockPosToChunkPos(area.getMin().toInt())) && !isInside(blockPosToChunkPos(area.getMax().toInt()))) return false;
+		if (!isInside(blockPosToChunkPos(area.getMin())) && !isInside(blockPosToChunkPos(area.getMax()))) return false;
 		
 		return world.isAreaGenerated(area);
 	}

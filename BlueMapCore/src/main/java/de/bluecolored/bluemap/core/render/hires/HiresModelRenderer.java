@@ -52,8 +52,8 @@ public class HiresModelRenderer {
 	}
 	
 	public HiresModel render(WorldTile tile, AABB region) {
-		Vector3i modelMin = region.getMin().toInt();
-		Vector3i modelMax = region.getMax().toInt();
+		Vector3i modelMin = region.getMin();
+		Vector3i modelMax = region.getMax();
 		
 		Vector3i min = modelMin.max(renderSettings.getMin());
 		Vector3i max = modelMax.min(renderSettings.getMax());
