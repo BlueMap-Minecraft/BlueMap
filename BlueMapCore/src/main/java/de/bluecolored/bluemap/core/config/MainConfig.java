@@ -239,7 +239,7 @@ public class MainConfig implements WebServerConfig {
 			
 			this.renderEdges = node.getNode("renderEdges").getBoolean(true);
 
-			this.renderEdges = node.getNode("useCompression").getBoolean(true);
+			this.useGzip = node.getNode("useCompression").getBoolean(true);
 			
 			this.hiresTileSize = node.getNode("hires", "tileSize").getInt(32);
 			this.hiresViewDistance = node.getNode("hires", "viewDistance").getFloat(4.5f);
