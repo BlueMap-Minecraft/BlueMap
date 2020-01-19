@@ -207,14 +207,17 @@ export default class BlueMap {
 		}
 
 		this.locationHash =
-			'#' + this.map
-			+ ':' + Math.floor(this.controls.targetPosition.x)
-			+ ':' + Math.floor(this.controls.targetPosition.z)
-			+ ':' + Math.round(this.controls.targetDirection * 100) / 100
-			+ ':' + Math.round(this.controls.targetDistance * 100) / 100
-			+ ':' + Math.ceil(this.controls.targetAngle * 100) / 100
-			+ ':' + Math.floor(this.controls.targetPosition.y);
-		history.replaceState(undefined, undefined, this.locationHash);
+				'#' + this.map
+				+ ':' + Math.floor(this.controls.targetPosition.x)
+				+ ':' + Math.floor(this.controls.targetPosition.z)
+				+ ':' + Math.round(this.controls.targetDirection * 100) / 100
+				+ ':' + Math.round(this.controls.targetDistance * 100) / 100
+				+ ':' + Math.ceil(this.controls.targetAngle * 100) / 100
+				+ ':' + Math.floor(this.controls.targetPosition.y);
+		// only update hash when changed
+		if (window.location.hash !== this.locationHash) {
+			history.replaceState(undefined, undefined, this.locationHash);
+		}
 	};
 
 	render = () => {
