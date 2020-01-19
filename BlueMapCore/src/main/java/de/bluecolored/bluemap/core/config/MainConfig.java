@@ -32,6 +32,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.base.Preconditions;
 
@@ -194,6 +195,8 @@ public class MainConfig implements WebServerConfig {
 		private String name;
 		private String world;
 		
+		private Vector2i startPos;
+		
 		private boolean renderCaves;
 		private float ambientOcclusion;
 		private float lighting;
@@ -218,6 +221,8 @@ public class MainConfig implements WebServerConfig {
 			
 			this.world = node.getNode("world").getString("");
 			if (world.isEmpty()) throw new IOException("Invalid configuration: Node maps[?].world is not defined");
+			
+			if (!node.getNode("startPos").isVirtual()) this.startPos = ConfigUtils.readVector2i(node.getNode("startPos"));
 			
 			this.renderCaves = node.getNode("renderCaves").getBoolean(false);
 			this.ambientOcclusion = node.getNode("ambientOcclusion").getFloat(0.25f);
@@ -258,6 +263,10 @@ public class MainConfig implements WebServerConfig {
 		
 		public String getWorldPath() {
 			return world;
+		}
+		
+		public Vector2i getStartPos() {
+			return startPos;
 		}
 
 		public boolean isRenderCaves() {

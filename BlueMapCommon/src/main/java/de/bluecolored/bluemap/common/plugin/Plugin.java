@@ -232,15 +232,14 @@ public class Plugin {
 		webSettings.setAllEnabled(false);
 		for (MapType map : maps.values()) {
 			webSettings.setEnabled(true, map.getId());
-			webSettings.setName(map.getName(), map.getId());
 			webSettings.setFrom(map.getTileRenderer(), map.getId());
+			webSettings.setFrom(map.getWorld(), map.getId());
 		}
 		int ordinal = 0;
 		for (MapConfig map : config.getMapConfigs()) {
 			if (!maps.containsKey(map.getId())) continue; //don't add not loaded maps
 			webSettings.setOrdinal(ordinal++, map.getId());
-			webSettings.setHiresViewDistance(map.getHiresViewDistance(), map.getId());
-			webSettings.setLowresViewDistance(map.getLowresViewDistance(), map.getId());
+			webSettings.setFrom(map, map.getId());
 		}
 		webSettings.save();
 		
