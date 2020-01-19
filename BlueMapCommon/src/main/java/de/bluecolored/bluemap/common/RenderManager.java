@@ -127,8 +127,10 @@ public class RenderManager {
 					RenderTask task = renderTasks.peek();
 					if (task != null) {
 						ticket = task.poll();
-						if (task.isFinished()) renderTasks.poll();
-						task.getMapType().getTileRenderer().save();
+						if (task.isFinished()) {
+							renderTasks.poll();
+							task.getMapType().getTileRenderer().save();
+						}
 					}
 				}
 			}
