@@ -5,18 +5,22 @@ plugins {
 
 allprojects {
 	repositories {
+        jcenter()
 		mavenCentral()
 		maven {
 			url 'https://jitpack.io'
 		}
 		maven {
 			name 'sponge'
-			url 'http://repo.spongepowered.org/maven'
+			url 'http://repo.spongepowered.org/maven/'
 		}
 		maven {
 			name 'CodeMC'
-			url 'https://repo.codemc.org/repository/maven-public'
+			url 'https://repo.codemc.org/repository/maven-public/'
 		}
+        maven { 
+        	url = 'https://files.minecraftforge.net/maven/'
+        }
 	}
 
 	compileJava.options.compilerArgs.add '-parameters'
@@ -30,6 +34,7 @@ dependencies {
 	compile project(':BlueMapCLI')
 	compile project(':BlueMapBukkit')
 	//compile project(':BlueMapSponge')
+	compile project(':BlueMapForge')
 }
 
 assemble.dependsOn shadowJar {

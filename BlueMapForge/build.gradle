@@ -1,0 +1,25 @@
+buildscript {
+    repositories {
+        maven { url = 'https://files.minecraftforge.net/maven/' }
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+
+version = '0.2.1'
+group = 'de.bluecolored.bluemap'
+archivesBaseName = 'bluemap'
+
+dependencies {
+	minecraft 'net.minecraftforge:forge:1.14.4-28.1.0'
+    compile project(':BlueMapCommon')
+}
+
+minecraft {
+	mappings = 'stable_58'
+}
