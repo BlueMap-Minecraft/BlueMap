@@ -215,41 +215,43 @@ export default class Controls {
 	}
 
 	updateHeights() {
-			function between(n, min, max) {
-				return n >= min && n < max;
-			}
+		function between(n, min, max) {
+			return n >= min && n < max;
+		}
 
-			let inTile = (pos, thisPos) => {
-				return between(pos.x, thisPos.x - this.tileSize.x, thisPos.x) &&
-						between(pos.z, thisPos.z - this.tileSize.z, thisPos.z);
-			};
+		let inTile = (pos, thisPos) => {
+			return between(pos.x, thisPos.x - this.tileSize.x, thisPos.x) &&
+					between(pos.z, thisPos.z - this.tileSize.z, thisPos.z);
+		};
 
-			let tileChildren = (targetPos) => {
-				return this.heightScene.children.filter(child => inTile(child.position, targetPos))
-			};
+		let tileChildren = (targetPos) => {
+			return this.heightScene.children.filter(child => inTile(child.position, targetPos))
+		};
 
+		// check hight at target
+		try {
 			let rayStart = new Vector3(this.targetPosition.x, 300, this.targetPosition.z);
 			this.raycaster.set(rayStart, this.rayDirection);
 			this.raycaster.near = 1;
 			this.raycaster.far = 300;
 			let intersects = this.raycaster.intersectObjects(tileChildren(this.targetPosition));
 
-			if (intersects.length > 0){
+			if (intersects.length > 0) {
 				this.minHeight = intersects[0].point.y;
-				//this.targetPosition.y = this.minHeight;
-			} else {
-				//this.targetPosition.y = 0;
 			}
+		} catch (ignore){}
 
-			rayStart.set(this.camera.position.x, 300, this.camera.position.z);
+		// check height at camera
+		try {
+			let rayStart = new Vector3(this.camera.position.x, 300, this.camera.position.z);
 			this.raycaster.set(rayStart, this.rayDirection);
-			intersects.length = 0;
-			intersects = this.raycaster.intersectObjects(tileChildren(this.camera.position));
-			if (intersects.length > 0){
-				if (intersects[0].point.y > this.minHeight){
+			let intersects = this.raycaster.intersectObjects(tileChildren(this.camera.position));
+			if (intersects.length > 0) {
+				if (intersects[0].point.y > this.minHeight) {
 					this.minHeight = intersects[0].point.y;
 				}
 			}
+		} catch (ignore){}
 	}
 
 	updateMouseMoves = () => {

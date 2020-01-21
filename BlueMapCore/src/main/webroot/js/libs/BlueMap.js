@@ -475,15 +475,15 @@ export default class BlueMap {
 		let displayAlert = () => {
 			let alert = $(`<div class="alert box" data-alert-id="${id}" style="display: none;"><div class="alert-close-button"></div>${content}</div>`).appendTo(alertBox);
 			alert.find('.alert-close-button').click(() => {
-				alert.fadeOut(200, () => alert.remove());
+				alert.stop().fadeOut(200, () => alert.remove());
 			});
-			alert.fadeIn(200);
+			alert.stop().fadeIn(200);
 		};
 
 		if (id !== undefined) {
 			let sameAlert = alertBox.find(`.alert[data-alert-id=${id}]`);
 			if (sameAlert.length > 0) {
-				alertBox.fadeOut(200, () => {
+				alertBox.stop().fadeOut(200, () => {
 					alertBox.html('');
 					alertBox.show();
 				});
@@ -493,7 +493,7 @@ export default class BlueMap {
 
 		let oldAlerts = alertBox.find('.alert');
 		if (oldAlerts.length > 0){
-			alertBox.fadeOut(200, () => {
+			alertBox.stop().fadeOut(200, () => {
 				alertBox.html('');
 				alertBox.show();
 				displayAlert();

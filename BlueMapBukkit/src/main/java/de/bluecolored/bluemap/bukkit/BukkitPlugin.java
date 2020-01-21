@@ -40,6 +40,7 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface {
 		new MetricsLite(this);
 		
 		//save world so the level.dat is present on new worlds
+		Logger.global.logInfo("Saving all worlds once, to make sure the level.dat is present...");
 		for (World world : getServer().getWorlds()) {
 			world.save();
 		}
