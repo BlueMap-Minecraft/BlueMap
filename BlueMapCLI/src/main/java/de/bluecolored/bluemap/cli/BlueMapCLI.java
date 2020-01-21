@@ -196,7 +196,7 @@ public class BlueMapCLI {
 					continue;
 				}
 				
-				RenderTask task = new RenderTask(map.getName(), map);
+				RenderTask task = new RenderTask(map.getId(), map);
 				task.addTiles(tiles);
 				task.optimizeQueue();
 				
