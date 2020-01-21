@@ -214,7 +214,6 @@ public class Plugin {
 					renderManager.readState(in, getMapTypes());
 				}
 			}
-			saveFile.delete();
 		} catch (IOException ex) {
 			Logger.global.logError("Failed to load render-manager state!", ex);
 		}
