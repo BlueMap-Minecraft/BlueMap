@@ -104,7 +104,7 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface {
 			if (worldFolder.equals(world.getWorldFolder().getCanonicalFile())) return world.getUID();
 		}
 		
-		throw new IOException("There is no world with this folder loaded: " + worldFolder.getCanonicalPath());
+		throw new IOException("There is no world with this folder loaded: " + worldFolder.getPath());
 	}
 
 	@Override

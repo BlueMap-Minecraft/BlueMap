@@ -83,9 +83,8 @@ public class HiresModelRenderer {
 						} catch (NoSuchResourceException e2) {
 							e.addSuppressed(e2);
 							blockModel = new BlockStateModel();
-						}						
-						
-						Logger.global.noFloodDebug(block.getBlockState().getFullId() + "-hiresModelRenderer-blockmodelerr", "Failed to create BlockModel for BlockState: " + block.getBlockState() + " (" + e.toString() + ")");
+						}
+						//Logger.global.noFloodDebug(block.getBlockState().getFullId() + "-hiresModelRenderer-blockmodelerr", "Failed to create BlockModel for BlockState: " + block.getBlockState() + " (" + e.toString() + ")");
 					}
 					
 					blockModel.translate(new Vector3f(x, y, z).sub(modelMin.toFloat()));

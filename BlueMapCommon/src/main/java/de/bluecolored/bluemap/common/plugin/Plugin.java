@@ -69,6 +69,7 @@ public class Plugin {
 	private RenderManager renderManager;
 	private BlueMapWebServer webServer;
 	
+	private Thread periodicalSaveThread;
 	private Thread metricsThread;
 	
 	private boolean loaded = false;
@@ -218,6 +219,23 @@ public class Plugin {
 			Logger.global.logError("Failed to load render-manager state!", ex);
 		}
 		
+		//create periodical-save thread
+		periodicalSaveThread = new Thread(() -> {
+			try {
+				while (true) {
+					Thread.sleep(TimeUnit.MINUTES.toMillis(5));
+					try {
+						saveRenderManagerState();
+					} catch (IOException ex) {
+						Logger.global.logError("Failed to save render-manager state!", ex);
+					}
+				}
+			} catch (InterruptedException ex){
+				return;
+			}
+		});
+		periodicalSaveThread.start();
+		
 		//start map updater
 		this.updateHandler = new MapUpdateHandler();
 		serverInterface.registerListener(updateHandler);
@@ -232,15 +250,14 @@ public class Plugin {
 		webSettings.setAllEnabled(false);
 		for (MapType map : maps.values()) {
 			webSettings.setEnabled(true, map.getId());
-			webSettings.setName(map.getName(), map.getId());
 			webSettings.setFrom(map.getTileRenderer(), map.getId());
+			webSettings.setFrom(map.getWorld(), map.getId());
 		}
 		int ordinal = 0;
 		for (MapConfig map : config.getMapConfigs()) {
 			if (!maps.containsKey(map.getId())) continue; //don't add not loaded maps
 			webSettings.setOrdinal(ordinal++, map.getId());
-			webSettings.setHiresViewDistance(map.getHiresViewDistance(), map.getId());
-			webSettings.setLowresViewDistance(map.getLowresViewDistance(), map.getId());
+			webSettings.setFrom(map, map.getId());
 		}
 		webSettings.save();
 		
@@ -278,6 +295,9 @@ public class Plugin {
 		if (metricsThread != null) metricsThread.interrupt();
 		metricsThread = null;
 		
+		if (periodicalSaveThread != null) periodicalSaveThread.interrupt();
+		periodicalSaveThread = null;
+		
 		//stop services
 		if (renderManager != null) renderManager.stop();
 		if (webServer != null) webServer.close();
@@ -286,14 +306,7 @@ public class Plugin {
 		if (updateHandler != null) updateHandler.flushTileBuffer(); //first write all buffered tiles to the render manager to save them too
 		if (renderManager != null) {
 			try {
-				File saveFile = config.getDataPath().resolve("rmstate").toFile();
-				saveFile.getParentFile().mkdirs();
-				if (saveFile.exists()) saveFile.delete();
-				saveFile.createNewFile();
-				
-				try (DataOutputStream out = new DataOutputStream(new GZIPOutputStream(new FileOutputStream(saveFile)))) {
-					renderManager.writeState(out);
-				}
+				saveRenderManagerState();
 			} catch (IOException ex) {
 				Logger.global.logError("Failed to save render-manager state!", ex);
 			}
@@ -314,6 +327,17 @@ public class Plugin {
 		worlds.clear();
 		
 		loaded = false;
+	}
+	
+	public void saveRenderManagerState() throws IOException {
+		File saveFile = config.getDataPath().resolve("rmstate").toFile();
+		saveFile.getParentFile().mkdirs();
+		if (saveFile.exists()) saveFile.delete();
+		saveFile.createNewFile();
+		
+		try (DataOutputStream out = new DataOutputStream(new GZIPOutputStream(new FileOutputStream(saveFile)))) {
+			renderManager.writeState(out);
+		}
 	}
 
 	public synchronized void reload() throws IOException, ParseResourceException {

@@ -81,32 +81,17 @@ export default class BlueMap {
 		this.controls = new Controls(this.camera, this.element, this.hiresScene);
 
 		this.loadSettings().then(async () => {
-			this.controls.setTileSize(this.settings[this.map]['hires']['tileSize']);
-
-			this.lowresTileManager = new TileManager(
-				this,
-				this.settings[this.map]['lowres']['viewDistance'],
-				this.loadLowresTile,
-				this.lowresScene,
-				this.settings[this.map]['lowres']['tileSize'],
-				{x: 0, z: 0}
-			);
-
-			this.hiresTileManager = new TileManager(
-				this,
-				this.settings[this.map]['hires']['viewDistance'],
-				this.loadHiresTile,
-				this.hiresScene,
-				this.settings[this.map]['hires']['tileSize'],
-				{x: 0, z: 0}
-			);
-
 			await this.loadHiresMaterial();
 			await this.loadLowresMaterial();
 
+			this.changeMap(this.map);
+
 			this.initModules();
 			this.start();
-		}).catch(error => this.onLoadError(error.toString()));
+		}).catch(error => {
+			this.onLoadError(error.toString())
+			console.error(error);
+		});
 	}
 
 	initModules() {
@@ -119,12 +104,20 @@ export default class BlueMap {
 	}
 
 	changeMap(map) {
-		this.hiresTileManager.close();
-		this.lowresTileManager.close();
+		if (this.hiresTileManager !== undefined) this.hiresTileManager.close();
+		if (this.lowresTileManager !== undefined) this.lowresTileManager.close();
 
 		this.map = map;
+
+		let startPos = {
+			x: this.settings[this.map]["startPos"]["x"],
+			z: this.settings[this.map]["startPos"]["z"]
+		};
+
 		this.controls.setTileSize(this.settings[this.map]['hires']['tileSize']);
 		this.controls.resetPosition();
+		this.controls.targetPosition.set(startPos.x, this.controls.targetPosition.y, startPos.z);
+		this.controls.position.copy(this.controls.targetPosition);
 
 		this.lowresTileManager = new TileManager(
 			this,
@@ -132,7 +125,7 @@ export default class BlueMap {
 			this.loadLowresTile,
 			this.lowresScene,
 			this.settings[this.map]['lowres']['tileSize'],
-			{x: 0, z: 0}
+			startPos
 		);
 
 		this.hiresTileManager = new TileManager(
@@ -141,7 +134,7 @@ export default class BlueMap {
 			this.loadHiresTile,
 			this.hiresScene,
 			this.settings[this.map]['hires']['tileSize'],
-			{x: 0, z: 0}
+			startPos
 		);
 
 		this.lowresTileManager.update();
@@ -214,14 +207,17 @@ export default class BlueMap {
 		}
 
 		this.locationHash =
-			'#' + this.map
-			+ ':' + Math.floor(this.controls.targetPosition.x)
-			+ ':' + Math.floor(this.controls.targetPosition.z)
-			+ ':' + Math.round(this.controls.targetDirection * 100) / 100
-			+ ':' + Math.round(this.controls.targetDistance * 100) / 100
-			+ ':' + Math.ceil(this.controls.targetAngle * 100) / 100
-			+ ':' + Math.floor(this.controls.targetPosition.y);
-		history.replaceState(undefined, undefined, this.locationHash);
+				'#' + this.map
+				+ ':' + Math.floor(this.controls.targetPosition.x)
+				+ ':' + Math.floor(this.controls.targetPosition.z)
+				+ ':' + Math.round(this.controls.targetDirection * 100) / 100
+				+ ':' + Math.round(this.controls.targetDistance * 100) / 100
+				+ ':' + Math.ceil(this.controls.targetAngle * 100) / 100
+				+ ':' + Math.floor(this.controls.targetPosition.y);
+		// only update hash when changed
+		if (window.location.hash !== this.locationHash) {
+			history.replaceState(undefined, undefined, this.locationHash);
+		}
 	};
 
 	render = () => {

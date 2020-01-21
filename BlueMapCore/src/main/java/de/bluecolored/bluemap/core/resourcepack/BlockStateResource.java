@@ -66,7 +66,7 @@ public class BlockStateResource {
 		Variant allMatch = null;
 		for (Variant variant : variants) {
 			if (variant.condition.matches(blockState)) {
-				if (variant.condition instanceof All) { //only use "all" conditioned if nothing else matched
+				if (variant.condition instanceof All) { //only use "all" condition if nothing else matched
 					if (allMatch == null) allMatch = variant;
 					continue;
 				}
@@ -106,16 +106,21 @@ public class BlockStateResource {
 		}
 
 		public TransformedBlockModelResource getModel(Vector3i pos) {
+			if (models.isEmpty()) throw new IllegalStateException("A variant must have at least one model!");
+			
 			double selection = MathUtils.hashToFloat(pos, 827364) * totalWeight; // random based on position
 			for (Weighted<TransformedBlockModelResource> w : models) {
 				selection -= w.weight;
-				if (selection < 0)
-					return w.value;
+				if (selection <= 0) return w.value;
 			}
 
 			throw new RuntimeException("This line should never be reached!");
 		}
 
+		public void checkValid() throws ParseResourceException {
+			if (models.isEmpty()) throw new ParseResourceException("A variant must have at least one model!");
+		}
+		
 		public void updateTotalWeight() {
 			totalWeight = 0d;
 			for (Weighted<?> w : models) {
@@ -181,10 +186,11 @@ public class BlockStateResource {
 					variant.models = loadModels(transformedModelNode, blockstateFile, null);
 
 					variant.updateTotalWeight();
+					variant.checkValid();
 
 					blockState.variants.add(variant);
-				} catch (Exception ex) {
-					Logger.global.logWarning("Failed to parse a variant of " + blockstateFile + ": " + ex);
+				} catch (Throwable t) {
+					Logger.global.logWarning("Failed to parse a variant of " + blockstateFile + ": " + t);
 				}
 			}
 
@@ -199,10 +205,11 @@ public class BlockStateResource {
 					variant.models = loadModels(partNode.getNode("apply"), blockstateFile, null);
 
 					variant.updateTotalWeight();
+					variant.checkValid();
 
 					blockState.multipart.add(variant);
-				} catch (Exception ex) {
-					Logger.global.logWarning("Failed to parse a multipart-part of " + blockstateFile + ": " + ex);
+				} catch (Throwable t) {
+					Logger.global.logWarning("Failed to parse a multipart-part of " + blockstateFile + ": " + t);
 				}
 			}
 
@@ -364,7 +371,14 @@ public class BlockStateResource {
 				}
 				
 				variant.updateTotalWeight();
-				blockState.variants.add(variant);
+
+				try {
+					variant.checkValid();
+					blockState.variants.add(variant);
+				} catch (ParseResourceException ex) {
+					Logger.global.logWarning("Failed to parse a variant (forge/property) of " + blockstateFile + ": " + ex);
+				}
+				
 			}
 			
 			//create default straight variant
@@ -390,7 +404,14 @@ public class BlockStateResource {
 				}
 				
 				variant.updateTotalWeight();
-				blockState.variants.add(variant);
+
+				try {
+					variant.checkValid();
+					blockState.variants.add(variant);
+				} catch (ParseResourceException ex) {
+					Logger.global.logWarning("Failed to parse a variant (forge/straight) of " + blockstateFile + ": " + ex);
+				}
+				
 			}
 
 			return blockState;

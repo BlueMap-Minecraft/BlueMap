@@ -127,8 +127,10 @@ public class RenderManager {
 					RenderTask task = renderTasks.peek();
 					if (task != null) {
 						ticket = task.poll();
-						if (task.isFinished()) renderTasks.poll();
-						task.getMapType().getTileRenderer().save();
+						if (task.isFinished()) {
+							renderTasks.poll();
+							task.getMapType().getTileRenderer().save();
+						}
 					}
 				}
 			}
@@ -155,7 +157,17 @@ public class RenderManager {
 	 * Returns a copy of the deque with the render tasks in order as array
 	 */
 	public RenderTask[] getRenderTasks(){
-		return renderTasks.toArray(new RenderTask[renderTasks.size()]);
+		synchronized (renderTasks) {
+			return renderTasks.toArray(new RenderTask[renderTasks.size()]);
+		}
+	}
+
+	public int getRenderTaskCount(){
+		return renderTasks.size();
+	}
+	
+	public RenderTask getCurrentRenderTask() {
+		return renderTasks.peek();
 	}
 	
 	public boolean isRunning() {

@@ -24,8 +24,14 @@
  */
 package de.bluecolored.bluemap.cli;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,6 +42,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -136,15 +144,14 @@ public class BlueMapCLI {
 		webSettings.setAllEnabled(false);
 		for (MapType map : maps.values()) {
 			webSettings.setEnabled(true, map.getId());
-			webSettings.setName(map.getName(), map.getId());
 			webSettings.setFrom(map.getTileRenderer(), map.getId());
+			webSettings.setFrom(map.getWorld(), map.getId());
 		}
 		int ordinal = 0;
 		for (MapConfig map : config.getMapConfigs()) {
 			if (!maps.containsKey(map.getId())) continue; //don't add not loaded maps
 			webSettings.setOrdinal(ordinal++, map.getId());
-			webSettings.setHiresViewDistance(map.getHiresViewDistance(), map.getId());
-			webSettings.setLowresViewDistance(map.getLowresViewDistance(), map.getId());
+			webSettings.setFrom(map, map.getId());
 		}
 		webSettings.save();
 
@@ -153,86 +160,118 @@ public class BlueMapCLI {
 		resourcePack.saveTextureFile(textureExportFile);
 
 		RenderManager renderManager = new RenderManager(config.getRenderThreadCount());
+		File rmstate = new File(configFolder, "rmstate");
+		
+		if (rmstate.exists()) {
+			try (
+				InputStream in = new GZIPInputStream(new FileInputStream(rmstate));
+				DataInputStream din = new DataInputStream(in);
+			){
+				renderManager.readState(din, maps.values());
+				Logger.global.logInfo("Found unfinished render, continuing ... (If you want to start a new render, delete the this file: " + rmstate.getCanonicalPath());
+			} catch (IOException ex) {
+				Logger.global.logError("Failed to read saved render-state! Remove the file " + rmstate.getCanonicalPath() + " to start a new render.", ex);
+			}
+		} else {
+			for (MapType map : maps.values()) {
+				Logger.global.logInfo("Creating render-task for map '" + map.getId() + "' ...");
+				Logger.global.logInfo("Collecting tiles ...");
+		
+				Collection<Vector2i> chunks;
+				if (!forceRender) {
+					long lastRender = webSettings.getLong(map.getId(), "last-render");
+					chunks = map.getWorld().getChunkList(lastRender);
+				} else {
+					chunks = map.getWorld().getChunkList();
+				}
+				
+				HiresModelManager hiresModelManager = map.getTileRenderer().getHiresModelManager();
+				Collection<Vector2i> tiles = hiresModelManager.getTilesForChunks(chunks);
+				Logger.global.logInfo("Found " + tiles.size() + " tiles to render! (" + chunks.size() + " chunks)");
+				if (!forceRender && chunks.size() == 0) {
+					Logger.global.logInfo("(This is normal if nothing has changed in the world since the last render. Use -f on the command-line to force a render of all chunks)");
+				}
+				
+				if (tiles.isEmpty()) {
+					continue;
+				}
+				
+				RenderTask task = new RenderTask(map.getName(), map);
+				task.addTiles(tiles);
+				task.optimizeQueue();
+				
+				renderManager.addRenderTask(task);
+			}
+		}
+
+		Logger.global.logInfo("Starting render ...");
 		renderManager.start();
 		
-		for (MapType map : maps.values()) {
-			Logger.global.logInfo("Rendering map '" + map.getId() + "' ...");
-			Logger.global.logInfo("Collecting tiles to render...");
-	
-			Collection<Vector2i> chunks;
-			if (!forceRender) {
-				long lastRender = webSettings.getLong(map.getId(), "last-render");
-				chunks = map.getWorld().getChunkList(lastRender);
-			} else {
-				chunks = map.getWorld().getChunkList();
-			}
-			
-			HiresModelManager hiresModelManager = map.getTileRenderer().getHiresModelManager();
-			Collection<Vector2i> tiles = hiresModelManager.getTilesForChunks(chunks);
-			Logger.global.logInfo("Found " + tiles.size() + " tiles to render! (" + chunks.size() + " chunks)");
-			if (!forceRender && chunks.size() == 0) {
-				Logger.global.logInfo("(This is normal if nothing has changed in the world since the last render. Use -f on the command-line to force a render of all chunks)");
-			}
-			
-			if (tiles.isEmpty()) {
-				continue;
-			}
+		long startTime = System.currentTimeMillis();
 		
-			Logger.global.logInfo("Starting Render...");
-			long starttime = System.currentTimeMillis();
-			
-			RenderTask task = new RenderTask("Map-Render: " + map.getName(), map);
-			task.addTiles(tiles);
-			task.optimizeQueue();
-			
-			renderManager.addRenderTask(task);
-			
-			long lastLogUpdate = System.currentTimeMillis();
-			long lastSave = lastLogUpdate;
-			
-			while(!task.isFinished()) {
-				try {
-					Thread.sleep(200);
-				} catch (InterruptedException e) {}
-				
-				long now = System.currentTimeMillis();
-				
-				if (lastLogUpdate < now - 10000) { // print update all 10 seconds
-					lastLogUpdate = now;
-					long time = task.getActiveTime();
-					
-					String durationString = DurationFormatUtils.formatDurationWords(time, true, true);
-					int tileCount = task.getRemainingTileCount() + task.getRenderedTileCount();
-					double pct = (double)task.getRenderedTileCount() / (double) tileCount;
-					
-					long ert = (long)((time / pct) * (1d - pct));
-					String ertDurationString = DurationFormatUtils.formatDurationWords(ert, true, true);
-					
-					double tps = task.getRenderedTileCount() / (time / 1000.0);
-					
-					Logger.global.logInfo("Rendered " + task.getRenderedTileCount() + " of " + tileCount + " tiles in " + durationString + " | " + GenericMath.round(tps, 3) + " tiles/s");
-					Logger.global.logInfo(GenericMath.round(pct * 100, 3) + "% | Estimated remaining time: " + ertDurationString);
-				}
-				
-				if (lastSave < now - 5 * 60000) { // save every 5 minutes
-					lastSave = now;
-					map.getTileRenderer().save();
-				}
-			}
-
-			map.getTileRenderer().save();
-	
+		long lastLogUpdate = startTime;
+		long lastSave = startTime;
+		
+		while(renderManager.getRenderTaskCount() != 0) {
 			try {
-				webSettings.set(starttime, map.getId(), "last-render");
-				webSettings.save();
-			} catch (IOException e) {
-				Logger.global.logError("Failed to update web-settings!", e);
+				Thread.sleep(200);
+			} catch (InterruptedException e) {}
+			
+
+			long now = System.currentTimeMillis();
+			
+			if (lastLogUpdate < now - 10000) { // print update all 10 seconds
+				RenderTask currentTask = renderManager.getCurrentRenderTask();
+				lastLogUpdate = now;
+				long time = currentTask.getActiveTime();
+				
+				String durationString = DurationFormatUtils.formatDurationWords(time, true, true);
+				int tileCount = currentTask.getRemainingTileCount() + currentTask.getRenderedTileCount();
+				double pct = (double)currentTask.getRenderedTileCount() / (double) tileCount;
+				
+				long ert = (long)((time / pct) * (1d - pct));
+				String ertDurationString = DurationFormatUtils.formatDurationWords(ert, true, true);
+				
+				double tps = currentTask.getRenderedTileCount() / (time / 1000.0);
+				
+				Logger.global.logInfo("Rendering map '" + currentTask.getName() + "':");
+				Logger.global.logInfo("Rendered " + currentTask.getRenderedTileCount() + " of " + tileCount + " tiles in " + durationString + " | " + GenericMath.round(tps, 3) + " tiles/s");
+				Logger.global.logInfo(GenericMath.round(pct * 100, 3) + "% | Estimated remaining time: " + ertDurationString);
+			}
+			
+			if (lastSave < now - 1 * 60000) { // save every minute
+				RenderTask currentTask = renderManager.getCurrentRenderTask();
+				
+				lastSave = now;
+				currentTask.getMapType().getTileRenderer().save();
+
+				try (
+					OutputStream os = new GZIPOutputStream(new FileOutputStream(rmstate));
+					DataOutputStream dos = new DataOutputStream(os);
+				){
+					renderManager.writeState(dos);
+				} catch (IOException ex) {
+					Logger.global.logError("Failed to save render-state!", ex);
+				}
 			}
 		}
 
 		renderManager.stop();
 		
-		Logger.global.logInfo("Waiting for all threads to quit...");
+		//render finished, so remove render state file
+		rmstate.delete();
+
+		for (MapType map : maps.values()) {
+			webSettings.set(startTime, map.getId(), "last-render");
+		}
+		
+		try {
+			webSettings.save();
+		} catch (IOException e) {
+			Logger.global.logError("Failed to update web-settings!", e);
+		}
+		
+		Logger.global.logInfo("Waiting for all threads to quit ...");
 		if (!ForkJoinPool.commonPool().awaitQuiescence(30, TimeUnit.SECONDS)) {
 			Logger.global.logWarning("Some save-threads are taking very long to exit (>30s), they will be ignored.");
 		}
@@ -241,14 +280,14 @@ public class BlueMapCLI {
 	}
 	
 	public void startWebserver() throws IOException {
-		Logger.global.logInfo("Starting webserver...");
+		Logger.global.logInfo("Starting webserver ...");
 		
 		BlueMapWebServer webserver = new BlueMapWebServer(configManager.getMainConfig());
 		webserver.start();
 	}
 	
 	private boolean loadResources() throws IOException, ParseResourceException {
-		Logger.global.logInfo("Loading resources...");
+		Logger.global.logInfo("Loading resources ...");
 
 		MainConfig config = configManager.getMainConfig();
 		

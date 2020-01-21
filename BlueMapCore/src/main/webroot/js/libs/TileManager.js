@@ -37,7 +37,8 @@ export default class TileManager {
 		this.scene = scene;
 		this.tileSize = new Vector2(tileSize.x, tileSize.z);
 
-		this.tile = new Vector2(position.x, position.z);
+		this.tile = new Vector2(0, 0);
+		this.tile.set(position.x, position.z).divide(this.tileSize).floor();
 		this.lastTile = this.tile.clone();
 
 		this.closed = false;

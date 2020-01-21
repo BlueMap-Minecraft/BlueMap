@@ -31,7 +31,9 @@ import java.util.stream.Collectors;
 
 import com.flowpowered.math.vector.Vector2i;
 
+import de.bluecolored.bluemap.core.config.MainConfig.MapConfig;
 import de.bluecolored.bluemap.core.render.TileRenderer;
+import de.bluecolored.bluemap.core.world.World;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.gson.GsonConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
@@ -128,13 +130,23 @@ public class WebSettings {
 		set(pointSize.getX() / 2, mapId, "lowres", "translate", "x");
 		set(pointSize.getY() / 2, mapId, "lowres", "translate", "z");
 	}
-	
-	public void setHiresViewDistance(float hiresViewDistance, String mapId) {
-		set(hiresViewDistance, mapId, "hires", "viewDistance");
+
+	public void setFrom(World world, String mapId) {
+		set(world.getSpawnPoint().getX(), mapId, "startPos", "x");
+		set(world.getSpawnPoint().getZ(), mapId, "startPos", "z");
 	}
 	
-	public void setLowresViewDistance(float lowresViewDistance, String mapId) {
-		set(lowresViewDistance, mapId, "lowres", "viewDistance");
+	public void setFrom(MapConfig mapConfig, String mapId) {
+		Vector2i startPos = mapConfig.getStartPos();
+		if (startPos != null) {
+			set(startPos.getX(), mapId, "startPos", "x");
+			set(startPos.getY(), mapId, "startPos", "z");
+		}
+
+		set(mapConfig.getLowresViewDistance(), mapId, "lowres", "viewDistance");
+		set(mapConfig.getHiresViewDistance(), mapId, "hires", "viewDistance");
+		
+		setName(mapConfig.getName(), mapId);
 	}
 	
 	public void setOrdinal(int ordinal, String mapId) {
