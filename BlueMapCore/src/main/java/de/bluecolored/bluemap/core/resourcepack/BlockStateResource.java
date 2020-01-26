@@ -37,7 +37,7 @@ import java.util.Map.Entry;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.flowpowered.math.vector.Vector2i;
+import com.flowpowered.math.vector.Vector2f;
 import com.flowpowered.math.vector.Vector3i;
 
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -255,7 +255,7 @@ public class BlockStateResource {
 				resourcePack.blockModelResources.put(modelPath, model);
 			}
 
-			Vector2i rotation = new Vector2i(node.getNode("x").getInt(0), node.getNode("y").getInt(0));
+			Vector2f rotation = new Vector2f(node.getNode("x").getFloat(0), node.getNode("y").getFloat(0));
 			boolean uvLock = node.getNode("uvlock").getBoolean(false);
 
 			TransformedBlockModelResource transformedModel = new TransformedBlockModelResource(rotation, uvLock, model);

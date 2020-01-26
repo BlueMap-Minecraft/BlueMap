@@ -1,0 +1,20 @@
+{
+    "variants": {
+        "rotation=0": { "model": "block/sign/acacia" },
+        "rotation=1": { "model": "block/sign/acacia", "y": 22.5 },
+        "rotation=2": { "model": "block/sign/acacia", "y": 45 },
+        "rotation=3": { "model": "block/sign/acacia", "y": 67.5 },
+        "rotation=4": { "model": "block/sign/acacia", "y": 90 },
+        "rotation=5": { "model": "block/sign/acacia", "y": 112.5 },
+        "rotation=6": { "model": "block/sign/acacia", "y": 135 },
+        "rotation=7": { "model": "block/sign/acacia", "y": 157.5 },
+        "rotation=8": { "model": "block/sign/acacia", "y": 180 },
+        "rotation=9": { "model": "block/sign/acacia", "y": 202.5 },
+        "rotation=10": { "model": "block/sign/acacia", "y": 225 },
+        "rotation=11": { "model": "block/sign/acacia", "y": 247.5 },
+        "rotation=12": { "model": "block/sign/acacia", "y": 270 },
+        "rotation=13": { "model": "block/sign/acacia", "y": 292.5 },
+        "rotation=14": { "model": "block/sign/acacia", "y": 315 },
+        "rotation=15": { "model": "block/sign/acacia", "y": 337.5 }
+    }
+}

@@ -24,22 +24,22 @@
  */
 package de.bluecolored.bluemap.core.resourcepack;
 
-import com.flowpowered.math.vector.Vector2i;
+import com.flowpowered.math.vector.Vector2f;
 
 public class TransformedBlockModelResource {
 
-	private Vector2i rotation = Vector2i.ZERO;
+	private Vector2f rotation = Vector2f.ZERO;
 	private boolean uvLock = false;
 	
 	private BlockModelResource model;
 
-	public TransformedBlockModelResource(Vector2i rotation, boolean uvLock, BlockModelResource model) {
+	public TransformedBlockModelResource(Vector2f rotation, boolean uvLock, BlockModelResource model) {
 		this.model = model;
 		this.rotation = rotation;
 		this.uvLock = uvLock;
 	}
 	
-	public Vector2i getRotation() {
+	public Vector2f getRotation() {
 		return rotation;
 	}
 	

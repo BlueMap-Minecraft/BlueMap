@@ -29,7 +29,6 @@ import com.flowpowered.math.imaginary.Complexf;
 import com.flowpowered.math.imaginary.Quaternionf;
 import com.flowpowered.math.matrix.Matrix3f;
 import com.flowpowered.math.vector.Vector2f;
-import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3f;
 import com.flowpowered.math.vector.Vector3i;
 import com.flowpowered.math.vector.Vector4f;
@@ -71,7 +70,7 @@ public class ResourceModelBuilder {
 			model.merge(fromModelElementResource(element, bmr));
 		}
 		
-		if (!bmr.getRotation().equals(Vector2i.ZERO)) {
+		if (!bmr.getRotation().equals(Vector2f.ZERO)) {
 			model.translate(NEG_HALF_3F);
 			model.rotate(Quaternionf.fromAxesAnglesDeg(
 					-bmr.getRotation().getX(),
@@ -173,7 +172,7 @@ public class ResourceModelBuilder {
 		
 		//UV-Lock counter-rotation
 		int uvLockAngle = 0;
-		Vector2i rotation = modelResource.getRotation();
+		Vector2f rotation = modelResource.getRotation();
 		if (modelResource.isUVLock()){
 			Quaternionf rot = Quaternionf.fromAxesAnglesDeg(rotation.getX(), rotation.getY(), 0);
 			uvLockAngle = (int) rot.getAxesAnglesDeg().dot(faceDir.toVector().toFloat());
@@ -257,16 +256,16 @@ public class ResourceModelBuilder {
 		
 	}
 	
-	private Block getRotationRelativeBlock(Vector2i modelRotation, Direction direction){
+	private Block getRotationRelativeBlock(Vector2f modelRotation, Direction direction){
 		return getRotationRelativeBlock(modelRotation, direction.toVector());
 	}
 	
-	private Block getRotationRelativeBlock(Vector2i modelRotation, Vector3i direction){
+	private Block getRotationRelativeBlock(Vector2f modelRotation, Vector3i direction){
 		Vector3i dir = getRotationRelativeDirectionVector(modelRotation, direction.toFloat()).round().toInt();
 		return block.getRelativeBlock(dir);
 	}
 	
-	private Vector3f getRotationRelativeDirectionVector(Vector2i modelRotation, Vector3f direction){
+	private Vector3f getRotationRelativeDirectionVector(Vector2f modelRotation, Vector3f direction){
 		Quaternionf rot = Quaternionf.fromAxesAnglesDeg(
 				-modelRotation.getX(),
 				-modelRotation.getY(),
@@ -276,7 +275,7 @@ public class ResourceModelBuilder {
 		return dir;
 	}
 	
-	private double testAo(Vector2i modelRotation, Vector3f vertex, Direction dir){
+	private double testAo(Vector2f modelRotation, Vector3f vertex, Direction dir){
 		int occluding = 0;
 		
 		int x = 0;
