@@ -37,6 +37,7 @@ import {
 	MeshLambertMaterial,
 	NormalBlending,
 	NearestFilter,
+	NearestMipmapLinearFilter,
 	PerspectiveCamera,
 	Scene,
 	Texture,
@@ -89,7 +90,7 @@ export default class BlueMap {
 			this.initModules();
 			this.start();
 		}).catch(error => {
-			this.onLoadError(error.toString())
+			this.onLoadError(error.toString());
 			console.error(error);
 		});
 	}
@@ -364,9 +365,11 @@ export default class BlueMap {
 				for (let i = 0; i < textures['textures'].length; i++) {
 					let t = textures['textures'][i];
 
+					let opaque = t['color'][3] === 1;
+					let transparent = t['transparent'];
 					let material = new MeshLambertMaterial({
-						transparent: t['transparent'],
-						alphaTest: 0.01,
+						transparent: transparent,
+						alphaTest: transparent ? 0 : (opaque ? 1 : 0.01),
 						depthWrite: true,
 						depthTest: true,
 						blending: NormalBlending,
@@ -378,15 +381,15 @@ export default class BlueMap {
 					let texture = new Texture();
 					texture.image = stringToImage(t['texture']);
 
-					texture.premultiplyAlpha = false;
-					texture.generateMipmaps = false;
+					texture.anisotropy = 1;
+					texture.generateMipmaps = opaque || transparent;
 					texture.magFilter = NearestFilter;
-					texture.minFilter = NearestFilter;
+					texture.minFilter = texture.generateMipmaps ? NearestMipmapLinearFilter : NearestFilter;
 					texture.wrapS = ClampToEdgeWrapping;
 					texture.wrapT = ClampToEdgeWrapping;
 					texture.flipY = false;
-					texture.needsUpdate = true;
 					texture.flatShading = true;
+					texture.needsUpdate = true;
 
 					material.map = texture;
 					material.needsUpdate = true;

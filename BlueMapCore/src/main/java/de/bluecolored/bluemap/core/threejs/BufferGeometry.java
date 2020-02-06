@@ -264,7 +264,7 @@ public class BufferGeometry {
 		json.name("array").beginArray();
 		for (int i = 0; i < array.length; i++){
 			//rounding and remove ".0" to save string space
-			double d = GenericMath.round(array[i], 3);
+			double d = GenericMath.round(array[i], 4);
 			if (d == (int) d) json.value((int) d);
 			else json.value(d);
 		}

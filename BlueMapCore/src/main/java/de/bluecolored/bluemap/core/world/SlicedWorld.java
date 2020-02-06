@@ -25,9 +25,9 @@
 package de.bluecolored.bluemap.core.world;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
@@ -98,29 +98,8 @@ public class SlicedWorld implements World {
 	}
 	
 	@Override
-	public Collection<Vector2i> getChunkList(){
-		Collection<Vector2i> chunkList = world.getChunkList();
-		
-		ArrayList<Vector2i> filteredChunkList = new ArrayList<>(chunkList.size());
-		for (Vector2i chunk : chunkList) {
-			if (isInside(chunk)) filteredChunkList.add(chunk);
-		}
-		filteredChunkList.trimToSize();
-		
-		return filteredChunkList;
-	}
-	
-	@Override
-	public Collection<Vector2i> getChunkList(long modifiedSince) {
-		Collection<Vector2i> chunkList = world.getChunkList(modifiedSince);
-		
-		ArrayList<Vector2i> filteredChunkList = new ArrayList<>(chunkList.size());
-		for (Vector2i chunk : chunkList) {
-			if (isInside(chunk)) filteredChunkList.add(chunk);
-		}
-		filteredChunkList.trimToSize();
-		
-		return filteredChunkList;
+	public Collection<Vector2i> getChunkList(long modifiedSince, Predicate<Vector2i> filter) {
+		return world.getChunkList(modifiedSince, filter.and(chunk -> isInside(chunk)));
 	}
 
 	@Override

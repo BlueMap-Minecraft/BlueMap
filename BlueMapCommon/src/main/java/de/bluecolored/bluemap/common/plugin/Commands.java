@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
@@ -154,10 +155,18 @@ public class Commands {
 		}
 	}
 
+
 	/**
 	 * Command: /bluemap render [world]
 	 */
 	public boolean executeRenderWorldCommand(CommandSource source, UUID worldUuid) {
+		return executeRenderWorldCommand(source, worldUuid, null, -1);
+	}
+	
+	/**
+	 * Command: /bluemap render [world] [block-radius]
+	 */
+	public boolean executeRenderWorldCommand(CommandSource source, UUID worldUuid, Vector2i center, int blockRadius) {
 		if (!checkLoaded(source)) return false;
 		
 		World world = bluemap.getWorld(worldUuid);
@@ -170,7 +179,7 @@ public class Commands {
 		world.invalidateChunkCache();
 		
 		new Thread(() -> {
-			createWorldRenderTask(source, world);
+			createWorldRenderTask(source, world, center, blockRadius);
 		}).start();
 		
 		return true;
@@ -262,9 +271,21 @@ public class Commands {
 		return Text.of(TextColor.GREEN, "[^]").setHoverText(Text.of(TextColor.GRAY, "click to prioritize this render-task")).setClickCommand("/bluemap render prioritize " + task.getUuid());
 	}
 	
-	private void createWorldRenderTask(CommandSource source, World world) {
+	private void createWorldRenderTask(CommandSource source, World world, Vector2i center, long blockRadius) {
 		source.sendMessage(Text.of(TextColor.GOLD, "Collecting chunks to render..."));
-		Collection<Vector2i> chunks = world.getChunkList();
+		
+		String taskName = "world-render";
+		
+		Predicate<Vector2i> filter;
+		if (center == null || blockRadius < 0) {
+			filter = c -> true;
+		} else {
+			filter = c -> c.mul(16).distanceSquared(center) <= blockRadius * blockRadius;
+			taskName = "radius-render";
+		}
+		
+		Collection<Vector2i> chunks = world.getChunkList(filter);
+		
 		source.sendMessage(Text.of(TextColor.GREEN, chunks.size() + " chunks found!"));
 		
 		for (MapType map : bluemap.getMapTypes()) {
@@ -274,8 +295,8 @@ public class Commands {
 			
 			HiresModelManager hmm = map.getTileRenderer().getHiresModelManager();
 			Collection<Vector2i> tiles = hmm.getTilesForChunks(chunks);
-
-			RenderTask task = new RenderTask("world-render", map);
+			
+			RenderTask task = new RenderTask(taskName, map);
 			task.addTiles(tiles);
 			task.optimizeQueue();
 			bluemap.getRenderManager().addRenderTask(task);
