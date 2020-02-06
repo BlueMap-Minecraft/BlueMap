@@ -171,6 +171,7 @@ public class BlueMapCLI {
 				Logger.global.logInfo("Found unfinished render, continuing ... (If you want to start a new render, delete the this file: " + rmstate.getCanonicalPath());
 			} catch (IOException ex) {
 				Logger.global.logError("Failed to read saved render-state! Remove the file " + rmstate.getCanonicalPath() + " to start a new render.", ex);
+				return;
 			}
 		} else {
 			for (MapType map : maps.values()) {

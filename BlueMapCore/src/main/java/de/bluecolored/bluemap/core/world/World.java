@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.core.world;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.UUID;
+import java.util.function.Predicate;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
@@ -73,14 +74,30 @@ public interface World {
 	 * <i>(Be aware that the collection is not cached and recollected each time from the world-files!)</i>
 	 */
 	public default Collection<Vector2i> getChunkList(){
-		return getChunkList(0);
+		return getChunkList(0, c -> true);
 	}
 	
+	/**
+	 * Returns a filtered collection of all generated chunks.<br>
+	 * <i>(Be aware that the collection is not cached and recollected each time from the world-files!)</i>
+	 */
+	public default Collection<Vector2i> getChunkList(Predicate<Vector2i> filter){
+		return getChunkList(0, filter);
+	}
+
 	/**
 	 * Returns a collection of all chunks that have been modified at or after the specified timestamp.<br>
 	 * <i>(Be aware that the collection is not cached and recollected each time from the world-files!)</i>
 	 */
-	public Collection<Vector2i> getChunkList(long modifiedSince);
+	public default Collection<Vector2i> getChunkList(long modifiedSince){
+		return getChunkList(modifiedSince, c -> true);
+	}
+	
+	/**
+	 * Returns a filtered collection of all chunks that have been modified at or after the specified timestamp.<br>
+	 * <i>(Be aware that the collection is not cached and recollected each time from the world-files!)</i>
+	 */
+	public Collection<Vector2i> getChunkList(long modifiedSince, Predicate<Vector2i> filter);
 
 	/**
 	 * Returns true if and only if that chunk is fully generated and no world-generation or lighting has yet to be done.

@@ -85,7 +85,10 @@ public class SpongeCommands {
 			.childArgumentParseExceptionFallback(false)
 			.child(createPrioritizeTaskCommand(), "prioritize")
 			.child(createRemoveTaskCommand(), "remove")
-			.arguments(GenericArguments.optional(GenericArguments.world(Text.of("world"))))
+			.arguments(
+					GenericArguments.optionalWeak(GenericArguments.onlyOne(GenericArguments.world(Text.of("world")))),
+					GenericArguments.optional(GenericArguments.integer(Text.of("block-radius")))
+				)
 			.executor((source, args) -> {
 				WorldProperties spongeWorld = args.<WorldProperties>getOne("world").orElse(null);
 				
@@ -99,6 +102,26 @@ public class SpongeCommands {
 					return CommandResult.empty();
 				}
 
+				int radius = args.<Integer>getOne("block-radius").orElse(-1);
+				
+				if (radius >= 0) {
+					if (source instanceof Locatable) {
+						Location<org.spongepowered.api.world.World> loc = ((Locatable) source).getLocation();
+						
+						if (commands.executeRenderWorldCommand(new SpongeCommandSource(source), spongeWorld.getUniqueId(), loc.getBlockPosition().toVector2(true), radius)) {
+							return CommandResult.success();
+						} else {
+							return CommandResult.empty();
+						}
+					} else {
+						source.sendMessages(
+								Text.of(TextColors.RED, "Could not determine a center-location for the radius!"), 
+								Text.of(TextColors.GRAY, "Could not determine a center-location for the radius!")
+								);
+						return CommandResult.empty();
+					}
+				}
+				
 				if (commands.executeRenderWorldCommand(new SpongeCommandSource(source), spongeWorld.getUniqueId())) {
 					return CommandResult.success();
 				} else {

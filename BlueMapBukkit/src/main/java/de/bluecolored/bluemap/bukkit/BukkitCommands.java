@@ -11,6 +11,7 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 
 import de.bluecolored.bluemap.common.plugin.Commands;
@@ -75,27 +76,40 @@ public class BukkitCommands implements CommandExecutor {
 		commands.add(new Command("bluemap.rendertask.create.world", "render") {
 			@Override
 			public boolean execute(CommandSender sender, CommandSource source, String[] args) {
-				if (args.length > 1) return false;
-				
-				World world;
-				if (args.length == 1) {
-					world = Bukkit.getWorld(args[0]);
-					if (world == null) {
-						source.sendMessage(Text.of(TextColor.RED, "There is no world named '" + args[0] + "'!"));
-						return true;
+				if (sender instanceof Player) {
+					if (args.length > 2) return false;
+					Player player = (Player) sender;
+					
+					World world = null;
+					int radius = -1;
+					if (args.length >= 1) {
+						world = Bukkit.getWorld(args[0]);
 					}
-				} else {
-					if (sender instanceof Player) {
-						Player player = (Player) sender;
+					if (args.length == 2 || (args.length == 1 && world == null)) {
+						try {
+							radius = Integer.parseInt(args[args.length - 1]);
+						} catch (NumberFormatException ex) {
+							return false;
+						}
+					}
+					if (world == null){
 						world = player.getWorld();
-					} else {
-						source.sendMessage(Text.of(TextColor.RED, "Since you are not a player, you have to specify a world!"));
-						return true;
 					}
+
+					if (radius >= 0) {
+						Vector2i pos = new Vector2i(player.getLocation().getBlockX(), player.getLocation().getBlockZ());
+						bluemapCommands.executeRenderWorldCommand(source, world.getUID(), pos, radius);
+					} else {
+						bluemapCommands.executeRenderWorldCommand(source, world.getUID());
+					}
+					return true;
+				} else {
+					if (args.length != 1) return false;
+					World world = Bukkit.getWorld(args[0]);
+
+					bluemapCommands.executeRenderWorldCommand(source, world.getUID());
+					return true;
 				}
-				
-				bluemapCommands.executeRenderWorldCommand(source, world.getUID());
-				return true;
 			}
 		});
 		

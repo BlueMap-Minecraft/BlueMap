@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Predicate;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
@@ -245,7 +246,7 @@ public class MCAWorld implements World {
 	}
 	
 	@Override
-	public Collection<Vector2i> getChunkList(long modifiedSinceMillis){
+	public Collection<Vector2i> getChunkList(long modifiedSinceMillis, Predicate<Vector2i> filter){
 		List<Vector2i> chunks = new ArrayList<>(10000);
 		
 		if (!getRegionFolder().toFile().isDirectory()) return Collections.emptyList();
@@ -274,7 +275,12 @@ public class MCAWorld implements World {
 						timestamp |= (raf.read() & 0xFF) << 8;
 						timestamp |= raf.read() & 0xFF;
 						
-						if (timestamp >= (modifiedSinceMillis / 1000)) chunks.add(new Vector2i(rX * 32 + x, rZ * 32 + z));
+						if (timestamp >= (modifiedSinceMillis / 1000)) {
+							Vector2i chunk = new Vector2i(rX * 32 + x, rZ * 32 + z);
+							if (filter.test(chunk)) {
+								chunks.add(chunk);
+							}
+						}
 					}
 				}
 			} catch (Exception ex) {

@@ -48,6 +48,7 @@ export default class Position {
 			.children()
 			.first();
 		element.on('input', this.onInput(type));
+		element.on('keydown', this.onKeyDown);
 		return element;
 	}
 
@@ -56,6 +57,10 @@ export default class Position {
 		if (!isNaN(value)) {
 			this.blueMap.controls.targetPosition[type] = value;
 		}
+	};
+
+	onKeyDown = event => {
+		event.stopPropagation();
 	};
 
 	onBlueMapUpdateFrame = () => {

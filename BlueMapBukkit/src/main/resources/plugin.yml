@@ -14,7 +14,7 @@ commands:
            /<command> reload
            /<command> pause
            /<command> resume
-           /<command> render [world]
+           /<command> render [world] [block-radius]
            /<command> debug
 permissions:
   bluemap.*:
