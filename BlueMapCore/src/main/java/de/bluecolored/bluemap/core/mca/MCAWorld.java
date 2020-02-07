@@ -54,6 +54,7 @@ import com.google.common.util.concurrent.UncheckedExecutionException;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.extensions.BlockStateExtension;
 import de.bluecolored.bluemap.core.mca.extensions.DoorExtension;
+import de.bluecolored.bluemap.core.mca.extensions.DoubleChestExtension;
 import de.bluecolored.bluemap.core.mca.extensions.DoublePlantExtension;
 import de.bluecolored.bluemap.core.mca.extensions.FireExtension;
 import de.bluecolored.bluemap.core.mca.extensions.GlassPaneConnectExtension;
@@ -97,6 +98,7 @@ public class MCAWorld implements World {
 		registerBlockStateExtension(new WoodenFenceConnectExtension());
 		registerBlockStateExtension(new GlassPaneConnectExtension());
 		registerBlockStateExtension(new DoublePlantExtension());
+		registerBlockStateExtension(new DoubleChestExtension());
 	}
 
 	private final UUID uuid;

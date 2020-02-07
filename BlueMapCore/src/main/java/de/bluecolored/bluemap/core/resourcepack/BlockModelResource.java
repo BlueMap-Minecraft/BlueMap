@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.core.resourcepack;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -259,8 +260,10 @@ public class BlockModelResource {
 		
 		private BlockModelResource buildNoReset(String modelPath, boolean renderElements, String topModelPath) throws IOException, ParseResourceException {
 			BlockModelResource blockModel = new BlockModelResource();
+			
+			InputStream fileIn = sourcesAccess.readFile(modelPath);
 			ConfigurationNode config = GsonConfigurationLoader.builder()
-					.setSource(() -> new BufferedReader(new InputStreamReader(sourcesAccess.readFile(modelPath), StandardCharsets.UTF_8)))
+					.setSource(() -> new BufferedReader(new InputStreamReader(fileIn, StandardCharsets.UTF_8)))
 					.build()
 					.load();
 			
