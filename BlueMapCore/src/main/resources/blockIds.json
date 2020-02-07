@@ -1125,6 +1125,7 @@
 	"164:6": "minecraft:dark_oak_stairs[facing=south,half=top]",
 	"164:7": "minecraft:dark_oak_stairs[facing=north,half=top]",
 	"165:0": "minecraft:slime[]",
+	"166:0": "minecraft:barrier",
 	"167:0": "minecraft:iron_trapdoor[facing=north,half=bottom,open=false]",
 	"167:1": "minecraft:iron_trapdoor[facing=south,half=bottom,open=false]",
 	"167:2": "minecraft:iron_trapdoor[facing=west,half=bottom,open=false]",
