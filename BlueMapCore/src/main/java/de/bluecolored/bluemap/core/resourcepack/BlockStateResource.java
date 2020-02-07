@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.core.resourcepack;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -159,10 +160,12 @@ public class BlockStateResource {
 		}
 
 		public BlockStateResource build(String blockstateFile) throws IOException {
+			
+			InputStream fileIn = sourcesAccess.readFile(blockstateFile);
 			ConfigurationNode config = GsonConfigurationLoader.builder()
-					.setSource(() -> new BufferedReader(
-							new InputStreamReader(sourcesAccess.readFile(blockstateFile), StandardCharsets.UTF_8)))
-					.build().load();
+					.setSource(() -> new BufferedReader(new InputStreamReader(fileIn, StandardCharsets.UTF_8)))
+					.build()
+					.load();
 
 			if (!config.getNode("forge_marker").isVirtual()) {
 				return buildForge(config, blockstateFile);

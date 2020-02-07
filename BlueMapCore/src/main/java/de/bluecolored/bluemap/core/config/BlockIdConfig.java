@@ -122,14 +122,13 @@ public class BlockIdConfig implements BlockIdMapper {
 	@Override
 	public BlockState get(String id, int numeralId, int meta) {
 		if (numeralId == 0) return BlockState.AIR;
-		
-		BlockIDMeta idmeta = new BlockIDMeta(id, meta);
-		BlockState state = idMappings.get(idmeta);
+
+		BlockNumeralIDMeta numidmeta = new BlockNumeralIDMeta(numeralId, meta);
+		BlockState state = numeralMappings.get(numidmeta);
 		if (state == null) {
-			BlockNumeralIDMeta numidmeta = new BlockNumeralIDMeta(numeralId, meta);
-			state = numeralMappings.get(numidmeta);
+			BlockIDMeta idmeta = new BlockIDMeta(id, meta);
+			state = idMappings.get(idmeta);
 			if (state == null) {
-				
 				state = idMappings.get(new BlockIDMeta(id, 0));
 				if (state == null) {
 					state = numeralMappings.get(new BlockNumeralIDMeta(numeralId, 0));

@@ -25,68 +25,32 @@
 package de.bluecolored.bluemap.core.mca.extensions;
 
 import java.util.Collection;
-import java.util.Set;
 
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 
 import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.world.BlockState;
 
-public class RedstoneExtension implements BlockStateExtension {
+public class DoubleChestExtension implements BlockStateExtension {
 
 	private static final Collection<String> AFFECTED_BLOCK_IDS = Lists.newArrayList(
-			"minecraft:redstone_wire"
-		);
-	
-
-	private static final Set<String> CONNECTIBLE = Sets.newHashSet(
-			"minecraft:redstone_wire",
-			"minecraft:redstone_wall_torch",
-			"minecraft:redstone_torch",
-			"minecraft:stone_button",
-			"minecraft:oak_button",
-			"minecraft:stone_button",
-			"minecraft:lever",
-			"minecraft:stone_pressure_plate",
-			"minecraft:oak_pressure_plate",
-			"minecraft:light_weighted_pressure_plate",
-			"minecraft:heavy_weighted_pressure_plate"
+			"minecraft:chest",
+			"minecraft:trapped_chest"
 		);
 	
 	@Override
 	public BlockState extend(MCAWorld world, Vector3i pos, BlockState state) {
-		BlockState up = world.getBlockState(pos.add(0, 1, 0));
-		boolean upBlocking = !up.equals(BlockState.AIR);
+		Direction dir = Direction.fromString(state.getProperties().getOrDefault("facing", "north"));
 		
-		state = state
-				.with("north", connection(world, pos, upBlocking, Direction.NORTH))
-				.with("east", connection(world, pos, upBlocking, Direction.EAST))
-				.with("south", connection(world, pos, upBlocking, Direction.SOUTH))
-				.with("west", connection(world, pos, upBlocking, Direction.WEST));
-		
-		return state;
-	}
+		BlockState left = world.getBlockState(pos.add(dir.left().toVector()));
+		if (left.getFullId().equals(state.getFullId())) return state.with("type", "right");
 
-	private String connection(MCAWorld world, Vector3i pos, boolean upBlocking, Direction direction) {
-		Vector3i directionVector = direction.toVector();
+		BlockState right = world.getBlockState(pos.add(dir.right().toVector()));
+		if (right.getFullId().equals(state.getFullId())) return state.with("type", "left");
 		
-		BlockState next = world.getBlockState(pos.add(directionVector));
-		if (CONNECTIBLE.contains(next.getFullId())) return "side";
-		
-		if (next.equals(BlockState.AIR)) {
-			BlockState nextdown = world.getBlockState(pos.add(directionVector.getX(), directionVector.getY() - 1, directionVector.getZ()));
-			if (nextdown.getFullId().equals("minecraft:redstone_wire")) return "side";
-		}
-		
-		if (!upBlocking) {
-			BlockState nextup = world.getBlockState(pos.add(directionVector.getX(), directionVector.getY() + 1, directionVector.getZ()));
-			if (nextup.getFullId().equals("minecraft:redstone_wire")) return "up";
-		}
-		
-		return "none";
+		return state.with("type", "single");
 	}
 
 	@Override

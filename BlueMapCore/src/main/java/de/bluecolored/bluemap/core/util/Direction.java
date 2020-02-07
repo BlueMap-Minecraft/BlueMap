@@ -43,11 +43,25 @@ public enum Direction {
 		SOUTH.opposite = NORTH;
 		WEST.opposite = EAST;
 		EAST.opposite = WEST;
+
+		UP.left = UP;
+		DOWN.left = DOWN;
+		NORTH.left = WEST;
+		SOUTH.left = EAST;
+		WEST.left = SOUTH;
+		EAST.left = NORTH;
+
+		UP.right = UP;
+		DOWN.right = DOWN;
+		NORTH.right = EAST;
+		SOUTH.right = WEST;
+		WEST.right = NORTH;
+		EAST.right = SOUTH;
 	}
 	
 	private Vector3i dir;
 	private Axis axis;
-	private Direction opposite;
+	private Direction opposite, left, right;
 	
 	private Direction(int x, int y, int z, Axis axis) {
 		this.dir = new Vector3i(x, y, z);
@@ -61,6 +75,14 @@ public enum Direction {
 	
 	public Direction opposite() {
 		return opposite;
+	}
+	
+	public Direction left() {
+		return left;
+	}
+	
+	public Direction right() {
+		return right;
 	}
 	
 	public Axis getAxis() {

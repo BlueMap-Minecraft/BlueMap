@@ -67,7 +67,7 @@ public class StairShapeExtension implements BlockStateExtension {
 	            	
 	            	if (!isStairs(next) || !isEqualStairs(state, next)) {
 	            	
-		                if (backFacing == rotateYCCW(facing)){
+		                if (backFacing == facing.left()){
 		        			return state.with("shape", "outer_left");
 		                }
 
@@ -85,7 +85,7 @@ public class StairShapeExtension implements BlockStateExtension {
 	            	BlockState next = world.getBlockState(pos.add(frontFacing.toVector()));
 					
 	            	if (!isStairs(next) || !isEqualStairs(state, next)) {
-		                if (frontFacing == rotateYCCW(facing)){
+		                if (frontFacing == facing.left()){
 		        			return state.with("shape", "inner_left");
 		                }
 
@@ -109,16 +109,6 @@ public class StairShapeExtension implements BlockStateExtension {
 		return 
 				stair1.getProperties().get("facing").equals(stair2.getProperties().get("facing")) &&
 				stair1.getProperties().get("half").equals(stair2.getProperties().get("half"));
-	}
-	
-	private Direction rotateYCCW(Direction dir) {
-		switch (dir) {
-		case NORTH: return Direction.WEST;
-		case WEST: return Direction.SOUTH;
-		case SOUTH: return Direction.EAST;
-		case EAST: return Direction.NORTH;
-		default: return dir;
-		}
 	}
 
 	@Override
