@@ -54,8 +54,8 @@ import de.bluecolored.bluemap.core.world.BlockState;
  */
 public class ResourcePack {
 
-	public static final String MINECRAFT_CLIENT_VERSION = "1.14.4";
-	public static final String MINECRAFT_CLIENT_URL = "https://launcher.mojang.com/v1/objects/8c325a0c5bd674dd747d6ebaa4c791fd363ad8a9/client.jar";
+	public static final String MINECRAFT_CLIENT_VERSION = "1.15.2";
+	public static final String MINECRAFT_CLIENT_URL = "https://launcher.mojang.com/v1/objects/e3f78cd16f9eb9a52307ed96ebec64241cc5b32d/client.jar";
 	
 	private static final String[] CONFIG_FILES = {
 		"blockColors.json",
