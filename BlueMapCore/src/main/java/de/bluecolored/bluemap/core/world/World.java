@@ -56,6 +56,11 @@ public interface World {
 	default int getMinY() {
 		return 0;
 	}
+
+	/**
+	 * Returns the Biome on the specified position or the default biome if the block is not generated yet.
+	 */
+	Biome getBiome(Vector3i pos);
 	
 	/**
 	 * Returns the Block on the specified position or an air-block if the block is not generated yet.

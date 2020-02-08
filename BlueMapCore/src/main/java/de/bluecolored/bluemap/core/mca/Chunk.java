@@ -75,7 +75,8 @@ public abstract class Chunk {
 		int version = chunkTag.getInt("DataVersion");
 		
 		if (version <= 1343) return new ChunkAnvil112(world, chunkTag);
-		return new ChunkAnvil113(world, chunkTag);
+		if (version <= 1976) return new ChunkAnvil113(world, chunkTag);
+		return new ChunkAnvil115(world, chunkTag);
 	}
 	
 	public static Chunk empty(MCAWorld world, Vector2i chunkPos) {

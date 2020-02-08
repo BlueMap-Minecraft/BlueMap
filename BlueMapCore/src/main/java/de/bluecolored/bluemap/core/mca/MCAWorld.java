@@ -150,6 +150,19 @@ public class MCAWorld implements World {
 	}
 	
 	@Override
+	public Biome getBiome(Vector3i pos) {
+		try {
+		
+			Vector2i chunkPos = blockToChunk(pos);
+			Chunk chunk = getChunk(chunkPos);
+			return chunk.getBiome(pos);
+		
+		} catch (IOException ex) {
+			throw new RuntimeException("Unexpected IO-Exception trying to read world-data!", ex);
+		}
+	}
+	
+	@Override
 	public Block getBlock(Vector3i pos) {
 		if (pos.getY() < getMinY()) {
 			return new Block(this, BlockState.AIR, LightData.ZERO, Biome.DEFAULT, BlockProperties.TRANSPARENT, pos);
