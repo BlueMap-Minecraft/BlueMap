@@ -43,7 +43,7 @@ import net.querz.nbt.StringTag;
 import net.querz.nbt.Tag;
 import net.querz.nbt.mca.MCAUtil;
 
-public class ChunkAnvil113 extends Chunk {
+public class ChunkAnvil115 extends Chunk {
 	private BiomeMapper biomeIdMapper;
 
 	private boolean isGenerated;
@@ -51,7 +51,7 @@ public class ChunkAnvil113 extends Chunk {
 	private int[] biomes;
 	
 	@SuppressWarnings("unchecked")
-	public ChunkAnvil113(MCAWorld world, CompoundTag chunkTag) {
+	public ChunkAnvil115(MCAWorld world, CompoundTag chunkTag) {
 		super(world, chunkTag);
 		
 		biomeIdMapper = getWorld().getBiomeIdMapper();
@@ -114,9 +114,10 @@ public class ChunkAnvil113 extends Chunk {
 
 	@Override
 	public Biome getBiome(Vector3i pos) {
-		int x = pos.getX() & 0xF; // Math.floorMod(pos.getX(), 16)
-		int z = pos.getZ() & 0xF;
-		int biomeIntIndex = z * 16 + x;
+		int x = (pos.getX() & 0xF) / 4; // Math.floorMod(pos.getX(), 16)
+		int z = (pos.getZ() & 0xF) / 4;
+		int y = pos.getY() / 4;
+		int biomeIntIndex = y * 16 + z * 4 + x;
 		
 		return biomeIdMapper.get(biomes[biomeIntIndex]);
 	}

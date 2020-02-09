@@ -1,6 +1,7 @@
 {
 	"default": "@foliage",
 	"minecraft:water": "@water",
+	"minecraft:cauldron": "@water",
 	"minecraft:grass": "@grass",
 	"minecraft:tall_grass": "@grass",
 	"minecraft:double_grass": "@grass",

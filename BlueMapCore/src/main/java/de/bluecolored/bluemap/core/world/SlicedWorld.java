@@ -80,6 +80,11 @@ public class SlicedWorld implements World {
 	}
 	
 	@Override
+	public Biome getBiome(Vector3i pos) {
+		return world.getBiome(pos);
+	}
+	
+	@Override
 	public Block getBlock(Vector3i pos) {
 		if (!isInside(pos)) return createAirBlock(pos);
 		

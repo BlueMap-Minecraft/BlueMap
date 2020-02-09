@@ -28,6 +28,7 @@ import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Function;
@@ -36,11 +37,13 @@ import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector2f;
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3f;
+import com.flowpowered.math.vector.Vector3i;
 
 import de.bluecolored.bluemap.core.util.ConfigUtils;
 import de.bluecolored.bluemap.core.util.MathUtils;
 import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.Block;
+import de.bluecolored.bluemap.core.world.World;
 import ninja.leaping.configurate.ConfigurationNode;
 
 public class BlockColorCalculator {
@@ -97,31 +100,28 @@ public class BlockColorCalculator {
 	
 	public Vector3f getWaterAverageColor(Block block){
 		Vector3f color = Vector3f.ZERO;
-		
-		for (int x = -1; x <= 1; x++){
-			for (int z = -1; z <= 1; z++){
-				color = color.add(block.getRelativeBlock(x, 0, z).getBiome().getWaterColor());
-			}
+
+		int count = 0;
+		for (Biome biome : iterateAverageBiomes(block)) {
+			color = color.add(biome.getWaterColor());
+			count++;
 		}
 		
-		return color.div(9f);
+		return color.div(count);
 	}
 
 	public Vector3f getFoliageAverageColor(Block block){
 		Vector3f color = Vector3f.ZERO;
 		
-		for (int x = -1; x <= 1; x++){
-			for (int z = -1; z <= 1; z++){
-				color = color.add(getFoliageColor(block.getRelativeBlock(x, 0, z)));
-			}
+		int blocksAboveSeaLevel = Math.max(block.getPosition().getY() - block.getWorld().getSeaLevel(), 0);
+
+		int count = 0;
+		for (Biome biome : iterateAverageBiomes(block)) {
+			color = color.add(getFoliageColor(biome, blocksAboveSeaLevel));
+			count++;
 		}
 		
-		return color.div(9f);
-	}
-
-	public Vector3f getFoliageColor(Block block){
-		int blocksAboveSeaLevel = Math.max(block.getPosition().getY() - block.getWorld().getSeaLevel(), 0);
-		return getFoliageColor(block.getBiome(), blocksAboveSeaLevel);
+		return color.div(count);
 	}
 	
 	public Vector3f getFoliageColor(Biome biome, int blocksAboveSeaLevel){
@@ -134,18 +134,15 @@ public class BlockColorCalculator {
 	public Vector3f getGrassAverageColor(Block block){
 		Vector3f color = Vector3f.ZERO;
 		
-		for (int x = -1; x <= 1; x++){
-			for (int z = -1; z <= 1; z++){
-				color = color.add(getGrassColor(block.getRelativeBlock(x, 0, z)));
-			}
+		int blocksAboveSeaLevel = Math.max(block.getPosition().getY() - block.getWorld().getSeaLevel(), 0);
+		
+		int count = 0;
+		for (Biome biome : iterateAverageBiomes(block)) {
+			color = color.add(getGrassColor(biome, blocksAboveSeaLevel));
+			count++;
 		}
 		
-		return color.div(9f);
-	}
-	
-	public Vector3f getGrassColor(Block block){
-		int blocksAboveSeaLevel = Math.max(block.getPosition().getY() - block.getWorld().getSeaLevel(), 0);
-		return getGrassColor(block.getBiome(), blocksAboveSeaLevel);
+		return color.div(count);
 	}
 	
 	public Vector3f getGrassColor(Biome biome, int blocksAboveSeaLevel){
@@ -167,6 +164,45 @@ public class BlockColorCalculator {
 		float adjTemp = (float) GenericMath.clamp(biome.getTemp() - (0.00166667 * blocksAboveSeaLevel), 0d, 1d);
 		float adjHumidity = (float) GenericMath.clamp(biome.getHumidity(), 0d, 1d) * adjTemp;
 		return new Vector2f(1 - adjTemp, 1 - adjHumidity);
+	}
+	
+	private Iterable<Biome> iterateAverageBiomes(Block block){
+		Vector3i pos = block.getPosition();
+		Vector3i radius = new Vector3i(2, 1, 2);
+		
+		final World world = block.getWorld(); 
+		final int sx = pos.getX() - radius.getX(), 
+				  sy = pos.getY() - radius.getY(), 
+				  sz = pos.getZ() - radius.getZ();
+		final int mx = pos.getX() + radius.getX(), 
+				  my = pos.getY() + radius.getY(), 
+				  mz = pos.getZ() + radius.getZ();
+		
+		return () -> new Iterator<Biome>() {
+			private int x = sx, 
+						y = sy, 
+						z = sz;
+
+			@Override
+			public boolean hasNext() {
+				return z < mz || y < my || x < mx;
+			}
+
+			@Override
+			public Biome next() {
+				x++;
+				if (x > mx) {
+					x = sx;
+					y++;
+				}
+				if (y > my) {
+					y = sy;
+					z++;
+				}
+				
+				return world.getBiome(new Vector3i(x, y, z));
+			}
+		};
 	}
 
 	public BufferedImage getFoliageMap() {
