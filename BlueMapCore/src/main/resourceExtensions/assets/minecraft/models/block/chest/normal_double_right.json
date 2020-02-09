@@ -1,6 +1,6 @@
 {
-	"parent":"block/chest/chest_double",
+	"parent":"block/chest/chest_double_right",
     "textures": {
-        "chest": "entity/chest/normal_double"
+        "chest": "entity/chest/normal_right"
 	}
 }
