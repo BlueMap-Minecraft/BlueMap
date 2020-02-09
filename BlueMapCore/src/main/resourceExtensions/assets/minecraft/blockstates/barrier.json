@@ -1,5 +1,5 @@
 {
     "variants": {
-        "": { "model": "block/barrier" }
+        "": { "model": "barrier" }
     }
 }
