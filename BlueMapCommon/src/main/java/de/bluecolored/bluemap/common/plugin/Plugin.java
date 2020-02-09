@@ -273,7 +273,7 @@ public class Plugin {
 				Thread.sleep(TimeUnit.MINUTES.toMillis(1));
 				
 				while (true) {
-					if (serverInterface.isMetricsEnabled(config.isMetricsEnabled())) Metrics.sendReport("Sponge");
+					if (serverInterface.isMetricsEnabled(config.isMetricsEnabled())) Metrics.sendReport(this.implementationType);
 					Thread.sleep(TimeUnit.MINUTES.toMillis(30));
 				}
 			} catch (InterruptedException ex){
