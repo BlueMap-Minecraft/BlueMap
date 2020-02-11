@@ -33,7 +33,7 @@ import com.flowpowered.math.vector.Vector3f;
 import com.flowpowered.math.vector.Vector3i;
 import com.flowpowered.math.vector.Vector4f;
 
-import de.bluecolored.bluemap.core.model.Face;
+import de.bluecolored.bluemap.core.model.ExtendedFace;
 import de.bluecolored.bluemap.core.render.RenderSettings;
 import de.bluecolored.bluemap.core.resourcepack.BlockColorCalculator;
 import de.bluecolored.bluemap.core.resourcepack.BlockModelResource;
@@ -154,18 +154,12 @@ public class ResourceModelBuilder {
 
 		//light calculation
 		Block facedBlockNeighbor = getRotationRelativeBlock(modelResource.getRotation(), faceDir);
-		float skyLight = facedBlockNeighbor.getPassedSunLight();
+		float sunLight = facedBlockNeighbor.getPassedSunLight();
 		
-		//filter out faces that are not skylighted
-		if (skyLight == 0f && renderSettings.isExcludeFacesWithoutSunlight()) return;
+		//filter out faces that are not sunlighted
+		if (sunLight == 0f && renderSettings.isExcludeFacesWithoutSunlight()) return;
 
-		float light = 1f;
-		if (renderSettings.getLightShadeMultiplier() > 0) {
-			float blockLight = facedBlockNeighbor.getPassedBlockLight();
-			light = (Math.max(skyLight, blockLight) / 15f) * renderSettings.getLightShadeMultiplier() + (1 - renderSettings.getLightShadeMultiplier());
-			if (light > 1) light = 1;
-			if (light < 0) light = 0;
-		}
+		float blockLight = facedBlockNeighbor.getPassedBlockLight();
 
 		//UV
 		Vector4f uv = face.getUv().toFloat().div(16);
@@ -195,41 +189,51 @@ public class ResourceModelBuilder {
 		Texture texture = face.getTexture();
 		int textureId = texture.getId();
 		
-		Face f1 = new Face(c0, c1, c2, uvs[0], uvs[1], uvs[2], textureId);
-		Face f2 = new Face(c0, c2, c3, uvs[0], uvs[2], uvs[3], textureId);
-		
-		//calculate ao
-		double ao0 = 1d, ao1 = 1d, ao2 = 1d, ao3 = 1d;
-		if (renderSettings.getAmbientOcclusionStrenght() > 0f && modelResource.getModel().isAmbientOcclusion()){
-			ao0 = testAo(modelResource.getRotation(), c0, faceDir);
-			ao1 = testAo(modelResource.getRotation(), c1, faceDir);
-			ao2 = testAo(modelResource.getRotation(), c2, faceDir);
-			ao3 = testAo(modelResource.getRotation(), c3, faceDir);
-		}
+		ExtendedFace f1 = new ExtendedFace(c0, c1, c2, uvs[0], uvs[1], uvs[2], textureId);
+		ExtendedFace f2 = new ExtendedFace(c0, c2, c3, uvs[0], uvs[2], uvs[3], textureId);
 		
 		//tint the face
 		Vector3f color = Vector3f.ONE;
 		if (face.isTinted()){
 			color = tintColor.getValue();
 		}
-	
-		color = color.mul(light);
 		
-		Vector3f aoColor;
+		f1.setC1(color);
+		f1.setC2(color);
+		f1.setC3(color);
+		f2.setC1(color);
+		f2.setC2(color);
+		f2.setC3(color);
 		
-		aoColor = color.mul(ao0);
-		f1.setC1(aoColor);
-		f2.setC1(aoColor);
+		f1.setBl1(blockLight);
+		f1.setBl2(blockLight);
+		f1.setBl3(blockLight);
+		f2.setBl1(blockLight);
+		f2.setBl2(blockLight);
+		f2.setBl3(blockLight);
 		
-		aoColor = color.mul(ao1);
-		f1.setC2(aoColor);
+		f1.setSl1(sunLight);
+		f1.setSl2(sunLight);
+		f1.setSl3(sunLight);
+		f2.setSl1(sunLight);
+		f2.setSl2(sunLight);
+		f2.setSl3(sunLight);
 		
-		aoColor = color.mul(ao2);
-		f1.setC3(aoColor);
-		f2.setC2(aoColor);
+		//calculate ao
+		float ao0 = 1f, ao1 = 1f, ao2 = 1f, ao3 = 1f;
+		if (modelResource.getModel().isAmbientOcclusion()){
+			ao0 = testAo(modelResource.getRotation(), c0, faceDir);
+			ao1 = testAo(modelResource.getRotation(), c1, faceDir);
+			ao2 = testAo(modelResource.getRotation(), c2, faceDir);
+			ao3 = testAo(modelResource.getRotation(), c3, faceDir);
+		}
 		
-		aoColor = color.mul(ao3);
-		f2.setC3(aoColor);
+		f1.setAo1(ao0);
+		f1.setAo2(ao1);
+		f1.setAo3(ao2);
+		f2.setAo1(ao0);
+		f2.setAo2(ao2);
+		f2.setAo3(ao3);
 				
 		//add the face
 		model.addFace(f1);
@@ -275,7 +279,7 @@ public class ResourceModelBuilder {
 		return dir;
 	}
 	
-	private double testAo(Vector2f modelRotation, Vector3f vertex, Direction dir){
+	private float testAo(Vector2f modelRotation, Vector3f vertex, Direction dir){
 		int occluding = 0;
 		
 		int x = 0;
@@ -322,7 +326,7 @@ public class ResourceModelBuilder {
 		if (occluding > 3)
 		occluding = 3;
 		
-		return Math.max(0.0, Math.min(1.0 - ((double) occluding * renderSettings.getAmbientOcclusionStrenght()), 1.0));
+		return  Math.max(0f, Math.min(1f - (occluding * renderSettings.getAmbientOcclusionStrenght()), 1f));
 	}
 	
 	private Vector2f[] rotateUVInner(Vector2f[] uv, int angle){

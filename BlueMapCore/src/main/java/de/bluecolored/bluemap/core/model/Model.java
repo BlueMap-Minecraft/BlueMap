@@ -25,7 +25,6 @@
 package de.bluecolored.bluemap.core.model;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 import com.flowpowered.math.imaginary.Quaternionf;
@@ -34,10 +33,11 @@ import com.flowpowered.math.vector.Vector2f;
 import com.flowpowered.math.vector.Vector3f;
 
 import de.bluecolored.bluemap.core.threejs.BufferGeometry;
+import de.bluecolored.bluemap.core.threejs.MaterialGroup;
 
-public class Model {
+public class Model<T extends Face> {
 	
-	private List<Face> faces;
+	private List<T> faces;
 	
 	public Model() {
 		this.faces = new ArrayList<>();
@@ -47,19 +47,19 @@ public class Model {
 	 * Merges the given Model into this model<br>
 	 * Faces are not cloned: So changes to the faces of the previous model will mirror in this model, but adding and removing faces will not.
 	 */
-	public void merge(Model model){
+	public void merge(Model<T> model){
 		faces.addAll(model.getFaces());
 	}
 	
-	public void addFace(Face face){
+	public void addFace(T face){
 		faces.add(face);
 	}
 	
-	public void removeFace(Face face){
+	public void removeFace(T face){
 		faces.remove(face);
 	}
 	
-	public Collection<Face> getFaces(){
+	public List<T> getFaces(){
 		return faces;
 	}
 	
@@ -70,13 +70,13 @@ public class Model {
 	}
 	
 	public void transform(Matrix3f transformation){
-		for (Face f : faces){
+		for (T f : faces){
 			f.transform(transformation);
 		}
 	}
 	
 	public void translate(Vector3f translation){
-		for (Face f : faces){
+		for (T f : faces){
 			f.translate(translation);
 		}
 	}
@@ -89,7 +89,7 @@ public class Model {
 		//reorganize all faces into arrays and create material-groups
 		int count = faces.size();
 		
-		List<BufferGeometry.MaterialGroup> groups = new ArrayList<>();
+		List<MaterialGroup> groups = new ArrayList<>();
 		int groupStart = 0;
 		int currentMaterialIndex = -1;
 		if (count > 0) currentMaterialIndex = faces.get(0).getMaterialIndex();
@@ -100,10 +100,10 @@ public class Model {
 		float[] uv = new float[count * 2 * 3];
 
 		for (int itemIndex = 0; itemIndex < count; itemIndex++){
-			Face f = faces.get(itemIndex);
+			T f = faces.get(itemIndex);
 			
 			if (currentMaterialIndex != f.getMaterialIndex()){
-				groups.add(new BufferGeometry.MaterialGroup(currentMaterialIndex, groupStart * 3, (itemIndex - groupStart) * 3));
+				groups.add(new MaterialGroup(currentMaterialIndex, groupStart * 3, (itemIndex - groupStart) * 3));
 				groupStart = itemIndex;
 				currentMaterialIndex = f.getMaterialIndex();
 			}
@@ -124,24 +124,24 @@ public class Model {
 			addVector2fToArray( uv,       f.getUv3(), (itemIndex * 3 + 2) * 2 );
 		}
 
-		groups.add(new BufferGeometry.MaterialGroup(currentMaterialIndex, groupStart * 3, (count - groupStart) * 3));
+		groups.add(new MaterialGroup(currentMaterialIndex, groupStart * 3, (count - groupStart) * 3));
 		
 		return new BufferGeometry(
 				position, 
 				normal, 
 				color, 
 				uv, 
-				groups.toArray(new BufferGeometry.MaterialGroup[groups.size()])
+				groups.toArray(new MaterialGroup[groups.size()])
 			);
 	}
 	
-	private void addVector3fToArray(float[] array, Vector3f v, int startIndex){
+	static void addVector3fToArray(float[] array, Vector3f v, int startIndex){
 		array[startIndex] = v.getX();
 		array[startIndex + 1] = v.getY();
 		array[startIndex + 2] = v.getZ();
 	}
 	
-	private void addVector2fToArray(float[] array, Vector2f v, int startIndex){
+	static void addVector2fToArray(float[] array, Vector2f v, int startIndex){
 		array[startIndex] = v.getX();
 		array[startIndex + 1] = v.getY();
 	}

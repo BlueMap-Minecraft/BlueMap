@@ -38,8 +38,8 @@ public class ModelUtils {
 	/**
 	 * Creates a plane-grid with alternating face-rotations.
 	 */
-	public static Model makeGrid(Vector2i gridSize){
-		Model m = new Model();
+	public static Model<Face> makeGrid(Vector2i gridSize){
+		Model<Face> m = new Model<Face>();
 		
 		float y = 0;
 		

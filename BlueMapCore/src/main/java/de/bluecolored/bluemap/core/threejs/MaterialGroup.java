@@ -22,49 +22,43 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.render.hires.blockmodel;
-
-import com.flowpowered.math.vector.Vector4f;
-
-import de.bluecolored.bluemap.core.model.ExtendedFace;
-import de.bluecolored.bluemap.core.model.ExtendedModel;
-import de.bluecolored.bluemap.core.model.Model;
-import de.bluecolored.bluemap.core.util.MathUtils;
-
 /**
- * A model with some extra information about the BlockState it represents
+ * 
  */
-public class BlockStateModel extends ExtendedModel {
+package de.bluecolored.bluemap.core.threejs;
 
-	private Vector4f mapColor;
+public class MaterialGroup {
+	private int materialIndex;
+	private int start;
+	private int count;
 	
-	public BlockStateModel(){
-		this(Vector4f.ZERO);
-	}
-	
-	public BlockStateModel(Vector4f mapColor) {
-		this.mapColor = mapColor;
-	}
-
-	@Override
-	public void merge(Model<ExtendedFace> model) {
-		super.merge(model);
-		
-		if (model instanceof BlockStateModel){
-			mergeMapColor(((BlockStateModel) model).getMapColor());
-		}
-	}
-	
-	public Vector4f getMapColor() {
-		return mapColor;
+	public MaterialGroup(int materialIndex, int start, int count) {
+		this.materialIndex = materialIndex;
+		this.start = start;
+		this.count = count;
 	}
 
-	public void setMapColor(Vector4f mapColor) {
-		this.mapColor = mapColor;
+	public int getMaterialIndex() {
+		return materialIndex;
 	}
-	
-	public void mergeMapColor(Vector4f mapColor) {		
-		this.mapColor = MathUtils.blendColors(this.mapColor, mapColor);
+
+	public int getStart() {
+		return start;
 	}
-	
+
+	public int getCount() {
+		return count;
+	}
+
+	public void setMaterialIndex(int materialIndex) {
+		this.materialIndex = materialIndex;
+	}
+
+	public void setStart(int start) {
+		this.start = start;
+	}
+
+	public void setCount(int count) {
+		this.count = count;
+	}
 }

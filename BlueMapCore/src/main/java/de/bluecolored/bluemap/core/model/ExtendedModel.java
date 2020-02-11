@@ -22,49 +22,42 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.render.hires.blockmodel;
+package de.bluecolored.bluemap.core.model;
 
-import com.flowpowered.math.vector.Vector4f;
+import de.bluecolored.bluemap.core.threejs.BufferAttribute;
+import de.bluecolored.bluemap.core.threejs.BufferGeometry;
 
-import de.bluecolored.bluemap.core.model.ExtendedFace;
-import de.bluecolored.bluemap.core.model.ExtendedModel;
-import de.bluecolored.bluemap.core.model.Model;
-import de.bluecolored.bluemap.core.util.MathUtils;
-
-/**
- * A model with some extra information about the BlockState it represents
- */
-public class BlockStateModel extends ExtendedModel {
-
-	private Vector4f mapColor;
-	
-	public BlockStateModel(){
-		this(Vector4f.ZERO);
-	}
-	
-	public BlockStateModel(Vector4f mapColor) {
-		this.mapColor = mapColor;
-	}
+public class ExtendedModel extends Model<ExtendedFace> {
 
 	@Override
-	public void merge(Model<ExtendedFace> model) {
-		super.merge(model);
+	public BufferGeometry toBufferGeometry() {
+		BufferGeometry geo = super.toBufferGeometry();
+
+		int count = getFaces().size();
+		float[] ao = new float[count * 3];
+		float[] blockLight = new float[count * 3];
+		float[] sunLight = new float[count * 3];
 		
-		if (model instanceof BlockStateModel){
-			mergeMapColor(((BlockStateModel) model).getMapColor());
+		for (int itemIndex = 0; itemIndex < count; itemIndex++){
+			ExtendedFace f = getFaces().get(itemIndex);
+			ao[itemIndex * 3 + 0] = f.getAo1();
+			ao[itemIndex * 3 + 1] = f.getAo2();
+			ao[itemIndex * 3 + 2] = f.getAo3();
+
+			blockLight[itemIndex * 3 + 0] = f.getBl1();
+			blockLight[itemIndex * 3 + 1] = f.getBl2();
+			blockLight[itemIndex * 3 + 2] = f.getBl3();
+
+			sunLight[itemIndex * 3 + 0] = f.getSl1();
+			sunLight[itemIndex * 3 + 1] = f.getSl2();
+			sunLight[itemIndex * 3 + 2] = f.getSl3();
 		}
-	}
-	
-	public Vector4f getMapColor() {
-		return mapColor;
+
+		geo.addAttribute("ao", new BufferAttribute(ao, 1));
+		geo.addAttribute("blocklight", new BufferAttribute(blockLight, 1));
+		geo.addAttribute("sunlight", new BufferAttribute(sunLight, 1));
+		
+		return geo;
 	}
 
-	public void setMapColor(Vector4f mapColor) {
-		this.mapColor = mapColor;
-	}
-	
-	public void mergeMapColor(Vector4f mapColor) {		
-		this.mapColor = MathUtils.blendColors(this.mapColor, mapColor);
-	}
-	
 }
