@@ -45,8 +45,8 @@ void main() {
 	vSunlight = sunlight;
 	vBlocklight = blocklight;
 	
-    gl_Position = 
-    	projectionMatrix *
+	gl_Position = 
+		projectionMatrix *
 		modelViewMatrix *
 		vec4(position, 1);
 }
