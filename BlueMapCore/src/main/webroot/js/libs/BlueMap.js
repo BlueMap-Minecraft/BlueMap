@@ -43,7 +43,7 @@ import {
 	Texture,
 	TextureLoader,
 	VertexColors,
-	WebGLRenderer,
+	WebGLRenderer, ShaderMaterial,
 } from 'three';
 
 import Compass from './modules/Compass.js';
@@ -54,6 +54,11 @@ import Settings from './modules/Settings.js';
 
 import Controls from './Controls.js';
 import TileManager from './TileManager.js';
+
+import HIRES_VERTEX_SHADER from './shaders/HiresVertexShader.js';
+import HIRES_FRAGMENT_SHADER from './shaders/HiresFragmentShader.js';
+import LOWRES_VERTEX_SHADER from './shaders/LowresVertexShader.js';
+import LOWRES_FRAGMENT_SHADER from './shaders/LowresFragmentShader.js';
 
 import { stringToImage, pathFromCoords } from './utils.js';
 
@@ -367,16 +372,6 @@ export default class BlueMap {
 
 					let opaque = t['color'][3] === 1;
 					let transparent = t['transparent'];
-					let material = new MeshLambertMaterial({
-						transparent: transparent,
-						alphaTest: transparent ? 0 : (opaque ? 1 : 0.01),
-						depthWrite: true,
-						depthTest: true,
-						blending: NormalBlending,
-						vertexColors: VertexColors,
-						side: FrontSide,
-						wireframe: false
-					});
 
 					let texture = new Texture();
 					texture.image = stringToImage(t['texture']);
@@ -391,9 +386,29 @@ export default class BlueMap {
 					texture.flatShading = true;
 					texture.needsUpdate = true;
 
-					material.map = texture;
-					material.needsUpdate = true;
+					let uniforms = {
+						texture: {
+							type: 't',
+							value: texture
+						},
+						sunlightStrength: {
+							value: 1
+						}
+					};
 
+					let material = new ShaderMaterial({
+						uniforms: uniforms,
+						vertexShader: HIRES_VERTEX_SHADER,
+						fragmentShader: HIRES_FRAGMENT_SHADER,
+						transparent: transparent,
+						depthWrite: true,
+						depthTest: true,
+						vertexColors: VertexColors,
+						side: FrontSide,
+						wireframe: false,
+					});
+
+					material.needsUpdate = true;
 					materials[i] = material;
 				}
 
@@ -404,7 +419,9 @@ export default class BlueMap {
 	}
 
 	async loadLowresMaterial() {
-		this.lowresMaterial = new MeshLambertMaterial({
+		this.lowresMaterial = new ShaderMaterial({
+			vertexShader: LOWRES_VERTEX_SHADER,
+			fragmentShader: LOWRES_FRAGMENT_SHADER,
 			transparent: false,
 			depthWrite: true,
 			depthTest: true,
