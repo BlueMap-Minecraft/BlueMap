@@ -34,8 +34,6 @@ import {
 	FrontSide,
 	Mesh,
 	MeshBasicMaterial,
-	MeshLambertMaterial,
-	NormalBlending,
 	NearestFilter,
 	NearestMipmapLinearFilter,
 	PerspectiveCamera,
@@ -119,6 +117,8 @@ export default class BlueMap {
 			x: this.settings[this.map]["startPos"]["x"],
 			z: this.settings[this.map]["startPos"]["z"]
 		};
+
+		this.targetSunLightStrength = 1;
 
 		this.controls.setTileSize(this.settings[this.map]['hires']['tileSize']);
 		this.controls.resetPosition();
@@ -229,13 +229,27 @@ export default class BlueMap {
 	render = () => {
 		requestAnimationFrame(this.render);
 
+		//update controls
 		if (this.controls.update()) this.updateFrame = true;
 
+		//update lighting
+		let targetLight = 1;
+		if (this.camera.position.y < 400){
+			targetLight = this.targetSunLightStrength;
+		}
+		if (Math.abs(targetLight - this.sunLightStrength.value) > 0.01) {
+			this.sunLightStrength.value += (targetLight - this.sunLightStrength.value) * 0.1;
+			this.updateFrame = true;
+		}
+
+		//don't render if nothing has changed
 		if (!this.updateFrame) return;
 		this.updateFrame = false;
 
+		//render event
 		document.dispatchEvent(new Event('bluemap-update-frame'));
 
+		//render
 		this.skyboxCamera.rotation.copy(this.camera.rotation);
 		this.skyboxCamera.updateProjectionMatrix();
 
@@ -291,6 +305,11 @@ export default class BlueMap {
 		this.updateFrame = true;
 		this.quality = 1;
 
+		this.targetSunLightStrength = 1;
+		this.sunLightStrength = {
+			value: this.targetSunLightStrength
+		};
+
 		this.renderer = new WebGLRenderer({
 			alpha: true,
 			antialias: true,
@@ -307,23 +326,10 @@ export default class BlueMap {
 		this.skyboxCamera.updateProjectionMatrix();
 
 		this.skyboxScene = new Scene();
-		this.skyboxScene.ambient = new AmbientLight(0xffffff, 1);
-		this.skyboxScene.add(this.skyboxScene.ambient);
 		this.skyboxScene.add(this.createSkybox());
 
 		this.lowresScene = new Scene();
-		this.lowresScene.ambient = new AmbientLight(0xffffff, 0.6);
-		this.lowresScene.add(this.lowresScene.ambient);
-		this.lowresScene.sunLight = new DirectionalLight(0xccccbb, 0.7);
-		this.lowresScene.sunLight.position.set(1, 5, 3);
-		this.lowresScene.add(this.lowresScene.sunLight);
-
 		this.hiresScene = new Scene();
-		this.hiresScene.ambient = new AmbientLight(0xffffff, 1);
-		this.hiresScene.add(this.hiresScene.ambient);
-		this.hiresScene.sunLight = new DirectionalLight(0xccccbb, 0.2);
-		this.hiresScene.sunLight.position.set(1, 5, 3);
-		this.hiresScene.add(this.hiresScene.sunLight);
 
 		this.element.append(this.renderer.domElement);
 		this.handleContainerResize();
@@ -391,9 +397,7 @@ export default class BlueMap {
 							type: 't',
 							value: texture
 						},
-						sunlightStrength: {
-							value: 1
-						}
+						sunlightStrength: this.sunLightStrength
 					};
 
 					let material = new ShaderMaterial({
@@ -419,7 +423,12 @@ export default class BlueMap {
 	}
 
 	async loadLowresMaterial() {
+		let uniforms = {
+			sunlightStrength: this.sunLightStrength
+		};
+
 		this.lowresMaterial = new ShaderMaterial({
+			uniforms: uniforms,
 			vertexShader: LOWRES_VERTEX_SHADER,
 			fragmentShader: LOWRES_FRAGMENT_SHADER,
 			transparent: false,

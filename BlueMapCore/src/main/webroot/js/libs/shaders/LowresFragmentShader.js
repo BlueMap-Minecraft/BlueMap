@@ -24,6 +24,8 @@
  */
 
 const LOWRES_FRAGMENT_SHADER = `
+uniform float sunlightStrength;
+
 varying vec3 vPosition;
 varying vec3 vNormal;
 varying vec2 vUv;
@@ -34,6 +36,8 @@ void main() {
 
 	float diff = sqrt(max(dot(vNormal, vec3(0.3637, 0.7274, 0.5819)), 0.0)) * 0.4 + 0.6;
 	color *= diff;
+
+	color *= sunlightStrength;
 
 	gl_FragColor = color;
 }
