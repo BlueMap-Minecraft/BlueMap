@@ -24,24 +24,28 @@
  */
 import $ from 'jquery';
 
-import { getTopLeftElement } from './Module.js';
+import Button from '../ui/Button.js';
 
 import COMPASS from '../../../assets/compass.svg';
 
-export default class Compass {
+export default class Compass extends Button {
 	constructor(blueMap) {
+		super(undefined, undefined, COMPASS);
 		this.blueMap = blueMap;
 
-		$('#bluemap-compass').remove();
-		this.element = $(`<div id="bluemap-compass" class="button"><img id="bluemap-compass-needle" src="${COMPASS}" /></div>`).appendTo(getTopLeftElement(blueMap));
-		this.needle = $('#bluemap-compass-needle');
-
 		$(document).on('bluemap-update-frame', this.onBlueMapUpdateFrame);
-		$(this.element).click(this.onClick);
+	}
+
+	createElement(){
+		let element = super.createElement();
+		element.click(this.onClick);
+		return element;
 	}
 
 	onBlueMapUpdateFrame = () => {
-		this.needle.css('transform', `rotate(${this.blueMap.controls.direction}rad)`);
+		this.elements.forEach(element => {
+			element.find("img").css('transform', `rotate(${this.blueMap.controls.direction}rad)`);
+		});
 	};
 
 	onClick = () => {

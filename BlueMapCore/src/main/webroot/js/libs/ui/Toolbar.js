@@ -24,46 +24,32 @@
  */
 import $ from 'jquery';
 
-import Element from "../ui/Element";
+import Element from './Element.js';
 
-export default class Position extends Element {
-	constructor(blueMap, axis) {
-		super();
-		this.blueMap = blueMap;
-		this.axis = axis;
+export default class Toolbar {
 
-		$(document).on('bluemap-update-frame', this.update);
+	constructor(){
+		this.element = $('<div class="toolbar"></div>');
+
+		this.children = [];
 	}
 
-	createElement(){
-		let element = super.createElement();
-
-		element.addClass("position");
-		element.attr("data-axis", this.axis);
-		let inputElement = $('<input type="number" value="0" />').appendTo(element);
-		inputElement.on('input', this.onInput);
-		inputElement.on('keydown', this.onKeyDown);
-
-		return element;
-	}
-
-	onInput = event => {
-		const value = Number(event.target.value);
-		if (!isNaN(value)) {
-			this.blueMap.controls.targetPosition[this.axis] = value;
-			this.update();
-		}
-	};
-
-	onKeyDown = event => {
-		event.stopPropagation();
-	};
-
-	update = () => {
-		const val = Math.floor(this.blueMap.controls.targetPosition[this.axis]);
-
-		this.elements.forEach(element => {
-			element.find("input").val(val);
+	addElement(element, hideOnMobile = false){
+		this.children.push({
+			element: element,
+			hideOnMobile: hideOnMobile
 		});
-	};
+	}
+
+	update() {
+		this.element.html("");
+		this.children.forEach(child => {
+			let element = child.element.createElement();
+			element.appendTo(this.element);
+			if (child.hideOnMobile){
+				element.addClass("mobile-hide");
+			}
+		});
+	}
+
 }

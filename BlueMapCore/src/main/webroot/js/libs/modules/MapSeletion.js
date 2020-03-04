@@ -24,46 +24,39 @@
  */
 import $ from 'jquery';
 
-import Element from "../ui/Element";
+import Dropdown from "../ui/Dropdown";
 
-export default class Position extends Element {
-	constructor(blueMap, axis) {
-		super();
-		this.blueMap = blueMap;
-		this.axis = axis;
+export default class MapSelection extends Dropdown {
+	constructor(bluemap) {
+		super(undefined);
+		super.onChange = this.onChangeMap;
 
-		$(document).on('bluemap-update-frame', this.update);
+		this.bluemap = bluemap;
+
+		//add maps
+		const maps = this.bluemap.settings;
+		for (let mapId in maps) {
+			if (!maps.hasOwnProperty(mapId)) continue;
+			const map = maps[mapId];
+			if (!map.enabled) continue;
+
+			this.addOption(mapId, map.name);
+		}
+
+		$(document).on('bluemap-map-change', this.onBlueMapMapChange);
 	}
 
-	createElement(){
+	createElement() {
 		let element = super.createElement();
-
-		element.addClass("position");
-		element.attr("data-axis", this.axis);
-		let inputElement = $('<input type="number" value="0" />').appendTo(element);
-		inputElement.on('input', this.onInput);
-		inputElement.on('keydown', this.onKeyDown);
-
+		element.addClass("map-selection");
 		return element;
 	}
 
-	onInput = event => {
-		const value = Number(event.target.value);
-		if (!isNaN(value)) {
-			this.blueMap.controls.targetPosition[this.axis] = value;
-			this.update();
-		}
+	onChangeMap = value => {
+		this.bluemap.changeMap(value);
 	};
 
-	onKeyDown = event => {
-		event.stopPropagation();
-	};
-
-	update = () => {
-		const val = Math.floor(this.blueMap.controls.targetPosition[this.axis]);
-
-		this.elements.forEach(element => {
-			element.find("input").val(val);
-		});
+	onBlueMapMapChange = () => {
+		this.select(this.bluemap.map);
 	};
 }

@@ -216,6 +216,11 @@ public class LiquidModelBuilder {
 		float blockLight = bl.getBlockLightLevel();
 		float sunLight = bl.getSunLightLevel();
 		
+		if (faceDir == Direction.UP) {
+			blockLight = block.getBlockLightLevel();
+			sunLight = block.getSunLightLevel();
+		}
+		
 		f1.setC1(color);
 		f1.setC2(color);
 		f1.setC3(color);

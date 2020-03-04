@@ -1,32 +1,39 @@
-.bluemap-position {
-  position: relative;
+.bluemap-container .ui .ui-element.position {
+    flex-basis: 6rem;
+    flex-shrink: 1;
+    min-width: 4rem;
 
-  input {
-    width: 4rem;
-    height: 100%;
-    border: none;
-    outline: none;
-    background: transparent;
-    padding: 0 5px 0 25px;
-    font: inherit;
-    color: inherit;
+    display: flex;
 
-    // remove number spinner firefox
-    -moz-appearance:textfield;
+    height: 1rem;
 
-    // remove number spinner webkit
-    &::-webkit-inner-spin-button,
-    &::-webkit-outer-spin-button {
-      -webkit-appearance: none;
-      margin: 0;
+    > input {
+        width: calc(100% - 2rem);
+        height: 100%;
+        padding: 0 0.5rem 0 0;
+
+        font: inherit;
+        color: inherit;
+        background: transparent;
+
+        border: none;
+        outline: none;
+
+        // remove number spinner firefox
+        -moz-appearance:textfield;
+
+        // remove number spinner webkit
+        &::-webkit-inner-spin-button,
+        &::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
     }
-  }
 
-  &[data-pos]::before {
-    position: absolute;
-    left: 7px;
-    color: #888888;
-    content: attr(data-pos)':';
-  }
+    &[data-axis]::before {
+        padding: 0 0.2rem 0 0.5rem;
+        line-height: 2rem;
+        color: $light_fg;
+        content: attr(data-axis)':';
+    }
 }
-

@@ -24,31 +24,24 @@
  */
 import $ from 'jquery';
 import {
-	AmbientLight,
 	BackSide,
 	BufferGeometryLoader,
 	ClampToEdgeWrapping,
-	CubeGeometry,
-	DirectionalLight,
+	SphereGeometry,
 	FileLoader,
 	FrontSide,
 	Mesh,
-	MeshBasicMaterial,
 	NearestFilter,
-	NearestMipmapLinearFilter,
+	NearestMipMapLinearFilter,
 	PerspectiveCamera,
 	Scene,
+	ShaderMaterial,
 	Texture,
-	TextureLoader,
 	VertexColors,
-	WebGLRenderer, ShaderMaterial,
+	WebGLRenderer,
 } from 'three';
 
-import Compass from './modules/Compass.js';
-import Info from './modules/Info.js';
-import MapMenu from './modules/MapMenu.js';
-import Position from './modules/Position.js';
-import Settings from './modules/Settings.js';
+import UI from './ui/UI.js';
 
 import Controls from './Controls.js';
 import TileManager from './TileManager.js';
@@ -57,22 +50,29 @@ import HIRES_VERTEX_SHADER from './shaders/HiresVertexShader.js';
 import HIRES_FRAGMENT_SHADER from './shaders/HiresFragmentShader.js';
 import LOWRES_VERTEX_SHADER from './shaders/LowresVertexShader.js';
 import LOWRES_FRAGMENT_SHADER from './shaders/LowresFragmentShader.js';
+import SKY_VERTEX_SHADER from './shaders/SkyVertexShader.js';
+import SKY_FRAGMENT_SHADER from './shaders/SkyFragmentShader.js';
 
 import { stringToImage, pathFromCoords } from './utils.js';
 
-import SKYBOX_NORTH from '../../assets/skybox/north.png';
-import SKYBOX_SOUTH from '../../assets/skybox/south.png';
-import SKYBOX_EAST from '../../assets/skybox/east.png';
-import SKYBOX_WEST from '../../assets/skybox/west.png';
-import SKYBOX_UP from '../../assets/skybox/up.png';
-import SKYBOX_DOWN from '../../assets/skybox/down.png';
-
 export default class BlueMap {
 	constructor(element, dataRoot) {
-		this.element = element;
+		this.element = $('<div class="bluemap-container"></div>').appendTo(element)[0];
 		this.dataRoot = dataRoot;
 
-		this.loadingNoticeElement = $('<div id="bluemap-loading" class="box">loading...</div>').appendTo($(this.element));
+		this.hiresViewDistance = 160;
+		this.lowresViewDistance = 3200;
+		this.targetSunLightStrength = 1;
+		this.sunLightStrength = {
+			value: this.targetSunLightStrength
+		};
+		this.mobSpawnOverlay = {
+			value: false
+		};
+
+		this.ui = new UI(this);
+
+		this.loadingNoticeElement = $('<div>loading...</div>').appendTo($(this.element));
 		window.onerror = this.onLoadError;
 
 		this.fileLoader = new FileLoader();
@@ -88,26 +88,18 @@ export default class BlueMap {
 			await this.loadHiresMaterial();
 			await this.loadLowresMaterial();
 
-			this.changeMap(this.map);
+			this.changeMap(this.maps[0]);
 
-			this.initModules();
+			this.ui.load();
 			this.start();
 		}).catch(error => {
 			this.onLoadError(error.toString());
-			console.error(error);
 		});
 	}
 
-	initModules() {
-		this.modules = {};
-		this.modules.compass = new Compass(this);
-		this.modules.position = new Position(this);
-		this.modules.mapMenu = new MapMenu(this);
-		this.modules.info = new Info(this);
-		this.modules.settings = new Settings(this);
-	}
-
 	changeMap(map) {
+		if (this.map === map) return;
+
 		if (this.hiresTileManager !== undefined) this.hiresTileManager.close();
 		if (this.lowresTileManager !== undefined) this.lowresTileManager.close();
 
@@ -118,8 +110,6 @@ export default class BlueMap {
 			z: this.settings[this.map]["startPos"]["z"]
 		};
 
-		this.targetSunLightStrength = 1;
-
 		this.controls.setTileSize(this.settings[this.map]['hires']['tileSize']);
 		this.controls.resetPosition();
 		this.controls.targetPosition.set(startPos.x, this.controls.targetPosition.y, startPos.z);
@@ -127,7 +117,7 @@ export default class BlueMap {
 
 		this.lowresTileManager = new TileManager(
 			this,
-			this.settings[this.map]['lowres']['viewDistance'],
+			this.lowresViewDistance,
 			this.loadLowresTile,
 			this.lowresScene,
 			this.settings[this.map]['lowres']['tileSize'],
@@ -136,7 +126,7 @@ export default class BlueMap {
 
 		this.hiresTileManager = new TileManager(
 			this,
-			this.settings[this.map]['hires']['viewDistance'],
+			this.hiresViewDistance,
 			this.loadHiresTile,
 			this.hiresScene,
 			this.settings[this.map]['hires']['tileSize'],
@@ -233,9 +223,9 @@ export default class BlueMap {
 		if (this.controls.update()) this.updateFrame = true;
 
 		//update lighting
-		let targetLight = 1;
-		if (this.camera.position.y < 400){
-			targetLight = this.targetSunLightStrength;
+		let targetLight = this.targetSunLightStrength;
+		if (this.camera.position.y > 400){
+			targetLight = Math.max(targetLight, 0.5);
 		}
 		if (Math.abs(targetLight - this.sunLightStrength.value) > 0.01) {
 			this.sunLightStrength.value += (targetLight - this.sunLightStrength.value) * 0.1;
@@ -295,7 +285,6 @@ export default class BlueMap {
 					return sort;
 				});
 
-				this.map = this.maps[0];
 				resolve();
 			});
 		});
@@ -304,11 +293,6 @@ export default class BlueMap {
 	initStage() {
 		this.updateFrame = true;
 		this.quality = 1;
-
-		this.targetSunLightStrength = 1;
-		this.sunLightStrength = {
-			value: this.targetSunLightStrength
-		};
 
 		this.renderer = new WebGLRenderer({
 			alpha: true,
@@ -331,40 +315,22 @@ export default class BlueMap {
 		this.lowresScene = new Scene();
 		this.hiresScene = new Scene();
 
-		this.element.append(this.renderer.domElement);
+		$(this.renderer.domElement).addClass("map-canvas").appendTo(this.element);
 		this.handleContainerResize();
 
 		$(window).resize(this.handleContainerResize);
 	}
 
 	createSkybox() {
-		let geometry = new CubeGeometry(10, 10, 10);
-		let material = [
-			new MeshBasicMaterial({
-				map: new TextureLoader().load(SKYBOX_SOUTH),
-				side: BackSide
-			}),
-			new MeshBasicMaterial({
-				map: new TextureLoader().load(SKYBOX_NORTH),
-				side: BackSide
-			}),
-			new MeshBasicMaterial({
-				map: new TextureLoader().load(SKYBOX_UP),
-				side: BackSide
-			}),
-			new MeshBasicMaterial({
-				map: new TextureLoader().load(SKYBOX_DOWN),
-				side: BackSide
-			}),
-			new MeshBasicMaterial({
-				map: new TextureLoader().load(SKYBOX_EAST),
-				side: BackSide
-			}),
-			new MeshBasicMaterial({
-				map: new TextureLoader().load(SKYBOX_WEST),
-				side: BackSide
-			})
-		];
+		let geometry = new SphereGeometry(10, 10, 10);
+		let material = new ShaderMaterial({
+			uniforms: {
+				sunlightStrength: this.sunLightStrength
+			},
+			vertexShader: SKY_VERTEX_SHADER,
+			fragmentShader: SKY_FRAGMENT_SHADER,
+			side: BackSide
+		});
 		return new Mesh(geometry, material);
 	}
 
@@ -385,7 +351,7 @@ export default class BlueMap {
 					texture.anisotropy = 1;
 					texture.generateMipmaps = opaque || transparent;
 					texture.magFilter = NearestFilter;
-					texture.minFilter = texture.generateMipmaps ? NearestMipmapLinearFilter : NearestFilter;
+					texture.minFilter = texture.generateMipmaps ? NearestMipMapLinearFilter : NearestFilter;
 					texture.wrapS = ClampToEdgeWrapping;
 					texture.wrapT = ClampToEdgeWrapping;
 					texture.flipY = false;
@@ -397,7 +363,8 @@ export default class BlueMap {
 							type: 't',
 							value: texture
 						},
-						sunlightStrength: this.sunLightStrength
+						sunlightStrength: this.sunLightStrength,
+						mobSpawnOverlay: this.mobSpawnOverlay
 					};
 
 					let material = new ShaderMaterial({
@@ -423,12 +390,10 @@ export default class BlueMap {
 	}
 
 	async loadLowresMaterial() {
-		let uniforms = {
-			sunlightStrength: this.sunLightStrength
-		};
-
 		this.lowresMaterial = new ShaderMaterial({
-			uniforms: uniforms,
+			uniforms: {
+				sunlightStrength: this.sunLightStrength
+			},
 			vertexShader: LOWRES_VERTEX_SHADER,
 			fragmentShader: LOWRES_FRAGMENT_SHADER,
 			transparent: false,
@@ -486,7 +451,7 @@ export default class BlueMap {
 		this.loadingNoticeElement.remove();
 
 		this.toggleAlert(undefined, `
-		<div style="max-width: 500px">
+		<div style="max-width: 50rem">
 			<h1>Error</h1>
 			<p style="color: red; font-family: monospace">${message}</p>
 		</div>
@@ -496,14 +461,14 @@ export default class BlueMap {
 	// ###### UI ######
 
 	toggleAlert(id, content) {
-		let alertBox = $('#alert-box');
+		let alertBox = $(this.element).find('.alert-box');
 		if (alertBox.length === 0){
-			alertBox = $('<div id="alert-box"></div>').appendTo(this.element);
+			alertBox = $('<div class="alert-box"></div>').appendTo(this.ui.hud);
 		}
 
 		let displayAlert = () => {
-			let alert = $(`<div class="alert box" data-alert-id="${id}" style="display: none;"><div class="alert-close-button"></div>${content}</div>`).appendTo(alertBox);
-			alert.find('.alert-close-button').click(() => {
+			let alert = $(`<div class="alert" data-alert-id="${id}" style="display: none;"><div class="close-button"></div>${content}</div>`).appendTo(alertBox);
+			alert.find('.close-button').click(() => {
 				alert.stop().fadeOut(200, () => alert.remove());
 			});
 			alert.stop().fadeIn(200);

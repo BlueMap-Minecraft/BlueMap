@@ -22,48 +22,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-import $ from 'jquery';
+import Element from './Element.js';
 
-import Element from "../ui/Element";
+export default class Separator extends Element {
 
-export default class Position extends Element {
-	constructor(blueMap, axis) {
+	constructor(greedy = false){
 		super();
-		this.blueMap = blueMap;
-		this.axis = axis;
-
-		$(document).on('bluemap-update-frame', this.update);
+		this.greedy = greedy;
 	}
 
-	createElement(){
+	createElement() {
 		let element = super.createElement();
 
-		element.addClass("position");
-		element.attr("data-axis", this.axis);
-		let inputElement = $('<input type="number" value="0" />').appendTo(element);
-		inputElement.on('input', this.onInput);
-		inputElement.on('keydown', this.onKeyDown);
+		element.addClass("separator");
+		if (this.greedy) element.addClass("greedy");
 
 		return element;
 	}
 
-	onInput = event => {
-		const value = Number(event.target.value);
-		if (!isNaN(value)) {
-			this.blueMap.controls.targetPosition[this.axis] = value;
-			this.update();
-		}
-	};
+	isGreedy(){
+		return this.greedy;
+	}
 
-	onKeyDown = event => {
-		event.stopPropagation();
-	};
-
-	update = () => {
-		const val = Math.floor(this.blueMap.controls.targetPosition[this.axis]);
-
+	setGreedy(greedy){
+		this.greedy = greedy;
 		this.elements.forEach(element => {
-			element.find("input").val(val);
+			if (this.greedy) {
+				element.addClass("greedy");
+			} else {
+				element.removeClass("greedy");
+			}
 		});
-	};
+	}
+
 }

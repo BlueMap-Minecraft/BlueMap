@@ -1,0 +1,76 @@
+.bluemap-container .ui .ui-element.dropdown {
+    padding: 0;
+    cursor: pointer;
+
+    overflow: visible;
+
+    user-select: none;
+
+    > .header {
+        height: 100%;
+        padding-right: 1rem;
+
+        &:hover {
+            background-color: $light_bg;
+        }
+
+        > .ui-element {
+            pointer-events: none;
+            background-color: transparent;
+        }
+
+        &::after {
+            position: absolute;
+            top: calc(50% - 0.2rem);
+            right: 0.5rem;
+
+            content: "";
+
+            width: 0;
+            height: 0;
+
+            border: solid;
+            border-width: 0.4rem 0.25rem 0.4rem 0.25rem;
+            border-color: $normal_fg transparent transparent transparent;
+        }
+    }
+
+    &.open > .header::after {
+        top: calc(50% - 0.6rem);
+        border-color: transparent transparent $normal_fg transparent;
+    }
+
+    > .select {
+        position: absolute;
+        top: calc(100% - 1px);
+        left: 0;
+
+        width: calc(100% - 2px);
+        overflow-x: hidden;
+
+        max-height: 300px;
+        overflow-y: auto;
+
+        border: solid 1px $light_bg;
+
+        z-index: 110;
+
+        > .option {
+            background-color: $super-light_bg;
+
+            &.selected {
+                background-color: $light_bg;
+            }
+
+            &:hover {
+                background-color: $normal_fg;
+                color: $normal_bg;
+            }
+        }
+    }
+
+    .option {
+        padding: 0 0.5rem;
+    }
+
+}

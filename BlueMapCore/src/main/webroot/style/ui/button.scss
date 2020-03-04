@@ -1,0 +1,38 @@
+.bluemap-container .ui .ui-element.button {
+    cursor: pointer;
+    user-select: none;
+
+    > .label {
+        margin: 0 0.5rem;
+    }
+
+    &.icon {
+        flex-grow: 0;
+
+        > .label {
+            display: none;
+        }
+    }
+
+    &:hover {
+        background-color: $element_fg;
+        color: $element_bg;
+
+        > img {
+            filter: invert(1);
+        }
+    }
+
+    &:active {
+        background-color: $light_fg;
+    }
+
+    > img {
+        position: absolute;
+        top: 0;
+        left: 0;
+
+        width: 100%;
+        height: 100%;
+    }
+}

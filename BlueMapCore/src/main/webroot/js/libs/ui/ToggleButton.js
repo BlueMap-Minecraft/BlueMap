@@ -24,46 +24,51 @@
  */
 import $ from 'jquery';
 
-import Element from "../ui/Element";
+import Button from './Button.js';
 
-export default class Position extends Element {
-	constructor(blueMap, axis) {
-		super();
-		this.blueMap = blueMap;
-		this.axis = axis;
+export default class ToggleButton extends Button {
 
-		$(document).on('bluemap-update-frame', this.update);
+	constructor(label, selected, onChange, icon){
+		super(label, undefined, icon);
+		this.selected = selected;
+		this.onChangeListener = onChange;
 	}
 
-	createElement(){
+	createElement() {
 		let element = super.createElement();
 
-		element.addClass("position");
-		element.attr("data-axis", this.axis);
-		let inputElement = $('<input type="number" value="0" />').appendTo(element);
-		inputElement.on('input', this.onInput);
-		inputElement.on('keydown', this.onKeyDown);
+		element.addClass("toggle-button");
+		if (this.selected) element.addClass("selected");
+		$('<div class="switch"></div>').appendTo(element);
+		element.click(this.onClick);
 
 		return element;
 	}
 
-	onInput = event => {
-		const value = Number(event.target.value);
-		if (!isNaN(value)) {
-			this.blueMap.controls.targetPosition[this.axis] = value;
-			this.update();
+	isSelected(){
+		return this.selected;
+	}
+
+	toggle(){
+		this.selected = !this.selected;
+		this.update();
+	}
+
+	update(){
+		this.elements.forEach(element => {
+			if (this.selected)
+				element.addClass("selected");
+			else
+				element.removeClass("selected");
+		});
+	}
+
+	onClick = () => {
+		this.toggle();
+
+		if (this.onChangeListener !== undefined && this.onChangeListener !== null){
+			this.onChangeListener(this);
 		}
 	};
 
-	onKeyDown = event => {
-		event.stopPropagation();
-	};
-
-	update = () => {
-		const val = Math.floor(this.blueMap.controls.targetPosition[this.axis]);
-
-		this.elements.forEach(element => {
-			element.find("input").val(val);
-		});
-	};
 }

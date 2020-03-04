@@ -26,8 +26,10 @@
 const HIRES_FRAGMENT_SHADER = `
 uniform sampler2D texture;
 uniform float sunlightStrength;
+uniform bool mobSpawnOverlay;
 
 varying vec3 vPosition;
+varying vec3 vWorldPosition;
 varying vec3 vNormal;
 varying vec2 vUv;
 varying vec3 vColor;
@@ -35,12 +37,34 @@ varying float vAo;
 varying float vSunlight;
 varying float vBlocklight;
 
+vec4 lerp(vec4 v1, vec4 v2, float amount){
+	return v1 * (1.0 - amount) + v2 * amount; 
+}
+vec3 lerp(vec3 v1, vec3 v2, float amount){
+	return v1 * (1.0 - amount) + v2 * amount; 
+}
+
+bool mobSpawnColor() {
+	if (vBlocklight < 7.1){
+		float cross1 = vUv.x - vUv.y;
+		float cross2 = vUv.x - (1.0 - vUv.y);
+		return cross1 < 0.05 && cross1 > -0.05 || cross2 < 0.05 && cross2 > -0.05;
+	}
+	
+	return false;
+}
+
 void main() {
 	vec4 color = texture2D(texture, vUv);
 	if (color.a == 0.0) discard;
 	
 	//apply vertex-color
 	color.rgb *= vColor;
+	
+	//mob spawn overlay
+	if (mobSpawnOverlay && mobSpawnColor()){
+		color.rgb = lerp(vec3(1.0, 0.0, 0.0), color.rgb, 0.25);
+	}
 
 	//apply ao
 	color.rgb *= vAo;
@@ -48,7 +72,7 @@ void main() {
 	//apply light
 	float light = max(vSunlight * sunlightStrength, vBlocklight);
 	color.rgb *= light / 15.0;
-
+	
 	gl_FragColor = color;
 }
 `;

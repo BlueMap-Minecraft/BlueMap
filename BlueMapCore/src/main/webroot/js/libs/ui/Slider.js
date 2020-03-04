@@ -24,46 +24,63 @@
  */
 import $ from 'jquery';
 
-import Element from "../ui/Element";
+import Element from './Element.js';
 
-export default class Position extends Element {
-	constructor(blueMap, axis) {
+export default class Slider extends Element {
+
+	constructor(min = 0, max = 1, step = 0.01, value, onChange, minWidth){
 		super();
-		this.blueMap = blueMap;
-		this.axis = axis;
+		this.min = min;
+		this.max = max;
+		this.step = step;
 
-		$(document).on('bluemap-update-frame', this.update);
+		if (value === undefined) value = min;
+		this.value = value;
+
+		this.onChangeListener = onChange;
+		this.minWidth = minWidth;
 	}
 
-	createElement(){
+	createElement() {
 		let element = super.createElement();
+		element.addClass("slider");
 
-		element.addClass("position");
-		element.attr("data-axis", this.axis);
-		let inputElement = $('<input type="number" value="0" />').appendTo(element);
-		inputElement.on('input', this.onInput);
-		inputElement.on('keydown', this.onKeyDown);
+		if (this.minWidth !== undefined){
+			element.addClass("sized");
+			element.css("min-width", this.minWidth);
+		}
+
+		let slider = $(`<input type="range" min="${this.min}" max="${this.max}" step="${this.step}" value="${this.value}">`).appendTo(element);
+		slider.on('input change', this.onChangeEvent(slider));
+		$(`<div class="label">-</div>`).appendTo(element);
+
+		this.update();
 
 		return element;
 	}
 
-	onInput = event => {
-		const value = Number(event.target.value);
-		if (!isNaN(value)) {
-			this.blueMap.controls.targetPosition[this.axis] = value;
-			this.update();
-		}
-	};
+	getValue() {
+		return this.value;
+	}
 
-	onKeyDown = event => {
-		event.stopPropagation();
-	};
-
-	update = () => {
-		const val = Math.floor(this.blueMap.controls.targetPosition[this.axis]);
-
+	update(){
 		this.elements.forEach(element => {
-			element.find("input").val(val);
+			let label = element.find(".label");
+			let slider = element.find("input");
+
+			slider.val(this.value);
+			label.html(Math.round(this.value * 100) / 100);
 		});
-	};
+	}
+
+	onChangeEvent = slider => () => {
+		this.value = slider.val();
+
+		this.update();
+
+		if (this.onChangeListener !== undefined && this.onChangeListener !== null) {
+			this.onChangeListener(this);
+		}
+	}
+
 }

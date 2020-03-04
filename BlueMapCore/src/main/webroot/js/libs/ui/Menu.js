@@ -24,46 +24,48 @@
  */
 import $ from 'jquery';
 
-import Element from "../ui/Element";
+import Element from './Element.js';
 
-export default class Position extends Element {
-	constructor(blueMap, axis) {
-		super();
-		this.blueMap = blueMap;
-		this.axis = axis;
+export default class Menu {
 
-		$(document).on('bluemap-update-frame', this.update);
+	constructor(){
+		this.element = $('<div class="menu closed"><h1>Menu</h1></div>');
+		this.content = $('<div class="content"></div>').appendTo(this.element);
+		this.closeButton = $('<div class="close-button"></div>').appendTo(this.element);
+
+		this.children = [];
+
+		this.closeButton.click(this.close);
 	}
 
-	createElement(){
-		let element = super.createElement();
-
-		element.addClass("position");
-		element.attr("data-axis", this.axis);
-		let inputElement = $('<input type="number" value="0" />').appendTo(element);
-		inputElement.on('input', this.onInput);
-		inputElement.on('keydown', this.onKeyDown);
-
-		return element;
+	addElement(element){
+		this.children.push(element);
 	}
 
-	onInput = event => {
-		const value = Number(event.target.value);
-		if (!isNaN(value)) {
-			this.blueMap.controls.targetPosition[this.axis] = value;
-			this.update();
-		}
-	};
-
-	onKeyDown = event => {
-		event.stopPropagation();
-	};
-
-	update = () => {
-		const val = Math.floor(this.blueMap.controls.targetPosition[this.axis]);
-
-		this.elements.forEach(element => {
-			element.find("input").val(val);
+	update() {
+		this.content.html("");
+		this.children.forEach(child => {
+			this.content.append(child.createElement());
 		});
+	}
+
+	isOpen = () => {
+		return !this.element.hasClass('closed');
 	};
+
+	toggleOpen = () => {
+		this.element.toggleClass('closed');
+	};
+
+	open = () => {
+
+		this.element.removeClass('closed');
+		this.element.trigger('menu-open');
+	};
+
+	close = () => {
+		this.element.addClass('closed');
+		this.element.trigger('menu-close');
+	};
+
 }

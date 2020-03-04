@@ -24,46 +24,40 @@
  */
 import $ from 'jquery';
 
-import Element from "../ui/Element";
+import Element from './Element.js';
 
-export default class Position extends Element {
-	constructor(blueMap, axis) {
+export default class Button extends Element {
+
+	constructor(label, onClick, icon){
 		super();
-		this.blueMap = blueMap;
-		this.axis = axis;
 
-		$(document).on('bluemap-update-frame', this.update);
+		this.label = label;
+		this.onClickListener = onClick;
+		this.icon = icon;
 	}
 
-	createElement(){
+	createElement() {
 		let element = super.createElement();
 
-		element.addClass("position");
-		element.attr("data-axis", this.axis);
-		let inputElement = $('<input type="number" value="0" />').appendTo(element);
-		inputElement.on('input', this.onInput);
-		inputElement.on('keydown', this.onKeyDown);
+		element.addClass("button");
+		element.click(this.onClickEvent);
+
+		if (this.label !== undefined) {
+			$(`<div class="label">${this.label}</div>`).appendTo(element);
+		}
+
+		if (this.icon !== undefined){
+			element.addClass("icon");
+			$(`<img src="${this.icon}" />`).appendTo(element);
+		}
 
 		return element;
 	}
 
-	onInput = event => {
-		const value = Number(event.target.value);
-		if (!isNaN(value)) {
-			this.blueMap.controls.targetPosition[this.axis] = value;
-			this.update();
+	onClickEvent = () => {
+		if (this.onClickListener !== undefined && this.onClickListener !== null) {
+			this.onClickListener(this);
 		}
-	};
+	}
 
-	onKeyDown = event => {
-		event.stopPropagation();
-	};
-
-	update = () => {
-		const val = Math.floor(this.blueMap.controls.targetPosition[this.axis]);
-
-		this.elements.forEach(element => {
-			element.find("input").val(val);
-		});
-	};
 }

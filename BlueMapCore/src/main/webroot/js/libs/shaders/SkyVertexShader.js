@@ -23,36 +23,17 @@
  * THE SOFTWARE.
  */
 
-const HIRES_VERTEX_SHADER = `
-attribute float ao;
-attribute float sunlight;
-attribute float blocklight;
-
+const SKY_VERTEX_SHADER = `
 varying vec3 vPosition;
-varying vec3 vWorldPosition;
-varying vec3 vNormal;
-varying vec2 vUv;
-varying vec3 vColor;
-varying float vAo;
-varying float vSunlight;
-varying float vBlocklight;
 
 void main() {
 	vPosition = position;
-	vWorldPosition = (vec4(position, 1) * modelMatrix).xyz;
-	vNormal = normal;
-	vUv = uv;
-	vColor = color;
-	vAo = ao;
-	vSunlight = sunlight;
-	vBlocklight = blocklight;
 	
 	gl_Position = 
 		projectionMatrix *
-		viewMatrix *
-		modelMatrix *
-		vec4(position, 1); 
+		modelViewMatrix *
+		vec4(position, 1);
 }
 `;
 
-export default HIRES_VERTEX_SHADER;
+export default SKY_VERTEX_SHADER;

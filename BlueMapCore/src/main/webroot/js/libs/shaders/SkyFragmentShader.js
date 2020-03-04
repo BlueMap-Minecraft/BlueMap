@@ -23,36 +23,20 @@
  * THE SOFTWARE.
  */
 
-const HIRES_VERTEX_SHADER = `
-attribute float ao;
-attribute float sunlight;
-attribute float blocklight;
+const SKY_FRAGMENT_SHADER = `
+uniform float sunlightStrength;
 
 varying vec3 vPosition;
-varying vec3 vWorldPosition;
-varying vec3 vNormal;
-varying vec2 vUv;
-varying vec3 vColor;
-varying float vAo;
-varying float vSunlight;
-varying float vBlocklight;
 
 void main() {
-	vPosition = position;
-	vWorldPosition = (vec4(position, 1) * modelMatrix).xyz;
-	vNormal = normal;
-	vUv = uv;
-	vColor = color;
-	vAo = ao;
-	vSunlight = sunlight;
-	vBlocklight = blocklight;
+	vec4 dayColor = vec4(0.49, 0.67, 1.0, 1.0);
+	vec4 nightColor = vec4(0.0, 0.02, 0.05, 1.0);
 	
-	gl_Position = 
-		projectionMatrix *
-		viewMatrix *
-		modelMatrix *
-		vec4(position, 1); 
+	vec4 color = dayColor * sunlightStrength + nightColor * (1.0 - sunlightStrength);
+	color.rgb *= (clamp(vPosition.y, -0.02, 0.02) + 0.02) * 25.0;
+
+	gl_FragColor = color;
 }
 `;
 
-export default HIRES_VERTEX_SHADER;
+export default SKY_FRAGMENT_SHADER;
