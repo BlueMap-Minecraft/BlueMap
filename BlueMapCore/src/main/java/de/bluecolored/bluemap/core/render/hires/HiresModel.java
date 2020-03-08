@@ -30,12 +30,12 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import com.flowpowered.math.vector.Vector4f;
 
-import de.bluecolored.bluemap.core.model.Model;
+import de.bluecolored.bluemap.core.model.ExtendedModel;
 
 /**
  * A model, containing additional information about the tile it represents
  */
-public class HiresModel extends Model {
+public class HiresModel extends ExtendedModel {
 
 	private UUID world;
 	private Vector2i tile;

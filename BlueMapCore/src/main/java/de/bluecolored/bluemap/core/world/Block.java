@@ -65,11 +65,11 @@ public class Block {
 		return pos;
 	}
 	
-	public double getSunLightLevel() {
+	public float getSunLightLevel() {
 		return lightData.getSkyLight();
 	}
 	
-	public double getBlockLightLevel() {
+	public float getBlockLightLevel() {
 		return lightData.getBlockLight();
 	}
 
@@ -108,15 +108,15 @@ public class Block {
 	}
 	
 	private void calculateLight() {
-		sunLight = (float) getSunLightLevel();
-		blockLight = (float) getBlockLightLevel();
+		sunLight = getSunLightLevel();
+		blockLight = getBlockLightLevel();
 		
 		if (blockLight > 0 || sunLight > 0) return;
 		
 		for (Direction direction : Direction.values()) {
 			Block neighbor = getRelativeBlock(direction);
-			sunLight = (float) Math.max(neighbor.getSunLightLevel(), sunLight);
-			blockLight = (float) Math.max(neighbor.getBlockLightLevel(), blockLight);
+			sunLight = Math.max(neighbor.getSunLightLevel(), sunLight);
+			blockLight = Math.max(neighbor.getBlockLightLevel(), blockLight);
 		}
 	}
 	

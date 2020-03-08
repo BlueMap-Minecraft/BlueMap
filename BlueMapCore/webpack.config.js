@@ -22,7 +22,8 @@ module.exports = {
     contentBase: WORLD_DATA_PATH,
     compress: true,
     port: 8080,
-    hot: true
+    hot: true,
+      host: '0.0.0.0'
   },
   plugins: [
     new MiniCssExtractPlugin({

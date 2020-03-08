@@ -30,9 +30,11 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 import com.flowpowered.math.vector.Vector2i;
+import com.flowpowered.math.vector.Vector3f;
 
 import de.bluecolored.bluemap.core.config.MainConfig.MapConfig;
 import de.bluecolored.bluemap.core.render.TileRenderer;
+import de.bluecolored.bluemap.core.util.MathUtils;
 import de.bluecolored.bluemap.core.world.World;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.gson.GsonConfigurationLoader;
@@ -94,17 +96,17 @@ public class WebSettings {
 	}
 	
 	public Collection<String> getMapIds() {
-		return rootNode.getChildrenMap().keySet().stream().map(o -> o.toString()).collect(Collectors.toSet());
+		return rootNode.getNode("maps").getChildrenMap().keySet().stream().map(o -> o.toString()).collect(Collectors.toSet());
 	}
 	
-	public void setAllEnabled(boolean enabled) {
-		for (ConfigurationNode mapNode : rootNode.getChildrenMap().values()) {
+	public void setAllMapsEnabled(boolean enabled) {
+		for (ConfigurationNode mapNode : rootNode.getNode("maps").getChildrenMap().values()) {
 			mapNode.getNode("enabled").setValue(enabled);
 		}
 	}
 	
-	public void setEnabled(boolean enabled, String mapId) {
-		set(enabled, mapId, "enabled");
+	public void setMapEnabled(boolean enabled, String mapId) {
+		set(enabled, "maps", mapId, "enabled");
 	}
 	
 	public void setFrom(TileRenderer tileRenderer, String mapId) {
@@ -113,56 +115,60 @@ public class WebSettings {
 		Vector2i lowresTileSize = tileRenderer.getLowresModelManager().getTileSize();
 		Vector2i lowresPointsPerHiresTile = tileRenderer.getLowresModelManager().getPointsPerHiresTile();
 		
-		set(hiresTileSize.getX(), mapId, "hires", "tileSize", "x");
-		set(hiresTileSize.getY(), mapId, "hires", "tileSize", "z");
-		set(1, mapId, "hires", "scale", "x");
-		set(1, mapId, "hires", "scale", "z");
-		set(gridOrigin.getX(), mapId, "hires", "translate", "x");
-		set(gridOrigin.getY(), mapId, "hires", "translate", "z");
+		set(hiresTileSize.getX(), "maps", mapId, "hires", "tileSize", "x");
+		set(hiresTileSize.getY(), "maps", mapId, "hires", "tileSize", "z");
+		set(1, "maps", mapId, "hires", "scale", "x");
+		set(1, "maps", mapId, "hires", "scale", "z");
+		set(gridOrigin.getX(), "maps", mapId, "hires", "translate", "x");
+		set(gridOrigin.getY(), "maps", mapId, "hires", "translate", "z");
 		
 		Vector2i pointSize = hiresTileSize.div(lowresPointsPerHiresTile);
 		Vector2i tileSize = pointSize.mul(lowresTileSize);
 		
-		set(tileSize.getX(), mapId, "lowres", "tileSize", "x");
-		set(tileSize.getY(), mapId, "lowres", "tileSize", "z");
-		set(pointSize.getX(), mapId, "lowres", "scale", "x");
-		set(pointSize.getY(), mapId, "lowres", "scale", "z");
-		set(pointSize.getX() / 2, mapId, "lowres", "translate", "x");
-		set(pointSize.getY() / 2, mapId, "lowres", "translate", "z");
+		set(tileSize.getX(), "maps", mapId, "lowres", "tileSize", "x");
+		set(tileSize.getY(), "maps", mapId, "lowres", "tileSize", "z");
+		set(pointSize.getX(), "maps", mapId, "lowres", "scale", "x");
+		set(pointSize.getY(), "maps", mapId, "lowres", "scale", "z");
+		set(pointSize.getX() / 2, "maps", mapId, "lowres", "translate", "x");
+		set(pointSize.getY() / 2, "maps", mapId, "lowres", "translate", "z");
 	}
 
 	public void setFrom(World world, String mapId) {
-		set(world.getSpawnPoint().getX(), mapId, "startPos", "x");
-		set(world.getSpawnPoint().getZ(), mapId, "startPos", "z");
+		set(world.getSpawnPoint().getX(), "maps", mapId, "startPos", "x");
+		set(world.getSpawnPoint().getZ(), "maps", mapId, "startPos", "z");
 	}
 	
 	public void setFrom(MapConfig mapConfig, String mapId) {
 		Vector2i startPos = mapConfig.getStartPos();
 		if (startPos != null) {
-			set(startPos.getX(), mapId, "startPos", "x");
-			set(startPos.getY(), mapId, "startPos", "z");
+			set(startPos.getX(), "maps", mapId, "startPos", "x");
+			set(startPos.getY(), "maps", mapId, "startPos", "z");
 		}
 
-		set(mapConfig.getLowresViewDistance(), mapId, "lowres", "viewDistance");
-		set(mapConfig.getHiresViewDistance(), mapId, "hires", "viewDistance");
+		Vector3f skyColor = MathUtils.color3FromInt(mapConfig.getSkyColor());
+		set(skyColor.getX(), "maps", mapId, "skyColor", "r");
+		set(skyColor.getY(), "maps", mapId, "skyColor", "g");
+		set(skyColor.getZ(), "maps", mapId, "skyColor", "b");
+		
+		set(mapConfig.getAmbientLight(), "maps", mapId, "ambientLight");
 		
 		setName(mapConfig.getName(), mapId);
 	}
 	
 	public void setOrdinal(int ordinal, String mapId) {
-		set(ordinal, mapId, "ordinal");
+		set(ordinal, "maps", mapId, "ordinal");
 	}
 	
 	public int getOrdinal(String mapId) {
-		return getInt(mapId, "ordinal");
+		return getInt("maps", mapId, "ordinal");
 	}
 	
 	public void setName(String name, String mapId) {
-		set(name, mapId, "name");
+		set(name, "maps", mapId, "name");
 	}
 	
 	public String getName(String mapId) {
-		return getString(mapId, "name");
+		return getString("maps", mapId, "name");
 	}
 	
 }

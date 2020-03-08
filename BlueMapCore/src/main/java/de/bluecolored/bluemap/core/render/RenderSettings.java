@@ -30,29 +30,12 @@ public interface RenderSettings {
 	
 	static final Vector3i DEFAULT_MIN = Vector3i.from(Integer.MIN_VALUE);
 	static final Vector3i DEFAULT_MAX = Vector3i.from(Integer.MAX_VALUE);
-	
-	/**
-	 * The strenght of ao-shading calculated for each vertex.<br>
-	 * A value of 0 turns off ao.<br>
-	 * The value represents the amount that each occluding face subtracts of the light-multiplier. (There are at most 3 occluding faces)
-	 */
-	default float getAmbientOcclusionStrenght() {
-		return 0.25f;
-	}
 
 	/**
 	 * Whether faces that have a sky-light-value of 0 will be rendered or not.
 	 */
 	default boolean isExcludeFacesWithoutSunlight() {
 		return true;
-	}
-	
-	/**
-	 * A multiplier to how much faces are shaded due to their light value<br>
-	 * This can be used to make sure blocks with a light value of 0 are not pitch black
-	 */
-	default float getLightShadeMultiplier() {
-		return 0.8f;
 	}
 
 	/**
@@ -87,9 +70,7 @@ public interface RenderSettings {
 	
 	default RenderSettings copy() {
 		return new StaticRenderSettings(
-				getAmbientOcclusionStrenght(),
 				isExcludeFacesWithoutSunlight(),
-				getLightShadeMultiplier(),
 				getMin(),
 				getMax(),
 				isRenderEdges()

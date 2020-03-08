@@ -32,8 +32,8 @@ import com.flowpowered.math.vector.Vector3f;
 import com.flowpowered.math.vector.Vector4f;
 import com.google.common.collect.Sets;
 
-import de.bluecolored.bluemap.core.model.Face;
-import de.bluecolored.bluemap.core.model.Model;
+import de.bluecolored.bluemap.core.model.ExtendedFace;
+import de.bluecolored.bluemap.core.model.ExtendedModel;
 import de.bluecolored.bluemap.core.render.RenderSettings;
 import de.bluecolored.bluemap.core.resourcepack.BlockColorCalculator;
 import de.bluecolored.bluemap.core.resourcepack.BlockModelResource;
@@ -190,7 +190,7 @@ public class LiquidModelBuilder {
 		return 0;
 	}
 	
-	private void createElementFace(Model model, Direction faceDir, Vector3f c0, Vector3f c1, Vector3f c2, Vector3f c3, Vector3f color, int textureId) {
+	private void createElementFace(ExtendedModel model, Direction faceDir, Vector3f c0, Vector3f c1, Vector3f c2, Vector3f c3, Vector3f color, int textureId) {
 		
 		//face culling
 		Block bl = block.getRelativeBlock(faceDir);
@@ -206,32 +206,41 @@ public class LiquidModelBuilder {
 		uvs[2] = new Vector2f(uv.getZ(), uv.getY());
 		uvs[3] = new Vector2f(uv.getX(), uv.getY());
 		
-		Face f1 = new Face(c0, c1, c2, uvs[0], uvs[1], uvs[2], textureId);
-		Face f2 = new Face(c0, c2, c3, uvs[0], uvs[2], uvs[3], textureId);
+		ExtendedFace f1 = new ExtendedFace(c0, c1, c2, uvs[0], uvs[1], uvs[2], textureId);
+		ExtendedFace f2 = new ExtendedFace(c0, c2, c3, uvs[0], uvs[2], uvs[3], textureId);
 		
-		//move face in a tiny bit to avoid z-fighting with waterlogged blocks
-		f1.translate(faceDir.opposite().toVector().toFloat().mul(0.01));
-		f2.translate(faceDir.opposite().toVector().toFloat().mul(0.01));
+		// move face in a tiny bit to avoid z-fighting with waterlogged blocks (doesn't work because it is rounded back when storing the model later)
+		//f1.translate(faceDir.opposite().toVector().toFloat().mul(0.01));
+		//f2.translate(faceDir.opposite().toVector().toFloat().mul(0.01));
 		
-		float light = 1f;
-		if (renderSettings.getLightShadeMultiplier() > 0) {
-			light = 0f;
-			for (Direction d : Direction.values()){
-				Block b = block.getRelativeBlock(d.toVector());
-				float l = (float) (Math.max(b.getBlockLightLevel(), b.getSunLightLevel()) / 15f) * renderSettings.getLightShadeMultiplier() + (1 - renderSettings.getLightShadeMultiplier());
-				if (l > light) light = l;
-			}
+		float blockLight = bl.getBlockLightLevel();
+		float sunLight = bl.getSunLightLevel();
+		
+		if (faceDir == Direction.UP) {
+			blockLight = block.getBlockLightLevel();
+			sunLight = block.getSunLightLevel();
 		}
-	
-		color = color.mul(light);
 		
 		f1.setC1(color);
 		f1.setC2(color);
 		f1.setC3(color);
-
 		f2.setC1(color);
 		f2.setC2(color);
 		f2.setC3(color);
+		
+		f1.setBl1(blockLight);
+		f1.setBl2(blockLight);
+		f1.setBl3(blockLight);
+		f2.setBl1(blockLight);
+		f2.setBl2(blockLight);
+		f2.setBl3(blockLight);
+		
+		f1.setSl1(sunLight);
+		f1.setSl2(sunLight);
+		f1.setSl3(sunLight);
+		f2.setSl1(sunLight);
+		f2.setSl2(sunLight);
+		f2.setSl3(sunLight);
 		
 		//add the face
 		model.addFace(f1);

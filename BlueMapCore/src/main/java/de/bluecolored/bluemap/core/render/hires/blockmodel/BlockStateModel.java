@@ -26,13 +26,15 @@ package de.bluecolored.bluemap.core.render.hires.blockmodel;
 
 import com.flowpowered.math.vector.Vector4f;
 
+import de.bluecolored.bluemap.core.model.ExtendedFace;
+import de.bluecolored.bluemap.core.model.ExtendedModel;
 import de.bluecolored.bluemap.core.model.Model;
 import de.bluecolored.bluemap.core.util.MathUtils;
 
 /**
  * A model with some extra information about the BlockState it represents
  */
-public class BlockStateModel extends Model {
+public class BlockStateModel extends ExtendedModel {
 
 	private Vector4f mapColor;
 	
@@ -45,7 +47,7 @@ public class BlockStateModel extends Model {
 	}
 
 	@Override
-	public void merge(Model model) {
+	public void merge(Model<ExtendedFace> model) {
 		super.merge(model);
 		
 		if (model instanceof BlockStateModel){

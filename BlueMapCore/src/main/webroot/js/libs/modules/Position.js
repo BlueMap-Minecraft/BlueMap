@@ -24,38 +24,34 @@
  */
 import $ from 'jquery';
 
-import { getTopLeftElement } from './Module.js';
+import Element from "../ui/Element";
 
-export default class Position {
-	constructor(blueMap) {
+export default class Position extends Element {
+	constructor(blueMap, axis) {
+		super();
 		this.blueMap = blueMap;
+		this.axis = axis;
 
-		$('.bluemap-position').remove();
-		this.elements = [
-			this.createPositionElement('x'),
-			null,//this.elementY = this.createPositionElement('y');
-			this.createPositionElement('z'),
-		];
-
-		$(document).on('bluemap-update-frame', this.onBlueMapUpdateFrame);
+		$(document).on('bluemap-update-frame', this.update);
 	}
 
-	/** Creates the position display */
-	createPositionElement(type) {
-		const parent = getTopLeftElement(this.blueMap);
-		const element = $(`<div class="bluemap-position" data-pos="${type}"><input type="number" value="0" /></div>`)
-			.appendTo(parent)
-			.children()
-			.first();
-		element.on('input', this.onInput(type));
-		element.on('keydown', this.onKeyDown);
+	createElement(){
+		let element = super.createElement();
+
+		element.addClass("position");
+		element.attr("data-axis", this.axis);
+		let inputElement = $('<input type="number" value="0" />').appendTo(element);
+		inputElement.on('input', this.onInput);
+		inputElement.on('keydown', this.onKeyDown);
+
 		return element;
 	}
 
-	onInput = type => event => {
+	onInput = event => {
 		const value = Number(event.target.value);
 		if (!isNaN(value)) {
-			this.blueMap.controls.targetPosition[type] = value;
+			this.blueMap.controls.targetPosition[this.axis] = value;
+			this.update();
 		}
 	};
 
@@ -63,14 +59,11 @@ export default class Position {
 		event.stopPropagation();
 	};
 
-	onBlueMapUpdateFrame = () => {
-		const { x, y, z } = this.blueMap.controls.targetPosition;
-		const values = [ z, y, x ];
-		for (let element of this.elements) {
-			const value = Math.floor(values.pop());
-			if (element) {
-				element.val(value);
-			}
-		}
+	update = () => {
+		const val = Math.floor(this.blueMap.controls.targetPosition[this.axis]);
+
+		this.elements.forEach(element => {
+			element.find("input").val(val);
+		});
 	};
 }

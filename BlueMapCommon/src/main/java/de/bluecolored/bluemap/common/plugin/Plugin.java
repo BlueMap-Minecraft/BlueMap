@@ -246,9 +246,10 @@ public class Plugin {
 		}
 
 		WebSettings webSettings = new WebSettings(config.getWebDataPath().resolve("settings.json").toFile());
-		webSettings.setAllEnabled(false);
+		webSettings.set(config.isUseCookies(), "useCookies");
+		webSettings.setAllMapsEnabled(false);
 		for (MapType map : maps.values()) {
-			webSettings.setEnabled(true, map.getId());
+			webSettings.setMapEnabled(true, map.getId());
 			webSettings.setFrom(map.getTileRenderer(), map.getId());
 			webSettings.setFrom(map.getWorld(), map.getId());
 		}
@@ -273,7 +274,7 @@ public class Plugin {
 				Thread.sleep(TimeUnit.MINUTES.toMillis(1));
 				
 				while (true) {
-					if (serverInterface.isMetricsEnabled(config.isMetricsEnabled())) Metrics.sendReport("Sponge");
+					if (serverInterface.isMetricsEnabled(config.isMetricsEnabled())) Metrics.sendReport(this.implementationType);
 					Thread.sleep(TimeUnit.MINUTES.toMillis(30));
 				}
 			} catch (InterruptedException ex){

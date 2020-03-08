@@ -28,41 +28,25 @@ import com.flowpowered.math.vector.Vector3i;
 
 public class StaticRenderSettings implements RenderSettings {
 	
-	private float ambientOcclusion;
 	private boolean excludeFacesWithoutSunlight;
-	private float lightShade;
 	private Vector3i min, max;
 	private boolean renderEdges;
 	
 	public StaticRenderSettings(
-			float ambientOcclusion,
 			boolean excludeFacesWithoutSunlight,
-			float ligheShade,
 			Vector3i min,
 			Vector3i max,
 			boolean renderEdges
 			) {
-		this.ambientOcclusion = ambientOcclusion;
 		this.excludeFacesWithoutSunlight = excludeFacesWithoutSunlight;
-		this.lightShade = ligheShade;
 		this.min = min;
 		this.max = max;
 		this.renderEdges = renderEdges;
 	}
 
 	@Override
-	public float getAmbientOcclusionStrenght() {
-		return ambientOcclusion;
-	}
-
-	@Override
 	public boolean isExcludeFacesWithoutSunlight() {
 		return excludeFacesWithoutSunlight;
-	}
-
-	@Override
-	public float getLightShadeMultiplier() {
-		return lightShade;
 	}
 	
 	@Override

@@ -42,8 +42,6 @@ import de.bluecolored.bluemap.core.web.WebServerConfig;
 import ninja.leaping.configurate.ConfigurationNode;
 
 public class MainConfig implements WebServerConfig {
-
-	private String version;
 	
 	private boolean downloadAccepted = false;
 	private boolean metricsEnabled = false;
@@ -52,6 +50,7 @@ public class MainConfig implements WebServerConfig {
 	private int webserverPort = 8100;
 	private int webserverMaxConnections = 100;
 	private InetAddress webserverBindAdress = null;
+	private boolean useCookies;
 
 	private Path dataPath = Paths.get("data");
 	
@@ -91,6 +90,8 @@ public class MainConfig implements WebServerConfig {
 			webDataPath = toFolder(webDataString);
 		else
 			webDataPath = webRoot.resolve("data");
+		
+		useCookies = node.getNode("useCookies").getBoolean(true);
 		
 		//webserver
 		loadWebConfig(node.getNode("webserver"));
@@ -137,13 +138,23 @@ public class MainConfig implements WebServerConfig {
 		return file.toPath();
 	}
 
+	@Override
+	public Path getWebRoot() {
+		return webRoot;
+	}
+
 	public Path getDataPath() {
 		return dataPath;
+	}
+	
+	public boolean isUseCookies() {
+		return useCookies;
 	}
 	
 	public boolean isWebserverEnabled() {
 		return webserverEnabled;
 	}
+	
 	
 	public Path getWebDataPath() {
 		return webDataPath;
@@ -162,15 +173,6 @@ public class MainConfig implements WebServerConfig {
 	@Override
 	public InetAddress getWebserverBindAdress() {
 		return webserverBindAdress;
-	}
-
-	@Override
-	public Path getWebRoot() {
-		return webRoot;
-	}
-	
-	public String getVersion() {
-		return version;
 	}
 	
 	public boolean isDownloadAccepted() {
@@ -196,10 +198,10 @@ public class MainConfig implements WebServerConfig {
 		private String world;
 		
 		private Vector2i startPos;
+		private int skyColor;
+		private float ambientLight;
 		
 		private boolean renderCaves;
-		private float ambientOcclusion;
-		private float lighting;
 		
 		private Vector3i min, max;
 		private boolean renderEdges;
@@ -207,11 +209,9 @@ public class MainConfig implements WebServerConfig {
 		private boolean useGzip;
 		
 		private int hiresTileSize;
-		private float hiresViewDistance;
 		
 		private int lowresPointsPerHiresTile;
 		private int lowresPointsPerLowresTile;
-		private float lowresViewDistance;
 		
 		private MapConfig(ConfigurationNode node) throws IOException {
 			this.id = node.getNode("id").getString("");
@@ -224,9 +224,12 @@ public class MainConfig implements WebServerConfig {
 			
 			if (!node.getNode("startPos").isVirtual()) this.startPos = ConfigUtils.readVector2i(node.getNode("startPos"));
 			
+			if (!node.getNode("skyColor").isVirtual()) this.skyColor = ConfigUtils.readColorInt(node.getNode("skyColor"));
+			else this.skyColor = 0x7dabff;
+			
+			this.ambientLight = node.getNode("ambientLight").getFloat(0f);
+			
 			this.renderCaves = node.getNode("renderCaves").getBoolean(false);
-			this.ambientOcclusion = node.getNode("ambientOcclusion").getFloat(0.25f);
-			this.lighting = node.getNode("lighting").getFloat(0.8f);
 
 			int minX = node.getNode("minX").getInt(RenderSettings.super.getMin().getX());
 			int maxX = node.getNode("maxX").getInt(RenderSettings.super.getMax().getX());
@@ -242,11 +245,9 @@ public class MainConfig implements WebServerConfig {
 			this.useGzip = node.getNode("useCompression").getBoolean(true);
 			
 			this.hiresTileSize = node.getNode("hires", "tileSize").getInt(32);
-			this.hiresViewDistance = node.getNode("hires", "viewDistance").getFloat(4.5f);
 			
 			this.lowresPointsPerHiresTile = node.getNode("lowres", "pointsPerHiresTile").getInt(4);
 			this.lowresPointsPerLowresTile = node.getNode("lowres", "pointsPerLowresTile").getInt(50);
-			this.lowresViewDistance = node.getNode("lowres", "viewDistance").getFloat(7f);
 			
 			//check valid configuration values
 			double blocksPerPoint = (double) this.hiresTileSize / (double) this.lowresPointsPerHiresTile;
@@ -268,27 +269,21 @@ public class MainConfig implements WebServerConfig {
 		public Vector2i getStartPos() {
 			return startPos;
 		}
+		
+		public int getSkyColor() {
+			return skyColor;
+		}
+		
+		public float getAmbientLight() {
+			return ambientLight;
+		}
 
 		public boolean isRenderCaves() {
 			return renderCaves;
 		}
-
-		@Override
-		public float getAmbientOcclusionStrenght() {
-			return ambientOcclusion;
-		}
-
-		@Override
-		public float getLightShadeMultiplier() {
-			return lighting;
-		}
 		
 		public int getHiresTileSize() {
 			return hiresTileSize;
-		}
-
-		public float getHiresViewDistance() {
-			return hiresViewDistance;
 		}
 
 		public int getLowresPointsPerHiresTile() {
@@ -297,10 +292,6 @@ public class MainConfig implements WebServerConfig {
 
 		public int getLowresPointsPerLowresTile() {
 			return lowresPointsPerLowresTile;
-		}
-
-		public float getLowresViewDistance() {
-			return lowresViewDistance;
 		}
 
 		@Override

@@ -1,0 +1,127 @@
+$menu-width: 375px;
+
+.bluemap-container .ui .menu {
+    position: relative;
+
+    height: 100%;
+    width: $menu-width;
+    max-width: 100%;
+
+    background-color: $normal_bg;
+    color: $normal_fg;
+
+    overflow: hidden;
+
+    transition: width 0.2s;
+
+    &.closed {
+        width: 0;
+    }
+
+    @media (max-width: $menu-width) {
+        transition: opacity 0.2s;
+
+        &.closed {
+            opacity: 0;
+            width: $menu-width;
+            pointer-events: none;
+        }
+    }
+
+    > h1 {
+        position: absolute;
+        right: 0;
+        top: 0;
+
+        width: $menu-width;
+        height: 2.5rem;
+        line-height: 2.5rem;
+
+        margin: 0;
+        padding: 0.25rem;
+
+        text-align: center;
+
+        font-family: inherit;
+        font-size: 1.2rem;
+        font-weight: bold;
+
+        box-shadow: 0 0 5px #00000088;
+
+        z-index: 10;
+
+        @media (max-width: $menu-width) {
+            width: 100%;
+        }
+    }
+
+    > .close-button {
+        z-index: 20;
+        left: 0;
+    }
+
+    > .content {
+        position: absolute;
+        right: 0;
+        top: 3rem;
+
+        width: calc(375px - 1rem);
+        height: calc(100% - 3rem);
+
+        padding: 0.5rem;
+
+        overflow-y: auto;
+
+        @media (max-width: $menu-width) {
+            width: calc(100% - 1rem);
+        }
+
+        > .separator {
+            position: relative;
+            left: -0.5rem;
+
+            width: calc(100% + 1rem);
+
+            border-top: solid 1px $line_color;
+            margin: 0.5rem 0;
+        }
+
+        > .label {
+            min-height: 0;
+            font-size: 0.8rem;
+            padding: 1rem 0.5rem 0.1rem 1rem;
+            line-height: 0.8rem;
+        }
+
+        > .dropdown > .select {
+            border: solid 1px $line_color;
+            border-top: none;
+
+            width: calc(100% - 2px);
+        }
+
+        // a little hacky to force not displaying any icon
+        > .toggle-button.icon {
+            > .label {
+                display: inline;
+            }
+
+            > img {
+                display: none;
+            }
+
+            > .switch {
+                display: block;
+            }
+
+            &.selected:not(:hover) {
+                background-color: $normal_bg;
+                color: $normal_fg;
+            }
+            &:hover {
+                background-color: $hover_bg;
+                color: $hover_fg;
+            }
+        }
+    }
+}

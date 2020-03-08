@@ -24,24 +24,34 @@
  */
 import $ from 'jquery';
 
-// ###### Modules ######
+import ToggleButton from '../ui/ToggleButton.js';
 
-export const getTopRightElement = blueMap => {
-	let element = $('#bluemap-topright');
+import BURGER from '../../../assets/burger.svg';
 
-	if (element.length === 0){
-		element = $('<div id="bluemap-topright" class="box"></div>').appendTo(blueMap.element);
+export default class MenuButton extends ToggleButton {
+	constructor(menu) {
+		super(undefined, false, undefined, BURGER);
+		this.menu = menu;
+
+		this.menu.element.on('menu-close menu-open', this.updateMenuState);
 	}
 
-	return element;
-};
-
-export const getTopLeftElement = blueMap => {
-	let element = $('#bluemap-topleft');
-
-	if (element.length === 0){
-		element = $('<div id="bluemap-topleft" class="box"></div>').appendTo(blueMap.element);
+	createElement(){
+		let element = super.createElement();
+		element.click(this.onMenuClick);
+		return element;
 	}
 
-	return element;
-};
+	updateMenuState = () => {
+		this.selected = this.menu.isOpen();
+		this.update();
+	};
+
+	onMenuClick = () => {
+		if (this.selected){
+			this.menu.open();
+		} else {
+			this.menu.close();
+		}
+	};
+}

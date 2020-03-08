@@ -141,9 +141,10 @@ public class BlueMapCLI {
 
 		Logger.global.logInfo("Writing settings.json ...");
 		WebSettings webSettings = new WebSettings(config.getWebDataPath().resolve("settings.json").toFile());
-		webSettings.setAllEnabled(false);
+		webSettings.set(config.isUseCookies(), "useCookies");
+		webSettings.setAllMapsEnabled(false);
 		for (MapType map : maps.values()) {
-			webSettings.setEnabled(true, map.getId());
+			webSettings.setMapEnabled(true, map.getId());
 			webSettings.setFrom(map.getTileRenderer(), map.getId());
 			webSettings.setFrom(map.getWorld(), map.getId());
 		}
