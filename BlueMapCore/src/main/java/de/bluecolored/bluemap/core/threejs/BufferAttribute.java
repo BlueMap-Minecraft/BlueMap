@@ -31,7 +31,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.flowpowered.math.GenericMath;
 import com.google.common.base.Preconditions;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
@@ -78,7 +77,7 @@ public class BufferAttribute {
 		json.name("array").beginArray();
 		for (int i = 0; i < values.length; i++) {
 			// rounding and remove ".0" to save string space
-			double d = GenericMath.round(values[i], 4);
+			float d = Math.round(values[i] * 10000f) / 10000f;
 			if (d == (int) d) json.value((int) d);
 			else json.value(d);
 		}

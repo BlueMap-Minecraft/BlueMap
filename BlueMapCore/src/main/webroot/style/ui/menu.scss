@@ -1,8 +1,6 @@
 $menu-width: 375px;
 
 .bluemap-container .ui .menu {
-    position: relative;
-
     height: 100%;
     width: $menu-width;
     max-width: 100%;
@@ -57,7 +55,13 @@ $menu-width: 375px;
 
     > .close-button {
         z-index: 20;
-        left: 0;
+        right: calc(375px - 2.5rem);
+        top: 0.5rem;
+
+        @media (max-width: $menu-width) {
+            left: 0.5rem;
+            top: 0.5rem;
+        }
     }
 
     > .content {
@@ -66,7 +70,7 @@ $menu-width: 375px;
         top: 3rem;
 
         width: calc(375px - 1rem);
-        height: calc(100% - 3rem);
+        height: calc(100% - 4rem);
 
         padding: 0.5rem;
 
