@@ -181,7 +181,7 @@ public class BlueMapCLI {
 		
 				Collection<Vector2i> chunks;
 				if (!forceRender) {
-					long lastRender = webSettings.getLong(map.getId(), "last-render");
+					long lastRender = webSettings.getLong("maps", map.getId(), "last-render");
 					chunks = map.getWorld().getChunkList(lastRender);
 				} else {
 					chunks = map.getWorld().getChunkList();
@@ -264,7 +264,7 @@ public class BlueMapCLI {
 		rmstate.delete();
 
 		for (MapType map : maps.values()) {
-			webSettings.set(startTime, map.getId(), "last-render");
+			webSettings.set(startTime, "maps", map.getId(), "last-render");
 		}
 		
 		try {
