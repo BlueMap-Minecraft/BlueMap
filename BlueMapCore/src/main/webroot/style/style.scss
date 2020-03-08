@@ -1,17 +1,5 @@
 @import "constants";
 
-@import "ui/ui";
-@import "ui/element";
-@import "ui/toolbar";
-@import "ui/menu";
-@import "ui/button";
-@import "ui/slider";
-@import "ui/togglebutton";
-@import "ui/separator";
-@import "ui/dropdown";
-@import "ui/label";
-@import "modules/position";
-
 html, body {
     margin: 0;
     padding: 0;
@@ -101,3 +89,15 @@ html, body {
         }
     }
 }
+
+@import "ui/ui";
+@import "ui/element";
+@import "ui/toolbar";
+@import "ui/menu";
+@import "ui/button";
+@import "ui/slider";
+@import "ui/togglebutton";
+@import "ui/separator";
+@import "ui/dropdown";
+@import "ui/label";
+@import "modules/position";
