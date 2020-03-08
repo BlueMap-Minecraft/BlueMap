@@ -326,7 +326,7 @@ public class ResourceModelBuilder {
 		if (occluding > 3)
 		occluding = 3;
 		
-		return  Math.max(0f, Math.min(1f - (occluding * renderSettings.getAmbientOcclusionStrenght()), 1f));
+		return  Math.max(0f, Math.min(1f - occluding * 0.25f, 1f));
 	}
 	
 	private Vector2f[] rotateUVInner(Vector2f[] uv, int angle){

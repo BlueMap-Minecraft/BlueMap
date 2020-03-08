@@ -34,9 +34,8 @@ export default class MapSelection extends Dropdown {
 		this.bluemap = bluemap;
 
 		//add maps
-		const maps = this.bluemap.settings;
-		for (let mapId in maps) {
-			if (!maps.hasOwnProperty(mapId)) continue;
+		const maps = this.bluemap.settings.maps;
+		for (let mapId of this.bluemap.maps) {
 			const map = maps[mapId];
 			if (!map.enabled) continue;
 

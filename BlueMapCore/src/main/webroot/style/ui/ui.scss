@@ -49,7 +49,7 @@
             width: 0.8rem;
             height: 0.2rem;
 
-            background-color: $light_fg;
+            background-color: $normal_fg;
         }
 
         &::before {
@@ -83,12 +83,13 @@
         .alert {
             position: relative;
 
-            pointer-events: all;
+            padding: 1rem;
+            margin: 1rem;
 
             background-color: $normal_bg;
-            padding: 1rem;
+            color: $normal_fg;
 
-            margin: 1rem;
+            pointer-events: all;
         }
     }
 

@@ -39,6 +39,7 @@ import {
 	Texture,
 	VertexColors,
 	WebGLRenderer,
+	Vector3,
 } from 'three';
 
 import UI from './ui/UI.js';
@@ -54,6 +55,7 @@ import SKY_VERTEX_SHADER from './shaders/SkyVertexShader.js';
 import SKY_FRAGMENT_SHADER from './shaders/SkyFragmentShader.js';
 
 import { stringToImage, pathFromCoords } from './utils.js';
+import {getCookie, setCookie} from "./utils";
 
 export default class BlueMap {
 	constructor(element, dataRoot) {
@@ -68,6 +70,12 @@ export default class BlueMap {
 		};
 		this.mobSpawnOverlay = {
 			value: false
+		};
+		this.ambientLight = {
+			value: 0
+		};
+		this.skyColor = {
+			value: new Vector3(0, 0, 0)
 		};
 
 		this.ui = new UI(this);
@@ -88,6 +96,9 @@ export default class BlueMap {
 			await this.loadHiresMaterial();
 			await this.loadLowresMaterial();
 
+			this.loadUserSettings();
+			this.handleContainerResize();
+
 			this.changeMap(this.maps[0]);
 
 			this.ui.load();
@@ -106,11 +117,18 @@ export default class BlueMap {
 		this.map = map;
 
 		let startPos = {
-			x: this.settings[this.map]["startPos"]["x"],
-			z: this.settings[this.map]["startPos"]["z"]
+			x: this.settings.maps[this.map]["startPos"]["x"],
+			z: this.settings.maps[this.map]["startPos"]["z"]
 		};
 
-		this.controls.setTileSize(this.settings[this.map]['hires']['tileSize']);
+		this.ambientLight.value = this.settings.maps[this.map]["ambientLight"];
+		this.skyColor.value.set(
+			this.settings.maps[this.map]["skyColor"].r,
+			this.settings.maps[this.map]["skyColor"].g,
+			this.settings.maps[this.map]["skyColor"].b
+		);
+
+		this.controls.setTileSize(this.settings.maps[this.map]['hires']['tileSize']);
 		this.controls.resetPosition();
 		this.controls.targetPosition.set(startPos.x, this.controls.targetPosition.y, startPos.z);
 		this.controls.position.copy(this.controls.targetPosition);
@@ -120,7 +138,7 @@ export default class BlueMap {
 			this.lowresViewDistance,
 			this.loadLowresTile,
 			this.lowresScene,
-			this.settings[this.map]['lowres']['tileSize'],
+			this.settings.maps[this.map]['lowres']['tileSize'],
 			startPos
 		);
 
@@ -129,7 +147,7 @@ export default class BlueMap {
 			this.hiresViewDistance,
 			this.loadHiresTile,
 			this.hiresScene,
-			this.settings[this.map]['hires']['tileSize'],
+			this.settings.maps[this.map]['hires']['tileSize'],
 			startPos
 		);
 
@@ -196,6 +214,8 @@ export default class BlueMap {
 
 	update = () => {
 		setTimeout(this.update, 1000);
+
+		this.saveUserSettings();
 
 		this.lowresTileManager.setPosition(this.controls.targetPosition);
 		if (this.camera.position.y < 400) {
@@ -273,14 +293,14 @@ export default class BlueMap {
 			this.fileLoader.load(this.dataRoot + 'settings.json', settings => {
 				this.settings = JSON.parse(settings);
 				this.maps = [];
-				for (let map in this.settings) {
-					if (this.settings.hasOwnProperty(map) && this.settings[map].enabled){
+				for (let map in this.settings.maps) {
+					if (this.settings["maps"].hasOwnProperty(map) && this.settings.maps[map].enabled){
 						this.maps.push(map);
 					}
 				}
 
 				this.maps.sort((map1, map2) => {
-					var sort = this.settings[map1].ordinal - this.settings[map2].ordinal;
+					var sort = this.settings.maps[map1].ordinal - this.settings.maps[map2].ordinal;
 					if (isNaN(sort)) return 0;
 					return sort;
 				});
@@ -321,11 +341,49 @@ export default class BlueMap {
 		$(window).resize(this.handleContainerResize);
 	}
 
+	loadUserSettings(){
+		if (!this.settings["useCookies"]) return;
+
+		this.mobSpawnOverlay.value = this.loadUserSetting("mobSpawnOverlay", this.mobSpawnOverlay.value);
+		this.targetSunLightStrength = this.loadUserSetting("sunLightStrength", this.targetSunLightStrength);
+		this.quality = this.loadUserSetting("renderQuality", this.quality);
+		this.hiresViewDistance = this.loadUserSetting("hiresViewDistance", this.hiresViewDistance);
+		this.lowresViewDistance = this.loadUserSetting("lowresViewDistance", this.lowresViewDistance);
+	}
+
+	saveUserSettings(){
+		if (!this.settings["useCookies"]) return;
+
+		if (this.savedUserSettings === undefined) this.savedUserSettings = {};
+
+		this.saveUserSetting("mobSpawnOverlay", this.mobSpawnOverlay.value);
+		this.saveUserSetting("sunLightStrength", this.targetSunLightStrength);
+		this.saveUserSetting("renderQuality", this.quality);
+		this.saveUserSetting("hiresViewDistance", this.hiresViewDistance);
+		this.saveUserSetting("lowresViewDistance", this.lowresViewDistance);
+	}
+
+	loadUserSetting(key, defaultValue){
+		let value = getCookie("bluemap-" + key);
+
+		if (value === undefined) return defaultValue;
+		return value;
+	}
+
+	saveUserSetting(key, value){
+		if (this.savedUserSettings[key] !== value){
+			this.savedUserSettings[key] = value;
+			setCookie("bluemap-" + key, value);
+		}
+	}
+
 	createSkybox() {
 		let geometry = new SphereGeometry(10, 10, 10);
 		let material = new ShaderMaterial({
 			uniforms: {
-				sunlightStrength: this.sunLightStrength
+				sunlightStrength: this.sunLightStrength,
+				ambientLight: this.ambientLight,
+				skyColor: this.skyColor,
 			},
 			vertexShader: SKY_VERTEX_SHADER,
 			fragmentShader: SKY_FRAGMENT_SHADER,
@@ -364,7 +422,8 @@ export default class BlueMap {
 							value: texture
 						},
 						sunlightStrength: this.sunLightStrength,
-						mobSpawnOverlay: this.mobSpawnOverlay
+						mobSpawnOverlay: this.mobSpawnOverlay,
+						ambientLight: this.ambientLight,
 					};
 
 					let material = new ShaderMaterial({
@@ -392,7 +451,8 @@ export default class BlueMap {
 	async loadLowresMaterial() {
 		this.lowresMaterial = new ShaderMaterial({
 			uniforms: {
-				sunlightStrength: this.sunLightStrength
+				sunlightStrength: this.sunLightStrength,
+				ambientLight: this.ambientLight,
 			},
 			vertexShader: LOWRES_VERTEX_SHADER,
 			fragmentShader: LOWRES_FRAGMENT_SHADER,
@@ -414,9 +474,9 @@ export default class BlueMap {
 			this.bufferGeometryLoader.load(path, geometry => {
 				let object = new Mesh(geometry, this.hiresMaterial);
 
-				let tileSize = this.settings[this.map]['hires']['tileSize'];
-				let translate = this.settings[this.map]['hires']['translate'];
-				let scale = this.settings[this.map]['hires']['scale'];
+				let tileSize = this.settings.maps[this.map]['hires']['tileSize'];
+				let translate = this.settings.maps[this.map]['hires']['translate'];
+				let scale = this.settings.maps[this.map]['hires']['scale'];
 				object.position.set(tileX * tileSize.x + translate.x, 0, tileZ * tileSize.z + translate.z);
 				object.scale.set(scale.x, 1, scale.z);
 
@@ -435,9 +495,9 @@ export default class BlueMap {
 			this.bufferGeometryLoader.load(path, geometry => {
 				let object = new Mesh(geometry, this.lowresMaterial);
 
-				let tileSize = this.settings[this.map]['lowres']['tileSize'];
-				let translate = this.settings[this.map]['lowres']['translate'];
-				let scale = this.settings[this.map]['lowres']['scale'];
+				let tileSize = this.settings.maps[this.map]['lowres']['tileSize'];
+				let translate = this.settings.maps[this.map]['lowres']['translate'];
+				let scale = this.settings.maps[this.map]['lowres']['scale'];
 				object.position.set(tileX * tileSize.x + translate.x, 0, tileZ * tileSize.z + translate.z);
 				object.scale.set(scale.x, 1, scale.z);
 
@@ -457,8 +517,6 @@ export default class BlueMap {
 		</div>
 		`);
 	};
-
-	// ###### UI ######
 
 	toggleAlert(id, content) {
 		let alertBox = $(this.element).find('.alert-box');
@@ -497,4 +555,5 @@ export default class BlueMap {
 
 		displayAlert();
 	}
+
 }

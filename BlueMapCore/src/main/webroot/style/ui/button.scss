@@ -15,16 +15,17 @@
     }
 
     &:hover {
-        background-color: $element_fg;
-        color: $element_bg;
+        background-color: $hover_bg;
+        color: $hover_fg;
+    }
+
+    &:active {
+        background-color: $active_bg;
+        color: $active_fg;
 
         > img {
             filter: invert(1);
         }
-    }
-
-    &:active {
-        background-color: $light_fg;
     }
 
     > img {

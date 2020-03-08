@@ -209,9 +209,9 @@ public class LiquidModelBuilder {
 		ExtendedFace f1 = new ExtendedFace(c0, c1, c2, uvs[0], uvs[1], uvs[2], textureId);
 		ExtendedFace f2 = new ExtendedFace(c0, c2, c3, uvs[0], uvs[2], uvs[3], textureId);
 		
-		//move face in a tiny bit to avoid z-fighting with waterlogged blocks
-		f1.translate(faceDir.opposite().toVector().toFloat().mul(0.01));
-		f2.translate(faceDir.opposite().toVector().toFloat().mul(0.01));
+		// move face in a tiny bit to avoid z-fighting with waterlogged blocks (doesn't work because it is rounded back when storing the model later)
+		//f1.translate(faceDir.opposite().toVector().toFloat().mul(0.01));
+		//f2.translate(faceDir.opposite().toVector().toFloat().mul(0.01));
 		
 		float blockLight = bl.getBlockLightLevel();
 		float sunLight = bl.getSunLightLevel();

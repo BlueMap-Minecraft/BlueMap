@@ -118,7 +118,7 @@ export default class Dropdown extends Element {
 		this.select(value);
 
 		//close
-		option.parents(".select").slideUp(200);
+		this.closeAll();
 
 		if (event !== undefined) event.stopPropagation();
 

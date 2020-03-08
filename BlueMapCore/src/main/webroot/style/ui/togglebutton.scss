@@ -4,22 +4,19 @@
         padding-right: 2.75rem;
     }
 
-    &:hover,
     &:active {
-        background-color: $light_bg;
-        color: $normal_fg;
+        background-color: $hover_bg;
+        color: $hover_fg;
+
+        > img {
+            filter: invert(0);
+        }
     }
 
     &.icon {
-        &:hover,
-        &:active {
-            background-color: $light_fg;
-            color: $normal_bg;
-        }
-
         &.selected {
-            background-color: $normal_fg;
-            color: $normal_bg;
+            background-color: $active_bg;
+            color: $active_fg;
 
             > img {
                 filter: invert(1);
@@ -39,7 +36,7 @@
 
         border-radius: 1rem;
 
-        background-color: $light_fg;
+        background-color: $normal_fg;
 
         transition: background-color 0.2s;
 
@@ -57,7 +54,7 @@
 
             border-radius: 100%;
 
-            background-color: $light_bg;
+            background-color: $normal_bg;
 
             transition: left 0.2s;
         }

@@ -33,7 +33,7 @@
     &[data-axis]::before {
         padding: 0 0.2rem 0 0.5rem;
         line-height: 2rem;
-        color: $light_fg;
+        color: $label_fg;
         content: attr(data-axis)':';
     }
 }

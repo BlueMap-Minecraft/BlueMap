@@ -1,11 +1,5 @@
-$element_fg: $normal_fg;
-$element_bg: $normal_bg;
-
 .bluemap-container .ui .ui-element {
     position: relative;
-
-    background-color: $element_bg;
-    color: $element_fg;
 
     min-width: 2rem;
     min-height: 2rem;

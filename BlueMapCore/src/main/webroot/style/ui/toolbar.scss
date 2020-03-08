@@ -12,7 +12,7 @@
         width: 100%;
         margin: 0;
 
-        background-color: $super_light_bg;
+        background-color: $normal_bg;
 
         > .mobile-hide {
             display: none;
@@ -30,8 +30,11 @@
     > .ui-element {
         flex-shrink: 0;
 
+        background-color: $normal_bg;
+        color: $normal_fg;
+
         @media (max-width: $small-max) {
-            border-top: solid 1px $light_bg;
+            border-top: solid 1px $line_color;
             margin-top: -1px;
         }
 
@@ -41,7 +44,7 @@
     }
 
     > .ui-element:not(.separator) + .ui-element:not(.separator) {
-        border-left: solid 1px $light_bg;
+        border-left: solid 1px $line_color;
         margin-left: -1px;
     }
 
@@ -51,7 +54,7 @@
 
         @media (max-width: $small-max) {
             width: 0;
-            border-left: solid 1px $light_bg;
+            border-left: solid 1px $line_color;
             margin-left: -1px;
         }
 
@@ -64,7 +67,7 @@
         flex-grow: 1;
 
         @media (max-width: $small-max) {
-            border-right: solid 1px $light_bg;
+            border-right: solid 1px $line_color;
             margin-right: -1px;
 
             z-index: 101;

@@ -26,6 +26,7 @@
 const HIRES_FRAGMENT_SHADER = `
 uniform sampler2D texture;
 uniform float sunlightStrength;
+uniform float ambientLight;
 uniform bool mobSpawnOverlay;
 
 varying vec3 vPosition;
@@ -71,7 +72,7 @@ void main() {
 	
 	//apply light
 	float light = max(vSunlight * sunlightStrength, vBlocklight);
-	color.rgb *= light / 15.0;
+	color.rgb *= max(light / 15.0, ambientLight);
 	
 	gl_FragColor = color;
 }

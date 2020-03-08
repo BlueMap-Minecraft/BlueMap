@@ -2,11 +2,15 @@
 $normal_fg: #333;
 $normal_bg: #fff;
 
-$super_light_fg: #484848;
-$super_light_bg: #ddd;
+$label_fg: #666;
 
-$light_fg: #666;
-$light_bg: #aaa;
+$hover_fg: $normal_fg;
+$hover_bg: #aaa;
+
+$active_fg: $normal_bg;
+$active_bg: $normal_fg;
+
+$line_color: #aaa;
 
 // breakpoints
 $super-small-max: 500px;

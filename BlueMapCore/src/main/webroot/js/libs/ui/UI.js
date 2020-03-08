@@ -74,9 +74,9 @@ export default class UI {
 			this.blueMap.quality = parseFloat(value);
 			this.blueMap.handleContainerResize();
 		});
-		quality.addOption("2", "high");
-		quality.addOption("1", "normal", true);
-		quality.addOption("0.5", "low");
+		quality.addOption("2", "high", this.blueMap.quality === 2);
+		quality.addOption("1", "normal", this.blueMap.quality === 1);
+		quality.addOption("0.5", "low", this.blueMap.quality === 0.5);
 		let hiresSlider = new Slider(32, 480, 1, this.blueMap.hiresViewDistance, v => {
 			this.blueMap.hiresViewDistance = v.getValue();
 			this.blueMap.hiresTileManager.setViewDistance(this.blueMap.hiresViewDistance);

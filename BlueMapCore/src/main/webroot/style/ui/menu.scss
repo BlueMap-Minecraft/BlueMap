@@ -1,6 +1,6 @@
 $menu-width: 375px;
 
-.bluemap-container .menu {
+.bluemap-container .ui .menu {
     position: relative;
 
     height: 100%;
@@ -8,6 +8,7 @@ $menu-width: 375px;
     max-width: 100%;
 
     background-color: $normal_bg;
+    color: $normal_fg;
 
     overflow: hidden;
 
@@ -33,8 +34,8 @@ $menu-width: 375px;
         top: 0;
 
         width: $menu-width;
-        height: 1.5rem;
-        line-height: 1.5rem;
+        height: 2.5rem;
+        line-height: 2.5rem;
 
         margin: 0;
         padding: 0.25rem;
@@ -62,21 +63,26 @@ $menu-width: 375px;
     > .content {
         position: absolute;
         right: 0;
-        top: 2rem;
+        top: 3rem;
 
-        width: $menu-width;
+        width: calc(375px - 1rem);
         height: calc(100% - 3rem);
 
-        padding-top: 0.5rem;
+        padding: 0.5rem;
 
         overflow-y: auto;
 
         @media (max-width: $menu-width) {
-            width: 100%;
+            width: calc(100% - 1rem);
         }
 
         > .separator {
-            border-top: solid 1px $light_bg;
+            position: relative;
+            left: -0.5rem;
+
+            width: calc(100% + 1rem);
+
+            border-top: solid 1px $line_color;
             margin: 0.5rem 0;
         }
 
@@ -87,10 +93,17 @@ $menu-width: 375px;
             line-height: 0.8rem;
         }
 
+        > .dropdown > .select {
+            border: solid 1px $line_color;
+            border-top: none;
+
+            width: calc(100% - 2px);
+        }
+
         // a little hacky to force not displaying any icon
         > .toggle-button.icon {
             > .label {
-                display: inline !important;
+                display: inline;
             }
 
             > img {
@@ -98,16 +111,16 @@ $menu-width: 375px;
             }
 
             > .switch {
-                display: block !important;
+                display: block;
             }
 
             &.selected:not(:hover) {
-                background-color: $normal_bg !important;
-                color: $normal_fg !important;
+                background-color: $normal_bg;
+                color: $normal_fg;
             }
             &:hover {
-                background-color: $light_bg !important;
-                color: $normal_fg !important;
+                background-color: $hover_bg;
+                color: $hover_fg;
             }
         }
     }

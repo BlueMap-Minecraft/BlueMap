@@ -25,14 +25,13 @@
 
 const SKY_FRAGMENT_SHADER = `
 uniform float sunlightStrength;
+uniform float ambientLight;
+uniform vec3 skyColor;
 
 varying vec3 vPosition;
 
 void main() {
-	vec4 dayColor = vec4(0.49, 0.67, 1.0, 1.0);
-	vec4 nightColor = vec4(0.0, 0.02, 0.05, 1.0);
-	
-	vec4 color = dayColor * sunlightStrength + nightColor * (1.0 - sunlightStrength);
+	vec4 color = vec4(skyColor * max(sunlightStrength, ambientLight), 1.0);
 	color.rgb *= (clamp(vPosition.y, -0.02, 0.02) + 0.02) * 25.0;
 
 	gl_FragColor = color;
