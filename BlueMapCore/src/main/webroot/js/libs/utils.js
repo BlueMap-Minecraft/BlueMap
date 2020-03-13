@@ -51,7 +51,7 @@ export const splitNumberToPath = num => {
 		path += '-';
 	}
 
-	let s = num.toString();
+	let s = parseInt(num).toString();
 
 	for (let i = 0; i < s.length; i++) {
 		path += s.charAt(i) + '/';

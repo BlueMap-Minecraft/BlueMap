@@ -24,34 +24,46 @@
  */
 import $ from 'jquery';
 
-import ToggleButton from '../ui/ToggleButton.js';
+import Element from "./Element";
 
-import BURGER from '../../../assets/burger.svg';
+export default class Position extends Element {
+	constructor(blueMap, axis) {
+		super();
+		this.blueMap = blueMap;
+		this.axis = axis;
 
-export default class MenuButton extends ToggleButton {
-	constructor(menu) {
-		super(undefined, false, undefined, BURGER);
-		this.menu = menu;
-
-		this.menu.element.on('menu-close menu-open', this.updateMenuState);
+		$(document).on('bluemap-update-frame', this.update);
 	}
 
 	createElement(){
 		let element = super.createElement();
-		element.click(this.onMenuClick);
+
+		element.addClass("position");
+		element.attr("data-axis", this.axis);
+		let inputElement = $('<input type="number" value="0" />').appendTo(element);
+		inputElement.on('input', this.onInput);
+		inputElement.on('keydown', this.onKeyDown);
+
 		return element;
 	}
 
-	updateMenuState = () => {
-		this.selected = this.menu.isOpen();
-		this.update();
+	onInput = event => {
+		const value = Number(event.target.value);
+		if (!isNaN(value)) {
+			this.blueMap.controls.targetPosition[this.axis] = value;
+			this.update();
+		}
 	};
 
-	onMenuClick = () => {
-		if (this.selected){
-			this.menu.open();
-		} else {
-			this.menu.close();
-		}
+	onKeyDown = event => {
+		event.stopPropagation();
+	};
+
+	update = () => {
+		const val = Math.floor(this.blueMap.controls.targetPosition[this.axis]);
+
+		this.elements.forEach(element => {
+			element.find("input").val(val);
+		});
 	};
 }

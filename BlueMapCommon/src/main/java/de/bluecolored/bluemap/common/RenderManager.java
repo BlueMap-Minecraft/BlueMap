@@ -41,7 +41,6 @@ public class RenderManager {
 		
 		for (int i = 0; i < renderThreads.length; i++) {
 			renderThreads[i] = new Thread(this::renderThread);
-			renderThreads[i].setDaemon(true);
 			renderThreads[i].setPriority(Thread.MIN_PRIORITY);
 			renderThreads[i].start();
 		}

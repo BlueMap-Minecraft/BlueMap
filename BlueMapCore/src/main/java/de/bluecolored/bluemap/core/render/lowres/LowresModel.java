@@ -126,6 +126,7 @@ public class LowresModel {
 				PrintWriter pw = new PrintWriter(osw);
 			){
 				pw.print(json);
+				pw.flush();
 			}
 		
 		}

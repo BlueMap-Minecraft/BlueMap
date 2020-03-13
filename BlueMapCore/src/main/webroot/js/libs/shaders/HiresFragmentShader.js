@@ -46,7 +46,7 @@ vec3 lerp(vec3 v1, vec3 v2, float amount){
 }
 
 bool mobSpawnColor() {
-	if (vBlocklight < 7.1){
+	if (vBlocklight < 7.1 && vNormal.y > 0.8){
 		float cross1 = vUv.x - vUv.y;
 		float cross2 = vUv.x - (1.0 - vUv.y);
 		return cross1 < 0.05 && cross1 > -0.05 || cross2 < 0.05 && cross2 > -0.05;

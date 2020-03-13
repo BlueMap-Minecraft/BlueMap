@@ -1,0 +1,89 @@
+.bluemap-container .ui .hud-info {
+    position: absolute;
+
+    transform: translate(-50%, calc(-100% - 1rem));
+
+    background-color: $normal_bg;
+    filter: drop-shadow(1px 1px 3px #0008);
+
+    pointer-events: none;
+    white-space: nowrap;
+
+    &.below {
+        transform: translate(-50%, 1rem);
+    }
+
+    .content {
+        position: relative;
+
+        > .label {
+            min-height: 0;
+            font-size: 0.8rem;
+            padding: 0.5rem 0.5rem 0 1rem;
+            line-height: 0.8rem;
+            color: $label_fg;
+            border-top: solid 1px $line_color;
+
+            &:first-child {
+                border-top: none;
+            }
+        }
+
+        > * {
+            padding: 0.5rem;
+        }
+
+        .coords {
+            display: flex;
+            justify-content: center;
+
+            > .coord {
+                margin: 0 0.2rem;
+                padding: 0 0.2rem;
+
+                border-radius: 0.2rem;
+
+                //background-color: #ccc;
+
+                > .label {
+                    color: $label_fg;
+                    margin-right: 0.2rem;
+
+                    &::after {
+                        content: ':';
+                    }
+                }
+            }
+        }
+
+        > .files {
+            border-top: solid 1px $line_color;
+            font-size: 0.8rem;
+            line-height: 0.8rem;
+            color: $label_fg;
+        }
+
+        &::after {
+            content: '';
+
+            position: absolute;
+            bottom: -1rem;
+            left: calc(50% - 0.5rem);
+
+            width: 0;
+            height: 0;
+
+            z-index: 0;
+
+            border: solid 0.5rem;
+            border-color: $normal_bg transparent transparent transparent;
+        }
+    }
+
+    &.below .content::after {
+        top: -1rem;
+
+        border: solid 0.5rem;
+        border-color: transparent transparent $normal_bg transparent;
+    }
+}

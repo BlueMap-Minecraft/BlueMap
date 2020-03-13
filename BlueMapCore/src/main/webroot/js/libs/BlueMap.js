@@ -77,6 +77,7 @@ export default class BlueMap {
 		this.skyColor = {
 			value: new Vector3(0, 0, 0)
 		};
+		this.debugInfo = false;
 
 		this.ui = new UI(this);
 
@@ -139,6 +140,7 @@ export default class BlueMap {
 			this.loadLowresTile,
 			this.lowresScene,
 			this.settings.maps[this.map]['lowres']['tileSize'],
+			this.settings.maps[this.map]['lowres']['translate'],
 			startPos
 		);
 
@@ -148,6 +150,7 @@ export default class BlueMap {
 			this.loadHiresTile,
 			this.hiresScene,
 			this.settings.maps[this.map]['hires']['tileSize'],
+			this.settings.maps[this.map]['hires']['translate'],
 			startPos
 		);
 
@@ -349,6 +352,7 @@ export default class BlueMap {
 		this.quality = this.loadUserSetting("renderQuality", this.quality);
 		this.hiresViewDistance = this.loadUserSetting("hiresViewDistance", this.hiresViewDistance);
 		this.lowresViewDistance = this.loadUserSetting("lowresViewDistance", this.lowresViewDistance);
+		this.debugInfo = this.loadUserSetting("debugInfo", this.debugInfo);
 	}
 
 	saveUserSettings(){
@@ -361,6 +365,7 @@ export default class BlueMap {
 		this.saveUserSetting("renderQuality", this.quality);
 		this.saveUserSetting("hiresViewDistance", this.hiresViewDistance);
 		this.saveUserSetting("lowresViewDistance", this.lowresViewDistance);
+		this.saveUserSetting("debugInfo", this.debugInfo);
 	}
 
 	loadUserSetting(key, defaultValue){

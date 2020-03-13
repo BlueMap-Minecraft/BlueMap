@@ -29,15 +29,16 @@ import Menu from './Menu.js';
 import Dropdown from "./Dropdown";
 import Separator from "./Separator";
 import Label from "./Label";
-import MenuButton from '../modules/MenuButton.js';
-import Compass from "../modules/Compass";
-import Position from "../modules/Position";
+import MenuButton from './MenuButton.js';
+import Compass from "./Compass";
+import Position from "./Position";
 import Button from "./Button";
 import Slider from "./Slider";
 import ToggleButton from "./ToggleButton";
-import MapSelection from "../modules/MapSeletion";
+import MapSelection from "./MapSeletion";
 
 import NIGHT from '../../../assets/night.svg';
+import HudInfo from "../modules/HudInfo";
 
 export default class UI {
 
@@ -52,6 +53,9 @@ export default class UI {
 
 		this.toolbar = new Toolbar();
 		this.toolbar.element.appendTo(this.hud);
+
+		//modules
+		this.hudInfo = new HudInfo(this.blueMap, this.element);
 	}
 
 	load() {
@@ -87,6 +91,9 @@ export default class UI {
 			this.blueMap.lowresTileManager.setViewDistance(this.blueMap.lowresViewDistance);
 			this.blueMap.lowresTileManager.update();
 		});
+		let debugInfo = new ToggleButton("debug-info", this.blueMap.debugInfo, button => {
+			this.blueMap.debugInfo = button.isSelected();
+		});
 
 		//toolbar
 		this.toolbar.addElement(menuButton);
@@ -109,6 +116,8 @@ export default class UI {
 		this.menu.addElement(hiresSlider);
 		this.menu.addElement(new Label('lowres render-distance (blocks):'));
 		this.menu.addElement(lowresSlider);
+		this.menu.addElement(new Separator());
+		this.menu.addElement(debugInfo);
 		this.menu.update();
 	}
 

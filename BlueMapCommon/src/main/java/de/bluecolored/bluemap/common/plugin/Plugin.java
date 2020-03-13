@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -184,8 +183,7 @@ public class Plugin {
 					config.getWebDataPath().resolve(id).resolve("hires"),
 					resourcePack,
 					mapConfig,
-					new Vector2i(mapConfig.getHiresTileSize(), mapConfig.getHiresTileSize()),
-					ForkJoinPool.commonPool()
+					new Vector2i(mapConfig.getHiresTileSize(), mapConfig.getHiresTileSize())
 					);
 			
 			LowresModelManager lowresModelManager = new LowresModelManager(

@@ -35,7 +35,6 @@ import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ExecutorService;
 import java.util.zip.GZIPOutputStream;
 
 import com.flowpowered.math.vector.Vector2i;
@@ -57,22 +56,19 @@ public class HiresModelManager {
 	private Vector2i tileSize;
 	private Vector2i gridOrigin;
 	
-	private ExecutorService savingExecutor;
-	
 	private boolean useGzip;
 	
-	public HiresModelManager(Path fileRoot, ResourcePack resourcePack, RenderSettings renderSettings, Vector2i tileSize, ExecutorService savingExecutor) {
-		this(fileRoot, new HiresModelRenderer(resourcePack, renderSettings), tileSize, new Vector2i(2, 2), savingExecutor, renderSettings.useGzipCompression());
+	public HiresModelManager(Path fileRoot, ResourcePack resourcePack, RenderSettings renderSettings, Vector2i tileSize) {
+		this(fileRoot, new HiresModelRenderer(resourcePack, renderSettings), tileSize, new Vector2i(2, 2), renderSettings.useGzipCompression());
 	}
 	
-	public HiresModelManager(Path fileRoot, HiresModelRenderer renderer, Vector2i tileSize, Vector2i gridOrigin, ExecutorService savingExecutor, boolean useGzip) {
+	public HiresModelManager(Path fileRoot, HiresModelRenderer renderer, Vector2i tileSize, Vector2i gridOrigin, boolean useGzip) {
 		this.fileRoot = fileRoot;
 		this.renderer = renderer;
 		
 		this.tileSize = tileSize;
 		this.gridOrigin = gridOrigin;
 		
-		this.savingExecutor = savingExecutor;
 		this.useGzip = useGzip;
 	}
 	
@@ -87,7 +83,7 @@ public class HiresModelManager {
 	
 	private void save(final HiresModel model) {
 		final String modelJson = model.toBufferGeometry().toJson();
-		savingExecutor.submit(() -> save(model, modelJson));
+		save(model, modelJson);
 	}
 	
 	private void save(HiresModel model, String modelJson){
