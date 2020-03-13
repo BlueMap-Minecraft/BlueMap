@@ -195,7 +195,16 @@ public class LowresModelManager {
 							model = new CachedModel(world, tile, BufferGeometry.fromJson(json));
 						} catch (IllegalArgumentException | IOException ex){
 							Logger.global.logError("Failed to load lowres model: " + modelFile, ex);
+
 							modelFile.delete();
+							
+							/*
+							File brokenFile = modelFile.toPath().getParent().resolve(modelFile.getName() + ".broken").toFile();
+							if (brokenFile.exists()) brokenFile.delete();
+							if (!modelFile.renameTo(brokenFile)) {
+								modelFile.delete();
+							}
+							*/
 						}
 					}
 

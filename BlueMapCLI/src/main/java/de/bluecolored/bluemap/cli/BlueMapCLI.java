@@ -40,8 +40,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -122,8 +120,7 @@ public class BlueMapCLI {
 					config.getWebDataPath().resolve(mapConfig.getId()).resolve("hires"),
 					resourcePack,
 					mapConfig,
-					new Vector2i(mapConfig.getHiresTileSize(), mapConfig.getHiresTileSize()),
-					ForkJoinPool.commonPool()
+					new Vector2i(mapConfig.getHiresTileSize(), mapConfig.getHiresTileSize())
 					);
 			
 			LowresModelManager lowresModelManager = new LowresModelManager(
@@ -224,6 +221,8 @@ public class BlueMapCLI {
 			
 			if (lastLogUpdate < now - 10000) { // print update all 10 seconds
 				RenderTask currentTask = renderManager.getCurrentRenderTask();
+				if (currentTask == null) continue;
+				
 				lastLogUpdate = now;
 				long time = currentTask.getActiveTime();
 				
@@ -243,6 +242,7 @@ public class BlueMapCLI {
 			
 			if (lastSave < now - 1 * 60000) { // save every minute
 				RenderTask currentTask = renderManager.getCurrentRenderTask();
+				if (currentTask == null) continue;
 				
 				lastSave = now;
 				currentTask.getMapType().getTileRenderer().save();
@@ -271,11 +271,6 @@ public class BlueMapCLI {
 			webSettings.save();
 		} catch (IOException e) {
 			Logger.global.logError("Failed to update web-settings!", e);
-		}
-		
-		Logger.global.logInfo("Waiting for all threads to quit ...");
-		if (!ForkJoinPool.commonPool().awaitQuiescence(30, TimeUnit.SECONDS)) {
-			Logger.global.logWarning("Some save-threads are taking very long to exit (>30s), they will be ignored.");
 		}
 
 		Logger.global.logInfo("Render finished!");

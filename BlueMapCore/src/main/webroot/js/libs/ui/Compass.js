@@ -24,38 +24,34 @@
  */
 import $ from 'jquery';
 
-import Dropdown from "../ui/Dropdown";
+import Button from './Button.js';
 
-export default class MapSelection extends Dropdown {
-	constructor(bluemap) {
-		super(undefined);
-		super.onChange = this.onChangeMap;
+import COMPASS from '../../../assets/compass.svg';
 
-		this.bluemap = bluemap;
+export default class Compass extends Button {
+	constructor(blueMap) {
+		super(undefined, undefined, COMPASS);
+		this.blueMap = blueMap;
 
-		//add maps
-		const maps = this.bluemap.settings.maps;
-		for (let mapId of this.bluemap.maps) {
-			const map = maps[mapId];
-			if (!map.enabled) continue;
-
-			this.addOption(mapId, map.name);
-		}
-
-		$(document).on('bluemap-map-change', this.onBlueMapMapChange);
+		$(document).on('bluemap-update-frame', this.onBlueMapUpdateFrame);
 	}
 
-	createElement() {
+	createElement(){
 		let element = super.createElement();
-		element.addClass("map-selection");
+		element.click(this.onClick);
 		return element;
 	}
 
-	onChangeMap = value => {
-		this.bluemap.changeMap(value);
+	onBlueMapUpdateFrame = () => {
+		this.elements.forEach(element => {
+			element.find("img").css('transform', `rotate(${this.blueMap.controls.direction}rad)`);
+		});
 	};
 
-	onBlueMapMapChange = () => {
-		this.select(this.bluemap.map);
+	onClick = () => {
+		this.blueMap.controls.targetDirection = 0;
+		this.blueMap.controls.direction = this.blueMap.controls.direction % (Math.PI * 2);
+		if (this.blueMap.controls.direction < -Math.PI) this.blueMap.controls.direction += Math.PI * 2;
+		if (this.blueMap.controls.direction > Math.PI) this.blueMap.controls.direction -= Math.PI * 2;
 	};
 }

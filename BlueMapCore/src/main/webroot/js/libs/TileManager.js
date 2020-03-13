@@ -30,9 +30,10 @@ import Tile from './Tile.js';
 import { hashTile } from './utils.js';
 
 export default class TileManager {
-	constructor(blueMap, viewDistance, tileLoader, scene, tileSize, position) {
+	constructor(blueMap, viewDistance, tileLoader, scene, tileSize, tileOffset, position) {
 		this.blueMap = blueMap;
 		this.tileSize = new Vector2(tileSize.x, tileSize.z);
+		this.tileOffset = new Vector2(tileOffset.x, tileOffset.z);
 		this.setViewDistance(viewDistance);
 		this.tileLoader = tileLoader;
 		this.scene = scene;
@@ -54,7 +55,7 @@ export default class TileManager {
 	}
 
 	setPosition(center) {
-		this.tile.set(center.x, center.z).divide(this.tileSize).floor();
+		this.tile.set(center.x, center.z).sub(this.tileOffset).divide(this.tileSize).floor();
 
 		if (!this.tile.equals(this.lastTile) && !this.closed) {
 			this.update();
