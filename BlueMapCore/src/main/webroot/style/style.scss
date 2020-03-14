@@ -1,163 +1,105 @@
-@import "./modules/alertbox.scss";
-@import "./modules/compass.scss";
-@import "./modules/info.scss";
-@import "./modules/mapmenu.scss";
-@import "./modules/position.scss";
-@import "./modules/settings.scss";
+@import "constants";
 
 html, body {
     margin: 0;
     padding: 0;
 
-	font-size: 15px;
+	font-size: 16px;
 	line-height: 1rem;
     font-family: Verdana,Helvetica,Arial,sans-serif;
 
-	color: #333333;
-	background-color: #dddddd;
+	color: $normal_fg;
+	background-color: $normal_bg;
 
-    @media (max-width: 900px) {
-        font-size: 17px;
+    @media (max-width: $small-max) {
+        font-size: 20px;
     }
-}
-
-.box {
-    color: #333333;
-    background-color: white;
-    box-shadow: 0 1px 4px 0 rgba(50, 50, 50, 0.8);
-}
-
-.button {
-    background-color: white;
-    cursor: pointer;
-}
-
-.button:hover {
-    background-color: #333333;
-    color: #dddddd;
-}
-
-.dropdown-container {
-    background-color: white;
-	position: relative;
-
-    transition: background-color 0.3s;
-}
-
-.dropdown-container:hover {
-    background-color: #dddddd;
-}
-
-.dropdown-container > .dropdown {
-    position: absolute;
-    background-color: white;
-    color: #333333;
-    width: 100%;
-
-	overflow: hidden;
-
-	transition: all 0.3s;
-	max-height: 0;
-}
-
-.dropdown-container:hover > .dropdown {
-    max-height: 200px;
-    border-color: #ddddddFF;
-}
-
-.dropdown-container > .dropdown > ul {
-	margin: 0;
-	padding: 0;
-	list-style: none;
-}
-
-.dropdown-container > .dropdown > ul > li {
-	cursor: pointer;
-}
-
-.dropdown-container > .dropdown > ul > li:hover {
-	color: #dddddd;
-	background-color: #333333;
 }
 
 #map-container {
     position: absolute;
+
     width: 100%;
     height: 100%;
-    background-color: black;
+}
+
+.bluemap-container {
+    position: relative;
+
+    width: 100%;
+    height: 100%;
+
     overflow: hidden;
-  }
 
-#map-container canvas {
-    width: 100%;
-    height: 100%;
-}
-
-#bluemap-loading {
-    position: absolute;
-    width: 200px;
-    line-height: 20px;
-    padding: 20px 0;
-    top: calc(50% - 31px);
-    left: calc(50% - 101px);
-    text-align: center;
-}
-
-#bluemap-topright {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-
-    line-height: 2rem;
-
-    display: flex;
-
-    @media (max-width: 900px) {
-        display: none;
-    }
-
-
-}
-
-#bluemap-topright > *:not(:last-child) {
-    border-right: solid 1px #dddddd;
-}
-
-#bluemap-topleft {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-
-    line-height: 2rem;
-
-    white-space: nowrap;
-
-    display: flex;
-  
-    @media (max-width: 900px) {
+    > .map-canvas {
+        position: absolute;
         top: 0;
         left: 0;
+
         width: 100%;
+        height: 100%;
 
-        >:last-child {
-            flex-grow: 1;
-        }
+        background-color: #000;
+
+        z-index: 0;
     }
 
-    @media (max-width: 500px) {
-        flex-wrap: wrap;
+    > .ui {
+        display: flex;
+        align-items: stretch;
 
-        > :not(:first-child) {
-            flex-grow: 1;
+        position: relative;
+
+        width: 100%;
+        height: 100%;
+
+        pointer-events: none;
+
+        z-index: 100;
+
+        > * {
+            pointer-events: auto;
         }
 
-        >:last-child {
+        > .menu {
+            position: relative;
+
+            flex-shrink: 0;
+            z-index: 200;
+
+            filter: drop-shadow(1px 1px 3px #0008);
+
+            @media (max-width: $middle-max) {
+                position: absolute;
+            }
+        }
+
+        > .hud {
+            position: relative;
+
             width: 100%;
-            border-top: solid 1px #dddddd;
+
+            pointer-events: none;
+
+            filter: drop-shadow(1px 1px 3px #0008);
+
+            > * {
+                pointer-events: auto;
+            }
         }
     }
 }
 
-#bluemap-topleft > *:not(:last-child) {
-    border-right: solid 1px #dddddd;
-}
+@import "ui/ui";
+@import "ui/element";
+@import "ui/toolbar";
+@import "ui/menu";
+@import "ui/button";
+@import "ui/slider";
+@import "ui/togglebutton";
+@import "ui/separator";
+@import "ui/dropdown";
+@import "ui/label";
+@import "ui/position";
+
+@import "modules/hudInfo";

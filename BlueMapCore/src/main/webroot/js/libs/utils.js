@@ -51,7 +51,7 @@ export const splitNumberToPath = num => {
 		path += '-';
 	}
 
-	let s = num.toString();
+	let s = parseInt(num).toString();
 
 	for (let i = 0; i < s.length; i++) {
 		path += s.charAt(i) + '/';
@@ -61,6 +61,45 @@ export const splitNumberToPath = num => {
 };
 
 export const hashTile = (x, z) => `x${x}z${z}`;
+
+/**
+ * Adapted from https://www.w3schools.com/js/js_cookies.asp
+ */
+export const setCookie = (key, value, days = 360) => {
+	value = JSON.stringify(value);
+
+	let expireDate = new Date();
+	expireDate.setTime(expireDate.getTime() + days * 24 * 60 * 60 * 1000);
+	document.cookie = key + "=" + value + ";" + "expires=" + expireDate.toUTCString();
+};
+
+/**
+ * Adapted from https://www.w3schools.com/js/js_cookies.asp
+ */
+export const getCookie = key => {
+	let cookieString = decodeURIComponent(document.cookie);
+	let cookies = cookieString.split(';');
+
+	for(let i = 0; i < cookies.length; i++) {
+		let cookie = cookies[i];
+
+		while (cookie.charAt(0) === ' ') {
+			cookie = cookie.substring(1);
+		}
+
+		if (cookie.indexOf(key + "=") === 0) {
+			let value = cookie.substring(key.length + 1, cookie.length);
+
+			try {
+				value = JSON.parse(value);
+			} catch (e) {}
+
+			return value;
+		}
+	}
+
+	return undefined;
+};
 
 export const Vector2_ZERO = new Vector2(0, 0);
 export const Vector3_ZERO = new Vector3(0, 0, 0);

@@ -24,30 +24,34 @@
  */
 import $ from 'jquery';
 
-import { getTopLeftElement } from './Module.js';
+import ToggleButton from './ToggleButton.js';
 
-import COMPASS from '../../../assets/compass.svg';
+import BURGER from '../../../assets/burger.svg';
 
-export default class Compass {
-	constructor(blueMap) {
-		this.blueMap = blueMap;
+export default class MenuButton extends ToggleButton {
+	constructor(menu) {
+		super(undefined, false, undefined, BURGER);
+		this.menu = menu;
 
-		$('#bluemap-compass').remove();
-		this.element = $(`<div id="bluemap-compass" class="button"><img id="bluemap-compass-needle" src="${COMPASS}" /></div>`).appendTo(getTopLeftElement(blueMap));
-		this.needle = $('#bluemap-compass-needle');
-
-		$(document).on('bluemap-update-frame', this.onBlueMapUpdateFrame);
-		$(this.element).click(this.onClick);
+		this.menu.element.on('menu-close menu-open', this.updateMenuState);
 	}
 
-	onBlueMapUpdateFrame = () => {
-		this.needle.css('transform', `rotate(${this.blueMap.controls.direction}rad)`);
+	createElement(){
+		let element = super.createElement();
+		element.click(this.onMenuClick);
+		return element;
+	}
+
+	updateMenuState = () => {
+		this.selected = this.menu.isOpen();
+		this.update();
 	};
 
-	onClick = () => {
-		this.blueMap.controls.targetDirection = 0;
-		this.blueMap.controls.direction = this.blueMap.controls.direction % (Math.PI * 2);
-		if (this.blueMap.controls.direction < -Math.PI) this.blueMap.controls.direction += Math.PI * 2;
-		if (this.blueMap.controls.direction > Math.PI) this.blueMap.controls.direction -= Math.PI * 2;
+	onMenuClick = () => {
+		if (this.selected){
+			this.menu.open();
+		} else {
+			this.menu.close();
+		}
 	};
 }

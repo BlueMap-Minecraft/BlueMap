@@ -24,26 +24,46 @@
  */
 import $ from 'jquery';
 
-import { getTopRightElement } from './Module.js';
+import Element from "./Element";
 
-export default class Info {
-	constructor(blueMap) {
+export default class Position extends Element {
+	constructor(blueMap, axis) {
+		super();
 		this.blueMap = blueMap;
-		const parent = getTopRightElement(blueMap);
-		$('#bluemap-info').remove();
-		this.elementInfo = $('<div id="bluemap-info" class="button"></div>').appendTo(parent);
-		this.elementInfo.click(this.onClick);
+		this.axis = axis;
+
+		$(document).on('bluemap-update-frame', this.update);
 	}
 
-	onClick = () => {
-		this.blueMap.toggleAlert('bluemap-info',
-			'<h1>Info</h1>' +
-			'Visit BlueMap on <a href="https://github.com/BlueMap-Minecraft">GitHub</a>!<br>' +
-			'BlueMap works best with <a href="https://www.google.com/chrome/">Chrome</a>.<br>' +
-			'<h2>Controls</h2>' +
-			'Leftclick-drag with your mouse or use the arrow-keys to navigate.<br>' +
-			'Rightclick-drag with your mouse to rotate your view.<br>' +
-			'Scroll to zoom.<br>'
-		);
+	createElement(){
+		let element = super.createElement();
+
+		element.addClass("position");
+		element.attr("data-axis", this.axis);
+		let inputElement = $('<input type="number" value="0" />').appendTo(element);
+		inputElement.on('input', this.onInput);
+		inputElement.on('keydown', this.onKeyDown);
+
+		return element;
+	}
+
+	onInput = event => {
+		const value = Number(event.target.value);
+		if (!isNaN(value)) {
+			this.blueMap.controls.targetPosition[this.axis] = value;
+			this.update();
+		}
+	};
+
+	onKeyDown = event => {
+		event.stopPropagation();
+	};
+
+	update = () => {
+		const val = Math.floor(this.blueMap.controls.targetPosition[this.axis]);
+
+		this.elements.forEach(element => {
+			element.find("input").val(val);
+		});
 	};
 }

@@ -14,7 +14,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -184,8 +183,7 @@ public class Plugin {
 					config.getWebDataPath().resolve(id).resolve("hires"),
 					resourcePack,
 					mapConfig,
-					new Vector2i(mapConfig.getHiresTileSize(), mapConfig.getHiresTileSize()),
-					ForkJoinPool.commonPool()
+					new Vector2i(mapConfig.getHiresTileSize(), mapConfig.getHiresTileSize())
 					);
 			
 			LowresModelManager lowresModelManager = new LowresModelManager(
@@ -246,9 +244,10 @@ public class Plugin {
 		}
 
 		WebSettings webSettings = new WebSettings(config.getWebDataPath().resolve("settings.json").toFile());
-		webSettings.setAllEnabled(false);
+		webSettings.set(config.isUseCookies(), "useCookies");
+		webSettings.setAllMapsEnabled(false);
 		for (MapType map : maps.values()) {
-			webSettings.setEnabled(true, map.getId());
+			webSettings.setMapEnabled(true, map.getId());
 			webSettings.setFrom(map.getTileRenderer(), map.getId());
 			webSettings.setFrom(map.getWorld(), map.getId());
 		}
@@ -273,7 +272,7 @@ public class Plugin {
 				Thread.sleep(TimeUnit.MINUTES.toMillis(1));
 				
 				while (true) {
-					if (serverInterface.isMetricsEnabled(config.isMetricsEnabled())) Metrics.sendReport("Sponge");
+					if (serverInterface.isMetricsEnabled(config.isMetricsEnabled())) Metrics.sendReport(this.implementationType);
 					Thread.sleep(TimeUnit.MINUTES.toMillis(30));
 				}
 			} catch (InterruptedException ex){

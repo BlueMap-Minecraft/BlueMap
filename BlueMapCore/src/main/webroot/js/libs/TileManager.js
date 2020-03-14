@@ -30,12 +30,13 @@ import Tile from './Tile.js';
 import { hashTile } from './utils.js';
 
 export default class TileManager {
-	constructor(blueMap, viewDistance, tileLoader, scene, tileSize, position) {
+	constructor(blueMap, viewDistance, tileLoader, scene, tileSize, tileOffset, position) {
 		this.blueMap = blueMap;
-		this.viewDistance = viewDistance;
+		this.tileSize = new Vector2(tileSize.x, tileSize.z);
+		this.tileOffset = new Vector2(tileOffset.x, tileOffset.z);
+		this.setViewDistance(viewDistance);
 		this.tileLoader = tileLoader;
 		this.scene = scene;
-		this.tileSize = new Vector2(tileSize.x, tileSize.z);
 
 		this.tile = new Vector2(0, 0);
 		this.tile.set(position.x, position.z).divide(this.tileSize).floor();
@@ -48,8 +49,13 @@ export default class TileManager {
 		this.tiles = {};
 	}
 
+	setViewDistance(viewDistance){
+		this.viewDistanceX = viewDistance / this.tileSize.x;
+		this.viewDistanceZ = viewDistance / this.tileSize.y;
+	}
+
 	setPosition(center) {
-		this.tile.set(center.x, center.z).divide(this.tileSize).floor();
+		this.tile.set(center.x, center.z).sub(this.tileOffset).divide(this.tileSize).floor();
 
 		if (!this.tile.equals(this.lastTile) && !this.closed) {
 			this.update();
@@ -75,16 +81,19 @@ export default class TileManager {
 
 			let tile = this.tiles[keys[i]];
 
-			let vd = this.viewDistance;
+			let vdx = this.viewDistanceX;
+			let vdz = this.viewDistanceZ;
 
 			if (
-				tile.x + vd < this.tile.x ||
-				tile.x - vd > this.tile.x ||
-				tile.z + vd < this.tile.y ||
-				tile.z - vd > this.tile.y
+				tile.x + vdx < this.tile.x ||
+				tile.x - vdx > this.tile.x ||
+				tile.z + vdz < this.tile.y ||
+				tile.z - vdz > this.tile.y
 			) {
 				tile.disposeModel();
 				delete this.tiles[keys[i]];
+
+				this.blueMap.updateFrame = true;
 			}
 		}
 	}
@@ -98,6 +107,8 @@ export default class TileManager {
 			tile.disposeModel();
 			delete this.tiles[keys[i]];
 		}
+
+		this.blueMap.updateFrame = true;
 	}
 
 	close() {
@@ -122,7 +133,7 @@ export default class TileManager {
 		let d = 1;
 		let m = 1;
 
-		while (m < this.viewDistance * 2) {
+		while (m < Math.max(this.viewDistanceX, this.viewDistanceZ) * 2 + 1) {
 			while (2 * x * d < m) {
 				if (this.tryLoadTile(this.tile.x + x, this.tile.y + z)) return true;
 				x = x + d;
@@ -140,6 +151,8 @@ export default class TileManager {
 
 	tryLoadTile(x, z) {
 		if (this.closed) return false;
+		if (Math.abs(x - this.tile.x) > this.viewDistanceX) return false;
+		if (Math.abs(z - this.tile.z) > this.viewDistanceZ) return false;
 
 		let tileHash = hashTile(x, z);
 

@@ -100,6 +100,7 @@ export default class Controls {
 
 		this.keyStates = {};
 		this.state = Controls.STATES.NONE;
+		this.mouseMoved = false;
 
 		let canvas = $(this.element).find('canvas').get(0);
 
@@ -116,6 +117,7 @@ export default class Controls {
 
 		// touch events
 		this.hammer = new Hammer.Manager(canvas);
+		let touchTap = new Hammer.Tap({ event: 'tap', pointers: 1, taps: 1, threshold: 2 });
 		let touchMove = new Hammer.Pan({ event: 'move', direction: Hammer.DIRECTION_ALL, threshold: 0 });
 		let touchTilt =  new Hammer.Pan({ event: 'tilt', direction: Hammer.DIRECTION_VERTICAL, pointers: 2, threshold: 0 });
 		let touchRotate = new Hammer.Rotate({ event: 'rotate', pointers: 2, threshold: 10 });
@@ -125,6 +127,7 @@ export default class Controls {
 		touchTilt.recognizeWith(touchZoom);
 		touchRotate.recognizeWith(touchZoom);
 
+		this.hammer.add( touchTap );
 		this.hammer.add( touchMove );
 		this.hammer.add( touchTilt );
 		this.hammer.add( touchRotate );
@@ -144,6 +147,7 @@ export default class Controls {
 		this.hammer.on('rotatecancel', this.onTouchRotateUp);
 		this.hammer.on('zoomstart', this.onTouchZoomDown);
 		this.hammer.on('zoommove', this.onTouchZoomMove);
+		this.hammer.on('tap', this.onInfoClick);
 
 		this.camera.position.set(0, 1000, 0);
 		this.camera.lookAt(this.position);
@@ -429,4 +433,11 @@ export default class Controls {
 	onKeyUp = event => {
 		this.keyStates[event.keyCode] = false;
 	};
+
+	onInfoClick = event => {
+		$(document).trigger({
+			type: 'bluemap-info-click',
+			pos: event.center
+		});
+	}
 }

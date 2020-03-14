@@ -22,55 +22,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-import $ from 'jquery';
 
-import { getTopLeftElement } from './Module.js';
+import Element from './Element.js';
 
-export default class Position {
-	constructor(blueMap) {
-		this.blueMap = blueMap;
+export default class Label extends Element {
 
-		$('.bluemap-position').remove();
-		this.elements = [
-			this.createPositionElement('x'),
-			null,//this.elementY = this.createPositionElement('y');
-			this.createPositionElement('z'),
-		];
-
-		$(document).on('bluemap-update-frame', this.onBlueMapUpdateFrame);
+	constructor(label){
+		super();
+		this.label = label;
 	}
 
-	/** Creates the position display */
-	createPositionElement(type) {
-		const parent = getTopLeftElement(this.blueMap);
-		const element = $(`<div class="bluemap-position" data-pos="${type}"><input type="number" value="0" /></div>`)
-			.appendTo(parent)
-			.children()
-			.first();
-		element.on('input', this.onInput(type));
-		element.on('keydown', this.onKeyDown);
+	createElement() {
+		let element = super.createElement();
+		element.addClass("label");
+		element.html(this.label);
 		return element;
 	}
 
-	onInput = type => event => {
-		const value = Number(event.target.value);
-		if (!isNaN(value)) {
-			this.blueMap.controls.targetPosition[type] = value;
-		}
-	};
-
-	onKeyDown = event => {
-		event.stopPropagation();
-	};
-
-	onBlueMapUpdateFrame = () => {
-		const { x, y, z } = this.blueMap.controls.targetPosition;
-		const values = [ z, y, x ];
-		for (let element of this.elements) {
-			const value = Math.floor(values.pop());
-			if (element) {
-				element.val(value);
-			}
-		}
-	};
 }

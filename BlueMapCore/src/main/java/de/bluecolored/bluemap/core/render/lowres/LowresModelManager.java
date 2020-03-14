@@ -76,7 +76,7 @@ public class LowresModelManager {
 	/**
 	 * Renders all points from the given highres-model onto the lowres-grid
 	 */
-	public void render(HiresModel hiresModel) throws IOException {
+	public void render(HiresModel hiresModel) {
 		Vector3i min = hiresModel.getBlockMin();
 		Vector3i max = hiresModel.getBlockMax();
 		Vector3i size = max.sub(min).add(Vector3i.ONE);
@@ -140,7 +140,7 @@ public class LowresModelManager {
 	/**
 	 * Updates a point on the lowresmodel-grid
 	 */
-	public void update(UUID world, Vector2i point, float height, Vector3f color) throws IOException {
+	public void update(UUID world, Vector2i point, float height, Vector3f color) {
 		Vector2i tile = pointToTile(point);
 		Vector2i relPoint = getPointRelativeToTile(tile, point);
 		LowresModel model = getModel(world, tile);
@@ -175,7 +175,7 @@ public class LowresModelManager {
 		return FileUtils.coordsToFile(fileRoot, tile, "json" + (useGzip ? ".gz" : ""));
 	}
 	
-	private LowresModel getModel(UUID world, Vector2i tile) throws IOException {
+	private LowresModel getModel(UUID world, Vector2i tile) {
 		
 		File modelFile = getFile(tile, useGzip);
 		CachedModel model = models.get(modelFile);
@@ -184,24 +184,28 @@ public class LowresModelManager {
 			synchronized (this) {
 				model = models.get(modelFile);
 				if (model == null){
+					
 					if (modelFile.exists()){
-
-						InputStream is = new FileInputStream(modelFile);
-						if (useGzip) is = new GZIPInputStream(is);
-						try {
+						try (FileInputStream fis = new FileInputStream(modelFile)) {
+							InputStream is = fis;
+							if (useGzip) is = new GZIPInputStream(is);
+							
 							String json = IOUtils.toString(is, StandardCharsets.UTF_8);	
 							
-							try {
-								model = new CachedModel(world, tile, BufferGeometry.fromJson(json));
-							} catch (IllegalArgumentException | IOException ex){
-								Logger.global.logError("Failed to load lowres model: " + modelFile, ex);
-								//gridFile.renameTo(gridFile.toPath().getParent().resolve(gridFile.getName() + ".broken").toFile());
+							model = new CachedModel(world, tile, BufferGeometry.fromJson(json));
+						} catch (IllegalArgumentException | IOException ex){
+							Logger.global.logError("Failed to load lowres model: " + modelFile, ex);
+
+							modelFile.delete();
+							
+							/*
+							File brokenFile = modelFile.toPath().getParent().resolve(modelFile.getName() + ".broken").toFile();
+							if (brokenFile.exists()) brokenFile.delete();
+							if (!modelFile.renameTo(brokenFile)) {
 								modelFile.delete();
 							}
-						} finally {
-							is.close();
+							*/
 						}
-						
 					}
 
 					if (model == null){

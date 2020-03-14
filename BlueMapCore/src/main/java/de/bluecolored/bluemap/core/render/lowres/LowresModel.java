@@ -126,6 +126,7 @@ public class LowresModel {
 				PrintWriter pw = new PrintWriter(osw);
 			){
 				pw.print(json);
+				pw.flush();
 			}
 		
 		}
@@ -140,35 +141,39 @@ public class LowresModel {
 			Map<Vector2i, LowresPoint> points = changes;
 			changes = new HashMap<>();
 			
-			int vertexCount = model.position.length / 3;
+			float[] position = model.attributes.get("position").values();
+			float[] color = model.attributes.get("color").values();
+			float[] normal = model.attributes.get("normal").values();
+			
+			int vertexCount = Math.floorDiv(position.length, 3);
 			
 			for (int i = 0; i < vertexCount; i++){
 				int j = i * 3;
-				int px = Math.round(model.position[j + 0]);
-				int pz = Math.round(model.position[j + 2]);
+				int px = Math.round(position[j + 0]);
+				int pz = Math.round(position[j + 2]);
 				
 				Vector2i p = new Vector2i(px, pz);
 				
 				LowresPoint lrp = points.get(p);
 				if (lrp == null) continue;
 	
-				model.position[j + 1] = lrp.height;
+				position[j + 1] = lrp.height;
 				
-				model.color[j + 0] = lrp.color.getX();
-				model.color[j + 1] = lrp.color.getY();
-				model.color[j + 2] = lrp.color.getZ();
+				color[j + 0] = lrp.color.getX();
+				color[j + 1] = lrp.color.getY();
+				color[j + 2] = lrp.color.getZ();
 				
 				//recalculate normals
 				int f = Math.floorDiv(i, 3) * 3 * 3;
-				Vector3f p1 = new Vector3f(model.position[f + 0], model.position[f + 1], model.position[f + 2]);
-				Vector3f p2 = new Vector3f(model.position[f + 3], model.position[f + 4], model.position[f + 5]);
-				Vector3f p3 = new Vector3f(model.position[f + 6], model.position[f + 7], model.position[f + 8]);
+				Vector3f p1 = new Vector3f(position[f + 0], position[f + 1], position[f + 2]);
+				Vector3f p2 = new Vector3f(position[f + 3], position[f + 4], position[f + 5]);
+				Vector3f p3 = new Vector3f(position[f + 6], position[f + 7], position[f + 8]);
 				
 				Vector3f n = MathUtils.getSurfaceNormal(p1, p2, p3);
 				
-				model.normal[f + 0] = n.getX();  model.normal[f + 1] = n.getY();  model.normal[f + 2] = n.getZ();
-				model.normal[f + 3] = n.getX();  model.normal[f + 4] = n.getY();  model.normal[f + 5] = n.getZ();
-				model.normal[f + 6] = n.getX();  model.normal[f + 7] = n.getY();  model.normal[f + 8] = n.getZ();
+				normal[f + 0] = n.getX();  normal[f + 1] = n.getY();  normal[f + 2] = n.getZ();
+				normal[f + 3] = n.getX();  normal[f + 4] = n.getY();  normal[f + 5] = n.getZ();
+				normal[f + 6] = n.getX();  normal[f + 7] = n.getY();  normal[f + 8] = n.getZ();
 			}
 		}
 	}
