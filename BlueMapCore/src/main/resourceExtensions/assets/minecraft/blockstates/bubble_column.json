@@ -1,5 +1,5 @@
 {
     "variants": {
-        "": { "model": "block/bubble_column" }
+        "": { "model": "bubble_column" }
     }
 }
