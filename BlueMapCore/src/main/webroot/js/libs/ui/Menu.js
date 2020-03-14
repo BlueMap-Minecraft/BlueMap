@@ -25,6 +25,7 @@
 import $ from 'jquery';
 
 import Element from './Element.js';
+import Separator from "./Separator";
 
 export default class Menu {
 
@@ -47,6 +48,23 @@ export default class Menu {
 		this.children.forEach(child => {
 			this.content.append(child.createElement());
 		});
+
+		$(`<div class="footer-separator"></div>`).appendTo(this.content);
+
+		$(`
+			<div class="ui-element footer">
+				<h1>BlueMap</h1>
+				<p>
+					Visit BlueMap on <a href="https://github.com/BlueMap-Minecraft">GitHub</a> and <a href="https://discord.gg/zmkyJa3">Discord</a>! 
+				</p>
+				<h2>Controls</h2>
+				<p>
+					<kbd>leftclick and drag</kbd> or <kbd>arrow-keys</kbd> to navigate<br>
+					<kbd>rightclick and drag</kbd> to rotate your view<br>
+					<kbd>scroll</kbd> to zoom in and out
+				</p>
+			</div>
+		`).appendTo(this.content);
 	}
 
 	isOpen = () => {

@@ -69,7 +69,7 @@ export default class UI {
 		let posZ = new Position(this.blueMap, 'z');
 		let compass = new Compass(this.blueMap);
 
-		let mobSpawnOverlay = new ToggleButton("mob-spawnable overlay", blueMap.mobSpawnOverlay.value, button => {
+		let mobSpawnOverlay = new ToggleButton("mob-spawn (experimental)", blueMap.mobSpawnOverlay.value, button => {
 			this.blueMap.mobSpawnOverlay.value = button.isSelected();
 			this.blueMap.updateFrame = true;
 		});
@@ -119,6 +119,7 @@ export default class UI {
 		this.menu.addElement(new Separator());
 		this.menu.addElement(debugInfo);
 		this.menu.update();
+
 	}
 
 }

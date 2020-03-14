@@ -1,7 +1,10 @@
 import $ from 'jquery';
 import {
 	Raycaster,
-	Vector2
+	Vector2,
+	BoxBufferGeometry,
+	Mesh,
+	MeshBasicMaterial
 } from 'three';
 import {pathFromCoords} from "../utils";
 
@@ -10,6 +13,16 @@ export default class HudInfo {
 	constructor(blueMap, container){
 		this.blueMap = blueMap;
 		this.container = container;
+
+		let blockMarkerGeo = new BoxBufferGeometry( 1, 1, 1 );
+		blockMarkerGeo.translate(0.5, 0.5, 0.5);
+		this.blockMarker = new Mesh(blockMarkerGeo, new MeshBasicMaterial( {
+			color: 0xffffff,
+			opacity: 0.3,
+			depthWrite: false,
+			depthTest: false,
+			transparent: true
+		} ));
 
 		this.rayPosition = new Vector2();
 		this.raycaster = new Raycaster();
@@ -125,6 +138,12 @@ export default class HudInfo {
 				this.element.removeClass("below");
 			}
 			this.element.fadeIn(200);
+
+			if (hiresData){
+				this.blockMarker.position.set(block.x, block.y, block.z);
+				this.blueMap.hiresScene.add(this.blockMarker);
+				this.blueMap.updateFrame = true;
+			}
 		}
 
 	};
@@ -132,6 +151,8 @@ export default class HudInfo {
 	onHideInfo = event => {
 		if (!this.element.is(':animated')) {
 			this.element.fadeOut(200);
+			this.blueMap.hiresScene.remove(this.blockMarker);
+			this.blueMap.updateFrame = true;
 		}
 	};
 
