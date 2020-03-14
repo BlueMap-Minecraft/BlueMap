@@ -110,6 +110,8 @@ export default class BlueMap {
 	}
 
 	changeMap(map) {
+		if (this.debugInfo) console.debug("changing map: ", map);
+
 		if (this.map === map) return;
 
 		if (this.hiresTileManager !== undefined) this.hiresTileManager.close();
@@ -163,7 +165,7 @@ export default class BlueMap {
 	loadLocationHash() {
 		let hashVars = window.location.hash.substring(1).split(':');
 		if (hashVars.length >= 1){
-			if (this.settings[hashVars[0]] !== undefined && this.map !== hashVars[0]){
+			if (this.settings.maps[hashVars[0]] !== undefined && this.map !== hashVars[0]){
 				this.changeMap(hashVars[0]);
 			}
 		}
