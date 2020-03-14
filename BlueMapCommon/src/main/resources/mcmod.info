@@ -2,7 +2,7 @@
     {
         "modid": "bluemap",
         "name": "BlueMap",
-        "version": "0.4.0-mc1.12",
+        "version": "0.5.0-mc1.12",
         "description": "A 3d-map of your Minecraft worlds view-able in your browser using three.js (WebGL)",
         "url": "https://github.com/BlueMap-Minecraft",
         "authorList": [
