@@ -1,4 +1,4 @@
-![title-banner](https://bluecolored.de/paste/bluemap-title.jpg)
+![title-banner](https://bluecolored.de/paste/BluemapBanner.png)
 
 BlueMap is a tool that generates 3d-maps of your Minecraft worlds and displays them in your browser. Take a look at [this demo](https://bluecolored.de/bluemap). It is really easy to set up - almost plug-and-play - if you use the integrated web-server (optional).
 
@@ -41,9 +41,9 @@ Here is a *(surely incomplete)* list of things that i want to include in future 
 - marker / region API
 - free-flight-controls
 - live player positions
-- shaders for dynamic day/night
 - more configurations
 - easier mod-integration
 - BlueMap as forge mod
 - ability to display the world-border
 - animated textures (if feasible)
+- add support for models in obj format (if feasible)
