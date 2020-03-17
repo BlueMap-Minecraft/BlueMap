@@ -77,8 +77,8 @@ public class BufferAttribute {
 		json.name("array").beginArray();
 		for (int i = 0; i < values.length; i++) {
 			// rounding and remove ".0" to save string space
-			float d = Math.round(values[i] * 10000f) / 10000f;
-			if (d == (int) d) json.value((int) d);
+			double d = Math.round(values[i] * 10000d) / 10000d;
+			if (d == (long) d) json.value((long) d);
 			else json.value(d);
 		}
 		json.endArray();
