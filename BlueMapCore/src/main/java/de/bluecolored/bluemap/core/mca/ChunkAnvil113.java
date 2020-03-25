@@ -107,7 +107,7 @@ public class ChunkAnvil113 extends Chunk {
 		int sectionY = MCAUtil.blockToChunk(pos.getY());
 		
 		Section section = this.sections[sectionY];
-		if (section == null) return LightData.FULL;
+		if (section == null) return LightData.SKY;
 		
 		return section.getLightData(pos);
 	}

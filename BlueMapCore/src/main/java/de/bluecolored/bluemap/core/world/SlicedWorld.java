@@ -180,7 +180,7 @@ public class SlicedWorld implements World {
 		return new Block(
 				this, 
 				BlockState.AIR, 
-				pos.getY() < this.min.getY() ? LightData.ZERO : LightData.FULL, 
+				pos.getY() < this.min.getY() ? LightData.ZERO : LightData.SKY,
 				Biome.DEFAULT, 
 				BlockProperties.TRANSPARENT, 
 				pos
