@@ -169,7 +169,7 @@ public class MCAWorld implements World {
 		}
 		
 		if (pos.getY() > getMaxY()) {
-			return new Block(this, BlockState.AIR, LightData.FULL, Biome.DEFAULT, BlockProperties.TRANSPARENT, pos);
+			return new Block(this, BlockState.AIR, LightData.SKY, Biome.DEFAULT, BlockProperties.TRANSPARENT, pos);
 		}
 		
 		try {

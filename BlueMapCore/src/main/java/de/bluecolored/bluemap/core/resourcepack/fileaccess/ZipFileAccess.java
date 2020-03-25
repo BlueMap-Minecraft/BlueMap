@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.HashSet;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
@@ -85,14 +86,20 @@ public class ZipFileAccess implements FileAccess {
 	public Collection<String> listFolders(String path) {
 		path = normalizeFolderPath(path);
 		
-		Collection<String> folders = new ArrayList<String>();
+		Collection<String> folders = new HashSet<String>();
 		for (Enumeration<? extends ZipEntry> entries = file.entries(); entries.hasMoreElements();) {
 			ZipEntry entry = entries.nextElement();
 			
-			if (!entry.isDirectory()) continue;
-			
 			String file = entry.getName();
-			file = file.substring(0, file.length() - 1); //strip last /
+			if (!entry.isDirectory()) {
+				int nameSplit = file.lastIndexOf('/');
+				if (nameSplit == -1) continue;
+				file = file.substring(0, nameSplit);
+			}
+			file = normalizeFolderPath(file);
+			
+			//strip last /
+			file = file.substring(0, file.length() - 1);
 			
 			int nameSplit = file.lastIndexOf('/');
 			String filePath = "/";
@@ -101,7 +108,17 @@ public class ZipFileAccess implements FileAccess {
 			}
 			filePath = normalizeFolderPath(filePath);
 			
-			if (!path.equals(filePath)) continue;
+			if (!filePath.startsWith(path)) continue;
+			
+			int subFolderMark = file.indexOf('/', path.length());
+			if (subFolderMark != -1) {
+				file = file.substring(0, subFolderMark);
+			}
+			
+			file = normalizeFolderPath(file);
+			
+			//strip last /
+			file = file.substring(0, file.length() - 1);
 			
 			folders.add(file);
 		}
