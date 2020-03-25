@@ -78,6 +78,11 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface {
 
 	@Override
 	public UUID getUUIDForWorld(File worldFolder) throws IOException {
+		//if it is a dimension folder
+		if (!new File(worldFolder, "level.dat").exists()) {
+			worldFolder = worldFolder.getParentFile();
+		}
+		
 		final File normalizedWorldFolder = worldFolder.getCanonicalFile();
 
 		Future<UUID> futureUUID;
