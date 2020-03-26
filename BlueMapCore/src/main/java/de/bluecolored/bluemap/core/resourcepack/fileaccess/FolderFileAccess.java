@@ -113,6 +113,7 @@ public class FolderFileAccess implements FileAccess {
 	}
 	
 	private Path resolve(String path) {
+		if (path.isEmpty() || "/".equals(path)) return folder.toPath();
 		if (File.separatorChar != '/') path = path.replace('/', File.separatorChar);
 		if (path.charAt(0) == '/') path = path.substring(1);
 		Path resolve = folder.toPath();
