@@ -217,58 +217,38 @@ public class MCAWorld implements World {
 	private Chunk loadChunk(Vector2i chunkPos) throws IOException {
 		Vector2i regionPos = chunkToRegion(chunkPos);
 		Path regionPath = getMCAFilePath(regionPos);
+				
+		try (RandomAccessFile raf = new RandomAccessFile(regionPath.toFile(), "r")) {
 		
-		Throwable exception = null;
-		
-		for (int tries = 1; tries <= 5; tries++) {
-			if (tries > 1) {
-				try {
-					Thread.sleep(200);
-				} catch (InterruptedException interrupt) {
-					throw new IOException("Interrupted while waiting for the " + tries + "th try to load a chunk..");
-				}
+			int xzChunk = Math.floorMod(chunkPos.getY(), 32) * 32 + Math.floorMod(chunkPos.getX(), 32);
+			
+			raf.seek(xzChunk * 4);
+			int offset = raf.read() << 16;
+			offset |= (raf.read() & 0xFF) << 8;
+			offset |= raf.read() & 0xFF;
+			offset *= 4096;
+			
+			int size = raf.readByte() * 4096;
+			if (size == 0) {
+				return Chunk.empty(this, chunkPos);
 			}
 			
-			try (RandomAccessFile raf = new RandomAccessFile(regionPath.toFile(), "r")) {
+			raf.seek(offset + 4); // +4 skip chunk size
 			
-				int xzChunk = Math.floorMod(chunkPos.getY(), 32) * 32 + Math.floorMod(chunkPos.getX(), 32);
-				
-				raf.seek(xzChunk * 4);
-				int offset = raf.read() << 16;
-				offset |= (raf.read() & 0xFF) << 8;
-				offset |= raf.read() & 0xFF;
-				offset *= 4096;
-				
-				int size = raf.readByte() * 4096;
-				if (size == 0) {
-					return Chunk.empty(this, chunkPos);
-				}
-				
-				raf.seek(offset + 4); // +4 skip chunk size
-				
-				byte compressionTypeByte = raf.readByte();
-				CompressionType compressionType = CompressionType.getFromID(compressionTypeByte);
-				if (compressionType == null) {
-					throw new IOException("invalid compression type " + compressionTypeByte);
-				}
-				
-				DataInputStream dis = new DataInputStream(new BufferedInputStream(compressionType.decompress(new FileInputStream(raf.getFD()))));
-				Tag<?> tag = Tag.deserialize(dis, Tag.DEFAULT_MAX_DEPTH);
-				if (tag instanceof CompoundTag) {
-					return Chunk.create(this, (CompoundTag) tag);
-				} else {
-					throw new IOException("invalid data tag: " + (tag == null ? "null" : tag.getClass().getName()));
-				}
-				
-			} catch (FileNotFoundException ex) {
-				return Chunk.empty(this, chunkPos);
-			} catch (Throwable ex) {
-				exception = ex;
+			byte compressionTypeByte = raf.readByte();
+			CompressionType compressionType = CompressionType.getFromID(compressionTypeByte);
+			if (compressionType == null) {
+				throw new IOException("invalid compression type " + compressionTypeByte);
+			}
+			
+			DataInputStream dis = new DataInputStream(new BufferedInputStream(compressionType.decompress(new FileInputStream(raf.getFD()))));
+			Tag<?> tag = Tag.deserialize(dis, Tag.DEFAULT_MAX_DEPTH);
+			if (tag instanceof CompoundTag) {
+				return Chunk.create(this, (CompoundTag) tag);
+			} else {
+				throw new IOException("invalid data tag: " + (tag == null ? "null" : tag.getClass().getName()));
 			}
 		}
-		
-		if (exception == null) throw new IOException("Failed to load chunk after multiple attempts!");
-		throw new IOException("Failed to load chunk after multiple attempts!", exception);
 	}
 	
 	@Override
