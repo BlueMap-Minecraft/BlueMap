@@ -217,7 +217,7 @@ public class MCAWorld implements World {
 	private Chunk loadChunk(Vector2i chunkPos) throws IOException {
 		Vector2i regionPos = chunkToRegion(chunkPos);
 		Path regionPath = getMCAFilePath(regionPos);
-		
+				
 		try (RandomAccessFile raf = new RandomAccessFile(regionPath.toFile(), "r")) {
 		
 			int xzChunk = Math.floorMod(chunkPos.getY(), 32) * 32 + Math.floorMod(chunkPos.getX(), 32);
@@ -248,9 +248,6 @@ public class MCAWorld implements World {
 			} else {
 				throw new IOException("invalid data tag: " + (tag == null ? "null" : tag.getClass().getName()));
 			}
-			
-		} catch (FileNotFoundException ex) {
-			return Chunk.empty(this, chunkPos);
 		}
 	}
 	
