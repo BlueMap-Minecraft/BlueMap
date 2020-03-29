@@ -3,3 +3,26 @@ dependencies {
     compile group: 'org.bstats', name: 'bstats-sponge-lite', version: '1.5'
     compile project(':BlueMapCommon')
 }
+
+build.dependsOn shadowJar {
+	destinationDir = file '../build/release'
+	archiveFileName = "BlueMap-${version}-sponge.jar"
+	
+	relocate 'com.google', 'de.bluecolored.bluemap.google'
+	relocate 'com.flowpowered', 'de.bluecolored.bluemap.flowpowered'
+	relocate 'com.typesafe', 'de.bluecolored.bluemap.typesafe'
+	relocate 'net.querz', 'de.bluecolored.bluemap.querz'
+	relocate 'ninja', 'de.bluecolored.bluemap.ninja'
+	relocate 'org.apache', 'de.bluecolored.bluemap.apache'
+	relocate 'org.yaml', 'de.bluecolored.bluemap.yaml'
+}
+
+processResources {
+	from(sourceSets.main.resources.srcDirs) {
+		include 'mcmod.info'
+		
+		expand (
+			version: project.version
+		)
+	}
+}

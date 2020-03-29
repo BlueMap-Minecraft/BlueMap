@@ -23,25 +23,15 @@ allprojects {
 	compileTestJava.options.compilerArgs.add '-parameters'
 
 	apply plugin: 'java'
-	apply plugin: 'com.github.johnrengelman.shadow'
-}
-
-dependencies {
-	compile project(':BlueMapCLI')
-	compile project(':BlueMapBukkit')
-	//compile project(':BlueMapSponge')
-}
-
-assemble.dependsOn shadowJar {
-	relocate 'org.bstats.bukkit', 'de.bluecolored.bluemap.bstats.bukkit'
 	
-	baseName = 'BlueMap'
-	version = null
-	classifier = null
+	group = 'de.bluecolored.bluemap'
+  	version = '0.5.1-mc1.13'
 }
 
-jar {
-	manifest {
-		attributes 'Main-Class' : "de.bluecolored.bluemap.cli.BlueMapCLI"
-	}
+subprojects {
+	apply plugin: 'com.github.johnrengelman.shadow'
+	apply plugin: 'java'
+	
+	sourceCompatibility = 1.8
+	targetCompatibility = 1.8
 }
