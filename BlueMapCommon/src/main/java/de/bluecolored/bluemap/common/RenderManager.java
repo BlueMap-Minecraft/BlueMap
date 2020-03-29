@@ -66,7 +66,10 @@ public class RenderManager {
 	}
 	
 	public RenderTicket createTicket(MapType mapType, Vector2i tile) {
-		RenderTicket ticket = new RenderTicket(mapType, tile);
+		return createTicket(new RenderTicket(mapType, tile));
+	}
+	
+	private RenderTicket createTicket(RenderTicket ticket) {
 		synchronized (renderTickets) {
 			if (renderTicketMap.putIfAbsent(ticket, ticket) == null) {
 				renderTickets.add(ticket);
@@ -138,7 +141,12 @@ public class RenderManager {
 				try {
 					ticket.render();
 				} catch (IOException e) {
-					Logger.global.logError("Failed to render tile " + ticket.getTile() + " of map '" + ticket.getMapType().getId() + "'!", e);
+					if (ticket.getRenderAttempts() < 3) {
+						Logger.global.logDebug("Failed to render tile " + ticket.getTile() + " of map '" + ticket.getMapType().getId() + "', rescheduling for " + (ticket.getRenderAttempts() + 1) + ". attempt..");
+						createTicket(ticket); //this might be a temporary issue, so we reschedule ticket for another attempt
+					} else {
+						Logger.global.logError("Failed to render tile " + ticket.getTile() + " of map '" + ticket.getMapType().getId() + "'!", e);
+					}
 				}
 			} else {
 				try {
