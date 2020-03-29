@@ -49,7 +49,7 @@ public class Text {
 		if (hoverText != null) {
 			sb.append(quote("hoverEvent")).append(":{");
 			sb.append(quote("action")).append(":").append(quote("show_text")).append(',');
-			sb.append(quote("value")).append(":").append(quote(hoverText.toFormattingCodedString('§')));
+			sb.append(quote("value")).append(":").append(quote(hoverText.toFormattingCodedString('\u00a7')));
 			sb.append("},");
 		}
 
@@ -131,7 +131,7 @@ public class Text {
 	private String escape(String value) {
 		value = value.replace("\\", "\\\\");
 		value = value.replace("\"", "\\\"");
-		value = value.replace("§", "\\u00a7");
+		value = value.replace("\u00a7", "\\u00a7");
 		value = value.replace("\n", "\\n");
 		return value;
 	}

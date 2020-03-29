@@ -26,7 +26,7 @@ public class BukkitCommandSource implements CommandSource {
 				return;
 			}
 			
-			delegate.sendMessage(text.toFormattingCodedString('§'));
+			delegate.sendMessage(text.toPlainString());
 		});
 	}
 	
