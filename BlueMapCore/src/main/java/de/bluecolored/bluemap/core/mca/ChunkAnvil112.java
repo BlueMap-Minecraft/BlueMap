@@ -31,8 +31,11 @@ import de.bluecolored.bluemap.core.mca.mapping.BlockIdMapper;
 import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.LightData;
+import net.querz.nbt.ByteArrayTag;
 import net.querz.nbt.CompoundTag;
+import net.querz.nbt.IntArrayTag;
 import net.querz.nbt.ListTag;
+import net.querz.nbt.Tag;
 import net.querz.nbt.mca.MCAUtil;
 
 public class ChunkAnvil112 extends Chunk {
@@ -41,7 +44,7 @@ public class ChunkAnvil112 extends Chunk {
 	
 	private boolean isGenerated;
 	private Section[] sections;
-	private byte[] biomes;
+	private int[] biomes;
 	
 	@SuppressWarnings("unchecked")
 	public ChunkAnvil112(MCAWorld world, CompoundTag chunkTag) {
@@ -62,10 +65,21 @@ public class ChunkAnvil112 extends Chunk {
 			sections[section.getSectionY()] = section;
 		}
 		
-		biomes = levelData.getByteArray("Biomes");
+		Tag<?> tag = levelData.get("Biomes"); //tag can be byte-array or int-array
+		if (tag instanceof ByteArrayTag) {
+			byte[] bs = ((ByteArrayTag) tag).getValue();
+			biomes = new int[bs.length];
+			
+			for (int i = 0; i < bs.length; i++) {
+				biomes[i] = bs[i] & 0xFF;
+			}
+		}
+		else if (tag instanceof IntArrayTag) {
+			biomes = ((IntArrayTag) tag).getValue(); 
+		}
 		
 		if (biomes == null || biomes.length == 0) {
-			biomes = new byte[2048];
+			biomes = new int[2048];
 		}
 	}
 
