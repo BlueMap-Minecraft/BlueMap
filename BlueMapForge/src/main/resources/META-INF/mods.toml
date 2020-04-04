@@ -1,0 +1,25 @@
+modLoader="javafml"
+loaderVersion="[28,)"
+issueTrackerURL="https://github.com/BlueMap-Minecraft/BlueMap/issues"
+[[mods]]
+modId="bluemap"
+version="${version}"
+displayName="BlueMap"
+displayURL="https://github.com/BlueMap-Minecraft/BlueMap"
+authors="Blue (TBlueF, Lukas Rieger)"
+description='''
+A 3d-map of your Minecraft worlds view-able in your browser using three.js (WebGL)
+'''
+
+[[dependencies.bluemap]]
+    modId="forge"
+    mandatory=true
+    versionRange="[28,)"
+    ordering="NONE"
+    side="SERVER"
+[[dependencies.bluemap]]
+    modId="minecraft"
+    mandatory=true
+    versionRange="[1.15.2]"
+    ordering="NONE"
+    side="SERVER"

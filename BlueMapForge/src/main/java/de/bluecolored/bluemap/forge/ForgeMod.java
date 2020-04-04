@@ -12,8 +12,6 @@ import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.logger.Logger;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.World;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -26,13 +24,15 @@ public class ForgeMod implements ServerInterface {
 	
 	private Plugin bluemap;
 	
-	private MinecraftServer server;
 	private Map<String, UUID> worldUUIDs;
 	
+	private ForgeCommands commands;
+	
 	public ForgeMod() {
-		Logger.global = new Log4jLogger(LogManager.getLogger());
+		Logger.global = new Log4jLogger(LogManager.getLogger(Plugin.PLUGIN_NAME));
 		
 		this.bluemap = new Plugin("forge", this);
+		this.commands = new ForgeCommands(this, bluemap);
 		this.worldUUIDs = new HashMap<>();
 		
 		MinecraftForge.EVENT_BUS.register(this);
@@ -40,16 +40,23 @@ public class ForgeMod implements ServerInterface {
 	
 	@SubscribeEvent
     public void onServerStarting(FMLServerStartingEvent event) {
-		this.server = event.getServer();
 		this.worldUUIDs.clear();
 		
 		for (ServerWorld world : event.getServer().getWorlds()) {
+			try {
+				registerWorld(world);
+			} catch (IOException e) {
+				Logger.global.logError("Failed to register world: " + world.getProviderName(), e);
+			}
+			
 			try {
 				world.save(null, false, false);
 			} catch (Throwable t) {
 				Logger.global.logError("Failed to save world: " + world.getProviderName(), t);
 			}
 		}
+		
+		this.commands.registerCommands(event.getCommandDispatcher());
 		
 		new Thread(() -> {
 			try {
@@ -61,6 +68,10 @@ public class ForgeMod implements ServerInterface {
 			}
 		}).start();
     }
+	
+	private void registerWorld(ServerWorld world) throws IOException {
+		getUUIDForWorld(world);
+	}
 	
 	@SubscribeEvent
     public void onServerStopping(FMLServerStoppingEvent event) {
@@ -83,20 +94,21 @@ public class ForgeMod implements ServerInterface {
 
 	@Override
 	public UUID getUUIDForWorld(File worldFolder) throws IOException {
-		
-		
-		worldFolder = worldFolder.getCanonicalFile();
-		
-		for (ServerWorld world : server.getWorlds()) {
-			if (worldFolder.equals(world.getSaveHandler().getWorldDirectory().getCanonicalFile())) return getUUIDForWorld(world);
+		synchronized (worldUUIDs) {
+			String key = worldFolder.getCanonicalPath();
+			
+			UUID uuid = worldUUIDs.get(key);
+			if (uuid == null) {
+				throw new IOException("There is no world with this folder loaded: " + worldFolder.getPath());
+			}
+			
+			return uuid;
 		}
-
-		throw new IOException("There is no world with this folder loaded: " + worldFolder.getPath());
 	}
 	
-	public UUID getUUIDForWorld(World world) {
+	public UUID getUUIDForWorld(ServerWorld world) throws IOException {
 		synchronized (worldUUIDs) {
-			String key = world.getWorldInfo().getWorldName();
+			String key = getFolderForWorld(world).getPath();
 			
 			UUID uuid = worldUUIDs.get(key);
 			if (uuid == null) {
@@ -107,11 +119,21 @@ public class ForgeMod implements ServerInterface {
 			return uuid;	
 		}
 	}
+	
+	private File getFolderForWorld(ServerWorld world) throws IOException {
+		File worldFolder = world.getSaveHandler().getWorldDirectory();
+		
+		int dimensionId = world.getDimension().getType().getId();
+		if (dimensionId != 0) {
+			worldFolder = new File(worldFolder, "DIM" + dimensionId);
+		}
+		
+		return worldFolder.getCanonicalFile();
+	}
 
 	@Override
 	public File getConfigFolder() {
-		//TODO
-		return new File(server.getDataDirectory(), "config");
+		return new File("config/bluemap");
 	}
     
 }
