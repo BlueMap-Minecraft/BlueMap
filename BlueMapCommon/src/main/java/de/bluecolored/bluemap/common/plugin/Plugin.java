@@ -25,7 +25,6 @@ import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.common.MapType;
 import de.bluecolored.bluemap.common.RenderManager;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
-import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.config.ConfigManager;
 import de.bluecolored.bluemap.core.config.MainConfig;
 import de.bluecolored.bluemap.core.config.MainConfig.MapConfig;
@@ -48,7 +47,6 @@ public class Plugin {
 
 	public static final String PLUGIN_ID = "bluemap";
 	public static final String PLUGIN_NAME = "BlueMap";
-	public static final String PLUGIN_VERSION = BlueMap.VERSION;
 
 	private static Plugin instance;
 	

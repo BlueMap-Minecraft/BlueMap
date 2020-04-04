@@ -1,0 +1,58 @@
+buildscript {
+    repositories {
+        maven { url = 'https://files.minecraftforge.net/maven/' }
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+
+minecraft {
+	mappings channel: 'snapshot', version: '20190719-1.14.3'
+}
+
+configurations {
+	compile.extendsFrom include
+}
+
+dependencies {
+	minecraft 'net.minecraftforge:forge:1.15.2-31.1.0'
+    include project(':BlueMapCommon')
+}
+
+build.dependsOn shadowJar {
+	destinationDir = file '../build/release'
+	archiveFileName = "BlueMap-${version}-forge.jar"
+	
+	configurations = [project.configurations.include]
+	
+	relocate 'com.google', 'de.bluecolored.bluemap.google'
+	relocate 'com.flowpowered', 'de.bluecolored.bluemap.flowpowered'
+	relocate 'com.typesafe', 'de.bluecolored.bluemap.typesafe'
+	relocate 'net.querz', 'de.bluecolored.bluemap.querz'
+	relocate 'ninja', 'de.bluecolored.bluemap.ninja'
+	relocate 'org.apache.commons', 'de.bluecolored.bluemap.apache.commons'
+	relocate 'org.yaml', 'de.bluecolored.bluemap.yaml'
+}
+
+processResources {
+	from(sourceSets.main.resources.srcDirs) {
+		include 'mcmod.info','META-INF/mods.toml'
+		
+		expand (
+			version: project.version
+		)
+	}
+}
+
+afterEvaluate {
+	reobf {
+		shadowJar {
+			mappings = createMcpToSrg.output
+		}
+	}
+}

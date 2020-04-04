@@ -5,43 +5,36 @@ plugins {
 
 allprojects {
 	repositories {
+        jcenter()
 		mavenCentral()
 		maven {
 			url 'https://jitpack.io'
 		}
 		maven {
 			name 'sponge'
-			url 'http://repo.spongepowered.org/maven'
+			url 'http://repo.spongepowered.org/maven/'
 		}
 		maven {
 			name 'CodeMC'
-			url 'https://repo.codemc.org/repository/maven-public'
+			url 'https://repo.codemc.org/repository/maven-public/'
 		}
+        maven { 
+        	url = 'https://files.minecraftforge.net/maven/'
+        }
 	}
 
 	compileJava.options.compilerArgs.add '-parameters'
 	compileTestJava.options.compilerArgs.add '-parameters'
 
 	apply plugin: 'java'
+	group = 'de.bluecolored.bluemap'
+  	version = '0.5.1-mc1.12'
+}
+
+subprojects {
 	apply plugin: 'com.github.johnrengelman.shadow'
-}
-
-dependencies {
-	compile project(':BlueMapCLI')
-	compile project(':BlueMapBukkit')
-	compile project(':BlueMapSponge')
-}
-
-assemble.dependsOn shadowJar {
-	relocate 'org.bstats.bukkit', 'de.bluecolored.bluemap.bstats.bukkit'
+	apply plugin: 'java'
 	
-	baseName = 'BlueMap'
-	version = null
-	classifier = null
-}
-
-jar {
-	manifest {
-		attributes 'Main-Class' : "de.bluecolored.bluemap.cli.BlueMapCLI"
-	}
+	sourceCompatibility = 1.8
+	targetCompatibility = 1.8
 }
