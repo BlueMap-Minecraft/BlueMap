@@ -52,8 +52,7 @@ import net.querz.nbt.NBTUtil;
 		id = Plugin.PLUGIN_ID, 
 		name = Plugin.PLUGIN_NAME,
 		authors = { "Blue (Lukas Rieger)" },
-		description = "This plugin provides a fully 3D map of your world for your browser!",
-		version = Plugin.PLUGIN_VERSION
+		description = "This plugin provides a fully 3D map of your world for your browser!"
 		)
 public class SpongePlugin implements ServerInterface {
 

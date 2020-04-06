@@ -1,5 +1,35 @@
 dependencies {
     shadow "org.spongepowered:spongeapi:7.1.0-SNAPSHOT"
     compile group: 'org.bstats', name: 'bstats-sponge-lite', version: '1.5'
-    compile project(':BlueMapCommon')
+    
+    compile (project(':BlueMapCommon')) {
+    	//exclude dependencies provided by sponge
+		exclude group: 'com.google.guava', module: 'guava'
+		exclude group: 'com.google.code.gson', module: 'gson'
+		exclude group: 'org.apache.commons', module: 'commons-lang3'
+		exclude group: 'com.flowpowered', module: 'flow-math'
+		exclude group: 'ninja.leaping.configurate', module: 'configurate-hocon'
+		exclude group: 'ninja.leaping.configurate', module: 'configurate-gson'
+		exclude group: 'ninja.leaping.configurate', module: 'configurate-yaml'
+	}
+}
+
+build.dependsOn shadowJar {
+	destinationDir = file '../build/release'
+	archiveFileName = "BlueMap-${version}-sponge.jar"
+	
+	relocate 'net.querz.nbt', 'de.bluecolored.shadow.querz.nbt'
+	relocate 'org.apache.commons.io', 'de.bluecolored.shadow.apache.commons.io'
+	
+	minimize()
+}
+
+processResources {
+	from(sourceSets.main.resources.srcDirs) {
+		include 'mcmod.info'
+		
+		expand (
+			version: project.version
+		)
+	}
 }

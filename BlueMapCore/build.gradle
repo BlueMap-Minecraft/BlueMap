@@ -16,6 +16,16 @@ dependencies {
    testCompile 'junit:junit:4.12'
 }
 
+processResources {
+	from(sourceSets.main.resources.srcDirs) {
+		include 'core.json'
+		
+		expand (
+			version: project.version
+		)
+	}
+}
+
 node {
   version = '12.14.1'
   download = true

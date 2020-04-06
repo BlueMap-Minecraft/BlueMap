@@ -15,7 +15,3 @@ jobs:
       run: ./gradlew test
     - name: Build with Gradle
       run: ./gradlew build
-    - uses: actions/upload-artifact@v1
-      with:
-        name: artifact
-        path: build/libs/BlueMap.jar
