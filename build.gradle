@@ -28,7 +28,7 @@ allprojects {
 
 	apply plugin: 'java'
 	group = 'de.bluecolored.bluemap'
-  	version = '0.5.1-mc1.12'
+  	version = coreVersion + '-' + targetVersion
 }
 
 subprojects {
