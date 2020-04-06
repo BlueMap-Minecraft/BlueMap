@@ -11,22 +11,26 @@ repositories {
 dependencies {
     shadow "org.bukkit:bukkit:1.14.4-R0.1-SNAPSHOT"
     compile group: 'org.bstats', name: 'bstats-bukkit-lite', version: '1.5'
-    compile project(':BlueMapCommon')
+    
+    compile (project(':BlueMapCommon')) {
+    	//exclude dependencies provided by bukkit
+		exclude group: 'com.google.guava', module: 'guava'
+		exclude group: 'com.google.code.gson', module: 'gson'
+		exclude group: 'org.yaml', module: 'snakeyaml'
+    }
 }
 
 build.dependsOn shadowJar {
 	destinationDir = file '../build/release'
 	archiveFileName = "BlueMap-${version}-bukkit.jar"
 	
-	relocate 'com.google', 'de.bluecolored.bluemap.google'
-	relocate 'com.flowpowered', 'de.bluecolored.bluemap.flowpowered'
-	relocate 'com.typesafe', 'de.bluecolored.bluemap.typesafe'
-	relocate 'net.querz', 'de.bluecolored.bluemap.querz'
-	relocate 'ninja', 'de.bluecolored.bluemap.ninja'
-	relocate 'org.apache', 'de.bluecolored.bluemap.apache'
-	relocate 'org.yaml', 'de.bluecolored.bluemap.yaml'
-	
-	relocate 'org.bstats.bukkit', 'de.bluecolored.bluemap.bstats.bukkit'
+	relocate 'com.flowpowered.math', 'de.bluecolored.shadow.flowpowered.math'
+	relocate 'com.typesafe.config', 'de.bluecolored.shadow.typesafe.config'
+	relocate 'net.querz.nbt', 'de.bluecolored.shadow.querz.nbt'
+	relocate 'ninja.leaping.configurate', 'de.bluecolored.shadow.ninja.leaping.configurate'
+	relocate 'org.apache.commons.io', 'de.bluecolored.shadow.apache.commons.io'
+	relocate 'org.apache.commons.lang3', 'de.bluecolored.shadow.apache.commons.lang3'
+	relocate 'org.bstats.bukkit', 'de.bluecolored.shadow.bstats.bukkit'
 }
 
 processResources {

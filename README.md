@@ -22,8 +22,8 @@ If you have a question, help others using BlueMap or get the latest news and inf
 If you have git installed, simply use the command `git clone https://github.com/BlueMap-Minecraft/BlueMap.git` to clone BlueMap.
 
 ### Build
-In order to build BlueMap you simply need to run the `./gradlew build` command in BlueMap's root directory.
-You can find the compiled JAR file in `./build/libs`.
+In order to build BlueMap you simply need to run the `./gradlew clean build` command in BlueMap's root directory.
+You can find the compiled JAR files in `./build/release`.
 
 ### Issues / Suggestions
 You found a bug, have another issue or a suggestion? Please create an issue [here](https://github.com/BlueMap-Minecraft/BlueMap/issues)!
