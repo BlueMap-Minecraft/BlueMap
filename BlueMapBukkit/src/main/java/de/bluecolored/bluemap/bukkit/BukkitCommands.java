@@ -73,7 +73,7 @@ public class BukkitCommands implements CommandExecutor {
 			}
 		});
 		
-		commands.add(new Command("bluemap.rendertask.create.world", "render") {
+		commands.add(new Command("bluemap.render", "render") {
 			@Override
 			public boolean execute(CommandSender sender, CommandSource source, String[] args) {
 				if (sender instanceof Player) {
@@ -113,7 +113,7 @@ public class BukkitCommands implements CommandExecutor {
 			}
 		});
 		
-		commands.add(new Command("bluemap.rendertask.prioritize", "render", "prioritize") {
+		commands.add(new Command("bluemap.render", "render", "prioritize") {
 			@Override
 			public boolean execute(CommandSender sender, CommandSource source, String[] args) {
 				if (args.length != 1) return false;
@@ -129,7 +129,7 @@ public class BukkitCommands implements CommandExecutor {
 			}
 		});
 		
-		commands.add(new Command("bluemap.rendertask.remove", "render", "remove") {
+		commands.add(new Command("bluemap.render", "render", "remove") {
 			@Override
 			public boolean execute(CommandSender sender, CommandSource source, String[] args) {
 				if (args.length != 1) return false;

@@ -81,7 +81,7 @@ public class SpongeCommands {
 	public CommandSpec createRenderCommand() {
 		return CommandSpec.builder()
 			.description(Text.of("Renders the whole world"))
-			.permission("bluemap.rendertask.create.world")
+			.permission("bluemap.render")
 			.childArgumentParseExceptionFallback(false)
 			.child(createPrioritizeTaskCommand(), "prioritize")
 			.child(createRemoveTaskCommand(), "remove")
@@ -134,7 +134,7 @@ public class SpongeCommands {
 	public CommandSpec createPrioritizeTaskCommand() {
 		return CommandSpec.builder()
 			.description(Text.of("Prioritizes the render-task with the given uuid"))
-			.permission("bluemap.rendertask.prioritize")
+			.permission("bluemap.render")
 			.arguments(GenericArguments.uuid(Text.of("task-uuid")))
 			.executor((source, args) -> {
 				Optional<UUID> uuid = args.<UUID>getOne("task-uuid");
@@ -152,7 +152,7 @@ public class SpongeCommands {
 	public CommandSpec createRemoveTaskCommand() {
 		return CommandSpec.builder()
 			.description(Text.of("Removes the render-task with the given uuid"))
-			.permission("bluemap.rendertask.remove")
+			.permission("bluemap.render")
 			.arguments(GenericArguments.uuid(Text.of("task-uuid")))
 			.executor((source, args) -> {
 				Optional<UUID> uuid = args.<UUID>getOne("task-uuid");
