@@ -13,11 +13,16 @@ build.dependsOn shadowJar {
 	destinationDir = file '../build/release'
 	archiveFileName = "BlueMap-${version}-cli.jar"
 	
-	relocate 'com.google', 'de.bluecolored.bluemap.google'
-	relocate 'com.flowpowered', 'de.bluecolored.bluemap.flowpowered'
-	relocate 'com.typesafe', 'de.bluecolored.bluemap.typesafe'
-	relocate 'net.querz', 'de.bluecolored.bluemap.querz'
-	relocate 'ninja', 'de.bluecolored.bluemap.ninja'
-	relocate 'org.apache', 'de.bluecolored.bluemap.apache'
-	relocate 'org.yaml', 'de.bluecolored.bluemap.yaml'
+	relocate 'com.flowpowered.math', 'de.bluecolored.shadow.flowpowered.math'
+	relocate 'com.google.common', 'de.bluecolored.shadow.google.common'
+	relocate 'com.google.gson', 'de.bluecolored.shadow.google.gson'
+	relocate 'com.google.thirdparty', 'de.bluecolored.shadow.google.thirdparty'
+	relocate 'com.typesafe.config', 'de.bluecolored.shadow.typesafe.config'
+	relocate 'net.querz.nbt', 'de.bluecolored.shadow.querz.nbt'
+	relocate 'ninja.leaping.configurate', 'de.bluecolored.shadow.ninja.leaping.configurate'
+	relocate 'org.apache.commons.cli', 'de.bluecolored.shadow.apache.commons.cli'
+	relocate 'org.apache.commons.io', 'de.bluecolored.shadow.apache.commons.io'
+	relocate 'org.apache.commons.lang3', 'de.bluecolored.shadow.apache.commons.lang3'
+	relocate 'org.bstats.bukkit', 'de.bluecolored.shadow.bstats.bukkit'
+	relocate 'org.yaml.snakeyaml', 'de.bluecolored.shadow.yaml.snakeyaml'
 }
