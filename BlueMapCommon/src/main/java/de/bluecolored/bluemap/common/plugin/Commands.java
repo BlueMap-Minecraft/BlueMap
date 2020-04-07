@@ -155,6 +155,58 @@ public class Commands {
 		}
 	}
 
+	/**
+	 * Command: /bluemap render [world,map]
+	 */
+	public boolean executeRenderCommand(CommandSource source, String mapOrWorld) {
+		return executeRenderCommand(source, mapOrWorld, null, -1);
+	}
+	
+	/**
+	 * Command: /bluemap render [world,map] [block-radius]
+	 */
+	public boolean executeRenderCommand(CommandSource source, String mapOrWorld, Vector2i center, int blockRadius) {
+		if (!checkLoaded(source)) return false;
+		
+		MapType map = null;
+		World world = null;
+		for (MapType m : bluemap.getMapTypes()) {
+			if (mapOrWorld.equalsIgnoreCase(m.getId()) || mapOrWorld.equalsIgnoreCase(m.getName())){
+				map = m;
+				world = map.getWorld();
+				break;
+			}
+		}
+		
+		if (world == null) {
+			for (World w : bluemap.getWorlds()) {
+				if (mapOrWorld.equalsIgnoreCase(w.getName())){
+					world = w;
+					break;
+				}
+			}
+		}
+		
+		if (world == null) {
+			source.sendMessage(Text.of(TextColor.RED, "Could not find a world or map with this name or id ", TextColor.GRAY, "('" + mapOrWorld + "')", TextColor.RED, "! Maybe it is not configured in BlueMap's config?"));
+		}
+		
+		world.invalidateChunkCache();
+
+		final World worldToRender = world;
+		final MapType mapToRender = map;
+		if (mapToRender == null) {
+			new Thread(() -> {
+				createWorldRenderTask(source, worldToRender, center, blockRadius);
+			}).start();
+		} else {
+			new Thread(() -> {
+				createMapRenderTask(source, mapToRender, center, blockRadius);
+			}).start();
+		}
+		
+		return true;
+	}
 
 	/**
 	 * Command: /bluemap render [world]
@@ -172,7 +224,7 @@ public class Commands {
 		World world = bluemap.getWorld(worldUuid);
 		
 		if (world == null) {
-			source.sendMessage(Text.of(TextColor.RED, "This world is not loaded with BlueMap! Maybe it is not configured?"));
+			source.sendMessage(Text.of(TextColor.RED, "This world is not loaded with BlueMap! Maybe it is not configured in BlueMap's config?"));
 			return false;
 		}
 		
@@ -304,6 +356,36 @@ public class Commands {
 			source.sendMessage(Text.of(TextColor.GREEN, tiles.size() + " tiles found! Task created."));
 		}
 
+		source.sendMessage(Text.of(TextColor.GREEN, "All render tasks created! Use /bluemap to view the progress!"));
+	}
+	
+	private void createMapRenderTask(CommandSource source, MapType map, Vector2i center, long blockRadius) {
+		source.sendMessage(Text.of(TextColor.GOLD, "Collecting chunks to render..."));
+		
+		String taskName = "world-render";
+		
+		Predicate<Vector2i> filter;
+		if (center == null || blockRadius < 0) {
+			filter = c -> true;
+		} else {
+			filter = c -> c.mul(16).distanceSquared(center) <= blockRadius * blockRadius;
+			taskName = "radius-render";
+		}
+		
+		Collection<Vector2i> chunks = map.getWorld().getChunkList(filter);
+		
+		source.sendMessage(Text.of(TextColor.GREEN, chunks.size() + " chunks found!"));
+		source.sendMessage(Text.of(TextColor.GOLD, "Collecting tiles for map '" + map.getId() + "'"));
+		
+		HiresModelManager hmm = map.getTileRenderer().getHiresModelManager();
+		Collection<Vector2i> tiles = hmm.getTilesForChunks(chunks);
+		
+		RenderTask task = new RenderTask(taskName, map);
+		task.addTiles(tiles);
+		task.optimizeQueue();
+		bluemap.getRenderManager().addRenderTask(task);
+		
+		source.sendMessage(Text.of(TextColor.GREEN, tiles.size() + " tiles found! Task created."));
 		source.sendMessage(Text.of(TextColor.GREEN, "All render tasks created! Use /bluemap to view the progress!"));
 	}
 	

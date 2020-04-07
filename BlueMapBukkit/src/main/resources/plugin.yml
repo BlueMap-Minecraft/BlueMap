@@ -23,9 +23,7 @@ permissions:
       bluemap.reload: true
       bluemap.pause: true
       bluemap.resume: true
-      bluemap.rendertask.create.world: true
-      bluemap.rendertask.prioritize: true
-      bluemap.rendertask.remove: true
+      bluemap.render: true
       bluemap.debug: true
     default: op
   bluemap.status:
@@ -36,11 +34,7 @@ permissions:
     default: op
   bluemap.resume:
     default: op
-  bluemap.rendertask.create.world:
-    default: op
-  bluemap.rendertask.prioritize:
-    default: op
-  bluemap.rendertask.remove:
+  bluemap.render:
     default: op
   bluemap.debug:
     default: op

@@ -2,11 +2,15 @@ package de.bluecolored.bluemap.forge;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
+
+import com.flowpowered.math.vector.Vector3i;
 
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
@@ -14,6 +18,8 @@ import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.logger.Logger;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
@@ -23,10 +29,9 @@ import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
 public class ForgeMod implements ServerInterface {
 	
 	private Plugin bluemap;
-	
-	private Map<String, UUID> worldUUIDs;
-	
 	private ForgeCommands commands;
+	private Map<String, UUID> worldUUIDs;
+	private Collection<ServerEventListener> eventListeners;
 	
 	public ForgeMod() {
 		Logger.global = new Log4jLogger(LogManager.getLogger(Plugin.PLUGIN_NAME));
@@ -34,6 +39,7 @@ public class ForgeMod implements ServerInterface {
 		this.bluemap = new Plugin("forge", this);
 		this.commands = new ForgeCommands(this, bluemap);
 		this.worldUUIDs = new HashMap<>();
+		this.eventListeners = new ArrayList<>(1);
 		
 		MinecraftForge.EVENT_BUS.register(this);
 	}
@@ -82,14 +88,50 @@ public class ForgeMod implements ServerInterface {
 
 	@Override
 	public void registerListener(ServerEventListener listener) {
-		// TODO Auto-generated method stub
-		
+		eventListeners.add(listener);
 	}
 
 	@Override
 	public void unregisterAllListeners() {
-		// TODO Auto-generated method stub
+		eventListeners.clear();
+	}
+	
+	@SubscribeEvent
+	public void onBlockBreak(BlockEvent.BreakEvent evt) {
+		onBlockChange(evt);
+	}
+	
+	@SubscribeEvent
+	public void onBlockPlace(BlockEvent.EntityPlaceEvent evt) {
+		onBlockChange(evt);
+	}
+	
+	private void onBlockChange(BlockEvent evt) {
+		if (!(evt.getWorld() instanceof ServerWorld)) return;
 		
+		try {
+			UUID world = getUUIDForWorld((ServerWorld) evt.getWorld());
+			Vector3i position = new Vector3i(
+					evt.getPos().getX(),
+					evt.getPos().getY(),
+					evt.getPos().getZ()
+				);
+			
+			for (ServerEventListener listener : eventListeners) listener.onBlockChange(world, position);
+			
+		} catch (IOException ignore) {}
+	}
+	
+	@SubscribeEvent
+	public void onWorldSave(WorldEvent.Save evt) {
+		if (!(evt.getWorld() instanceof ServerWorld)) return;
+		
+		try {
+			UUID world = getUUIDForWorld((ServerWorld) evt.getWorld());
+			
+			for (ServerEventListener listener : eventListeners) listener.onWorldSaveToDisk(world);
+			
+		} catch (IOException ignore) {}
 	}
 
 	@Override

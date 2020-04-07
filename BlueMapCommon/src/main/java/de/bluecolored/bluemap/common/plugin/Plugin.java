@@ -361,6 +361,10 @@ public class Plugin {
 		return worlds.get(uuid);
 	}
 	
+	public Collection<World> getWorlds(){
+		return worlds.values();
+	}
+	
 	public Collection<MapType> getMapTypes(){
 		return maps.values();
 	}
