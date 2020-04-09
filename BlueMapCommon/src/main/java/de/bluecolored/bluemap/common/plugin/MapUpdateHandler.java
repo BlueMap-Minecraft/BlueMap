@@ -21,20 +21,27 @@ public class MapUpdateHandler implements ServerEventListener {
 	}
 	
 	@Override
-	public void onWorldSaveToDisk(UUID world) {
+	public void onWorldSaveToDisk(final UUID world) {
 		RenderManager renderManager = Plugin.getInstance().getRenderManager();
 		
-		synchronized (updateBuffer) {
-			Iterator<MapType> iterator = updateBuffer.keys().iterator();
-			while (iterator.hasNext()) {
-				MapType map = iterator.next();
-				if (map.getWorld().getUUID().equals(world)) {
-					renderManager.createTickets(map, updateBuffer.get(map));
-					iterator.remove();
+		new Thread(() -> {
+			try {
+				Thread.sleep(5000); // wait 5 sec before rendering so saving has finished to avoid render-errors
+				
+				synchronized (updateBuffer) {
+					Iterator<MapType> iterator = updateBuffer.keys().iterator();
+					while (iterator.hasNext()) {
+						MapType map = iterator.next();
+						if (map.getWorld().getUUID().equals(world)) {
+							renderManager.createTickets(map, updateBuffer.get(map));
+							iterator.remove();
+						}
+					}
+					
 				}
-			}
+			} catch (InterruptedException ignore) {} 
 			
-		}
+		}).start();
 	}
 	
 	@Override

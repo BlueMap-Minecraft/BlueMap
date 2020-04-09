@@ -141,11 +141,10 @@ public class RenderManager {
 				try {
 					ticket.render();
 				} catch (IOException e) {
-					if (ticket.getRenderAttempts() < 3) {
-						Logger.global.logDebug("Failed to render tile " + ticket.getTile() + " of map '" + ticket.getMapType().getId() + "', rescheduling for " + (ticket.getRenderAttempts() + 1) + ". attempt..");
-						createTicket(ticket); //this might be a temporary issue, so we reschedule ticket for another attempt
+					if (ticket.getRenderAttempts() <= 1) {
+						createTicket(ticket);
 					} else {
-						Logger.global.logError("Failed to render tile " + ticket.getTile() + " of map '" + ticket.getMapType().getId() + "'!", e);
+						Logger.global.logDebug("Failed to render tile " + ticket.getTile() + " of map '" + ticket.getMapType().getId() + "' after " + ticket.getRenderAttempts() + " render-attempts! (" + e.toString() + ")");
 					}
 				}
 			} else {
