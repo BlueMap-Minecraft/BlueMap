@@ -32,7 +32,7 @@ dependencies {
 }
 
 build.dependsOn shadowJar {
-	destinationDir = file '../build/unsupported'
+	destinationDir = file '../build/release'
 	archiveFileName = "BlueMap-${version}-forge.jar"
 	
 	configurations = [project.configurations.include]
