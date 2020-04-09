@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.core.resourcepack;
 
-import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -199,9 +198,8 @@ public class TextureGallery {
 			
 			//crop off animation frames
 			if (image.getHeight() > image.getWidth()){
-				BufferedImage cropped = new BufferedImage(image.getWidth(), image.getWidth(), BufferedImage.TYPE_INT_ARGB);
-				Graphics2D g = cropped.createGraphics();
-				g.drawImage(image, 0, 0, null);
+				BufferedImage cropped = new BufferedImage(image.getWidth(), image.getWidth(), image.getType());
+				image.copyData(cropped.getRaster());
 				image = cropped;
 			}
 			
