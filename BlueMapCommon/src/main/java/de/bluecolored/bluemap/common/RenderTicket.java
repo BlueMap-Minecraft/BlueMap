@@ -11,23 +11,23 @@ public class RenderTicket {
 	private final Vector2i tile;
 	
 	private int renderAttempts;
-	private boolean finished;
+	private boolean successfullyRendered;
 	
 	public RenderTicket(MapType map, Vector2i tile) {
 		this.map = map;
 		this.tile = tile;
 		
 		this.renderAttempts = 0;
-		this.finished = false;
+		this.successfullyRendered = false;
 	}
 	
 	public synchronized void render() throws IOException {
 		renderAttempts++;
 		
-		if (!finished) {
+		if (!successfullyRendered) {
 			map.renderTile(tile);
 			
-			finished = true;
+			successfullyRendered = true;
 		}
 	}
 	
@@ -41,10 +41,6 @@ public class RenderTicket {
 	
 	public int getRenderAttempts() {
 		return renderAttempts;
-	}
-	
-	public boolean isFinished() {
-		return finished;
 	}
 	
 	@Override
