@@ -32,6 +32,7 @@ import java.util.function.Predicate;
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 
+import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.util.AABB;
 
 /**
@@ -47,6 +48,8 @@ public class SlicedWorld implements World {
 		this.world = world;
 		this.min = min;
 		this.max = max;
+		
+		Logger.global.logInfo("Sliced: " + min + max);
 	}
 	
 	@Override
@@ -116,23 +119,29 @@ public class SlicedWorld implements World {
 	
 	@Override
 	public boolean isAreaGenerated(AABB area) throws IOException {
-		if (!isInside(blockPosToChunkPos(area.getMin())) && !isInside(blockPosToChunkPos(area.getMax()))) return false;
-		
-		return world.isAreaGenerated(area);
+		return isAreaGenerated(area.getMin(), area.getMax());
 	}
 	
 	@Override
 	public boolean isAreaGenerated(Vector3i blockMin, Vector3i blockMax) throws IOException {
-		if (!isInside(blockPosToChunkPos(blockMin)) && !isInside(blockPosToChunkPos(blockMax))) return false;
-		
-		return world.isAreaGenerated(blockMin, blockMax);
+		return isAreaGenerated(blockPosToChunkPos(blockMin), blockPosToChunkPos(blockMax));
 	}
 	
 	@Override
 	public boolean isAreaGenerated(Vector2i chunkMin, Vector2i chunkMax) throws IOException {
-		if (!isInside(chunkMin) && !isInside(chunkMax)) return false;
+		if (!isInside(chunkMin) && 
+			!isInside(chunkMax) && 
+			!isInside(new Vector2i(chunkMin.getX(), chunkMax.getY())) && 
+			!isInside(new Vector2i(chunkMax.getX(), chunkMin.getY()))
+			) return false;
 		
-		return world.isAreaGenerated(chunkMin, chunkMax);
+		for (int x = chunkMin.getX(); x <= chunkMax.getX(); x++) {
+			for (int z = chunkMin.getY(); z <= chunkMax.getY(); z++) {
+				if (!world.isChunkGenerated(new Vector2i(x, z))) return false;
+			}
+		}
+		
+		return true;
 	}
 
 	@Override
@@ -170,10 +179,11 @@ public class SlicedWorld implements World {
 	
 	private boolean isInside(int chunkX, int chunkZ) {
 		return 
-				chunkX * 16 >= min.getX() &&
-				chunkX * 16 + 15 <= max.getX() &&
-				chunkZ * 16 >= min.getZ() &&
-				chunkZ * 16 + 15 <= max.getZ();
+			chunkX * 16 <= max.getX() &&
+			chunkX * 16 + 15 >= min.getX() &&
+			chunkZ * 16 <= max.getZ() &&
+			chunkZ * 16 + 15 >= min.getZ(); 
+				
 	}
 	
 	private Block createAirBlock(Vector3i pos) {

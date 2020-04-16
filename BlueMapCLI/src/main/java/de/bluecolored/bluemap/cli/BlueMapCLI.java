@@ -111,9 +111,17 @@ public class BlueMapCLI {
 			Logger.global.logInfo("Preparing renderer for map '" + mapConfig.getId() + "' ...");
 			World world = MCAWorld.load(worldFolder.toPath(), UUID.randomUUID(), configManager.getBlockIdConfig(), configManager.getBlockPropertiesConfig(), configManager.getBiomeConfig());
 			
-			//slice world to render edges if configured
-			if (mapConfig.isRenderEdges() && !(mapConfig.getMin().equals(RenderSettings.DEFAULT_MIN) && mapConfig.getMax().equals(RenderSettings.DEFAULT_MAX))) {
-				world = new SlicedWorld(world, mapConfig.getMin(), mapConfig.getMax());
+			//slice world if configured
+			if (!mapConfig.getMin().equals(RenderSettings.DEFAULT_MIN) || !mapConfig.getMax().equals(RenderSettings.DEFAULT_MAX)) {
+				if (mapConfig.isRenderEdges()) { 
+					world = new SlicedWorld(world, mapConfig.getMin(), mapConfig.getMax());
+				} else {
+					world = new SlicedWorld(
+							world, 
+							mapConfig.getMin().min(mapConfig.getMin().sub(2, 2, 2)), // protect from int-overflow
+							mapConfig.getMax().max(mapConfig.getMax().add(2, 2, 2))  // protect from int-overflow
+							);
+				}
 			}
 			
 			HiresModelManager hiresModelManager = new HiresModelManager(
