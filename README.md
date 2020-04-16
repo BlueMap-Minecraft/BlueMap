@@ -19,7 +19,7 @@ BlueMap can be used on the command-line, or as a plugin for your Sponge/Spigot/P
 If you have a question, help others using BlueMap or get the latest news and info you are welcome to join us [on Discord](https://discord.gg/zmkyJa3)!
 
 ### Clone
-If you have git installed, simply use the command `git clone https://github.com/BlueMap-Minecraft/BlueMap.git` to clone BlueMap.
+If you have git installed, simply use the command `git clone --recursive https://github.com/BlueMap-Minecraft/BlueMap.git` to clone BlueMap.
 
 ### Build
 In order to build BlueMap you simply need to run the `./gradlew clean build` command in BlueMap's root directory.

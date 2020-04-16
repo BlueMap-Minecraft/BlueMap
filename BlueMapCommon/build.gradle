@@ -1,3 +1,4 @@
 dependencies {
     compile project(':BlueMapCore')
+    compile project(':BlueMapAPI')
 }

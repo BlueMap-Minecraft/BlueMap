@@ -324,43 +324,19 @@ public class Commands {
 	}
 	
 	private void createWorldRenderTask(CommandSource source, World world, Vector2i center, long blockRadius) {
-		source.sendMessage(Text.of(TextColor.GOLD, "Collecting chunks to render..."));
-		
-		String taskName = "world-render";
-		
-		Predicate<Vector2i> filter;
-		if (center == null || blockRadius < 0) {
-			filter = c -> true;
-		} else {
-			filter = c -> c.mul(16).distanceSquared(center) <= blockRadius * blockRadius;
-			taskName = "radius-render";
-		}
-		
-		Collection<Vector2i> chunks = world.getChunkList(filter);
-		
-		source.sendMessage(Text.of(TextColor.GREEN, chunks.size() + " chunks found!"));
 		
 		for (MapType map : bluemap.getMapTypes()) {
 			if (!map.getWorld().getUUID().equals(world.getUUID())) continue;
 
-			source.sendMessage(Text.of(TextColor.GOLD, "Collecting tiles for map '" + map.getId() + "'"));
-			
-			HiresModelManager hmm = map.getTileRenderer().getHiresModelManager();
-			Collection<Vector2i> tiles = hmm.getTilesForChunks(chunks);
-			
-			RenderTask task = new RenderTask(taskName, map);
-			task.addTiles(tiles);
-			task.optimizeQueue();
-			bluemap.getRenderManager().addRenderTask(task);
-			
-			source.sendMessage(Text.of(TextColor.GREEN, tiles.size() + " tiles found! Task created."));
+			createMapRenderTask(source, map, center, blockRadius);
 		}
 
 		source.sendMessage(Text.of(TextColor.GREEN, "All render tasks created! Use /bluemap to view the progress!"));
 	}
 	
 	private void createMapRenderTask(CommandSource source, MapType map, Vector2i center, long blockRadius) {
-		source.sendMessage(Text.of(TextColor.GOLD, "Collecting chunks to render..."));
+		source.sendMessage(Text.of(TextColor.GOLD, "Creating render-task for map: " + map.getId()));
+		source.sendMessage(Text.of(TextColor.GOLD, "Collecting chunks..."));
 		
 		String taskName = "world-render";
 		
@@ -375,7 +351,7 @@ public class Commands {
 		Collection<Vector2i> chunks = map.getWorld().getChunkList(filter);
 		
 		source.sendMessage(Text.of(TextColor.GREEN, chunks.size() + " chunks found!"));
-		source.sendMessage(Text.of(TextColor.GOLD, "Collecting tiles for map '" + map.getId() + "'"));
+		source.sendMessage(Text.of(TextColor.GOLD, "Collecting tiles..."));
 		
 		HiresModelManager hmm = map.getTileRenderer().getHiresModelManager();
 		Collection<Vector2i> tiles = hmm.getTilesForChunks(chunks);
@@ -386,7 +362,6 @@ public class Commands {
 		bluemap.getRenderManager().addRenderTask(task);
 		
 		source.sendMessage(Text.of(TextColor.GREEN, tiles.size() + " tiles found! Task created."));
-		source.sendMessage(Text.of(TextColor.GREEN, "All render tasks created! Use /bluemap to view the progress!"));
 	}
 	
 	private boolean checkLoaded(CommandSource source) {

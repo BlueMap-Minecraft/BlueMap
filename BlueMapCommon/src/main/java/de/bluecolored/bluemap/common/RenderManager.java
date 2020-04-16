@@ -21,7 +21,7 @@ import de.bluecolored.bluemap.core.logger.Logger;
 
 public class RenderManager {
 
-	private boolean running;
+	private volatile boolean running;
 	
 	private Thread[] renderThreads;
 	private ArrayDeque<RenderTicket> renderTickets;
@@ -38,14 +38,13 @@ public class RenderManager {
 	
 	public synchronized void start() {
 		stop(); //ensure everything is stopped first
+		running = true;
 		
 		for (int i = 0; i < renderThreads.length; i++) {
 			renderThreads[i] = new Thread(this::renderThread);
 			renderThreads[i].setPriority(Thread.MIN_PRIORITY);
 			renderThreads[i].start();
 		}
-		
-		running = true;
 	}
 	
 	public synchronized void stop() {
@@ -118,7 +117,7 @@ public class RenderManager {
 	private void renderThread() {
 		RenderTicket ticket = null;
 		
-		while (!Thread.interrupted()) {
+		while (!Thread.interrupted() && running) {
 			synchronized (renderTickets) {
 				ticket = renderTickets.poll();
 				if (ticket != null) renderTicketMap.remove(ticket);
@@ -157,6 +156,10 @@ public class RenderManager {
 	
 	public int getQueueSize() {
 		return renderTickets.size();
+	}
+	
+	public int getRenderThreadCount() {
+		return renderThreads.length;
 	}
 	
 	/**
