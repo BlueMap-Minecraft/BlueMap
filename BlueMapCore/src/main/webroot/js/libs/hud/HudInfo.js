@@ -6,35 +6,56 @@ import {
 	Mesh,
 	MeshBasicMaterial
 } from 'three';
+import {CSS2DObject} from './CSS2DRenderer';
 import {pathFromCoords} from "../utils";
 
 export default class HudInfo {
 
-	constructor(blueMap, container){
+	constructor(blueMap){
 		this.blueMap = blueMap;
-		this.container = container;
 
-		let blockMarkerGeo = new BoxBufferGeometry( 1, 1, 1 );
+		let blockMarkerGeo = new BoxBufferGeometry( 1.01, 1.01, 1.01 );
 		blockMarkerGeo.translate(0.5, 0.5, 0.5);
 		this.blockMarker = new Mesh(blockMarkerGeo, new MeshBasicMaterial( {
 			color: 0xffffff,
-			opacity: 0.3,
+			opacity: 0.5,
 			depthWrite: false,
-			depthTest: false,
-			transparent: true
+			transparent: true,
 		} ));
 
 		this.rayPosition = new Vector2();
 		this.raycaster = new Raycaster();
 
 		this.element = $(`
-			<div class="hud-info" style="display: none">
+			<div class="hud-info"><div class="bubble" style="display: none">
 				<div class="content"></div>
-			</div>
-		`).appendTo(this.container);
+			</div></div>
+		`);
+		this.bubble = this.element.find(".bubble");
+
+		this.hudElement = new CSS2DObject(this.element[0]);
 
 		$(document).on('bluemap-info-click', this.onShowInfo);
-		$(window).on('mousedown wheel', this.onHideInfo);
+		$(window).on('mousedown wheel touchstart', this.onHideInfo);
+	}
+
+	showInfoBubble(content, x, y, z, onClose) {
+		if (this.onClose){
+			this.onClose();
+			this.onClose = undefined;
+		}
+
+		this.bubble.hide();
+		this.bubble.find(".content").html(content);
+
+		this.hudElement.position.set(x, y, z);
+		this.bubble.stop();
+		this.blueMap.hudScene.add(this.hudElement);
+		this.bubble.fadeIn(200);
+
+		this.onClose = onClose;
+
+		this.blueMap.updateFrame = true;
 	}
 
 	onShowInfo = event => {
@@ -50,9 +71,7 @@ export default class HudInfo {
 		}
 
 		if (intersects.length > 0) {
-			this.element.hide();
-			let content = this.element.find(".content");
-			content.html("");
+			let content = $("<div></div>");
 
 			if (this.blueMap.debugInfo){
 				console.debug("Tapped position data: ", intersects[0]);
@@ -129,28 +148,28 @@ export default class HudInfo {
 				`).appendTo(content);
 			}
 
-			//display the element
-			this.element.css('left', `${event.pos.x}px`);
-			this.element.css('top', `${event.pos.y}px`);
-			if (event.pos.y < this.blueMap.element.offsetHeight / 3){
-				this.element.addClass("below");
-			} else {
-				this.element.removeClass("below");
-			}
-			this.element.fadeIn(200);
-
+			//add block marker
 			if (hiresData){
 				this.blockMarker.position.set(block.x, block.y, block.z);
 				this.blueMap.hiresScene.add(this.blockMarker);
-				this.blueMap.updateFrame = true;
+				this.blockMarker.needsUpdate = true;
 			}
+
+			this.showInfoBubble(content.html(), block.x + 0.5, block.y + 1, block.z + 0.5);
 		}
 
 	};
 
 	onHideInfo = event => {
-		if (!this.element.is(':animated')) {
-			this.element.fadeOut(200);
+		if (!this.bubble.is(':animated')) {
+			this.bubble.fadeOut(200, () => {
+				this.blueMap.hudScene.remove(this.hudElement);
+
+				if (this.onClose){
+					this.onClose();
+					this.onClose = undefined;
+				}
+			});
 			this.blueMap.hiresScene.remove(this.blockMarker);
 			this.blueMap.updateFrame = true;
 		}

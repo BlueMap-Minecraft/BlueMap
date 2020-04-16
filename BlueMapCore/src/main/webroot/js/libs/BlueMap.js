@@ -42,6 +42,8 @@ import {
 	Vector3,
 } from 'three';
 
+import { CSS2DRenderer } from './hud/CSS2DRenderer';
+
 import UI from './ui/UI.js';
 
 import Controls from './Controls.js';
@@ -61,6 +63,7 @@ export default class BlueMap {
 	constructor(element, dataRoot) {
 		this.element = $('<div class="bluemap-container"></div>').appendTo(element)[0];
 		this.dataRoot = dataRoot;
+		this.locationHash = '';
 
 		this.hiresViewDistance = 160;
 		this.lowresViewDistance = 3200;
@@ -79,18 +82,17 @@ export default class BlueMap {
 		};
 		this.debugInfo = false;
 
-		this.ui = new UI(this);
-
-		this.loadingNoticeElement = $('<div>loading...</div>').appendTo($(this.element));
-		window.onerror = this.onLoadError;
-
 		this.fileLoader = new FileLoader();
 		this.blobLoader = new FileLoader();
 		this.blobLoader.setResponseType('blob');
 		this.bufferGeometryLoader = new BufferGeometryLoader();
 
+		this.ui = new UI(this);
+
+		this.loadingNoticeElement = $('<div>loading...</div>').appendTo($(this.element));
+		window.onerror = this.onLoadError;
+
 		this.initStage();
-		this.locationHash = '';
 		this.controls = new Controls(this.camera, this.element, this.hiresScene);
 
 		this.loadSettings().then(async () => {
@@ -100,16 +102,16 @@ export default class BlueMap {
 			this.loadUserSettings();
 			this.handleContainerResize();
 
-			this.changeMap(this.maps[0]);
+			this.changeMap(this.maps[0], false);
 
-			this.ui.load();
+			await this.ui.load();
 			this.start();
 		}).catch(error => {
 			this.onLoadError(error.toString());
 		});
 	}
 
-	changeMap(map) {
+	changeMap(map, loadTiles = true) {
 		if (this.debugInfo) console.debug("changing map: ", map);
 
 		if (this.map === map) return;
@@ -156,13 +158,15 @@ export default class BlueMap {
 			startPos
 		);
 
-		this.lowresTileManager.update();
-		this.hiresTileManager.update();
+		if (loadTiles) {
+			this.lowresTileManager.update();
+			this.hiresTileManager.update();
+		}
 
 		document.dispatchEvent(new Event('bluemap-map-change'));
 	}
 
-	loadLocationHash() {
+	loadLocationHash(smooth = false) {
 		let hashVars = window.location.hash.substring(1).split(':');
 		if (hashVars.length >= 1){
 			if (this.settings.maps[hashVars[0]] !== undefined && this.map !== hashVars[0]){
@@ -184,18 +188,23 @@ export default class BlueMap {
 			if (!isNaN(dir)) this.controls.targetDirection = dir;
 			if (!isNaN(dist)) this.controls.targetDistance = dist;
 			if (!isNaN(angle)) this.controls.targetAngle = angle;
-			this.controls.direction = this.controls.targetDirection;
-			this.controls.distance = this.controls.targetDistance;
-			this.controls.angle = this.controls.targetAngle;
-			this.controls.targetPosition.y = this.controls.minHeight;
-			this.controls.position.copy(this.controls.targetPosition);
+			if (!smooth) {
+				this.controls.direction = this.controls.targetDirection;
+				this.controls.distance = this.controls.targetDistance;
+				this.controls.angle = this.controls.targetAngle;
+				this.controls.targetPosition.y = this.controls.minHeight;
+				this.controls.position.copy(this.controls.targetPosition);
+			}
 		}
 		if (hashVars.length >= 7){
 			let height = parseInt(hashVars[6]);
 			if (!isNaN(height)){
 				this.controls.minHeight = height;
 				this.controls.targetPosition.y = height;
-				this.controls.position.copy(this.controls.targetPosition);
+
+				if (!smooth) {
+					this.controls.position.copy(this.controls.targetPosition);
+				}
 			}
 		}
 	}
@@ -207,7 +216,7 @@ export default class BlueMap {
 
 		$(window).on('hashchange', () => {
 			if (this.locationHash === window.location.hash) return;
-			this.loadLocationHash();
+			this.loadLocationHash(true);
 		});
 
 		this.update();
@@ -269,13 +278,16 @@ export default class BlueMap {
 		this.skyboxCamera.updateProjectionMatrix();
 
 		this.renderer.clear();
-		this.renderer.render(this.skyboxScene, this.skyboxCamera, this.renderer.getRenderTarget(), false);
+		this.renderer.render(this.skyboxScene, this.skyboxCamera);
 		this.renderer.clearDepth();
-		this.renderer.render(this.lowresScene, this.camera, this.renderer.getRenderTarget(), false);
+		this.renderer.render(this.lowresScene, this.camera);
 		if (this.camera.position.y < 400) {
 			this.renderer.clearDepth();
-			this.renderer.render(this.hiresScene, this.camera, this.renderer.getRenderTarget(), false);
+			this.renderer.render(this.hiresScene, this.camera);
 		}
+		this.renderer.render(this.shapeScene, this.camera);
+
+		this.hudRenderer.render(this.hudScene, this.camera);
 	};
 
 	handleContainerResize = () => {
@@ -289,6 +301,8 @@ export default class BlueMap {
 		$(this.renderer.domElement)
 			.css('width', this.element.clientWidth)
 			.css('height', this.element.clientHeight);
+
+		this.hudRenderer.setSize(this.element.clientWidth, this.element.clientHeight);
 
 		this.updateFrame = true;
 	};
@@ -324,9 +338,11 @@ export default class BlueMap {
 			antialias: true,
 			sortObjects: false,
 			preserveDrawingBuffer: true,
-			logarithmicDepthBuffer: true,
+			logarithmicDepthBuffer: false,
 		});
 		this.renderer.autoClear = false;
+
+		this.hudRenderer = new CSS2DRenderer();
 
 		this.camera = new PerspectiveCamera(75, this.element.scrollWidth / this.element.scrollHeight, 0.1, 10000);
 		this.camera.updateProjectionMatrix();
@@ -340,7 +356,11 @@ export default class BlueMap {
 		this.lowresScene = new Scene();
 		this.hiresScene = new Scene();
 
+		this.shapeScene = new Scene();
+		this.hudScene = new Scene();
+
 		$(this.renderer.domElement).addClass("map-canvas").appendTo(this.element);
+		$(this.hudRenderer.domElement).addClass("map-canvas-hud").appendTo(this.element);
 		this.handleContainerResize();
 
 		$(window).resize(this.handleContainerResize);
