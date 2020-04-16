@@ -32,7 +32,6 @@ import java.util.function.Predicate;
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 
-import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.util.AABB;
 
 /**
@@ -48,8 +47,6 @@ public class SlicedWorld implements World {
 		this.world = world;
 		this.min = min;
 		this.max = max;
-		
-		Logger.global.logInfo("Sliced: " + min + max);
 	}
 	
 	@Override
