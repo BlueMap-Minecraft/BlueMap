@@ -24,6 +24,7 @@ import com.flowpowered.math.vector.Vector2i;
 
 import de.bluecolored.bluemap.common.MapType;
 import de.bluecolored.bluemap.common.RenderManager;
+import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.config.ConfigManager;
 import de.bluecolored.bluemap.core.config.MainConfig;
@@ -49,6 +50,8 @@ public class Plugin {
 	public static final String PLUGIN_NAME = "BlueMap";
 
 	private static Plugin instance;
+	
+	private BlueMapAPIImpl api;
 	
 	private String implementationType;
 	
@@ -280,9 +283,16 @@ public class Plugin {
 		metricsThread.start();
 
 		loaded = true;
+		
+		//enable api
+		this.api = new BlueMapAPIImpl(this);
+		this.api.register();
 	}
 	
 	public synchronized void unload() {
+		
+		//disable api
+		if (api != null) api.unregister();
 		
 		//unregister listeners
 		serverInterface.unregisterAllListeners();
