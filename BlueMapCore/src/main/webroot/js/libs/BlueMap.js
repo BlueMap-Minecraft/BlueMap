@@ -281,8 +281,8 @@ export default class BlueMap {
 		this.renderer.render(this.skyboxScene, this.skyboxCamera);
 		this.renderer.clearDepth();
 		this.renderer.render(this.lowresScene, this.camera);
+		this.renderer.clearDepth();
 		if (this.camera.position.y < 400) {
-			this.renderer.clearDepth();
 			this.renderer.render(this.hiresScene, this.camera);
 		}
 		this.renderer.render(this.shapeScene, this.camera);
@@ -336,7 +336,7 @@ export default class BlueMap {
 		this.renderer = new WebGLRenderer({
 			alpha: true,
 			antialias: true,
-			sortObjects: false,
+			sortObjects: true,
 			preserveDrawingBuffer: true,
 			logarithmicDepthBuffer: false,
 		});

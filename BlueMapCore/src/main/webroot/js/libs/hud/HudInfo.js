@@ -63,8 +63,20 @@ export default class HudInfo {
 		this.rayPosition.y = - ( event.pos.y / this.blueMap.element.offsetHeight ) * 2 + 1;
 
 		this.raycaster.setFromCamera(this.rayPosition, this.blueMap.camera);
+
+		//check markers first
+		let intersects = this.raycaster.intersectObjects( this.blueMap.shapeScene.children );
+		console.log(intersects);
+		if (intersects.length !== 0){
+			try {
+				intersects[0].object.userData.marker.onClick(intersects[0].point);
+			} catch (ignore) {}
+			return;
+		}
+
+		//then show position info
 		let hiresData = true;
-		let intersects = this.raycaster.intersectObjects( this.blueMap.hiresScene.children );
+		intersects = this.raycaster.intersectObjects( this.blueMap.hiresScene.children );
 		if (intersects.length === 0){
 			hiresData = false;
 			intersects = this.raycaster.intersectObjects( this.blueMap.lowresScene.children );

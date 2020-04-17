@@ -1,3 +1,5 @@
+import {Vector3} from "three";
+
 export default class Marker {
 
 	constructor(blueMap, markerSet, markerData) {
@@ -5,7 +7,8 @@ export default class Marker {
 		this.markerSet = markerSet;
 		this.type = markerData.type;
 		this.map = markerData.map;
-		this.label = markerData.label;
+		this.position = new Vector3(markerData.position.x, markerData.position.y, markerData.position.z);
+		this.label = `<div class="marker-label">${markerData.label}</div>`;
 		this.link = markerData.link;
 		this.newTab = !!markerData.newTab;
 
@@ -25,7 +28,7 @@ export default class Marker {
 	updateRenderObject(object, scene, camera){
 		if (this.visible) {
 			//update visiblity
-			let distanceSquared = object.position.distanceToSquared(camera.position);
+			let distanceSquared = this.position.distanceToSquared(camera.position);
 			object.visible = distanceSquared <= this.maxDistanceSquared && distanceSquared >= this.minDistanceSquared;
 		} else {
 			object.visible = false;

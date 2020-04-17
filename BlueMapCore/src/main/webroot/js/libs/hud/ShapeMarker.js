@@ -1,13 +1,16 @@
 import {
 	Vector2,
 	Shape,
-	ExtrudeBufferGeometry,
 	MeshBasicMaterial,
 	Mesh,
-	Object3D,
+	Line,
+	LineBasicMaterial,
+	BufferGeometry,
+	ShapeBufferGeometry,
 	DoubleSide
 } from 'three';
 import Marker from "./Marker";
+import $ from "jquery";
 
 export default class ShapeMarker extends Marker {
 
@@ -20,44 +23,65 @@ export default class ShapeMarker extends Marker {
 				points.push(new Vector2(point.x, point.z));
 			});
 		}
-		this.floor = markerData.floor ? markerData.floor : 0;
-		this.ceiling = markerData.ceiling ? markerData.ceiling : 128;
+		this.height = markerData.height ? markerData.height : 128;
 
+		this.fillColor = this.prepareColor(markerData.fillColor);
+		this.borderColor = this.prepareColor(markerData.borderColor);
+
+		//fill
 		let shape = new Shape(points);
-		let extrude = new ExtrudeBufferGeometry(shape, {
-			steps: 1,
-			depth: this.ceiling - this.floor,
-			bevelEnabled: false
-		});
-		extrude.rotateX(Math.PI * 0.5);
-		extrude.translate(0, this.ceiling, 0);
-		let material = new MeshBasicMaterial( {
-			color: 0xff0000,
-			opacity: 0.25,
+		let fillGeo = new ShapeBufferGeometry(shape, 1);
+		fillGeo.rotateX(Math.PI * 0.5);
+		fillGeo.translate(0, this.height + 0.0072, 0);
+		let fillMaterial = new MeshBasicMaterial({
+			color: this.fillColor.rgb,
+			opacity: this.fillColor.a,
 			transparent: true,
-			side: DoubleSide
-		} );
+			side: DoubleSide,
+		});
+		let fill = new Mesh( fillGeo, fillMaterial );
 
-		let extrudeMesh = new Mesh( extrude, material );
+		//border
+		points.push(points[0]);
+		let lineGeo = new BufferGeometry().setFromPoints(points);
+		lineGeo.rotateX(Math.PI * 0.5);
+		lineGeo.translate(0, this.height + 0.0072, 0);
+		let lineMaterial = new LineBasicMaterial({
+			color: this.borderColor.rgb,
+			opacity: this.borderColor.a,
+			transparent: true,
+			depthTest: false,
+		});
+		let line = new Line( lineGeo, lineMaterial );
 
-		this.renderObject = new Object3D();
-		this.renderObject.add(extrudeMesh);
+		this.renderObject = fill;
+		fill.add(line);
+
+		this.renderObject.userData = {
+			marker: this,
+		};
+
 	}
 
 	setVisible(visible){
 		super.setVisible(visible);
 
 		if (this.visible) {
-			console.log(this.renderObject);
 			this.blueMap.shapeScene.add(this.renderObject);
+			$(document).on('bluemap-update-frame', this.onRender);
 		} else {
 			this.blueMap.shapeScene.remove(this.renderObject);
+			$(document).off('bluemap-update-frame', this.onRender);
 		}
 	}
 
-	onClick = () => {
+	onRender = () => {
+		this.updateRenderObject(this.renderObject, this.blueMap.shapeScene, this.blueMap.camera);
+	};
+
+	onClick = (clickPos) => {
 		if (this.label) {
-			//this.blueMap.ui.hudInfo.showInfoBubble(this.label, this.position.x, this.position.y, this.position.z);
+			this.blueMap.ui.hudInfo.showInfoBubble(this.label, clickPos.x, clickPos.y, clickPos.z);
 		}
 
 		if (this.link){
@@ -67,6 +91,16 @@ export default class ShapeMarker extends Marker {
 				location.href = this.link;
 			}
 		}
+	};
+
+	prepareColor(color){
+		if (color.r === undefined) color.r = 0;
+		if (color.g === undefined) color.g = 0;
+		if (color.b === undefined) color.b = 0;
+		if (color.a === undefined) color.a = 1;
+
+		color.rgb = (color.r << 16) + (color.g << 8) + (color.b);
+		return color;
 	}
 
 }

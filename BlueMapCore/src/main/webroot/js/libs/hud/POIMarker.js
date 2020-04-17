@@ -15,8 +15,6 @@ export default class POIMarker extends Marker {
 			x: markerData.iconAnchor.x,
 			y: markerData.iconAnchor.y
 		};
-
-		this.position = new Vector3(markerData.position.x, markerData.position.y, markerData.position.z);
 	}
 
 	setVisible(visible){
