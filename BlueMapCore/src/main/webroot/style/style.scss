@@ -31,17 +31,28 @@ html, body {
 
     overflow: hidden;
 
-    > .map-canvas {
+    > .map-canvas, .map-canvas-hud {
         position: absolute;
         top: 0;
         left: 0;
 
         width: 100%;
         height: 100%;
+    }
 
+    > .map-canvas {
         background-color: #000;
-
         z-index: 0;
+    }
+
+    > .map-canvas-hud {
+        pointer-events: none;
+
+        z-index: 10;
+
+        > * {
+            pointer-events: auto;
+        }
     }
 
     > .ui {

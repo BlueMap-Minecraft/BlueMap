@@ -24,6 +24,11 @@
  */
 package de.bluecolored.bluemap.common.api;
 
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -31,19 +36,23 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
+import javax.imageio.ImageIO;
+
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.renderer.BlueMapMap;
 import de.bluecolored.bluemap.api.renderer.BlueMapWorld;
-import de.bluecolored.bluemap.api.renderer.Renderer;
 import de.bluecolored.bluemap.common.MapType;
+import de.bluecolored.bluemap.common.api.marker.MarkerAPIImpl;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.world.World;
 
 public class BlueMapAPIImpl extends BlueMapAPI {
 
+	private static final String IMAGE_ROOT_PATH = "images";
+	
 	public Plugin blueMap;
-	public RendererImpl renderer;
+	public RenderAPIImpl renderer;
 	
 	public Map<UUID, BlueMapWorldImpl> worlds;
 	public Map<String, BlueMapMapImpl> maps;
@@ -51,7 +60,7 @@ public class BlueMapAPIImpl extends BlueMapAPI {
 	public BlueMapAPIImpl(Plugin blueMap) {
 		this.blueMap = blueMap;
 		
-		this.renderer = new RendererImpl(this, blueMap.getRenderManager());
+		this.renderer = new RenderAPIImpl(this, blueMap.getRenderManager());
 		
 		worlds = new HashMap<>();
 		for (World world : blueMap.getWorlds()) {
@@ -67,8 +76,13 @@ public class BlueMapAPIImpl extends BlueMapAPI {
 	}
 	
 	@Override
-	public Renderer getRenderer() {
+	public RenderAPIImpl getRenderAPI() {
 		return renderer;
+	}
+
+	@Override
+	public MarkerAPIImpl getMarkerAPI() throws IOException {
+		return new MarkerAPIImpl(this, blueMap.getMainConfig().getWebDataPath().resolve("markers.json").toFile());
 	}
 
 	@Override
@@ -79,6 +93,27 @@ public class BlueMapAPIImpl extends BlueMapAPI {
 	@Override
 	public Collection<BlueMapWorld> getWorlds() {
 		return Collections.unmodifiableCollection(worlds.values());
+	}
+
+	@Override
+	public String createImage(BufferedImage image, String path) throws IOException {
+		path = path.replaceAll("[^a-zA-Z_\\.\\-\\/]", "_");
+		String separator = FileSystems.getDefault().getSeparator();
+		
+		Path webRoot = blueMap.getMainConfig().getWebRoot().toAbsolutePath();
+		Path webDataRoot = blueMap.getMainConfig().getWebDataPath().toAbsolutePath();
+		
+		Path imagePath;
+		if (webDataRoot.startsWith(webRoot)) {
+			imagePath = webDataRoot.resolve(Paths.get(IMAGE_ROOT_PATH, path.replace("/", separator))).toAbsolutePath();
+		} else {
+			imagePath = webRoot.resolve("assets").resolve(Paths.get(IMAGE_ROOT_PATH, path.replace("/", separator))).toAbsolutePath();
+		}
+
+		if (!ImageIO.write(image, "png", imagePath.toFile()))
+			throw new IOException("The format 'png' is not supported!");
+		
+		return webRoot.relativize(imagePath).toString().replace(separator, "/");
 	}
 
 	@Override

@@ -30,15 +30,15 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 
 import de.bluecolored.bluemap.api.renderer.BlueMapMap;
-import de.bluecolored.bluemap.api.renderer.Renderer;
+import de.bluecolored.bluemap.api.renderer.RenderAPI;
 import de.bluecolored.bluemap.common.RenderManager;
 
-public class RendererImpl implements Renderer {
+public class RenderAPIImpl implements RenderAPI {
 
 	private BlueMapAPIImpl api;
 	private RenderManager renderManager;
 	
-	protected RendererImpl(BlueMapAPIImpl api, RenderManager renderManager) {
+	protected RenderAPIImpl(BlueMapAPIImpl api, RenderManager renderManager) {
 		this.api = api;
 		this.renderManager = renderManager;
 	}
