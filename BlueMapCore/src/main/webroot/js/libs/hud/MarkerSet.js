@@ -6,7 +6,7 @@ export default class MarkerSet {
 	constructor(blueMap, setData) {
 		this.blueMap = blueMap;
 		this.id = setData.id;
-		this.label = setData.label ? setData.label : this.id;
+		this.label = setData.label ? this.escapeHTML(setData.label) : this.id;
 		this.toggleable = setData.toggleable !== undefined ? !!setData.toggleable : true;
 		this.defaultHide = !!setData.defaultHide;
 		this.marker = [];
@@ -31,6 +31,10 @@ export default class MarkerSet {
 		this.marker.forEach(marker => {
 			marker.setVisible(this.visible);
 		});
+	}
+
+	escapeHTML(text) {
+		return text.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 	}
 
 }
