@@ -1,17 +1,14 @@
-.bluemap-container .ui .hud-info {
-    position: absolute;
+.bluemap-container .hud-info {
+    pointer-events: none;
+}
 
-    transform: translate(-50%, calc(-100% - 1rem));
+.bluemap-container .hud-info .bubble {
+    transform: translate(0, calc(-50% - 0.5rem));
 
     background-color: $normal_bg;
     filter: drop-shadow(1px 1px 3px #0008);
 
-    pointer-events: none;
     white-space: nowrap;
-
-    &.below {
-        transform: translate(-50%, 1rem);
-    }
 
     .content {
         position: relative;
@@ -67,23 +64,26 @@
             content: '';
 
             position: absolute;
-            bottom: -1rem;
+            bottom: calc(-1rem + 1px);
             left: calc(50% - 0.5rem);
 
             width: 0;
             height: 0;
 
-            z-index: 0;
-
             border: solid 0.5rem;
             border-color: $normal_bg transparent transparent transparent;
         }
     }
+}
 
-    &.below .content::after {
-        top: -1rem;
+.bluemap-container .marker-poi {
+    pointer-events: none;
 
-        border: solid 0.5rem;
-        border-color: transparent transparent $normal_bg transparent;
+    > * {
+      pointer-events: auto;
+    }
+
+    > img {
+        filter: drop-shadow(1px 1px 3px #0008);
     }
 }

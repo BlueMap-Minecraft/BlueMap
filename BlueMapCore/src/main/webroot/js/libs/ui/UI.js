@@ -38,7 +38,8 @@ import ToggleButton from "./ToggleButton";
 import MapSelection from "./MapSeletion";
 
 import NIGHT from '../../../assets/night.svg';
-import HudInfo from "../modules/HudInfo";
+import HudInfo from "../hud/HudInfo";
+import MarkerManager from "../hud/MarkerManager";
 
 export default class UI {
 
@@ -55,10 +56,11 @@ export default class UI {
 		this.toolbar.element.appendTo(this.hud);
 
 		//modules
-		this.hudInfo = new HudInfo(this.blueMap, this.element);
+		this.hudInfo = new HudInfo(this.blueMap);
+		this.markers = new MarkerManager(this.blueMap, this);
 	}
 
-	load() {
+	async load() {
 		//elements
 		let menuButton = new MenuButton(this.menu);
 		let mapSelect = new MapSelection(this.blueMap);
@@ -108,7 +110,11 @@ export default class UI {
 
 		//menu
 		this.menu.addElement(nightButton);
-		this.menu.addElement(mobSpawnOverlay);
+		//this.menu.addElement(mobSpawnOverlay);
+
+		await this.markers.readyPromise;
+		this.markers.addMenuElements(this.menu);
+
 		this.menu.addElement(new Separator());
 		this.menu.addElement(new Label('render quality:'));
 		this.menu.addElement(quality);
@@ -119,7 +125,6 @@ export default class UI {
 		this.menu.addElement(new Separator());
 		this.menu.addElement(debugInfo);
 		this.menu.update();
-
 	}
 
 }
