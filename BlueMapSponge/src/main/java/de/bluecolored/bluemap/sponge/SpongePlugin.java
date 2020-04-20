@@ -41,7 +41,6 @@ import org.spongepowered.api.event.game.state.GameStoppingEvent;
 import org.spongepowered.api.scheduler.SpongeExecutorService;
 import org.spongepowered.api.world.storage.WorldProperties;
 
-import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
@@ -72,8 +71,6 @@ public class SpongePlugin implements ServerInterface {
 	@Inject
 	public SpongePlugin(org.slf4j.Logger logger) {
 		Logger.global = new Slf4jLogger(logger);
-		
-		BlueMapAPI.registerListener(new BlueMapIntegration());
 		
 		this.bluemap = new Plugin("sponge", this);
 	}
