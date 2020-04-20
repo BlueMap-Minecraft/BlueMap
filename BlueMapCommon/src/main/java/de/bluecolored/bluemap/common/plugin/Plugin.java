@@ -207,6 +207,11 @@ public class Plugin {
 			MapType mapType = new MapType(id, name, world, tileRenderer);
 			maps.put(id, mapType);
 		}
+		if (maps.isEmpty()) {
+			Logger.global.logWarning("There are no valid maps configured, please check your config! Disabling BlueMap...");
+			unload();
+			return;
+		}
 		
 		//initialize render manager
 		renderManager = new RenderManager(config.getRenderThreadCount());
@@ -301,6 +306,7 @@ public class Plugin {
 		
 		//disable api
 		if (api != null) api.unregister();
+		api = null;
 		
 		//unregister listeners
 		serverInterface.unregisterAllListeners();

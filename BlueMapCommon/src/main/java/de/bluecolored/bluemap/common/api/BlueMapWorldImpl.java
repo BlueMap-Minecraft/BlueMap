@@ -30,8 +30,8 @@ import java.util.Collections;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import de.bluecolored.bluemap.api.renderer.BlueMapMap;
-import de.bluecolored.bluemap.api.renderer.BlueMapWorld;
+import de.bluecolored.bluemap.api.BlueMapMap;
+import de.bluecolored.bluemap.api.BlueMapWorld;
 import de.bluecolored.bluemap.core.world.World;
 
 public class BlueMapWorldImpl implements BlueMapWorld {
@@ -48,8 +48,7 @@ public class BlueMapWorldImpl implements BlueMapWorld {
 
 	@Override
 	public Path getSaveFolder() {
-		// TODO Auto-generated method stub
-		return null;
+		return delegate.getSaveFolder();
 	}
 
 	@Override

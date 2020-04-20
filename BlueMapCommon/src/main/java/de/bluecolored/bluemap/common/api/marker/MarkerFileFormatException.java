@@ -22,50 +22,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.api;
+package de.bluecolored.bluemap.common.api.marker;
 
-import com.flowpowered.math.vector.Vector2i;
+import java.io.IOException;
 
-import de.bluecolored.bluemap.api.BlueMapMap;
-import de.bluecolored.bluemap.common.MapType;
+public class MarkerFileFormatException extends IOException {
+	private static final long serialVersionUID = 1L;
 
-public class BlueMapMapImpl implements BlueMapMap {
-	
-	private BlueMapAPIImpl api;
-	private MapType delegate;
-
-	protected BlueMapMapImpl(BlueMapAPIImpl api, MapType delegate) {
-		this.api = api;
-		this.delegate = delegate;
+	public MarkerFileFormatException() {
+		super();
 	}
 	
-	@Override
-	public String getId() {
-		return delegate.getId();
+	public MarkerFileFormatException(String message) {
+		super(message);
 	}
-
-	@Override
-	public String getName() {
-		return delegate.getName();
-	}
-
-	@Override
-	public BlueMapWorldImpl getWorld() {
-		return api.getWorldForUuid(delegate.getWorld().getUUID());
-	}
-
-	@Override
-	public Vector2i getTileSize() {
-		return delegate.getTileRenderer().getHiresModelManager().getTileSize();
-	}
-
-	@Override
-	public Vector2i getTileOffset() {
-		return delegate.getTileRenderer().getHiresModelManager().getGridOrigin();
-	}
-
-	public MapType getMapType() {
-		return delegate;
+	
+	public MarkerFileFormatException(String message, Throwable cause) {
+		super(message, cause);
 	}
 	
 }

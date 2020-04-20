@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.core.world;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.function.Predicate;
@@ -44,6 +45,8 @@ public interface World {
 	String getName();
 	
 	UUID getUUID();
+	
+	Path getSaveFolder();
 	
 	int getSeaLevel();
 	

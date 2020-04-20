@@ -29,3 +29,6 @@ package-lock.json
 # exclude generated resource
 BlueMapCore/src/main/resources/webroot.zip
 BlueMapCore/src/main/resources/resourceExtensions.zip
+
+#exclude-test-data
+data/test-render
