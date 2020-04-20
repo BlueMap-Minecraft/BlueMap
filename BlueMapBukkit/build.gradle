@@ -1,5 +1,5 @@
 repositories {
-		maven {
+	maven {
 		url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
 
 		content {
