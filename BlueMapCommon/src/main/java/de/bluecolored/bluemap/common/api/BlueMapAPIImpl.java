@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.common.api;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
@@ -35,16 +36,19 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 import javax.imageio.ImageIO;
 
 import de.bluecolored.bluemap.api.BlueMapAPI;
-import de.bluecolored.bluemap.api.renderer.BlueMapMap;
-import de.bluecolored.bluemap.api.renderer.BlueMapWorld;
+import de.bluecolored.bluemap.api.BlueMapMap;
+import de.bluecolored.bluemap.api.BlueMapWorld;
 import de.bluecolored.bluemap.common.MapType;
 import de.bluecolored.bluemap.common.api.marker.MarkerAPIImpl;
+import de.bluecolored.bluemap.common.api.render.RenderAPIImpl;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.core.BlueMap;
+import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.world.World;
 
 public class BlueMapAPIImpl extends BlueMapAPI {
@@ -105,11 +109,16 @@ public class BlueMapAPIImpl extends BlueMapAPI {
 		
 		Path imagePath;
 		if (webDataRoot.startsWith(webRoot)) {
-			imagePath = webDataRoot.resolve(Paths.get(IMAGE_ROOT_PATH, path.replace("/", separator))).toAbsolutePath();
+			imagePath = webDataRoot.resolve(Paths.get(IMAGE_ROOT_PATH, path.replace("/", separator) + ".png")).toAbsolutePath();
 		} else {
-			imagePath = webRoot.resolve("assets").resolve(Paths.get(IMAGE_ROOT_PATH, path.replace("/", separator))).toAbsolutePath();
+			imagePath = webRoot.resolve("assets").resolve(Paths.get(IMAGE_ROOT_PATH, path.replace("/", separator) + ".png")).toAbsolutePath();
 		}
 
+		File imageFile = imagePath.toFile();
+		imageFile.getParentFile().mkdirs();
+		imageFile.delete();
+		imageFile.createNewFile();
+		
 		if (!ImageIO.write(image, "png", imagePath.toFile()))
 			throw new IOException("The format 'png' is not supported!");
 		
@@ -148,11 +157,19 @@ public class BlueMapAPIImpl extends BlueMapAPI {
 	}
 	
 	public void register() {
-		BlueMapAPI.registerInstance(this);
+		try {
+			BlueMapAPI.registerInstance(this);
+		} catch (ExecutionException ex) {
+			Logger.global.logError("BlueMapAPI: A BlueMapAPIListener threw an exception (onEnable)!", ex.getCause());
+		}
 	}
 	
 	public void unregister() {
-		BlueMapAPI.unregisterInstance(this);
+		try {
+			BlueMapAPI.unregisterInstance(this);
+		} catch (ExecutionException ex) {
+			Logger.global.logError("BlueMapAPI: A BlueMapAPIListener threw an exception (onDisable)!", ex.getCause());
+		}
 	}
 
 }

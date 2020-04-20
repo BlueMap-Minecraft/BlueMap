@@ -312,6 +312,11 @@ public class MCAWorld implements World {
 	public UUID getUUID() {
 		return uuid;
 	}
+	
+	@Override
+	public Path getSaveFolder() {
+		return worldFolder;
+	}
 
 	@Override
 	public int getSeaLevel() {

@@ -32,7 +32,7 @@ export default class ShapeMarker extends Marker {
 		let shape = new Shape(points);
 		let fillGeo = new ShapeBufferGeometry(shape, 1);
 		fillGeo.rotateX(Math.PI * 0.5);
-		fillGeo.translate(0, this.height + 0.0072, 0);
+		fillGeo.translate(0, this.height + 0.0172, 0);
 		let fillMaterial = new MeshBasicMaterial({
 			color: this.fillColor.rgb,
 			opacity: this.fillColor.a,

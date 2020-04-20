@@ -27,7 +27,6 @@ package de.bluecolored.bluemap.common.api.marker;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -37,10 +36,10 @@ import com.flowpowered.math.vector.Vector3d;
 import com.google.common.collect.Sets;
 
 import de.bluecolored.bluemap.api.BlueMapAPI;
+import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.marker.Marker;
 import de.bluecolored.bluemap.api.marker.MarkerSet;
 import de.bluecolored.bluemap.api.marker.Shape;
-import de.bluecolored.bluemap.api.renderer.BlueMapMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import ninja.leaping.configurate.ConfigurationNode;
 
@@ -145,87 +144,76 @@ public class MarkerSetImpl implements MarkerSet {
 		return false;
 	}
 	
-	public synchronized void load(BlueMapAPI api, ConfigurationNode node) throws MarkerFileFormatException {
-		this.hasUnsavedChanges = false;
-		this.removedMarkers.clear();
-		
-		this.label = node.getNode("label").getString(id);
-		this.toggleable = node.getNode("toggleable").getBoolean(true);
-		this.isDefaultHidden = node.getNode("defaultHide").getBoolean(false);
-		
+	public synchronized void load(BlueMapAPI api, ConfigurationNode node, boolean overwriteChanges) throws MarkerFileFormatException {
 		BlueMapMap dummyMap = api.getMaps().iterator().next();
 		Shape dummyShape = Shape.createRect(0d, 0d, 1d, 1d);
-		Set<String> externallyRemovedMarkers = new HashSet<>(this.markers.keySet());
 		
+		Set<String> externallyRemovedMarkers = new HashSet<>(this.markers.keySet());
 		for (ConfigurationNode markerNode : node.getNode("marker").getChildrenList()) {
 			String id = markerNode.getNode("id").getString();
 			String type = markerNode.getNode("type").getString();
 			
 			if (id == null || type == null) {
 				Logger.global.logDebug("Marker-API: Failed to load a marker in the set '" + this.id + "': No id or type defined!");
+				continue;
 			}
+
+			externallyRemovedMarkers.remove(id);
+			if (!overwriteChanges && removedMarkers.contains(id)) continue;
 			
 			MarkerImpl marker = markers.get(id);
-			externallyRemovedMarkers.remove(id);
-			
-			if (marker == null || !marker.getType().equals(type)) {
-				switch (type) {
-				case POIMarkerImpl.MARKER_TYPE:
-					marker = new POIMarkerImpl(id, dummyMap, Vector3d.ZERO);
-					break;
-				case ShapeMarkerImpl.MARKER_TYPE:
-					marker = new ShapeMarkerImpl(id, dummyMap, Vector3d.ZERO, dummyShape, 0f);
-					break;
-				}
-			}
-			
+
 			try {
-				marker.load(api, markerNode);
+				if (marker == null || !marker.getType().equals(type)) {
+					switch (type) {
+					case POIMarkerImpl.MARKER_TYPE:
+						marker = new POIMarkerImpl(id, dummyMap, Vector3d.ZERO);
+						break;
+					case ShapeMarkerImpl.MARKER_TYPE:
+						marker = new ShapeMarkerImpl(id, dummyMap, Vector3d.ZERO, dummyShape, 0f);
+						break;
+					default:
+						Logger.global.logDebug("Marker-API: Failed to load marker '" + id + "' in the set '" + this.id + "': Unknown marker-type '" + type + "'!");
+						continue;
+					}
+
+					marker.load(api, markerNode, true);
+				} else {
+					marker.load(api, markerNode, overwriteChanges);					
+				}
 				markers.put(id, marker);
 			} catch (MarkerFileFormatException ex) {
 				Logger.global.logDebug("Marker-API: Failed to load marker '" + id + "' in the set '" + this.id + "': " + ex);
 			}
 		}
 		
-		for (String id : externallyRemovedMarkers) {
-			markers.remove(id);
+		if (overwriteChanges) {
+			for (String id : externallyRemovedMarkers) {
+				markers.remove(id);
+			}
+			
+			this.removedMarkers.clear();
 		}
+		
+		if (!overwriteChanges && hasUnsavedChanges) return;
+		hasUnsavedChanges = false;
+		
+		this.label = node.getNode("label").getString(id);
+		this.toggleable = node.getNode("toggleable").getBoolean(true);
+		this.isDefaultHidden = node.getNode("defaultHide").getBoolean(false);
 	}
 	
-	public synchronized void save(ConfigurationNode node, boolean force) {
-		List<? extends ConfigurationNode> markerList = node.getNode("marker").getChildrenList();
-		node.removeChild("marker");
-		
-		Set<String> newMarkers = new HashSet<>(markers.keySet());
-		for (ConfigurationNode markerNode : markerList) {
-			String id = markerNode.getNode("id").getString();
-			if (id == null) continue;
-			if (removedMarkers.contains(id)) continue;
-			
-			newMarkers.remove(id);
-			MarkerImpl marker = markers.get(id);
-			
-			if (marker != null) marker.save(markerNode, false);
-			
-			node.getNode("marker").getAppendedNode().mergeValuesFrom(markerNode);
-		}
-		
-		for (String markerId : newMarkers) {
-			MarkerImpl marker = markers.get(markerId);
-			if (marker == null) continue;
-			
-			marker.save(node.getNode("marker").getAppendedNode(), true);
-		}
-		
-		removedMarkers.clear();
-		
-		if (!force && !hasUnsavedChanges) return;
-		
+	public synchronized void save(ConfigurationNode node) {
 		node.getNode("id").setValue(this.id);
 		node.getNode("label").setValue(this.label);
 		node.getNode("toggleable").setValue(this.toggleable);
 		node.getNode("defaultHide").setValue(this.isDefaultHidden);
 		
+		for (MarkerImpl marker : markers.values()) {
+			marker.save(node.getNode("marker").getAppendedNode());
+		}
+
+		removedMarkers.clear();
 		this.hasUnsavedChanges = false;
 	}
 

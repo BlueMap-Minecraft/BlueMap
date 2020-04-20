@@ -28,8 +28,8 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3d;
 
 import de.bluecolored.bluemap.api.BlueMapAPI;
+import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.marker.POIMarker;
-import de.bluecolored.bluemap.api.renderer.BlueMapMap;
 import ninja.leaping.configurate.ConfigurationNode;
 
 public class POIMarkerImpl extends MarkerImpl implements POIMarker {
@@ -72,9 +72,10 @@ public class POIMarkerImpl extends MarkerImpl implements POIMarker {
 	}
 	
 	@Override
-	public synchronized void load(BlueMapAPI api, ConfigurationNode markerNode) throws MarkerFileFormatException {
-		super.load(api, markerNode);
+	public synchronized void load(BlueMapAPI api, ConfigurationNode markerNode, boolean overwriteChanges) throws MarkerFileFormatException {
+		super.load(api, markerNode, overwriteChanges);
 
+		if (!overwriteChanges && hasUnsavedChanges) return;
 		this.hasUnsavedChanges = false;
 
 		this.iconAddress = markerNode.getNode("icon").getString("assets/poi.svg");
@@ -82,11 +83,9 @@ public class POIMarkerImpl extends MarkerImpl implements POIMarker {
 	}
 	
 	@Override
-	public synchronized void save(ConfigurationNode markerNode, boolean force) {
-		super.save(markerNode, force);
+	public synchronized void save(ConfigurationNode markerNode) {
+		super.save(markerNode);
 		
-		if (!force && !hasUnsavedChanges) return;
-
 		markerNode.getNode("icon").setValue(this.iconAddress);
 		writeAnchor(markerNode.getNode("iconAnchor"), this.anchor);
 		

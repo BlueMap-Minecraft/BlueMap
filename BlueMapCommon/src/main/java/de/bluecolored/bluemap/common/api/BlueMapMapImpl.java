@@ -26,7 +26,7 @@ package de.bluecolored.bluemap.common.api;
 
 import com.flowpowered.math.vector.Vector2i;
 
-import de.bluecolored.bluemap.api.renderer.BlueMapMap;
+import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.common.MapType;
 
 public class BlueMapMapImpl implements BlueMapMap {

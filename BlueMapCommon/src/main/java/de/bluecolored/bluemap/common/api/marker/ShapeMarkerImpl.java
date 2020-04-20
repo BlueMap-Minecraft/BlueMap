@@ -32,9 +32,9 @@ import com.flowpowered.math.vector.Vector3d;
 import com.google.common.base.Preconditions;
 
 import de.bluecolored.bluemap.api.BlueMapAPI;
+import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.marker.Shape;
 import de.bluecolored.bluemap.api.marker.ShapeMarker;
-import de.bluecolored.bluemap.api.renderer.BlueMapMap;
 import ninja.leaping.configurate.ConfigurationNode;
 
 public class ShapeMarkerImpl extends MarkerImpl implements ShapeMarker {
@@ -53,6 +53,8 @@ public class ShapeMarkerImpl extends MarkerImpl implements ShapeMarker {
 		
 		this.shape = shape;
 		this.height = height;
+		this.borderColor = new Color(255, 0, 0, 200);
+		this.fillColor = new Color(200, 0, 0, 100);
 
 		this.hasUnsavedChanges = true;
 	}
@@ -108,20 +110,21 @@ public class ShapeMarkerImpl extends MarkerImpl implements ShapeMarker {
 	}
 	
 	@Override
-	public void load(BlueMapAPI api, ConfigurationNode markerNode) throws MarkerFileFormatException {
-		super.load(api, markerNode);
+	public void load(BlueMapAPI api, ConfigurationNode markerNode, boolean overwriteChanges) throws MarkerFileFormatException {
+		super.load(api, markerNode, overwriteChanges);
 
-		this.shape = readShape(markerNode.getNode("icon"));
+		if (!overwriteChanges && hasUnsavedChanges) return;
+		this.hasUnsavedChanges = false;
+		
+		this.shape = readShape(markerNode.getNode("shape"));
 		this.height = markerNode.getNode("height").getFloat(64);
 		this.borderColor = readColor(markerNode.getNode("borderColor"));
 		this.fillColor = readColor(markerNode.getNode("fillColor"));
 	}
 	
 	@Override
-	public void save(ConfigurationNode markerNode, boolean force) {
-		super.save(markerNode, force);
-		
-		if (!force && !hasUnsavedChanges) return;
+	public void save(ConfigurationNode markerNode) {
+		super.save(markerNode);
 
 		writeShape(markerNode.getNode("shape"), this.shape);
 		markerNode.getNode("height").setValue(Math.round(height * 1000f) / 1000f);
