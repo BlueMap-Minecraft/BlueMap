@@ -30,8 +30,8 @@ import com.flowpowered.math.vector.Vector3d;
 import com.google.common.base.Preconditions;
 
 import de.bluecolored.bluemap.api.BlueMapAPI;
+import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.marker.Marker;
-import de.bluecolored.bluemap.api.renderer.BlueMapMap;
 import ninja.leaping.configurate.ConfigurationNode;
 
 public abstract class MarkerImpl implements Marker {
@@ -147,8 +147,9 @@ public abstract class MarkerImpl implements Marker {
 		this.hasUnsavedChanges = true;
 	}
 	
-	public synchronized void load(BlueMapAPI api, ConfigurationNode markerNode) throws MarkerFileFormatException {
-		this.hasUnsavedChanges = false;
+	public synchronized void load(BlueMapAPI api, ConfigurationNode markerNode, boolean overwriteChanges) throws MarkerFileFormatException {
+		if (!overwriteChanges && hasUnsavedChanges) return;
+		hasUnsavedChanges = false;
 		
 		//map
 		String mapId = markerNode.getNode("map").getString();
@@ -170,9 +171,7 @@ public abstract class MarkerImpl implements Marker {
 		this.newTab = markerNode.getNode("newTab").getBoolean(true);
 	}
 	
-	public synchronized void save(ConfigurationNode markerNode, boolean force) {
-		if (!force && !hasUnsavedChanges) return;
-		
+	public synchronized void save(ConfigurationNode markerNode) {		
 		markerNode.getNode("id").setValue(this.id);
 		markerNode.getNode("type").setValue(this.getType());
 		markerNode.getNode("map").setValue(this.map.getId());

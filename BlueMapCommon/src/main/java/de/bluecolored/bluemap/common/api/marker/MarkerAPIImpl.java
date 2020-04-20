@@ -29,7 +29,6 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -95,8 +94,10 @@ public class MarkerAPIImpl implements MarkerAPI {
 
 	@Override
 	public synchronized void load() throws IOException {		
-		this.removedMarkerSets.clear();
-
+		load(true);
+	}
+	
+	private synchronized void load(boolean overwriteChanges) throws IOException {
 		if (!markerFile.exists()) {
 			markerFile.getParentFile().mkdirs();
 			markerFile.createNewFile();
@@ -108,54 +109,50 @@ public class MarkerAPIImpl implements MarkerAPI {
 		Set<String> externallyRemovedSets = new HashSet<>(markerSets.keySet());
 		for (ConfigurationNode markerSetNode : node.getNode("markerSets").getChildrenList()) {
 			String setId = markerSetNode.getNode("id").getString();
-			if (setId == null) continue;
-			
-			externallyRemovedSets.remove(setId);
-			MarkerSetImpl set = markerSets.get(setId);
-			
-			if (set == null) {
-				set = new MarkerSetImpl(setId);
+			if (setId == null) {
+				Logger.global.logDebug("Marker-API: Failed to load a markerset: No id defined!");
+				continue;
 			}
 			
+			externallyRemovedSets.remove(setId);
+			if (!overwriteChanges && removedMarkerSets.contains(setId)) continue;
+			
+			MarkerSetImpl set = markerSets.get(setId);
+			
 			try {
-				set.load(api, markerSetNode);
+				if (set == null) {
+					set = new MarkerSetImpl(setId);
+					set.load(api, markerSetNode, true);
+				} else {
+					set.load(api, markerSetNode, overwriteChanges);
+				}
 				markerSets.put(setId, set);
 			} catch (MarkerFileFormatException ex) {
 				Logger.global.logDebug("Marker-API: Failed to load marker-set '" + setId + ": " + ex);
 			}
 		}
 		
-		for (String setId : externallyRemovedSets) {
-			markerSets.remove(setId);
+		if (overwriteChanges) {
+			for (String setId : externallyRemovedSets) {
+				markerSets.remove(setId);
+			}
+			
+			removedMarkerSets.clear();
 		}
 	}
 
 	@Override
 	public synchronized void save() throws IOException {
-		if (!markerFile.exists()) {
-			markerFile.getParentFile().mkdirs();
-			markerFile.createNewFile();
-		}
+		load(false);
 		
 		GsonConfigurationLoader loader = GsonConfigurationLoader.builder().setFile(markerFile).build();
-		ConfigurationNode node = loader.load();
+		ConfigurationNode node = loader.createEmptyNode();
 		
-		List<? extends ConfigurationNode> markerList = node.getNode("markerSets").getChildrenList();
-		node.removeChild("markerSets");
-		
-		Set<String> newMarkers = new HashSet<>(markerSets.keySet());
-		for (ConfigurationNode markerSetNode : markerList) {
-			String setId = markerSetNode.getNode("id").getString();
-			if (setId == null) continue;
-			if (removedMarkerSets.contains(setId)) continue;
-			
-			newMarkers.remove(setId);
-			MarkerSetImpl set = markerSets.get(setId);
-			
-			if (set != null) set.save(markerSetNode, false);
-			
-			node.getNode("markerSets").getAppendedNode().mergeValuesFrom(markerSetNode);
+		for (MarkerSetImpl set : markerSets.values()) {
+			set.save(node.getNode("markerSets").getAppendedNode());
 		}
+		
+		loader.save(node);
 		
 		removedMarkerSets.clear();
 	}

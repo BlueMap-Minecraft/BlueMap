@@ -22,23 +22,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.api;
+package de.bluecolored.bluemap.common.api.render;
 
 import java.util.UUID;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 
-import de.bluecolored.bluemap.api.renderer.BlueMapMap;
+import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.renderer.RenderAPI;
 import de.bluecolored.bluemap.common.RenderManager;
+import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
+import de.bluecolored.bluemap.common.api.BlueMapMapImpl;
 
 public class RenderAPIImpl implements RenderAPI {
 
 	private BlueMapAPIImpl api;
 	private RenderManager renderManager;
 	
-	protected RenderAPIImpl(BlueMapAPIImpl api, RenderManager renderManager) {
+	public RenderAPIImpl(BlueMapAPIImpl api, RenderManager renderManager) {
 		this.api = api;
 		this.renderManager = renderManager;
 	}
