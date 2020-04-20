@@ -13,7 +13,8 @@ export default class MarkerManager {
 
 		this.readyPromise =
 			this.loadMarkerData()
-			.then(this.loadMarkers);
+				.catch(ignore => {})
+				.then(this.loadMarkers);
 
 		$(document).on('bluemap-map-change', this.onBlueMapMapChange);
 	}
@@ -34,9 +35,11 @@ export default class MarkerManager {
 	}
 
 	loadMarkers = () => {
-		this.markerData.markerSets.forEach(setData => {
-			this.markerSets.push(new MarkerSet(this.blueMap, setData));
-		});
+		if (this.markerData && this.markerData.markerSets) {
+			this.markerData.markerSets.forEach(setData => {
+				this.markerSets.push(new MarkerSet(this.blueMap, setData));
+			});
+		}
 	};
 
 	update(){
