@@ -13,7 +13,7 @@ build.dependsOn shadowJar {
 	destinationDir = file '../build/release'
 	archiveFileName = "BlueMap-${version}-cli.jar"
 	
-	relocate 'com.flowpowered.math', 'de.bluecolored.shadow.flowpowered.math'
+	//relocate 'com.flowpowered.math', 'de.bluecolored.shadow.flowpowered.math' //DON'T relocate this, because the API depends on it
 	relocate 'com.google.common', 'de.bluecolored.shadow.google.common'
 	relocate 'com.google.gson', 'de.bluecolored.shadow.google.gson'
 	relocate 'com.google.thirdparty', 'de.bluecolored.shadow.google.thirdparty'
