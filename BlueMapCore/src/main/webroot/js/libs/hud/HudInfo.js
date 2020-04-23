@@ -66,8 +66,11 @@ export default class HudInfo {
 
 		//check markers first
 		let intersects = this.raycaster.intersectObjects( this.blueMap.shapeScene.children );
-		console.log(intersects);
 		if (intersects.length !== 0){
+			if (this.blueMap.debugInfo){
+				console.debug("Tapped position data: ", intersects[0]);
+			}
+
 			try {
 				intersects[0].object.userData.marker.onClick(intersects[0].point);
 			} catch (ignore) {}
@@ -163,7 +166,7 @@ export default class HudInfo {
 			//add block marker
 			if (hiresData){
 				this.blockMarker.position.set(block.x, block.y, block.z);
-				this.blueMap.hiresScene.add(this.blockMarker);
+				this.blueMap.shapeScene.add(this.blockMarker);
 				this.blockMarker.needsUpdate = true;
 			}
 
@@ -182,7 +185,7 @@ export default class HudInfo {
 					this.onClose = undefined;
 				}
 			});
-			this.blueMap.hiresScene.remove(this.blockMarker);
+			this.blueMap.shapeScene.remove(this.blockMarker);
 			this.blueMap.updateFrame = true;
 		}
 	};

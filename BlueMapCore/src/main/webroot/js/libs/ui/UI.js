@@ -93,6 +93,10 @@ export default class UI {
 			this.blueMap.lowresTileManager.setViewDistance(this.blueMap.lowresViewDistance);
 			this.blueMap.lowresTileManager.update();
 		});
+		let extendedZoom = new ToggleButton("extended zoom", this.blueMap.controls.settings.zoom.max > 2000, button => {
+			this.blueMap.controls.settings.zoom.max = button.isSelected() ? 8000 : 2000;
+			this.blueMap.controls.targetDistance = Math.min(this.blueMap.controls.targetDistance, this.blueMap.controls.settings.zoom.max);
+		});
 		let debugInfo = new ToggleButton("debug-info", this.blueMap.debugInfo, button => {
 			this.blueMap.debugInfo = button.isSelected();
 		});
@@ -122,6 +126,7 @@ export default class UI {
 		this.menu.addElement(hiresSlider);
 		this.menu.addElement(new Label('lowres render-distance (blocks):'));
 		this.menu.addElement(lowresSlider);
+		this.menu.addElement(extendedZoom);
 		this.menu.addElement(new Separator());
 		this.menu.addElement(debugInfo);
 		this.menu.update();
