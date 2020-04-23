@@ -14,6 +14,10 @@ bin/
 bin/*
 */bin/*
 
+doc/
+doc/*
+*/doc/*
+
 .classpath
 */.classpath
 

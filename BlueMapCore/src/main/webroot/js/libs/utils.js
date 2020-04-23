@@ -25,6 +25,10 @@
 
 import { Vector2, Vector3 } from 'three';
 
+export const cachePreventionNr = () => {
+	return Math.floor(Math.random() * 100000000);
+};
+
 export const stringToImage = string => {
 	let image = document.createElementNS('http://www.w3.org/1999/xhtml', 'img');
 	image.src = string;

@@ -22,8 +22,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+import { ShaderChunk } from 'three';
 
 const HIRES_FRAGMENT_SHADER = `
+${ShaderChunk.logdepthbuf_pars_fragment}
+
 uniform sampler2D texture;
 uniform float sunlightStrength;
 uniform float ambientLight;
@@ -75,6 +78,8 @@ void main() {
 	color.rgb *= max(light / 15.0, ambientLight);
 	
 	gl_FragColor = color;
+	
+	${ShaderChunk.logdepthbuf_fragment}
 }
 `;
 

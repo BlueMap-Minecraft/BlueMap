@@ -42,6 +42,7 @@ public class ShapeMarkerImpl extends MarkerImpl implements ShapeMarker {
 
 	private Shape shape;
 	private float height;
+	private boolean depthTest;
 	private Color borderColor, fillColor;
 
 	private boolean hasUnsavedChanges;
@@ -82,6 +83,16 @@ public class ShapeMarkerImpl extends MarkerImpl implements ShapeMarker {
 		this.height = height;
 		this.hasUnsavedChanges = true;
 	}
+	
+	@Override
+	public boolean isDepthTestEnabled() {
+		return this.depthTest;
+	}
+
+	@Override
+	public void setDepthTestEnabled(boolean enabled) {
+		this.depthTest = enabled;
+	}
 
 	@Override
 	public Color getBorderColor() {
@@ -118,6 +129,7 @@ public class ShapeMarkerImpl extends MarkerImpl implements ShapeMarker {
 		
 		this.shape = readShape(markerNode.getNode("shape"));
 		this.height = markerNode.getNode("height").getFloat(64);
+		this.depthTest = markerNode.getNode("depthTest").getBoolean(true);
 		this.borderColor = readColor(markerNode.getNode("borderColor"));
 		this.fillColor = readColor(markerNode.getNode("fillColor"));
 	}
@@ -128,6 +140,7 @@ public class ShapeMarkerImpl extends MarkerImpl implements ShapeMarker {
 
 		writeShape(markerNode.getNode("shape"), this.shape);
 		markerNode.getNode("height").setValue(Math.round(height * 1000f) / 1000f);
+		markerNode.getNode("depthTest").setValue(this.depthTest);
 		writeColor(markerNode.getNode("borderColor"), this.borderColor);
 		writeColor(markerNode.getNode("fillColor"), this.fillColor);
 		
