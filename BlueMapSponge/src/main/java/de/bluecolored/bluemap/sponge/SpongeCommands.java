@@ -144,7 +144,7 @@ public class SpongeCommands {
 			
 			List<Text> lines = new ArrayList<>();
 			for (String usageString : dispatcher.getSmartUsage(node, source).values()) {
-				lines.add(Text.of(TextColors.WHITE, "/", TextColors.GRAY, usageString));
+				lines.add(Text.of(TextColors.WHITE, "/" + label + " ", TextColors.GRAY, usageString));
 			}
 			
 			return Text.joinWith(Text.NEW_LINE, lines);
