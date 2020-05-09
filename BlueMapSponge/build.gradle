@@ -20,6 +20,7 @@ build.dependsOn shadowJar {
 	
 	relocate 'net.querz.nbt', 'de.bluecolored.shadow.querz.nbt'
 	relocate 'org.apache.commons.io', 'de.bluecolored.shadow.apache.commons.io'
+	relocate 'com.mojang.brigadier', 'de.bluecolored.shadow.mojang.brigadier'
 	
 	minimize()
 }

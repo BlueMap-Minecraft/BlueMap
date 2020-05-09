@@ -27,17 +27,19 @@ export default class ShapeMarker extends Marker {
 
 		this.fillColor = this.prepareColor(markerData.fillColor);
 		this.borderColor = this.prepareColor(markerData.borderColor);
+		this.depthTest = !!markerData.depthTest;
 
 		//fill
 		let shape = new Shape(points);
 		let fillGeo = new ShapeBufferGeometry(shape, 1);
 		fillGeo.rotateX(Math.PI * 0.5);
-		fillGeo.translate(0, this.height + 0.0172, 0);
+		fillGeo.translate(0, this.height + 0.01456, 0);
 		let fillMaterial = new MeshBasicMaterial({
 			color: this.fillColor.rgb,
 			opacity: this.fillColor.a,
 			transparent: true,
 			side: DoubleSide,
+			depthTest: this.depthTest,
 		});
 		let fill = new Mesh( fillGeo, fillMaterial );
 
@@ -45,7 +47,7 @@ export default class ShapeMarker extends Marker {
 		points.push(points[0]);
 		let lineGeo = new BufferGeometry().setFromPoints(points);
 		lineGeo.rotateX(Math.PI * 0.5);
-		lineGeo.translate(0, this.height + 0.0072, 0);
+		lineGeo.translate(0, this.height + 0.01456, 0);
 		let lineMaterial = new LineBasicMaterial({
 			color: this.borderColor.rgb,
 			opacity: this.borderColor.a,
@@ -54,8 +56,12 @@ export default class ShapeMarker extends Marker {
 		});
 		let line = new Line( lineGeo, lineMaterial );
 
-		this.renderObject = fill;
-		fill.add(line);
+		if (this.fillColor.a > 0 || this.borderColor.a <= 0) {
+			this.renderObject = fill;
+			fill.add(line);
+		} else {
+			this.renderObject = line;
+		}
 
 		this.renderObject.userData = {
 			marker: this,

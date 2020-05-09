@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.bukkit;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -34,6 +35,8 @@ import java.util.concurrent.Future;
 import org.bstats.bukkit.MetricsLite;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.bukkit.command.CommandMap;
+import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import de.bluecolored.bluemap.common.plugin.Plugin;
@@ -54,7 +57,7 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface {
 
 		this.eventForwarder = new EventForwarder();
 		this.bluemap = new Plugin("bukkit", this);
-		this.commands = new BukkitCommands(bluemap.getCommands());
+		this.commands = new BukkitCommands(this.bluemap);
 		
 		BukkitPlugin.instance = this;
 	}
@@ -69,9 +72,27 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface {
 			world.save();
 		}
 		
+		//register events
 		getServer().getPluginManager().registerEvents(eventForwarder, this);
-		getCommand("bluemap").setExecutor(commands);
 		
+		//register commands
+		try {
+			final Field bukkitCommandMap = Bukkit.getServer().getClass().getDeclaredField("commandMap");
+
+			bukkitCommandMap.setAccessible(true);
+			CommandMap commandMap = (CommandMap) bukkitCommandMap.get(Bukkit.getServer());
+
+			for (BukkitCommand command : commands.getRootCommands()) {
+				commandMap.register(command.getLabel(), command);
+			}
+		} catch(NoSuchFieldException | SecurityException | IllegalAccessException e) {
+			Logger.global.logError("Failed to register commands!", e);
+		}
+		
+		//tab completions
+		getServer().getPluginManager().registerEvents(commands, this);
+		
+		//load bluemap
 		getServer().getScheduler().runTaskAsynchronously(this, () -> {
 			try {
 				Logger.global.logInfo("Loading...");

@@ -80,6 +80,7 @@ public class BlueMapWebRequestHandler implements HttpRequestHandler {
 		return response;
 	}
 
+	@SuppressWarnings ("resource")
 	private HttpResponse generateResponse(HttpRequest request) {
 		String adress = request.getPath();
 		if (adress.isEmpty()) adress = "/";

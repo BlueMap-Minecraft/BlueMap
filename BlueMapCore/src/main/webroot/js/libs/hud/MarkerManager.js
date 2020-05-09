@@ -2,6 +2,7 @@ import MarkerSet from "./MarkerSet";
 import $ from "jquery";
 import ToggleButton from "../ui/ToggleButton";
 import Label from "../ui/Label";
+import {cachePreventionNr} from "../utils";
 
 export default class MarkerManager {
 
@@ -13,7 +14,9 @@ export default class MarkerManager {
 
 		this.readyPromise =
 			this.loadMarkerData()
-				.catch(ignore => {})
+				.catch(ignore => {
+					if (this.blueMap.debugInfo) console.debug("Failed load markers:", ignore);
+				})
 				.then(this.loadMarkers);
 
 		$(document).on('bluemap-map-change', this.onBlueMapMapChange);
@@ -21,10 +24,14 @@ export default class MarkerManager {
 
 	loadMarkerData() {
 		return new Promise((resolve, reject) => {
-			this.blueMap.fileLoader.load(this.blueMap.dataRoot + 'markers.json',
+			this.blueMap.fileLoader.load(this.blueMap.dataRoot + 'markers.json?' + cachePreventionNr(),
 				markerData => {
-					this.markerData = JSON.parse(markerData);
-					resolve();
+					try {
+						this.markerData = JSON.parse(markerData);
+						resolve();
+					} catch (e){
+						reject(e);
+					}
 				},
 				xhr => {},
 				error => {

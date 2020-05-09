@@ -37,9 +37,11 @@ import org.apache.logging.log4j.LogManager;
 import com.flowpowered.math.vector.Vector3i;
 
 import de.bluecolored.bluemap.common.plugin.Plugin;
+import de.bluecolored.bluemap.common.plugin.commands.Commands;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.logger.Logger;
+import net.minecraft.command.CommandSource;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.BlockEvent;
@@ -53,7 +55,7 @@ import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
 public class ForgeMod implements ServerInterface {
 	
 	private Plugin bluemap;
-	private ForgeCommands commands;
+	private Commands<CommandSource> commands;
 	private Map<String, UUID> worldUUIDs;
 	private Collection<ServerEventListener> eventListeners;
 	
@@ -61,7 +63,6 @@ public class ForgeMod implements ServerInterface {
 		Logger.global = new Log4jLogger(LogManager.getLogger(Plugin.PLUGIN_NAME));
 		
 		this.bluemap = new Plugin("forge", this);
-		this.commands = new ForgeCommands(this, bluemap);
 		this.worldUUIDs = new HashMap<>();
 		this.eventListeners = new ArrayList<>(1);
 		
@@ -85,8 +86,9 @@ public class ForgeMod implements ServerInterface {
 				Logger.global.logError("Failed to save world: " + world.getProviderName(), t);
 			}
 		}
-		
-		this.commands.registerCommands(event.getCommandDispatcher());
+
+		//register commands
+		this.commands = new Commands<>(bluemap, event.getCommandDispatcher(), ForgeCommandSource::new);
 		
 		new Thread(() -> {
 			try {
@@ -182,7 +184,7 @@ public class ForgeMod implements ServerInterface {
 				worldUUIDs.put(key, uuid);
 			}
 			
-			return uuid;	
+			return uuid;
 		}
 	}
 	
@@ -200,6 +202,10 @@ public class ForgeMod implements ServerInterface {
 	@Override
 	public File getConfigFolder() {
 		return new File("config/bluemap");
+	}
+
+	public Commands<CommandSource> getCommands() {
+		return commands;
 	}
     
 }

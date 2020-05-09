@@ -80,7 +80,7 @@ export default class BlueMap {
 		this.skyColor = {
 			value: new Vector3(0, 0, 0)
 		};
-		this.debugInfo = false;
+		this.debugInfo = this.loadUserSetting("debugInfo", true);
 
 		this.fileLoader = new FileLoader();
 		this.blobLoader = new FileLoader();
@@ -99,6 +99,7 @@ export default class BlueMap {
 			await this.loadHiresMaterial();
 			await this.loadLowresMaterial();
 
+			this.debugInfo = false;
 			this.loadUserSettings();
 			this.handleContainerResize();
 
@@ -107,7 +108,7 @@ export default class BlueMap {
 			await this.ui.load();
 			this.start();
 		}).catch(error => {
-			this.onLoadError(error.toString());
+			this.onLoadError("Initialization: " + error.toString());
 		});
 	}
 
@@ -310,21 +311,25 @@ export default class BlueMap {
 	async loadSettings() {
 		return new Promise(resolve => {
 			this.fileLoader.load(this.dataRoot + 'settings.json', settings => {
-				this.settings = JSON.parse(settings);
-				this.maps = [];
-				for (let map in this.settings.maps) {
-					if (this.settings["maps"].hasOwnProperty(map) && this.settings.maps[map].enabled){
-						this.maps.push(map);
+				try {
+					this.settings = JSON.parse(settings);
+					this.maps = [];
+					for (let map in this.settings.maps) {
+						if (this.settings["maps"].hasOwnProperty(map) && this.settings.maps[map].enabled) {
+							this.maps.push(map);
+						}
 					}
+
+					this.maps.sort((map1, map2) => {
+						let sort = this.settings.maps[map1].ordinal - this.settings.maps[map2].ordinal;
+						if (isNaN(sort)) return 0;
+						return sort;
+					});
+
+					resolve();
+				} catch (e) {
+					reject(e);
 				}
-
-				this.maps.sort((map1, map2) => {
-					var sort = this.settings.maps[map1].ordinal - this.settings.maps[map2].ordinal;
-					if (isNaN(sort)) return 0;
-					return sort;
-				});
-
-				resolve();
 			});
 		});
 	}
@@ -334,11 +339,10 @@ export default class BlueMap {
 		this.quality = 1;
 
 		this.renderer = new WebGLRenderer({
-			alpha: true,
 			antialias: true,
 			sortObjects: true,
 			preserveDrawingBuffer: true,
-			logarithmicDepthBuffer: false,
+			logarithmicDepthBuffer: true,
 		});
 		this.renderer.autoClear = false;
 
@@ -374,6 +378,7 @@ export default class BlueMap {
 		this.quality = this.loadUserSetting("renderQuality", this.quality);
 		this.hiresViewDistance = this.loadUserSetting("hiresViewDistance", this.hiresViewDistance);
 		this.lowresViewDistance = this.loadUserSetting("lowresViewDistance", this.lowresViewDistance);
+		this.controls.settings.zoom.max = this.loadUserSetting("maxZoomDistance", this.controls.settings.zoom.max);
 		this.debugInfo = this.loadUserSetting("debugInfo", this.debugInfo);
 	}
 
@@ -387,6 +392,7 @@ export default class BlueMap {
 		this.saveUserSetting("renderQuality", this.quality);
 		this.saveUserSetting("hiresViewDistance", this.hiresViewDistance);
 		this.saveUserSetting("lowresViewDistance", this.lowresViewDistance);
+		this.saveUserSetting("maxZoomDistance", this.controls.settings.zoom.max);
 		this.saveUserSetting("debugInfo", this.debugInfo);
 	}
 

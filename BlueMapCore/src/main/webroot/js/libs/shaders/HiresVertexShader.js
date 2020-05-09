@@ -22,8 +22,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+import { ShaderChunk } from 'three';
 
 const HIRES_VERTEX_SHADER = `
+${ShaderChunk.logdepthbuf_pars_vertex}
+
 attribute float ao;
 attribute float sunlight;
 attribute float blocklight;
@@ -51,7 +54,9 @@ void main() {
 		projectionMatrix *
 		viewMatrix *
 		modelMatrix *
-		vec4(position, 1); 
+		vec4(position, 1);
+	
+	${ShaderChunk.logdepthbuf_vertex} 
 }
 `;
 

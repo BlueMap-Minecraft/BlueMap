@@ -24,7 +24,12 @@
  */
 package de.bluecolored.bluemap.common.plugin.serverinterface;
 
+import java.util.Optional;
+
+import com.flowpowered.math.vector.Vector3d;
+
 import de.bluecolored.bluemap.common.plugin.text.Text;
+import de.bluecolored.bluemap.core.world.World;
 
 public interface CommandSource {
 
@@ -34,6 +39,16 @@ public interface CommandSource {
 		for (Text text : textLines) {
 			sendMessage(text);
 		}
+	}
+	
+	boolean hasPermission(String permission);
+	
+	default Optional<World> getWorld() {
+		return Optional.empty();
+	}
+	
+	default Optional<Vector3d> getPosition() {
+		return Optional.empty();
 	}
 	
 }
