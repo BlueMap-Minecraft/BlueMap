@@ -21,6 +21,9 @@ allprojects {
         maven { 
         	url = 'https://files.minecraftforge.net/maven/'
         }
+		maven {
+		    url "https://libraries.minecraft.net"
+		}
 	}
 
 	compileJava.options.compilerArgs.add '-parameters'

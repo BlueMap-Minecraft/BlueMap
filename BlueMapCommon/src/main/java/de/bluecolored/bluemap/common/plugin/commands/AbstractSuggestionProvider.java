@@ -22,28 +22,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.forge;
+package de.bluecolored.bluemap.common.plugin.commands;
 
-import de.bluecolored.bluemap.common.plugin.serverinterface.CommandSource;
-import de.bluecolored.bluemap.common.plugin.text.Text;
-import net.minecraft.util.text.ITextComponent;
+import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
 
-public class ForgeCommandSource implements CommandSource {
+import com.mojang.brigadier.context.CommandContext;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.suggestion.SuggestionProvider;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 
-	private net.minecraft.command.CommandSource delegate;
-	
-	public ForgeCommandSource(net.minecraft.command.CommandSource delegate) {
-		this.delegate = delegate;
-	}
-
-	@Override
-	public void sendMessage(Text text) {
-		delegate.sendFeedback(ITextComponent.Serializer.fromJson(text.toJSONString()), false);
-	}
+public abstract class AbstractSuggestionProvider<S> implements SuggestionProvider<S> {
 
 	@Override
-	public boolean hasPermission(String permission) {
-		return delegate.hasPermissionLevel(1);
+	public CompletableFuture<Suggestions> getSuggestions(CommandContext<S> context, SuggestionsBuilder builder) throws CommandSyntaxException {
+		Collection<String> possibleValues = getPossibleValues();
+		if(possibleValues.isEmpty()) return Suggestions.empty();
+
+		String remaining = builder.getRemaining().toLowerCase();
+		for (String str : possibleValues) {
+			if (str.toLowerCase().startsWith(remaining)) {
+				builder.suggest(str);
+			}
+		}
+		
+		return builder.buildFuture();
 	}
+
+	public abstract Collection<String> getPossibleValues();
 	
 }

@@ -24,194 +24,136 @@
  */
 package de.bluecolored.bluemap.sponge;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
+import org.spongepowered.api.command.CommandCallable;
+import org.spongepowered.api.command.CommandException;
 import org.spongepowered.api.command.CommandResult;
-import org.spongepowered.api.command.args.GenericArguments;
-import org.spongepowered.api.command.spec.CommandSpec;
+import org.spongepowered.api.command.CommandSource;
 import org.spongepowered.api.text.Text;
 import org.spongepowered.api.text.format.TextColors;
-import org.spongepowered.api.world.Locatable;
 import org.spongepowered.api.world.Location;
-import org.spongepowered.api.world.storage.WorldProperties;
+import org.spongepowered.api.world.World;
 
-import de.bluecolored.bluemap.common.plugin.Commands;
+import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.exceptions.CommandSyntaxException;
+import com.mojang.brigadier.suggestion.Suggestion;
+import com.mojang.brigadier.suggestion.Suggestions;
+import com.mojang.brigadier.tree.CommandNode;
+
+import de.bluecolored.bluemap.common.plugin.Plugin;
+import de.bluecolored.bluemap.common.plugin.commands.Commands;
 
 public class SpongeCommands {
-	
-	private Commands commands;
-	
-	public SpongeCommands(Commands commands) {
-		this.commands = commands;
-	}
-	
-	public CommandSpec createRootCommand() {
-		return CommandSpec.builder()
-			.description(Text.of("Displays BlueMaps render status"))
-			.permission("bluemap.status")
-			.childArgumentParseExceptionFallback(false)
-			.child(createReloadCommand(), "reload")
-			.child(createPauseRenderCommand(), "pause")
-			.child(createResumeRenderCommand(), "resume")
-			.child(createRenderCommand(), "render")
-			.child(createDebugCommand(), "debug")
-			.executor((source, args) -> {
-				commands.executeRootCommand(new SpongeCommandSource(source));
-				return CommandResult.success();
-			})
-			.build();
-	}
-	
-	public CommandSpec createReloadCommand() {
-		return CommandSpec.builder()
-			.description(Text.of("Reloads all resources and configuration-files"))
-			.permission("bluemap.reload")
-			.executor((source, args) -> {
-				commands.executeReloadCommand(new SpongeCommandSource(source));
-				return CommandResult.success();
-			})
-			.build();
-	}
 
-	public CommandSpec createPauseRenderCommand() {
-		return CommandSpec.builder()
-			.description(Text.of("Pauses all rendering"))
-			.permission("bluemap.pause")
-			.executor((source, args) -> {
-				if (commands.executePauseCommand(new SpongeCommandSource(source))) {
-					return CommandResult.success();
-				} else {
-					return CommandResult.empty();
-				}
-			})
-			.build();
+	private CommandDispatcher<CommandSource> dispatcher;
+	
+	public SpongeCommands(final Plugin plugin) {
+		this.dispatcher = new CommandDispatcher<>();
+		
+		// register commands
+		new Commands<>(plugin, dispatcher, bukkitSender -> new SpongeCommandSource(plugin, bukkitSender));
 	}
 	
-	public CommandSpec createResumeRenderCommand() {
-		return CommandSpec.builder()
-			.description(Text.of("Resumes all paused rendering"))
-			.permission("bluemap.resume")
-			.executor((source, args) -> {
-				if (commands.executeResumeCommand(new SpongeCommandSource(source))) {
-					return CommandResult.success();
-				} else {
-					return CommandResult.empty();
-				}
-			})
-			.build();
+	public Collection<SpongeCommandProxy> getRootCommands(){
+		Collection<SpongeCommandProxy> rootCommands = new ArrayList<>();
+		
+		for (CommandNode<CommandSource> node : this.dispatcher.getRoot().getChildren()) {
+			rootCommands.add(new SpongeCommandProxy(node.getName()));
+		}
+		
+		return rootCommands;
 	}
 	
-	public CommandSpec createRenderCommand() {
-		return CommandSpec.builder()
-			.description(Text.of("Renders the whole world"))
-			.permission("bluemap.render")
-			.childArgumentParseExceptionFallback(false)
-			.child(createPrioritizeTaskCommand(), "prioritize")
-			.child(createRemoveTaskCommand(), "remove")
-			.arguments(
-					GenericArguments.optionalWeak(GenericArguments.onlyOne(GenericArguments.world(Text.of("world")))),
-					GenericArguments.optional(GenericArguments.integer(Text.of("block-radius")))
-				)
-			.executor((source, args) -> {
-				WorldProperties spongeWorld = args.<WorldProperties>getOne("world").orElse(null);
-				
-				if (spongeWorld == null && source instanceof Locatable) {
-					Location<org.spongepowered.api.world.World> loc = ((Locatable) source).getLocation();
-					spongeWorld = loc.getExtent().getProperties();
-				}
-				
-				if (spongeWorld == null){
-					source.sendMessage(Text.of(TextColors.RED, "You have to define a world to render!"));
-					return CommandResult.empty();
-				}
+	public class SpongeCommandProxy implements CommandCallable {
 
-				int radius = args.<Integer>getOne("block-radius").orElse(-1);
+		private String label;
+		
+		protected SpongeCommandProxy(String label) {
+			this.label = label;
+		}
+		
+		@Override
+		public CommandResult process(CommandSource source, String arguments) throws CommandException {
+			String command = label;
+			if (!arguments.isEmpty()) {
+				command += " " + arguments;
+			}
+			
+			try {
+				return CommandResult.successCount(dispatcher.execute(command, source));
+			} catch (CommandSyntaxException ex) {
+				source.sendMessage(Text.of(TextColors.RED, ex.getRawMessage().getString()));
 				
-				if (radius >= 0) {
-					if (source instanceof Locatable) {
-						Location<org.spongepowered.api.world.World> loc = ((Locatable) source).getLocation();
-						
-						if (commands.executeRenderWorldCommand(new SpongeCommandSource(source), spongeWorld.getUniqueId(), loc.getBlockPosition().toVector2(true), radius)) {
-							return CommandResult.success();
-						} else {
-							return CommandResult.empty();
-						}
-					} else {
-						source.sendMessages(
-								Text.of(TextColors.RED, "Could not determine a center-location for the radius!"), 
-								Text.of(TextColors.GRAY, "Could not determine a center-location for the radius!")
-								);
-						return CommandResult.empty();
-					}
-				}
+				String context = ex.getContext();
+				if (context != null) source.sendMessage(Text.of(TextColors.GRAY, context));
 				
-				if (commands.executeRenderWorldCommand(new SpongeCommandSource(source), spongeWorld.getUniqueId())) {
-					return CommandResult.success();
-				} else {
-					return CommandResult.empty();
-				}
-			})
-			.build();
-	}
-	
-	public CommandSpec createPrioritizeTaskCommand() {
-		return CommandSpec.builder()
-			.description(Text.of("Prioritizes the render-task with the given uuid"))
-			.permission("bluemap.render")
-			.arguments(GenericArguments.uuid(Text.of("task-uuid")))
-			.executor((source, args) -> {
-				Optional<UUID> uuid = args.<UUID>getOne("task-uuid");
-				if (!uuid.isPresent()) {
-					source.sendMessage(Text.of(TextColors.RED, "You need to specify a task-uuid"));
-					return CommandResult.empty();
-				}
-				
-				commands.executePrioritizeRenderTaskCommand(new SpongeCommandSource(source), uuid.get());
-				return CommandResult.success();
-			})
-			.build();
-	}
-	
-	public CommandSpec createRemoveTaskCommand() {
-		return CommandSpec.builder()
-			.description(Text.of("Removes the render-task with the given uuid"))
-			.permission("bluemap.render")
-			.arguments(GenericArguments.uuid(Text.of("task-uuid")))
-			.executor((source, args) -> {
-				Optional<UUID> uuid = args.<UUID>getOne("task-uuid");
-				if (!uuid.isPresent()) {
-					source.sendMessage(Text.of(TextColors.RED, "You need to specify a task-uuid"));
-					return CommandResult.empty();
-				}
-				
-				commands.executeRemoveRenderTaskCommand(new SpongeCommandSource(source), uuid.get());
-				return CommandResult.success();
-			})
-			.build();
-	}
-	
-	public CommandSpec createDebugCommand() {
-		return CommandSpec.builder()
-			.permission("bluemap.debug")
-			.description(Text.of("Prints some debug info"))
-			.extendedDescription(Text.of("Prints some information about how bluemap sees the blocks at and below your position"))
-			.executor((source, args) -> {
-				if (source instanceof Locatable) {
-					Location<org.spongepowered.api.world.World> loc = ((Locatable) source).getLocation();
-					UUID worldUuid = loc.getExtent().getUniqueId();
-					
-					if (commands.executeDebugCommand(new SpongeCommandSource(source), worldUuid, loc.getBlockPosition())) {
-						return CommandResult.success();					
-					} else {
-						return CommandResult.empty();
-					}
-				}
-				
-				source.sendMessage(Text.of(TextColors.RED, "You can only execute this command as a player!"));
 				return CommandResult.empty();
-			})
-			.build();
+			}
+		}
+
+		@Override
+		public List<String> getSuggestions(CommandSource source, String arguments, Location<World> targetPosition) throws CommandException {
+			String command = label;
+			if (!arguments.isEmpty()) {
+				command += " " + arguments;
+			}
+
+			List<String> completions = new ArrayList<>();
+
+			try {
+				Suggestions suggestions = dispatcher.getCompletionSuggestions(dispatcher.parse(command, source)).get(100, TimeUnit.MILLISECONDS);
+				for (Suggestion suggestion : suggestions.getList()) {
+					String text = suggestion.getText();
+	
+					if (text.indexOf(' ') == -1) {
+						completions.add(text);
+					}
+				}
+			} catch (InterruptedException | ExecutionException | TimeoutException ignore) {}
+
+			completions.sort((s1, s2) -> s1.compareToIgnoreCase(s2));
+			return completions;
+		}
+
+		@Override
+		public boolean testPermission(CommandSource source) {
+			return true;
+		}
+
+		@Override
+		public Optional<Text> getShortDescription(CommandSource source) {
+			return Optional.empty();
+		}
+
+		@Override
+		public Optional<Text> getHelp(CommandSource source) {
+			return Optional.empty();
+		}
+
+		@Override
+		public Text getUsage(CommandSource source) {
+			CommandNode<CommandSource> node = dispatcher.getRoot().getChild(label);
+			if (node == null) return Text.of("/" + label);
+			
+			List<Text> lines = new ArrayList<>();
+			for (String usageString : dispatcher.getSmartUsage(node, source).values()) {
+				lines.add(Text.of(TextColors.WHITE, "/", TextColors.GRAY, usageString));
+			}
+			
+			return Text.joinWith(Text.NEW_LINE, lines);
+		}
+
+		public String getLabel() {
+			return label;
+		}
+		
 	}
 	
 }

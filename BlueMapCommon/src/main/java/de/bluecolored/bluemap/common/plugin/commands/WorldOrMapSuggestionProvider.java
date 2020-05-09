@@ -22,28 +22,36 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.forge;
+package de.bluecolored.bluemap.common.plugin.commands;
 
-import de.bluecolored.bluemap.common.plugin.serverinterface.CommandSource;
-import de.bluecolored.bluemap.common.plugin.text.Text;
-import net.minecraft.util.text.ITextComponent;
+import java.util.Collection;
+import java.util.HashSet;
 
-public class ForgeCommandSource implements CommandSource {
+import de.bluecolored.bluemap.common.MapType;
+import de.bluecolored.bluemap.common.plugin.Plugin;
+import de.bluecolored.bluemap.core.world.World;
 
-	private net.minecraft.command.CommandSource delegate;
+public class WorldOrMapSuggestionProvider<S> extends AbstractSuggestionProvider<S> {
+
+	private Plugin plugin;
 	
-	public ForgeCommandSource(net.minecraft.command.CommandSource delegate) {
-		this.delegate = delegate;
+	public WorldOrMapSuggestionProvider(Plugin plugin) {
+		this.plugin = plugin;
 	}
-
+	
 	@Override
-	public void sendMessage(Text text) {
-		delegate.sendFeedback(ITextComponent.Serializer.fromJson(text.toJSONString()), false);
-	}
-
-	@Override
-	public boolean hasPermission(String permission) {
-		return delegate.hasPermissionLevel(1);
+	public Collection<String> getPossibleValues() {
+		Collection<String> values = new HashSet<>();
+		
+		for (World world : plugin.getWorlds()) {
+			values.add(world.getName());
+		}
+		
+		for (MapType map : plugin.getMapTypes()) {
+			values.add(map.getId());
+		}
+		
+		return values;
 	}
 	
 }

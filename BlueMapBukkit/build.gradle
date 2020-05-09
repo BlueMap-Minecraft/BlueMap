@@ -1,4 +1,4 @@
-repositories {
+repositories {        
 	maven {
 		url = 'https://hub.spigotmc.org/nexus/content/repositories/snapshots/'
 
@@ -31,6 +31,7 @@ build.dependsOn shadowJar {
 	relocate 'org.apache.commons.io', 'de.bluecolored.shadow.apache.commons.io'
 	relocate 'org.apache.commons.lang3', 'de.bluecolored.shadow.apache.commons.lang3'
 	relocate 'org.bstats.bukkit', 'de.bluecolored.shadow.bstats.bukkit'
+	relocate 'com.mojang.brigadier', 'de.bluecolored.shadow.mojang.brigadier'
 }
 
 processResources {

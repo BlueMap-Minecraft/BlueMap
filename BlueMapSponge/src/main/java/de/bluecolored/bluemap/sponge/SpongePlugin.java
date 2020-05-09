@@ -45,6 +45,7 @@ import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.sponge.SpongeCommands.SpongeCommandProxy;
 import net.querz.nbt.CompoundTag;
 import net.querz.nbt.NBTUtil;
 
@@ -65,6 +66,7 @@ public class SpongePlugin implements ServerInterface {
     private MetricsLite2 metrics;
 	
 	private Plugin bluemap;
+	private SpongeCommands commands;
 	
 	private SpongeExecutorService asyncExecutor;
 	
@@ -73,6 +75,7 @@ public class SpongePlugin implements ServerInterface {
 		Logger.global = new Slf4jLogger(logger);
 		
 		this.bluemap = new Plugin("sponge", this);
+		this.commands = new SpongeCommands(bluemap);
 	}
 	
 	@Listener
@@ -84,7 +87,10 @@ public class SpongePlugin implements ServerInterface {
 			Sponge.getServer().saveWorldProperties(properties);
 		}
 		
-		Sponge.getCommandManager().register(this, new SpongeCommands(bluemap.getCommands()).createRootCommand(), "bluemap");
+		//register commands
+		for(SpongeCommandProxy command : commands.getRootCommands()) {
+			Sponge.getCommandManager().register(this, command, command.getLabel());
+		}
 		
 		asyncExecutor.execute(() -> {
 			try {
