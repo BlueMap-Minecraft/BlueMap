@@ -24,16 +24,25 @@
  */
 package de.bluecolored.bluemap.sponge;
 
-import org.spongepowered.api.text.serializer.TextSerializers;
+import java.util.Optional;
 
+import org.spongepowered.api.text.serializer.TextSerializers;
+import org.spongepowered.api.world.Locatable;
+
+import com.flowpowered.math.vector.Vector3d;
+
+import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.plugin.text.Text;
+import de.bluecolored.bluemap.core.world.World;
 
 public class SpongeCommandSource implements CommandSource {
 
+	private Plugin plugin;
 	private org.spongepowered.api.command.CommandSource delegate;
 	
-	public SpongeCommandSource(org.spongepowered.api.command.CommandSource delegate) {
+	public SpongeCommandSource(Plugin plugin, org.spongepowered.api.command.CommandSource delegate) {
+		this.plugin = plugin;
 		this.delegate = delegate;
 	}
 	
@@ -41,6 +50,29 @@ public class SpongeCommandSource implements CommandSource {
 	public void sendMessage(Text text) {
 		org.spongepowered.api.text.Text spongeText = TextSerializers.JSON.deserializeUnchecked(text.toJSONString());
 		delegate.sendMessage(spongeText);
+	}
+
+	@Override
+	public boolean hasPermission(String permission) {
+		return delegate.hasPermission(permission);
+	}
+	
+	@Override
+	public Optional<Vector3d> getPosition() {
+		if (delegate instanceof Locatable) {
+			return Optional.of(((Locatable) delegate).getLocation().getPosition());
+		}
+		
+		return Optional.empty();
+	}
+	
+	@Override
+	public Optional<World> getWorld() {
+		if (delegate instanceof Locatable) {
+			return Optional.ofNullable(plugin.getWorld(((Locatable) delegate).getLocation().getExtent().getUniqueId()));
+		}
+		
+		return Optional.empty();
 	}
 
 }

@@ -28,6 +28,7 @@ dependencies {
 		exclude group: 'com.google.code.gson', module: 'gson'
 		exclude group: 'org.apache.commons', module: 'commons-lang3'
 		exclude group: 'commons-io', module: 'commons-io'
+		exclude group: 'com.mojang', module: 'brigadier'
     }
 }
 

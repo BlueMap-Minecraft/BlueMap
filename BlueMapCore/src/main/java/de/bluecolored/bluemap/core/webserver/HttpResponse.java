@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.core.webserver;
 
 import java.io.ByteArrayInputStream;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -39,7 +40,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
 
-public class HttpResponse {
+public class HttpResponse implements Closeable {
 
 	private String version;
 	private HttpStatusCode statusCode;
@@ -111,6 +112,11 @@ public class HttpResponse {
 			out.flush();
 			data.close();
 		}
+	}
+
+	@Override
+	public void close() throws IOException {
+		data.close();
 	}
 	
 	private void writeLine(OutputStreamWriter writer, String line) throws IOException {
