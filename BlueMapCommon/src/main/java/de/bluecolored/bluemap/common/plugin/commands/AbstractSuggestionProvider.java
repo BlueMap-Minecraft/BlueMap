@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.common.plugin.commands;
 
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
+import java.util.regex.Pattern;
 
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
@@ -35,6 +36,8 @@ import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 
 public abstract class AbstractSuggestionProvider<S> implements SuggestionProvider<S> {
 
+	private static final Pattern ESCAPE_PATTERN = Pattern.compile("[^a-zA-Z0-9_-]");
+	
 	@Override
 	public CompletableFuture<Suggestions> getSuggestions(CommandContext<S> context, SuggestionsBuilder builder) throws CommandSyntaxException {
 		Collection<String> possibleValues = getPossibleValues();
@@ -42,6 +45,10 @@ public abstract class AbstractSuggestionProvider<S> implements SuggestionProvide
 
 		String remaining = builder.getRemaining().toLowerCase();
 		for (String str : possibleValues) {
+			if (ESCAPE_PATTERN.matcher(str).find() && str.indexOf('"') == -1) {
+				str = "\"" + str + "\"";
+			}
+			
 			if (str.toLowerCase().startsWith(remaining)) {
 				builder.suggest(str);
 			}

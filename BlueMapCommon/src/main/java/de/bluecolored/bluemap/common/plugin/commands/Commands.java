@@ -95,7 +95,7 @@ public class Commands<S> {
 				.requires(requirements("bluemap.debug"))
 				.executes(this::debugCommand)
 
-				.then(argument("world", StringArgumentType.word()).suggests(new WorldSuggestionProvider<>(plugin))
+				.then(argument("world", StringArgumentType.string()).suggests(new WorldSuggestionProvider<>(plugin))
 						.then(argument("x", DoubleArgumentType.doubleArg())
 								.then(argument("y", DoubleArgumentType.doubleArg())
 										.then(argument("z", DoubleArgumentType.doubleArg())
@@ -135,7 +135,7 @@ public class Commands<S> {
 								)
 						)
 				
-				.then(argument("world|map", StringArgumentType.word()).suggests(new WorldOrMapSuggestionProvider<>(plugin))
+				.then(argument("world|map", StringArgumentType.string()).suggests(new WorldOrMapSuggestionProvider<>(plugin))
 						.executes(this::renderCommand) // /bluemap render <world|map>
 						
 						.then(argument("x", DoubleArgumentType.doubleArg())
@@ -152,7 +152,7 @@ public class Commands<S> {
 		LiteralCommandNode<S> prioRenderCommand = 
 				literal("prioritize")
 				.requires(requirements("bluemap.render"))
-				.then(argument("uuid", StringArgumentType.word())
+				.then(argument("uuid", StringArgumentType.string())
 						.executes(this::prioritizeRenderTaskCommand)
 						)
 				.build();
@@ -160,9 +160,21 @@ public class Commands<S> {
 		LiteralCommandNode<S> cancelRenderCommand = 
 				literal("cancel")
 				.requires(requirements("bluemap.render"))
-				.then(argument("uuid", StringArgumentType.word())
+				.then(argument("uuid", StringArgumentType.string())
 						.executes(this::cancelRenderTaskCommand)
 						)
+				.build();
+		
+		LiteralCommandNode<S> worldsCommand = 
+				literal("worlds")
+				.requires(requirements("bluemap.status"))
+				.executes(this::worldsCommand)
+				.build();
+		
+		LiteralCommandNode<S> mapsCommand = 
+				literal("maps")
+				.requires(requirements("bluemap.status"))
+				.executes(this::mapsCommand)
 				.build();
 		
 		// command tree
@@ -174,6 +186,8 @@ public class Commands<S> {
 		baseCommand.addChild(renderCommand);
 		renderCommand.addChild(prioRenderCommand);
 		renderCommand.addChild(cancelRenderCommand);
+		baseCommand.addChild(worldsCommand);
+		baseCommand.addChild(mapsCommand);
 	}
 	
 	private Predicate<S> requirements(String permission){
@@ -454,4 +468,27 @@ public class Commands<S> {
 		source.sendMessage(Text.of(TextColor.RED, "There is no render-task with this UUID: " + uuidString));
 		return 0;
 	}
+	
+	public int worldsCommand(CommandContext<S> context) {
+		CommandSource source = commandSourceInterface.apply(context.getSource());
+		
+		source.sendMessage(Text.of(TextColor.BLUE, "Worlds loaded by BlueMap:"));
+		for (World world : plugin.getWorlds()) {
+			source.sendMessage(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, world.getName()).setHoverText(Text.of(TextColor.GRAY, world.getUUID())));
+		}
+		
+		return 1;
+	}
+	
+	public int mapsCommand(CommandContext<S> context) {
+		CommandSource source = commandSourceInterface.apply(context.getSource());
+		
+		source.sendMessage(Text.of(TextColor.BLUE, "Maps loaded by BlueMap:"));
+		for (MapType map : plugin.getMapTypes()) {
+			source.sendMessage(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, map.getId(), TextColor.GRAY, " (" + map.getName() + ")").setHoverText(Text.of(TextColor.WHITE, "World: ", TextColor.GRAY, map.getWorld().getName())));
+		}
+		
+		return 1;
+	}
+	
 }
