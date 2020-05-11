@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.sponge;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.inject.Inject;
@@ -39,6 +40,7 @@ import org.spongepowered.api.event.game.GameReloadEvent;
 import org.spongepowered.api.event.game.state.GameStartingServerEvent;
 import org.spongepowered.api.event.game.state.GameStoppingEvent;
 import org.spongepowered.api.scheduler.SpongeExecutorService;
+import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
 
 import de.bluecolored.bluemap.common.plugin.Plugin;
@@ -144,6 +146,14 @@ public class SpongePlugin implements ServerInterface {
 		} catch (Throwable t) {
 			throw new IOException("Failed to read level_sponge.dat", t);
 		}
+	}
+	
+	@Override
+	public String getWorldName(UUID worldUUID) {
+		Optional<World> world = Sponge.getServer().getWorld(worldUUID);
+		if (world.isPresent()) return world.get().getName();
+		
+		return null;
 	}
 
 	@Override

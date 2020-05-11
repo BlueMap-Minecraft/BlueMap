@@ -88,7 +88,7 @@ public class ForgeMod implements ServerInterface {
 		}
 
 		//register commands
-		this.commands = new Commands<>(bluemap, event.getCommandDispatcher(), ForgeCommandSource::new);
+		this.commands = new Commands<>(bluemap, event.getCommandDispatcher(), forgeSource -> new ForgeCommandSource(this, bluemap, forgeSource));
 		
 		new Thread(() -> {
 			try {

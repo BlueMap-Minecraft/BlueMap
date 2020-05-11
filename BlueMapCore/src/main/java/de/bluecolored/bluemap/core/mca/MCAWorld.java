@@ -377,11 +377,18 @@ public class MCAWorld implements World {
 	private Path getMCAFilePath(Vector2i region) {
 		return getRegionFolder().resolve(MCAUtil.createNameFromRegionLocation(region.getX(), region.getY()));
 	}
-	
+
 	public static MCAWorld load(Path worldFolder, UUID uuid, BlockIdMapper blockIdMapper, BlockPropertiesMapper blockPropertiesMapper, BiomeMapper biomeIdMapper) throws IOException {
+		return load(worldFolder, uuid, blockIdMapper, blockPropertiesMapper, biomeIdMapper, null);
+	}
+	
+	public static MCAWorld load(Path worldFolder, UUID uuid, BlockIdMapper blockIdMapper, BlockPropertiesMapper blockPropertiesMapper, BiomeMapper biomeIdMapper, String name) throws IOException {
 		try {
+			boolean subDimension = false;
+			
 			File levelFile = new File(worldFolder.toFile(), "level.dat");
 			if (!levelFile.exists()) {
+				subDimension = true;
 				levelFile = new File(worldFolder.toFile().getParentFile(), "level.dat");
 				if (!levelFile.exists()) {
 					throw new FileNotFoundException("Could not find a level.dat file for this world!");
@@ -391,7 +398,11 @@ public class MCAWorld implements World {
 			CompoundTag level = (CompoundTag) NBTUtil.readTag(levelFile);
 			CompoundTag levelData = level.getCompoundTag("Data");
 			
-			String name = levelData.getString("LevelName");
+			if (name == null) {
+				name = levelData.getString("LevelName");
+				if (subDimension) name += "/" + worldFolder.toFile().getName();
+			}
+			
 			int worldHeight = 255;
 			int seaLevel = 63;
 			Vector3i spawnPoint = new Vector3i(

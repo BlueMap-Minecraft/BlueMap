@@ -51,6 +51,17 @@ public interface ServerInterface {
 	UUID getUUIDForWorld(File worldFolder) throws IOException;
 
 	/**
+	 * Returns the name of the world with that UUID, the name is used in commands and should therefore be unique.<br>
+	 * A return-value of <code>null</code> makes bluemap load the world-name from the level.dat and dimension-folder. 
+	 * 
+	 * @param worldUUID the uuid of the world
+	 * @return the worlds name
+	 */
+	default String getWorldName(UUID worldUUID) {
+		return null;
+	}
+	
+	/**
 	 * Returns the Folder containing the configurations for the plugin
 	 */
 	File getConfigFolder();
