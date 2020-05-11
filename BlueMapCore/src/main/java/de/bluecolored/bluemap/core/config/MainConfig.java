@@ -31,6 +31,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
@@ -42,6 +43,7 @@ import de.bluecolored.bluemap.core.web.WebServerConfig;
 import ninja.leaping.configurate.ConfigurationNode;
 
 public class MainConfig implements WebServerConfig {
+	private static final Pattern VALID_ID_PATTERN = Pattern.compile("[a-zA-Z0-9_]+");
 	
 	private boolean downloadAccepted = false;
 	private boolean metricsEnabled = false;
@@ -207,6 +209,7 @@ public class MainConfig implements WebServerConfig {
 		private boolean renderEdges;
 		
 		private boolean useGzip;
+		private boolean ignoreMissingLightData;
 		
 		private int hiresTileSize;
 		
@@ -216,6 +219,7 @@ public class MainConfig implements WebServerConfig {
 		private MapConfig(ConfigurationNode node) throws IOException {
 			this.id = node.getNode("id").getString("");
 			if (id.isEmpty()) throw new IOException("Invalid configuration: Node maps[?].id is not defined");
+			if (!VALID_ID_PATTERN.matcher(id).matches()) throw new IOException("Invalid configuration: Node maps[?].id '" + id + "' has invalid characters in it");
 			
 			this.name = node.getNode("name").getString(id);
 			
@@ -243,6 +247,7 @@ public class MainConfig implements WebServerConfig {
 			this.renderEdges = node.getNode("renderEdges").getBoolean(true);
 
 			this.useGzip = node.getNode("useCompression").getBoolean(true);
+			this.ignoreMissingLightData = node.getNode("ignoreMissingLightData").getBoolean(false);
 			
 			this.hiresTileSize = node.getNode("hires", "tileSize").getInt(32);
 			
@@ -317,6 +322,10 @@ public class MainConfig implements WebServerConfig {
 		@Override
 		public boolean useGzipCompression() {
 			return useGzip;
+		}
+		
+		public boolean isIgnoreMissingLightData() {
+			return ignoreMissingLightData;
 		}
 		
 	}
