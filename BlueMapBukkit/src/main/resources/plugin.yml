@@ -3,7 +3,6 @@ description: "A 3d-map of your Minecraft worlds view-able in your browser using 
 main: de.bluecolored.bluemap.bukkit.BukkitPlugin
 version: ${version}
 author: "Blue (TBlueF / Lukas Rieger)"
-authors: [Blue (TBlueF / Lukas Rieger)]
 website: "https://github.com/BlueMap-Minecraft"
 commands:
 permissions:
@@ -15,6 +14,7 @@ permissions:
       bluemap.resume: true
       bluemap.render: true
       bluemap.debug: true
+      bluemap.marker: true
     default: op
   bluemap.status:
     default: op
@@ -27,4 +27,6 @@ permissions:
   bluemap.render:
     default: op
   bluemap.debug:
+    default: op
+  bluemap.marker:
     default: op

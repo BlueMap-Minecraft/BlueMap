@@ -24,15 +24,28 @@
  */
 package de.bluecolored.bluemap.forge;
 
+import java.io.IOException;
+import java.util.Optional;
+
+import com.flowpowered.math.vector.Vector3d;
+
+import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.plugin.text.Text;
+import de.bluecolored.bluemap.core.world.World;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraft.world.server.ServerWorld;
 
 public class ForgeCommandSource implements CommandSource {
 
+	private ForgeMod mod;
+	private Plugin plugin;
 	private net.minecraft.command.CommandSource delegate;
 	
-	public ForgeCommandSource(net.minecraft.command.CommandSource delegate) {
+	public ForgeCommandSource(ForgeMod mod, Plugin plugin, net.minecraft.command.CommandSource delegate) {
+		this.mod = mod;
+		this.plugin = plugin;
 		this.delegate = delegate;
 	}
 
@@ -44,6 +57,28 @@ public class ForgeCommandSource implements CommandSource {
 	@Override
 	public boolean hasPermission(String permission) {
 		return delegate.hasPermissionLevel(1);
+	}
+	
+	@Override
+	public Optional<Vector3d> getPosition() {
+		Vec3d pos = delegate.getPos(); 
+		if (pos != null) {
+			return Optional.of(new Vector3d(pos.x, pos.y, pos.z));
+		}
+		
+		return Optional.empty();
+	}
+	
+	@Override
+	public Optional<World> getWorld() {
+		try {
+			ServerWorld world = delegate.getWorld();
+			if (world != null) {
+				return Optional.ofNullable(plugin.getWorld(mod.getUUIDForWorld(world)));
+			}
+		} catch (IOException ignore) {}
+		
+		return Optional.empty();
 	}
 	
 }

@@ -150,6 +150,14 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface {
 		}
 	}
 	
+	@Override
+	public String getWorldName(UUID worldUUID) {
+		World world = getServer().getWorld(worldUUID);
+		if (world != null) return world.getName();
+		
+		return null;
+	}
+	
 	private UUID getUUIDForWorldSync (File worldFolder) throws IOException {
 		for (World world : getServer().getWorlds()) {
 			if (worldFolder.equals(world.getWorldFolder().getCanonicalFile())) return world.getUID();

@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.common.plugin.commands;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
@@ -34,7 +35,7 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
 
 public abstract class AbstractSuggestionProvider<S> implements SuggestionProvider<S> {
-
+	
 	@Override
 	public CompletableFuture<Suggestions> getSuggestions(CommandContext<S> context, SuggestionsBuilder builder) throws CommandSyntaxException {
 		Collection<String> possibleValues = getPossibleValues();
@@ -43,7 +44,7 @@ public abstract class AbstractSuggestionProvider<S> implements SuggestionProvide
 		String remaining = builder.getRemaining().toLowerCase();
 		for (String str : possibleValues) {
 			if (str.toLowerCase().startsWith(remaining)) {
-				builder.suggest(str);
+				builder.suggest(str = StringArgumentType.escapeIfRequired(str));
 			}
 		}
 		
