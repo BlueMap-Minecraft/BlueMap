@@ -35,15 +35,13 @@ Just create a pull request with your changes :)
 ### Todo / planned features
 Here is a *(surely incomplete)* list of things that i want to include in future versions. *(They are not in any specific order. There is no guarantee that any of those things will ever be included.)*
 
+- live player positions
+- fabric version
 - render more tile-entities (banners, shulker-chests, etc..)
 - render entities (armor-stands, item-frames, maybe even cows and such..)
-- configurable markers / regions
-- marker / region API
 - free-flight-controls
-- live player positions
 - more configurations
 - easier mod-integration
-- BlueMap as forge mod
 - ability to display the world-border
 - animated textures (if feasible)
 - add support for models in obj format (if feasible)
