@@ -47,11 +47,12 @@ public class ChunkAnvil113 extends Chunk {
 	private BiomeMapper biomeIdMapper;
 
 	private boolean isGenerated;
+	private boolean hasLight;
 	private Section[] sections;
 	private int[] biomes;
 	
 	@SuppressWarnings("unchecked")
-	public ChunkAnvil113(MCAWorld world, CompoundTag chunkTag) {
+	public ChunkAnvil113(MCAWorld world, CompoundTag chunkTag, boolean ignoreMissingLightData) {
 		super(world, chunkTag);
 		
 		biomeIdMapper = getWorld().getBiomeIdMapper();
@@ -60,6 +61,11 @@ public class ChunkAnvil113 extends Chunk {
 		
 		String status = levelData.getString("Status");
 		isGenerated = status.equals("full") || status.equals("spawn"); // full is normal fully generated and spawn seems to be converted from old format but not yet loaded if you optimized your world
+		hasLight = isGenerated;
+		
+		if (!isGenerated && ignoreMissingLightData) {
+			isGenerated = !status.equals("empty");
+		}
 		
 		sections = new Section[32]; //32 supports a max world-height of 512 which is the max that the hightmaps of Minecraft V1.13+ can store with 9 bits, i believe?
 		if (levelData.containsKey("Sections")) {
@@ -104,6 +110,8 @@ public class ChunkAnvil113 extends Chunk {
 
 	@Override
 	public LightData getLightData(Vector3i pos) {
+		if (!hasLight) return LightData.SKY;
+		
 		int sectionY = MCAUtil.blockToChunk(pos.getY());
 		
 		Section section = this.sections[sectionY];

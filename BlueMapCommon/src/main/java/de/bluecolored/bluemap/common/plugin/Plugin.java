@@ -189,7 +189,7 @@ public class Plugin {
 			World world = worlds.get(worldUUID);
 			if (world == null) {
 				try {
-					world = MCAWorld.load(worldFolder.toPath(), worldUUID, configManager.getBlockIdConfig(), configManager.getBlockPropertiesConfig(), configManager.getBiomeConfig(), serverInterface.getWorldName(worldUUID));
+					world = MCAWorld.load(worldFolder.toPath(), worldUUID, configManager.getBlockIdConfig(), configManager.getBlockPropertiesConfig(), configManager.getBiomeConfig(), serverInterface.getWorldName(worldUUID), true);
 					worlds.put(worldUUID, world);
 				} catch (IOException e) {
 					Logger.global.logError("Failed to load map '" + id + "': Failed to read level.dat", e);

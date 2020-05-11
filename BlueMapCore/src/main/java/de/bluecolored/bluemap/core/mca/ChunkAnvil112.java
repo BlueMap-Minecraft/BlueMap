@@ -40,11 +40,12 @@ public class ChunkAnvil112 extends Chunk {
 	private BiomeMapper biomeIdMapper;
 	
 	private boolean isGenerated;
+	private boolean hasLight;
 	private Section[] sections;
 	private byte[] biomes;
 	
 	@SuppressWarnings("unchecked")
-	public ChunkAnvil112(MCAWorld world, CompoundTag chunkTag) {
+	public ChunkAnvil112(MCAWorld world, CompoundTag chunkTag, boolean ignoreMissingLightData) {
 		super(world, chunkTag);
 		
 		blockIdMapper = getWorld().getBlockIdMapper();
@@ -52,8 +53,10 @@ public class ChunkAnvil112 extends Chunk {
 		
 		CompoundTag levelData = chunkTag.getCompoundTag("Level");
 		
+		hasLight = levelData.getBoolean("LightPopulated");
+		
 		isGenerated = 
-				levelData.getBoolean("LightPopulated") &&
+				(hasLight || ignoreMissingLightData) &&
 				levelData.getBoolean("TerrainPopulated");
 		
 		sections = new Section[32]; //32 supports a max world-height of 512 which is the max that the hightmaps of Minecraft V1.13+ can store with 9 bits, i believe?
@@ -95,6 +98,8 @@ public class ChunkAnvil112 extends Chunk {
 	
 	@Override
 	public LightData getLightData(Vector3i pos) {
+		if (!hasLight) return LightData.SKY;
+		
 		int sectionY = MCAUtil.blockToChunk(pos.getY());
 		
 		Section section = this.sections[sectionY];
