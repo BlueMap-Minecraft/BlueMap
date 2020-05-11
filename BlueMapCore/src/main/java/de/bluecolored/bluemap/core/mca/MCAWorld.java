@@ -111,6 +111,8 @@ public class MCAWorld implements World {
 	private BlockPropertiesMapper blockPropertiesMapper;
 	private BiomeMapper biomeMapper;
 	
+	private boolean ignoreMissingLightData;
+	
 	private Map<Integer, String> forgeBlockMappings;
 	
 	private MCAWorld(
@@ -122,7 +124,8 @@ public class MCAWorld implements World {
 			Vector3i spawnPoint, 
 			BlockIdMapper blockIdMapper,
 			BlockPropertiesMapper blockPropertiesMapper, 
-			BiomeMapper biomeMapper
+			BiomeMapper biomeMapper,
+			boolean ignoreMissingLightData
 			) {
 		this.uuid = uuid;
 		this.worldFolder = worldFolder;
@@ -133,6 +136,8 @@ public class MCAWorld implements World {
 		this.blockIdMapper = blockIdMapper;
 		this.blockPropertiesMapper = blockPropertiesMapper;
 		this.biomeMapper = biomeMapper;
+		
+		this.ignoreMissingLightData = ignoreMissingLightData;
 		
 		this.forgeBlockMappings = new HashMap<>();
 	}
@@ -244,7 +249,7 @@ public class MCAWorld implements World {
 			DataInputStream dis = new DataInputStream(new BufferedInputStream(compressionType.decompress(new FileInputStream(raf.getFD()))));
 			Tag<?> tag = Tag.deserialize(dis, Tag.DEFAULT_MAX_DEPTH);
 			if (tag instanceof CompoundTag) {
-				return Chunk.create(this, (CompoundTag) tag);
+				return Chunk.create(this, (CompoundTag) tag, ignoreMissingLightData);
 			} else {
 				throw new IOException("invalid data tag: " + (tag == null ? "null" : tag.getClass().getName()));
 			}
@@ -379,10 +384,10 @@ public class MCAWorld implements World {
 	}
 
 	public static MCAWorld load(Path worldFolder, UUID uuid, BlockIdMapper blockIdMapper, BlockPropertiesMapper blockPropertiesMapper, BiomeMapper biomeIdMapper) throws IOException {
-		return load(worldFolder, uuid, blockIdMapper, blockPropertiesMapper, biomeIdMapper, null);
+		return load(worldFolder, uuid, blockIdMapper, blockPropertiesMapper, biomeIdMapper, null, false);
 	}
 	
-	public static MCAWorld load(Path worldFolder, UUID uuid, BlockIdMapper blockIdMapper, BlockPropertiesMapper blockPropertiesMapper, BiomeMapper biomeIdMapper, String name) throws IOException {
+	public static MCAWorld load(Path worldFolder, UUID uuid, BlockIdMapper blockIdMapper, BlockPropertiesMapper blockPropertiesMapper, BiomeMapper biomeIdMapper, String name, boolean ignoreMissingLightData) throws IOException {
 		try {
 			boolean subDimension = false;
 			
@@ -423,7 +428,8 @@ public class MCAWorld implements World {
 					spawnPoint,
 					blockIdMapper,
 					blockPropertiesMapper,
-					biomeIdMapper
+					biomeIdMapper,
+					ignoreMissingLightData
 					);
 			
 			try {

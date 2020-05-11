@@ -71,12 +71,12 @@ public abstract class Chunk {
 	
 	public abstract Biome getBiome(Vector3i pos);
 	
-	public static Chunk create(MCAWorld world, CompoundTag chunkTag) throws IOException {
+	public static Chunk create(MCAWorld world, CompoundTag chunkTag, boolean ignoreMissingLightData) throws IOException {
 		int version = chunkTag.getInt("DataVersion");
 		
-		if (version <= 1343) return new ChunkAnvil112(world, chunkTag);
-		if (version <= 1976) return new ChunkAnvil113(world, chunkTag);
-		return new ChunkAnvil115(world, chunkTag);
+		if (version <= 1343) return new ChunkAnvil112(world, chunkTag, ignoreMissingLightData);
+		if (version <= 1976) return new ChunkAnvil113(world, chunkTag, ignoreMissingLightData);
+		return new ChunkAnvil115(world, chunkTag, ignoreMissingLightData);
 	}
 	
 	public static Chunk empty(MCAWorld world, Vector2i chunkPos) {
