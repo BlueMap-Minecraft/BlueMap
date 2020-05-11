@@ -45,6 +45,11 @@ import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 
+import de.bluecolored.bluemap.api.BlueMapAPI;
+import de.bluecolored.bluemap.api.BlueMapMap;
+import de.bluecolored.bluemap.api.marker.MarkerAPI;
+import de.bluecolored.bluemap.api.marker.MarkerSet;
+import de.bluecolored.bluemap.api.marker.POIMarker;
 import de.bluecolored.bluemap.common.MapType;
 import de.bluecolored.bluemap.common.RenderTask;
 import de.bluecolored.bluemap.common.plugin.Plugin;
@@ -59,6 +64,8 @@ import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.World;
 
 public class Commands<S> {
+	
+	public static final String DEFAULT_MARKER_SET_ID = "markers"; 
 
 	private final Plugin plugin;
 	private final CommandDispatcher<S> dispatcher;
@@ -99,11 +106,7 @@ public class Commands<S> {
 						.then(argument("x", DoubleArgumentType.doubleArg())
 								.then(argument("y", DoubleArgumentType.doubleArg())
 										.then(argument("z", DoubleArgumentType.doubleArg())
-												.executes(this::debugCommand)
-												)
-										)
-								)
-						)
+												.executes(this::debugCommand)))))
 				.build();
 		
 		LiteralCommandNode<S> pauseCommand = 
@@ -124,16 +127,12 @@ public class Commands<S> {
 				.executes(this::renderCommand) // /bluemap render
 
 				.then(argument("radius", IntegerArgumentType.integer())
-						.executes(this::renderCommand) // /bluemap render <radius>
-						)
+						.executes(this::renderCommand)) // /bluemap render <radius>
 				
 				.then(argument("x", DoubleArgumentType.doubleArg())
 						.then(argument("z", DoubleArgumentType.doubleArg())
 								.then(argument("radius", IntegerArgumentType.integer())
-										.executes(this::renderCommand) // /bluemap render <x> <z> <radius>
-										)
-								)
-						)
+										.executes(this::renderCommand)))) // /bluemap render <x> <z> <radius>
 				
 				.then(argument("world|map", StringArgumentType.string()).suggests(new WorldOrMapSuggestionProvider<>(plugin))
 						.executes(this::renderCommand) // /bluemap render <world|map>
@@ -141,28 +140,21 @@ public class Commands<S> {
 						.then(argument("x", DoubleArgumentType.doubleArg())
 								.then(argument("z", DoubleArgumentType.doubleArg())
 										.then(argument("radius", IntegerArgumentType.integer())
-												.executes(this::renderCommand) // /bluemap render <world|map> <x> <z> <radius>
-												)
-										)
-								)
-						)
-				
+												.executes(this::renderCommand))))) // /bluemap render <world|map> <x> <z> <radius>
 				.build();
 		
 		LiteralCommandNode<S> prioRenderCommand = 
 				literal("prioritize")
 				.requires(requirements("bluemap.render"))
 				.then(argument("uuid", StringArgumentType.string())
-						.executes(this::prioritizeRenderTaskCommand)
-						)
+						.executes(this::prioritizeRenderTaskCommand))
 				.build();
 		
 		LiteralCommandNode<S> cancelRenderCommand = 
 				literal("cancel")
 				.requires(requirements("bluemap.render"))
 				.then(argument("uuid", StringArgumentType.string())
-						.executes(this::cancelRenderTaskCommand)
-						)
+						.executes(this::cancelRenderTaskCommand))
 				.build();
 		
 		LiteralCommandNode<S> worldsCommand = 
@@ -177,6 +169,34 @@ public class Commands<S> {
 				.executes(this::mapsCommand)
 				.build();
 		
+		LiteralCommandNode<S> markerCommand = 
+				literal("marker")
+				.requires(requirements("bluemap.marker"))
+				.build();
+		
+		LiteralCommandNode<S> createMarkerCommand = 
+				literal("create")
+				.requires(requirements("bluemap.marker"))
+				.then(argument("id", StringArgumentType.word())
+						.then(argument("map", StringArgumentType.string()).suggests(new MapSuggestionProvider<>(plugin))
+						
+							.then(argument("label", StringArgumentType.string())
+									.executes(this::createMarkerCommand))
+							
+							.then(argument("x", DoubleArgumentType.doubleArg())
+									.then(argument("y", DoubleArgumentType.doubleArg())
+											.then(argument("z", DoubleArgumentType.doubleArg())
+													.then(argument("label", StringArgumentType.string())
+															.executes(this::createMarkerCommand)))))))
+				.build();
+		
+		LiteralCommandNode<S> removeMarkerCommand = 
+				literal("remove")
+				.requires(requirements("bluemap.marker"))
+				.then(argument("id", StringArgumentType.word()).suggests(MarkerIdSuggestionProvider.getInstance())
+						.executes(this::removeMarkerCommand))
+				.build();
+		
 		// command tree
 		dispatcher.getRoot().addChild(baseCommand);
 		baseCommand.addChild(reloadCommand);
@@ -188,6 +208,9 @@ public class Commands<S> {
 		renderCommand.addChild(cancelRenderCommand);
 		baseCommand.addChild(worldsCommand);
 		baseCommand.addChild(mapsCommand);
+		baseCommand.addChild(markerCommand);
+		markerCommand.addChild(createMarkerCommand);
+		markerCommand.addChild(removeMarkerCommand);
 	}
 	
 	private Predicate<S> requirements(String permission){
@@ -488,6 +511,114 @@ public class Commands<S> {
 			source.sendMessage(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, map.getId(), TextColor.GRAY, " (" + map.getName() + ")").setHoverText(Text.of(TextColor.WHITE, "World: ", TextColor.GRAY, map.getWorld().getName())));
 		}
 		
+		return 1;
+	}
+	
+	public int createMarkerCommand(CommandContext<S> context) {
+		CommandSource source = commandSourceInterface.apply(context.getSource());
+		
+		String markerId = context.getArgument("id", String.class);
+		String markerLabel = context.getArgument("label", String.class)
+				.replace("<", "&lt;")
+				.replace(">", "&gt;");  //no html via commands
+		
+		// parse world/map argument
+		String mapString = context.getArgument("map", String.class);
+		MapType map = parseMap(mapString).orElse(null);
+		
+		if (map == null) {
+			source.sendMessage(Text.of(TextColor.RED, "There is no ", helper.mapHelperHover(), " with this name: ", TextColor.WHITE, mapString));
+			return 0;
+		}
+		
+		// parse position
+		Optional<Double> x = getOptionalArgument(context, "x", Double.class);
+		Optional<Double> y = getOptionalArgument(context, "y", Double.class);
+		Optional<Double> z = getOptionalArgument(context, "z", Double.class);
+		
+		Vector3d position;
+		
+		if (x.isPresent() && y.isPresent() && z.isPresent()) {
+			position = new Vector3d(x.get(), y.get(), z.get());
+		} else {
+			position = source.getPosition().orElse(null);
+			
+			if (position == null) {
+				source.sendMessage(Text.of(TextColor.RED, "Can't detect a position from this command-source, you'll have to define the x,y,z coordinates for the marker!").setHoverText(Text.of(TextColor.GRAY, "/bluemap marker create " + markerId + " " + "[world|map] <x> <y> <z> <label>")));
+				return 0;
+			}
+		}
+		
+		// get api
+		BlueMapAPI api = BlueMapAPI.getInstance().orElse(null);
+		if (api == null) {
+			source.sendMessage(Text.of(TextColor.RED, "MarkerAPI is not available, try ", TextColor.GRAY, "/bluemap reload"));
+			return 0;
+		}
+		
+		// resolve api-map
+		Optional<BlueMapMap> apiMap = api.getMap(map.getId());
+		if (!apiMap.isPresent()) {
+			source.sendMessage(Text.of(TextColor.RED, "Failed to get map from API, try ", TextColor.GRAY, "/bluemap reload"));
+			return 0;
+		}
+		
+		// add marker
+		try {
+			MarkerAPI markerApi = api.getMarkerAPI();
+			
+			MarkerSet set = markerApi.getMarkerSet(DEFAULT_MARKER_SET_ID).orElse(null);
+			if (set == null) {
+				set = markerApi.createMarkerSet(DEFAULT_MARKER_SET_ID);
+				set.setLabel("Markers");
+			}
+			
+			if (set.getMarker(markerId).isPresent()) {
+				source.sendMessage(Text.of(TextColor.RED, "There already is a marker with this id: ", TextColor.WHITE, markerId));
+				return 0;
+			}
+			
+			POIMarker marker = set.createPOIMarker(markerId, apiMap.get(), position);
+			marker.setLabel(markerLabel);
+			
+			markerApi.save();
+			MarkerIdSuggestionProvider.getInstance().forceUpdate();
+		} catch (IOException e) {
+			source.sendMessage(Text.of(TextColor.RED, "There was an error trying to add the marker, please check the console for details!"));
+			Logger.global.logError("Exception trying to add a marker!", e);
+		}
+
+		source.sendMessage(Text.of(TextColor.GREEN, "Marker added!"));
+		return 1;
+	}
+	
+	public int removeMarkerCommand(CommandContext<S> context) {
+		CommandSource source = commandSourceInterface.apply(context.getSource());
+
+		String markerId = context.getArgument("id", String.class);
+		
+		BlueMapAPI api = BlueMapAPI.getInstance().orElse(null);
+		if (api == null) {
+			source.sendMessage(Text.of(TextColor.RED, "MarkerAPI is not available, try ", TextColor.GRAY, "/bluemap reload"));
+			return 0;
+		}
+		
+		try {
+			MarkerAPI markerApi = api.getMarkerAPI();
+			
+			MarkerSet set = markerApi.createMarkerSet("markers");
+			if (!set.removeMarker(markerId)) {
+				source.sendMessage(Text.of(TextColor.RED, "There is no marker with this id: ", TextColor.WHITE, markerId));
+			}
+			
+			markerApi.save();
+			MarkerIdSuggestionProvider.getInstance().forceUpdate();
+		} catch (IOException e) {
+			source.sendMessage(Text.of(TextColor.RED, "There was an error trying to remove the marker, please check the console for details!"));
+			Logger.global.logError("Exception trying to remove a marker!", e);
+		}
+
+		source.sendMessage(Text.of(TextColor.GREEN, "Marker removed!"));
 		return 1;
 	}
 	
