@@ -1,3 +1,5 @@
+import net.fabricmc.loom.task.RemapJarTask
+
 plugins {
 	id 'fabric-loom' version '0.2.7-SNAPSHOT'
 }
@@ -11,8 +13,8 @@ dependencies {
 	mappings "net.fabricmc:yarn:1.15.2+build.15:v2"
 	modImplementation "net.fabricmc:fabric-loader:0.8.2+build.194"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:0.5.1+build.294-1.15"
-	
-	include (project(':BlueMapCommon')) {
+
+	compile (project(':BlueMapCommon')) {
     	//exclude dependencies provided by fabric
 		exclude group: 'com.google.guava', module: 'guava'
 		exclude group: 'com.google.code.gson', module: 'gson'
@@ -20,19 +22,6 @@ dependencies {
 		exclude group: 'commons-io', module: 'commons-io'
 		exclude group: 'com.mojang', module: 'brigadier'
     }
-}
-
-build.dependsOn shadowJar {
-	destinationDir = file '../build/unsupported'
-	archiveFileName = "BlueMap-${version}-fabric.jar"
-	
-	configurations = [project.configurations.include]
-	
-	//relocate 'com.flowpowered.math', 'de.bluecolored.shadow.flowpowered.math' //DON'T relocate this, because the API depends on it
-	relocate 'com.typesafe.config', 'de.bluecolored.shadow.typesafe.config'
-	relocate 'net.querz.nbt', 'de.bluecolored.shadow.querz.nbt'
-	relocate 'ninja.leaping.configurate', 'de.bluecolored.shadow.ninja.leaping.configurate'
-	relocate 'org.yaml.snakeyaml', 'de.bluecolored.shadow.yaml.snakeyaml'
 }
 
 processResources {
@@ -46,6 +35,32 @@ processResources {
 	from(sourceSets.main.resources.srcDirs) {
 		exclude "fabric.mod.json"
 	}
+}
+
+shadowJar {
+	configurations = [project.configurations.compile]
+
+	dependencies {
+		include(dependency(':BlueMapCommon'))
+		include(dependency(':BlueMapCore'))
+		include(dependency(':BlueMapAPI'))
+	}
+
+	//relocate 'com.flowpowered.math', 'de.bluecolored.shadow.flowpowered.math' //DON'T relocate this, because the API depends on it
+	relocate 'com.typesafe.config', 'de.bluecolored.shadow.typesafe.config'
+	relocate 'net.querz.nbt', 'de.bluecolored.shadow.querz.nbt'
+	relocate 'ninja.leaping.configurate', 'de.bluecolored.shadow.ninja.leaping.configurate'
+	relocate 'org.yaml.snakeyaml', 'de.bluecolored.shadow.yaml.snakeyaml'
+
+	exclude '/mappings/*'
+}
+
+task ramappedShadowJar(type: RemapJarTask) {
+	destinationDir = file '../build/unsupported'
+	dependsOn tasks.shadowJar
+	input = tasks.shadowJar.archivePath
+	addNestedDependencies = true
+	archiveName = "BlueMap-${version}-fabric.jar"
 }
 
 task sourcesJar(type: Jar, dependsOn: classes) {
