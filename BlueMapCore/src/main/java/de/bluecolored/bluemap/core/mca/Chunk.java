@@ -39,9 +39,13 @@ public abstract class Chunk {
 	private final MCAWorld world;
 	private final Vector2i chunkPos;
 	
+	private final int dataVersion;
+	
 	protected Chunk(MCAWorld world, Vector2i chunkPos) {
 		this.world = world;
 		this.chunkPos = chunkPos;
+		
+		this.dataVersion = -1;
 	}
 	
 	protected Chunk(MCAWorld world, CompoundTag chunkTag) {
@@ -53,6 +57,8 @@ public abstract class Chunk {
 				levelData.getInt("xPos"),
 				levelData.getInt("zPos")
 			);
+		
+		dataVersion = chunkTag.getInt("DataVersion");
 	}
 	
 	public abstract boolean isGenerated();
@@ -63,6 +69,10 @@ public abstract class Chunk {
 	
 	public MCAWorld getWorld() {
 		return world;
+	}
+	
+	public int getDataVersion() {
+		return dataVersion;
 	}
 	
 	public abstract BlockState getBlockState(Vector3i pos);
@@ -76,7 +86,8 @@ public abstract class Chunk {
 		
 		if (version <= 1343) return new ChunkAnvil112(world, chunkTag, ignoreMissingLightData);
 		if (version <= 1976) return new ChunkAnvil113(world, chunkTag, ignoreMissingLightData);
-		return new ChunkAnvil115(world, chunkTag, ignoreMissingLightData);
+		if (version < 2534) return new ChunkAnvil115(world, chunkTag, ignoreMissingLightData);
+		return new ChunkAnvil116(world, chunkTag, ignoreMissingLightData);
 	}
 	
 	public static Chunk empty(MCAWorld world, Vector2i chunkPos) {
