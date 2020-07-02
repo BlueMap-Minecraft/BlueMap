@@ -269,7 +269,6 @@ public class BlockModelResource {
 			
 			for (Entry<Object, ? extends ConfigurationNode> entry : config.getNode("textures").getChildrenMap().entrySet()) {
 				if (entry.getKey().equals(JSON_COMMENT)) continue;
-				
 				textures.putIfAbsent(entry.getKey().toString(), entry.getValue().getString(null));
 			}
 			
@@ -426,6 +425,8 @@ public class BlockModelResource {
 		}
 		
 		private Texture getTexture(String key) throws NoSuchElementException, FileNotFoundException, IOException {
+			if (key.isEmpty() || key.equals("#")) throw new NoSuchElementException("Empty texture key or name!");
+			
 			if (key.charAt(0) == '#') {
 				String value = textures.get(key.substring(1));
 				if (value == null) throw new NoSuchElementException("There is no texture defined for the key " + key);
