@@ -22,11 +22,52 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.webserver;
+package de.bluecolored.bluemap.common.live;
 
-@FunctionalInterface
-public interface HttpRequestHandler {
+import java.io.IOException;
 
-	HttpResponse handle(HttpRequest request);
+import com.google.gson.stream.JsonWriter;
+
+public class Event {
+
+	private String type;
+	private long time;
+	private long expires;
+	private String jsonData;
+	
+	public Event(String type, long time, long expires, String jsonData) {
+		this.type = type;
+		this.time = time;
+		this.expires = expires;
+		this.jsonData = jsonData;
+	}
+	
+	public void serialize(JsonWriter writer) throws IOException {
+		writer.beginObject();
+		
+		writer.name("type").value(type);
+		writer.name("time").value(time);
+		writer.name("jsonData").jsonValue(jsonData);
+		
+		writer.endObject();
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public long getTime() {
+		return time;
+	}
+
+	public long getExpireTime() {
+		return expires;
+	}
+
+	public String getJsonData() {
+		return jsonData;
+	}
+	
+	
 	
 }

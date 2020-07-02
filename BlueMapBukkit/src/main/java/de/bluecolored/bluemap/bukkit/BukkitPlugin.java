@@ -27,6 +27,9 @@ package de.bluecolored.bluemap.bukkit;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -40,6 +43,7 @@ import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import de.bluecolored.bluemap.common.plugin.Plugin;
+import de.bluecolored.bluemap.common.plugin.serverinterface.PlayerInterface;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -177,6 +181,18 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface {
 
 	public static BukkitPlugin getInstance() {
 		return instance;
+	}
+
+	@Override
+	public Collection<PlayerInterface> getOnlinePlayers() {
+		// TODO Implement
+		return Collections.emptyList();
+	}
+
+	@Override
+	public Optional<PlayerInterface> getPlayer(UUID uuid) {
+		// TODO Implement
+		return Optional.empty();
 	}
 	
 }

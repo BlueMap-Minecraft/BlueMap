@@ -22,11 +22,37 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.webserver;
+package de.bluecolored.bluemap.common.plugin.serverinterface;
 
-@FunctionalInterface
-public interface HttpRequestHandler {
+import java.util.UUID;
 
-	HttpResponse handle(HttpRequest request);
+import de.bluecolored.bluemap.common.plugin.text.Text;
+
+public interface PlayerInterface extends CommandSource {
+
+	UUID getUuid();
+	
+	Text getName();
+
+	boolean isOnline();
+	
+	/**
+	 * Return <code>true</code> if the player is sneaking.
+	 * <p><i>If the player is offline the value of this method is undetermined.</i></p>
+	 * @return
+	 */
+	boolean isSneaking();
+	
+	/**
+	 * Returns <code>true</code> if the player has an invisibillity effect
+	 * <p><i>If the player is offline the value of this method is undetermined.</i></p>
+	 */
+	boolean isInvisible();
+	
+	/**
+	 * Returns the {@link Gamemode} this player is in
+	 * <p><i>If the player is offline the value of this method is undetermined.</i></p>
+	 */
+	Gamemode getGamemode();
 	
 }

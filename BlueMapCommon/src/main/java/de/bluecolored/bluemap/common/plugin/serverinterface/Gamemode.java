@@ -22,11 +22,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.webserver;
+package de.bluecolored.bluemap.common.plugin.serverinterface;
 
-@FunctionalInterface
-public interface HttpRequestHandler {
+public enum Gamemode {
 
-	HttpResponse handle(HttpRequest request);
+	SURVIVAL,
+	CREATIVE,
+	ADVENTURE,
+	SPECTATOR
 	
 }

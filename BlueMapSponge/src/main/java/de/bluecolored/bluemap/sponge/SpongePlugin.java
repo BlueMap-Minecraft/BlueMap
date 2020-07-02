@@ -27,6 +27,8 @@ package de.bluecolored.bluemap.sponge;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -44,6 +46,7 @@ import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
 
 import de.bluecolored.bluemap.common.plugin.Plugin;
+import de.bluecolored.bluemap.common.plugin.serverinterface.PlayerInterface;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -159,6 +162,18 @@ public class SpongePlugin implements ServerInterface {
 	@Override
 	public File getConfigFolder() {
 		return configurationDir.toFile();
+	}
+
+	@Override
+	public Collection<PlayerInterface> getOnlinePlayers() {
+		// TODO Implement
+		return Collections.emptyList();
+	}
+
+	@Override
+	public Optional<PlayerInterface> getPlayer(UUID uuid) {
+		// TODO Implement
+		return Optional.empty();
 	}
 	
 }

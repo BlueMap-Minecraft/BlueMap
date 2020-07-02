@@ -26,6 +26,8 @@ package de.bluecolored.bluemap.common.plugin.serverinterface;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Optional;
 import java.util.UUID;
 
 public interface ServerInterface {
@@ -72,6 +74,17 @@ public interface ServerInterface {
 	default boolean isMetricsEnabled(boolean configValue) {
 		return configValue;
 	}
+	
+	/**
+	 * Returns a collection of players that are currently online
+	 */
+	Collection<PlayerInterface> getOnlinePlayers();
+	
+	/**
+	 * Returns the player with that UUID if present<br>
+	 * this method is only guaranteed to return a player if the player is currently online.
+	 */
+	Optional<PlayerInterface> getPlayer(UUID uuid);
 	
 	
 }

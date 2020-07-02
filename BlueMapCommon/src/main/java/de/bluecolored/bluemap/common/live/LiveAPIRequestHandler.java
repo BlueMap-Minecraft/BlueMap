@@ -22,11 +22,41 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.webserver;
+package de.bluecolored.bluemap.common.live;
 
-@FunctionalInterface
-public interface HttpRequestHandler {
+import java.util.HashMap;
+import java.util.Map;
 
-	HttpResponse handle(HttpRequest request);
+import de.bluecolored.bluemap.core.webserver.HttpRequest;
+import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
+import de.bluecolored.bluemap.core.webserver.HttpResponse;
+import de.bluecolored.bluemap.core.webserver.HttpStatusCode;
+
+public class LiveAPIRequestHandler implements HttpRequestHandler {
+
+	private HttpRequestHandler notFoundHandler;
+	private Map<String, HttpRequestHandler> liveAPIRequests;
+	
+	public LiveAPIRequestHandler(HttpRequestHandler notFoundHandler) {
+		this.notFoundHandler = notFoundHandler;
+		
+		this.liveAPIRequests = new HashMap<>();
+		
+		this.liveAPIRequests.put("live/events", this::handleEventsRequest);
+	}
+
+	@Override
+	public HttpResponse handle(HttpRequest request) {
+		HttpRequestHandler handler = liveAPIRequests.get(request.getPath());
+		if (handler != null) return handler.handle(request);
+		
+		return this.notFoundHandler.handle(request);
+	}
+
+	public HttpResponse handleEventsRequest(HttpRequest request) {
+		if (!request.getMethod().equalsIgnoreCase("GET")) return new HttpResponse(HttpStatusCode.BAD_REQUEST);
+		
+		return new HttpResponse(HttpStatusCode.NOT_IMPLEMENTED);
+	}
 	
 }

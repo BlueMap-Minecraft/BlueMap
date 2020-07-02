@@ -34,7 +34,9 @@ import com.google.common.collect.MultimapBuilder;
 
 import de.bluecolored.bluemap.common.MapType;
 import de.bluecolored.bluemap.common.RenderManager;
+import de.bluecolored.bluemap.common.plugin.serverinterface.PlayerInterface;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
+import de.bluecolored.bluemap.common.plugin.text.Text;
 
 public class MapUpdateHandler implements ServerEventListener {
 
@@ -130,6 +132,26 @@ public class MapUpdateHandler implements ServerEventListener {
 			}
 			updateBuffer.clear();
 		}
+	}
+
+	@Override
+	public void onPlayerJoin(UUID playerUuid) {
+		
+	}
+
+	@Override
+	public void onPlayerLeave(UUID playerUuid) {
+		
+	}
+	
+	@Override
+	public void onPlayerMove(UUID playerUuid) {
+		
+	}
+
+	@Override
+	public void onChatMessage(Text message) {
+		
 	}
 	
 }

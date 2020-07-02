@@ -22,11 +22,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.web;
+package de.bluecolored.bluemap.common;
 
 import java.io.IOException;
 
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.web.FileRequestHandler;
+import de.bluecolored.bluemap.core.web.WebFilesManager;
+import de.bluecolored.bluemap.core.web.WebServerConfig;
 import de.bluecolored.bluemap.core.webserver.WebServer;
 
 public class BlueMapWebServer extends WebServer {
@@ -38,7 +41,7 @@ public class BlueMapWebServer extends WebServer {
 			config.getWebserverPort(), 
 			config.getWebserverMaxConnections(), 
 			config.getWebserverBindAdress(), 
-			new BlueMapWebRequestHandler(config.getWebRoot())
+			new FileRequestHandler(config.getWebRoot(), "BlueMap/Webserver")
 		);
 		
 		this.webFilesManager = new WebFilesManager(config.getWebRoot());

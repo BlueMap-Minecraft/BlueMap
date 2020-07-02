@@ -46,6 +46,7 @@ import org.apache.commons.io.FileUtils;
 
 import com.flowpowered.math.vector.Vector2i;
 
+import de.bluecolored.bluemap.common.BlueMapWebServer;
 import de.bluecolored.bluemap.common.MapType;
 import de.bluecolored.bluemap.common.RenderManager;
 import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
@@ -62,7 +63,6 @@ import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.render.lowres.LowresModelManager;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.web.BlueMapWebServer;
 import de.bluecolored.bluemap.core.web.WebFilesManager;
 import de.bluecolored.bluemap.core.web.WebSettings;
 import de.bluecolored.bluemap.core.world.SlicedWorld;

@@ -28,8 +28,10 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.logging.log4j.LogManager;
@@ -38,6 +40,7 @@ import com.flowpowered.math.vector.Vector3i;
 
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.commands.Commands;
+import de.bluecolored.bluemap.common.plugin.serverinterface.PlayerInterface;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -206,6 +209,18 @@ public class ForgeMod implements ServerInterface {
 
 	public Commands<CommandSource> getCommands() {
 		return commands;
+	}
+
+	@Override
+	public Collection<PlayerInterface> getOnlinePlayers() {
+		// TODO Implement
+		return Collections.emptyList();
+	}
+
+	@Override
+	public Optional<PlayerInterface> getPlayer(UUID uuid) {
+		// TODO Implement
+		return Optional.empty();
 	}
     
 }
