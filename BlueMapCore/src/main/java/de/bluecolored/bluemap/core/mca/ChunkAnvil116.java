@@ -43,7 +43,7 @@ import net.querz.nbt.StringTag;
 import net.querz.nbt.Tag;
 import net.querz.nbt.mca.MCAUtil;
 
-public class ChunkAnvil115 extends Chunk {
+public class ChunkAnvil116 extends Chunk {
 	private BiomeMapper biomeIdMapper;
 
 	private boolean isGenerated;
@@ -52,7 +52,7 @@ public class ChunkAnvil115 extends Chunk {
 	private int[] biomes;
 	
 	@SuppressWarnings("unchecked")
-	public ChunkAnvil115(MCAWorld world, CompoundTag chunkTag, boolean ignoreMissingLightData) {
+	public ChunkAnvil116(MCAWorld world, CompoundTag chunkTag, boolean ignoreMissingLightData) {
 		super(world, chunkTag);
 		
 		biomeIdMapper = getWorld().getBiomeIdMapper();
@@ -138,8 +138,9 @@ public class ChunkAnvil115 extends Chunk {
 		private byte[] skyLight;
 		private long[] blocks;
 		private BlockState[] palette;
-		
+
 		private int bitsPerBlock;
+		private int blocksPerLong;
 		
 		@SuppressWarnings("unchecked")
 		public Section(CompoundTag sectionData) {
@@ -177,8 +178,11 @@ public class ChunkAnvil115 extends Chunk {
 			} else {
 				this.palette = new BlockState[0];
 			}
+			
 
-			this.bitsPerBlock = blocks.length * 64 / 4096; //64 bits per long and 4096 blocks per section
+			this.bitsPerBlock = 32 - Integer.numberOfLeadingZeros(palette.length - 1);
+			if (this.bitsPerBlock < 4) this.bitsPerBlock = 4;
+			this.blocksPerLong = 64 / bitsPerBlock;
 		}
 		
 		public int getSectionY() {
@@ -192,22 +196,15 @@ public class ChunkAnvil115 extends Chunk {
 			int y = pos.getY() & 0xF;
 			int z = pos.getZ() & 0xF;
 			int blockIndex = y * 256 + z * 16 + x;
-			int index = blockIndex * bitsPerBlock;
-			int firstLong = index >> 6; // index / 64
-			int bitoffset = index & 0x3F; // Math.floorMod(index, 64)
+			int longIndex = blockIndex / blocksPerLong;
+			int bitIndex = (blockIndex % blocksPerLong) * bitsPerBlock;
 			
-			long value = blocks[firstLong] >>> bitoffset;
-			
-			if (bitoffset > 0 && firstLong + 1 < blocks.length) {
-				long value2 = blocks[firstLong + 1];
-				value2 = value2 << -bitoffset;
-				value = value | value2;
-			}
-			
+			long value = blocks[longIndex] >>> bitIndex;
+
 			value = value & (0xFFFFFFFFFFFFFFFFL >>> -bitsPerBlock);
 			
 			if (value >= palette.length) {
-				Logger.global.noFloodWarning("palettewarning", "Got palette value " + value + " but palette has size of " + palette.length + " (Future occasions of this error will not be logged)");
+				Logger.global.noFloodWarning("palettewarning", "Got palette value " + value + " but palette has size of " + palette.length + "! (Future occasions of this error will not be logged)");
 				return BlockState.MISSING;
 			}
 			
