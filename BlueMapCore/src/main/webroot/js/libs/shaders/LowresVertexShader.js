@@ -25,6 +25,7 @@
 import { ShaderChunk } from 'three';
 
 const LOWRES_VERTEX_SHADER = `
+#define EPSILON 1e-6
 ${ShaderChunk.logdepthbuf_pars_vertex}
 
 varying vec3 vPosition;

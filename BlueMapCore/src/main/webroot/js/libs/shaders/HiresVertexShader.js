@@ -25,6 +25,7 @@
 import { ShaderChunk } from 'three';
 
 const HIRES_VERTEX_SHADER = `
+#define EPSILON 1e-6
 ${ShaderChunk.logdepthbuf_pars_vertex}
 
 attribute float ao;
