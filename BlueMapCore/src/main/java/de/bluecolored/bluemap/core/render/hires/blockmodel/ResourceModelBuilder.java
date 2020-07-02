@@ -189,8 +189,17 @@ public class ResourceModelBuilder {
 		Texture texture = face.getTexture();
 		int textureId = texture.getId();
 		
-		ExtendedFace f1 = new ExtendedFace(c0, c1, c2, uvs[0], uvs[1], uvs[2], textureId);
-		ExtendedFace f2 = new ExtendedFace(c0, c2, c3, uvs[0], uvs[2], uvs[3], textureId);
+		ExtendedFace f1;
+		ExtendedFace f2;
+		
+		try {
+			f1 = new ExtendedFace(c0, c1, c2, uvs[0], uvs[1], uvs[2], textureId);
+			f2 = new ExtendedFace(c0, c2, c3, uvs[0], uvs[2], uvs[3], textureId);
+		} catch (ArithmeticException ex) {
+			// This error is thrown when a model defined a face that has no surface (all 3 points are on one line)
+			// we catch it here and simply ignore the face
+			return;
+		}
 		
 		//tint the face
 		Vector3f color = Vector3f.ONE;
