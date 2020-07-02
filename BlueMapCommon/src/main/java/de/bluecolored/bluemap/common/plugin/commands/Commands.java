@@ -87,7 +87,7 @@ public class Commands<S> {
 		// commands
 		LiteralCommandNode<S> baseCommand = 
 				literal("bluemap")
-				.requires(requirements("bluemap.status"))
+				.requires(requirementsUnloaded("bluemap.status"))
 				.executes(this::statusCommand)
 				.build();
 		
@@ -276,6 +276,11 @@ public class Commands<S> {
 	
 	public int statusCommand(CommandContext<S> context) {
 		CommandSource source = commandSourceInterface.apply(context.getSource());
+		
+		if (!plugin.isLoaded()) {
+			source.sendMessage(Text.of(TextColor.RED, "BlueMap is not loaded! Try /bluemap reload"));
+			return 0;
+		}
 		
 		source.sendMessages(helper.createStatusMessage());
 		return 1;
