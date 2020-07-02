@@ -255,7 +255,7 @@ public class Commands<S> {
 	
 	private Optional<MapType> parseMap(String mapId) {
 		for (MapType map : plugin.getMapTypes()) {
-			if (map.getName().equalsIgnoreCase(mapId)) {
+			if (map.getId().equalsIgnoreCase(mapId)) {
 				return Optional.of(map);
 			}
 		}
