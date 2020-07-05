@@ -265,7 +265,7 @@ public class RenderManager {
 				tiles.add(tile);
 			}
 			
-			createTickets(mapType, tiles);
+			if (mapType != null) createTickets(mapType, tiles);
 		}
 		
 		//read tasks
