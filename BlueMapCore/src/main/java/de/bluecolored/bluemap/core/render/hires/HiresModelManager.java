@@ -28,9 +28,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.HashSet;
@@ -82,11 +79,11 @@ public class HiresModelManager {
 	}
 	
 	private void save(final HiresModel model) {
-		final String modelJson = model.toBufferGeometry().toJson();
+		final byte[] modelJson = model.toBufferGeometry().toBinary();
 		save(model, modelJson);
 	}
 	
-	private void save(HiresModel model, String modelJson){
+	private void save(HiresModel model, byte[] binary){
 		File file = getFile(model.getTile(), useGzip);
 		
 		try {
@@ -97,13 +94,9 @@ public class HiresModelManager {
 	
 			OutputStream os = new FileOutputStream(file);
 			if (useGzip) os = new GZIPOutputStream(os);
-			OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
-			try (
-				PrintWriter pw = new PrintWriter(osw);
-			){
-				pw.print(modelJson);
-			}
-			
+			os.write(binary);
+			os.close();
+
 			//logger.logDebug("Saved hires model: " + model.getTile()); 
 		} catch (IOException e){
 			Logger.global.logError("Failed to save hires model: " + file, e);
@@ -186,7 +179,7 @@ public class HiresModelManager {
 	 * Returns the file for a tile
 	 */
 	public File getFile(Vector2i tilePos, boolean gzip){
-		return FileUtils.coordsToFile(fileRoot, tilePos, "json" + (gzip ? ".gz" : ""));
+		return FileUtils.coordsToFile(fileRoot, tilePos, "bin" + (gzip ? ".gz" : ""));
 	}
 	
 }

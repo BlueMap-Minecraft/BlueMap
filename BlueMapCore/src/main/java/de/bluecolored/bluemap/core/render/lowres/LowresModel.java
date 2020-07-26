@@ -28,9 +28,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -102,9 +99,9 @@ public class LowresModel {
 
 		flush();
 		
-		String json;
+		byte[] binary;
 		synchronized (modelLock) {
-			json = model.toJson();
+			binary = model.toBinary();
 		}
 		
 		synchronized (fileLock) {
@@ -121,13 +118,8 @@ public class LowresModel {
 
 			OutputStream os = new FileOutputStream(file);
 			if (useGzip) os = new GZIPOutputStream(os);
-			OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
-			try (
-				PrintWriter pw = new PrintWriter(osw);
-			){
-				pw.print(json);
-				pw.flush();
-			}
+			os.write(binary);
+			os.close();
 		
 		}
 	}

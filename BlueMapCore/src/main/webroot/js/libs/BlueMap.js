@@ -56,7 +56,7 @@ import LOWRES_FRAGMENT_SHADER from './shaders/LowresFragmentShader.js';
 import SKY_VERTEX_SHADER from './shaders/SkyVertexShader.js';
 import SKY_FRAGMENT_SHADER from './shaders/SkyFragmentShader.js';
 
-import { stringToImage, pathFromCoords } from './utils.js';
+import { stringToImage, pathFromCoords, binaryGeometryLoader } from './utils.js';
 import {getCookie, setCookie} from "./utils";
 
 export default class BlueMap {
@@ -501,10 +501,10 @@ export default class BlueMap {
 	async loadHiresTile(tileX, tileZ) {
 		let path = this.dataRoot + this.map + '/hires/';
 		path += pathFromCoords(tileX, tileZ);
-		path += '.json';
+		path += '.bin';
 
 		return new Promise((resolve, reject) => {
-			this.bufferGeometryLoader.load(path, geometry => {
+			binaryGeometryLoader(path, geometry => {
 				let object = new Mesh(geometry, this.hiresMaterial);
 
 				let tileSize = this.settings.maps[this.map]['hires']['tileSize'];
@@ -515,17 +515,17 @@ export default class BlueMap {
 
 				resolve(object);
 			}, () => {
-			}, reject);
+			}, (msg)=>{console.log(msg)});
 		});
 	}
 
 	async loadLowresTile(tileX, tileZ) {
 		let path = this.dataRoot + this.map + '/lowres/';
 		path += pathFromCoords(tileX, tileZ);
-		path += '.json';
+		path += '.bin';
 
 		return new Promise((reslove, reject) => {
-			this.bufferGeometryLoader.load(path, geometry => {
+			binaryGeometryLoader(path, geometry => {
 				let object = new Mesh(geometry, this.lowresMaterial);
 
 				let tileSize = this.settings.maps[this.map]['lowres']['tileSize'];

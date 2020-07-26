@@ -24,11 +24,11 @@
  */
 package de.bluecolored.bluemap.core.render.lowres;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,8 +37,6 @@ import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.GZIPInputStream;
-
-import org.apache.commons.io.IOUtils;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3d;
@@ -172,7 +170,7 @@ public class LowresModelManager {
 	 * Returns the file for a tile
 	 */
 	public File getFile(Vector2i tile, boolean useGzip){
-		return FileUtils.coordsToFile(fileRoot, tile, "json" + (useGzip ? ".gz" : ""));
+		return FileUtils.coordsToFile(fileRoot, tile, "bin" + (useGzip ? ".gz" : ""));
 	}
 	
 	private LowresModel getModel(UUID world, Vector2i tile) {
@@ -189,10 +187,20 @@ public class LowresModelManager {
 						try (FileInputStream fis = new FileInputStream(modelFile)) {
 							InputStream is = fis;
 							if (useGzip) is = new GZIPInputStream(is);
+							byte[] buffer = new byte[1024];
 							
-							String json = IOUtils.toString(is, StandardCharsets.UTF_8);	
+							ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+							int len;
+							while ((len = is.read(buffer)) > 0) {
+								out.write(buffer, 0, len);
+							}
+
+							is.close();
+							out.close();
+							byte[] data = out.toByteArray();
 							
-							model = new CachedModel(world, tile, BufferGeometry.fromJson(json));
+							model = new CachedModel(world, tile, BufferGeometry.fromBinary(data));
 						} catch (IllegalArgumentException | IOException ex){
 							Logger.global.logError("Failed to load lowres model: " + modelFile, ex);
 

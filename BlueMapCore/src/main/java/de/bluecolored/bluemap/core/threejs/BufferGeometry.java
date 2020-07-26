@@ -27,6 +27,10 @@ package de.bluecolored.bluemap.core.threejs;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -127,6 +131,109 @@ public class BufferGeometry {
 		}
 	}
 
+	public byte[] toBinary() {
+		byte[][] encodedAttrs = new byte[this.attributes.size()][];
+
+		int[] groupArray = new int[this.groups.length * 3];
+		int i = 0;
+		for (MaterialGroup g : this.groups) {
+			groupArray[i++] = g.getMaterialIndex();
+			groupArray[i++] = g.getStart();
+			groupArray[i++] = g.getCount();
+		}
+		ByteBuffer buffer = ByteBuffer.allocate(4 * groupArray.length);
+		IntBuffer intBuffer = buffer.asIntBuffer();
+		intBuffer.put(groupArray);
+		byte[] encodedGroups = buffer.array();
+
+		int[] header = new int[this.attributes.size() * 5 + 2];
+		int current = 12 + header.length * 4;
+		header[0] = current;
+		header[1] = encodedGroups.length;
+		current +=  encodedGroups.length;
+		int j = 2;
+		for (Entry<String, BufferAttribute> entry : this.attributes.entrySet()) {
+			header[j ++] = current;
+			byte[] data = entry.getValue().toBinary();
+			header[j ++] = data.length;
+			current += data.length;
+			int type = AttributeType.valueOf(entry.getKey()).ordinal();
+			header[j ++] = type;
+			encodedAttrs[type] = data;
+			header[j ++] = entry.getValue().isNormalized()?1:0;
+			header[j ++] = entry.getValue().getItemSize();
+		}
+
+		buffer = ByteBuffer.allocate(4 * header.length);
+		intBuffer = buffer.asIntBuffer();
+		intBuffer.put(header);
+		byte[] encodedHeader = buffer.array();
+
+		int size = 12 + encodedHeader.length + encodedGroups.length;
+		for (byte[] attr : encodedAttrs) {
+			size += attr.length;
+		}
+
+		buffer = ByteBuffer.allocate(8);
+		buffer.putInt(size);
+		buffer.putInt(header.length);
+		byte[] inf = buffer.array();
+
+		byte[] result = new byte[size];
+		result[0] = 'B';
+		result[1] = 'L';
+		result[2] = 'U';
+		result[3] = 'E';
+		System.arraycopy(inf, 0, result, 4, 8);
+		System.arraycopy(encodedHeader, 0, result, 12, encodedHeader.length);
+		System.arraycopy(encodedGroups, 0, result, 12 + encodedHeader.length, encodedGroups.length);
+		for (int k = 2; k < header.length; k += 5) {
+			System.arraycopy(encodedAttrs[header[k+2]], 0, result, header[k], header[k+1]);
+		}
+		return result;
+	}
+
+	public static BufferGeometry fromBinary(byte[] data) throws IOException {
+		ByteBuffer buffer = ByteBuffer.wrap(data);
+		buffer.order(ByteOrder.BIG_ENDIAN);
+		if (data[0] != 'B' || data[1] != 'L' || data[2] != 'U' || data[3] != 'E') {
+			throw new IOException("Unrecognized file type: " + data[0] + "," + data[1] + "," + data[2] + "," + data[3]);
+		}
+		if (buffer.getInt(4) != data.length) {
+			throw new IOException("Incomplete data");
+		}
+		Map<String, BufferAttribute> attributes = new HashMap<>();
+		List<MaterialGroup> groups = new ArrayList<>(10);
+		int headersize = buffer.getInt(8) * 4;
+		int gstart = buffer.getInt(12);
+		int glength = buffer.getInt(16);
+		for (int i = 20; i < headersize; i += 20) {
+			int astart = buffer.getInt(i);
+			int alength = buffer.getInt(i+4);
+			String type = AttributeType.values()[buffer.getInt(i+8)].name();
+			boolean normalized = buffer.getInt(i+12) != 0;
+			int itemsize = buffer.getInt(i+16);
+			ByteBuffer floatBuffer = ByteBuffer.wrap(data, astart, alength);
+			floatBuffer.order(ByteOrder.LITTLE_ENDIAN);
+			FloatBuffer fb = floatBuffer.asFloatBuffer();
+			float[] floatarray = new float[fb.limit()];
+			fb.get(floatarray);
+			BufferAttribute bufferAttribute = new BufferAttribute(floatarray, itemsize, normalized);
+			attributes.put(type, bufferAttribute);
+		}
+		for (int i = gstart; i < gstart + glength; i+=12) {
+			int materialIndex = buffer.getInt(i);
+			int start = buffer.getInt(i+4);
+			int count = buffer.getInt(i+8);
+			groups.add(new MaterialGroup(materialIndex, start, count));
+		}
+		BufferGeometry bufferGeometry = new BufferGeometry();
+		bufferGeometry.attributes = attributes;
+		bufferGeometry.groups = groups.toArray(new MaterialGroup[groups.size()]);
+		
+		return bufferGeometry;
+	}
+
 	public static BufferGeometry fromJson(String jsonString) throws IOException {
 
 		Gson gson = new GsonBuilder().create();
@@ -204,6 +311,16 @@ public class BufferGeometry {
 		bufferGeometry.groups = groups.toArray(new MaterialGroup[groups.size()]);
 		
 		return bufferGeometry;
+	}
+
+	public static enum AttributeType{
+		position,
+		normal,
+		color,
+		uv,
+		ao,
+		blocklight,
+		sunlight
 	}
 
 }

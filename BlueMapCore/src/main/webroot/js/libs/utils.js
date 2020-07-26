@@ -23,7 +23,7 @@
  * THE SOFTWARE.
  */
 
-import { Vector2, Vector3 } from 'three';
+import { Vector2, Vector3, FileLoader, BufferGeometry ,BufferAttribute } from 'three';
 
 export const cachePreventionNr = () => {
 	return Math.floor(Math.random() * 100000000);
@@ -104,6 +104,50 @@ export const getCookie = key => {
 
 	return undefined;
 };
+
+const attributeTypes = ["position","normal","color","uv","ao","blocklight","sunlight"];
+
+export const binaryGeometryLoader = (url, onLoad, onProgress, onError) => {
+	const loader = new FileLoader();
+	loader.setResponseType("arraybuffer");
+	loader.load(url, function(data) {
+		if (data instanceof ArrayBuffer == false) {
+			return onError("not ArrayBuffer")
+		}
+        var dv = new DataView(data);
+		var sign = "";
+		for (var i = 0; i < 4; i ++) {
+			sign += String.fromCharCode(dv.getUint8(i))
+		}
+		if (sign != "BLUE") {
+			return onError("not BLUE")
+		}
+		var size = dv.getInt32(4);
+		if (size != data.byteLength) {
+			return onError("size!= " + size + ";"+data.byteLength);
+		}
+		const geometry = new BufferGeometry();
+		var headersize = dv.getInt32(8) * 4;
+		var gstart = dv.getInt32(12);
+		var glength = dv.getInt32(16);
+		for (var i = 20; i < headersize; i += 20) {
+			var astart = dv.getInt32(i);
+			var alength = dv.getInt32(i+4);
+			var type = attributeTypes[dv.getInt32(i+8)];
+			var normalized = dv.getInt32(i+12) != 0;
+			var itemsize = dv.getInt32(i+16);
+			var bufferAttribute = new BufferAttribute(new Float32Array(data, astart, alength/4), itemsize, normalized);
+			geometry.attributes[type] = bufferAttribute;
+		}
+		for (var i = gstart; i < gstart + glength; i+=12) {
+			var materialIndex = dv.getInt32(i);
+			var start = dv.getInt32(i+4);
+			var count = dv.getInt32(i+8);
+			geometry.addGroup( start, count, materialIndex );
+		}
+		onLoad(geometry);
+	}, onProgress, onError);
+}
 
 export const Vector2_ZERO = new Vector2(0, 0);
 export const Vector3_ZERO = new Vector3(0, 0, 0);

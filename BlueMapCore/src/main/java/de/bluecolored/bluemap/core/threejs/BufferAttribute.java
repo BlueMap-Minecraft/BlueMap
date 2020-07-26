@@ -28,6 +28,9 @@
 package de.bluecolored.bluemap.core.threejs;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.FloatBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -84,6 +87,14 @@ public class BufferAttribute {
 		json.endArray();
 
 		json.endObject();
+	}
+
+	public byte[] toBinary() {
+		ByteBuffer buffer = ByteBuffer.allocate(4 * values.length);
+		buffer.order(ByteOrder.LITTLE_ENDIAN);
+		FloatBuffer floatBuffer = buffer.asFloatBuffer();
+		floatBuffer.put(this.values);
+		return buffer.array();
 	}
 
 	public int getItemSize() {
