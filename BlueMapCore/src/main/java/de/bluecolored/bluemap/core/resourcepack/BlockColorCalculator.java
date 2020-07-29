@@ -172,10 +172,10 @@ public class BlockColorCalculator {
 		
 		final World world = block.getWorld(); 
 		final int sx = pos.getX() - radius.getX(), 
-				  sy = pos.getY() - radius.getY(), 
+				  sy = Math.max(0,  pos.getY() - radius.getY()), 
 				  sz = pos.getZ() - radius.getZ();
 		final int mx = pos.getX() + radius.getX(), 
-				  my = pos.getY() + radius.getY(), 
+				  my = Math.min(255, pos.getY() + radius.getY()), 
 				  mz = pos.getZ() + radius.getZ();
 		
 		return () -> new Iterator<Biome>() {
