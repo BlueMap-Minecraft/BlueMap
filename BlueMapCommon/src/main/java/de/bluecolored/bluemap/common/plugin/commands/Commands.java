@@ -311,7 +311,7 @@ public class Commands<S> {
 	}
 
 	public int debugCommand(CommandContext<S> context) throws CommandSyntaxException {
-		CommandSource source = commandSourceInterface.apply(context.getSource());
+		final CommandSource source = commandSourceInterface.apply(context.getSource());
 		
 		// parse arguments
 		Optional<String> worldName = getOptionalArgument(context, "world", String.class);
@@ -319,8 +319,8 @@ public class Commands<S> {
 		Optional<Double> y = getOptionalArgument(context, "y", Double.class);
 		Optional<Double> z = getOptionalArgument(context, "z", Double.class);
 		
-		World world;
-		Vector3d position;
+		final World world;
+		final Vector3d position;
 		
 		if (worldName.isPresent() && x.isPresent() && y.isPresent() && z.isPresent()) {
 			world = parseWorld(worldName.get()).orElse(null);
@@ -340,30 +340,32 @@ public class Commands<S> {
 			}
 		}
 		
-		// output debug info
-		Vector3i blockPos = position.floor().toInt();
-		Block block = world.getBlock(blockPos);
-		Block blockBelow = world.getBlock(blockPos.add(0, -1, 0));
-		
-		String blockIdMeta = "";
-		String blockBelowIdMeta = "";
-		
-		if (world instanceof MCAWorld) {
-			try {
-				Chunk chunk = ((MCAWorld) world).getChunk(MCAWorld.blockToChunk(blockPos));
-				if (chunk instanceof ChunkAnvil112) {
-					blockIdMeta = " (" + ((ChunkAnvil112) chunk).getBlockIdMeta(blockPos) + ")";
-					blockBelowIdMeta = " (" + ((ChunkAnvil112) chunk).getBlockIdMeta(blockPos.add(0, -1, 0)) + ")";
+		new Thread(() -> {
+			// collect and output debug info
+			Vector3i blockPos = position.floor().toInt();
+			Block block = world.getBlock(blockPos);
+			Block blockBelow = world.getBlock(blockPos.add(0, -1, 0));
+			
+			String blockIdMeta = "";
+			String blockBelowIdMeta = "";
+			
+			if (world instanceof MCAWorld) {
+				try {
+					Chunk chunk = ((MCAWorld) world).getChunk(MCAWorld.blockToChunk(blockPos));
+					if (chunk instanceof ChunkAnvil112) {
+						blockIdMeta = " (" + ((ChunkAnvil112) chunk).getBlockIdMeta(blockPos) + ")";
+						blockBelowIdMeta = " (" + ((ChunkAnvil112) chunk).getBlockIdMeta(blockPos.add(0, -1, 0)) + ")";
+					}
+				} catch (IOException ex) {
+					Logger.global.logError("Failed to read chunk for debug!", ex);
 				}
-			} catch (IOException ex) {
-				Logger.global.logError("Failed to read chunk for debug!", ex);
 			}
-		}
-		
-		source.sendMessages(Lists.newArrayList(
-				Text.of(TextColor.GOLD, "Block at you: ", TextColor.WHITE, block, TextColor.GRAY, blockIdMeta),
-				Text.of(TextColor.GOLD, "Block below you: ", TextColor.WHITE, blockBelow, TextColor.GRAY, blockBelowIdMeta)
-			));
+			
+			source.sendMessages(Lists.newArrayList(
+					Text.of(TextColor.GOLD, "Block at you: ", TextColor.WHITE, block, TextColor.GRAY, blockIdMeta),
+					Text.of(TextColor.GOLD, "Block below you: ", TextColor.WHITE, blockBelow, TextColor.GRAY, blockBelowIdMeta)
+				));
+		}).start();
 		
 		return 1;
 	}
@@ -395,12 +397,13 @@ public class Commands<S> {
 	}
 
 	public int renderCommand(CommandContext<S> context) {
-		CommandSource source = commandSourceInterface.apply(context.getSource());
+		final CommandSource source = commandSourceInterface.apply(context.getSource());
 		
 		// parse world/map argument
 		Optional<String> worldOrMap = getOptionalArgument(context, "world|map", String.class);
-		World world = null;
-		MapType map = null;
+		
+		final World world;
+		final MapType map;
 		if (worldOrMap.isPresent()) {
 			world = parseWorld(worldOrMap.get()).orElse(null);
 			
@@ -411,9 +414,12 @@ public class Commands<S> {
 					source.sendMessage(Text.of(TextColor.RED, "There is no ", helper.worldHelperHover(), " or ", helper.mapHelperHover(), " with this name: ", TextColor.WHITE, worldOrMap.get()));
 					return 0;
 				}
+			} else {
+				map = null;
 			}
 		} else {
 			world = source.getWorld().orElse(null);
+			map = null;
 			
 			if (world == null) {
 				source.sendMessage(Text.of(TextColor.RED, "Can't detect a world from this command-source, you'll have to define a world or a map to render!").setHoverText(Text.of(TextColor.GRAY, "/bluemap render <world|map>")));
@@ -422,8 +428,8 @@ public class Commands<S> {
 		}
 
 		// parse radius and center arguments
-		int radius = getOptionalArgument(context, "radius", Integer.class).orElse(-1);
-		Vector2i center = null;
+		final int radius = getOptionalArgument(context, "radius", Integer.class).orElse(-1);
+		final Vector2i center;
 		if (radius >= 0) {
 			Optional<Double> x = getOptionalArgument(context, "x", Double.class);
 			Optional<Double> z = getOptionalArgument(context, "z", Double.class);
@@ -439,14 +445,18 @@ public class Commands<S> {
 				
 				center = position.toVector2(true).floor().toInt();
 			}
+		} else {
+			center = null;
 		}
 		
-		// execute render 
-		if (world != null) {
-			helper.createWorldRenderTask(source, world, center, radius);
-		} else {
-			helper.createMapRenderTask(source, map, center, radius);
-		}
+		// execute render
+		new Thread(() -> {
+			if (world != null) {
+				helper.createWorldRenderTask(source, world, center, radius);
+			} else {
+				helper.createMapRenderTask(source, map, center, radius);
+			}
+		}).start();
 		
 		return 1;
 	}
