@@ -282,24 +282,26 @@ public class MCAWorld implements World {
 				
 				for (int x = 0; x < 32; x++) {
 					for (int z = 0; z < 32; z++) {
-						int xzChunk = z * 32 + x;
-						
-						raf.seek(xzChunk * 4 + 3);
-						int size = raf.readByte() * 4096;
-
-						if (size == 0) continue;
-						
-						raf.seek(xzChunk * 4 + 4096);
-						int timestamp = raf.read() << 24;
-						timestamp |= (raf.read() & 0xFF) << 16;
-						timestamp |= (raf.read() & 0xFF) << 8;
-						timestamp |= raf.read() & 0xFF;
-						
-						if (timestamp >= (modifiedSinceMillis / 1000)) {
-							Vector2i chunk = new Vector2i(rX * 32 + x, rZ * 32 + z);
-							if (filter.test(chunk)) {
+						Vector2i chunk = new Vector2i(rX * 32 + x, rZ * 32 + z);
+						if (filter.test(chunk)) {
+							
+							int xzChunk = z * 32 + x;
+							
+							raf.seek(xzChunk * 4 + 3);
+							int size = raf.readByte() * 4096;
+	
+							if (size == 0) continue;
+							
+							raf.seek(xzChunk * 4 + 4096);
+							int timestamp = raf.read() << 24;
+							timestamp |= (raf.read() & 0xFF) << 16;
+							timestamp |= (raf.read() & 0xFF) << 8;
+							timestamp |= raf.read() & 0xFF;
+							
+							if (timestamp >= (modifiedSinceMillis / 1000)) {
 								chunks.add(chunk);
 							}
+							
 						}
 					}
 				}
