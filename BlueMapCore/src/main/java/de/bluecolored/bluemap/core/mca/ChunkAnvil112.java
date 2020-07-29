@@ -141,7 +141,7 @@ public class ChunkAnvil112 extends Chunk {
 			this.skyLight = sectionData.getByteArray("SkyLight");
 			this.data = sectionData.getByteArray("Data");
 			
-			if (blocks.length < 4096) blocks = Arrays.copyOf(biomes, 4096);
+			if (blocks.length < 4096) blocks = Arrays.copyOf(blocks, 4096);
 			if (blockLight.length < 2048) blockLight = Arrays.copyOf(blockLight, 2048);
 			if (skyLight.length < 2048) skyLight = Arrays.copyOf(skyLight, 2048);
 			if (data.length < 2048) data = Arrays.copyOf(data, 2048);

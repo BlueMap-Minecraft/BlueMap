@@ -151,10 +151,12 @@ public class ChunkAnvil116 extends Chunk {
 		public Section(CompoundTag sectionData) {
 			this.sectionY = sectionData.getByte("Y");
 			this.blockLight = sectionData.getByteArray("BlockLight");
-			if (blockLight.length == 0) blockLight = new byte[2048];
 			this.skyLight = sectionData.getByteArray("SkyLight");
-			if (skyLight.length == 0) skyLight = new byte[2048];
 			this.blocks = sectionData.getLongArray("BlockStates");
+
+			if (blocks.length < 256) blocks = Arrays.copyOf(blocks, 256);
+			if (blockLight.length < 2048) blockLight = Arrays.copyOf(blockLight, 2048);
+			if (skyLight.length < 2048) skyLight = Arrays.copyOf(skyLight, 2048);
 			
 			//read block palette
 			ListTag<CompoundTag> paletteTag = (ListTag<CompoundTag>) sectionData.getListTag("Palette");

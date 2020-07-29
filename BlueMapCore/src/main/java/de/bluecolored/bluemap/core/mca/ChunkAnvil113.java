@@ -143,14 +143,18 @@ public class ChunkAnvil113 extends Chunk {
 		private long[] blocks;
 		private BlockState[] palette;
 		
+		private int bitsPerBlock;
+		
 		@SuppressWarnings("unchecked")
 		public Section(CompoundTag sectionData) {
 			this.sectionY = sectionData.getByte("Y");
 			this.blockLight = sectionData.getByteArray("BlockLight");
-			if (blockLight.length == 0) blockLight = new byte[2048];
 			this.skyLight = sectionData.getByteArray("SkyLight");
-			if (skyLight.length == 0) skyLight = new byte[2048];
 			this.blocks = sectionData.getLongArray("BlockStates");
+
+			if (blocks.length < 256) blocks = Arrays.copyOf(blocks, 256);
+			if (blockLight.length < 2048) blockLight = Arrays.copyOf(blockLight, 2048);
+			if (skyLight.length < 2048) skyLight = Arrays.copyOf(skyLight, 2048);
 			
 			//read block palette
 			ListTag<CompoundTag> paletteTag = (ListTag<CompoundTag>) sectionData.getListTag("Palette");
@@ -179,6 +183,8 @@ public class ChunkAnvil113 extends Chunk {
 			} else {
 				this.palette = new BlockState[0];
 			}
+
+			this.bitsPerBlock = blocks.length * 64 / 4096; //64 bits per long and 4096 blocks per section
 		}
 		
 		public int getSectionY() {
@@ -192,7 +198,6 @@ public class ChunkAnvil113 extends Chunk {
 			int y = pos.getY() & 0xF;
 			int z = pos.getZ() & 0xF;
 			int blockIndex = y * 256 + z * 16 + x;
-			int bitsPerBlock = blocks.length * 64 / 4096; //64 bits per long and 4096 blocks per section
 			int index = blockIndex * bitsPerBlock;
 			int firstLong = index >> 6; // index / 64
 			int bitoffset = index & 0x3F; // Math.floorMod(index, 64)

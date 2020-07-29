@@ -156,40 +156,32 @@ public class MCAWorld implements World {
 	
 	@Override
 	public Biome getBiome(Vector3i pos) {
-		try {
-		
-			Vector2i chunkPos = blockToChunk(pos);
-			Chunk chunk = getChunk(chunkPos);
-			return chunk.getBiome(pos);
-		
-		} catch (IOException ex) {
-			throw new RuntimeException("Unexpected IO-Exception trying to read world-data!", ex);
+		if (pos.getY() < getMinY()) {
+			pos = new Vector3i(pos.getX(), getMinY(), pos.getZ());
+		} else if (pos.getY() > getMaxY()) {
+			pos = new Vector3i(pos.getX(), getMaxY(), pos.getZ());
 		}
+		
+		Vector2i chunkPos = blockToChunk(pos);
+		Chunk chunk = getChunk(chunkPos);
+		return chunk.getBiome(pos);
 	}
 	
 	@Override
 	public Block getBlock(Vector3i pos) {
 		if (pos.getY() < getMinY()) {
 			return new Block(this, BlockState.AIR, LightData.ZERO, Biome.DEFAULT, BlockProperties.TRANSPARENT, pos);
-		}
-		
-		if (pos.getY() > getMaxY()) {
+		} else if (pos.getY() > getMaxY()) {
 			return new Block(this, BlockState.AIR, LightData.SKY, Biome.DEFAULT, BlockProperties.TRANSPARENT, pos);
 		}
 		
-		try {
-			
-			Vector2i chunkPos = blockToChunk(pos);
-			Chunk chunk = getChunk(chunkPos);
-			BlockState blockState = getExtendedBlockState(chunk, pos);
-			LightData lightData = chunk.getLightData(pos);
-			Biome biome = chunk.getBiome(pos);
-			BlockProperties properties = blockPropertiesMapper.get(blockState);
-			return new Block(this, blockState, lightData, biome, properties, pos);
-			
-		} catch (IOException ex) {
-			throw new RuntimeException("Unexpected IO-Exception trying to read world-data!", ex);
-		}
+		Vector2i chunkPos = blockToChunk(pos);
+		Chunk chunk = getChunk(chunkPos);
+		BlockState blockState = getExtendedBlockState(chunk, pos);
+		LightData lightData = chunk.getLightData(pos);
+		Biome biome = chunk.getBiome(pos);
+		BlockProperties properties = blockPropertiesMapper.get(blockState);
+		return new Block(this, blockState, lightData, biome, properties, pos);
 	}
 
 	private BlockState getExtendedBlockState(Chunk chunk, Vector3i pos) {
@@ -204,19 +196,33 @@ public class MCAWorld implements World {
 		return blockState;
 	}
 	
-	public Chunk getChunk(Vector2i chunkPos) throws IOException {
+	public Chunk getChunk(Vector2i chunkPos) {
 		try {
-			Chunk chunk = CHUNK_CACHE.get(new WorldChunkHash(this, chunkPos), () -> this.loadChunk(chunkPos));
+			Chunk chunk = CHUNK_CACHE.get(new WorldChunkHash(this, chunkPos), () -> this.loadChunkOrEmpty(chunkPos, 2, 1000));
 			return chunk;
 		} catch (UncheckedExecutionException | ExecutionException e) {
-			Throwable cause = e.getCause();
-			
-			if (cause instanceof IOException) {
-				throw (IOException) cause;
-			}
-			
-			else throw new IOException(cause);
+			throw new RuntimeException(e.getCause());
 		}
+	}
+	
+	private Chunk loadChunkOrEmpty(Vector2i chunkPos, int tries, long tryInterval) {
+		Exception loadException = null;
+		for (int i = 0; i < tries; i++) {
+			try {
+				return loadChunk(chunkPos);
+			} catch (Exception e) {
+				loadException = e;
+				
+				if (tryInterval > 0 && i+1 < tries) {
+					try {
+						Thread.sleep(tryInterval);
+					} catch (InterruptedException interrupt) {}
+				}
+			}
+		}
+
+		Logger.global.logDebug("Unexpected exception trying to load chunk (" + chunkPos + "):" + loadException);
+		return Chunk.empty(this, chunkPos);
 	}
 	
 	private Chunk loadChunk(Vector2i chunkPos) throws IOException {
@@ -246,7 +252,7 @@ public class MCAWorld implements World {
 			byte compressionTypeByte = raf.readByte();
 			CompressionType compressionType = CompressionType.getFromID(compressionTypeByte);
 			if (compressionType == null) {
-				throw new IOException("invalid compression type " + compressionTypeByte);
+				throw new IOException("Invalid compression type " + compressionTypeByte);
 			}
 			
 			DataInputStream dis = new DataInputStream(new BufferedInputStream(compressionType.decompress(new FileInputStream(raf.getFD()))));
@@ -254,8 +260,10 @@ public class MCAWorld implements World {
 			if (tag instanceof CompoundTag) {
 				return Chunk.create(this, (CompoundTag) tag, ignoreMissingLightData);
 			} else {
-				throw new IOException("invalid data tag: " + (tag == null ? "null" : tag.getClass().getName()));
+				throw new IOException("Invalid data tag: " + (tag == null ? "null" : tag.getClass().getName()));
 			}
+		} catch (Exception e) {
+			throw new IOException("Exception trying to load chunk (" + chunkPos + ")", e);
 		}
 	}
 	
