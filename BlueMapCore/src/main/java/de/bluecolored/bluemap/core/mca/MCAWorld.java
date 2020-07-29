@@ -253,6 +253,8 @@ public class MCAWorld implements World {
 			} else {
 				throw new IOException("invalid data tag: " + (tag == null ? "null" : tag.getClass().getName()));
 			}
+		} catch (FileNotFoundException ex) {
+			return Chunk.empty(this, chunkPos);
 		}
 	}
 	
