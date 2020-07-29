@@ -350,14 +350,10 @@ public class Commands<S> {
 			String blockBelowIdMeta = "";
 			
 			if (world instanceof MCAWorld) {
-				try {
-					Chunk chunk = ((MCAWorld) world).getChunk(MCAWorld.blockToChunk(blockPos));
-					if (chunk instanceof ChunkAnvil112) {
-						blockIdMeta = " (" + ((ChunkAnvil112) chunk).getBlockIdMeta(blockPos) + ")";
-						blockBelowIdMeta = " (" + ((ChunkAnvil112) chunk).getBlockIdMeta(blockPos.add(0, -1, 0)) + ")";
-					}
-				} catch (IOException ex) {
-					Logger.global.logError("Failed to read chunk for debug!", ex);
+				Chunk chunk = ((MCAWorld) world).getChunk(MCAWorld.blockToChunk(blockPos));
+				if (chunk instanceof ChunkAnvil112) {
+					blockIdMeta = " (" + ((ChunkAnvil112) chunk).getBlockIdMeta(blockPos) + ")";
+					blockBelowIdMeta = " (" + ((ChunkAnvil112) chunk).getBlockIdMeta(blockPos.add(0, -1, 0)) + ")";
 				}
 			}
 			

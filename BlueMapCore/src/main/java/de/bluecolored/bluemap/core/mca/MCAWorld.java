@@ -268,7 +268,7 @@ public class MCAWorld implements World {
 	}
 	
 	@Override
-	public boolean isChunkGenerated(Vector2i chunkPos) throws IOException {
+	public boolean isChunkGenerated(Vector2i chunkPos) {
 		Chunk chunk = getChunk(chunkPos);
 		return chunk.isGenerated();
 	}

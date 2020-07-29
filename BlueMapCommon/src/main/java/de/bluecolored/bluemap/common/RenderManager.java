@@ -161,11 +161,7 @@ public class RenderManager {
 			}
 			
 			if (ticket != null) {
-				try {
-					ticket.render();
-				} catch (IOException e) {
-					Logger.global.logDebug("Failed to render tile " + ticket.getTile() + " of map '" + ticket.getMapType().getId() + "' after " + ticket.getRenderAttempts() + " render-attempts! (" + e.toString() + ")");
-				}
+				ticket.render();
 			} else {
 				try {
 					Thread.sleep(1000); // we don't need a super fast response time, so waiting a second is totally fine

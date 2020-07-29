@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.common;
 
-import java.io.IOException;
 import java.util.Objects;
 
 import com.flowpowered.math.vector.Vector2i;
@@ -34,25 +33,13 @@ public class RenderTicket {
 	private final MapType map;
 	private final Vector2i tile;
 	
-	private int renderAttempts;
-	private boolean successfullyRendered;
-	
 	public RenderTicket(MapType map, Vector2i tile) {
 		this.map = map;
 		this.tile = tile;
-		
-		this.renderAttempts = 0;
-		this.successfullyRendered = false;
 	}
 	
-	public synchronized void render() throws IOException {
-		renderAttempts++;
-		
-		if (!successfullyRendered) {
-			map.renderTile(tile);
-			
-			successfullyRendered = true;
-		}
+	public synchronized void render() {
+		map.renderTile(tile);
 	}
 	
 	public MapType getMapType() {
@@ -61,10 +48,6 @@ public class RenderTicket {
 	
 	public Vector2i getTile() {
 		return tile;
-	}
-	
-	public int getRenderAttempts() {
-		return renderAttempts;
 	}
 	
 	@Override
