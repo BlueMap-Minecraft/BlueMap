@@ -161,11 +161,19 @@ public class RenderManager {
 			}
 			
 			if (ticket != null) {
-				ticket.render();
+				try {
+					ticket.render();
+				} catch (Exception e) {
+					//catch possible runtime exceptions, display them, and wait a while .. then resurrect this render-thread
+					Logger.global.logError("Unexpected exception in render-thread!", e);
+					try {
+						Thread.sleep(10000);
+					} catch (InterruptedException interrupt) { break; }
+				}
 			} else {
 				try {
 					Thread.sleep(1000); // we don't need a super fast response time, so waiting a second is totally fine
-				} catch (InterruptedException e) { break; }
+				} catch (InterruptedException interrupt) { break; }
 			}
 		}
 	}
