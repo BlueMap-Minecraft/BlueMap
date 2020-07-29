@@ -24,6 +24,8 @@
  */
 package de.bluecolored.bluemap.core.mca;
 
+import java.util.Arrays;
+
 import com.flowpowered.math.vector.Vector3i;
 
 import de.bluecolored.bluemap.core.mca.mapping.BiomeMapper;
@@ -60,15 +62,21 @@ public class ChunkAnvil112 extends Chunk {
 				levelData.getBoolean("TerrainPopulated");
 		
 		sections = new Section[32]; //32 supports a max world-height of 512 which is the max that the hightmaps of Minecraft V1.13+ can store with 9 bits, i believe?
-		for (CompoundTag sectionTag : ((ListTag<CompoundTag>) levelData.getListTag("Sections"))) {
-			Section section = new Section(sectionTag);
-			sections[section.getSectionY()] = section;
+		if (levelData.containsKey("Sections")) {
+			for (CompoundTag sectionTag : ((ListTag<CompoundTag>) levelData.getListTag("Sections"))) {
+				Section section = new Section(sectionTag);
+				if (section.getSectionY() >= 0 && section.getSectionY() < sections.length) sections[section.getSectionY()] = section;
+			}
 		}
 		
 		biomes = levelData.getByteArray("Biomes");
 		
 		if (biomes == null || biomes.length == 0) {
-			biomes = new byte[2048];
+			biomes = new byte[256];
+		}
+		
+		if (biomes.length < 256) {
+			biomes = Arrays.copyOf(biomes, 256);
 		}
 	}
 
@@ -132,6 +140,11 @@ public class ChunkAnvil112 extends Chunk {
 			this.blockLight = sectionData.getByteArray("BlockLight");
 			this.skyLight = sectionData.getByteArray("SkyLight");
 			this.data = sectionData.getByteArray("Data");
+			
+			if (blocks.length < 4096) blocks = Arrays.copyOf(biomes, 4096);
+			if (blockLight.length < 2048) blockLight = Arrays.copyOf(blockLight, 2048);
+			if (skyLight.length < 2048) skyLight = Arrays.copyOf(skyLight, 2048);
+			if (data.length < 2048) data = Arrays.copyOf(data, 2048);
 		}
 
 		public int getSectionY() {
@@ -148,7 +161,7 @@ public class ChunkAnvil112 extends Chunk {
 			
 			int blockId = this.blocks[blockByteIndex] & 0xFF;
 			
-			if (this.add.length > 0) {
+			if (this.add.length > blockHalfByteIndex) {
 				blockId = blockId | (getByteHalf(this.add[blockHalfByteIndex], largeHalf) << 8);
 			}
 			
@@ -172,7 +185,7 @@ public class ChunkAnvil112 extends Chunk {
 			
 			int blockId = this.blocks[blockByteIndex] & 0xFF;
 			
-			if (this.add.length > 0) {
+			if (this.add.length > blockHalfByteIndex) {
 				blockId = blockId | (getByteHalf(this.add[blockHalfByteIndex], largeHalf) << 8);
 			}
 			

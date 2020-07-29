@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.core.mca;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -71,7 +72,7 @@ public class ChunkAnvil113 extends Chunk {
 		if (levelData.containsKey("Sections")) {
 			for (CompoundTag sectionTag : ((ListTag<CompoundTag>) levelData.getListTag("Sections"))) {
 				Section section = new Section(sectionTag);
-				if (section.getSectionY() >= 0) sections[section.getSectionY()] = section;
+				if (section.getSectionY() >= 0 && section.getSectionY() < sections.length) sections[section.getSectionY()] = section;
 			}
 		}
 		
@@ -89,7 +90,11 @@ public class ChunkAnvil113 extends Chunk {
 		}
 		
 		if (biomes == null || biomes.length == 0) {
-			biomes = new int[2048];
+			biomes = new int[256];
+		}
+		
+		if (biomes.length < 256) {
+			biomes = Arrays.copyOf(biomes, 256);
 		}
 	}
 
