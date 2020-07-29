@@ -110,7 +110,7 @@ public interface World {
 	/**
 	 * Returns true if and only if that chunk is fully generated and no world-generation or lighting has yet to be done.
 	 */
-	public boolean isChunkGenerated(Vector2i chunkPos) throws IOException;
+	public boolean isChunkGenerated(Vector2i chunkPos);
 	
 	
 	/**
@@ -118,7 +118,7 @@ public interface World {
 	 * @param area The area to check
 	 * @throws IOException 
 	 */
-	public default boolean isAreaGenerated(AABB area) throws IOException {
+	public default boolean isAreaGenerated(AABB area) {
 		return isAreaGenerated(area.getMin(), area.getMax());
 	}
 	
@@ -127,7 +127,7 @@ public interface World {
 	 * @param area The area to check
 	 * @throws IOException 
 	 */
-	public default boolean isAreaGenerated(Vector3i blockMin, Vector3i blockMax) throws IOException {
+	public default boolean isAreaGenerated(Vector3i blockMin, Vector3i blockMax) {
 		return isAreaGenerated(blockPosToChunkPos(blockMin), blockPosToChunkPos(blockMax));
 	}
 	
@@ -136,7 +136,7 @@ public interface World {
 	 * @param area The area to check
 	 * @throws IOException 
 	 */
-	public default boolean isAreaGenerated(Vector2i chunkMin, Vector2i chunkMax) throws IOException {
+	public default boolean isAreaGenerated(Vector2i chunkMin, Vector2i chunkMax) {
 		for (int x = chunkMin.getX(); x <= chunkMax.getX(); x++) {
 			for (int z = chunkMin.getY(); z <= chunkMax.getY(); z++) {
 				if (!isChunkGenerated(new Vector2i(x, z))) return false;

@@ -24,8 +24,6 @@
  */
 package de.bluecolored.bluemap.core.render;
 
-import java.io.IOException;
-
 import de.bluecolored.bluemap.core.render.hires.HiresModel;
 import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.render.lowres.LowresModelManager;
@@ -42,9 +40,8 @@ public class TileRenderer {
 
 	/**
 	 * Renders the provided WorldTile (only) if the world is generated
-	 * @throws IOException If an IO-Exception occurs during the render
 	 */
-	public void render(WorldTile tile) throws IOException {
+	public void render(WorldTile tile) {
 		//check if the region is generated before rendering, don't render if it's not generated
 		AABB area = hiresModelManager.getTileRegion(tile);
 		if (!tile.getWorld().isAreaGenerated(area)) return;
