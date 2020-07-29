@@ -32,6 +32,12 @@ You found a bug, have another issue or a suggestion? Please create an issue [her
 You are welcome to contribute!
 Just create a pull request with your changes :)
 
+If you want to have your changes merged faster, make sure they are complete, documented and well tested!
+
+The `master`-branch is for the latest version of minecraft.
+The `mc/xx`-branches are for other minecraft-versions.
+Changes that apply to all versions should be made on the `mc/1.13`-branch. This branch can be merged into `master` and every other `mc/xx` branch.
+
 ### Todo / planned features
 Here is a *(surely incomplete)* list of things that i want to include in future versions. *(They are not in any specific order. There is no guarantee that any of those things will ever be included.)*
 
