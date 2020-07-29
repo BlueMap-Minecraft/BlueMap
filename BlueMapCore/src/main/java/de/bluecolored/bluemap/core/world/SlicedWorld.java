@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.core.world;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.UUID;
@@ -114,24 +113,24 @@ public class SlicedWorld implements World {
 	}
 
 	@Override
-	public boolean isChunkGenerated(Vector2i chunkPos) throws IOException {
+	public boolean isChunkGenerated(Vector2i chunkPos) {
 		if (!isInside(chunkPos)) return false;
 		
 		return world.isChunkGenerated(chunkPos);
 	}
 	
 	@Override
-	public boolean isAreaGenerated(AABB area) throws IOException {
+	public boolean isAreaGenerated(AABB area) {
 		return isAreaGenerated(area.getMin(), area.getMax());
 	}
 	
 	@Override
-	public boolean isAreaGenerated(Vector3i blockMin, Vector3i blockMax) throws IOException {
+	public boolean isAreaGenerated(Vector3i blockMin, Vector3i blockMax) {
 		return isAreaGenerated(blockPosToChunkPos(blockMin), blockPosToChunkPos(blockMax));
 	}
 	
 	@Override
-	public boolean isAreaGenerated(Vector2i chunkMin, Vector2i chunkMax) throws IOException {
+	public boolean isAreaGenerated(Vector2i chunkMin, Vector2i chunkMax) {
 		if (!isInside(chunkMin) && 
 			!isInside(chunkMax) && 
 			!isInside(new Vector2i(chunkMin.getX(), chunkMax.getY())) && 

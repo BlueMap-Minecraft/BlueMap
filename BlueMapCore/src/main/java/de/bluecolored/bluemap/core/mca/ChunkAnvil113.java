@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.core.mca;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -71,7 +72,7 @@ public class ChunkAnvil113 extends Chunk {
 		if (levelData.containsKey("Sections")) {
 			for (CompoundTag sectionTag : ((ListTag<CompoundTag>) levelData.getListTag("Sections"))) {
 				Section section = new Section(sectionTag);
-				if (section.getSectionY() >= 0) sections[section.getSectionY()] = section;
+				if (section.getSectionY() >= 0 && section.getSectionY() < sections.length) sections[section.getSectionY()] = section;
 			}
 		}
 		
@@ -89,7 +90,11 @@ public class ChunkAnvil113 extends Chunk {
 		}
 		
 		if (biomes == null || biomes.length == 0) {
-			biomes = new int[2048];
+			biomes = new int[256];
+		}
+		
+		if (biomes.length < 256) {
+			biomes = Arrays.copyOf(biomes, 256);
 		}
 	}
 
@@ -138,14 +143,18 @@ public class ChunkAnvil113 extends Chunk {
 		private long[] blocks;
 		private BlockState[] palette;
 		
+		private int bitsPerBlock;
+		
 		@SuppressWarnings("unchecked")
 		public Section(CompoundTag sectionData) {
 			this.sectionY = sectionData.getByte("Y");
 			this.blockLight = sectionData.getByteArray("BlockLight");
-			if (blockLight.length == 0) blockLight = new byte[2048];
 			this.skyLight = sectionData.getByteArray("SkyLight");
-			if (skyLight.length == 0) skyLight = new byte[2048];
 			this.blocks = sectionData.getLongArray("BlockStates");
+
+			if (blocks.length < 256) blocks = Arrays.copyOf(blocks, 256);
+			if (blockLight.length < 2048) blockLight = Arrays.copyOf(blockLight, 2048);
+			if (skyLight.length < 2048) skyLight = Arrays.copyOf(skyLight, 2048);
 			
 			//read block palette
 			ListTag<CompoundTag> paletteTag = (ListTag<CompoundTag>) sectionData.getListTag("Palette");
@@ -174,6 +183,8 @@ public class ChunkAnvil113 extends Chunk {
 			} else {
 				this.palette = new BlockState[0];
 			}
+
+			this.bitsPerBlock = blocks.length * 64 / 4096; //64 bits per long and 4096 blocks per section
 		}
 		
 		public int getSectionY() {
@@ -187,7 +198,6 @@ public class ChunkAnvil113 extends Chunk {
 			int y = pos.getY() & 0xF;
 			int z = pos.getZ() & 0xF;
 			int blockIndex = y * 256 + z * 16 + x;
-			int bitsPerBlock = blocks.length * 64 / 4096; //64 bits per long and 4096 blocks per section
 			int index = blockIndex * bitsPerBlock;
 			int firstLong = index >> 6; // index / 64
 			int bitoffset = index & 0x3F; // Math.floorMod(index, 64)
