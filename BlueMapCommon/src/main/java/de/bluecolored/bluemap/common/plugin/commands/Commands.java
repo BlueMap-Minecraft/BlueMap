@@ -100,13 +100,19 @@ public class Commands<S> {
 		LiteralCommandNode<S> debugCommand = 
 				literal("debug")
 				.requires(requirements("bluemap.debug"))
-				.executes(this::debugCommand)
-
-				.then(argument("world", StringArgumentType.string()).suggests(new WorldSuggestionProvider<>(plugin))
-						.then(argument("x", DoubleArgumentType.doubleArg())
-								.then(argument("y", DoubleArgumentType.doubleArg())
-										.then(argument("z", DoubleArgumentType.doubleArg())
-												.executes(this::debugCommand)))))
+				
+				.then(literal("block")
+						.executes(this::debugBlockCommand)
+		
+						.then(argument("world", StringArgumentType.string()).suggests(new WorldSuggestionProvider<>(plugin))
+								.then(argument("x", DoubleArgumentType.doubleArg())
+										.then(argument("y", DoubleArgumentType.doubleArg())
+												.then(argument("z", DoubleArgumentType.doubleArg())
+														.executes(this::debugBlockCommand))))))
+				
+				.then(literal("cache")
+						.executes(this::debugClearCacheCommand))
+						
 				.build();
 		
 		LiteralCommandNode<S> pauseCommand = 
@@ -310,7 +316,18 @@ public class Commands<S> {
 		return 1;
 	}
 
-	public int debugCommand(CommandContext<S> context) throws CommandSyntaxException {
+	public int debugClearCacheCommand(CommandContext<S> context) throws CommandSyntaxException {
+		CommandSource source = commandSourceInterface.apply(context.getSource());
+		
+		for (World world : plugin.getWorlds()) {
+			world.invalidateChunkCache();
+		}
+		
+		source.sendMessage(Text.of(TextColor.GREEN, "All caches cleared!"));
+		return 1;
+	}
+	
+	public int debugBlockCommand(CommandContext<S> context) throws CommandSyntaxException {
 		final CommandSource source = commandSourceInterface.apply(context.getSource());
 		
 		// parse arguments
@@ -358,6 +375,7 @@ public class Commands<S> {
 			}
 			
 			source.sendMessages(Lists.newArrayList(
+					Text.of(TextColor.GOLD, "Is generated: ", TextColor.WHITE, world.isChunkGenerated(world.blockPosToChunkPos(blockPos))),
 					Text.of(TextColor.GOLD, "Block at you: ", TextColor.WHITE, block, TextColor.GRAY, blockIdMeta),
 					Text.of(TextColor.GOLD, "Block below you: ", TextColor.WHITE, blockBelow, TextColor.GRAY, blockBelowIdMeta)
 				));
