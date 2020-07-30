@@ -42,6 +42,8 @@ import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.logger.Logger;
 import net.minecraft.command.CommandSource;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.world.DimensionType;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.world.BlockEvent;
@@ -88,7 +90,7 @@ public class ForgeMod implements ServerInterface {
 		}
 
 		//register commands
-		this.commands = new Commands<>(bluemap, event.getCommandDispatcher(), forgeSource -> new ForgeCommandSource(this, bluemap, forgeSource));
+		this.commands = new Commands<>(bluemap, event.getServer().getCommandManager().getDispatcher(), forgeSource -> new ForgeCommandSource(this, bluemap, forgeSource));
 		
 		new Thread(() -> {
 			try {
@@ -189,14 +191,11 @@ public class ForgeMod implements ServerInterface {
 	}
 	
 	private File getFolderForWorld(ServerWorld world) throws IOException {
-		File worldFolder = world.getSaveHandler().getWorldDirectory();
-		
-		int dimensionId = world.getDimension().getType().getId();
-		if (dimensionId != 0) {
-			worldFolder = new File(worldFolder, "DIM" + dimensionId);
-		}
-		
-		return worldFolder.getCanonicalFile();
+		MinecraftServer server = world.getServer();
+		String worldName = server.func_240793_aU_().getWorldName();
+		File worldFolder = new File(world.getServer().getDataDirectory(), worldName);
+		File dimensionFolder = DimensionType.func_236031_a_(world.func_234923_W_(), worldFolder);
+		return dimensionFolder.getCanonicalFile();
 	}
 
 	@Override

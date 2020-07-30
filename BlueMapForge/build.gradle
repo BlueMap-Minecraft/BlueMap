@@ -12,7 +12,7 @@ buildscript {
 apply plugin: 'net.minecraftforge.gradle'
 
 minecraft {
-	mappings channel: 'snapshot', version: '20190719-1.14.3'
+    mappings channel: 'snapshot', version: '20200514-1.16'
 }
 
 configurations {
@@ -20,7 +20,7 @@ configurations {
 }
 
 dependencies {
-	minecraft 'net.minecraftforge:forge:1.15.2-31.1.0'
+	minecraft 'net.minecraftforge:forge:1.16.1-32.0.97'
 	
     include (project(':BlueMapCommon')) {
     	//exclude dependencies provided by forge
@@ -33,7 +33,7 @@ dependencies {
 }
 
 build.dependsOn shadowJar {
-	destinationDir = file '../build/unsupported'
+	destinationDir = file '../build/release'
 	archiveFileName = "BlueMap-${version}-forge.jar"
 	
 	configurations = [project.configurations.include]

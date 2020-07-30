@@ -33,7 +33,6 @@ import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.core.world.World;
-import net.minecraft.util.math.Vec3d;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.server.ServerWorld;
 
@@ -51,7 +50,7 @@ public class ForgeCommandSource implements CommandSource {
 
 	@Override
 	public void sendMessage(Text text) {
-		delegate.sendFeedback(ITextComponent.Serializer.fromJson(text.toJSONString()), false);
+		delegate.sendFeedback(ITextComponent.Serializer.func_240643_a_(text.toJSONString()), false);
 	}
 
 	@Override
@@ -61,7 +60,7 @@ public class ForgeCommandSource implements CommandSource {
 	
 	@Override
 	public Optional<Vector3d> getPosition() {
-		Vec3d pos = delegate.getPos(); 
+		net.minecraft.util.math.vector.Vector3d pos = delegate.getPos(); 
 		if (pos != null) {
 			return Optional.of(new Vector3d(pos.x, pos.y, pos.z));
 		}

@@ -20,6 +20,6 @@ A 3d-map of your Minecraft worlds view-able in your browser using three.js (WebG
 [[dependencies.bluemap]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.15.2]"
+    versionRange="[1.16.1]"
     ordering="NONE"
     side="SERVER"
