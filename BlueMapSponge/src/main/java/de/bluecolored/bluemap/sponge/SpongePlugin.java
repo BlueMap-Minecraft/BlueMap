@@ -161,6 +161,7 @@ public class SpongePlugin implements ServerInterface {
 	@Override
 	public void unregisterAllListeners() {
 		Sponge.getEventManager().unregisterPluginListeners(this);
+		Sponge.getEventManager().registerListeners(this, this);
 	}
 
 	@Override
