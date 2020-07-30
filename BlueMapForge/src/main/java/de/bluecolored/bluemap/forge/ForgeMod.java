@@ -40,7 +40,7 @@ import com.flowpowered.math.vector.Vector3i;
 
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.commands.Commands;
-import de.bluecolored.bluemap.common.plugin.serverinterface.PlayerInterface;
+import de.bluecolored.bluemap.common.plugin.serverinterface.PlayerState;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -212,13 +212,13 @@ public class ForgeMod implements ServerInterface {
 	}
 
 	@Override
-	public Collection<PlayerInterface> getOnlinePlayers() {
+	public Collection<PlayerState> getOnlinePlayers() {
 		// TODO Implement
 		return Collections.emptyList();
 	}
 
 	@Override
-	public Optional<PlayerInterface> getPlayer(UUID uuid) {
+	public Optional<PlayerState> getPlayer(UUID uuid) {
 		// TODO Implement
 		return Optional.empty();
 	}

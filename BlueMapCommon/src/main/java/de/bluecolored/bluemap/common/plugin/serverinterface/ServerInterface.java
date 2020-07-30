@@ -78,13 +78,13 @@ public interface ServerInterface {
 	/**
 	 * Returns a collection of players that are currently online
 	 */
-	Collection<PlayerInterface> getOnlinePlayers();
+	Collection<PlayerState> getOnlinePlayers();
 	
 	/**
 	 * Returns the player with that UUID if present<br>
 	 * this method is only guaranteed to return a player if the player is currently online.
 	 */
-	Optional<PlayerInterface> getPlayer(UUID uuid);
+	Optional<PlayerState> getPlayer(UUID uuid);
 	
 	
 }

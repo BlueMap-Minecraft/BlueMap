@@ -28,9 +28,13 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import javax.inject.Inject;
 
@@ -41,6 +45,7 @@ import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.GameReloadEvent;
 import org.spongepowered.api.event.game.state.GameStartingServerEvent;
 import org.spongepowered.api.event.game.state.GameStoppingEvent;
+import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.scheduler.SpongeExecutorService;
 import org.spongepowered.api.util.Tristate;
@@ -48,7 +53,7 @@ import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
 
 import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.common.plugin.serverinterface.PlayerInterface;
+import de.bluecolored.bluemap.common.plugin.serverinterface.PlayerState;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -74,12 +79,18 @@ public class SpongePlugin implements ServerInterface {
 	
 	private Plugin bluemap;
 	private SpongeCommands commands;
-	
+
+	private SpongeExecutorService syncExecutor;
 	private SpongeExecutorService asyncExecutor;
+	
+	private long lastPlayerUpdate = -1;
+	private Map<UUID, PlayerState> onlinePlayers;
 	
 	@Inject
 	public SpongePlugin(org.slf4j.Logger logger) {
 		Logger.global = new Slf4jLogger(logger);
+		
+		this.onlinePlayers = new ConcurrentHashMap<>();
 		
 		this.bluemap = new Plugin("sponge", this);
 		this.commands = new SpongeCommands(bluemap);
@@ -88,6 +99,7 @@ public class SpongePlugin implements ServerInterface {
 	@Listener
 	public void onServerStart(GameStartingServerEvent evt) {
 		asyncExecutor = Sponge.getScheduler().createAsyncExecutor(this);
+		syncExecutor = Sponge.getScheduler().createSyncExecutor(this);
 		
 		//save all world properties to generate level_sponge.dat files
 		for (WorldProperties properties : Sponge.getServer().getAllWorldProperties()) {
@@ -130,6 +142,17 @@ public class SpongePlugin implements ServerInterface {
 		});
 	}
 
+	
+	@Listener
+	public void onPlayerJoin(ClientConnectionEvent.Join evt) {
+		onlinePlayers.put(evt.getTargetEntity().getUniqueId(), new SpongePlayerState(evt.getTargetEntity()));
+	}
+	
+	@Listener
+	public void onPlayerLeave(ClientConnectionEvent.Disconnect evt) {
+		onlinePlayers.remove(evt.getTargetEntity().getUniqueId());
+	}
+
 	@Override
 	public void registerListener(ServerEventListener listener) {
 		Sponge.getEventManager().registerListeners(this, new EventForwarder(listener));
@@ -167,15 +190,38 @@ public class SpongePlugin implements ServerInterface {
 	}
 
 	@Override
-	public Collection<PlayerInterface> getOnlinePlayers() {
-		// TODO Implement
-		return Collections.emptyList();
+	public Collection<PlayerState> getOnlinePlayers() {
+		updatePlayers();
+		return onlinePlayers.values();
 	}
 
 	@Override
-	public Optional<PlayerInterface> getPlayer(UUID uuid) {
-		// TODO Implement
-		return Optional.empty();
+	public Optional<PlayerState> getPlayer(UUID uuid) {
+		updatePlayers();
+		return Optional.ofNullable(onlinePlayers.get(uuid));
+	}
+	
+	private synchronized void updatePlayers() {
+		if (lastPlayerUpdate + 1000 > System.currentTimeMillis()) return; //only update once a second
+		
+		if (Sponge.getServer().isMainThread()) {
+			updatePlayersSync();
+		} else {
+			try {
+				syncExecutor.submit(this::updatePlayersSync).get(3, TimeUnit.SECONDS);
+			} catch (TimeoutException | InterruptedException ignore) {
+			} catch (ExecutionException e) {
+				Logger.global.logError("Unexpected exception trying to update player-states!", e);
+			}
+		}
+
+		lastPlayerUpdate = System.currentTimeMillis();
+	}
+	
+	private void updatePlayersSync() {
+		for (PlayerState player : onlinePlayers.values()) {
+			if (player instanceof SpongePlayerState) ((SpongePlayerState) player).update();
+		}
 	}
 	
 	@Override

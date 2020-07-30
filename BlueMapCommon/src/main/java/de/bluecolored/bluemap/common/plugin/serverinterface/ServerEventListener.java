@@ -43,8 +43,6 @@ public interface ServerEventListener {
 	
 	void onPlayerLeave(UUID playerUuid);
 	
-	void onPlayerMove(UUID playerUuid);
-	
 	void onChatMessage(Text message);
 	
 }

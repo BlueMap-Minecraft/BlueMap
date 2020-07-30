@@ -297,7 +297,7 @@ public class Plugin {
 		
 		//start webserver
 		if (config.isWebserverEnabled()) {
-			webServer = new BlueMapWebServer(config);
+			webServer = new BlueMapWebServer(config, serverInterface);
 			webServer.updateWebfiles();
 			webServer.start();
 		}

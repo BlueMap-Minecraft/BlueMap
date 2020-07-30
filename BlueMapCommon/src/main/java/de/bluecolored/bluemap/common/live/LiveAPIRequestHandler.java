@@ -24,9 +24,16 @@
  */
 package de.bluecolored.bluemap.common.live;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.google.gson.stream.JsonWriter;
+
+import de.bluecolored.bluemap.common.plugin.serverinterface.Gamemode;
+import de.bluecolored.bluemap.common.plugin.serverinterface.PlayerState;
+import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.webserver.HttpRequest;
 import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
 import de.bluecolored.bluemap.core.webserver.HttpResponse;
@@ -36,13 +43,15 @@ public class LiveAPIRequestHandler implements HttpRequestHandler {
 
 	private HttpRequestHandler notFoundHandler;
 	private Map<String, HttpRequestHandler> liveAPIRequests;
+	private ServerInterface server;
 	
-	public LiveAPIRequestHandler(HttpRequestHandler notFoundHandler) {
+	public LiveAPIRequestHandler(ServerInterface server, HttpRequestHandler notFoundHandler) {
+		this.server = server;
 		this.notFoundHandler = notFoundHandler;
 		
 		this.liveAPIRequests = new HashMap<>();
 		
-		this.liveAPIRequests.put("live/events", this::handleEventsRequest);
+		this.liveAPIRequests.put("live/players", this::handlePlayersRequest);
 	}
 
 	@Override
@@ -53,10 +62,44 @@ public class LiveAPIRequestHandler implements HttpRequestHandler {
 		return this.notFoundHandler.handle(request);
 	}
 
-	public HttpResponse handleEventsRequest(HttpRequest request) {
+	public HttpResponse handlePlayersRequest(HttpRequest request) {
 		if (!request.getMethod().equalsIgnoreCase("GET")) return new HttpResponse(HttpStatusCode.BAD_REQUEST);
 		
-		return new HttpResponse(HttpStatusCode.NOT_IMPLEMENTED);
+		try (
+			StringWriter data = new StringWriter();
+			JsonWriter json = new JsonWriter(data);
+		){
+			
+			json.beginObject();
+			json.name("players").beginArray();
+			for (PlayerState player : server.getOnlinePlayers()) {
+				
+				if (player.isInvisible()) continue;
+				if (player.isSneaking()) continue;
+				if (player.getGamemode() == Gamemode.SPECTATOR) continue;
+				
+				json.beginObject();
+				json.name("uuid").value(player.getUuid().toString());
+				json.name("name").value(player.getName().toPlainString());
+				json.name("world").value(player.getWorld().toString());
+				json.name("position").beginObject();
+				json.name("x").value(player.getPosition().getX());
+				json.name("y").value(player.getPosition().getY());
+				json.name("z").value(player.getPosition().getZ());
+				json.endObject();
+				json.endObject();
+			}
+			json.endArray();
+			json.endObject();
+		
+			HttpResponse response = new HttpResponse(HttpStatusCode.OK);
+			response.setData(data.toString());
+			
+			return response;
+
+		} catch (IOException ex) {
+			return new HttpResponse(HttpStatusCode.INTERNAL_SERVER_ERROR);
+		}
 	}
 	
 }
