@@ -24,8 +24,6 @@
  */
 package de.bluecolored.bluemap.common;
 
-import java.io.IOException;
-
 import com.flowpowered.math.vector.Vector2i;
 import com.google.common.base.Preconditions;
 
@@ -68,7 +66,7 @@ public class MapType {
 		return tileRenderer;
 	}
 	
-	public void renderTile(Vector2i tile) throws IOException {
+	public void renderTile(Vector2i tile) {
 		getTileRenderer().render(new WorldTile(getWorld(), tile));
 	}
 	

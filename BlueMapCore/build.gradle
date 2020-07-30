@@ -5,7 +5,7 @@ plugins {
 dependencies {
    compile 'com.google.guava:guava:21.0'
    compile 'com.google.code.gson:gson:2.8.0'
-   compile 'org.apache.commons:commons-lang3:3.5'
+   compile 'org.apache.commons:commons-lang3:3.6'
    compile group: 'commons-io', name: 'commons-io', version: '2.5'
    compile 'com.flowpowered:flow-math:1.0.3'
    compile 'ninja.leaping.configurate:configurate-hocon:3.3'
