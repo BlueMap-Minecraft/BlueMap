@@ -163,17 +163,17 @@ public class RenderManager {
 			if (ticket != null) {
 				try {
 					ticket.render();
-				} catch (IOException e) {
-					if (ticket.getRenderAttempts() <= 1) {
-						createTicket(ticket);
-					} else {
-						Logger.global.logDebug("Failed to render tile " + ticket.getTile() + " of map '" + ticket.getMapType().getId() + "' after " + ticket.getRenderAttempts() + " render-attempts! (" + e.toString() + ")");
-					}
+				} catch (Exception e) {
+					//catch possible runtime exceptions, display them, and wait a while .. then resurrect this render-thread
+					Logger.global.logError("Unexpected exception in render-thread!", e);
+					try {
+						Thread.sleep(10000);
+					} catch (InterruptedException interrupt) { break; }
 				}
 			} else {
 				try {
 					Thread.sleep(1000); // we don't need a super fast response time, so waiting a second is totally fine
-				} catch (InterruptedException e) { break; }
+				} catch (InterruptedException interrupt) { break; }
 			}
 		}
 	}
@@ -265,7 +265,7 @@ public class RenderManager {
 				tiles.add(tile);
 			}
 			
-			createTickets(mapType, tiles);
+			if (mapType != null) createTickets(mapType, tiles);
 		}
 		
 		//read tasks

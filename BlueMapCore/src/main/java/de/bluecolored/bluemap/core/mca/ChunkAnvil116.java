@@ -44,7 +44,7 @@ import net.querz.nbt.StringTag;
 import net.querz.nbt.Tag;
 import net.querz.nbt.mca.MCAUtil;
 
-public class ChunkAnvil113 extends Chunk {
+public class ChunkAnvil116 extends Chunk {
 	private BiomeMapper biomeIdMapper;
 
 	private boolean isGenerated;
@@ -53,7 +53,7 @@ public class ChunkAnvil113 extends Chunk {
 	private int[] biomes;
 	
 	@SuppressWarnings("unchecked")
-	public ChunkAnvil113(MCAWorld world, CompoundTag chunkTag, boolean ignoreMissingLightData) {
+	public ChunkAnvil116(MCAWorld world, CompoundTag chunkTag, boolean ignoreMissingLightData) {
 		super(world, chunkTag);
 		
 		biomeIdMapper = getWorld().getBiomeIdMapper();
@@ -90,11 +90,11 @@ public class ChunkAnvil113 extends Chunk {
 		}
 		
 		if (biomes == null || biomes.length == 0) {
-			biomes = new int[256];
+			biomes = new int[1024];
 		}
 		
-		if (biomes.length < 256) {
-			biomes = Arrays.copyOf(biomes, 256);
+		if (biomes.length < 1024) {
+			biomes = Arrays.copyOf(biomes, 1024);
 		}
 	}
 
@@ -127,9 +127,10 @@ public class ChunkAnvil113 extends Chunk {
 
 	@Override
 	public Biome getBiome(Vector3i pos) {
-		int x = pos.getX() & 0xF; // Math.floorMod(pos.getX(), 16)
-		int z = pos.getZ() & 0xF;
-		int biomeIntIndex = z * 16 + x;
+		int x = (pos.getX() & 0xF) / 4; // Math.floorMod(pos.getX(), 16)
+		int z = (pos.getZ() & 0xF) / 4;
+		int y = pos.getY() / 4;
+		int biomeIntIndex = y * 16 + z * 4 + x;
 		
 		return biomeIdMapper.get(biomes[biomeIntIndex]);
 	}
@@ -142,7 +143,7 @@ public class ChunkAnvil113 extends Chunk {
 		private byte[] skyLight;
 		private long[] blocks;
 		private BlockState[] palette;
-		
+
 		private int bitsPerBlock;
 		
 		@SuppressWarnings("unchecked")
@@ -183,8 +184,10 @@ public class ChunkAnvil113 extends Chunk {
 			} else {
 				this.palette = new BlockState[0];
 			}
+			
 
-			this.bitsPerBlock = blocks.length * 64 / 4096; //64 bits per long and 4096 blocks per section
+			this.bitsPerBlock = 32 - Integer.numberOfLeadingZeros(palette.length - 1);
+			if (this.bitsPerBlock < 4) this.bitsPerBlock = 4;
 		}
 		
 		public int getSectionY() {
@@ -198,10 +201,10 @@ public class ChunkAnvil113 extends Chunk {
 			int y = pos.getY() & 0xF;
 			int z = pos.getZ() & 0xF;
 			int blockIndex = y * 256 + z * 16 + x;
-			
-			long value = MCAMath.getValueFromLongStream(blocks, blockIndex, bitsPerBlock);
+
+			long value = MCAMath.getValueFromLongArray(blocks, blockIndex, bitsPerBlock);
 			if (value >= palette.length) {
-				Logger.global.noFloodWarning("palettewarning", "Got palette value " + value + " but palette has size of " + palette.length + " (Future occasions of this error will not be logged)");
+				Logger.global.noFloodWarning("palettewarning", "Got palette value " + value + " but palette has size of " + palette.length + "! (Future occasions of this error will not be logged)");
 				return BlockState.MISSING;
 			}
 			

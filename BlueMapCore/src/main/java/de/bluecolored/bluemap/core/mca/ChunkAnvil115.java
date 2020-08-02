@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.core.mca;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -71,7 +72,7 @@ public class ChunkAnvil115 extends Chunk {
 		if (levelData.containsKey("Sections")) {
 			for (CompoundTag sectionTag : ((ListTag<CompoundTag>) levelData.getListTag("Sections"))) {
 				Section section = new Section(sectionTag);
-				if (section.getSectionY() >= 0) sections[section.getSectionY()] = section;
+				if (section.getSectionY() >= 0 && section.getSectionY() < sections.length) sections[section.getSectionY()] = section;
 			}
 		}
 		
@@ -89,7 +90,11 @@ public class ChunkAnvil115 extends Chunk {
 		}
 		
 		if (biomes == null || biomes.length == 0) {
-			biomes = new int[2048];
+			biomes = new int[1024];
+		}
+		
+		if (biomes.length < 1024) {
+			biomes = Arrays.copyOf(biomes, 1024);
 		}
 	}
 
@@ -139,14 +144,18 @@ public class ChunkAnvil115 extends Chunk {
 		private long[] blocks;
 		private BlockState[] palette;
 		
+		private int bitsPerBlock;
+		
 		@SuppressWarnings("unchecked")
 		public Section(CompoundTag sectionData) {
 			this.sectionY = sectionData.getByte("Y");
 			this.blockLight = sectionData.getByteArray("BlockLight");
-			if (blockLight.length == 0) blockLight = new byte[2048];
 			this.skyLight = sectionData.getByteArray("SkyLight");
-			if (skyLight.length == 0) skyLight = new byte[2048];
 			this.blocks = sectionData.getLongArray("BlockStates");
+
+			if (blocks.length < 256 && blocks.length > 0) blocks = Arrays.copyOf(blocks, 256);
+			if (blockLight.length < 2048 && blockLight.length > 0) blockLight = Arrays.copyOf(blockLight, 2048);
+			if (skyLight.length < 2048 && skyLight.length > 0) skyLight = Arrays.copyOf(skyLight, 2048);
 			
 			//read block palette
 			ListTag<CompoundTag> paletteTag = (ListTag<CompoundTag>) sectionData.getListTag("Palette");
@@ -175,6 +184,8 @@ public class ChunkAnvil115 extends Chunk {
 			} else {
 				this.palette = new BlockState[0];
 			}
+
+			this.bitsPerBlock = blocks.length * 64 / 4096; //64 bits per long and 4096 blocks per section
 		}
 		
 		public int getSectionY() {
@@ -188,21 +199,8 @@ public class ChunkAnvil115 extends Chunk {
 			int y = pos.getY() & 0xF;
 			int z = pos.getZ() & 0xF;
 			int blockIndex = y * 256 + z * 16 + x;
-			int bitsPerBlock = blocks.length * 64 / 4096; //64 bits per long and 4096 blocks per section
-			int index = blockIndex * bitsPerBlock;
-			int firstLong = index >> 6; // index / 64
-			int bitoffset = index & 0x3F; // Math.floorMod(index, 64)
 			
-			long value = blocks[firstLong] >>> bitoffset;
-			
-			if (bitoffset > 0 && firstLong + 1 < blocks.length) {
-				long value2 = blocks[firstLong + 1];
-				value2 = value2 << -bitoffset;
-				value = value | value2;
-			}
-			
-			value = value & (0xFFFFFFFFFFFFFFFFL >>> -bitsPerBlock);
-			
+			long value = MCAMath.getValueFromLongStream(blocks, blockIndex, bitsPerBlock);
 			if (value >= palette.length) {
 				Logger.global.noFloodWarning("palettewarning", "Got palette value " + value + " but palette has size of " + palette.length + " (Future occasions of this error will not be logged)");
 				return BlockState.MISSING;
@@ -212,6 +210,8 @@ public class ChunkAnvil115 extends Chunk {
 		}
 		
 		public LightData getLightData(Vector3i pos) {
+			if (blockLight.length == 0 && skyLight.length == 0) return LightData.ZERO;
+			
 			int x = pos.getX() & 0xF; // Math.floorMod(pos.getX(), 16)
 			int y = pos.getY() & 0xF;
 			int z = pos.getZ() & 0xF;
@@ -219,23 +219,10 @@ public class ChunkAnvil115 extends Chunk {
 			int blockHalfByteIndex = blockByteIndex >> 1; // blockByteIndex / 2 
 			boolean largeHalf = (blockByteIndex & 0x1) != 0; // (blockByteIndex % 2) == 0
 
-			int blockLight = getByteHalf(this.blockLight[blockHalfByteIndex], largeHalf);
-			int skyLight = getByteHalf(this.skyLight[blockHalfByteIndex], largeHalf);
+			int blockLight = this.blockLight.length > 0 ? MCAMath.getByteHalf(this.blockLight[blockHalfByteIndex], largeHalf) : 0;
+			int skyLight = this.skyLight.length > 0 ? MCAMath.getByteHalf(this.skyLight[blockHalfByteIndex], largeHalf) : 0;
 			
 			return new LightData(skyLight, blockLight);
-		}
-		
-		/**
-		 * Extracts the 4 bits of the left (largeHalf = <code>true</code>) or the right (largeHalf = <code>false</code>) side of the byte stored in <code>value</code>.<br> 
-		 * The value is treated as an unsigned byte.
-		 */
-		private int getByteHalf(int value, boolean largeHalf) {
-			value = value & 0xFF;
-			if (largeHalf) {
-				value = value >> 4;
-			}
-			value = value & 0xF;
-			return value;
 		}
 	}
 	

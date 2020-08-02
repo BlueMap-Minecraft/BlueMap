@@ -39,7 +39,9 @@ import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.game.GameReloadEvent;
 import org.spongepowered.api.event.game.state.GameStartingServerEvent;
 import org.spongepowered.api.event.game.state.GameStoppingEvent;
+import org.spongepowered.api.plugin.PluginContainer;
 import org.spongepowered.api.scheduler.SpongeExecutorService;
+import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
 
@@ -133,6 +135,7 @@ public class SpongePlugin implements ServerInterface {
 	@Override
 	public void unregisterAllListeners() {
 		Sponge.getEventManager().unregisterPluginListeners(this);
+		Sponge.getEventManager().registerListeners(this, this);
 	}
 
 	@Override
@@ -159,6 +162,19 @@ public class SpongePlugin implements ServerInterface {
 	@Override
 	public File getConfigFolder() {
 		return configurationDir.toFile();
+	}
+	
+	@Override
+	public boolean isMetricsEnabled(boolean configValue) {
+		PluginContainer pluginContainer = Sponge.getPluginManager().fromInstance(this).orElse(null);
+		if (pluginContainer != null) {
+			Tristate metricsEnabled = Sponge.getMetricsConfigManager().getCollectionState(pluginContainer);
+			if (metricsEnabled != Tristate.UNDEFINED) {
+				return metricsEnabled == Tristate.TRUE ? true : false;
+			}
+		}
+		
+		return Sponge.getMetricsConfigManager().getGlobalCollectionState().asBoolean();
 	}
 	
 }
