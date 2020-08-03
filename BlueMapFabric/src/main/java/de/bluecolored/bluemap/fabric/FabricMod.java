@@ -20,11 +20,11 @@ import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import net.fabricmc.api.ModInitializer;
-import net.fabricmc.fabric.api.event.server.ServerStartCallback;
-import net.fabricmc.fabric.api.event.server.ServerStopCallback;
-import net.fabricmc.fabric.api.registry.CommandRegistry;
+import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.world.dimension.DimensionType;
 
 public class FabricMod implements ModInitializer, ServerInterface {
 
@@ -57,11 +57,11 @@ public class FabricMod implements ModInitializer, ServerInterface {
 	public void onInitialize() {
 		
 		//register commands
-		CommandRegistry.INSTANCE.register(true, dispatcher -> {
+		CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
 			new Commands<>(pluginInstance, dispatcher, fabricSource -> new FabricCommandSource(this, pluginInstance, fabricSource));
 		});
 		
-		ServerStartCallback.EVENT.register((MinecraftServer server) -> {
+		ServerLifecycleEvents.SERVER_STARTED.register((MinecraftServer server) -> {
 			new Thread(()->{
 				Logger.global.logInfo("Loading BlueMap...");
 				
@@ -74,7 +74,7 @@ public class FabricMod implements ModInitializer, ServerInterface {
 			}).start();
 		});
 		
-		ServerStopCallback.EVENT.register((MinecraftServer server) -> {
+		ServerLifecycleEvents.SERVER_STOPPING.register((MinecraftServer server) -> {
 			pluginInstance.unload();
 			Logger.global.logInfo("BlueMap unloaded!");
 		});
@@ -114,7 +114,11 @@ public class FabricMod implements ModInitializer, ServerInterface {
 	}
 
 	private UUID loadUUIDForWorld(ServerWorld world) throws IOException {
-		File dimensionDir = world.getDimension().getType().getSaveDirectory(world.getSaveHandler().getWorldDir());
+		MinecraftServer server = world.getServer();
+		String worldName = server.getSaveProperties().getLevelName();
+		File worldFolder = new File(world.getServer().getRunDirectory(), worldName);
+		File dimensionFolder = DimensionType.getSaveDirectory(world.getRegistryKey(), worldFolder);
+		File dimensionDir = dimensionFolder.getCanonicalFile();
 		return getUUIDForWorld(dimensionDir);
 	}
 

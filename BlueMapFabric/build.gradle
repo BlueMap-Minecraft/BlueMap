@@ -9,10 +9,10 @@ configurations {
 }
 
 dependencies {
-	minecraft "com.mojang:minecraft:1.15.2"
-	mappings "net.fabricmc:yarn:1.15.2+build.15:v2"
-	modImplementation "net.fabricmc:fabric-loader:0.8.2+build.194"
-	modImplementation "net.fabricmc.fabric-api:fabric-api:0.5.1+build.294-1.15"
+	minecraft "com.mojang:minecraft:1.16.1"
+	mappings "net.fabricmc:yarn:1.16.1+build.21:v2"
+	modImplementation "net.fabricmc:fabric-loader:0.9.0+build.204"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:0.16.2+build.385-1.16.1"
 
 	shadowInclude (project(':BlueMapCommon')) {
     	//exclude dependencies provided by fabric
@@ -50,7 +50,7 @@ shadowJar {
 }
 
 task ramappedShadowJar(type: RemapJarTask) {
-	destinationDir = file '../build/unsupported'
+	destinationDir = file '../build/release'
 	dependsOn tasks.shadowJar
 	input = tasks.shadowJar.archivePath
 	addNestedDependencies = true
