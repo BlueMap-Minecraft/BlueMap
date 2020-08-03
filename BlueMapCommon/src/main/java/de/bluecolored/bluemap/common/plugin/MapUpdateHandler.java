@@ -38,15 +38,18 @@ import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 
 public class MapUpdateHandler implements ServerEventListener {
 
-	public Multimap<MapType, Vector2i> updateBuffer;
+	private Plugin plugin;
 	
-	public MapUpdateHandler() {
+	private Multimap<MapType, Vector2i> updateBuffer;
+	
+	public MapUpdateHandler(Plugin plugin) {
+		this.plugin = plugin;
 		updateBuffer = MultimapBuilder.hashKeys().hashSetValues().build();
 	}
 	
 	@Override
 	public void onWorldSaveToDisk(final UUID world) {
-		RenderManager renderManager = Plugin.getInstance().getRenderManager();
+		RenderManager renderManager = plugin.getRenderManager();
 		
 		new Thread(() -> {
 			try {
@@ -106,7 +109,7 @@ public class MapUpdateHandler implements ServerEventListener {
 	
 	private void updateBlock(UUID world, Vector3i pos){
 		synchronized (updateBuffer) {
-			for (MapType mapType : Plugin.getInstance().getMapTypes()) {
+			for (MapType mapType : plugin.getMapTypes()) {
 				if (mapType.getWorld().getUUID().equals(world)) {
 					mapType.getWorld().invalidateChunkCache(mapType.getWorld().blockPosToChunkPos(pos));
 					
@@ -122,7 +125,7 @@ public class MapUpdateHandler implements ServerEventListener {
 	}
 	
 	public void flushTileBuffer() {
-		RenderManager renderManager = Plugin.getInstance().getRenderManager();
+		RenderManager renderManager = plugin.getRenderManager();
 		
 		synchronized (updateBuffer) {
 			for (MapType map : updateBuffer.keySet()) {

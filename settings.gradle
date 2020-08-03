@@ -1,3 +1,14 @@
+pluginManagement {
+    repositories {
+        jcenter()
+        maven {
+            name = 'Fabric'
+            url = 'https://maven.fabricmc.net/'
+        }
+        gradlePluginPortal()
+    }
+}
+
 rootProject.name = 'BlueMap'
 include ':BlueMapCore'
 include ':BlueMapCLI'
@@ -6,6 +17,7 @@ include ':BlueMapSponge'
 include ':BlueMapBukkit'
 include ':BlueMapForge'
 include ':BlueMapAPI'
+include ':BlueMapFabric'
 
 project(':BlueMapCore').projectDir = "$rootDir/BlueMapCore" as File
 project(':BlueMapCLI').projectDir = "$rootDir/BlueMapCLI" as File
@@ -14,3 +26,4 @@ project(':BlueMapSponge').projectDir = "$rootDir/BlueMapSponge" as File
 project(':BlueMapBukkit').projectDir = "$rootDir/BlueMapBukkit" as File
 project(':BlueMapForge').projectDir = "$rootDir/BlueMapForge" as File
 project(':BlueMapAPI').projectDir = "$rootDir/BlueMapAPI" as File
+project(':BlueMapFabric').projectDir = "$rootDir/BlueMapFabric" as File
