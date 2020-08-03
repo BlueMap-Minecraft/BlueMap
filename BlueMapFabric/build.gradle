@@ -1,0 +1,64 @@
+import net.fabricmc.loom.task.RemapJarTask
+
+plugins {
+	id 'fabric-loom' version '0.2.7-SNAPSHOT'
+}
+
+configurations {
+	compile.extendsFrom shadowInclude
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:1.15.2"
+	mappings "net.fabricmc:yarn:1.15.2+build.15:v2"
+	modImplementation "net.fabricmc:fabric-loader:0.8.2+build.194"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:0.5.1+build.294-1.15"
+
+	shadowInclude (project(':BlueMapCommon')) {
+    	//exclude dependencies provided by fabric
+		exclude group: 'com.google.guava', module: 'guava'
+		exclude group: 'com.google.code.gson', module: 'gson'
+		exclude group: 'org.apache.commons', module: 'commons-lang3'
+		exclude group: 'commons-io', module: 'commons-io'
+		exclude group: 'com.mojang', module: 'brigadier'
+    }
+}
+
+processResources {
+	inputs.property "version", project.version
+
+	from(sourceSets.main.resources.srcDirs) {
+		include "fabric.mod.json"
+		expand "version": project.version
+	}
+
+	from(sourceSets.main.resources.srcDirs) {
+		exclude "fabric.mod.json"
+	}
+}
+
+shadowJar {
+	configurations = [project.configurations.shadowInclude]
+
+	//relocate 'com.flowpowered.math', 'de.bluecolored.shadow.flowpowered.math' //DON'T relocate this, because the API depends on it
+	relocate 'com.typesafe.config', 'de.bluecolored.shadow.typesafe.config'
+	relocate 'net.querz.nbt', 'de.bluecolored.shadow.querz.nbt'
+	relocate 'ninja.leaping.configurate', 'de.bluecolored.shadow.ninja.leaping.configurate'
+	relocate 'org.yaml.snakeyaml', 'de.bluecolored.shadow.yaml.snakeyaml'
+
+	//exclude '/mappings/*'
+}
+
+task ramappedShadowJar(type: RemapJarTask) {
+	destinationDir = file '../build/unsupported'
+	dependsOn tasks.shadowJar
+	input = tasks.shadowJar.archivePath
+	addNestedDependencies = true
+	archiveName = "BlueMap-${version}-fabric.jar"
+}
+build.dependsOn ramappedShadowJar
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+	classifier = "sources"
+	from sourceSets.main.allSource
+}

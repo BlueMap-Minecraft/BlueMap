@@ -145,7 +145,6 @@ public class ChunkAnvil116 extends Chunk {
 		private BlockState[] palette;
 
 		private int bitsPerBlock;
-		private int blocksPerLong;
 		
 		@SuppressWarnings("unchecked")
 		public Section(CompoundTag sectionData) {
@@ -189,7 +188,6 @@ public class ChunkAnvil116 extends Chunk {
 
 			this.bitsPerBlock = 32 - Integer.numberOfLeadingZeros(palette.length - 1);
 			if (this.bitsPerBlock < 4) this.bitsPerBlock = 4;
-			this.blocksPerLong = 64 / bitsPerBlock;
 		}
 		
 		public int getSectionY() {
@@ -203,13 +201,8 @@ public class ChunkAnvil116 extends Chunk {
 			int y = pos.getY() & 0xF;
 			int z = pos.getZ() & 0xF;
 			int blockIndex = y * 256 + z * 16 + x;
-			int longIndex = blockIndex / blocksPerLong;
-			int bitIndex = (blockIndex % blocksPerLong) * bitsPerBlock;
-			
-			long value = blocks[longIndex] >>> bitIndex;
 
-			value = value & (0xFFFFFFFFFFFFFFFFL >>> -bitsPerBlock);
-			
+			long value = MCAMath.getValueFromLongArray(blocks, blockIndex, bitsPerBlock);
 			if (value >= palette.length) {
 				Logger.global.noFloodWarning("palettewarning", "Got palette value " + value + " but palette has size of " + palette.length + "! (Future occasions of this error will not be logged)");
 				return BlockState.MISSING;
@@ -228,23 +221,10 @@ public class ChunkAnvil116 extends Chunk {
 			int blockHalfByteIndex = blockByteIndex >> 1; // blockByteIndex / 2 
 			boolean largeHalf = (blockByteIndex & 0x1) != 0; // (blockByteIndex % 2) == 0
 
-			int blockLight = this.blockLight.length > 0 ? getByteHalf(this.blockLight[blockHalfByteIndex], largeHalf) : 0;
-			int skyLight = this.skyLight.length > 0 ? getByteHalf(this.skyLight[blockHalfByteIndex], largeHalf) : 0;
+			int blockLight = this.blockLight.length > 0 ? MCAMath.getByteHalf(this.blockLight[blockHalfByteIndex], largeHalf) : 0;
+			int skyLight = this.skyLight.length > 0 ? MCAMath.getByteHalf(this.skyLight[blockHalfByteIndex], largeHalf) : 0;
 			
 			return new LightData(skyLight, blockLight);
-		}
-		
-		/**
-		 * Extracts the 4 bits of the left (largeHalf = <code>true</code>) or the right (largeHalf = <code>false</code>) side of the byte stored in <code>value</code>.<br> 
-		 * The value is treated as an unsigned byte.
-		 */
-		private int getByteHalf(int value, boolean largeHalf) {
-			value = value & 0xFF;
-			if (largeHalf) {
-				value = value >> 4;
-			}
-			value = value & 0xF;
-			return value;
 		}
 	}
 	

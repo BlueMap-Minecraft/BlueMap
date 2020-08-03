@@ -38,7 +38,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Predicate;
@@ -506,7 +505,7 @@ public class MCAWorld implements World {
 		
 		@Override
 		public int hashCode() {
-			return Objects.hash(world, chunk);
+			return (world.hashCode() * 31 + chunk.getX()) * 31 + chunk.getY();
 		}
 		
 		@Override

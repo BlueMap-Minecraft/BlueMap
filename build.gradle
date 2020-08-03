@@ -24,10 +24,18 @@ allprojects {
 		maven {
 		    url "https://libraries.minecraft.net"
 		}
+        maven {
+            name = 'Fabric'
+            url = 'https://maven.fabricmc.net/'
+        }
 	}
 
 	compileJava.options.compilerArgs.add '-parameters'
 	compileTestJava.options.compilerArgs.add '-parameters'
+	
+	tasks.withType(JavaCompile) {
+		options.encoding = "UTF-8"
+	}
 
 	apply plugin: 'java'
 	group = 'de.bluecolored.bluemap'

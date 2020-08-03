@@ -31,10 +31,14 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.logging.log4j.LogManager;
 
 import com.flowpowered.math.vector.Vector3i;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.commands.Commands;
@@ -59,12 +63,23 @@ public class ForgeMod implements ServerInterface {
 	private Map<String, UUID> worldUUIDs;
 	private Collection<ServerEventListener> eventListeners;
 	
+	private LoadingCache<ServerWorld, UUID> worldUuidCache;
+	
 	public ForgeMod() {
 		Logger.global = new Log4jLogger(LogManager.getLogger(Plugin.PLUGIN_NAME));
 		
 		this.bluemap = new Plugin("forge", this);
 		this.worldUUIDs = new HashMap<>();
 		this.eventListeners = new ArrayList<>(1);
+		this.worldUuidCache = CacheBuilder.newBuilder()
+				.weakKeys()
+				.maximumSize(1000)
+				.build(new CacheLoader<ServerWorld, UUID>() {
+					@Override
+					public UUID load(ServerWorld key) throws Exception {
+						return loadUUIDForWorld(key);
+					}
+				});
 		
 		MinecraftForge.EVENT_BUS.register(this);
 	}
@@ -175,6 +190,16 @@ public class ForgeMod implements ServerInterface {
 	}
 	
 	public UUID getUUIDForWorld(ServerWorld world) throws IOException {
+		try {
+			return worldUuidCache.get(world);
+		} catch (ExecutionException e) {
+			Throwable cause = e.getCause();
+			if (cause instanceof IOException) throw (IOException) cause;
+			else throw new IOException(cause);
+		}
+	}
+	
+	private UUID loadUUIDForWorld(ServerWorld world) throws IOException {
 		synchronized (worldUUIDs) {
 			String key = getFolderForWorld(world).getPath();
 			
