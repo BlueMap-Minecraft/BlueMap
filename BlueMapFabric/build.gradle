@@ -5,7 +5,7 @@ plugins {
 }
 
 configurations {
-	compile.extendsFrom include
+	compile.extendsFrom shadowInclude
 }
 
 dependencies {
@@ -14,7 +14,7 @@ dependencies {
 	modImplementation "net.fabricmc:fabric-loader:0.8.2+build.194"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:0.5.1+build.294-1.15"
 
-	compile (project(':BlueMapCommon')) {
+	shadowInclude (project(':BlueMapCommon')) {
     	//exclude dependencies provided by fabric
 		exclude group: 'com.google.guava', module: 'guava'
 		exclude group: 'com.google.code.gson', module: 'gson'
@@ -38,13 +38,7 @@ processResources {
 }
 
 shadowJar {
-	configurations = [project.configurations.compile]
-
-	dependencies {
-		include(dependency(':BlueMapCommon'))
-		include(dependency(':BlueMapCore'))
-		include(dependency(':BlueMapAPI'))
-	}
+	configurations = [project.configurations.shadowInclude]
 
 	//relocate 'com.flowpowered.math', 'de.bluecolored.shadow.flowpowered.math' //DON'T relocate this, because the API depends on it
 	relocate 'com.typesafe.config', 'de.bluecolored.shadow.typesafe.config'
@@ -52,7 +46,7 @@ shadowJar {
 	relocate 'ninja.leaping.configurate', 'de.bluecolored.shadow.ninja.leaping.configurate'
 	relocate 'org.yaml.snakeyaml', 'de.bluecolored.shadow.yaml.snakeyaml'
 
-	exclude '/mappings/*'
+	//exclude '/mappings/*'
 }
 
 task ramappedShadowJar(type: RemapJarTask) {
@@ -62,6 +56,7 @@ task ramappedShadowJar(type: RemapJarTask) {
 	addNestedDependencies = true
 	archiveName = "BlueMap-${version}-fabric.jar"
 }
+build.dependsOn ramappedShadowJar
 
 task sourcesJar(type: Jar, dependsOn: classes) {
 	classifier = "sources"
