@@ -72,8 +72,6 @@ public class Plugin {
 
 	public static final String PLUGIN_ID = "bluemap";
 	public static final String PLUGIN_NAME = "BlueMap";
-
-	private static Plugin instance;
 	
 	private BlueMapAPIImpl api;
 	
@@ -104,8 +102,6 @@ public class Plugin {
 		
 		this.maps = new HashMap<>();
 		this.worlds = new HashMap<>();
-		
-		instance = this;
 	}
 	
 	public synchronized void load() throws IOException, ParseResourceException {
@@ -270,7 +266,7 @@ public class Plugin {
 		periodicalSaveThread.start();
 		
 		//start map updater
-		this.updateHandler = new MapUpdateHandler();
+		this.updateHandler = new MapUpdateHandler(this);
 		serverInterface.registerListener(updateHandler);
 		
 		//create/update webfiles
@@ -425,10 +421,6 @@ public class Plugin {
 	
 	public boolean isLoaded() {
 		return loaded;
-	}
-	
-	public static Plugin getInstance() {
-		return instance;
 	}
 	
 }
