@@ -22,48 +22,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.forge;
+package de.bluecolored.bluemap.fabric.mixin;
 
-import org.apache.logging.log4j.Logger;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import de.bluecolored.bluemap.core.logger.AbstractLogger;
+import de.bluecolored.bluemap.fabric.events.WorldSaveCallback;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.ProgressListener;
+import net.minecraft.world.SessionLockException;
 
-public class Log4jLogger extends AbstractLogger {
+@Mixin(ServerWorld.class)
+public abstract class MixinServerWorld {
 
-	private Logger out;
-	
-	public Log4jLogger(Logger out) {
-		this.out = out;
-	}
-
-	@Override
-	public void logError(String message, Throwable throwable) {
-		out.error(message, throwable);
-	}
-
-	@Override
-	public void logWarning(String message) {
-		out.warn(message);
-	}
-
-	@Override
-	public void logInfo(String message) {
-		out.info(message);
-	}
-
-	@Override
-	public void logDebug(String message) {
-		if (out.isDebugEnabled()) out.debug(message);
-	}
-	
-	@Override
-	public void noFloodDebug(String message) {
-		if (out.isDebugEnabled()) super.noFloodDebug(message);
-	}
-	
-	@Override
-	public void noFloodDebug(String key, String message) {
-		if (out.isDebugEnabled()) super.noFloodDebug(key, message);
+	@Inject(at = @At("RETURN"), method = "save")
+	public void save(ProgressListener progressListener, boolean flush, boolean bl, CallbackInfo ci) throws SessionLockException {		
+		WorldSaveCallback.EVENT.invoker().onWorldSaved((ServerWorld) (Object) this);
 	}
 	
 }

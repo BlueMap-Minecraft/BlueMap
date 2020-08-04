@@ -1,6 +1,7 @@
 plugins {
 	id 'java'
 	id 'com.github.johnrengelman.shadow' version '5.1.0'
+	id 'com.github.hierynomus.license' version '0.15.0'
 }
 
 allprojects {
@@ -24,15 +25,34 @@ allprojects {
 		maven {
 		    url "https://libraries.minecraft.net"
 		}
+        maven {
+            name = 'Fabric'
+            url = 'https://maven.fabricmc.net/'
+        }
 	}
 
 	compileJava.options.compilerArgs.add '-parameters'
 	compileTestJava.options.compilerArgs.add '-parameters'
+	
+	tasks.withType(JavaCompile) {
+		options.encoding = "UTF-8"
+	}
 
 	apply plugin: 'java'
 	
 	group = 'de.bluecolored.bluemap'
   	version = coreVersion + '-' + targetVersion
+  	
+  	apply plugin: 'license'
+  	license {
+		header rootProject.file('HEADER')
+		excludes([
+			'*.conf',
+			'*.yml',
+			'*.zip',
+			'*.json'
+		])
+	}
 }
 
 subprojects {

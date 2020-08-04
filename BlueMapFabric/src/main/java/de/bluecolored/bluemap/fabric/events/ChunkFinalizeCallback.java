@@ -22,68 +22,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common;
+package de.bluecolored.bluemap.fabric.events;
 
 import com.flowpowered.math.vector.Vector2i;
-import com.google.common.base.Preconditions;
 
-import de.bluecolored.bluemap.core.render.TileRenderer;
-import de.bluecolored.bluemap.core.render.WorldTile;
-import de.bluecolored.bluemap.core.world.World;
+import net.fabricmc.fabric.api.event.Event;
+import net.fabricmc.fabric.api.event.EventFactory;
+import net.minecraft.server.world.ServerWorld;
 
-public class MapType {
+public interface ChunkFinalizeCallback {
+	Event<ChunkFinalizeCallback> EVENT = EventFactory.createArrayBacked(ChunkFinalizeCallback.class,
+			(listeners) -> (world, chunkPos) -> {
+				for (ChunkFinalizeCallback event : listeners) {
+					event.onChunkFinalized(world, chunkPos);
+				}
+			}
+	);
 
-	private final String id;
-	private String name;
-	private World world;
-	private TileRenderer tileRenderer;
-	
-	public MapType(String id, String name, World world, TileRenderer tileRenderer) {
-		Preconditions.checkNotNull(id);
-		Preconditions.checkNotNull(name);
-		Preconditions.checkNotNull(world);
-		Preconditions.checkNotNull(tileRenderer);
-		
-		this.id = id;
-		this.name = name;
-		this.world = world;
-		this.tileRenderer = tileRenderer;
-	}
-
-	public String getId() {
-		return id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public World getWorld() {
-		return world;
-	}
-
-	public TileRenderer getTileRenderer() {
-		return tileRenderer;
-	}
-	
-	public void renderTile(Vector2i tile) {
-		getTileRenderer().render(new WorldTile(getWorld(), tile));
-	}
-	
-	@Override
-	public int hashCode() {
-		return id.hashCode();
-	}
-	
-	@Override
-	public boolean equals(Object obj) {
-		if (obj != null && obj instanceof MapType) {
-			MapType that = (MapType) obj;
-			
-			return this.id.equals(that.id);
-		}
-		
-		return false;
-	}
-	
+	void onChunkFinalized(ServerWorld world, Vector2i chunkPos);
 }

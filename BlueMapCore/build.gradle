@@ -31,6 +31,10 @@ node {
   download = true
 }
 
+license {
+	exclude('**/AABB.java')
+}
+
 task fixPackageLock() {
   if (!file("./package-lock.json").exists()) {
     file("./package-lock.json").text = ""

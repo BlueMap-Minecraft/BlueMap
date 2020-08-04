@@ -22,48 +22,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.forge;
+package de.bluecolored.bluemap.fabric.events;
 
-import org.apache.logging.log4j.Logger;
+import net.fabricmc.fabric.api.event.Event;
+import net.fabricmc.fabric.api.event.EventFactory;
+import net.minecraft.server.world.ServerWorld;
 
-import de.bluecolored.bluemap.core.logger.AbstractLogger;
+public interface WorldSaveCallback {
+	Event<WorldSaveCallback> EVENT = EventFactory.createArrayBacked(WorldSaveCallback.class,
+			(listeners) -> (world) -> {
+				for (WorldSaveCallback event : listeners) {
+					event.onWorldSaved(world);
+				}
+			}
+	);
 
-public class Log4jLogger extends AbstractLogger {
-
-	private Logger out;
-	
-	public Log4jLogger(Logger out) {
-		this.out = out;
-	}
-
-	@Override
-	public void logError(String message, Throwable throwable) {
-		out.error(message, throwable);
-	}
-
-	@Override
-	public void logWarning(String message) {
-		out.warn(message);
-	}
-
-	@Override
-	public void logInfo(String message) {
-		out.info(message);
-	}
-
-	@Override
-	public void logDebug(String message) {
-		if (out.isDebugEnabled()) out.debug(message);
-	}
-	
-	@Override
-	public void noFloodDebug(String message) {
-		if (out.isDebugEnabled()) super.noFloodDebug(message);
-	}
-	
-	@Override
-	public void noFloodDebug(String key, String message) {
-		if (out.isDebugEnabled()) super.noFloodDebug(key, message);
-	}
-	
+	void onWorldSaved(ServerWorld world);
 }

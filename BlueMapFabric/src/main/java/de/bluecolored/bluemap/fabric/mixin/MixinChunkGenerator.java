@@ -22,68 +22,35 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common;
+package de.bluecolored.bluemap.fabric.mixin;
+
+import org.spongepowered.asm.mixin.Final;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
 import com.flowpowered.math.vector.Vector2i;
-import com.google.common.base.Preconditions;
 
-import de.bluecolored.bluemap.core.render.TileRenderer;
-import de.bluecolored.bluemap.core.render.WorldTile;
-import de.bluecolored.bluemap.core.world.World;
+import de.bluecolored.bluemap.fabric.events.ChunkFinalizeCallback;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.world.ChunkRegion;
+import net.minecraft.world.IWorld;
+import net.minecraft.world.gen.chunk.ChunkGenerator;
 
-public class MapType {
+@Mixin(ChunkGenerator.class)
+public class MixinChunkGenerator {
 
-	private final String id;
-	private String name;
-	private World world;
-	private TileRenderer tileRenderer;
+	@Shadow
+	@Final
+	protected IWorld world;
 	
-	public MapType(String id, String name, World world, TileRenderer tileRenderer) {
-		Preconditions.checkNotNull(id);
-		Preconditions.checkNotNull(name);
-		Preconditions.checkNotNull(world);
-		Preconditions.checkNotNull(tileRenderer);
-		
-		this.id = id;
-		this.name = name;
-		this.world = world;
-		this.tileRenderer = tileRenderer;
-	}
-
-	public String getId() {
-		return id;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public World getWorld() {
-		return world;
-	}
-
-	public TileRenderer getTileRenderer() {
-		return tileRenderer;
-	}
-	
-	public void renderTile(Vector2i tile) {
-		getTileRenderer().render(new WorldTile(getWorld(), tile));
-	}
-	
-	@Override
-	public int hashCode() {
-		return id.hashCode();
-	}
-	
-	@Override
-	public boolean equals(Object obj) {
-		if (obj != null && obj instanceof MapType) {
-			MapType that = (MapType) obj;
-			
-			return this.id.equals(that.id);
+	@Inject(at = @At("RETURN"), method = "generateFeatures")
+	public void generateFeatures(ChunkRegion region, CallbackInfo ci) {
+		if (world instanceof ServerWorld) {
+			ChunkFinalizeCallback.EVENT.invoker().onChunkFinalized((ServerWorld) world, new Vector2i(region.getCenterChunkX(), region.getCenterChunkZ()));
 		}
-		
-		return false;
 	}
 	
 }

@@ -17,7 +17,7 @@ jobs:
       run: ./gradlew test
     - name: Build with Gradle
       run: ./gradlew build
-    - uses: actions/upload-artifact@v2-preview
+    - uses: actions/upload-artifact@v2
       with:
         name: artifact
         path: build/release/*
