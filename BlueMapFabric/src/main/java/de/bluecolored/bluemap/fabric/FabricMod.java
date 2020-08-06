@@ -26,7 +26,10 @@ package de.bluecolored.bluemap.fabric;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
@@ -39,6 +42,7 @@ import com.google.common.cache.LoadingCache;
 
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.commands.Commands;
+import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -145,6 +149,18 @@ public class FabricMod implements ModInitializer, ServerInterface {
 	@Override
 	public File getConfigFolder() {
 		return new File("config/bluemap");
+	}
+
+	@Override
+	public Collection<Player> getOnlinePlayers() {
+		// TODO Implement
+		return Collections.emptyList();
+	}
+
+	@Override
+	public Optional<Player> getPlayer(UUID uuid) {
+		// TODO Implement
+		return Optional.empty();
 	}
 	
 }

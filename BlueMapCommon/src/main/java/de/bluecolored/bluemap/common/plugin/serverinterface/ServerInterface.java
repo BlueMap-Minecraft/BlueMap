@@ -76,15 +76,15 @@ public interface ServerInterface {
 	}
 	
 	/**
-	 * Returns a collection of players that are currently online
+	 * Returns a collection of the states of players that are currently online
 	 */
-	Collection<PlayerState> getOnlinePlayers();
+	Collection<Player> getOnlinePlayers();
 	
 	/**
-	 * Returns the player with that UUID if present<br>
-	 * this method is only guaranteed to return a player if the player is currently online.
+	 * Returns the state of the player with that UUID if present<br>
+	 * this method is only guaranteed to return a {@link PlayerState} if the player is currently online.
 	 */
-	Optional<PlayerState> getPlayer(UUID uuid);
+	Optional<Player> getPlayer(UUID uuid);
 	
 	
 }

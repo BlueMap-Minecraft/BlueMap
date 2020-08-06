@@ -27,85 +27,38 @@ package de.bluecolored.bluemap.common.plugin.serverinterface;
 import java.util.UUID;
 
 import com.flowpowered.math.vector.Vector3d;
-import com.google.common.base.MoreObjects;
 
 import de.bluecolored.bluemap.common.plugin.text.Text;
 
-public class PlayerState {
+public interface Player {
 
-	private final UUID uuid;
-	protected Text name;
-	protected UUID world;
-	protected Vector3d position = Vector3d.ZERO;
-	protected boolean online = false;
-	protected boolean sneaking = false;
-	protected boolean invisible = false;
-	protected Gamemode gamemode = Gamemode.SURVIVAL;
+	public UUID getUuid();
 	
-	public PlayerState(UUID uuid, Text name, UUID world, Vector3d position) {
-		this.uuid = uuid;
-		this.name = name;
-		this.world = world;
-		this.position = position;
-	}
+	public Text getName();
 	
-	public UUID getUuid() {
-		return uuid;
-	}
+	public UUID getWorld();
 	
-	public Text getName() {
-		return name;
-	}
-	
-	public UUID getWorld() {
-		return world;
-	}
-	
-	public Vector3d getPosition() {
-		return position;
-	}
+	public Vector3d getPosition();
 
-	public boolean isOnline() {
-		return online;
-	}
+	public boolean isOnline();
 	
 	/**
 	 * Return <code>true</code> if the player is sneaking.
 	 * <p><i>If the player is offline the value of this method is undetermined.</i></p>
 	 * @return
 	 */
-	public boolean isSneaking() {
-		return sneaking;
-	}
+	public boolean isSneaking();
 	
 	/**
 	 * Returns <code>true</code> if the player has an invisibillity effect
 	 * <p><i>If the player is offline the value of this method is undetermined.</i></p>
 	 */
-	public boolean isInvisible() {
-		return invisible;
-	}
+	public boolean isInvisible();
 	
 	/**
 	 * Returns the {@link Gamemode} this player is in
 	 * <p><i>If the player is offline the value of this method is undetermined.</i></p>
 	 */
-	public Gamemode getGamemode() {
-		return gamemode;
-	}
-	
-	@Override
-	public String toString() {
-		return MoreObjects.toStringHelper(this)
-		.add("uuid", uuid)
-		//.add("name", name)
-		//.add("world", world)
-		//.add("position", position)
-		//.add("online", online)
-		//.add("sneaking", sneaking)
-		//.add("invisible", invisible)
-		//.add("gamemode", gamemode)
-		.toString();
-	}
+	public Gamemode getGamemode();
 	
 }

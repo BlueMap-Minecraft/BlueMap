@@ -32,7 +32,7 @@ import java.util.Map;
 import com.google.gson.stream.JsonWriter;
 
 import de.bluecolored.bluemap.common.plugin.serverinterface.Gamemode;
-import de.bluecolored.bluemap.common.plugin.serverinterface.PlayerState;
+import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.webserver.HttpRequest;
 import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
@@ -50,7 +50,8 @@ public class LiveAPIRequestHandler implements HttpRequestHandler {
 		this.notFoundHandler = notFoundHandler;
 		
 		this.liveAPIRequests = new HashMap<>();
-		
+
+		this.liveAPIRequests.put("live", this::handleLivePingRequest);
 		this.liveAPIRequests.put("live/players", this::handlePlayersRequest);
 	}
 
@@ -62,6 +63,12 @@ public class LiveAPIRequestHandler implements HttpRequestHandler {
 		return this.notFoundHandler.handle(request);
 	}
 
+	public HttpResponse handleLivePingRequest(HttpRequest request) {
+		HttpResponse response = new HttpResponse(HttpStatusCode.OK);
+		response.setData("{\"status\":\"OK\"}");
+		return response;
+	}
+	
 	public HttpResponse handlePlayersRequest(HttpRequest request) {
 		if (!request.getMethod().equalsIgnoreCase("GET")) return new HttpResponse(HttpStatusCode.BAD_REQUEST);
 		
@@ -72,7 +79,7 @@ public class LiveAPIRequestHandler implements HttpRequestHandler {
 			
 			json.beginObject();
 			json.name("players").beginArray();
-			for (PlayerState player : server.getOnlinePlayers()) {
+			for (Player player : server.getOnlinePlayers()) {
 				
 				if (player.isInvisible()) continue;
 				if (player.isSneaking()) continue;

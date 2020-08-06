@@ -43,7 +43,7 @@ import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.common.plugin.serverinterface.PlayerState;
+import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -184,13 +184,13 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface {
 	}
 
 	@Override
-	public Collection<PlayerState> getOnlinePlayers() {
+	public Collection<Player> getOnlinePlayers() {
 		// TODO Implement
 		return Collections.emptyList();
 	}
 
 	@Override
-	public Optional<PlayerState> getPlayer(UUID uuid) {
+	public Optional<Player> getPlayer(UUID uuid) {
 		// TODO Implement
 		return Optional.empty();
 	}
