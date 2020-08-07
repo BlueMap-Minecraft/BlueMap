@@ -1,7 +1,6 @@
 import $ from 'jquery';
 import Marker from "./Marker";
 import {CSS2DObject} from "./CSS2DRenderer";
-import {Vector3} from "three";
 
 import POI from "../../../assets/poi.svg";
 

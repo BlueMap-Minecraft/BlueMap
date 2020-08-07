@@ -198,9 +198,7 @@ public class TextureGallery {
 			
 			//crop off animation frames
 			if (image.getHeight() > image.getWidth()){
-				BufferedImage cropped = new BufferedImage(image.getWidth(), image.getWidth(), image.getType());
-				image.copyData(cropped.getRaster());
-				image = cropped;
+				image = image.getSubimage(0, 0, image.getWidth(), image.getWidth());
 			}
 			
 			//check halfTransparency

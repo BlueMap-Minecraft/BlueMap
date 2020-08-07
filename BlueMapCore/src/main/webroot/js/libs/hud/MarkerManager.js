@@ -3,6 +3,7 @@ import $ from "jquery";
 import ToggleButton from "../ui/ToggleButton";
 import Label from "../ui/Label";
 import {cachePreventionNr} from "../utils";
+import PlayerMarkerSet from "./PlayerMarkerSet";
 
 export default class MarkerManager {
 
@@ -10,14 +11,23 @@ export default class MarkerManager {
 		this.blueMap = blueMap;
 		this.ui = ui;
 
+		this.markerData = null;
+		this.liveData = null;
 		this.markerSets = [];
 
+		this.playerMarkerSet = null;
+
 		this.readyPromise =
-			this.loadMarkerData()
-				.catch(ignore => {
-					if (this.blueMap.debugInfo) console.debug("Failed load markers:", ignore);
-				})
-				.then(this.loadMarkers);
+			Promise.all([
+					this.loadMarkerData()
+						.catch(ignore => {
+							if (this.blueMap.debugInfo) console.debug("Failed load markers:", ignore);
+						}),
+					this.checkLiveAPI()
+						.then(this.initializePlayerMarkers)
+				])
+				.then(this.loadMarkers)
+				.then(this.updatePlayerMarkerLoop);
 
 		$(document).on('bluemap-map-change', this.onBlueMapMapChange);
 	}
@@ -41,6 +51,25 @@ export default class MarkerManager {
 		});
 	}
 
+	checkLiveAPI() {
+		return new Promise((resolve, reject) => {
+			this.blueMap.fileLoader.load(this.blueMap.liveApiRoot + 'players?' + cachePreventionNr(),
+				liveData => {
+					try {
+						this.liveData = JSON.parse(liveData);
+						resolve();
+					} catch (e){
+						reject(e);
+					}
+				},
+				xhr => {},
+				error => {
+					reject();
+				}
+			);
+		});
+	}
+
 	loadMarkers = () => {
 		if (this.markerData && this.markerData.markerSets) {
 			this.markerData.markerSets.forEach(setData => {
@@ -49,11 +78,26 @@ export default class MarkerManager {
 		}
 	};
 
+	initializePlayerMarkers = () => {
+		if (this.liveData){
+			this.playerMarkerSet = new PlayerMarkerSet(this.blueMap);
+			this.markerSets.push(this.playerMarkerSet);
+		}
+	};
+
 	update(){
 		this.markerSets.forEach(markerSet => {
 			markerSet.update();
 		});
 	}
+
+	updatePlayerMarkerLoop = () => {
+		if (this.playerMarkerSet){
+			this.playerMarkerSet.updateLive();
+		}
+
+		setTimeout(this.updatePlayerMarkerLoop, 2000);
+	};
 
 	addMenuElements(menu){
 		let addedLabel = false;

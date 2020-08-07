@@ -51,6 +51,7 @@ import de.bluecolored.bluemap.common.MapType;
 import de.bluecolored.bluemap.common.RenderManager;
 import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.common.plugin.skins.PlayerSkinUpdater;
 import de.bluecolored.bluemap.core.config.ConfigManager;
 import de.bluecolored.bluemap.core.config.MainConfig;
 import de.bluecolored.bluemap.core.config.MainConfig.MapConfig;
@@ -86,6 +87,7 @@ public class Plugin {
 	private Map<String, MapType> maps;
 	
 	private MapUpdateHandler updateHandler;
+	private PlayerSkinUpdater skinUpdater;
 
 	private RenderManager renderManager;
 	private BlueMapWebServer webServer;
@@ -268,6 +270,10 @@ public class Plugin {
 		//start map updater
 		this.updateHandler = new MapUpdateHandler(this);
 		serverInterface.registerListener(updateHandler);
+		
+		//start skin updater
+		this.skinUpdater = new PlayerSkinUpdater(config.getWebRoot().resolve("assets").resolve("playerheads").toFile());
+		serverInterface.registerListener(skinUpdater);
 		
 		//create/update webfiles
 		WebFilesManager webFilesManager = new WebFilesManager(config.getWebRoot());

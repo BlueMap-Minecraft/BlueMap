@@ -60,9 +60,10 @@ import { stringToImage, pathFromCoords } from './utils.js';
 import {cachePreventionNr, getCookie, setCookie} from "./utils";
 
 export default class BlueMap {
-	constructor(element, dataRoot) {
+	constructor(element, dataRoot = "data/", liveApiRoot = "live/") {
 		this.element = $('<div class="bluemap-container"></div>').appendTo(element)[0];
 		this.dataRoot = dataRoot;
+		this.liveApiRoot = liveApiRoot;
 		this.locationHash = '';
 		this.cacheSuffix = '';
 
