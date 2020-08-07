@@ -42,6 +42,9 @@ import org.bukkit.event.block.BlockFormEvent;
 import org.bukkit.event.block.BlockGrowEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.ChunkPopulateEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 
@@ -49,6 +52,7 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
+import de.bluecolored.bluemap.common.plugin.text.Text;
 
 public class EventForwarder implements Listener {
 
@@ -128,6 +132,22 @@ public class EventForwarder implements Listener {
 		UUID world = chunk.getWorld().getUID();
 		Vector2i chunkPos = new Vector2i(chunk.getX(), chunk.getZ());
 		listeners.forEach(l -> l.onChunkFinishedGeneration(world, chunkPos));
+	}
+	
+	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+	public void onPlayerJoin(PlayerJoinEvent evt) {
+		listeners.forEach(l -> l.onPlayerJoin(evt.getPlayer().getUniqueId()));
+	}
+	
+	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+	public void onPlayerLeave(PlayerQuitEvent evt) {
+		listeners.forEach(l -> l.onPlayerJoin(evt.getPlayer().getUniqueId()));
+	}
+	
+	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+	public void onPlayerChat(AsyncPlayerChatEvent evt) {
+		String message = String.format(evt.getFormat(), evt.getPlayer().getDisplayName(), evt.getMessage());
+		listeners.forEach(l -> l.onChatMessage(Text.of(message)));
 	}
 
 }

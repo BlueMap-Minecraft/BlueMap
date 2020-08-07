@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -91,7 +92,7 @@ public class SpongePlugin implements ServerInterface {
 		Logger.global = new Slf4jLogger(logger);
 		
 		this.onlinePlayerMap = new ConcurrentHashMap<>();
-		this.onlinePlayerList = new ArrayList<>();
+		this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 		
 		this.bluemap = new Plugin("sponge", this);
 		this.commands = new SpongeCommands(bluemap);
@@ -131,6 +132,7 @@ public class SpongePlugin implements ServerInterface {
 	@Listener
 	public void onServerStop(GameStoppingEvent evt) {
 		Logger.global.logInfo("Stopping...");
+		Sponge.getScheduler().getScheduledTasks(this).forEach(t -> t.cancel());
 		bluemap.unload();
 		Logger.global.logInfo("Saved and stopped!");
 	}
@@ -160,7 +162,9 @@ public class SpongePlugin implements ServerInterface {
 	public void onPlayerLeave(ClientConnectionEvent.Disconnect evt) {
 		UUID playerUUID = evt.getTargetEntity().getUniqueId();
 		onlinePlayerMap.remove(playerUUID);
-		onlinePlayerList.removeIf(p -> p.getUuid().equals(playerUUID));
+		synchronized (onlinePlayerList) {
+			onlinePlayerList.removeIf(p -> p.getUuid().equals(playerUUID));	
+		}
 	}
 
 	@Override

@@ -27,11 +27,15 @@ package de.bluecolored.bluemap.bukkit;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -40,6 +44,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.CommandMap;
 import org.bukkit.command.defaults.BukkitCommand;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import de.bluecolored.bluemap.common.plugin.Plugin;
@@ -48,7 +57,7 @@ import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.logger.Logger;
 
-public class BukkitPlugin extends JavaPlugin implements ServerInterface {
+public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listener {
 	
 	private static BukkitPlugin instance;
 	
@@ -56,8 +65,15 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface {
 	private EventForwarder eventForwarder;
 	private BukkitCommands commands;
 	
+	private int playerUpdateIndex = 0;
+	private Map<UUID, Player> onlinePlayerMap;
+	private List<BukkitPlayer> onlinePlayerList;
+	
 	public BukkitPlugin() {
 		Logger.global = new JavaLogger(getLogger());
+		
+		this.onlinePlayerMap = new ConcurrentHashMap<>();
+		this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 
 		this.eventForwarder = new EventForwarder();
 		this.bluemap = new Plugin("bukkit", this);
@@ -77,6 +93,7 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface {
 		}
 		
 		//register events
+		getServer().getPluginManager().registerEvents(this, this);
 		getServer().getPluginManager().registerEvents(eventForwarder, this);
 		
 		//register commands
@@ -96,6 +113,9 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface {
 		//tab completions
 		getServer().getPluginManager().registerEvents(commands, this);
 		
+		//start updating players
+		getServer().getScheduler().runTaskTimer(this, this::updateSomePlayers, 1, 1);
+		
 		//load bluemap
 		getServer().getScheduler().runTaskAsynchronously(this, () -> {
 			try {
@@ -111,6 +131,7 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface {
 	@Override
 	public void onDisable() {
 		Logger.global.logInfo("Stopping...");
+		getServer().getScheduler().cancelTasks(this);
 		bluemap.unload();
 		Logger.global.logInfo("Saved and stopped!");
 	}
@@ -182,17 +203,52 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface {
 	public static BukkitPlugin getInstance() {
 		return instance;
 	}
+	
+	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+	public void onPlayerJoin(PlayerJoinEvent evt) {
+		BukkitPlayer player = new BukkitPlayer(evt.getPlayer());
+		onlinePlayerMap.put(evt.getPlayer().getUniqueId(), player);
+		onlinePlayerList.add(player);
+	}
+	
+	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+	public void onPlayerLeave(PlayerQuitEvent evt) {
+		UUID playerUUID = evt.getPlayer().getUniqueId();
+		onlinePlayerMap.remove(playerUUID);
+		synchronized (onlinePlayerList) {
+			onlinePlayerList.removeIf(p -> p.getUuid().equals(playerUUID));
+		}
+	}
 
 	@Override
 	public Collection<Player> getOnlinePlayers() {
-		// TODO Implement
-		return Collections.emptyList();
+		return onlinePlayerMap.values();
 	}
 
 	@Override
 	public Optional<Player> getPlayer(UUID uuid) {
-		// TODO Implement
-		return Optional.empty();
+		return Optional.ofNullable(onlinePlayerMap.get(uuid));
+	}
+	
+	/**
+	 * Only update some of the online players each tick to minimize performance impact on the server-thread.
+	 * Only call this method on the server-thread.
+	 */
+	private void updateSomePlayers() {
+		int onlinePlayerCount = onlinePlayerList.size();
+		if (onlinePlayerCount == 0) return;
+		
+		int playersToBeUpdated = onlinePlayerCount / 20; //with 20 tps, each player is updated once a second
+		if (playersToBeUpdated == 0) playersToBeUpdated = 1;
+		
+		for (int i = 0; i < playersToBeUpdated; i++) {
+			playerUpdateIndex++;
+			if (playerUpdateIndex >= 20 && playerUpdateIndex >= onlinePlayerCount) playerUpdateIndex = 0;
+			
+			if (playerUpdateIndex < onlinePlayerCount) {
+				onlinePlayerList.get(i).update();
+			}
+		}
 	}
 	
 }
