@@ -109,7 +109,7 @@ export default class BlueMap {
 			await this.ui.load();
 			this.start();
 		}).catch(error => {
-			this.onLoadError("Initialization: " + error.toString());
+			this.onLoadError("Initialization: " + (error ? error.toString() : "unknown"));
 		});
 	}
 
