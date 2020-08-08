@@ -35,10 +35,14 @@ import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.fabric.events.ChunkFinalizeCallback;
+import de.bluecolored.bluemap.fabric.events.PlayerJoinCallback;
+import de.bluecolored.bluemap.fabric.events.PlayerLeaveCallback;
 import de.bluecolored.bluemap.fabric.events.WorldSaveCallback;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.Hand;
@@ -60,6 +64,9 @@ public class FabricEventForwarder {
 		ChunkFinalizeCallback.EVENT.register(this::onChunkFinalize);
 		AttackBlockCallback.EVENT.register(this::onBlockAttack);
 		UseBlockCallback.EVENT.register(this::onBlockUse);
+		
+		PlayerJoinCallback.EVENT.register(this::onPlayerJoin);
+		PlayerLeaveCallback.EVENT.register(this::onPlayerLeave);
 	}
 	
 	public void addEventListener(ServerEventListener listener) {
@@ -114,6 +121,18 @@ public class FabricEventForwarder {
 		} catch (IOException e) {
 			Logger.global.logError("Failed to get UUID for world: " + world, e);
 		}
+	}
+	
+	public void onPlayerJoin(MinecraftServer server, ServerPlayerEntity player) {
+		if (this.mod.getServer() != server) return;
+		
+		this.eventListeners.forEach(l -> l.onPlayerJoin(player.getUuid()));
+	}
+	
+	public void onPlayerLeave(MinecraftServer server, ServerPlayerEntity player) {
+		if (this.mod.getServer() != server) return;
+		
+		this.eventListeners.forEach(l -> l.onPlayerLeave(player.getUuid()));
 	}
 	
 }

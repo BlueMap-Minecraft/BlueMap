@@ -26,8 +26,10 @@ package de.bluecolored.bluemap.fabric;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -47,24 +49,36 @@ import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
+import de.bluecolored.bluemap.fabric.events.PlayerJoinCallback;
+import de.bluecolored.bluemap.fabric.events.PlayerLeaveCallback;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.server.ServerStartCallback;
 import net.fabricmc.fabric.api.event.server.ServerStopCallback;
+import net.fabricmc.fabric.api.event.server.ServerTickCallback;
 import net.fabricmc.fabric.api.registry.CommandRegistry;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 
 public class FabricMod implements ModInitializer, ServerInterface {
 
 	private Plugin pluginInstance = null;
+	private MinecraftServer serverInstance = null;
 	
 	private Map<File, UUID> worldUuids;
 	private FabricEventForwarder eventForwarder;
 	
 	private LoadingCache<ServerWorld, UUID> worldUuidCache;
+
+	private int playerUpdateIndex = 0;
+	private Map<UUID, Player> onlinePlayerMap;
+	private List<FabricPlayer> onlinePlayerList;
 	
 	public FabricMod() {
 		Logger.global = new Log4jLogger(LogManager.getLogger(Plugin.PLUGIN_NAME));
+		
+		this.onlinePlayerMap = new ConcurrentHashMap<>();
+		this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 		
 		pluginInstance = new Plugin("fabric", this);
 		
@@ -90,6 +104,8 @@ public class FabricMod implements ModInitializer, ServerInterface {
 		});
 		
 		ServerStartCallback.EVENT.register((MinecraftServer server) -> {
+			this.serverInstance = server;
+			
 			new Thread(()->{
 				Logger.global.logInfo("Loading BlueMap...");
 				
@@ -105,6 +121,13 @@ public class FabricMod implements ModInitializer, ServerInterface {
 		ServerStopCallback.EVENT.register((MinecraftServer server) -> {
 			pluginInstance.unload();
 			Logger.global.logInfo("BlueMap unloaded!");
+		});
+		
+		PlayerJoinCallback.EVENT.register(this::onPlayerJoin);
+		PlayerLeaveCallback.EVENT.register(this::onPlayerLeave);
+		
+		ServerTickCallback.EVENT.register((MinecraftServer server) -> {
+			if (server == this.serverInstance) this.updateSomePlayers();
 		});
 	}
 	
@@ -151,16 +174,57 @@ public class FabricMod implements ModInitializer, ServerInterface {
 		return new File("config/bluemap");
 	}
 
+	public void onPlayerJoin(MinecraftServer server, ServerPlayerEntity playerInstance) {
+		if (this.serverInstance != server) return;
+		
+		FabricPlayer player = new FabricPlayer(this, playerInstance);
+		onlinePlayerMap.put(player.getUuid(), player);
+		onlinePlayerList.add(player);
+	}
+	
+	public void onPlayerLeave(MinecraftServer server, ServerPlayerEntity player) {
+		if (this.serverInstance != server) return;
+		
+		UUID playerUUID = player.getUuid();
+		onlinePlayerMap.remove(playerUUID);
+		synchronized (onlinePlayerList) {
+			onlinePlayerList.removeIf(p -> p.getUuid().equals(playerUUID));
+		}
+	}
+	
+	public MinecraftServer getServer() {
+		return this.serverInstance;
+	}
+	
 	@Override
 	public Collection<Player> getOnlinePlayers() {
-		// TODO Implement
-		return Collections.emptyList();
+		return onlinePlayerMap.values();
 	}
 
 	@Override
 	public Optional<Player> getPlayer(UUID uuid) {
-		// TODO Implement
-		return Optional.empty();
+		return Optional.ofNullable(onlinePlayerMap.get(uuid));
+	}
+	
+	/**
+	 * Only update some of the online players each tick to minimize performance impact on the server-thread.
+	 * Only call this method on the server-thread.
+	 */
+	private void updateSomePlayers() {
+		int onlinePlayerCount = onlinePlayerList.size();
+		if (onlinePlayerCount == 0) return;
+		
+		int playersToBeUpdated = onlinePlayerCount / 20; //with 20 tps, each player is updated once a second
+		if (playersToBeUpdated == 0) playersToBeUpdated = 1;
+		
+		for (int i = 0; i < playersToBeUpdated; i++) {
+			playerUpdateIndex++;
+			if (playerUpdateIndex >= 20 && playerUpdateIndex >= onlinePlayerCount) playerUpdateIndex = 0;
+			
+			if (playerUpdateIndex < onlinePlayerCount) {
+				onlinePlayerList.get(i).update();
+			}
+		}
 	}
 	
 }
