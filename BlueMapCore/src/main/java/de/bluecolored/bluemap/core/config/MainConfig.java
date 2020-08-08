@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.core.config;
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -109,7 +110,9 @@ public class MainConfig implements WebServerConfig {
 		if (webserverEnabled) {
 			//ip
 			String webserverBindAdressString = node.getNode("ip").getString("");
-			if (webserverBindAdressString.isEmpty()) {
+			if (webserverBindAdressString.isEmpty() || webserverBindAdressString.equals("0.0.0.0") || webserverBindAdressString.equals("::0")) {
+				webserverBindAdress = new InetSocketAddress(0).getAddress(); // 0.0.0.0
+			} else if (webserverBindAdressString.equals("#getLocalHost")) {
 				webserverBindAdress = InetAddress.getLocalHost();
 			} else {
 				webserverBindAdress = InetAddress.getByName(webserverBindAdressString);
