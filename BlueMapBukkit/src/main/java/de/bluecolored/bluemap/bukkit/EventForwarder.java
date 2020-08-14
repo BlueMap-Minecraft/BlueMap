@@ -72,7 +72,7 @@ public class EventForwarder implements Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public synchronized void onWorldSaveToDisk(WorldSaveEvent evt) {
-		listeners.forEach(l -> l.onWorldSaveToDisk(evt.getWorld().getUID()));		
+		for (ServerEventListener listener : listeners) listener.onWorldSaveToDisk(evt.getWorld().getUID());		
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -123,7 +123,7 @@ public class EventForwarder implements Listener {
 	private synchronized void onBlockChange(Location loc) {
 		UUID world = loc.getWorld().getUID();
 		Vector3i pos = new Vector3i(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
-		listeners.forEach(l -> l.onBlockChange(world, pos));
+		for (ServerEventListener listener : listeners) listener.onBlockChange(world, pos);
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -131,23 +131,23 @@ public class EventForwarder implements Listener {
 		Chunk chunk = evt.getChunk();
 		UUID world = chunk.getWorld().getUID();
 		Vector2i chunkPos = new Vector2i(chunk.getX(), chunk.getZ());
-		listeners.forEach(l -> l.onChunkFinishedGeneration(world, chunkPos));
+		for (ServerEventListener listener : listeners) listener.onChunkFinishedGeneration(world, chunkPos);
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-	public void onPlayerJoin(PlayerJoinEvent evt) {
-		listeners.forEach(l -> l.onPlayerJoin(evt.getPlayer().getUniqueId()));
+	public synchronized void onPlayerJoin(PlayerJoinEvent evt) {
+		for (ServerEventListener listener : listeners) listener.onPlayerJoin(evt.getPlayer().getUniqueId());
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-	public void onPlayerLeave(PlayerQuitEvent evt) {
-		listeners.forEach(l -> l.onPlayerJoin(evt.getPlayer().getUniqueId()));
+	public synchronized void onPlayerLeave(PlayerQuitEvent evt) {
+		for (ServerEventListener listener : listeners) listener.onPlayerJoin(evt.getPlayer().getUniqueId());
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-	public void onPlayerChat(AsyncPlayerChatEvent evt) {
+	public synchronized void onPlayerChat(AsyncPlayerChatEvent evt) {
 		String message = String.format(evt.getFormat(), evt.getPlayer().getDisplayName(), evt.getMessage());
-		listeners.forEach(l -> l.onChatMessage(Text.of(message)));
+		for (ServerEventListener listener : listeners) listener.onChatMessage(Text.of(message));
 	}
 
 }

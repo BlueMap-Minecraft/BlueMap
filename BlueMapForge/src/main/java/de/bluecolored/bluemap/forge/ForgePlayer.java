@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.fabric;
+package de.bluecolored.bluemap.forge;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -35,24 +35,24 @@ import com.flowpowered.math.vector.Vector3d;
 import de.bluecolored.bluemap.common.plugin.serverinterface.Gamemode;
 import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.text.Text;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.potion.EffectInstance;
+import net.minecraft.potion.Effects;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.GameMode;
+import net.minecraft.world.GameType;
 
-public class FabricPlayer implements Player {
+public class ForgePlayer implements Player {
 
 	private static final UUID UNKNOWN_WORLD_UUID = UUID.randomUUID();
 	
-	private static final Map<GameMode, Gamemode> GAMEMODE_MAP = new EnumMap<>(GameMode.class);
+	private static final Map<GameType, Gamemode> GAMEMODE_MAP = new EnumMap<>(GameType.class);
 	static {
-		GAMEMODE_MAP.put(GameMode.ADVENTURE, Gamemode.ADVENTURE);
-		GAMEMODE_MAP.put(GameMode.SURVIVAL, Gamemode.SURVIVAL);
-		GAMEMODE_MAP.put(GameMode.CREATIVE, Gamemode.CREATIVE);
-		GAMEMODE_MAP.put(GameMode.SPECTATOR, Gamemode.SPECTATOR);
-		GAMEMODE_MAP.put(GameMode.NOT_SET, Gamemode.SURVIVAL);
+		GAMEMODE_MAP.put(GameType.ADVENTURE, Gamemode.ADVENTURE);
+		GAMEMODE_MAP.put(GameType.SURVIVAL, Gamemode.SURVIVAL);
+		GAMEMODE_MAP.put(GameType.CREATIVE, Gamemode.CREATIVE);
+		GAMEMODE_MAP.put(GameType.SPECTATOR, Gamemode.SPECTATOR);
+		GAMEMODE_MAP.put(GameType.NOT_SET, Gamemode.SURVIVAL);
 	}
 	
 	private UUID uuid;
@@ -64,11 +64,11 @@ public class FabricPlayer implements Player {
 	private boolean invisible;
 	private Gamemode gamemode;
 
-	private FabricMod mod;
+	private ForgeMod mod;
 	private WeakReference<ServerPlayerEntity> delegate;
 	
-	public FabricPlayer(FabricMod mod, ServerPlayerEntity delegate) {
-		this.uuid = delegate.getUuid();
+	public ForgePlayer(ForgeMod mod, ServerPlayerEntity delegate) {
+		this.uuid = delegate.getUniqueID();
 		this.mod = mod;
 		this.delegate = new WeakReference<>(delegate);
 		
@@ -123,7 +123,7 @@ public class FabricPlayer implements Player {
 		if (player == null) {
 			MinecraftServer server = mod.getServer();
 			if (server != null) {
-				player = server.getPlayerManager().getPlayer(uuid);
+				player = server.getPlayerList().getPlayerByUUID(uuid);
 			}
 			
 			if (player == null) {
@@ -134,15 +134,15 @@ public class FabricPlayer implements Player {
 			delegate = new WeakReference<>(player);
 		}
 		
-		this.gamemode = GAMEMODE_MAP.get(player.interactionManager.getGameMode());
+		this.gamemode = GAMEMODE_MAP.get(player.interactionManager.getGameType());
 		
-		StatusEffectInstance invis = player.getStatusEffect(StatusEffects.INVISIBILITY);
+		EffectInstance invis = player.getActivePotionEffect(Effects.INVISIBILITY);
 		this.invisible = invis != null && invis.getDuration() > 0;
 		
 		this.name = Text.of(player.getName().getString());
 		this.online = true;
 		
-		Vec3d pos = player.getPos();
+		Vec3d pos = player.getPositionVec();
 		this.position = new Vector3d(pos.getX(), pos.getY(), pos.getZ());
 		this.sneaking = player.isSneaking();
 		

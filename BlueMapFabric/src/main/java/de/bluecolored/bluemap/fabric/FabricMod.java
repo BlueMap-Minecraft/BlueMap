@@ -65,7 +65,7 @@ public class FabricMod implements ModInitializer, ServerInterface {
 	private Plugin pluginInstance = null;
 	private MinecraftServer serverInstance = null;
 	
-	private Map<File, UUID> worldUuids;
+	private Map<File, UUID> worldUUIDs;
 	private FabricEventForwarder eventForwarder;
 	
 	private LoadingCache<ServerWorld, UUID> worldUuidCache;
@@ -82,7 +82,7 @@ public class FabricMod implements ModInitializer, ServerInterface {
 		
 		pluginInstance = new Plugin("fabric", this);
 		
-		this.worldUuids = new ConcurrentHashMap<>();
+		this.worldUUIDs = new ConcurrentHashMap<>();
 		this.eventForwarder = new FabricEventForwarder(this);
 		this.worldUuidCache = CacheBuilder.newBuilder()
 				.weakKeys()
@@ -111,7 +111,7 @@ public class FabricMod implements ModInitializer, ServerInterface {
 				
 				try {
 					pluginInstance.load();
-					Logger.global.logInfo("BlueMap loaded!");
+					if (pluginInstance.isLoaded()) Logger.global.logInfo("BlueMap loaded!");
 				} catch (IOException | ParseResourceException e) {
 					Logger.global.logError("Failed to load bluemap!", e);
 				}
@@ -145,10 +145,10 @@ public class FabricMod implements ModInitializer, ServerInterface {
 	public UUID getUUIDForWorld(File worldFolder) throws IOException {
 		worldFolder = worldFolder.getCanonicalFile();
 		
-		UUID uuid = worldUuids.get(worldFolder);
+		UUID uuid = worldUUIDs.get(worldFolder);
 		if (uuid == null) {
 			uuid = UUID.randomUUID();
-			worldUuids.put(worldFolder, uuid);
+			worldUUIDs.put(worldFolder, uuid);
 		}
 		
 		return uuid;

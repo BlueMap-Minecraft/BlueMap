@@ -69,11 +69,11 @@ public class FabricEventForwarder {
 		PlayerLeaveCallback.EVENT.register(this::onPlayerLeave);
 	}
 	
-	public void addEventListener(ServerEventListener listener) {
+	public synchronized void addEventListener(ServerEventListener listener) {
 		this.eventListeners.add(listener);
 	}
 	
-	public void removeAllListeners() {
+	public synchronized void removeAllListeners() {
 		this.eventListeners.clear();
 	}
 	
@@ -94,45 +94,47 @@ public class FabricEventForwarder {
 		return ActionResult.PASS;
 	}
 	
-	public void onBlockChange(ServerWorld world, BlockPos blockPos) {
+	public synchronized void onBlockChange(ServerWorld world, BlockPos blockPos) {
 		Vector3i position = new Vector3i(blockPos.getX(), blockPos.getY(), blockPos.getZ());
 		
 		try {
 			UUID uuid = mod.getUUIDForWorld(world);
-			eventListeners.forEach(e -> e.onBlockChange(uuid, position));
+			for (ServerEventListener listener : eventListeners) listener.onBlockChange(uuid, position);
 		} catch (IOException e) {
-			Logger.global.logError("Failed to get UUID for world: " + world, e);
+			Logger.global.noFloodError("Failed to get the UUID for a world!", e);
 		}
 	}
 	
-	public void onWorldSave(ServerWorld world) {
+	public synchronized void onWorldSave(ServerWorld world) {
 		try {
 			UUID uuid = mod.getUUIDForWorld(world);
-			eventListeners.forEach(e -> e.onWorldSaveToDisk(uuid));
+			for (ServerEventListener listener : eventListeners) listener.onWorldSaveToDisk(uuid);
 		} catch (IOException e) {
-			Logger.global.logError("Failed to get UUID for world: " + world, e);
+			Logger.global.noFloodError("Failed to get the UUID for a world!", e);
 		}
 	}
 	
-	public void onChunkFinalize(ServerWorld world, Vector2i chunkPos) {
+	public synchronized void onChunkFinalize(ServerWorld world, Vector2i chunkPos) {
 		try {
 			UUID uuid = mod.getUUIDForWorld(world);
-			eventListeners.forEach(e -> e.onChunkFinishedGeneration(uuid, chunkPos));
+			for (ServerEventListener listener : eventListeners) listener.onChunkFinishedGeneration(uuid, chunkPos);
 		} catch (IOException e) {
-			Logger.global.logError("Failed to get UUID for world: " + world, e);
+			Logger.global.noFloodError("Failed to get the UUID for a world!", e);
 		}
 	}
 	
-	public void onPlayerJoin(MinecraftServer server, ServerPlayerEntity player) {
+	public synchronized void onPlayerJoin(MinecraftServer server, ServerPlayerEntity player) {
 		if (this.mod.getServer() != server) return;
 		
-		this.eventListeners.forEach(l -> l.onPlayerJoin(player.getUuid()));
+		UUID uuid = player.getUuid();
+		for (ServerEventListener listener : eventListeners) listener.onPlayerJoin(uuid);
 	}
 	
-	public void onPlayerLeave(MinecraftServer server, ServerPlayerEntity player) {
+	public synchronized void onPlayerLeave(MinecraftServer server, ServerPlayerEntity player) {
 		if (this.mod.getServer() != server) return;
-		
-		this.eventListeners.forEach(l -> l.onPlayerLeave(player.getUuid()));
+
+		UUID uuid = player.getUuid();
+		for (ServerEventListener listener : eventListeners) listener.onPlayerLeave(uuid);
 	}
 	
 }
