@@ -21,7 +21,7 @@ dependencies {
 }
 
 build.dependsOn shadowJar {
-	destinationDir = file '../build/release'
+	destinationDir = file '../build/supported'
 	archiveFileName = "BlueMap-${version}-bukkit.jar"
 	
 	//relocate 'com.flowpowered.math', 'de.bluecolored.shadow.flowpowered.math' //DON'T relocate this, because the API depends on it
