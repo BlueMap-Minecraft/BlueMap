@@ -1,5 +1,5 @@
 /*
- * This file is part of BlueMapSponge, licensed under the MIT License (MIT).
+ * This file is part of BlueMap, licensed under the MIT License (MIT).
  *
  * Copyright (c) Blue (Lukas Rieger) <https://bluecolored.de>
  * Copyright (c) contributors
