@@ -57,13 +57,14 @@ import SKY_VERTEX_SHADER from './shaders/SkyVertexShader.js';
 import SKY_FRAGMENT_SHADER from './shaders/SkyFragmentShader.js';
 
 import { stringToImage, pathFromCoords } from './utils.js';
-import {getCookie, setCookie} from "./utils";
+import {cachePreventionNr, getCookie, setCookie} from "./utils";
 
 export default class BlueMap {
 	constructor(element, dataRoot) {
 		this.element = $('<div class="bluemap-container"></div>').appendTo(element)[0];
 		this.dataRoot = dataRoot;
 		this.locationHash = '';
+		this.cacheSuffix = '';
 
 		this.hiresViewDistance = 160;
 		this.lowresViewDistance = 3200;
@@ -108,8 +109,19 @@ export default class BlueMap {
 			await this.ui.load();
 			this.start();
 		}).catch(error => {
-			this.onLoadError("Initialization: " + error.toString());
+			this.onLoadError("Initialization: " + (error ? error.toString() : "unknown"));
 		});
+	}
+
+	reloadMap() {
+		if (this.hiresTileManager !== undefined){
+			this.hiresTileManager.removeAllTiles();
+			this.hiresTileManager.update();
+		}
+		if (this.lowresTileManager !== undefined){
+			this.lowresTileManager.removeAllTiles();
+			this.lowresTileManager.update();
+		}
 	}
 
 	changeMap(map, loadTiles = true) {
@@ -310,7 +322,7 @@ export default class BlueMap {
 
 	async loadSettings() {
 		return new Promise(resolve => {
-			this.fileLoader.load(this.dataRoot + 'settings.json', settings => {
+			this.fileLoader.load(this.dataRoot + 'settings.json?' + cachePreventionNr(), settings => {
 				try {
 					this.settings = JSON.parse(settings);
 					this.maps = [];
@@ -379,6 +391,7 @@ export default class BlueMap {
 		this.hiresViewDistance = this.loadUserSetting("hiresViewDistance", this.hiresViewDistance);
 		this.lowresViewDistance = this.loadUserSetting("lowresViewDistance", this.lowresViewDistance);
 		this.controls.settings.zoom.max = this.loadUserSetting("maxZoomDistance", this.controls.settings.zoom.max);
+		this.cacheSuffix = this.loadUserSetting("cacheSuffix", this.cacheSuffix);
 		this.debugInfo = this.loadUserSetting("debugInfo", this.debugInfo);
 	}
 
@@ -393,6 +406,7 @@ export default class BlueMap {
 		this.saveUserSetting("hiresViewDistance", this.hiresViewDistance);
 		this.saveUserSetting("lowresViewDistance", this.lowresViewDistance);
 		this.saveUserSetting("maxZoomDistance", this.controls.settings.zoom.max);
+		this.saveUserSetting("cacheSuffix", this.cacheSuffix);
 		this.saveUserSetting("debugInfo", this.debugInfo);
 	}
 
@@ -427,7 +441,7 @@ export default class BlueMap {
 
 	async loadHiresMaterial() {
 		return new Promise(resolve => {
-			this.fileLoader.load(this.dataRoot + 'textures.json', textures => {
+			this.fileLoader.load(this.dataRoot + 'textures.json?' + cachePreventionNr(), textures => {
 				textures = JSON.parse(textures);
 				let materials = [];
 				for (let i = 0; i < textures['textures'].length; i++) {
@@ -501,7 +515,7 @@ export default class BlueMap {
 	async loadHiresTile(tileX, tileZ) {
 		let path = this.dataRoot + this.map + '/hires/';
 		path += pathFromCoords(tileX, tileZ);
-		path += '.json';
+		path += '.json?' + this.cacheSuffix;
 
 		return new Promise((resolve, reject) => {
 			this.bufferGeometryLoader.load(path, geometry => {
@@ -522,7 +536,7 @@ export default class BlueMap {
 	async loadLowresTile(tileX, tileZ) {
 		let path = this.dataRoot + this.map + '/lowres/';
 		path += pathFromCoords(tileX, tileZ);
-		path += '.json';
+		path += '.json?' + this.cacheSuffix;
 
 		return new Promise((reslove, reject) => {
 			this.bufferGeometryLoader.load(path, geometry => {
