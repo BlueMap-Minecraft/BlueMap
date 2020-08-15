@@ -41,6 +41,8 @@ import NIGHT from '../../../assets/night.svg';
 import HudInfo from "../hud/HudInfo";
 import MarkerManager from "../hud/MarkerManager";
 
+import {cachePreventionNr} from "../utils";
+
 export default class UI {
 
 	constructor(blueMap) {
@@ -101,6 +103,11 @@ export default class UI {
 			this.blueMap.debugInfo = button.isSelected();
 		});
 
+		let clearCache = new Button("clear tile cache", button => {
+			this.blueMap.cacheSuffix = cachePreventionNr();
+			this.blueMap.reloadMap();
+		});
+
 		//toolbar
 		this.toolbar.addElement(menuButton);
 		this.toolbar.addElement(mapSelect);
@@ -128,6 +135,7 @@ export default class UI {
 		this.menu.addElement(lowresSlider);
 		this.menu.addElement(extendedZoom);
 		this.menu.addElement(new Separator());
+		this.menu.addElement(clearCache);
 		this.menu.addElement(debugInfo);
 		this.menu.update();
 	}

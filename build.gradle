@@ -1,6 +1,7 @@
 plugins {
 	id 'java'
 	id 'com.github.johnrengelman.shadow' version '5.1.0'
+	id 'com.github.hierynomus.license' version '0.15.0'
 }
 
 allprojects {
@@ -40,6 +41,17 @@ allprojects {
 	apply plugin: 'java'
 	group = 'de.bluecolored.bluemap'
   	version = coreVersion + '-' + targetVersion
+  	
+  	apply plugin: 'license'
+  	license {
+		header rootProject.file('HEADER')
+		excludes([
+			'*.conf',
+			'*.yml',
+			'*.zip',
+			'*.json'
+		])
+	}
 }
 
 subprojects {
