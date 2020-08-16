@@ -76,7 +76,7 @@
     }
 }
 
-.bluemap-container .marker-poi {
+.bluemap-container .marker-poi, .bluemap-container .marker-player {
     pointer-events: none;
 
     > * {
@@ -85,5 +85,40 @@
 
     > img {
         filter: drop-shadow(1px 1px 3px #0008);
+    }
+}
+
+.bluemap-container .marker-player {
+    img {
+        width: 32px;
+        height: 32px;
+
+        image-rendering: pixelated;
+        image-rendering: crisp-edges;
+
+        transition: all 0.3s;
+    }
+
+    .nameplate {
+        position: absolute;
+        left: 50%;
+        top: 0;
+        transform: translate(-50%, -110%);
+        background: rgba(50, 50, 50, 0.75);
+        padding: 0.2em 0.3em;
+        color: white;
+
+        transition: all 0.3s;
+    }
+
+    &.distant {
+        img {
+            width: 16px;
+            height: 16px;
+        }
+
+        .nameplate {
+            opacity: 0;
+        }
     }
 }

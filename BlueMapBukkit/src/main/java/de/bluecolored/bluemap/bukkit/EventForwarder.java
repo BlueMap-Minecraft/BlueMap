@@ -42,6 +42,9 @@ import org.bukkit.event.block.BlockFormEvent;
 import org.bukkit.event.block.BlockGrowEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
+import org.bukkit.event.player.AsyncPlayerChatEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.ChunkPopulateEvent;
 import org.bukkit.event.world.WorldSaveEvent;
 
@@ -49,6 +52,7 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
+import de.bluecolored.bluemap.common.plugin.text.Text;
 
 public class EventForwarder implements Listener {
 
@@ -68,7 +72,7 @@ public class EventForwarder implements Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public synchronized void onWorldSaveToDisk(WorldSaveEvent evt) {
-		listeners.forEach(l -> l.onWorldSaveToDisk(evt.getWorld().getUID()));		
+		for (ServerEventListener listener : listeners) listener.onWorldSaveToDisk(evt.getWorld().getUID());		
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -119,7 +123,7 @@ public class EventForwarder implements Listener {
 	private synchronized void onBlockChange(Location loc) {
 		UUID world = loc.getWorld().getUID();
 		Vector3i pos = new Vector3i(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
-		listeners.forEach(l -> l.onBlockChange(world, pos));
+		for (ServerEventListener listener : listeners) listener.onBlockChange(world, pos);
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -127,7 +131,23 @@ public class EventForwarder implements Listener {
 		Chunk chunk = evt.getChunk();
 		UUID world = chunk.getWorld().getUID();
 		Vector2i chunkPos = new Vector2i(chunk.getX(), chunk.getZ());
-		listeners.forEach(l -> l.onChunkFinishedGeneration(world, chunkPos));
+		for (ServerEventListener listener : listeners) listener.onChunkFinishedGeneration(world, chunkPos);
+	}
+	
+	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+	public synchronized void onPlayerJoin(PlayerJoinEvent evt) {
+		for (ServerEventListener listener : listeners) listener.onPlayerJoin(evt.getPlayer().getUniqueId());
+	}
+	
+	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+	public synchronized void onPlayerLeave(PlayerQuitEvent evt) {
+		for (ServerEventListener listener : listeners) listener.onPlayerJoin(evt.getPlayer().getUniqueId());
+	}
+	
+	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+	public synchronized void onPlayerChat(AsyncPlayerChatEvent evt) {
+		String message = String.format(evt.getFormat(), evt.getPlayer().getDisplayName(), evt.getMessage());
+		for (ServerEventListener listener : listeners) listener.onChatMessage(Text.of(message));
 	}
 
 }

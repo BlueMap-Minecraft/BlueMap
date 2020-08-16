@@ -32,6 +32,8 @@ import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
 import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.filter.type.Exclude;
+import org.spongepowered.api.event.message.MessageChannelEvent;
+import org.spongepowered.api.event.network.ClientConnectionEvent;
 import org.spongepowered.api.event.world.SaveWorldEvent;
 import org.spongepowered.api.event.world.chunk.PopulateChunkEvent;
 import org.spongepowered.api.world.Location;
@@ -40,6 +42,7 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
+import de.bluecolored.bluemap.common.plugin.text.Text;
 
 public class EventForwarder {
 
@@ -73,4 +76,19 @@ public class EventForwarder {
 		listener.onChunkFinishedGeneration(evt.getTargetChunk().getWorld().getUniqueId(), new Vector2i(chunkPos.getX(), chunkPos.getZ()));
 	}
 
+	@Listener(order = Order.POST)
+	public void onPlayerJoin(ClientConnectionEvent.Join evt) {
+		listener.onPlayerJoin(evt.getTargetEntity().getUniqueId());
+	}
+	
+	@Listener(order = Order.POST)
+	public void onPlayerLeave(ClientConnectionEvent.Disconnect evt) {
+		listener.onPlayerJoin(evt.getTargetEntity().getUniqueId());
+	}
+	
+	@Listener(order = Order.POST)
+	public void onPlayerChat(MessageChannelEvent.Chat evt) {
+		listener.onChatMessage(Text.of(evt.getMessage().toPlain()));
+	}
+	
 }
