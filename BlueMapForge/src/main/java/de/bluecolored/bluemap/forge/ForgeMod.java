@@ -241,7 +241,7 @@ public class ForgeMod implements ServerInterface {
 			if (playerUpdateIndex >= 20 && playerUpdateIndex >= onlinePlayerCount) playerUpdateIndex = 0;
 			
 			if (playerUpdateIndex < onlinePlayerCount) {
-				onlinePlayerList.get(i).update();
+				onlinePlayerList.get(playerUpdateIndex).update();
 			}
 		}
 	}
