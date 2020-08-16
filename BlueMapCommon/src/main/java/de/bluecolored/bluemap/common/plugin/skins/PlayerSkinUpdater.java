@@ -22,27 +22,42 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.plugin.serverinterface;
+package de.bluecolored.bluemap.common.plugin.skins;
 
+import java.io.File;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
-import com.flowpowered.math.vector.Vector2i;
-import com.flowpowered.math.vector.Vector3i;
+import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 
-import de.bluecolored.bluemap.common.plugin.text.Text;
+public class PlayerSkinUpdater implements ServerEventListener {
 
-public interface ServerEventListener {
-
-	default void onWorldSaveToDisk(UUID world) {};
+	private File storageFolder;
 	
-	default void onBlockChange(UUID world, Vector3i blockPos) {};
+	private Map<UUID, PlayerSkin> skins;
 	
-	default void onChunkFinishedGeneration(UUID world, Vector2i chunkPos) {};
+	public PlayerSkinUpdater(File storageFolder) {
+		this.storageFolder = storageFolder;
+		this.skins = new ConcurrentHashMap<>();
+		
+		this.storageFolder.mkdirs();
+	}
 	
-	default void onPlayerJoin(UUID playerUuid) {};
+	public void updateSkin(UUID playerUuid) {
+		PlayerSkin skin = skins.get(playerUuid);
+		
+		if (skin == null) {
+			skin = new PlayerSkin(playerUuid);
+			skins.put(playerUuid, skin);
+		}
+		
+		skin.update(storageFolder);
+	}
 	
-	default void onPlayerLeave(UUID playerUuid) {};
-	
-	default void onChatMessage(Text message) {};
+	@Override
+	public void onPlayerJoin(UUID playerUuid) {
+		updateSkin(playerUuid);
+	}
 	
 }
