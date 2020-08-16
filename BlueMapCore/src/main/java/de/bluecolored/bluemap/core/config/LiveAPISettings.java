@@ -22,33 +22,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.web;
+package de.bluecolored.bluemap.core.config;
 
-import java.io.IOException;
+import java.util.Collection;
 
-import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.webserver.WebServer;
+public interface LiveAPISettings {
 
-public class BlueMapWebServer extends WebServer {
+	boolean isLiveUpdatesEnabled();
 	
-	private WebFilesManager webFilesManager;
-	
-	public BlueMapWebServer(WebServerConfig config) {
-		super(
-			config.getWebserverPort(), 
-			config.getWebserverMaxConnections(), 
-			config.getWebserverBindAdress(), 
-			new BlueMapWebRequestHandler(config.getWebRoot())
-		);
-		
-		this.webFilesManager = new WebFilesManager(config.getWebRoot());
-	}
-	
-	public void updateWebfiles() throws IOException {
-		if (webFilesManager.needsUpdate()) {
-			Logger.global.logInfo("Webfiles are missing or outdated, updating...");
-			webFilesManager.updateFiles();
-		}
-	}
+	Collection<String> getHiddenGameModes();
+
+	boolean isHideInvisible();
+
+	boolean isHideSneaking();
 	
 }

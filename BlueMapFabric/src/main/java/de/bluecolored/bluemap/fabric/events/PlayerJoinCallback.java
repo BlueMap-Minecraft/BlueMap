@@ -22,27 +22,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.plugin.serverinterface;
+package de.bluecolored.bluemap.fabric.events;
 
-import java.util.UUID;
+import net.fabricmc.fabric.api.event.Event;
+import net.fabricmc.fabric.api.event.EventFactory;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayerEntity;
 
-import com.flowpowered.math.vector.Vector2i;
-import com.flowpowered.math.vector.Vector3i;
+public interface PlayerJoinCallback {
+	Event<PlayerJoinCallback> EVENT = EventFactory.createArrayBacked(PlayerJoinCallback.class,
+			(listeners) -> (server, player) -> {
+				for (PlayerJoinCallback event : listeners) {
+					event.onPlayerJoin(server, player);
+				}
+			}
+	);
 
-import de.bluecolored.bluemap.common.plugin.text.Text;
-
-public interface ServerEventListener {
-
-	default void onWorldSaveToDisk(UUID world) {};
-	
-	default void onBlockChange(UUID world, Vector3i blockPos) {};
-	
-	default void onChunkFinishedGeneration(UUID world, Vector2i chunkPos) {};
-	
-	default void onPlayerJoin(UUID playerUuid) {};
-	
-	default void onPlayerLeave(UUID playerUuid) {};
-	
-	default void onChatMessage(Text message) {};
-	
+	void onPlayerJoin(MinecraftServer server, ServerPlayerEntity player);
 }

@@ -31,6 +31,8 @@ import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -43,7 +45,7 @@ import de.bluecolored.bluemap.core.util.ConfigUtils;
 import de.bluecolored.bluemap.core.web.WebServerConfig;
 import ninja.leaping.configurate.ConfigurationNode;
 
-public class MainConfig implements WebServerConfig {
+public class MainConfig implements WebServerConfig, LiveAPISettings {
 	private static final Pattern VALID_ID_PATTERN = Pattern.compile("[a-zA-Z0-9_]+");
 	
 	private boolean downloadAccepted = false;
@@ -63,6 +65,11 @@ public class MainConfig implements WebServerConfig {
 	private int renderThreadCount = 0;
 	
 	private List<MapConfig> mapConfigs = new ArrayList<>();
+	
+	private boolean liveUpdatesEnabled = false;
+	private Collection<String> hiddenGameModes = Collections.emptyList();
+	private boolean hideInvisible = false;
+	private boolean hideSneaking = false;
 	
 	public MainConfig(ConfigurationNode node) throws OutdatedConfigException, IOException {
 		checkOutdated(node);
@@ -101,6 +108,19 @@ public class MainConfig implements WebServerConfig {
 		
 		//maps
 		loadMapConfigs(node.getNode("maps"));
+		
+		//live-updates
+		ConfigurationNode liveNode = node.getNode("liveUpdates");
+		liveUpdatesEnabled = liveNode.getNode("enabled").getBoolean(true);
+		
+		hiddenGameModes = new ArrayList<>();
+		for (ConfigurationNode gameModeNode : liveNode.getNode("hiddenGameModes").getChildrenList()) {
+			hiddenGameModes.add(gameModeNode.getString());
+		}
+		hiddenGameModes = Collections.unmodifiableCollection(hiddenGameModes);
+		
+		hideInvisible = liveNode.getNode("hideInvisible").getBoolean(true);
+		hideSneaking = liveNode.getNode("hideSneaking").getBoolean(false);
 	}
 
 	private void loadWebConfig(ConfigurationNode node) throws IOException {
@@ -196,6 +216,26 @@ public class MainConfig implements WebServerConfig {
 		return mapConfigs;
 	}
 	
+	@Override
+	public boolean isLiveUpdatesEnabled() {
+		return this.liveUpdatesEnabled;
+	}
+
+	@Override
+	public Collection<String> getHiddenGameModes() {
+		return this.hiddenGameModes;
+	}
+
+	@Override
+	public boolean isHideInvisible() {
+		return this.hideInvisible;
+	}
+
+	@Override
+	public boolean isHideSneaking() {
+		return this.hideSneaking;
+	}
+
 	public class MapConfig implements RenderSettings {
 		
 		private String id;

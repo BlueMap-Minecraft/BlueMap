@@ -50,15 +50,18 @@ public class HttpRequest {
 	private static final Pattern REQUEST_PATTERN = Pattern.compile("^(\\w+) (\\S+) (.+)$");
 	
 	private String method;
-	private String path;
+	private String adress;
 	private String version;
 	private Map<String, Set<String>> header;
 	private Map<String, Set<String>> headerLC;
 	private byte[] data;
 	
-	public HttpRequest(String method, String path, String version, Map<String, Set<String>> header) {
+	private String path = null;
+	private Map<String, String> getParams = null;
+	
+	public HttpRequest(String method, String adress, String version, Map<String, Set<String>> header) {
 		this.method = method;
-		this.path = path;
+		this.adress = adress;
 		this.version = version;
 		this.header = header;
 		this.headerLC = new HashMap<>();
@@ -79,8 +82,8 @@ public class HttpRequest {
 		return method;
 	}
 	
-	public String getPath(){
-		return path;
+	public String getAdress(){
+		return adress;
 	}
 
 	public String getVersion() {
@@ -92,7 +95,7 @@ public class HttpRequest {
 	}
 	
 	public Map<String, Set<String>> getLowercaseHeader() {
-		return header;
+		return headerLC;
 	}
 	
 	public Set<String> getHeader(String key){
@@ -105,6 +108,40 @@ public class HttpRequest {
 		Set<String> headerValues = headerLC.get(key.toLowerCase());
 		if (headerValues == null) return Collections.emptySet();
 		return headerValues;
+	}
+	
+	public String getPath() {
+		if (path == null) parseAdress();
+		return path;
+	}
+	
+	public Map<String, String> getGETParams() {
+		if (getParams == null) parseAdress();
+		return Collections.unmodifiableMap(getParams);
+	}
+	
+	private void parseAdress() {
+		String adress = this.adress;
+		if (adress.isEmpty()) adress = "/";
+		String[] adressParts = adress.split("\\?", 2);
+		String path = adressParts[0];
+		String getParamString = adressParts.length > 1 ? adressParts[1] : ""; 
+		
+		Map<String, String> getParams = new HashMap<>();
+		for (String getParam : getParamString.split("&")){
+			if (getParam.isEmpty()) continue;
+			String[] kv = getParam.split("=", 2);
+			String key = kv[0];
+			String value = kv.length > 1 ? kv[1] : "";
+			getParams.put(key, value);
+		}
+		
+		//normalize path
+		if (path.startsWith("/")) path = path.substring(1);
+		if (path.endsWith("/")) path = path.substring(0, path.length() - 1);
+		
+		this.path = path;
+		this.getParams = getParams;
 	}
 	
 	public InputStream getData(){
