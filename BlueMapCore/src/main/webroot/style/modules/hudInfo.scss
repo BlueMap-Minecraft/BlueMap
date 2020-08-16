@@ -96,6 +96,8 @@
         image-rendering: pixelated;
         image-rendering: crisp-edges;
 
+        border: solid 2px transparent;
+
         transition: all 0.3s;
     }
 
@@ -115,10 +117,18 @@
         img {
             width: 16px;
             height: 16px;
+
+            border-width: 1px;
         }
 
         .nameplate {
             opacity: 0;
+        }
+    }
+
+    &.following {
+        img {
+            border-color: white;
         }
     }
 }
