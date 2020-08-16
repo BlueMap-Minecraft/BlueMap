@@ -25,6 +25,9 @@ export default class MarkerManager {
 						}),
 					this.checkLiveAPI()
 						.then(this.initializePlayerMarkers)
+						.catch(ignore => {
+							if (this.blueMap.debugInfo) console.debug("Failed load live-players:", ignore);
+						})
 				])
 				.then(this.loadMarkers)
 				.then(this.updatePlayerMarkerLoop);
