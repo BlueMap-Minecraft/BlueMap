@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.core.webserver;
 
+@FunctionalInterface
 public interface HttpRequestHandler {
 
 	HttpResponse handle(HttpRequest request);

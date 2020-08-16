@@ -33,9 +33,7 @@ import java.io.IOException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.GregorianCalendar;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
@@ -50,16 +48,18 @@ import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
 import de.bluecolored.bluemap.core.webserver.HttpResponse;
 import de.bluecolored.bluemap.core.webserver.HttpStatusCode;
 
-public class BlueMapWebRequestHandler implements HttpRequestHandler {
+public class FileRequestHandler implements HttpRequestHandler {
 
 	private static final long DEFLATE_MIN_SIZE = 10L * 1024L;
 	private static final long DEFLATE_MAX_SIZE = 10L * 1024L * 1024L;
 	private static final long INFLATE_MAX_SIZE = 10L * 1024L * 1024L;
 	
 	private Path webRoot;
+	private String serverName;
 	
-	public BlueMapWebRequestHandler(Path webRoot) {
+	public FileRequestHandler(Path webRoot, String serverName) {
 		this.webRoot = webRoot;
+		this.serverName = serverName;
 	}
 	
 	@Override
@@ -70,11 +70,11 @@ public class BlueMapWebRequestHandler implements HttpRequestHandler {
 		) return new HttpResponse(HttpStatusCode.NOT_IMPLEMENTED); 
 		
 		HttpResponse response = generateResponse(request);
-		response.addHeader("Server", "BlueMap/WebServer");
+		response.addHeader("Server", this.serverName);
 		
 		HttpStatusCode status = response.getStatusCode();
 		if (status.getCode() >= 400){
-			response.setData(status.getCode() + " - " + status.getMessage() + "\nBlueMap/Webserver");
+			response.setData(status.getCode() + " - " + status.getMessage() + "\n" + this.serverName);
 		}
 		
 		return response;
@@ -82,23 +82,7 @@ public class BlueMapWebRequestHandler implements HttpRequestHandler {
 
 	@SuppressWarnings ("resource")
 	private HttpResponse generateResponse(HttpRequest request) {
-		String adress = request.getPath();
-		if (adress.isEmpty()) adress = "/";
-		String[] adressParts = adress.split("\\?", 2);
-		String path = adressParts[0];
-		String getParamString = adressParts.length > 1 ? adressParts[1] : ""; 
-		
-		Map<String, String> getParams = new HashMap<>();
-		for (String getParam : getParamString.split("&")){
-			if (getParam.isEmpty()) continue;
-			String[] kv = getParam.split("=", 2);
-			String key = kv[0];
-			String value = kv.length > 1 ? kv[1] : "";
-			getParams.put(key, value);
-		}
-		
-		if (path.startsWith("/")) path = path.substring(1);
-		if (path.endsWith("/")) path = path.substring(0, path.length() - 1);
+		String path = request.getPath();
 		
 		Path filePath = webRoot;
 		try {

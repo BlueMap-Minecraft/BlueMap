@@ -6,8 +6,9 @@
 	"mixins": [],
 	"client": [],
 	"server": [
-		"MixinServerWorld",
-		"MixinChunkGenerator"
+		"MixinChunkGenerator",
+		"MixinPlayerManager",
+		"MixinServerWorld"
 	],
 	"injectors": {
 		"defaultRequire": 1
