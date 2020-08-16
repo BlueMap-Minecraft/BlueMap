@@ -72,6 +72,7 @@ export default class PlayerMarkerSet {
 
 			marker.nowOnline = true;
 			marker.position = new Vector3(player.position.x, player.position.y + 1.5, player.position.z);
+			marker.world = player.world;
 			marker.updatePosition();
 		}
 
