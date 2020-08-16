@@ -2,6 +2,8 @@ import $ from 'jquery';
 import Marker from "./Marker";
 import {CSS2DObject} from "./CSS2DRenderer";
 
+import STEVE from "../../../assets/playerheads/steve.svg";
+
 export default class PlayerMarker extends Marker {
 
 	constructor(blueMap, markerSet, markerData, playerUuid, worldUuid) {
@@ -21,7 +23,7 @@ export default class PlayerMarker extends Marker {
 		this.blueMap.updateFrame = true;
 
 		if (!this.renderObject){
-			let iconElement = $(`<div class="marker-player"><img src="assets/playerheads/${this.player}.png" onerror="this.onerror=null;this.src='assets/playerheads/steve.png';"><div class="nameplate">${this.label}</div></div>`);
+			let iconElement = $(`<div class="marker-player"><img src="assets/playerheads/${this.player}.png" onerror="this.onerror=null;this.src='${STEVE}';"><div class="nameplate">${this.label}</div></div>`);
 			iconElement.find("img").click(this.onClick);
 
 			this.renderObject = new CSS2DObject(iconElement[0]);
