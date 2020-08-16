@@ -61,7 +61,7 @@ public class LiveAPIRequestHandler implements HttpRequestHandler {
 
 	@Override
 	public HttpResponse handle(HttpRequest request) {
-		if (!config.isLiveUpdatesEnabled()) this.notFoundHandler.handle(request);
+		if (!config.isLiveUpdatesEnabled()) return this.notFoundHandler.handle(request);
 		
 		HttpRequestHandler handler = liveAPIRequests.get(request.getPath());
 		if (handler != null) return handler.handle(request);
