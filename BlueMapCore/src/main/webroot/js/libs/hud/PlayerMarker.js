@@ -15,6 +15,8 @@ export default class PlayerMarker extends Marker {
 
 		this.animationRunning = false;
 		this.lastFrame = -1;
+
+		this.follow = false;
 	}
 
 	setVisible(visible){
@@ -23,17 +25,18 @@ export default class PlayerMarker extends Marker {
 		this.blueMap.updateFrame = true;
 
 		if (!this.renderObject){
-			let iconElement = $(`<div class="marker-player"><img src="assets/playerheads/${this.player}.png" onerror="this.onerror=null;this.src='${STEVE}';"><div class="nameplate">${this.label}</div></div>`);
-			iconElement.find("img").click(this.onClick);
+			this.iconElement = $(`<div class="marker-player"><img src="assets/playerheads/${this.player}.png" onerror="this.onerror=null;this.src='${STEVE}';"><div class="nameplate">${this.label}</div></div>`);
+			this.iconElement.find("img").click(this.onClick);
+			$(window).on('mousedown touchstart', this.onStopFollowing);
 
-			this.renderObject = new CSS2DObject(iconElement[0]);
+			this.renderObject = new CSS2DObject(this.iconElement[0]);
 			this.renderObject.position.copy(this.position);
 			this.renderObject.onBeforeRender = (renderer, scene, camera) => {
 				let distanceSquared = this.position.distanceToSquared(camera.position);
 				if (distanceSquared > 1000000) {
-					iconElement.addClass("distant");
+					this.iconElement.addClass("distant");
 				} else {
-					iconElement.removeClass("distant");
+					this.iconElement.removeClass("distant");
 				}
 
 				this.updateRenderObject(this.renderObject, scene, camera);
@@ -56,6 +59,11 @@ export default class PlayerMarker extends Marker {
 				}
 			} else {
 				this.renderObject.position.copy(this.position);
+			}
+
+			if (this.follow){
+				this.blueMap.controls.targetPosition.x = this.position.x;
+				this.blueMap.controls.targetPosition.z = this.position.z;
 			}
 		}
 	};
@@ -86,7 +94,18 @@ export default class PlayerMarker extends Marker {
 	};
 
 	onClick = () => {
+		this.follow = true;
+		this.iconElement.addClass("following");
 
-	}
+		this.blueMap.controls.targetPosition.x = this.position.x;
+		this.blueMap.controls.targetPosition.z = this.position.z;
+	};
+
+	onStopFollowing = event => {
+		if(this.follow) {
+			this.follow = true;
+			this.iconElement.removeClass("following");
+		}
+	};
 
 }
