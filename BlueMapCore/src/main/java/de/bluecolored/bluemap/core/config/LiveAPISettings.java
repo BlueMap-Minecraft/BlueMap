@@ -22,33 +22,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.plugin.serverinterface;
+package de.bluecolored.bluemap.core.config;
 
-public enum Gamemode {
+import java.util.Collection;
 
-	SURVIVAL ("survival"),
-	CREATIVE ("creative"),
-	ADVENTURE ("adventure"),
-	SPECTATOR ("spectator");
+public interface LiveAPISettings {
+
+	boolean isLiveUpdatesEnabled();
 	
-	private final String id;
-	
-	Gamemode(String id){
-		this.id = id;
-	}
-	
-	public String getId() {
-		return id;
-	}
-	
-	public static Gamemode getById(String id) {
-		if (id == null) throw new NullPointerException("id cannot be null");
-		
-		for (Gamemode gamemode : values()) {
-			if (gamemode.id.equals(id)) return gamemode;
-		}
-		
-		throw new IllegalArgumentException("There is no Gamemode with id: '" + id + "'");
-	}
+	Collection<String> getHiddenGameModes();
+
+	boolean isHideInvisible();
+
+	boolean isHideSneaking();
 	
 }

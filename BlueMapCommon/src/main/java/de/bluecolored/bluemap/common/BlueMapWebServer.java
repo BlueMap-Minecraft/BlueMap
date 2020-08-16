@@ -28,6 +28,7 @@ import java.io.IOException;
 
 import de.bluecolored.bluemap.common.live.LiveAPIRequestHandler;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.core.config.LiveAPISettings;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.web.FileRequestHandler;
 import de.bluecolored.bluemap.core.web.WebFilesManager;
@@ -50,12 +51,12 @@ public class BlueMapWebServer extends WebServer {
 		this.webFilesManager = new WebFilesManager(config.getWebRoot());
 	}
 	
-	public BlueMapWebServer(WebServerConfig config, ServerInterface server) {
+	public BlueMapWebServer(WebServerConfig config, LiveAPISettings liveSettings, ServerInterface server) {
 		super(
 			config.getWebserverPort(), 
 			config.getWebserverMaxConnections(), 
 			config.getWebserverBindAdress(), 
-			new LiveAPIRequestHandler(server, new FileRequestHandler(config.getWebRoot(), "BlueMap/Webserver"))
+			new LiveAPIRequestHandler(server, liveSettings, new FileRequestHandler(config.getWebRoot(), "BlueMap/Webserver"))
 		);
 		
 		this.webFilesManager = new WebFilesManager(config.getWebRoot());

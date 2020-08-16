@@ -31,9 +31,9 @@ import java.util.Map;
 
 import com.google.gson.stream.JsonWriter;
 
-import de.bluecolored.bluemap.common.plugin.serverinterface.Gamemode;
 import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.core.config.LiveAPISettings;
 import de.bluecolored.bluemap.core.webserver.HttpRequest;
 import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
 import de.bluecolored.bluemap.core.webserver.HttpResponse;
@@ -45,7 +45,9 @@ public class LiveAPIRequestHandler implements HttpRequestHandler {
 	private Map<String, HttpRequestHandler> liveAPIRequests;
 	private ServerInterface server;
 	
-	public LiveAPIRequestHandler(ServerInterface server, HttpRequestHandler notFoundHandler) {
+	private LiveAPISettings config;
+	
+	public LiveAPIRequestHandler(ServerInterface server, LiveAPISettings config, HttpRequestHandler notFoundHandler) {
 		this.server = server;
 		this.notFoundHandler = notFoundHandler;
 		
@@ -53,10 +55,14 @@ public class LiveAPIRequestHandler implements HttpRequestHandler {
 
 		this.liveAPIRequests.put("live", this::handleLivePingRequest);
 		this.liveAPIRequests.put("live/players", this::handlePlayersRequest);
+		
+		this.config = config;
 	}
 
 	@Override
 	public HttpResponse handle(HttpRequest request) {
+		if (!config.isLiveUpdatesEnabled()) this.notFoundHandler.handle(request);
+		
 		HttpRequestHandler handler = liveAPIRequests.get(request.getPath());
 		if (handler != null) return handler.handle(request);
 		
@@ -81,9 +87,9 @@ public class LiveAPIRequestHandler implements HttpRequestHandler {
 			json.name("players").beginArray();
 			for (Player player : server.getOnlinePlayers()) {
 				
-				if (player.isInvisible()) continue;
-				if (player.isSneaking()) continue;
-				if (player.getGamemode() == Gamemode.SPECTATOR) continue;
+				if (config.isHideInvisible() && player.isInvisible()) continue;
+				if (config.isHideSneaking() && player.isSneaking()) continue;
+				if (config.getHiddenGameModes().contains(player.getGamemode().getId())) continue;
 				
 				json.beginObject();
 				json.name("uuid").value(player.getUuid().toString());

@@ -272,8 +272,10 @@ public class Plugin {
 		serverInterface.registerListener(updateHandler);
 		
 		//start skin updater
-		this.skinUpdater = new PlayerSkinUpdater(config.getWebRoot().resolve("assets").resolve("playerheads").toFile());
-		serverInterface.registerListener(skinUpdater);
+		if (config.isLiveUpdatesEnabled()) {
+			this.skinUpdater = new PlayerSkinUpdater(config.getWebRoot().resolve("assets").resolve("playerheads").toFile());
+			serverInterface.registerListener(skinUpdater);
+		}
 		
 		//create/update webfiles
 		WebFilesManager webFilesManager = new WebFilesManager(config.getWebRoot());
@@ -299,7 +301,7 @@ public class Plugin {
 		
 		//start webserver
 		if (config.isWebserverEnabled()) {
-			webServer = new BlueMapWebServer(config, serverInterface);
+			webServer = new BlueMapWebServer(config, config, serverInterface);
 			webServer.updateWebfiles();
 			webServer.start();
 		}
