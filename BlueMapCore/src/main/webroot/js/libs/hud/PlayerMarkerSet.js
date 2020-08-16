@@ -50,6 +50,7 @@ export default class PlayerMarkerSet {
 	updateWith(liveData){
 		this.marker.forEach(marker => {
 			marker.nowOnline = false;
+			marker.worldChanged = false;
 		});
 
 		for(let i = 0; i < liveData.players.length; i++){
@@ -72,11 +73,15 @@ export default class PlayerMarkerSet {
 
 			marker.nowOnline = true;
 			marker.position = new Vector3(player.position.x, player.position.y + 1.5, player.position.z);
+			if (marker.world !== player.world) {
+				marker.world = player.world;
+				marker.worldChanged = true;
+			}
 			marker.updatePosition();
 		}
 
 		this.marker.forEach(marker => {
-			if (marker.nowOnline !== marker.online){
+			if (marker.nowOnline !== marker.online || marker.worldChanged){
 				marker.online = marker.nowOnline;
 				marker.setVisible(this.visible);
 			}

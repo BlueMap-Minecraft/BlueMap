@@ -70,7 +70,7 @@ public class PlayerSkin {
 				BufferedImage head = createHead(skin);
 				ImageIO.write(head, "png", new File(storageFolder, uuid.toString() + ".png"));
 			} catch (ExecutionException | TimeoutException e) {
-				Logger.global.logWarning("Failed to load player-skin from mojang-servers: " + e);
+				Logger.global.logDebug("Failed to load player-skin from mojang-servers: " + e);
 			} catch (IOException e) {
 				Logger.global.logError("Failed to write player-head image!", e);
 			} catch (InterruptedException ignore) {}
