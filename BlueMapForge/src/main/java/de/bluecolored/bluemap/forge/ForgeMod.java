@@ -190,7 +190,8 @@ public class ForgeMod implements ServerInterface {
 	public File getConfigFolder() {
 		return new File("config/bluemap");
 	}
-	
+
+	@SubscribeEvent
 	public void onPlayerJoin(PlayerLoggedInEvent evt) {
 		PlayerEntity playerInstance = evt.getPlayer();
 		if (!(playerInstance instanceof ServerPlayerEntity)) return;
@@ -199,7 +200,8 @@ public class ForgeMod implements ServerInterface {
 		onlinePlayerMap.put(player.getUuid(), player);
 		onlinePlayerList.add(player);
 	}
-	
+
+	@SubscribeEvent
 	public void onPlayerLeave(PlayerLoggedOutEvent evt) {
 		PlayerEntity player = evt.getPlayer();
 		if (!(player instanceof ServerPlayerEntity)) return;
