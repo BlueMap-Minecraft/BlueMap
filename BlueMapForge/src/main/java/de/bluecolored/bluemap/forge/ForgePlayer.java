@@ -144,7 +144,7 @@ public class ForgePlayer implements Player {
 		
 		Vec3d pos = player.getPositionVec();
 		this.position = new Vector3d(pos.getX(), pos.getY(), pos.getZ());
-		this.sneaking = player.isSneaking();
+		this.sneaking = player.isCrouching();
 		
 		try {
 			this.world = mod.getUUIDForWorld(player.getServerWorld());
