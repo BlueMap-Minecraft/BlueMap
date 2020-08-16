@@ -2,7 +2,7 @@ import $ from 'jquery';
 import Marker from "./Marker";
 import {CSS2DObject} from "./CSS2DRenderer";
 
-import STEVE from "../../../assets/playerheads/steve.svg";
+import STEVE from "../../../assets/playerheads/steve.png";
 
 export default class PlayerMarker extends Marker {
 
