@@ -136,6 +136,7 @@ public class WebSettings {
 	public void setFrom(World world, String mapId) {
 		set(world.getSpawnPoint().getX(), "maps", mapId, "startPos", "x");
 		set(world.getSpawnPoint().getZ(), "maps", mapId, "startPos", "z");
+		set(world.getUUID().toString(), "maps", mapId, "world");
 	}
 	
 	public void setFrom(MapConfig mapConfig, String mapId) {

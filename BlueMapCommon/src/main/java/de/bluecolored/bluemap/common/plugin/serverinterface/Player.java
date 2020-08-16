@@ -26,23 +26,39 @@ package de.bluecolored.bluemap.common.plugin.serverinterface;
 
 import java.util.UUID;
 
-import com.flowpowered.math.vector.Vector2i;
-import com.flowpowered.math.vector.Vector3i;
+import com.flowpowered.math.vector.Vector3d;
 
 import de.bluecolored.bluemap.common.plugin.text.Text;
 
-public interface ServerEventListener {
+public interface Player {
 
-	default void onWorldSaveToDisk(UUID world) {};
+	public UUID getUuid();
 	
-	default void onBlockChange(UUID world, Vector3i blockPos) {};
+	public Text getName();
 	
-	default void onChunkFinishedGeneration(UUID world, Vector2i chunkPos) {};
+	public UUID getWorld();
 	
-	default void onPlayerJoin(UUID playerUuid) {};
+	public Vector3d getPosition();
+
+	public boolean isOnline();
 	
-	default void onPlayerLeave(UUID playerUuid) {};
+	/**
+	 * Return <code>true</code> if the player is sneaking.
+	 * <p><i>If the player is offline the value of this method is undetermined.</i></p>
+	 * @return
+	 */
+	public boolean isSneaking();
 	
-	default void onChatMessage(Text message) {};
+	/**
+	 * Returns <code>true</code> if the player has an invisibillity effect
+	 * <p><i>If the player is offline the value of this method is undetermined.</i></p>
+	 */
+	public boolean isInvisible();
+	
+	/**
+	 * Returns the {@link Gamemode} this player is in
+	 * <p><i>If the player is offline the value of this method is undetermined.</i></p>
+	 */
+	public Gamemode getGamemode();
 	
 }

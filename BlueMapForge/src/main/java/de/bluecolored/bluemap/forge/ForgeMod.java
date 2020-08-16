@@ -28,28 +28,35 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.Collections;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
 import org.apache.logging.log4j.LogManager;
 
-import com.flowpowered.math.vector.Vector3i;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.commands.Commands;
+import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.logger.Logger;
-import net.minecraft.command.CommandSource;
+import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
+import net.minecraft.entity.player.PlayerEntity;
+import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.world.BlockEvent;
-import net.minecraftforge.event.world.WorldEvent;
+import net.minecraftforge.event.TickEvent.ServerTickEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
@@ -57,20 +64,29 @@ import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
 
 @Mod(Plugin.PLUGIN_ID)
 public class ForgeMod implements ServerInterface {
+
+	private Plugin pluginInstance = null;
+	private MinecraftServer serverInstance = null;
 	
-	private Plugin bluemap;
-	private Commands<CommandSource> commands;
-	private Map<String, UUID> worldUUIDs;
-	private Collection<ServerEventListener> eventListeners;
+	private Map<File, UUID> worldUUIDs;
+	private ForgeEventForwarder eventForwarder;
 	
 	private LoadingCache<ServerWorld, UUID> worldUuidCache;
+	
+	private int playerUpdateIndex = 0;
+	private Map<UUID, Player> onlinePlayerMap;
+	private List<ForgePlayer> onlinePlayerList;
 	
 	public ForgeMod() {
 		Logger.global = new Log4jLogger(LogManager.getLogger(Plugin.PLUGIN_NAME));
 		
-		this.bluemap = new Plugin("forge", this);
-		this.worldUUIDs = new HashMap<>();
-		this.eventListeners = new ArrayList<>(1);
+		this.onlinePlayerMap = new ConcurrentHashMap<>();
+		this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
+		
+		this.pluginInstance = new Plugin("forge", this);
+		
+		this.worldUUIDs = new ConcurrentHashMap<>();
+		this.eventForwarder = new ForgeEventForwarder(this);
 		this.worldUuidCache = CacheBuilder.newBuilder()
 				.weakKeys()
 				.maximumSize(1000)
@@ -80,113 +96,61 @@ public class ForgeMod implements ServerInterface {
 						return loadUUIDForWorld(key);
 					}
 				});
-		
+
 		MinecraftForge.EVENT_BUS.register(this);
 	}
 	
 	@SubscribeEvent
     public void onServerStarting(FMLServerStartingEvent event) {
 		this.worldUUIDs.clear();
-		
-		for (ServerWorld world : event.getServer().getWorlds()) {
-			try {
-				registerWorld(world);
-			} catch (IOException e) {
-				Logger.global.logError("Failed to register world: " + world.getProviderName(), e);
-			}
-			
-			try {
-				world.save(null, false, false);
-			} catch (Throwable t) {
-				Logger.global.logError("Failed to save world: " + world.getProviderName(), t);
-			}
-		}
 
 		//register commands
-		this.commands = new Commands<>(bluemap, event.getCommandDispatcher(), forgeSource -> new ForgeCommandSource(this, bluemap, forgeSource));
+		new Commands<>(pluginInstance, event.getCommandDispatcher(), forgeSource -> new ForgeCommandSource(this, pluginInstance, forgeSource));
 		
 		new Thread(() -> {
+			Logger.global.logInfo("Loading...");
+			
 			try {
-				Logger.global.logInfo("Loading...");
-				bluemap.load();
-				if (bluemap.isLoaded()) Logger.global.logInfo("Loaded!");
-			} catch (Throwable t) {
-				Logger.global.logError("Failed to load!", t);
+				pluginInstance.load();
+				if (pluginInstance.isLoaded()) Logger.global.logInfo("Loaded!");
+			} catch (IOException | ParseResourceException e) {
+				Logger.global.logError("Failed to load bluemap!", e);
 			}
 		}).start();
     }
 	
-	private void registerWorld(ServerWorld world) throws IOException {
-		getUUIDForWorld(world);
-	}
-	
 	@SubscribeEvent
     public void onServerStopping(FMLServerStoppingEvent event) {
-		Logger.global.logInfo("Stopping...");
-		bluemap.unload();
-		Logger.global.logInfo("Saved and stopped!");
+		pluginInstance.unload();
+		Logger.global.logInfo("BlueMap unloaded!");
     }
+	
+	@SubscribeEvent
+	public void onTick(ServerTickEvent evt) {
+		updateSomePlayers();
+	}
 
 	@Override
 	public void registerListener(ServerEventListener listener) {
-		eventListeners.add(listener);
+		eventForwarder.addEventListener(listener);
 	}
 
 	@Override
 	public void unregisterAllListeners() {
-		eventListeners.clear();
-	}
-	
-	@SubscribeEvent
-	public void onBlockBreak(BlockEvent.BreakEvent evt) {
-		onBlockChange(evt);
-	}
-	
-	@SubscribeEvent
-	public void onBlockPlace(BlockEvent.EntityPlaceEvent evt) {
-		onBlockChange(evt);
-	}
-	
-	private void onBlockChange(BlockEvent evt) {
-		if (!(evt.getWorld() instanceof ServerWorld)) return;
-		
-		try {
-			UUID world = getUUIDForWorld((ServerWorld) evt.getWorld());
-			Vector3i position = new Vector3i(
-					evt.getPos().getX(),
-					evt.getPos().getY(),
-					evt.getPos().getZ()
-				);
-			
-			for (ServerEventListener listener : eventListeners) listener.onBlockChange(world, position);
-			
-		} catch (IOException ignore) {}
-	}
-	
-	@SubscribeEvent
-	public void onWorldSave(WorldEvent.Save evt) {
-		if (!(evt.getWorld() instanceof ServerWorld)) return;
-		
-		try {
-			UUID world = getUUIDForWorld((ServerWorld) evt.getWorld());
-			
-			for (ServerEventListener listener : eventListeners) listener.onWorldSaveToDisk(world);
-			
-		} catch (IOException ignore) {}
+		eventForwarder.removeAllListeners();
 	}
 
 	@Override
 	public UUID getUUIDForWorld(File worldFolder) throws IOException {
-		synchronized (worldUUIDs) {
-			String key = worldFolder.getCanonicalPath();
-			
-			UUID uuid = worldUUIDs.get(key);
-			if (uuid == null) {
-				throw new IOException("There is no world with this folder loaded: " + worldFolder.getPath());
-			}
-			
-			return uuid;
+		worldFolder = worldFolder.getCanonicalFile();
+		
+		UUID uuid = worldUUIDs.get(worldFolder);
+		if (uuid == null) {
+			uuid = UUID.randomUUID();
+			worldUUIDs.put(worldFolder, uuid);
 		}
+		
+		return uuid;
 	}
 	
 	public UUID getUUIDForWorld(ServerWorld world) throws IOException {
@@ -200,17 +164,15 @@ public class ForgeMod implements ServerInterface {
 	}
 	
 	private UUID loadUUIDForWorld(ServerWorld world) throws IOException {
-		synchronized (worldUUIDs) {
-			String key = getFolderForWorld(world).getPath();
-			
-			UUID uuid = worldUUIDs.get(key);
-			if (uuid == null) {
-				uuid = UUID.randomUUID();
-				worldUUIDs.put(key, uuid);
-			}
-			
-			return uuid;
+		File key = getFolderForWorld(world);
+		
+		UUID uuid = worldUUIDs.get(key);
+		if (uuid == null) {
+			uuid = UUID.randomUUID();
+			worldUUIDs.put(key, uuid);
 		}
+		
+		return uuid;
 	}
 	
 	private File getFolderForWorld(ServerWorld world) throws IOException {
@@ -228,9 +190,60 @@ public class ForgeMod implements ServerInterface {
 	public File getConfigFolder() {
 		return new File("config/bluemap");
 	}
+	
+	public void onPlayerJoin(PlayerLoggedInEvent evt) {
+		PlayerEntity playerInstance = evt.getPlayer();
+		if (!(playerInstance instanceof ServerPlayerEntity)) return;
+		
+		ForgePlayer player = new ForgePlayer(this, (ServerPlayerEntity) playerInstance);
+		onlinePlayerMap.put(player.getUuid(), player);
+		onlinePlayerList.add(player);
+	}
+	
+	public void onPlayerLeave(PlayerLoggedOutEvent evt) {
+		PlayerEntity player = evt.getPlayer();
+		if (!(player instanceof ServerPlayerEntity)) return;
+		
+		UUID playerUUID = player.getUniqueID();
+		onlinePlayerMap.remove(playerUUID);
+		synchronized (onlinePlayerList) {
+			onlinePlayerList.removeIf(p -> p.getUuid().equals(playerUUID));
+		}
+	}
 
-	public Commands<CommandSource> getCommands() {
-		return commands;
+	public MinecraftServer getServer() {
+		return this.serverInstance;
+	}
+
+	@Override
+	public Collection<Player> getOnlinePlayers() {
+		return onlinePlayerMap.values();
+	}
+
+	@Override
+	public Optional<Player> getPlayer(UUID uuid) {
+		return Optional.ofNullable(onlinePlayerMap.get(uuid));
+	}
+	
+	/**
+	 * Only update some of the online players each tick to minimize performance impact on the server-thread.
+	 * Only call this method on the server-thread.
+	 */
+	private void updateSomePlayers() {
+		int onlinePlayerCount = onlinePlayerList.size();
+		if (onlinePlayerCount == 0) return;
+		
+		int playersToBeUpdated = onlinePlayerCount / 20; //with 20 tps, each player is updated once a second
+		if (playersToBeUpdated == 0) playersToBeUpdated = 1;
+		
+		for (int i = 0; i < playersToBeUpdated; i++) {
+			playerUpdateIndex++;
+			if (playerUpdateIndex >= 20 && playerUpdateIndex >= onlinePlayerCount) playerUpdateIndex = 0;
+			
+			if (playerUpdateIndex < onlinePlayerCount) {
+				onlinePlayerList.get(i).update();
+			}
+		}
 	}
     
 }

@@ -24,25 +24,31 @@
  */
 package de.bluecolored.bluemap.common.plugin.serverinterface;
 
-import java.util.UUID;
+public enum Gamemode {
 
-import com.flowpowered.math.vector.Vector2i;
-import com.flowpowered.math.vector.Vector3i;
-
-import de.bluecolored.bluemap.common.plugin.text.Text;
-
-public interface ServerEventListener {
-
-	default void onWorldSaveToDisk(UUID world) {};
+	SURVIVAL ("survival"),
+	CREATIVE ("creative"),
+	ADVENTURE ("adventure"),
+	SPECTATOR ("spectator");
 	
-	default void onBlockChange(UUID world, Vector3i blockPos) {};
+	private final String id;
 	
-	default void onChunkFinishedGeneration(UUID world, Vector2i chunkPos) {};
+	Gamemode(String id){
+		this.id = id;
+	}
 	
-	default void onPlayerJoin(UUID playerUuid) {};
+	public String getId() {
+		return id;
+	}
 	
-	default void onPlayerLeave(UUID playerUuid) {};
-	
-	default void onChatMessage(Text message) {};
+	public static Gamemode getById(String id) {
+		if (id == null) throw new NullPointerException("id cannot be null");
+		
+		for (Gamemode gamemode : values()) {
+			if (gamemode.id.equals(id)) return gamemode;
+		}
+		
+		throw new IllegalArgumentException("There is no Gamemode with id: '" + id + "'");
+	}
 	
 }

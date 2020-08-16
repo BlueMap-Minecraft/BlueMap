@@ -46,10 +46,12 @@ import org.apache.commons.io.FileUtils;
 
 import com.flowpowered.math.vector.Vector2i;
 
+import de.bluecolored.bluemap.common.BlueMapWebServer;
 import de.bluecolored.bluemap.common.MapType;
 import de.bluecolored.bluemap.common.RenderManager;
 import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.common.plugin.skins.PlayerSkinUpdater;
 import de.bluecolored.bluemap.core.config.ConfigManager;
 import de.bluecolored.bluemap.core.config.MainConfig;
 import de.bluecolored.bluemap.core.config.MainConfig.MapConfig;
@@ -62,7 +64,6 @@ import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.render.lowres.LowresModelManager;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.web.BlueMapWebServer;
 import de.bluecolored.bluemap.core.web.WebFilesManager;
 import de.bluecolored.bluemap.core.web.WebSettings;
 import de.bluecolored.bluemap.core.world.SlicedWorld;
@@ -86,6 +87,7 @@ public class Plugin {
 	private Map<String, MapType> maps;
 	
 	private MapUpdateHandler updateHandler;
+	private PlayerSkinUpdater skinUpdater;
 
 	private RenderManager renderManager;
 	private BlueMapWebServer webServer;
@@ -269,6 +271,12 @@ public class Plugin {
 		this.updateHandler = new MapUpdateHandler(this);
 		serverInterface.registerListener(updateHandler);
 		
+		//start skin updater
+		if (config.isLiveUpdatesEnabled()) {
+			this.skinUpdater = new PlayerSkinUpdater(config.getWebRoot().resolve("assets").resolve("playerheads").toFile());
+			serverInterface.registerListener(skinUpdater);
+		}
+		
 		//create/update webfiles
 		WebFilesManager webFilesManager = new WebFilesManager(config.getWebRoot());
 		if (webFilesManager.needsUpdate()) {
@@ -293,7 +301,7 @@ public class Plugin {
 		
 		//start webserver
 		if (config.isWebserverEnabled()) {
-			webServer = new BlueMapWebServer(config);
+			webServer = new BlueMapWebServer(config, config, serverInterface);
 			webServer.updateWebfiles();
 			webServer.start();
 		}

@@ -22,27 +22,35 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.plugin.serverinterface;
+package de.bluecolored.bluemap.fabric.mixin;
 
-import java.util.UUID;
+import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.Shadow;
+import org.spongepowered.asm.mixin.injection.At;
+import org.spongepowered.asm.mixin.injection.Inject;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
 
-import com.flowpowered.math.vector.Vector2i;
-import com.flowpowered.math.vector.Vector3i;
+import de.bluecolored.bluemap.fabric.events.PlayerJoinCallback;
+import de.bluecolored.bluemap.fabric.events.PlayerLeaveCallback;
+import net.minecraft.network.ClientConnection;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.PlayerManager;
+import net.minecraft.server.network.ServerPlayerEntity;
 
-import de.bluecolored.bluemap.common.plugin.text.Text;
+@Mixin(PlayerManager.class)
+public abstract class MixinPlayerManager {
 
-public interface ServerEventListener {
-
-	default void onWorldSaveToDisk(UUID world) {};
+	@Shadow
+	public abstract MinecraftServer getServer();
 	
-	default void onBlockChange(UUID world, Vector3i blockPos) {};
+	@Inject(at = @At("RETURN"), method = "onPlayerConnect")
+	public void onPlayerConnect(ClientConnection connection, ServerPlayerEntity player, CallbackInfo ci) {
+		PlayerJoinCallback.EVENT.invoker().onPlayerJoin(this.getServer(), player);
+	}
 	
-	default void onChunkFinishedGeneration(UUID world, Vector2i chunkPos) {};
-	
-	default void onPlayerJoin(UUID playerUuid) {};
-	
-	default void onPlayerLeave(UUID playerUuid) {};
-	
-	default void onChatMessage(Text message) {};
+	@Inject(at = @At("HEAD"), method = "remove")
+	public void remove(ServerPlayerEntity player, CallbackInfo ci) {
+		PlayerLeaveCallback.EVENT.invoker().onPlayerLeave(this.getServer(), player);
+	}
 	
 }
