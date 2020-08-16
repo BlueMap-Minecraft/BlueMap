@@ -2,6 +2,7 @@ import $ from 'jquery';
 import {
 	Raycaster,
 	Vector2,
+	Vector3,
 	BoxBufferGeometry,
 	Mesh,
 	MeshBasicMaterial
@@ -155,10 +156,21 @@ export default class HudInfo {
 				let lrpath = this.blueMap.dataRoot + this.blueMap.map + '/lowres/';
 				lrpath += pathFromCoords(lowresTile.x, lowresTile.y);
 				lrpath += '.json';
+
+				//chunk
+				let chunkCoords = new Vector3(block.x, block.y, block.z).divide({x:16,y:16,z:16}).floor();
+				let chunk = `x:${chunkCoords.x}, y:${chunkCoords.y}, z:${chunkCoords.z}`;
+
+				//region
+				let regionCoords = new Vector2(block.x, block.z).divide({x:512,y:512}).floor();
+				let region = `r.${regionCoords.x}.${regionCoords.y}.mca`;
+
 				$(`
 					<div class="files">
 						<span class="value">${hrpath}</span><br>
-						<span class="value">${lrpath}</span>
+						<span class="value">${lrpath}</span><br>
+						<span class="value">chunk: ${chunk}</span><br>
+						<span class="value">region: ${region}</span>
 					</div>
 				`).appendTo(content);
 			}
