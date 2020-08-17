@@ -103,7 +103,7 @@ export default class PlayerMarker extends Marker {
 
 	onStopFollowing = event => {
 		if(this.follow) {
-			this.follow = true;
+			this.follow = false;
 			this.iconElement.removeClass("following");
 		}
 	};
