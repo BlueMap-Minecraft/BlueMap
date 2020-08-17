@@ -27,7 +27,7 @@ export default class PlayerMarker extends Marker {
 		if (!this.renderObject){
 			this.iconElement = $(`<div class="marker-player"><img src="assets/playerheads/${this.player}.png" onerror="this.onerror=null;this.src='${STEVE}';"><div class="nameplate">${this.label}</div></div>`);
 			this.iconElement.find("img").click(this.onClick);
-			$(window).on('mousedown touchstart', this.onStopFollowing);
+			$(window).on('mousedown touchstart', this.onUserInput);
 
 			this.renderObject = new CSS2DObject(this.iconElement[0]);
 			this.renderObject.position.copy(this.position);
@@ -47,6 +47,12 @@ export default class PlayerMarker extends Marker {
 			this.blueMap.hudScene.add(this.renderObject);
 		} else {
 			this.blueMap.hudScene.remove(this.renderObject);
+
+			if (this.follow) {
+				this.follow = false;
+				this.iconElement.removeClass("following");
+				this.blueMap.controls.targetPosition.y = 0;
+			}
 		}
 	}
 
@@ -99,8 +105,8 @@ export default class PlayerMarker extends Marker {
 		this.blueMap.controls.targetPosition.copy(this.position);
 	};
 
-	onStopFollowing = e => {
-		if (e.type !== "mousedown" || e.button === 0) {
+	onUserInput = e => {
+		if ((e.type !== "mousedown" || e.button === 0) && this.follow) {
 			this.follow = false;
 			this.iconElement.removeClass("following");
 			this.blueMap.controls.targetPosition.y = 0;
