@@ -79,7 +79,7 @@ export default class Controls {
 		this.camera = camera;
 		this.element = element;
 		this.heightScene = heightScene;
-		this.minHeight = 0;
+		this.terrainHeight = 70;
 
 		this.raycaster = new Raycaster();
 		this.rayDirection = new Vector3(0, -1, 0);
@@ -159,8 +159,8 @@ export default class Controls {
 	}
 
 	resetPosition() {
-		this.position = new Vector3(0, 70, 0);
-		this.targetPosition = new Vector3(0, 70, 0);
+		this.position = new Vector3(0, 0, 0);
+		this.targetPosition = new Vector3(0, 0, 0);
 
 		this.distance = 5000;
 		this.targetDistance = 1000;
@@ -177,13 +177,10 @@ export default class Controls {
 
 		let changed = false;
 
-		let zoomLerp = (this.distance - 100) / 200;
-		if (zoomLerp < 0) zoomLerp = 0;
-		if (zoomLerp > 1) zoomLerp = 1;
-		this.targetPosition.y = 300 * zoomLerp + this.minHeight * (1 - zoomLerp);
+		let targetY = Math.max(this.targetPosition.y, this.terrainHeight);
 
 		this.position.x += (this.targetPosition.x - this.position.x) * this.settings.move.smooth;
-		this.position.y += (this.targetPosition.y - this.position.y) * this.settings.move.smoothY;
+		this.position.y += (targetY - this.position.y) * this.settings.move.smoothY;
 		this.position.z += (this.targetPosition.z - this.position.z) * this.settings.move.smooth;
 
 		this.distance += (this.targetDistance - this.distance) * this.settings.zoom.smooth;
@@ -241,7 +238,7 @@ export default class Controls {
 			let intersects = this.raycaster.intersectObjects(tileChildren(this.targetPosition));
 
 			if (intersects.length > 0) {
-				this.minHeight = intersects[0].point.y;
+				this.terrainHeight = intersects[0].point.y;
 			}
 		} catch (ignore){}
 
@@ -251,8 +248,8 @@ export default class Controls {
 			this.raycaster.set(rayStart, this.rayDirection);
 			let intersects = this.raycaster.intersectObjects(tileChildren(this.camera.position));
 			if (intersects.length > 0) {
-				if (intersects[0].point.y > this.minHeight) {
-					this.minHeight = intersects[0].point.y;
+				if (intersects[0].point.y > this.terrainHeight) {
+					this.terrainHeight = intersects[0].point.y;
 				}
 			}
 		} catch (ignore){}

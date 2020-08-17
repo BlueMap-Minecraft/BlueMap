@@ -206,18 +206,16 @@ export default class BlueMap {
 				this.controls.direction = this.controls.targetDirection;
 				this.controls.distance = this.controls.targetDistance;
 				this.controls.angle = this.controls.targetAngle;
-				this.controls.targetPosition.y = this.controls.minHeight;
 				this.controls.position.copy(this.controls.targetPosition);
 			}
 		}
 		if (hashVars.length >= 7){
 			let height = parseInt(hashVars[6]);
 			if (!isNaN(height)){
-				this.controls.minHeight = height;
-				this.controls.targetPosition.y = height;
+				this.controls.terrainHeight = height;
 
 				if (!smooth) {
-					this.controls.position.copy(this.controls.targetPosition);
+					if (this.controls.position.y < this.controls.terrainHeight) this.controls.position.y = this.controls.terrainHeight;
 				}
 			}
 		}
@@ -257,7 +255,7 @@ export default class BlueMap {
 				+ ':' + Math.round(this.controls.targetDirection * 100) / 100
 				+ ':' + Math.round(this.controls.targetDistance * 100) / 100
 				+ ':' + Math.ceil(this.controls.targetAngle * 100) / 100
-				+ ':' + Math.floor(this.controls.targetPosition.y);
+				+ ':' + Math.floor(this.controls.terrainHeight);
 		// only update hash when changed
 		if (window.location.hash !== this.locationHash) {
 			history.replaceState(undefined, undefined, this.locationHash);

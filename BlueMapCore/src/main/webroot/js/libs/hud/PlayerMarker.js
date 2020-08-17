@@ -62,8 +62,7 @@ export default class PlayerMarker extends Marker {
 			}
 
 			if (this.follow){
-				this.blueMap.controls.targetPosition.x = this.position.x;
-				this.blueMap.controls.targetPosition.z = this.position.z;
+				this.blueMap.controls.targetPosition.copy(this.position);
 			}
 		}
 	};
@@ -97,14 +96,14 @@ export default class PlayerMarker extends Marker {
 		this.follow = true;
 		this.iconElement.addClass("following");
 
-		this.blueMap.controls.targetPosition.x = this.position.x;
-		this.blueMap.controls.targetPosition.z = this.position.z;
+		this.blueMap.controls.targetPosition.copy(this.position);
 	};
 
-	onStopFollowing = event => {
-		if(this.follow) {
+	onStopFollowing = e => {
+		if (e.type !== "mousedown" || e.button === 0) {
 			this.follow = false;
 			this.iconElement.removeClass("following");
+			this.blueMap.controls.targetPosition.y = 0;
 		}
 	};
 
