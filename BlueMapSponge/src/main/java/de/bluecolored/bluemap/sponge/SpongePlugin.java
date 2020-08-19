@@ -58,6 +58,7 @@ import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.sponge.SpongeCommands.SpongeCommandProxy;
 import net.querz.nbt.CompoundTag;
 import net.querz.nbt.NBTUtil;
@@ -74,11 +75,7 @@ public class SpongePlugin implements ServerInterface {
 	@ConfigDir(sharedRoot = false)
 	private Path configurationDir;
 	
-	@SuppressWarnings("unused")
-	@Inject
-    private MetricsLite2 metrics;
-	
-	private Plugin bluemap;
+	private Plugin pluginInstance;
 	private SpongeCommands commands;
 
 	private SpongeExecutorService asyncExecutor;
@@ -88,14 +85,17 @@ public class SpongePlugin implements ServerInterface {
 	private List<SpongePlayer> onlinePlayerList;
 	
 	@Inject
-	public SpongePlugin(org.slf4j.Logger logger) {
+	public SpongePlugin(org.slf4j.Logger logger, MetricsLite2.Factory bstatsFactory) {
 		Logger.global = new Slf4jLogger(logger);
 		
 		this.onlinePlayerMap = new ConcurrentHashMap<>();
 		this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 		
-		this.bluemap = new Plugin("sponge", this);
-		this.commands = new SpongeCommands(bluemap);
+		this.pluginInstance = new Plugin("sponge", this);
+		this.commands = new SpongeCommands(pluginInstance);
+		
+		//init bstats metrics
+		bstatsFactory.make(5911);
 	}
 	
 	@Listener
@@ -121,10 +121,11 @@ public class SpongePlugin implements ServerInterface {
 		asyncExecutor.execute(() -> {
 			try {
 				Logger.global.logInfo("Loading...");
-				bluemap.load();
-				if (bluemap.isLoaded()) Logger.global.logInfo("Loaded!");
-			} catch (Throwable t) {
-				Logger.global.logError("Failed to load!", t);
+				pluginInstance.load();
+				if (pluginInstance.isLoaded()) Logger.global.logInfo("Loaded!");
+			} catch (IOException | ParseResourceException | RuntimeException e) {
+				Logger.global.logError("Failed to load!", e);
+				pluginInstance.unload();
 			}
 		});
 	}
@@ -133,7 +134,7 @@ public class SpongePlugin implements ServerInterface {
 	public void onServerStop(GameStoppingEvent evt) {
 		Logger.global.logInfo("Stopping...");
 		Sponge.getScheduler().getScheduledTasks(this).forEach(t -> t.cancel());
-		bluemap.unload();
+		pluginInstance.unload();
 		Logger.global.logInfo("Saved and stopped!");
 	}
 	
@@ -142,15 +143,15 @@ public class SpongePlugin implements ServerInterface {
 		asyncExecutor.execute(() -> {
 			try {
 				Logger.global.logInfo("Reloading...");
-				bluemap.reload();
+				pluginInstance.reload();
 				Logger.global.logInfo("Reloaded!");
-			} catch (Exception e) {
+			} catch (IOException | ParseResourceException | RuntimeException e) {
 				Logger.global.logError("Failed to load!", e);
+				pluginInstance.unload();
 			}
 		});
 	}
 
-	
 	@Listener
 	public void onPlayerJoin(ClientConnectionEvent.Join evt) {
 		SpongePlayer player = new SpongePlayer(evt.getTargetEntity());
@@ -186,8 +187,8 @@ public class SpongePlugin implements ServerInterface {
 			long most = spongeData.getLong("UUIDMost");
 			long least = spongeData.getLong("UUIDLeast");
 			return new UUID(most, least);
-		} catch (Throwable t) {
-			throw new IOException("Failed to read level_sponge.dat", t);
+		} catch (IOException | RuntimeException e) {
+			throw new IOException("Failed to read level_sponge.dat", e);
 		}
 	}
 	

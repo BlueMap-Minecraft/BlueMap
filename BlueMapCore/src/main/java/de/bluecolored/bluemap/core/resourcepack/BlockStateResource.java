@@ -192,8 +192,8 @@ public class BlockStateResource {
 					variant.checkValid();
 
 					blockState.variants.add(variant);
-				} catch (Throwable t) {
-					Logger.global.logWarning("Failed to parse a variant of " + blockstateFile + ": " + t);
+				} catch (ParseResourceException | RuntimeException e) {
+					Logger.global.logWarning("Failed to parse a variant of " + blockstateFile + ": " + e);
 				}
 			}
 
@@ -211,8 +211,8 @@ public class BlockStateResource {
 					variant.checkValid();
 
 					blockState.multipart.add(variant);
-				} catch (Throwable t) {
-					Logger.global.logWarning("Failed to parse a multipart-part of " + blockstateFile + ": " + t);
+				} catch (ParseResourceException | RuntimeException e) {
+					Logger.global.logWarning("Failed to parse a multipart-part of " + blockstateFile + ": " + e);
 				}
 			}
 

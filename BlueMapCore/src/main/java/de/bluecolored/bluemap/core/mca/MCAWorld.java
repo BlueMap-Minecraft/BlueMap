@@ -142,15 +142,9 @@ public class MCAWorld implements World {
 	}
 	
 	public BlockState getBlockState(Vector3i pos) {
-		try {
-			
-			Vector2i chunkPos = blockToChunk(pos);
-			Chunk chunk = getChunk(chunkPos);
-			return chunk.getBlockState(pos);
-			
-		} catch (Exception ex) {
-			return BlockState.MISSING;
-		}
+		Vector2i chunkPos = blockToChunk(pos);
+		Chunk chunk = getChunk(chunkPos);
+		return chunk.getBlockState(pos);
 	}
 	
 	@Override
@@ -200,22 +194,22 @@ public class MCAWorld implements World {
 			Chunk chunk = CHUNK_CACHE.get(new WorldChunkHash(this, chunkPos), () -> this.loadChunkOrEmpty(chunkPos, 2, 1000));
 			return chunk;
 		} catch (UncheckedExecutionException | ExecutionException e) {
+			if (e.getCause() instanceof InterruptedException) Thread.currentThread().interrupt();
 			throw new RuntimeException(e.getCause());
 		}
 	}
 	
-	private Chunk loadChunkOrEmpty(Vector2i chunkPos, int tries, long tryInterval) {
+	private Chunk loadChunkOrEmpty(Vector2i chunkPos, int tries, long tryInterval) throws InterruptedException {
 		Exception loadException = null;
 		for (int i = 0; i < tries; i++) {
 			try {
 				return loadChunk(chunkPos);
-			} catch (Exception e) {
+			} catch (IOException | RuntimeException e) {
+				if (loadException != null) e.addSuppressed(loadException);
 				loadException = e;
 				
 				if (tryInterval > 0 && i+1 < tries) {
-					try {
-						Thread.sleep(tryInterval);
-					} catch (InterruptedException interrupt) {}
+					Thread.sleep(tryInterval);
 				}
 			}
 		}
@@ -261,7 +255,7 @@ public class MCAWorld implements World {
 			} else {
 				throw new IOException("Invalid data tag: " + (tag == null ? "null" : tag.getClass().getName()));
 			}
-		} catch (Exception e) {
+		} catch (RuntimeException | IOException e) {
 			throw new IOException("Exception trying to load chunk (" + chunkPos + ")", e);
 		}
 	}
@@ -312,7 +306,7 @@ public class MCAWorld implements World {
 						}
 					}
 				}
-			} catch (Exception ex) {
+			} catch (RuntimeException | IOException ex) {
 				Logger.global.logWarning("Failed to read .mca file: " + file.getAbsolutePath() + " (" + ex.toString() + ")");
 			}
 		}

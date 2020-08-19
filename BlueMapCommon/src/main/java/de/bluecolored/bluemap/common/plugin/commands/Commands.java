@@ -60,6 +60,7 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.Chunk;
 import de.bluecolored.bluemap.core.mca.ChunkAnvil112;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
+import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.World;
 
@@ -307,7 +308,7 @@ public class Commands<S> {
 					source.sendMessage(Text.of(TextColor.RED, "Could not load BlueMap! See the console for details!"));
 				}
 
-			} catch (Exception ex) {
+			} catch (IOException | ParseResourceException | RuntimeException ex) {
 				Logger.global.logError("Failed to reload BlueMap!", ex);
 				
 				source.sendMessage(Text.of(TextColor.RED, "There was an error reloading BlueMap! See the console for details!"));
