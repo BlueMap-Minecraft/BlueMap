@@ -56,12 +56,13 @@ import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 
 public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listener {
 	
 	private static BukkitPlugin instance;
 	
-	private Plugin bluemap;
+	private Plugin pluginInstance;
 	private EventForwarder eventForwarder;
 	private BukkitCommands commands;
 	
@@ -76,15 +77,15 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 		this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 
 		this.eventForwarder = new EventForwarder();
-		this.bluemap = new Plugin("bukkit", this);
-		this.commands = new BukkitCommands(this.bluemap);
+		this.pluginInstance = new Plugin("bukkit", this);
+		this.commands = new BukkitCommands(this.pluginInstance);
 		
 		BukkitPlugin.instance = this;
 	}
 	
 	@Override
 	public void onEnable() {
-		new MetricsLite(this);
+		new MetricsLite(this, 5912);
 		
 		//save world so the level.dat is present on new worlds
 		Logger.global.logInfo("Saving all worlds once, to make sure the level.dat is present...");
@@ -113,6 +114,15 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 		//tab completions
 		getServer().getPluginManager().registerEvents(commands, this);
 		
+		//update online-player collections
+		this.onlinePlayerList.clear();
+		this.onlinePlayerMap.clear();
+		for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) {
+			BukkitPlayer bukkitPlayer = new BukkitPlayer(player);
+			onlinePlayerMap.put(player.getUniqueId(), bukkitPlayer);
+			onlinePlayerList.add(bukkitPlayer);
+		}
+		
 		//start updating players
 		getServer().getScheduler().runTaskTimer(this, this::updateSomePlayers, 1, 1);
 		
@@ -120,10 +130,11 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 		getServer().getScheduler().runTaskAsynchronously(this, () -> {
 			try {
 				Logger.global.logInfo("Loading...");
-				this.bluemap.load();
-				if (bluemap.isLoaded()) Logger.global.logInfo("Loaded!");
-			} catch (Throwable t) {
-				Logger.global.logError("Failed to load!", t);
+				this.pluginInstance.load();
+				if (pluginInstance.isLoaded()) Logger.global.logInfo("Loaded!");
+			} catch (IOException | ParseResourceException | RuntimeException e) {
+				Logger.global.logError("Failed to load!", e);
+				this.pluginInstance.unload();
 			}
 		});
 	}
@@ -132,7 +143,7 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 	public void onDisable() {
 		Logger.global.logInfo("Stopping...");
 		getServer().getScheduler().cancelTasks(this);
-		bluemap.unload();
+		pluginInstance.unload();
 		Logger.global.logInfo("Saved and stopped!");
 	}
 
@@ -165,6 +176,7 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 		try {
 			return futureUUID.get();
 		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
 			throw new IOException(e);
 		} catch (ExecutionException e) {
 			if (e.getCause() instanceof IOException) {
@@ -197,7 +209,7 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 	}
 	
 	public Plugin getBlueMap() {
-		return bluemap;
+		return pluginInstance;
 	}
 
 	public static BukkitPlugin getInstance() {

@@ -37,6 +37,7 @@ import javax.net.ssl.HttpsURLConnection;
 import com.google.gson.JsonObject;
 
 import de.bluecolored.bluemap.core.BlueMap;
+import de.bluecolored.bluemap.core.logger.Logger;
 
 public class Metrics {
 
@@ -53,7 +54,9 @@ public class Metrics {
 		
 		try {
 			sendData(data.toString());
-		} catch (Exception ex) {}
+		} catch (IOException | RuntimeException ex) {
+			Logger.global.logDebug("Failed to send Metrics-Report: " + ex);
+		}
 	}
 	
 	private static String sendData(String data) throws MalformedURLException, IOException {
