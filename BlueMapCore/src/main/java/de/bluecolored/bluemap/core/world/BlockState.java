@@ -183,7 +183,7 @@ public class BlockState {
 			String blockId = m.group(1).trim();
 			
 			return new BlockState(blockId, pt);
-		} catch (Exception ex) {
+		} catch (RuntimeException ex) {
 			throw new IllegalArgumentException("'" + serializedBlockState + "' could not be parsed to a BlockState!");
 		}
 	}

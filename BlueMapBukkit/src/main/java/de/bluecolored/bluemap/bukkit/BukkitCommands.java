@@ -86,7 +86,9 @@ public class BukkitCommands implements Listener {
 				completions.sort((s1, s2) -> s1.compareToIgnoreCase(s2));
 				evt.setCompletions(completions);
 			}
-		} catch (InterruptedException | ExecutionException | TimeoutException ignore) {}
+		} catch (InterruptedException ignore) {
+			Thread.currentThread().interrupt();
+		} catch (ExecutionException | TimeoutException ignore) {}
 	}
 	
 	private class CommandProxy extends BukkitCommand {

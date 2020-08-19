@@ -116,7 +116,9 @@ public class SpongeCommands {
 						completions.add(text);
 					}
 				}
-			} catch (InterruptedException | ExecutionException | TimeoutException ignore) {}
+			} catch (InterruptedException ignore) {
+				Thread.currentThread().interrupt();
+			} catch (ExecutionException | TimeoutException ignore) {}
 
 			completions.sort((s1, s2) -> s1.compareToIgnoreCase(s2));
 			return completions;

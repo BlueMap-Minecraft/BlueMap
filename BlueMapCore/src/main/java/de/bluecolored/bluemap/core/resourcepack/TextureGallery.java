@@ -167,13 +167,13 @@ public class TextureGallery {
 					boolean transparent = texture.get("transparent").getAsBoolean();
 					Vector4f color = readVector4f(texture.get("color").getAsJsonArray());
 					textureList.set(i, new Texture(i, path, color, transparent, EMPTY_BASE64));
-				} catch (Exception ex) {
+				} catch (ParseResourceException | RuntimeException ex) {
 					Logger.global.logWarning("Failed to load texture with id " + i + " from texture file " + file + "!");
 				}
 			}
 		} catch (IOException ex) {
 			throw ex;
-		} catch (Exception ex) {
+		} catch (RuntimeException ex) {
 			throw new ParseResourceException("Invalid texture file format!", ex);
 		} finally {
 			regenerateMap();
