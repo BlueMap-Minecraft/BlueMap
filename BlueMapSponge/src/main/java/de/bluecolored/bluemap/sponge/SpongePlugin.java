@@ -75,10 +75,6 @@ public class SpongePlugin implements ServerInterface {
 	@ConfigDir(sharedRoot = false)
 	private Path configurationDir;
 	
-	@SuppressWarnings("unused")
-	@Inject
-    private MetricsLite2 metrics;
-	
 	private Plugin pluginInstance;
 	private SpongeCommands commands;
 
@@ -89,7 +85,7 @@ public class SpongePlugin implements ServerInterface {
 	private List<SpongePlayer> onlinePlayerList;
 	
 	@Inject
-	public SpongePlugin(org.slf4j.Logger logger) {
+	public SpongePlugin(org.slf4j.Logger logger, MetricsLite2.Factory bstatsFactory) {
 		Logger.global = new Slf4jLogger(logger);
 		
 		this.onlinePlayerMap = new ConcurrentHashMap<>();
@@ -97,6 +93,9 @@ public class SpongePlugin implements ServerInterface {
 		
 		this.pluginInstance = new Plugin("sponge", this);
 		this.commands = new SpongeCommands(pluginInstance);
+		
+		//init bstats metrics
+		bstatsFactory.make(5911);
 	}
 	
 	@Listener
