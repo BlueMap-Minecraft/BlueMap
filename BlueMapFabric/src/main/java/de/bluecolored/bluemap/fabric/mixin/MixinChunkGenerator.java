@@ -41,7 +41,7 @@ public class MixinChunkGenerator {
 
 	@Inject(at = @At("RETURN"), method = "generateFeatures")
 	public void generateFeatures(ChunkRegion region, StructureAccessor accessor, CallbackInfo ci) {
-		ChunkFinalizeCallback.EVENT.invoker().onChunkFinalized(region.getWorld(), new Vector2i(region.getCenterChunkX(), region.getCenterChunkZ()));
+		ChunkFinalizeCallback.EVENT.invoker().onChunkFinalized(region.toServerWorld(), new Vector2i(region.getCenterChunkX(), region.getCenterChunkZ()));
 	}
 	
 }
