@@ -340,15 +340,19 @@ public class Plugin {
 		serverInterface.unregisterAllListeners();
 
 		//stop scheduled threads
-		if (metricsThread != null) metricsThread.interrupt();
-		try {metricsThread.join(1000);} catch (InterruptedException ignore) { Thread.currentThread().interrupt(); }
-		if (metricsThread.isAlive()) Logger.global.logWarning("The metricsThread did not terminate correctly in time!");
-		metricsThread = null;
+		if (metricsThread != null) {
+			metricsThread.interrupt();
+			try {metricsThread.join(1000);} catch (InterruptedException ignore) { Thread.currentThread().interrupt(); }
+			if (metricsThread.isAlive()) Logger.global.logWarning("The metricsThread did not terminate correctly in time!");
+			metricsThread = null;
+		}
 		
-		if (periodicalSaveThread != null) periodicalSaveThread.interrupt();
-		try {periodicalSaveThread.join(1000);} catch (InterruptedException ignore) { Thread.currentThread().interrupt(); }
-		if (periodicalSaveThread.isAlive()) Logger.global.logWarning("The periodicalSaveThread did not terminate correctly in time!");
-		periodicalSaveThread = null;
+		if (periodicalSaveThread != null) {
+			periodicalSaveThread.interrupt();
+			try {periodicalSaveThread.join(1000);} catch (InterruptedException ignore) { Thread.currentThread().interrupt(); }
+			if (periodicalSaveThread.isAlive()) Logger.global.logWarning("The periodicalSaveThread did not terminate correctly in time!");
+			periodicalSaveThread = null;
+		}
 		
 		//stop services
 		if (renderManager != null) renderManager.stop();
