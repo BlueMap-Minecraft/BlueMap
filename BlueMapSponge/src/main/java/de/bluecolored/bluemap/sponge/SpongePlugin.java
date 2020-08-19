@@ -79,7 +79,7 @@ public class SpongePlugin implements ServerInterface {
 	@Inject
     private MetricsLite2 metrics;
 	
-	private Plugin bluemap;
+	private Plugin pluginInstance;
 	private SpongeCommands commands;
 
 	private SpongeExecutorService asyncExecutor;
@@ -95,8 +95,8 @@ public class SpongePlugin implements ServerInterface {
 		this.onlinePlayerMap = new ConcurrentHashMap<>();
 		this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 		
-		this.bluemap = new Plugin("sponge", this);
-		this.commands = new SpongeCommands(bluemap);
+		this.pluginInstance = new Plugin("sponge", this);
+		this.commands = new SpongeCommands(pluginInstance);
 	}
 	
 	@Listener
@@ -122,10 +122,11 @@ public class SpongePlugin implements ServerInterface {
 		asyncExecutor.execute(() -> {
 			try {
 				Logger.global.logInfo("Loading...");
-				bluemap.load();
-				if (bluemap.isLoaded()) Logger.global.logInfo("Loaded!");
+				pluginInstance.load();
+				if (pluginInstance.isLoaded()) Logger.global.logInfo("Loaded!");
 			} catch (IOException | ParseResourceException | RuntimeException e) {
 				Logger.global.logError("Failed to load!", e);
+				pluginInstance.unload();
 			}
 		});
 	}
@@ -134,7 +135,7 @@ public class SpongePlugin implements ServerInterface {
 	public void onServerStop(GameStoppingEvent evt) {
 		Logger.global.logInfo("Stopping...");
 		Sponge.getScheduler().getScheduledTasks(this).forEach(t -> t.cancel());
-		bluemap.unload();
+		pluginInstance.unload();
 		Logger.global.logInfo("Saved and stopped!");
 	}
 	
@@ -143,11 +144,11 @@ public class SpongePlugin implements ServerInterface {
 		asyncExecutor.execute(() -> {
 			try {
 				Logger.global.logInfo("Reloading...");
-				bluemap.reload();
+				pluginInstance.reload();
 				Logger.global.logInfo("Reloaded!");
 			} catch (IOException | ParseResourceException | RuntimeException e) {
 				Logger.global.logError("Failed to load!", e);
-				bluemap.unload();
+				pluginInstance.unload();
 			}
 		});
 	}

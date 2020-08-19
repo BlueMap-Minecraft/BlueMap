@@ -62,7 +62,7 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 	
 	private static BukkitPlugin instance;
 	
-	private Plugin bluemap;
+	private Plugin pluginInstance;
 	private EventForwarder eventForwarder;
 	private BukkitCommands commands;
 	
@@ -77,8 +77,8 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 		this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 
 		this.eventForwarder = new EventForwarder();
-		this.bluemap = new Plugin("bukkit", this);
-		this.commands = new BukkitCommands(this.bluemap);
+		this.pluginInstance = new Plugin("bukkit", this);
+		this.commands = new BukkitCommands(this.pluginInstance);
 		
 		BukkitPlugin.instance = this;
 	}
@@ -130,11 +130,11 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 		getServer().getScheduler().runTaskAsynchronously(this, () -> {
 			try {
 				Logger.global.logInfo("Loading...");
-				this.bluemap.load();
-				if (bluemap.isLoaded()) Logger.global.logInfo("Loaded!");
+				this.pluginInstance.load();
+				if (pluginInstance.isLoaded()) Logger.global.logInfo("Loaded!");
 			} catch (IOException | ParseResourceException | RuntimeException e) {
 				Logger.global.logError("Failed to load!", e);
-				this.bluemap.unload();
+				this.pluginInstance.unload();
 			}
 		});
 	}
@@ -143,7 +143,7 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 	public void onDisable() {
 		Logger.global.logInfo("Stopping...");
 		getServer().getScheduler().cancelTasks(this);
-		bluemap.unload();
+		pluginInstance.unload();
 		Logger.global.logInfo("Saved and stopped!");
 	}
 
@@ -209,7 +209,7 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 	}
 	
 	public Plugin getBlueMap() {
-		return bluemap;
+		return pluginInstance;
 	}
 
 	public static BukkitPlugin getInstance() {
