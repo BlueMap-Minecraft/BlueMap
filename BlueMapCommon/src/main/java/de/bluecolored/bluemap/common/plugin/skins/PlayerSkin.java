@@ -73,7 +73,7 @@ public class PlayerSkin {
 				Logger.global.logDebug("Failed to load player-skin from mojang-servers: " + e);
 			} catch (IOException e) {
 				Logger.global.logError("Failed to write player-head image!", e);
-			} catch (InterruptedException ignore) {}
+			} catch (InterruptedException ignore) { Thread.currentThread().interrupt(); }
 		}).start();
 	}
 	
@@ -87,7 +87,7 @@ public class PlayerSkin {
 			Graphics2D g = head.createGraphics();
 			g.drawImage(layer1, 0, 0, null);
 			g.drawImage(layer2, 0, 0, null);
-		} catch (Throwable t) { // There might be problems with headless servers when loading the graphics class
+		} catch (Throwable t) { // There might be problems with headless servers when loading the graphics class, so we catch every exception and error on purpose here
 			Logger.global.noFloodWarning("headless-graphics-fail", 
 					"Could not access Graphics2D to render player-skin texture. Try adding '-Djava.awt.headless=true' to your startup flags or ignore this warning.");
 			

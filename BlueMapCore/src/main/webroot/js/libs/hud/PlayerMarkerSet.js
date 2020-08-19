@@ -42,8 +42,11 @@ export default class PlayerMarkerSet {
 			);
 		}).then((liveData) => {
 			this.updateWith(liveData)
-		}).catch((e) => {
-			console.error("Failed to update player-markers!", e);
+		}).catch(() => {
+			this.marker.forEach(marker => {
+				marker.online = false;
+				marker.setVisible(false);
+			});
 		});
 	}
 

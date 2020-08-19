@@ -116,6 +116,7 @@ public class ForgeMod implements ServerInterface {
 				if (pluginInstance.isLoaded()) Logger.global.logInfo("Loaded!");
 			} catch (IOException | ParseResourceException e) {
 				Logger.global.logError("Failed to load bluemap!", e);
+				pluginInstance.unload();
 			}
 		}).start();
     }

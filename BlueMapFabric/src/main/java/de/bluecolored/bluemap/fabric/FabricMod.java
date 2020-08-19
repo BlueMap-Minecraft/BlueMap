@@ -114,6 +114,7 @@ public class FabricMod implements ModInitializer, ServerInterface {
 					if (pluginInstance.isLoaded()) Logger.global.logInfo("BlueMap loaded!");
 				} catch (IOException | ParseResourceException e) {
 					Logger.global.logError("Failed to load bluemap!", e);
+					pluginInstance.unload();
 				}
 			}).start();
 		});

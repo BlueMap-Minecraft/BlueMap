@@ -66,7 +66,7 @@ public class MapUpdateHandler implements ServerEventListener {
 					}
 					
 				}
-			} catch (InterruptedException ignore) {} 
+			} catch (InterruptedException ignore) { Thread.currentThread().interrupt(); } 
 			
 		}).start();
 	}

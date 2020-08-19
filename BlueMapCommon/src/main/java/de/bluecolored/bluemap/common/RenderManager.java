@@ -75,7 +75,6 @@ public class RenderManager {
 		for (int i = 0; i < renderThreads.length; i++) {
 			if (renderThreads[i] != null) {
 				renderThreads[i].interrupt();
-				renderThreads[i] = null;
 			}
 		}
 		
@@ -141,7 +140,7 @@ public class RenderManager {
 	private void renderThread() {
 		RenderTicket ticket = null;
 		
-		while (!Thread.interrupted() && running) {
+		while (running) {
 			synchronized (renderTickets) {
 				ticket = renderTickets.poll();
 				if (ticket != null) renderTicketMap.remove(ticket);
@@ -163,17 +162,22 @@ public class RenderManager {
 			if (ticket != null) {
 				try {
 					ticket.render();
-				} catch (Exception e) {
+				} catch (RuntimeException e) {
 					//catch possible runtime exceptions, display them, and wait a while .. then resurrect this render-thread
 					Logger.global.logError("Unexpected exception in render-thread!", e);
 					try {
 						Thread.sleep(10000);
-					} catch (InterruptedException interrupt) { break; }
+					} catch (InterruptedException interrupt) { Thread.currentThread().interrupt(); break; }
 				}
 			} else {
 				try {
 					Thread.sleep(1000); // we don't need a super fast response time, so waiting a second is totally fine
-				} catch (InterruptedException interrupt) { break; }
+				} catch (InterruptedException interrupt) { Thread.currentThread().interrupt(); break; }
+			}
+			
+			if (Thread.interrupted()) {
+				Thread.currentThread().interrupt();
+				break;
 			}
 		}
 	}
