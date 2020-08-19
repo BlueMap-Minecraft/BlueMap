@@ -20,7 +20,7 @@ configurations {
 }
 
 dependencies {
-	minecraft 'net.minecraftforge:forge:1.16.1-32.0.97'
+	minecraft 'net.minecraftforge:forge:1.16.2-33.0.7'
 	
     include (project(':BlueMapCommon')) {
     	//exclude dependencies provided by forge
