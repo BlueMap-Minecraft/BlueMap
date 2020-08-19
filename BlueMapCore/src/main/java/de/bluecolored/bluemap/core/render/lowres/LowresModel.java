@@ -37,6 +37,7 @@ import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.zip.GZIPOutputStream;
 
 import com.flowpowered.math.vector.Vector2i;
@@ -116,6 +117,9 @@ public class LowresModel {
 			try {
 				FileUtils.waitForFile(file, 10, TimeUnit.SECONDS);
 			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				throw new IOException("Failed to get write-access to file: " + file, e);
+			} catch (TimeoutException e) {
 				throw new IOException("Failed to get write-access to file: " + file, e);
 			}
 

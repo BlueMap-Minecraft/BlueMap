@@ -58,6 +58,7 @@ import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.sponge.SpongeCommands.SpongeCommandProxy;
 import net.querz.nbt.CompoundTag;
 import net.querz.nbt.NBTUtil;
@@ -123,8 +124,8 @@ public class SpongePlugin implements ServerInterface {
 				Logger.global.logInfo("Loading...");
 				bluemap.load();
 				if (bluemap.isLoaded()) Logger.global.logInfo("Loaded!");
-			} catch (Throwable t) {
-				Logger.global.logError("Failed to load!", t);
+			} catch (IOException | ParseResourceException | RuntimeException e) {
+				Logger.global.logError("Failed to load!", e);
 			}
 		});
 	}
@@ -144,13 +145,13 @@ public class SpongePlugin implements ServerInterface {
 				Logger.global.logInfo("Reloading...");
 				bluemap.reload();
 				Logger.global.logInfo("Reloaded!");
-			} catch (Exception e) {
+			} catch (IOException | ParseResourceException | RuntimeException e) {
 				Logger.global.logError("Failed to load!", e);
+				bluemap.unload();
 			}
 		});
 	}
 
-	
 	@Listener
 	public void onPlayerJoin(ClientConnectionEvent.Join evt) {
 		SpongePlayer player = new SpongePlayer(evt.getTargetEntity());
@@ -186,8 +187,8 @@ public class SpongePlugin implements ServerInterface {
 			long most = spongeData.getLong("UUIDMost");
 			long least = spongeData.getLong("UUIDLeast");
 			return new UUID(most, least);
-		} catch (Throwable t) {
-			throw new IOException("Failed to read level_sponge.dat", t);
+		} catch (IOException | RuntimeException e) {
+			throw new IOException("Failed to read level_sponge.dat", e);
 		}
 	}
 	

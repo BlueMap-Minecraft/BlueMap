@@ -56,6 +56,7 @@ import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 
 public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listener {
 	
@@ -113,6 +114,15 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 		//tab completions
 		getServer().getPluginManager().registerEvents(commands, this);
 		
+		//update online-player collections
+		this.onlinePlayerList.clear();
+		this.onlinePlayerMap.clear();
+		for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) {
+			BukkitPlayer bukkitPlayer = new BukkitPlayer(player);
+			onlinePlayerMap.put(player.getUniqueId(), bukkitPlayer);
+			onlinePlayerList.add(bukkitPlayer);
+		}
+		
 		//start updating players
 		getServer().getScheduler().runTaskTimer(this, this::updateSomePlayers, 1, 1);
 		
@@ -122,8 +132,9 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 				Logger.global.logInfo("Loading...");
 				this.bluemap.load();
 				if (bluemap.isLoaded()) Logger.global.logInfo("Loaded!");
-			} catch (Throwable t) {
-				Logger.global.logError("Failed to load!", t);
+			} catch (IOException | ParseResourceException | RuntimeException e) {
+				Logger.global.logError("Failed to load!", e);
+				this.bluemap.unload();
 			}
 		});
 	}
@@ -165,6 +176,7 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 		try {
 			return futureUUID.get();
 		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
 			throw new IOException(e);
 		} catch (ExecutionException e) {
 			if (e.getCause() instanceof IOException) {

@@ -262,6 +262,7 @@ public class Plugin {
 					}
 				}
 			} catch (InterruptedException ex){
+				Thread.currentThread().interrupt();
 				return;
 			}
 		});
@@ -316,6 +317,7 @@ public class Plugin {
 					Thread.sleep(TimeUnit.MINUTES.toMillis(30));
 				}
 			} catch (InterruptedException ex){
+				Thread.currentThread().interrupt();
 				return;
 			}
 		});
@@ -339,9 +341,13 @@ public class Plugin {
 
 		//stop scheduled threads
 		if (metricsThread != null) metricsThread.interrupt();
+		try {metricsThread.join(1000);} catch (InterruptedException ignore) { Thread.currentThread().interrupt(); }
+		if (metricsThread.isAlive()) Logger.global.logWarning("The metricsThread did not terminate correctly in time!");
 		metricsThread = null;
 		
 		if (periodicalSaveThread != null) periodicalSaveThread.interrupt();
+		try {periodicalSaveThread.join(1000);} catch (InterruptedException ignore) { Thread.currentThread().interrupt(); }
+		if (periodicalSaveThread.isAlive()) Logger.global.logWarning("The periodicalSaveThread did not terminate correctly in time!");
 		periodicalSaveThread = null;
 		
 		//stop services

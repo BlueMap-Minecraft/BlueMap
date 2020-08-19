@@ -222,7 +222,7 @@ public class BlueMapCLI {
 		while(renderManager.getRenderTaskCount() != 0) {
 			try {
 				Thread.sleep(200);
-			} catch (InterruptedException e) {}
+			} catch (InterruptedException e) { Thread.currentThread().interrupt(); return; }
 			
 
 			long now = System.currentTimeMillis();
@@ -390,7 +390,7 @@ public class BlueMapCLI {
 				//wait a second to let the webserver start, looks nicer in the log
 				try {
 					Thread.sleep(1000);
-				} catch (InterruptedException ignore) {}
+				} catch (InterruptedException ignore) { Thread.currentThread().interrupt(); }
 			}
 			
 			
@@ -452,7 +452,7 @@ public class BlueMapCLI {
 					filename = file.getAbsolutePath();
 				}
 			}
-		} catch (Exception ex) {}
+		} catch (IOException ex) {}
 		
 		String command = "java -jar " + filename;
 		
