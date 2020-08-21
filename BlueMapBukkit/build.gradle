@@ -11,7 +11,7 @@ repositories {
 dependencies {
     shadow "org.bukkit:bukkit:1.12.2-R0.1-SNAPSHOT"
     
-    compile group: 'org.bstats', name: 'bstats-bukkit-lite', version: '1.7'
+    compile group: 'org.bstats', name: 'bstats-bukkit-lite', version: '1.5'
     
     compile (project(':BlueMapCommon')) {
     	//exclude dependencies provided by bukkit
