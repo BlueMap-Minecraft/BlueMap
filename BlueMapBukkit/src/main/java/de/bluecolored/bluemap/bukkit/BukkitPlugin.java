@@ -85,7 +85,6 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 	
 	@Override
 	public void onEnable() {
-		new MetricsLite(this, 5912);
 		
 		//save world so the level.dat is present on new worlds
 		Logger.global.logInfo("Saving all worlds once, to make sure the level.dat is present...");
@@ -137,6 +136,9 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 				this.pluginInstance.unload();
 			}
 		});
+		
+		//init bstats
+		new MetricsLite(this);
 	}
 	
 	@Override

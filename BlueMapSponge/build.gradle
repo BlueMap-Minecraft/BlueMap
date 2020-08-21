@@ -1,7 +1,7 @@
 dependencies {
     shadow "org.spongepowered:spongeapi:7.2.0"
     
-    compile group: 'org.bstats', name: 'bstats-sponge-lite', version: '1.7'
+    compile group: 'org.bstats', name: 'bstats-sponge-lite', version: '1.5'
     
     compile (project(':BlueMapCommon')) {
     	//exclude dependencies provided by sponge
