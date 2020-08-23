@@ -72,7 +72,12 @@ public class BukkitCommands implements Listener {
 	@EventHandler
 	public void onTabComplete(TabCompleteEvent evt) {
 		try {
-			Suggestions suggestions = dispatcher.getCompletionSuggestions(dispatcher.parse(evt.getBuffer().substring(1), evt.getSender())).get(100, TimeUnit.MILLISECONDS);
+			String input = evt.getBuffer();
+			if (input.length() > 0 && input.charAt(0) == '/') {
+				input = input.substring(1);
+			}
+			
+			Suggestions suggestions = dispatcher.getCompletionSuggestions(dispatcher.parse(input, evt.getSender())).get(100, TimeUnit.MILLISECONDS);
 			List<String> completions = new ArrayList<>();
 			for (Suggestion suggestion : suggestions.getList()) {
 				String text = suggestion.getText();
@@ -84,7 +89,7 @@ public class BukkitCommands implements Listener {
 			
 			if (!completions.isEmpty()) {
 				completions.sort((s1, s2) -> s1.compareToIgnoreCase(s2));
-				evt.setCompletions(completions);
+				evt.getCompletions().addAll(completions);
 			}
 		} catch (InterruptedException ignore) {
 			Thread.currentThread().interrupt();
