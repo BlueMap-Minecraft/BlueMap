@@ -31,9 +31,9 @@ import java.util.Map;
 
 import com.google.gson.stream.JsonWriter;
 
+import de.bluecolored.bluemap.common.plugin.PluginConfig;
 import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
-import de.bluecolored.bluemap.core.config.LiveAPISettings;
 import de.bluecolored.bluemap.core.webserver.HttpRequest;
 import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
 import de.bluecolored.bluemap.core.webserver.HttpResponse;
@@ -45,9 +45,9 @@ public class LiveAPIRequestHandler implements HttpRequestHandler {
 	private Map<String, HttpRequestHandler> liveAPIRequests;
 	private ServerInterface server;
 	
-	private LiveAPISettings config;
+	private PluginConfig config;
 	
-	public LiveAPIRequestHandler(ServerInterface server, LiveAPISettings config, HttpRequestHandler notFoundHandler) {
+	public LiveAPIRequestHandler(ServerInterface server, PluginConfig config, HttpRequestHandler notFoundHandler) {
 		this.server = server;
 		this.notFoundHandler = notFoundHandler;
 		

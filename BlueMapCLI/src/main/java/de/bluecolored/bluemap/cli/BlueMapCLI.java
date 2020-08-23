@@ -62,8 +62,8 @@ import de.bluecolored.bluemap.common.MapType;
 import de.bluecolored.bluemap.common.RenderManager;
 import de.bluecolored.bluemap.common.RenderTask;
 import de.bluecolored.bluemap.core.config.ConfigManager;
-import de.bluecolored.bluemap.core.config.MainConfig;
-import de.bluecolored.bluemap.core.config.MainConfig.MapConfig;
+import de.bluecolored.bluemap.core.config.CoreConfig;
+import de.bluecolored.bluemap.core.config.CoreConfig.MapConfig;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.metrics.Metrics;
@@ -95,7 +95,7 @@ public class BlueMapCLI {
 	public void renderMaps() throws IOException {
 		Preconditions.checkNotNull(resourcePack);
 		
-		MainConfig config = configManager.getMainConfig();
+		CoreConfig config = configManager.getCoreConfig();
 		configManager.loadResourceConfigs(resourcePack);
 		
 		config.getWebDataPath().toFile().mkdirs();
@@ -287,14 +287,14 @@ public class BlueMapCLI {
 	public void startWebserver() throws IOException {
 		Logger.global.logInfo("Starting webserver ...");
 		
-		BlueMapWebServer webserver = new BlueMapWebServer(configManager.getMainConfig());
+		BlueMapWebServer webserver = new BlueMapWebServer(configManager.getCoreConfig());
 		webserver.start();
 	}
 	
 	private boolean loadResources() throws IOException, ParseResourceException {
 		Logger.global.logInfo("Loading resources ...");
 
-		MainConfig config = configManager.getMainConfig();
+		CoreConfig config = configManager.getCoreConfig();
 		
 		File defaultResourceFile = config.getDataPath().resolve("minecraft-client-" + ResourcePack.MINECRAFT_CLIENT_VERSION + ".jar").toFile();
 		File resourceExtensionsFile = config.getDataPath().resolve("resourceExtensions.zip").toFile();
@@ -327,7 +327,7 @@ public class BlueMapCLI {
 	}
 	
 	private boolean handleMissingResources(File resourceFile) throws IOException {
-		if (configManager.getMainConfig().isDownloadAccepted()) {
+		if (configManager.getCoreConfig().isDownloadAccepted()) {
 			try {
 				Logger.global.logInfo("Downloading " + ResourcePack.MINECRAFT_CLIENT_URL + " to " + resourceFile.getCanonicalPath() + " ...");
 				ResourcePack.downloadDefaultResource(resourceFile);
@@ -339,7 +339,7 @@ public class BlueMapCLI {
 		} else {
 			Logger.global.logWarning("BlueMap is missing important resources!");
 			Logger.global.logWarning("You need to accept the download of the required files in order of BlueMap to work!");
-			Logger.global.logWarning("Please check " + configManager.getMainConfigFile().getCanonicalPath() + " and try again!");
+			Logger.global.logWarning("Please check " + configManager.getCoreConfigFile().getCanonicalPath() + " and try again!");
 			return false;
 		}
 	}
@@ -367,23 +367,23 @@ public class BlueMapCLI {
 			URL cliDefaultsUrl = BlueMapCLI.class.getResource("/bluemap-cli-defaults.conf");
 			
 			ConfigManager config = new ConfigManager(configFolder, cliConfigUrl, cliDefaultsUrl);
-			boolean configCreated = !config.getMainConfigFile().exists();
+			boolean configCreated = !config.getCoreConfigFile().exists();
 			config.loadMainConfig();
 			
 			if (configCreated) {
-				Logger.global.logInfo("No config file found! Created default config here: " + config.getMainConfigFile().getCanonicalPath());
+				Logger.global.logInfo("No config file found! Created default config here: " + config.getCoreConfigFile().getCanonicalPath());
 				return;
 			}
 			
-			WebFilesManager webFilesManager = new WebFilesManager(config.getMainConfig().getWebRoot());
+			WebFilesManager webFilesManager = new WebFilesManager(config.getCoreConfig().getWebRoot());
 			if (webFilesManager.needsUpdate()) {
-				Logger.global.logInfo("Updating webfiles in " + config.getMainConfig().getWebRoot().normalize() + "...");
+				Logger.global.logInfo("Updating webfiles in " + config.getCoreConfig().getWebRoot().normalize() + "...");
 				webFilesManager.updateFiles();
 			}
 			
 			BlueMapCLI bluemap = new BlueMapCLI(config, configFolder, cmd.hasOption("f"));
 
-			if (config.getMainConfig().isWebserverEnabled()) {
+			if (config.getCoreConfig().isWebserverEnabled()) {
 				//start webserver
 				bluemap.startWebserver();
 
@@ -394,12 +394,12 @@ public class BlueMapCLI {
 			}
 			
 			
-			if (!config.getMainConfig().getMapConfigs().isEmpty()) {
+			if (!config.getCoreConfig().getMapConfigs().isEmpty()) {
 				//load resources
 				if (bluemap.loadResources()) {
 					
 					//metrics
-					if (config.getMainConfig().isMetricsEnabled()) Metrics.sendReportAsync("CLI");
+					if (config.getCoreConfig().isMetricsEnabled()) Metrics.sendReportAsync("CLI");
 					
 					//render maps
 					bluemap.renderMaps();

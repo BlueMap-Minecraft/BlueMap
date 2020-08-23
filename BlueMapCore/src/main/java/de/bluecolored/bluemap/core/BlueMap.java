@@ -35,7 +35,7 @@ public class BlueMap {
 	static {
 		String version = "DEV";
 		try {
-			version = GsonConfigurationLoader.builder().setURL(BlueMap.class.getResource("/core.json")).build().load().getNode("version").getString("DEV");
+			version = GsonConfigurationLoader.builder().setURL(BlueMap.class.getResource("/version.json")).build().load().getNode("version").getString("DEV");
 		} catch (IOException ex) {
 			Logger.global.logError("Failed to load core.json from resources!", ex);
 		}

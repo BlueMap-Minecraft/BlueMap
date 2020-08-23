@@ -27,7 +27,6 @@ package de.bluecolored.bluemap.core.web;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
@@ -36,14 +35,14 @@ import org.apache.commons.io.FileUtils;
 
 public class WebFilesManager {
 
-	private Path webRoot;
+	private File webRoot;
 	
-	public WebFilesManager(Path webRoot) {
+	public WebFilesManager(File webRoot) {
 		this.webRoot = webRoot;
 	}
 	
 	public boolean needsUpdate() {
-		if (!webRoot.resolve("index.html").toFile().exists()) return true;
+		if (!new File(webRoot, "index.html").exists()) return true;
 	
 		return false;
 	}
@@ -58,9 +57,9 @@ public class WebFilesManager {
 				Enumeration<? extends ZipEntry> entries = zipFile.entries();
 				while(entries.hasMoreElements()) {
 					ZipEntry zipEntry = entries.nextElement();
-					if (zipEntry.isDirectory()) webRoot.resolve(zipEntry.getName()).toFile().mkdirs();
+					if (zipEntry.isDirectory()) new File(webRoot, zipEntry.getName()).mkdirs();
 					else {
-						File target = webRoot.resolve(zipEntry.getName()).toFile();
+						File target = new File(webRoot, zipEntry.getName());
 						FileUtils.copyInputStreamToFile(zipFile.getInputStream(zipEntry), target);
 					}
 				}

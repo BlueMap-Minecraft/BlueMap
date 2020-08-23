@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3f;
 
-import de.bluecolored.bluemap.core.config.MainConfig.MapConfig;
+import de.bluecolored.bluemap.core.config.MapConfig;
 import de.bluecolored.bluemap.core.render.TileRenderer;
 import de.bluecolored.bluemap.core.util.MathUtils;
 import de.bluecolored.bluemap.core.world.World;
