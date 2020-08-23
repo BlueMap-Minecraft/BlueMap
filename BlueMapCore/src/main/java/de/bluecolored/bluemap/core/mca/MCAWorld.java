@@ -39,16 +39,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
-import com.google.common.util.concurrent.UncheckedExecutionException;
 
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.extensions.BlockStateExtension;
@@ -82,7 +81,6 @@ import net.querz.nbt.mca.MCAUtil;
 
 public class MCAWorld implements World {
 
-	private static final Cache<WorldChunkHash, Chunk> CHUNK_CACHE = CacheBuilder.newBuilder().maximumSize(500).build();	
 	private static final Multimap<String, BlockStateExtension> BLOCK_STATE_EXTENSIONS = MultimapBuilder.hashKeys().arrayListValues().build();
 
 	static {
@@ -106,6 +104,8 @@ public class MCAWorld implements World {
 	private int seaLevel;
 	private Vector3i spawnPoint;
 
+	private final LoadingCache<Vector2i, Chunk> chunkCache;	
+	
 	private BlockIdMapper blockIdMapper;
 	private BlockPropertiesMapper blockPropertiesMapper;
 	private BiomeMapper biomeMapper;
@@ -139,6 +139,11 @@ public class MCAWorld implements World {
 		this.ignoreMissingLightData = ignoreMissingLightData;
 		
 		this.forgeBlockMappings = new HashMap<>();
+		
+		this.chunkCache = Caffeine.newBuilder()
+			.maximumSize(500)
+			.expireAfterWrite(1, TimeUnit.MINUTES)
+			.build(chunkPos -> this.loadChunkOrEmpty(chunkPos, 2, 1000));
 	}
 	
 	public BlockState getBlockState(Vector3i pos) {
@@ -191,11 +196,11 @@ public class MCAWorld implements World {
 	
 	public Chunk getChunk(Vector2i chunkPos) {
 		try {
-			Chunk chunk = CHUNK_CACHE.get(new WorldChunkHash(this, chunkPos), () -> this.loadChunkOrEmpty(chunkPos, 2, 1000));
+			Chunk chunk = chunkCache.get(chunkPos);
 			return chunk;
-		} catch (UncheckedExecutionException | ExecutionException e) {
+		} catch (RuntimeException e) {
 			if (e.getCause() instanceof InterruptedException) Thread.currentThread().interrupt();
-			throw new RuntimeException(e.getCause());
+			throw e;
 		}
 	}
 	
@@ -341,12 +346,12 @@ public class MCAWorld implements World {
 	
 	@Override
 	public void invalidateChunkCache() {
-		CHUNK_CACHE.invalidateAll();
+		chunkCache.invalidateAll();
 	}
 	
 	@Override
 	public void invalidateChunkCache(Vector2i chunk) {
-		CHUNK_CACHE.invalidate(new WorldChunkHash(this, chunk));
+		chunkCache.invalidate(chunk);
 	}
 	
 	public BlockIdMapper getBlockIdMapper() {
@@ -422,9 +427,6 @@ public class MCAWorld implements World {
 					levelData.getInt("SpawnZ")
 					);
 			
-
-			CHUNK_CACHE.invalidateAll();
-			
 			MCAWorld world = new MCAWorld(
 					worldFolder, 
 					uuid, 
@@ -485,34 +487,6 @@ public class MCAWorld implements World {
 		for (String id : extension.getAffectedBlockIds()) {
 			BLOCK_STATE_EXTENSIONS.put(id, extension);
 		}
-	}
-	
-	private static class WorldChunkHash {
-		
-		private final UUID world;
-		private final Vector2i chunk;
-		
-		public WorldChunkHash(MCAWorld world, Vector2i chunk) {
-			this.world = world.getUUID();
-			this.chunk = chunk;
-		}
-		
-		@Override
-		public int hashCode() {
-			return (world.hashCode() * 31 + chunk.getX()) * 31 + chunk.getY();
-		}
-		
-		@Override
-		public boolean equals(Object obj) {
-			
-			if (obj instanceof WorldChunkHash) {
-				WorldChunkHash other = (WorldChunkHash) obj;
-				return other.chunk.equals(chunk) && world.equals(other.world);
-			}
-			
-			return false;
-		}
-		
 	}
 	
 }

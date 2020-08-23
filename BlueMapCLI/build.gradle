@@ -25,4 +25,7 @@ build.dependsOn shadowJar {
 	relocate 'org.apache.commons.lang3', 'de.bluecolored.shadow.apache.commons.lang3'
 	relocate 'org.bstats.bukkit', 'de.bluecolored.shadow.bstats.bukkit'
 	relocate 'org.yaml.snakeyaml', 'de.bluecolored.shadow.yaml.snakeyaml'
+	relocate 'com.github.benmanes.caffeine', 'de.bluecolored.shadow.benmanes.caffeine'
+	relocate 'com.google.errorprone', 'de.bluecolored.shadow.google.errorprone'
+	relocate 'org.checkerframework', 'de.bluecolored.shadow.checkerframework'
 }

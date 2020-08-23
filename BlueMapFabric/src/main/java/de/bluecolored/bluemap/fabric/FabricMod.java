@@ -34,13 +34,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 
 import org.apache.logging.log4j.LogManager;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.commands.Commands;
@@ -84,15 +82,10 @@ public class FabricMod implements ModInitializer, ServerInterface {
 		
 		this.worldUUIDs = new ConcurrentHashMap<>();
 		this.eventForwarder = new FabricEventForwarder(this);
-		this.worldUuidCache = CacheBuilder.newBuilder()
+		this.worldUuidCache = Caffeine.newBuilder()
 				.weakKeys()
 				.maximumSize(1000)
-				.build(new CacheLoader<ServerWorld, UUID>() {
-					@Override
-					public UUID load(ServerWorld key) throws Exception {
-						return loadUUIDForWorld(key);
-					}
-				});
+				.build(this::loadUUIDForWorld);
 	}
 	
 	@Override
@@ -158,7 +151,7 @@ public class FabricMod implements ModInitializer, ServerInterface {
 	public UUID getUUIDForWorld(ServerWorld world) throws IOException {
 		try {
 			return worldUuidCache.get(world);
-		} catch (ExecutionException e) {
+		} catch (RuntimeException e) {
 			Throwable cause = e.getCause();
 			if (cause instanceof IOException) throw (IOException) cause;
 			else throw new IOException(cause);

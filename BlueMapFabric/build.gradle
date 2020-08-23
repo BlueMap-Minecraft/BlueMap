@@ -45,8 +45,9 @@ shadowJar {
 	relocate 'net.querz.nbt', 'de.bluecolored.shadow.querz.nbt'
 	relocate 'ninja.leaping.configurate', 'de.bluecolored.shadow.ninja.leaping.configurate'
 	relocate 'org.yaml.snakeyaml', 'de.bluecolored.shadow.yaml.snakeyaml'
-
-	//exclude '/mappings/*'
+	relocate 'com.github.benmanes.caffeine', 'de.bluecolored.shadow.benmanes.caffeine'
+	relocate 'com.google.errorprone', 'de.bluecolored.shadow.google.errorprone'
+	relocate 'org.checkerframework', 'de.bluecolored.shadow.checkerframework'
 }
 
 task ramappedShadowJar(type: RemapJarTask) {

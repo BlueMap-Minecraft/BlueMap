@@ -51,8 +51,8 @@ import ninja.leaping.configurate.gson.GsonConfigurationLoader;
 
 public class BlockStateResource {
 	
-	private List<Variant> variants = new ArrayList<>();
-	private Collection<Variant> multipart = new ArrayList<>();
+	private List<Variant> variants = new ArrayList<>(0);
+	private Collection<Variant> multipart = new ArrayList<>(0);
 
 	private BlockStateResource() {
 	}
@@ -62,7 +62,7 @@ public class BlockStateResource {
 	}
 
 	public Collection<TransformedBlockModelResource> getModels(BlockState blockState, Vector3i pos) {
-		Collection<TransformedBlockModelResource> models = new ArrayList<>();
+		Collection<TransformedBlockModelResource> models = new ArrayList<>(1);
 		
 		Variant allMatch = null;
 		for (Variant variant : variants) {
