@@ -26,8 +26,8 @@ package de.bluecolored.bluemap.core.logger;
 
 import java.util.concurrent.TimeUnit;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 
 public abstract class AbstractLogger extends Logger {
 
@@ -36,8 +36,7 @@ public abstract class AbstractLogger extends Logger {
 	private Cache<String, Object> noFloodCache;
 	
 	public AbstractLogger() {
-		noFloodCache = CacheBuilder.newBuilder()
-				.concurrencyLevel(4)
+		noFloodCache = Caffeine.newBuilder()
 				.expireAfterWrite(1, TimeUnit.HOURS)
 				.maximumSize(10000)
 				.build();

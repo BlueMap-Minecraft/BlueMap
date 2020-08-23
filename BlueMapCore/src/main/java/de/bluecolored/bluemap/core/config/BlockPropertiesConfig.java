@@ -26,11 +26,9 @@ package de.bluecolored.bluemap.core.config;
 
 import java.io.IOException;
 import java.util.Map.Entry;
-import java.util.concurrent.ExecutionException;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multimaps;
@@ -80,22 +78,14 @@ public class BlockPropertiesConfig implements BlockPropertiesMapper {
 			}
 		}
 		
-		mappingCache = CacheBuilder.newBuilder()
-				.concurrencyLevel(8)
+		mappingCache = Caffeine.newBuilder()
 				.maximumSize(10000)
-				.build(new CacheLoader<BlockState, BlockProperties>(){
-					@Override public BlockProperties load(BlockState key) { return mapNoCache(key); }
-				});
+				.build(key -> mapNoCache(key));
 	}
 	
 	@Override
 	public BlockProperties get(BlockState from){
-		try {
-			return mappingCache.get(from);
-		} catch (ExecutionException neverHappens) {
-			//should never happen, since the CacheLoader does not throw any exceptions
-			throw new RuntimeException("Unexpected error while trying to map a BlockState's properties", neverHappens.getCause());
-		}
+		return mappingCache.get(from);
 	}
 
 	private BlockProperties mapNoCache(BlockState bs){

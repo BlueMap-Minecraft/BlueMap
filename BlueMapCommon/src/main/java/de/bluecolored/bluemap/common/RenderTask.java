@@ -29,7 +29,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Deque;
 import java.util.List;
@@ -65,8 +64,8 @@ public class RenderTask {
 		Vector2d sortGridSize = new Vector2d(20, 20).div(mapType.getTileRenderer().getHiresModelManager().getTileSize().toDouble().div(16)).ceil().max(1, 1);
 		
 		synchronized (renderTiles) {
-			Vector2i[] array = renderTiles.toArray(new Vector2i[renderTiles.size()]);
-			Arrays.sort(array, (v1, v2) -> {
+			ArrayList<Vector2i> tileList = new ArrayList<>(renderTiles);
+			tileList.sort((v1, v2) -> {
 				Vector2i v1SortGridPos = v1.toDouble().div(sortGridSize).floor().toInt();
 				Vector2i v2SortGridPos = v2.toDouble().div(sortGridSize).floor().toInt();
 				
@@ -90,8 +89,9 @@ public class RenderTask {
 				
 				return 0;
 			});
+			
 			renderTiles.clear();
-			for (Vector2i tile : array) {
+			for (Vector2i tile : tileList) {
 				renderTiles.add(tile);
 			}
 		}

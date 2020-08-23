@@ -22,8 +22,9 @@ build.dependsOn shadowJar {
 	relocate 'net.querz.nbt', 'de.bluecolored.shadow.querz.nbt'
 	relocate 'org.apache.commons.io', 'de.bluecolored.shadow.apache.commons.io'
 	relocate 'com.mojang.brigadier', 'de.bluecolored.shadow.mojang.brigadier'
-	
-	minimize()
+	relocate 'com.github.benmanes.caffeine', 'de.bluecolored.shadow.benmanes.caffeine'
+	relocate 'com.google.errorprone', 'de.bluecolored.shadow.google.errorprone'
+	relocate 'org.checkerframework', 'de.bluecolored.shadow.checkerframework'
 }
 
 processResources {
