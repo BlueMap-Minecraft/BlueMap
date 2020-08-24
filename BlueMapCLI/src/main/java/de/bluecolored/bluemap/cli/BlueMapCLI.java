@@ -32,14 +32,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -50,137 +43,47 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector2i;
-import com.google.common.base.Preconditions;
 
-import de.bluecolored.bluemap.common.BlueMapWebServer;
+import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.MapType;
+import de.bluecolored.bluemap.common.MissingResourcesException;
 import de.bluecolored.bluemap.common.RenderManager;
 import de.bluecolored.bluemap.common.RenderTask;
-import de.bluecolored.bluemap.core.config.ConfigManager;
-import de.bluecolored.bluemap.core.config.CoreConfig;
-import de.bluecolored.bluemap.core.config.CoreConfig.MapConfig;
+import de.bluecolored.bluemap.core.BlueMap;
+import de.bluecolored.bluemap.core.config.WebServerConfig;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.mca.MCAWorld;
-import de.bluecolored.bluemap.core.metrics.Metrics;
-import de.bluecolored.bluemap.core.render.RenderSettings;
-import de.bluecolored.bluemap.core.render.TileRenderer;
 import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
-import de.bluecolored.bluemap.core.render.lowres.LowresModelManager;
-import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
-import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.web.WebFilesManager;
+import de.bluecolored.bluemap.core.web.FileRequestHandler;
 import de.bluecolored.bluemap.core.web.WebSettings;
-import de.bluecolored.bluemap.core.world.SlicedWorld;
-import de.bluecolored.bluemap.core.world.World;
+import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
+import de.bluecolored.bluemap.core.webserver.WebServer;
 
 public class BlueMapCLI {
-
-	private ConfigManager configManager;
-	private File configFolder;
-	private ResourcePack resourcePack;
-	private boolean forceRender;
 	
-	public BlueMapCLI(ConfigManager configManager, File configFolder, boolean forceRender) {
-		this.configManager = configManager;
-		this.configFolder = configFolder;
-		this.forceRender = forceRender;
-		this.resourcePack = null;
-	}
-	
-	public void renderMaps() throws IOException {
-		Preconditions.checkNotNull(resourcePack);
+	public void renderMaps(BlueMapService blueMap, boolean forceRender, boolean forceGenerateWebapp) throws IOException {
+		blueMap.createOrUpdateWebApp(forceGenerateWebapp);
+		WebSettings webSettings = blueMap.updateWebAppSettings();
 		
-		CoreConfig config = configManager.getCoreConfig();
-		configManager.loadResourceConfigs(resourcePack);
+		RenderManager renderManager = new RenderManager(blueMap.getCoreConfig().getRenderThreadCount());
+		File rmstate = new File(blueMap.getCoreConfig().getDataFolder(), "rmstate");
 		
-		config.getWebDataPath().toFile().mkdirs();
-		
-		Map<String, MapType> maps = new HashMap<>(); 
-
-		for (MapConfig mapConfig : config.getMapConfigs()) {
-			File worldFolder = new File(mapConfig.getWorldPath());
-			if (!worldFolder.exists() || !worldFolder.isDirectory()) {
-				throw new IOException("Save folder '" + worldFolder + "' does not exist or is not a directory!");
-			}
-	
-			Logger.global.logInfo("Preparing renderer for map '" + mapConfig.getId() + "' ...");
-			World world = MCAWorld.load(worldFolder.toPath(), UUID.randomUUID(), configManager.getBlockIdConfig(), configManager.getBlockPropertiesConfig(), configManager.getBiomeConfig());
-			
-			//slice world if configured
-			if (!mapConfig.getMin().equals(RenderSettings.DEFAULT_MIN) || !mapConfig.getMax().equals(RenderSettings.DEFAULT_MAX)) {
-				if (mapConfig.isRenderEdges()) { 
-					world = new SlicedWorld(world, mapConfig.getMin(), mapConfig.getMax());
-				} else {
-					world = new SlicedWorld(
-							world, 
-							mapConfig.getMin().min(mapConfig.getMin().sub(2, 2, 2)), // protect from int-overflow
-							mapConfig.getMax().max(mapConfig.getMax().add(2, 2, 2))  // protect from int-overflow
-							);
-				}
-			}
-			
-			HiresModelManager hiresModelManager = new HiresModelManager(
-					config.getWebDataPath().resolve(mapConfig.getId()).resolve("hires"),
-					resourcePack,
-					mapConfig,
-					new Vector2i(mapConfig.getHiresTileSize(), mapConfig.getHiresTileSize())
-					);
-			
-			LowresModelManager lowresModelManager = new LowresModelManager(
-					config.getWebDataPath().resolve(mapConfig.getId()).resolve("lowres"), 
-					new Vector2i(mapConfig.getLowresPointsPerLowresTile(), mapConfig.getLowresPointsPerLowresTile()),
-					new Vector2i(mapConfig.getLowresPointsPerHiresTile(), mapConfig.getLowresPointsPerHiresTile()),
-					mapConfig.useGzipCompression()
-					);
-			
-			TileRenderer tileRenderer = new TileRenderer(hiresModelManager, lowresModelManager);
-			
-			MapType mapType = new MapType(mapConfig.getId(), mapConfig.getName(), world, tileRenderer);
-			maps.put(mapConfig.getId(), mapType);
-		}
-
-		Logger.global.logInfo("Writing settings.json ...");
-		WebSettings webSettings = new WebSettings(config.getWebDataPath().resolve("settings.json").toFile());
-		webSettings.set(config.isUseCookies(), "useCookies");
-		webSettings.setAllMapsEnabled(false);
-		for (MapType map : maps.values()) {
-			webSettings.setMapEnabled(true, map.getId());
-			webSettings.setFrom(map.getTileRenderer(), map.getId());
-			webSettings.setFrom(map.getWorld(), map.getId());
-		}
-		int ordinal = 0;
-		for (MapConfig map : config.getMapConfigs()) {
-			if (!maps.containsKey(map.getId())) continue; //don't add not loaded maps
-			webSettings.setOrdinal(ordinal++, map.getId());
-			webSettings.setFrom(map, map.getId());
-		}
-		webSettings.save();
-
-		Logger.global.logInfo("Writing textures.json ...");
-		File textureExportFile = config.getWebDataPath().resolve("textures.json").toFile();
-		resourcePack.saveTextureFile(textureExportFile);
-
-		RenderManager renderManager = new RenderManager(config.getRenderThreadCount());
-		File rmstate = new File(configFolder, "rmstate");
-		
-		if (rmstate.exists()) {
+		if (!forceRender && rmstate.exists()) {
 			try (
 				InputStream in = new GZIPInputStream(new FileInputStream(rmstate));
 				DataInputStream din = new DataInputStream(in);
 			){
-				renderManager.readState(din, maps.values());
-				Logger.global.logInfo("Found unfinished render, continuing ... (If you want to start a new render, delete the this file: " + rmstate.getCanonicalPath());
+				renderManager.readState(din, blueMap.getMaps().values());
+				Logger.global.logInfo("Found unfinished render, continuing ... (If you want to start a new render, delete the this file: " + rmstate.getCanonicalPath() + " or force a full render using -f)");
 			} catch (IOException ex) {
 				Logger.global.logError("Failed to read saved render-state! Remove the file " + rmstate.getCanonicalPath() + " to start a new render.", ex);
 				return;
 			}
 		} else {
-			for (MapType map : maps.values()) {
+			for (MapType map : blueMap.getMaps().values()) {
 				Logger.global.logInfo("Creating render-task for map '" + map.getId() + "' ...");
 				Logger.global.logInfo("Collecting tiles ...");
 		
@@ -213,6 +116,30 @@ public class BlueMapCLI {
 
 		Logger.global.logInfo("Starting render ...");
 		renderManager.start();
+		
+		Thread shutdownHook = new Thread(() -> {
+			Logger.global.logInfo("Stopping render ...");
+			renderManager.stop();
+			
+			Logger.global.logInfo("Saving tiles ...");
+			RenderTask currentTask = renderManager.getCurrentRenderTask();
+			if (currentTask != null){
+				currentTask.getMapType().getTileRenderer().save();
+			}
+
+			Logger.global.logInfo("Saving render-state ...");
+			try (
+				OutputStream os = new GZIPOutputStream(new FileOutputStream(rmstate));
+				DataOutputStream dos = new DataOutputStream(os);
+			){
+				renderManager.writeState(dos);
+				
+				Logger.global.logInfo("Render saved and stopped! Restart the render (without using -f) to resume.");
+			} catch (IOException ex) {
+				Logger.global.logError("Failed to save render-state!", ex);
+			}
+		});
+		Runtime.getRuntime().addShutdownHook(shutdownHook);
 		
 		long startTime = System.currentTimeMillis();
 		
@@ -266,12 +193,16 @@ public class BlueMapCLI {
 			}
 		}
 
-		renderManager.stop();
+		//render finished and saved, so this is no longer needed
+		Runtime.getRuntime().removeShutdownHook(shutdownHook);
 		
+		//stop render-threads
+		renderManager.stop();
+
 		//render finished, so remove render state file
 		rmstate.delete();
 
-		for (MapType map : maps.values()) {
+		for (MapType map : blueMap.getMaps().values()) {
 			webSettings.set(startTime, "maps", map.getId(), "last-render");
 		}
 		
@@ -284,134 +215,112 @@ public class BlueMapCLI {
 		Logger.global.logInfo("Render finished!");
 	}
 	
-	public void startWebserver() throws IOException {
+	public void startWebserver(BlueMapService blueMap) throws IOException {
 		Logger.global.logInfo("Starting webserver ...");
 		
-		BlueMapWebServer webserver = new BlueMapWebServer(configManager.getCoreConfig());
-		webserver.start();
+		WebServerConfig config = blueMap.getWebServerConfig();
+		HttpRequestHandler requestHandler = new FileRequestHandler(config.getWebRoot().toPath(), "BlueMap v" + BlueMap.VERSION);
+		
+		WebServer webServer = new WebServer(
+			config.getWebserverPort(),
+			config.getWebserverMaxConnections(),
+			config.getWebserverBindAdress(),
+			requestHandler
+		);
+		webServer.start();
 	}
 	
-	private boolean loadResources() throws IOException, ParseResourceException {
-		Logger.global.logInfo("Loading resources ...");
-
-		CoreConfig config = configManager.getCoreConfig();
-		
-		File defaultResourceFile = config.getDataPath().resolve("minecraft-client-" + ResourcePack.MINECRAFT_CLIENT_VERSION + ".jar").toFile();
-		File resourceExtensionsFile = config.getDataPath().resolve("resourceExtensions.zip").toFile();
-		File textureExportFile = config.getWebDataPath().resolve("textures.json").toFile();
-		
-		if (!defaultResourceFile.exists()) {
-			if (!handleMissingResources(defaultResourceFile)) return false;
-		}
-		
-		resourceExtensionsFile.delete();
-		FileUtils.copyURLToFile(BlueMapCLI.class.getResource("/resourceExtensions.zip"), resourceExtensionsFile, 10000, 10000);
-		
-		//find more resource packs
-		File resourcePackFolder = configFolder.toPath().resolve("resourcepacks").toFile();
-		resourcePackFolder.mkdirs();
-		File[] resourcePacks = resourcePackFolder.listFiles();
-		Arrays.sort(resourcePacks); //load resource packs in alphabetical order so you can reorder them by renaming
-		
-		List<File> resources = new ArrayList<>(resourcePacks.length + 1);
-		resources.add(defaultResourceFile);
-		for (File file : resourcePacks) resources.add(file);
-		resources.add(resourceExtensionsFile);
-		
-		resourcePack = new ResourcePack();
-		if (textureExportFile.exists()) resourcePack.loadTextureFile(textureExportFile);
-		resourcePack.load(resources);
-		resourcePack.saveTextureFile(textureExportFile);
-		
-		return true;
-	}
-	
-	private boolean handleMissingResources(File resourceFile) throws IOException {
-		if (configManager.getCoreConfig().isDownloadAccepted()) {
-			try {
-				Logger.global.logInfo("Downloading " + ResourcePack.MINECRAFT_CLIENT_URL + " to " + resourceFile.getCanonicalPath() + " ...");
-				ResourcePack.downloadDefaultResource(resourceFile);
-				return true;
-			} catch (IOException e) {
-				Logger.global.logError("Failed to download resources!", e);
-				return false;
-			}
-		} else {
-			Logger.global.logWarning("BlueMap is missing important resources!");
-			Logger.global.logWarning("You need to accept the download of the required files in order of BlueMap to work!");
-			Logger.global.logWarning("Please check " + configManager.getCoreConfigFile().getCanonicalPath() + " and try again!");
-			return false;
-		}
-	}
-	
-	public static void main(String[] args) throws IOException, ParseResourceException {
+	public static void main(String[] args) {
 		CommandLineParser parser = new DefaultParser();
+		
+		BlueMapCLI cli = new BlueMapCLI();
+		BlueMapService blueMap = null;
 		
 		try {
 			CommandLine cmd = parser.parse(BlueMapCLI.createOptions(), args, false);
-
+			
 			//help
 			if (cmd.hasOption("h")) {
 				BlueMapCLI.printHelp();
 				return;
 			}
 			
-			//load config
+			//config folder
 			File configFolder = new File(".");
 			if (cmd.hasOption("c")) {
 				configFolder = new File(cmd.getOptionValue("c"));
 				configFolder.mkdirs();
 			}
-			
-			URL cliConfigUrl = BlueMapCLI.class.getResource("/bluemap-cli.conf");
-			URL cliDefaultsUrl = BlueMapCLI.class.getResource("/bluemap-cli-defaults.conf");
-			
-			ConfigManager config = new ConfigManager(configFolder, cliConfigUrl, cliDefaultsUrl);
-			boolean configCreated = !config.getCoreConfigFile().exists();
-			config.loadMainConfig();
-			
-			if (configCreated) {
-				Logger.global.logInfo("No config file found! Created default config here: " + config.getCoreConfigFile().getCanonicalPath());
-				return;
-			}
-			
-			WebFilesManager webFilesManager = new WebFilesManager(config.getCoreConfig().getWebRoot());
-			if (webFilesManager.needsUpdate()) {
-				Logger.global.logInfo("Updating webfiles in " + config.getCoreConfig().getWebRoot().normalize() + "...");
-				webFilesManager.updateFiles();
-			}
-			
-			BlueMapCLI bluemap = new BlueMapCLI(config, configFolder, cmd.hasOption("f"));
 
-			if (config.getCoreConfig().isWebserverEnabled()) {
-				//start webserver
-				bluemap.startWebserver();
+			blueMap = new BlueMapService(configFolder);
+			boolean noActions = true;
 
-				//wait a second to let the webserver start, looks nicer in the log
-				try {
-					Thread.sleep(1000);
-				} catch (InterruptedException ignore) { Thread.currentThread().interrupt(); }
+			if (cmd.hasOption("w")) {
+				noActions = false;
+				
+				cli.startWebserver(blueMap);
+				Thread.sleep(1000); //wait a second to let the webserver start, looks nicer in the log if anything comes after that
 			}
 			
-			
-			if (!config.getCoreConfig().getMapConfigs().isEmpty()) {
-				//load resources
-				if (bluemap.loadResources()) {
-					
-					//metrics
-					if (config.getCoreConfig().isMetricsEnabled()) Metrics.sendReportAsync("CLI");
-					
-					//render maps
-					bluemap.renderMaps();
-					
-					//since we don't need it any more, free some memory
-					bluemap.resourcePack = null;
+			if (cmd.hasOption("r")) {
+				noActions = false;
+				
+				boolean force = cmd.hasOption("f");
+				cli.renderMaps(blueMap, force, cmd.hasOption("g"));
+			} else {
+				if (cmd.hasOption("g")) {
+					noActions = false;
+					blueMap.createOrUpdateWebApp(true);
+				}
+				if (cmd.hasOption("s")) {
+					noActions = false;
+					blueMap.updateWebAppSettings();
 				}
 			}
 			
+			// if nothing has been defined to do
+			if (noActions) {
+				
+				if (
+						!blueMap.getCoreConfigFile().exists() ||
+						!blueMap.getRenderConfigFile().exists() ||
+						!blueMap.getWebServerConfigFile().exists()
+				) {
+					Logger.global.logInfo("Generating default config files for you, here: " + configFolder.getCanonicalPath().toString() + "\n");
+				}
+				
+				//generate all configs
+				blueMap.getCoreConfig();
+				blueMap.getRenderConfig();
+				blueMap.getWebServerConfig();
+				
+				//print help
+				BlueMapCLI.printHelp();
+				System.exit(1);
+				return;
+			}
+			
+		} catch (MissingResourcesException e) {
+			Logger.global.logWarning("BlueMap is missing important resources!");
+			Logger.global.logWarning("You need to accept the download of the required files in order of BlueMap to work!");
+			try { Logger.global.logWarning("Please check: " + blueMap.getCoreConfigFile().getCanonicalPath()); } catch (NullPointerException | IOException ignored) {}
+			System.exit(2);
+			return;
 		} catch (ParseException e) {
 			Logger.global.logError("Failed to parse provided arguments!", e);
 			BlueMapCLI.printHelp();
+			System.exit(1);
+			return;
+		} catch (IOException e) {
+			Logger.global.logError("An IO-error occurred!", e);
+			System.exit(1);
+			return;
+		} catch (InterruptedException ex) {
+			System.exit(1);
+			return;
+		} catch (RuntimeException e) {
+			Logger.global.logError("An unexpected error occurred!", e);
+			System.exit(1);
 			return;
 		}
 	}
@@ -429,7 +338,13 @@ public class BlueMapCLI {
 				.desc("Sets path of the folder containing the configuration-files to use (configurations will be generated here if they don't exist)")
 				.build()
 			);
+		
+		options.addOption("w", "webserver", false, "Starts the web-server, configured in the 'webserver.conf' file");
 
+		options.addOption("g", "generate-webapp", false, "Generates the files for the web-app to the folder, configured in the 'render.conf' file (this is done automatically when rendering if the 'index.html' file in the webroot can't be found)");
+		options.addOption("s", "generate-websettings", false, "Generates the settings for the web-app, using the settings from the 'render.conf' file (this is done automatically when rendering)");
+
+		options.addOption("r", "render", false, "Renders the maps configured in the 'render.conf' file");
 		options.addOption("f", "force-render", false, "Forces rendering everything, instead of only rendering chunks that have been modified since the last render");
 		
 		return options;
@@ -438,7 +353,7 @@ public class BlueMapCLI {
 	private static void printHelp() {
 		HelpFormatter formatter = new HelpFormatter();
 		
-		String filename = "bluemapcli.jar";
+		String filename = "bluemap-cli.jar";
 		try {
 			File file = new File(BlueMapCLI.class.getProtectionDomain()
 					.getCodeSource()
@@ -452,11 +367,22 @@ public class BlueMapCLI {
 					filename = file.getAbsolutePath();
 				}
 			}
-		} catch (IOException ex) {}
+		} catch (IOException ignore) {}
 		
 		String command = "java -jar " + filename;
 		
-		formatter.printHelp(command + " [options]", "\nOptions:", createOptions(), "");
+		StringBuilder footer = new StringBuilder();
+		footer.append("Examples:\n\n");
+		footer.append(command + " -c './config/'\n");
+		footer.append("Generates the default/example configurations in a folder named 'config' if they are not already present\n\n");
+		footer.append(command + " -r\n");
+		footer.append("Render the configured maps\n\n");
+		footer.append(command + " -w\n");
+		footer.append("Start only the webserver without doing anything else\n\n");
+		footer.append(command + " -gs\n");
+		footer.append("Generate the web-app and settings without starting a render\n\n");
+		
+		formatter.printHelp(command + " [options]", "\nOptions:", createOptions(), "\n" + footer.toString());
 	}
 	
 }

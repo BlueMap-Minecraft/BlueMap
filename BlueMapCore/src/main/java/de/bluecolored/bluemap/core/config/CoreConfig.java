@@ -57,6 +57,7 @@ public class CoreConfig {
 	}
 	
 	public File getDataFolder() {
+		if (!dataFolder.exists()) dataFolder.mkdirs();
 		return dataFolder;
 	}
 	

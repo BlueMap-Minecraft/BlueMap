@@ -75,6 +75,7 @@ public class WebServerConfig {
 	}
 	
 	public File getWebRoot() {
+		if (!webRoot.exists()) webRoot.mkdirs();
 		return webRoot;
 	}
 

@@ -250,7 +250,6 @@ public class ConfigManager {
 		
 		File file = new File(pathString);
 		if (file.exists() && !file.isDirectory()) throw new IOException("Invalid configuration: Path '" + file.getAbsolutePath() + "' is a file (should be a directory)");
-		if (!file.exists() && !file.mkdirs()) throw new IOException("Invalid configuration: Folders to path '" + file.getAbsolutePath() + "' could not be created");
 		return file;
 	}
 	

@@ -19,7 +19,7 @@ dependencies {
 
 processResources {
 	from(sourceSets.main.resources.srcDirs) {
-		include 'core.json'
+		include 'version.json'
 		
 		expand (
 			version: project.version
