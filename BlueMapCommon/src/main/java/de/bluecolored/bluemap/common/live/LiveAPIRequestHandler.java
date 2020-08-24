@@ -63,7 +63,13 @@ public class LiveAPIRequestHandler implements HttpRequestHandler {
 	public HttpResponse handle(HttpRequest request) {
 		if (!config.isLiveUpdatesEnabled()) return this.notFoundHandler.handle(request);
 		
-		HttpRequestHandler handler = liveAPIRequests.get(request.getPath());
+		String path = request.getPath();
+		
+		//normalize path
+		if (path.startsWith("/")) path = path.substring(1);
+		if (path.endsWith("/")) path = path.substring(0, path.length() - 1);
+		
+		HttpRequestHandler handler = liveAPIRequests.get(path);
 		if (handler != null) return handler.handle(request);
 		
 		return this.notFoundHandler.handle(request);

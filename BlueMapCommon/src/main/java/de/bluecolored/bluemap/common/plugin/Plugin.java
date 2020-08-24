@@ -93,10 +93,20 @@ public class Plugin {
 		unload(); //ensure nothing is left running (from a failed load or something)
 		
 		blueMap = new BlueMapService(serverInterface);
-		
+
+		//load configs
 		CoreConfig coreConfig = blueMap.getCoreConfig();
 		RenderConfig renderConfig = blueMap.getRenderConfig();
 		WebServerConfig webServerConfig = blueMap.getWebServerConfig();
+
+		//load plugin config
+		pluginConfig = new PluginConfig(blueMap.getConfigManager().loadOrCreate(
+				new File(serverInterface.getConfigFolder(), "plugin.conf"), 
+				Plugin.class.getResource("/plugin.conf"), 
+				Plugin.class.getResource("/plugin-defaults.conf"), 
+				true,
+				true
+		));
 		
 		//try load resources
 		try {
@@ -161,15 +171,6 @@ public class Plugin {
 		//update webapp and settings
 		blueMap.createOrUpdateWebApp(false);
 		blueMap.updateWebAppSettings();
-		
-		//load plugin config
-		pluginConfig = new PluginConfig(blueMap.getConfigManager().loadOrCreate(
-				new File(serverInterface.getConfigFolder(), "plugin.conf"), 
-				Plugin.class.getResource("/plugin.conf"), 
-				Plugin.class.getResource("/plugin-defaults.conf"), 
-				true,
-				true
-		));
 		
 		//start skin updater
 		if (pluginConfig.isLiveUpdatesEnabled()) {

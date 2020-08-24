@@ -84,6 +84,10 @@ public class FileRequestHandler implements HttpRequestHandler {
 	private HttpResponse generateResponse(HttpRequest request) {
 		String path = request.getPath();
 		
+		//normalize path
+		if (path.startsWith("/")) path = path.substring(1);
+		if (path.endsWith("/")) path = path.substring(0, path.length() - 1);
+		
 		Path filePath = webRoot;
 		try {
 			filePath = webRoot.resolve(path);
@@ -101,6 +105,13 @@ public class FileRequestHandler implements HttpRequestHandler {
 		}
 		
 		File file = filePath.toFile();
+		
+		// redirect to have correct relative paths
+		if (file.isDirectory() && !request.getPath().endsWith("/")) {
+			HttpResponse response = new HttpResponse(HttpStatusCode.SEE_OTHER);
+			response.addHeader("Location", "/" + path + "/" + (request.getGETParamString().isEmpty() ? "" : "?" + request.getGETParamString()));
+			return response;
+		}
 		
 		if (!file.exists() || file.isDirectory()){
 			file = new File(filePath.toString() + ".gz");
@@ -164,7 +175,7 @@ public class FileRequestHandler implements HttpRequestHandler {
 		
 		//add content type header
 		String filetype = file.getName().toString();
-		if (filetype.endsWith(".gz")) filetype = filetype.substring(3);
+		if (filetype.endsWith(".gz")) filetype = filetype.substring(0, filetype.length() - 3);
 		int pointIndex = filetype.lastIndexOf('.');
 		if (pointIndex >= 0) filetype = filetype.substring(pointIndex + 1);
 		
