@@ -47,10 +47,10 @@ allprojects {
   	license {
 		header rootProject.file('HEADER')
 		excludes([
-			'*.conf',
-			'*.yml',
-			'*.zip',
-			'*.json'
+			'**/*.conf',
+			'**/*.yml',
+			'**/*.zip',
+			'**/*.json'
 		])
 	}
 }

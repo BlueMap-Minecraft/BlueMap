@@ -19,7 +19,7 @@ dependencies {
 
 processResources {
 	from(sourceSets.main.resources.srcDirs) {
-		include 'version.json'
+		include 'de/bluecolored/bluemap/version.json'
 		
 		expand (
 			version: project.version
