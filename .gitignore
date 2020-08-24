@@ -31,8 +31,8 @@ node_modules/
 package-lock.json
 
 # exclude generated resource
-BlueMapCore/src/main/resources/webroot.zip
-BlueMapCore/src/main/resources/resourceExtensions.zip
+BlueMapCore/src/main/resources/de/bluecolored/bluemap/webroot.zip
+BlueMapCore/src/main/resources/de/bluecolored/bluemap/resourceExtensions.zip
 
 #exclude-test-data
 data/test-render

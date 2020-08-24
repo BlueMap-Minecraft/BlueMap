@@ -48,7 +48,7 @@ public class WebFilesManager {
 	}
 	
 	public void updateFiles() throws IOException {
-		URL fileResource = getClass().getResource("/webroot.zip");
+		URL fileResource = getClass().getResource("/de/bluecolored/bluemap/webroot.zip");
 		File tempFile = File.createTempFile("bluemap_webroot_extraction", null);
 		
 		try {

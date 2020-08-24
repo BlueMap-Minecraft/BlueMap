@@ -239,7 +239,7 @@ public class BlueMapService {
 			Logger.global.logInfo("Loading resources...");
 			
 			resourceExtensionsFile.delete();
-			FileUtils.copyURLToFile(Plugin.class.getResource("/resourceExtensions.zip"), resourceExtensionsFile, 10000, 10000);
+			FileUtils.copyURLToFile(Plugin.class.getResource("/de/bluecolored/bluemap/resourceExtensions.zip"), resourceExtensionsFile, 10000, 10000);
 			
 			//find more resource packs
 			File resourcePackFolder = new File(configFolder, "resourcepacks");
@@ -283,8 +283,8 @@ public class BlueMapService {
 		if (coreConfig == null) {
 			coreConfig = new CoreConfig(configManager.loadOrCreate(
 					getCoreConfigFile(), 
-					Plugin.class.getResource("/core.conf"), 
-					Plugin.class.getResource("/core-defaults.conf"), 
+					Plugin.class.getResource("/de/bluecolored/bluemap/core.conf"), 
+					Plugin.class.getResource("/de/bluecolored/bluemap/core-defaults.conf"), 
 					true, 
 					true
 			));
@@ -301,8 +301,8 @@ public class BlueMapService {
 		if (renderConfig == null) {
 			renderConfig = new RenderConfig(configManager.loadOrCreate(
 					getRenderConfigFile(), 
-					Plugin.class.getResource("/render.conf"), 
-					Plugin.class.getResource("/render-defaults.conf"), 
+					Plugin.class.getResource("/de/bluecolored/bluemap/render.conf"), 
+					Plugin.class.getResource("/de/bluecolored/bluemap/render-defaults.conf"), 
 					true, 
 					true
 			));
@@ -319,8 +319,8 @@ public class BlueMapService {
 		if (webServerConfig == null) {
 			webServerConfig = new WebServerConfig(configManager.loadOrCreate(
 					getWebServerConfigFile(), 
-					Plugin.class.getResource("/webserver.conf"), 
-					Plugin.class.getResource("/webserver-defaults.conf"), 
+					Plugin.class.getResource("/de/bluecolored/bluemap/webserver.conf"), 
+					Plugin.class.getResource("/de/bluecolored/bluemap/webserver-defaults.conf"), 
 					true, 
 					true
 			));
