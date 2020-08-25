@@ -1,0 +1,13 @@
+{
+    "variants": {
+        "type=single,facing=north": { "model": "block/chest/normal", "y": 180 },
+        "type=single,facing=east": { "model": "block/chest/normal", "y": 270 },
+        "type=single,facing=south": { "model": "block/chest/normal" },
+        "type=single,facing=west": { "model": "block/chest/normal", "y":90 },
+        "type=right,facing=north": { "model": "block/chest/normal_double", "y": 180 },
+        "type=right,facing=east": { "model": "block/chest/normal_double", "y": 270 },
+        "type=right,facing=south": { "model": "block/chest/normal_double" },
+        "type=right,facing=west": { "model": "block/chest/normal_double", "y":90 },
+        "type=left": { "model": "block/chest/left" }
+    }
+}
