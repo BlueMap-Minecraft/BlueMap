@@ -51,7 +51,7 @@ shadowJar {
 }
 
 task ramappedShadowJar(type: RemapJarTask) {
-	destinationDir = file '../build/release'
+	destinationDir = file '../../build/release'
 	dependsOn tasks.shadowJar
 	input = tasks.shadowJar.archivePath
 	addNestedDependencies = true

@@ -22,7 +22,7 @@ dependencies {
 }
 
 build.dependsOn shadowJar {
-	destinationDir = file '../build/release'
+	destinationDir = file '../../build/release'
 	archiveFileName = "BlueMap-${version}-spigot-1.16.2.jar"
 	
 	//relocate 'com.flowpowered.math', 'de.bluecolored.shadow.flowpowered.math' //DON'T relocate this, because the API depends on it

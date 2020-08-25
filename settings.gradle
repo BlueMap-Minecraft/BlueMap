@@ -10,20 +10,25 @@ pluginManagement {
 }
 
 rootProject.name = 'BlueMap'
-include ':BlueMapCore'
-include ':BlueMapCLI'
-include ':BlueMapCommon'
-include ':BlueMapSponge'
-include ':BlueMapBukkit'
-include ':BlueMapForge'
-include ':BlueMapAPI'
-include ':BlueMapFabric'
 
-project(':BlueMapCore').projectDir = "$rootDir/BlueMapCore" as File
-project(':BlueMapCLI').projectDir = "$rootDir/BlueMapCLI" as File
-project(':BlueMapCommon').projectDir = "$rootDir/BlueMapCommon" as File
-project(':BlueMapSponge').projectDir = "$rootDir/BlueMapSponge" as File
-project(':BlueMapBukkit').projectDir = "$rootDir/BlueMapBukkit" as File
-project(':BlueMapForge').projectDir = "$rootDir/BlueMapForge" as File
+
+include ':BlueMapAPI'
+include ':BlueMapCore'
+include ':BlueMapCommon'
+
+include ':cli'
+include ':sponge-7.2.0'
+include ':spigot'
+include ':forge-1.16.2'
+include ':fabric-1.16.2'
+
+
 project(':BlueMapAPI').projectDir = "$rootDir/BlueMapAPI" as File
-project(':BlueMapFabric').projectDir = "$rootDir/BlueMapFabric" as File
+project(':BlueMapCore').projectDir = "$rootDir/BlueMapCore" as File
+project(':BlueMapCommon').projectDir = "$rootDir/BlueMapCommon" as File
+
+project(':cli').projectDir = "$rootDir/implementations/cli" as File
+project(':sponge-7.2.0').projectDir = "$rootDir/implementations/sponge-7.2.0" as File
+project(':spigot').projectDir = "$rootDir/implementations/spigot" as File
+project(':forge-1.16.2').projectDir = "$rootDir/implementations/forge-1.16.2" as File
+project(':fabric-1.16.2').projectDir = "$rootDir/implementations/fabric-1.16.2" as File
