@@ -4,9 +4,6 @@ on:
   push:
     branches:
     - master
-    - mc/1.12
-    - mc/1.13
-    - mc/1.15
 
 jobs:
   build:
@@ -19,10 +16,8 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
-    - name: Test with Gradle
-      run: ./gradlew test
     - name: Build with Gradle
-      run: ./gradlew build
+      run: ./gradlew clean test build
     - uses: actions/upload-artifact@v2
       with:
         name: artifact

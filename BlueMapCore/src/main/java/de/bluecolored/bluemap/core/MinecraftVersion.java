@@ -35,7 +35,7 @@ public enum MinecraftVersion {
 	MC_1_15 ("1.15", "mc1_15", "https://launcher.mojang.com/v1/objects/e3f78cd16f9eb9a52307ed96ebec64241cc5b32d/client.jar"),
 	MC_1_16 ("1.16", "mc1_16", "https://launcher.mojang.com/v1/objects/653e97a2d1d76f87653f02242d243cdee48a5144/client.jar");
 
-	private static final Pattern VERSION_REGEX = Pattern.compile("(?:(?'major'\\d+)\\.(?'minor'\\d+))(?:\\.(?'patch'\\d+))?(?:\\-(?:pre|rc)\\d+)?");
+	private static final Pattern VERSION_REGEX = Pattern.compile("(?:(?<major>\\d+)\\.(?<minor>\\d+))(?:\\.(?<patch>\\d+))?(?:\\-(?:pre|rc)\\d+)?");
 	
 	private final String versionString;
 	private final String resourcePrefix;

@@ -221,7 +221,7 @@ public class BlueMapService {
 	public synchronized ResourcePack getResourcePack() throws IOException, MissingResourcesException {
 		if (resourcePack == null) {
 			File defaultResourceFile = new File(getCoreConfig().getDataFolder(), "minecraft-client-" + minecraftVersion.getVersionString() + ".jar");
-			File resourceExtensionsFile = new File(getCoreConfig().getDataFolder(), minecraftVersion.getResourcePrefix() + File.separator + "resourceExtensions.zip");
+			File resourceExtensionsFile = new File(getCoreConfig().getDataFolder(), "resourceExtensions.zip");
 
 			File textureExportFile = new File(getRenderConfig().getWebRoot(), "data" + File.separator + "textures.json");
 			
@@ -244,7 +244,7 @@ public class BlueMapService {
 			Logger.global.logInfo("Loading resources...");
 			
 			resourceExtensionsFile.delete();
-			FileUtils.copyURLToFile(Plugin.class.getResource("/de/bluecolored/bluemap/resourceExtensions.zip"), resourceExtensionsFile, 10000, 10000);
+			FileUtils.copyURLToFile(Plugin.class.getResource("/de/bluecolored/bluemap/" + minecraftVersion.getResourcePrefix() + "/resourceExtensions.zip"), resourceExtensionsFile, 10000, 10000);
 			
 			//find more resource packs
 			File resourcePackFolder = new File(configFolder, "resourcepacks");

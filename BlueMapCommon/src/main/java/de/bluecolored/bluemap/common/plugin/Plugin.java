@@ -94,26 +94,29 @@ public class Plugin {
 	public synchronized void load() throws IOException, ParseResourceException {
 		if (loaded) return;
 		unload(); //ensure nothing is left running (from a failed load or something)
-		
-		blueMap = new BlueMapService(minecraftVersion, serverInterface);
 
+		blueMap = new BlueMapService(minecraftVersion, serverInterface);
+	
 		//load configs
 		CoreConfig coreConfig = blueMap.getCoreConfig();
 		RenderConfig renderConfig = blueMap.getRenderConfig();
 		WebServerConfig webServerConfig = blueMap.getWebServerConfig();
 
-		//load plugin config
-		pluginConfig = new PluginConfig(blueMap.getConfigManager().loadOrCreate(
-				new File(serverInterface.getConfigFolder(), "plugin.conf"), 
-				Plugin.class.getResource("/plugin.conf"), 
-				Plugin.class.getResource("/plugin-defaults.conf"), 
-				true,
-				true
-		));
-		
 		//try load resources
 		try {
-			blueMap.getResourcePack();
+			
+			//load plugin config
+			pluginConfig = new PluginConfig(blueMap.getConfigManager().loadOrCreate(
+					new File(serverInterface.getConfigFolder(), "plugin.conf"), 
+					Plugin.class.getResource("/plugin.conf"), 
+					Plugin.class.getResource("/plugin-defaults.conf"), 
+					true,
+					true
+			));
+			
+			//make sure resources are loaded
+			getResourcePack();
+		
 		} catch (MissingResourcesException ex) {
 			Logger.global.logWarning("BlueMap is missing important resources!");
 			Logger.global.logWarning("You need to accept the download of the required files in order of BlueMap to work!");

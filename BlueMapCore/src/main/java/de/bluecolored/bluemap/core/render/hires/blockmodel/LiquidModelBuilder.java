@@ -65,6 +65,7 @@ public class LiquidModelBuilder {
 	
 	public LiquidModelBuilder(Block block, BlockState liquidBlockState, MinecraftVersion minecraftVersion, RenderSettings renderSettings, BlockColorCalculator colorCalculator) {
 		this.block = block;
+		this.minecraftVersion = minecraftVersion;
 		this.renderSettings = renderSettings;
 		this.liquidBlockState = liquidBlockState;
 		this.colorCalculator = colorCalculator;

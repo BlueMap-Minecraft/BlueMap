@@ -38,6 +38,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.bstats.bukkit.MetricsLite;
 import org.bukkit.Bukkit;
@@ -75,10 +77,15 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 		Logger.global = new JavaLogger(getLogger());
 
 		MinecraftVersion version = MinecraftVersion.getLatest();
+		
+		//try to get best matching minecraft-version
 		try {
-			version = MinecraftVersion.fromVersionString(Bukkit.getVersion());
+			String versionString = getServer().getBukkitVersion();
+			Matcher versionMatcher = Pattern.compile("(\\d+\\.\\d+\\.\\d+)[-_].*").matcher(versionString);
+			if (!versionMatcher.matches()) throw new IllegalArgumentException();
+			version = MinecraftVersion.fromVersionString(versionMatcher.group(1));
 		} catch (IllegalArgumentException e) {
-			Logger.global.logWarning("Failed to find a matching version for version-string '" + Bukkit.getVersion() + "'! Using latest version: " + version.getVersionString());
+			Logger.global.logWarning("Failed to detect the minecraft version of this server! Using latest version: " + version.getVersionString());
 		}
 		
 		this.onlinePlayerMap = new ConcurrentHashMap<>();
