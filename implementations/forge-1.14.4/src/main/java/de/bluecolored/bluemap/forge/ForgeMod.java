@@ -51,7 +51,6 @@ import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.DimensionType;
 import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent.ServerTickEvent;
@@ -83,7 +82,7 @@ public class ForgeMod implements ServerInterface {
 		this.onlinePlayerMap = new ConcurrentHashMap<>();
 		this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 		
-		this.pluginInstance = new Plugin(MinecraftVersion.MC_1_16, "forge", this);
+		this.pluginInstance = new Plugin(MinecraftVersion.MC_1_14, "forge", this);
 		
 		this.worldUUIDs = new ConcurrentHashMap<>();
 		this.eventForwarder = new ForgeEventForwarder(this);
@@ -99,11 +98,11 @@ public class ForgeMod implements ServerInterface {
     public void onServerStarting(FMLServerStartingEvent event) {
 		this.worldUUIDs.clear();
 
-		//register commands
-		new Commands<>(pluginInstance, event.getServer().getCommandManager().getDispatcher(), forgeSource -> new ForgeCommandSource(this, pluginInstance, forgeSource));
-
 		//save worlds to generate level.dat files
 		event.getServer().save(false, true, true);
+
+		//register commands
+		new Commands<>(pluginInstance, event.getServer().getCommandManager().getDispatcher(), forgeSource -> new ForgeCommandSource(this, pluginInstance, forgeSource));
 		
 		new Thread(() -> {
 			Logger.global.logInfo("Loading...");
@@ -175,11 +174,14 @@ public class ForgeMod implements ServerInterface {
 	}
 	
 	private File getFolderForWorld(ServerWorld world) throws IOException {
-		MinecraftServer server = world.getServer();
-		String worldName = server.func_240793_aU_().getWorldName();
-		File worldFolder = new File(world.getServer().getDataDirectory(), worldName);
-		File dimensionFolder = DimensionType.func_236031_a_(world.func_234923_W_(), worldFolder);
-		return dimensionFolder.getCanonicalFile();
+		File worldFolder = world.getSaveHandler().getWorldDirectory();
+		
+		int dimensionId = world.getDimension().getType().getId();
+		if (dimensionId != 0) {
+			worldFolder = new File(worldFolder, "DIM" + dimensionId);
+		}
+		
+		return worldFolder.getCanonicalFile();
 	}
 
 	@Override

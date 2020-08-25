@@ -1,0 +1,67 @@
+buildscript {
+    repositories {
+        maven { url = 'https://files.minecraftforge.net/maven/' }
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+
+minecraft {
+    mappings channel: 'snapshot', version: '20190719-1.14.3'
+}
+
+configurations {
+	compile.extendsFrom include
+}
+
+dependencies {
+	minecraft 'net.minecraftforge:forge:1.15.2-31.2.0'
+	
+    include (project(':BlueMapCommon')) {
+    	//exclude dependencies provided by forge
+		exclude group: 'com.google.guava', module: 'guava'
+		exclude group: 'com.google.code.gson', module: 'gson'
+		exclude group: 'org.apache.commons', module: 'commons-lang3'
+		exclude group: 'commons-io', module: 'commons-io'
+		exclude group: 'com.mojang', module: 'brigadier'
+    }
+}
+
+build.dependsOn shadowJar {
+	destinationDir = file '../../build/release'
+	archiveFileName = "BlueMap-${version}-forge-1.15.2.jar"
+	
+	configurations = [project.configurations.include]
+	
+	//relocate 'com.flowpowered.math', 'de.bluecolored.shadow.flowpowered.math' //DON'T relocate this, because the API depends on it
+	relocate 'com.typesafe.config', 'de.bluecolored.shadow.typesafe.config'
+	relocate 'net.querz.nbt', 'de.bluecolored.shadow.querz.nbt'
+	relocate 'ninja.leaping.configurate', 'de.bluecolored.shadow.ninja.leaping.configurate'
+	relocate 'org.yaml.snakeyaml', 'de.bluecolored.shadow.yaml.snakeyaml'
+	relocate 'com.github.benmanes.caffeine', 'de.bluecolored.shadow.benmanes.caffeine'
+	relocate 'com.google.errorprone', 'de.bluecolored.shadow.google.errorprone'
+	relocate 'org.checkerframework', 'de.bluecolored.shadow.checkerframework'
+}
+
+processResources {
+	from(sourceSets.main.resources.srcDirs) {
+		include 'mcmod.info','META-INF/mods.toml'
+		
+		expand (
+			version: project.version
+		)
+	}
+}
+
+afterEvaluate {
+	reobf {
+		shadowJar {
+			mappings = createMcpToSrg.output
+		}
+	}
+}

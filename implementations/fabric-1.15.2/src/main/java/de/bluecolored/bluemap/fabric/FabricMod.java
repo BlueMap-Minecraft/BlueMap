@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.forge;
+package de.bluecolored.bluemap.fabric;
 
 import java.io.File;
 import java.io.IOException;
@@ -48,87 +48,83 @@ import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
+import de.bluecolored.bluemap.fabric.events.PlayerJoinCallback;
+import de.bluecolored.bluemap.fabric.events.PlayerLeaveCallback;
+import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.DimensionType;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.TickEvent.ServerTickEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
-import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.world.ServerWorld;
 
-@Mod(Plugin.PLUGIN_ID)
-public class ForgeMod implements ServerInterface {
+public class FabricMod implements ModInitializer, ServerInterface {
 
 	private Plugin pluginInstance = null;
 	private MinecraftServer serverInstance = null;
 	
 	private Map<File, UUID> worldUUIDs;
-	private ForgeEventForwarder eventForwarder;
+	private FabricEventForwarder eventForwarder;
 	
 	private LoadingCache<ServerWorld, UUID> worldUuidCache;
-	
+
 	private int playerUpdateIndex = 0;
 	private Map<UUID, Player> onlinePlayerMap;
-	private List<ForgePlayer> onlinePlayerList;
+	private List<FabricPlayer> onlinePlayerList;
 	
-	public ForgeMod() {
+	public FabricMod() {
 		Logger.global = new Log4jLogger(LogManager.getLogger(Plugin.PLUGIN_NAME));
 		
 		this.onlinePlayerMap = new ConcurrentHashMap<>();
 		this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 		
-		this.pluginInstance = new Plugin(MinecraftVersion.MC_1_16, "forge", this);
+		pluginInstance = new Plugin(MinecraftVersion.MC_1_15, "fabric", this);
 		
 		this.worldUUIDs = new ConcurrentHashMap<>();
-		this.eventForwarder = new ForgeEventForwarder(this);
+		this.eventForwarder = new FabricEventForwarder(this);
 		this.worldUuidCache = Caffeine.newBuilder()
 				.weakKeys()
 				.maximumSize(1000)
 				.build(this::loadUUIDForWorld);
-
-		MinecraftForge.EVENT_BUS.register(this);
 	}
 	
-	@SubscribeEvent
-    public void onServerStarting(FMLServerStartingEvent event) {
-		this.worldUUIDs.clear();
-
-		//register commands
-		new Commands<>(pluginInstance, event.getServer().getCommandManager().getDispatcher(), forgeSource -> new ForgeCommandSource(this, pluginInstance, forgeSource));
-
-		//save worlds to generate level.dat files
-		event.getServer().save(false, true, true);
+	@Override
+	public void onInitialize() {
 		
-		new Thread(() -> {
-			Logger.global.logInfo("Loading...");
+		//register commands
+		CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
+			new Commands<>(pluginInstance, dispatcher, fabricSource -> new FabricCommandSource(this, pluginInstance, fabricSource));
+		});
+		
+		ServerLifecycleEvents.SERVER_STARTED.register((MinecraftServer server) -> {
+			this.serverInstance = server;
 			
-			try {
-				pluginInstance.load();
-				if (pluginInstance.isLoaded()) Logger.global.logInfo("Loaded!");
-			} catch (IOException | ParseResourceException e) {
-				Logger.global.logError("Failed to load bluemap!", e);
-				pluginInstance.unload();
-			}
-		}).start();
-    }
-	
-	@SubscribeEvent
-    public void onServerStopping(FMLServerStoppingEvent event) {
-		pluginInstance.unload();
-		Logger.global.logInfo("BlueMap unloaded!");
-    }
-	
-	@SubscribeEvent
-	public void onTick(ServerTickEvent evt) {
-		updateSomePlayers();
+			new Thread(()->{
+				Logger.global.logInfo("Loading BlueMap...");	
+				
+				try {
+					pluginInstance.load();
+					if (pluginInstance.isLoaded()) Logger.global.logInfo("BlueMap loaded!");
+				} catch (IOException | ParseResourceException e) {
+					Logger.global.logError("Failed to load bluemap!", e);
+					pluginInstance.unload();
+				}
+			}).start();
+		});
+		
+		ServerLifecycleEvents.SERVER_STOPPING.register((MinecraftServer server) -> {
+			pluginInstance.unload();
+			Logger.global.logInfo("BlueMap unloaded!");
+		});
+		
+		PlayerJoinCallback.EVENT.register(this::onPlayerJoin);
+		PlayerLeaveCallback.EVENT.register(this::onPlayerLeave);
+		
+		ServerTickEvents.END_SERVER_TICK.register((MinecraftServer server) -> {
+			if (server == this.serverInstance) this.updateSomePlayers();
+		});
 	}
-
+	
 	@Override
 	public void registerListener(ServerEventListener listener) {
 		eventForwarder.addEventListener(listener);
@@ -151,7 +147,7 @@ public class ForgeMod implements ServerInterface {
 		
 		return uuid;
 	}
-	
+
 	public UUID getUUIDForWorld(ServerWorld world) throws IOException {
 		try {
 			return worldUuidCache.get(world);
@@ -161,25 +157,10 @@ public class ForgeMod implements ServerInterface {
 			else throw new IOException(cause);
 		}
 	}
-	
+
 	private UUID loadUUIDForWorld(ServerWorld world) throws IOException {
-		File key = getFolderForWorld(world);
-		
-		UUID uuid = worldUUIDs.get(key);
-		if (uuid == null) {
-			uuid = UUID.randomUUID();
-			worldUUIDs.put(key, uuid);
-		}
-		
-		return uuid;
-	}
-	
-	private File getFolderForWorld(ServerWorld world) throws IOException {
-		MinecraftServer server = world.getServer();
-		String worldName = server.func_240793_aU_().getWorldName();
-		File worldFolder = new File(world.getServer().getDataDirectory(), worldName);
-		File dimensionFolder = DimensionType.func_236031_a_(world.func_234923_W_(), worldFolder);
-		return dimensionFolder.getCanonicalFile();
+		File dimensionDir = world.getDimension().getType().getSaveDirectory(world.getSaveHandler().getWorldDir());
+		return getUUIDForWorld(dimensionDir.getCanonicalFile());
 	}
 
 	@Override
@@ -187,32 +168,28 @@ public class ForgeMod implements ServerInterface {
 		return new File("config/bluemap");
 	}
 
-	@SubscribeEvent
-	public void onPlayerJoin(PlayerLoggedInEvent evt) {
-		PlayerEntity playerInstance = evt.getPlayer();
-		if (!(playerInstance instanceof ServerPlayerEntity)) return;
+	public void onPlayerJoin(MinecraftServer server, ServerPlayerEntity playerInstance) {
+		if (this.serverInstance != server) return;
 		
-		ForgePlayer player = new ForgePlayer(this, (ServerPlayerEntity) playerInstance);
+		FabricPlayer player = new FabricPlayer(this, playerInstance);
 		onlinePlayerMap.put(player.getUuid(), player);
 		onlinePlayerList.add(player);
 	}
-
-	@SubscribeEvent
-	public void onPlayerLeave(PlayerLoggedOutEvent evt) {
-		PlayerEntity player = evt.getPlayer();
-		if (!(player instanceof ServerPlayerEntity)) return;
+	
+	public void onPlayerLeave(MinecraftServer server, ServerPlayerEntity player) {
+		if (this.serverInstance != server) return;
 		
-		UUID playerUUID = player.getUniqueID();
+		UUID playerUUID = player.getUuid();
 		onlinePlayerMap.remove(playerUUID);
 		synchronized (onlinePlayerList) {
 			onlinePlayerList.removeIf(p -> p.getUuid().equals(playerUUID));
 		}
 	}
-
+	
 	public MinecraftServer getServer() {
 		return this.serverInstance;
 	}
-
+	
 	@Override
 	public Collection<Player> getOnlinePlayers() {
 		return onlinePlayerMap.values();
@@ -243,5 +220,5 @@ public class ForgeMod implements ServerInterface {
 			}
 		}
 	}
-    
+	
 }
