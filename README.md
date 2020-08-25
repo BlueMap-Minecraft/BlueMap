@@ -36,10 +36,6 @@ Just create a pull request with your changes :)
 Keep in mind that we have to maintain all new features and keep supporting them in the future.
 This means we always can decide to not accept a PR for any reason.
 
-The `master`-branch is for the latest version of minecraft.
-The `mc/xx`-branches are for other minecraft-versions.
-**Changes that apply to all versions should be based on the** `base` **branch.** This branch can be merged into `master` and every other `mc/xx` branch.
-
 ### Todo / planned features
 Here is a *(surely incomplete)* list of things that i want to include in future versions. *(They are not in any specific order. There is no guarantee that any of those things will ever be included.)*
 
