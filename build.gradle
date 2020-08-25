@@ -41,7 +41,7 @@ allprojects {
 	apply plugin: 'java'
 	
 	group = 'de.bluecolored.bluemap'
-  	version = coreVersion + '-' + targetVersion
+  	version = coreVersion
   	
   	apply plugin: 'license'
   	license {

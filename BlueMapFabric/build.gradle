@@ -55,7 +55,7 @@ task ramappedShadowJar(type: RemapJarTask) {
 	dependsOn tasks.shadowJar
 	input = tasks.shadowJar.archivePath
 	addNestedDependencies = true
-	archiveName = "BlueMap-${version}-fabric.jar"
+	archiveName = "BlueMap-${version}-fabric-1.16.2.jar"
 }
 build.dependsOn ramappedShadowJar
 

@@ -16,8 +16,8 @@ dependencies {
 }
 
 build.dependsOn shadowJar {
-	destinationDir = file '../build/unsupported'
-	archiveFileName = "BlueMap-${version}-sponge.jar"
+	destinationDir = file '../build/release'
+	archiveFileName = "BlueMap-${version}-sponge-7.2.0.jar"
 	
 	relocate 'net.querz.nbt', 'de.bluecolored.shadow.querz.nbt'
 	relocate 'org.apache.commons.io', 'de.bluecolored.shadow.apache.commons.io'
