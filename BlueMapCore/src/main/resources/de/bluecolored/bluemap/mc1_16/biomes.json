@@ -1,0 +1,470 @@
+{
+	"minecraft:ocean": {
+		"id": 0,
+		"humidity": 0.5,
+		"temp": 0.5,
+		"watercolor": 4159204
+	},
+	"minecraft:plains": {
+		"id": 1,
+		"humidity": 0.4,
+		"temp": 0.8,
+		"watercolor": 4159204
+	},
+	"minecraft:desert": {
+		"id": 2,
+		"humidity": 0.0,
+		"temp": 2.0,
+		"watercolor": 4159204
+	},
+	"minecraft:mountains": {
+		"id": 3,
+		"humidity": 0.3,
+		"temp": 0.2,
+		"watercolor": 4159204
+	},
+	"minecraft:forest": {
+		"id": 4,
+		"humidity": 0.8,
+		"temp": 0.7,
+		"watercolor": 4159204
+	},
+	"minecraft:taiga": {
+		"id": 5,
+		"humidity": 0.8,
+		"temp": 0.25,
+		"watercolor": 4159204
+	},
+	"minecraft:swamp": {
+		"id": 6,
+		"humidity": 0.9,
+		"temp": 0.8,
+		"foliagecolor": "#6A7039",
+		"grasscolor": "#6A7039",
+		"watercolor": 6388580
+	},
+	"minecraft:river": {
+		"id": 7,
+		"humidity": 0.5,
+		"temp": 0.5,
+		"watercolor": 4159204
+	},
+	"minecraft:nether": {
+		"id": 8,
+		"humidity": 0.0,
+		"temp": 2.0,
+		"watercolor": 4159204
+	},
+	"minecraft:the_end": {
+		"id": 9,
+		"humidity": 0.5,
+		"temp": 0.5,
+		"watercolor": 4159204
+	},
+	"minecraft:frozen_ocean": {
+		"id": 10,
+		"humidity": 0.5,
+		"temp": 0.0,
+		"watercolor": 3750089
+	},
+	"minecraft:frozen_river": {
+		"id": 11,
+		"humidity": 0.5,
+		"temp": 0.0,
+		"watercolor": 3750089
+	},
+	"minecraft:snowy_tundra": {
+		"id": 12,
+		"humidity": 0.5,
+		"temp": 0.0,
+		"watercolor": 4159204
+	},
+	"minecraft:snowy_mountains": {
+		"id": 13,
+		"humidity": 0.5,
+		"temp": 0.0,
+		"watercolor": 4159204
+	},
+	"minecraft:mushroom_fields": {
+		"id": 14,
+		"humidity": 1.0,
+		"temp": 0.9,
+		"watercolor": 4159204
+	},
+	"minecraft:mushroom_field_shore": {
+		"id": 15,
+		"humidity": 1.0,
+		"temp": 0.9,
+		"watercolor": 4159204
+	},
+	"minecraft:beach": {
+		"id": 16,
+		"humidity": 0.4,
+		"temp": 0.8,
+		"watercolor": 4159204
+	},
+	"minecraft:desert_hills": {
+		"id": 17,
+		"humidity": 0.0,
+		"temp": 2.0,
+		"watercolor": 4159204
+	},
+	"minecraft:wooded_hills": {
+		"id": 18,
+		"humidity": 0.8,
+		"temp": 0.7,
+		"watercolor": 4159204
+	},
+	"minecraft:taiga_hills": {
+		"id": 19,
+		"humidity": 0.8,
+		"temp": 0.25,
+		"watercolor": 4159204
+	},
+	"minecraft:mountain_edge": {
+		"id": 20,
+		"humidity": 0.3,
+		"temp": 0.2,
+		"watercolor": 4159204
+	},
+	"minecraft:jungle": {
+		"id": 21,
+		"humidity": 0.9,
+		"temp": 0.95,
+		"watercolor": 4159204
+	},
+	"minecraft:jungle_hills": {
+		"id": 22,
+		"humidity": 0.9,
+		"temp": 0.95,
+		"watercolor": 4159204
+	},
+	"minecraft:jungle_edge": {
+		"id": 23,
+		"humidity": 0.8,
+		"temp": 0.95,
+		"watercolor": 4159204
+	},
+	"minecraft:deep_ocean": {
+		"id": 24,
+		"humidity": 0.5,
+		"temp": 0.5,
+		"watercolor": 4159204
+	},
+	"minecraft:stone_shore": {
+		"id": 25,
+		"humidity": 0.3,
+		"temp": 0.2,
+		"watercolor": 4159204
+	},
+	"minecraft:snowy_beach": {
+		"id": 26,
+		"humidity": 0.3,
+		"temp": 0.05,
+		"watercolor": 4020182
+	},
+	"minecraft:birch_forest": {
+		"id": 27,
+		"humidity": 0.6,
+		"temp": 0.6,
+		"watercolor": 4159204
+	},
+	"minecraft:birch_forest_hills": {
+		"id": 28,
+		"humidity": 0.6,
+		"temp": 0.6,
+		"watercolor": 4159204
+	},
+	"minecraft:dark_forest": {
+		"id": 29,
+		"humidity": 0.8,
+		"temp": 0.7,
+		"foliagecolor": "#5528340a",
+		"grasscolor": "#8828340a",
+		"watercolor": 4159204
+	},
+	"minecraft:snowy_taiga": {
+		"id": 30,
+		"humidity": 0.4,
+		"temp": -0.5,
+		"watercolor": 4020182
+	},
+	"minecraft:snowy_taiga_hills": {
+		"id": 31,
+		"humidity": 0.4,
+		"temp": -0.5,
+		"watercolor": 4020182
+	},
+	"minecraft:giant_tree_taiga": {
+		"id": 32,
+		"humidity": 0.8,
+		"temp": 0.3,
+		"watercolor": 4159204
+	},
+	"minecraft:giant_tree_taiga_hills": {
+		"id": 33,
+		"humidity": 0.8,
+		"temp": 0.3,
+		"watercolor": 4159204
+	},
+	"minecraft:wooded_mountains": {
+		"id": 34,
+		"humidity": 0.3,
+		"temp": 0.2,
+		"watercolor": 4159204
+	},
+	"minecraft:savanna": {
+		"id": 35,
+		"humidity": 0.0,
+		"temp": 1.2,
+		"watercolor": 4159204
+	},
+	"minecraft:savanna_plateau": {
+		"id": 36,
+		"humidity": 0.0,
+		"temp": 1.0,
+		"watercolor": 4159204
+	},
+	"minecraft:badlands": {
+		"id": 37,
+		"humidity": 0.0,
+		"temp": 2.0,
+		"foliagecolor": "#9e814d",
+		"grasscolor": "#90814d",
+		"watercolor": 4159204
+	},
+	"minecraft:wooded_badlands_plateau": {
+		"id": 38,
+		"humidity": 0.0,
+		"temp": 2.0,
+		"foliagecolor": "#9e814d",
+		"grasscolor": "#90814d",
+		"watercolor": 4159204
+	},
+	"minecraft:badlands_plateau": {
+		"id": 39,
+		"humidity": 0.0,
+		"temp": 2.0,
+		"foliagecolor": "#9e814d",
+		"grasscolor": "#90814d",
+		"watercolor": 4159204
+	},
+	"minecraft:small_end_islands": {
+		"id": 40,
+		"humidity": 0.5,
+		"temp": 0.5,
+		"watercolor": 4159204
+	},
+	"minecraft:end_midlands": {
+		"id": 41,
+		"humidity": 0.5,
+		"temp": 0.5,
+		"watercolor": 4159204
+	},
+	"minecraft:end_highlands": {
+		"id": 42,
+		"humidity": 0.5,
+		"temp": 0.5,
+		"watercolor": 4159204
+	},
+	"minecraft:end_barrens": {
+		"id": 43,
+		"humidity": 0.5,
+		"temp": 0.5,
+		"watercolor": 4159204
+	},
+	"minecraft:warm_ocean": {
+		"id": 44,
+		"humidity": 0.5,
+		"temp": 0.5,
+		"watercolor": 4445678
+	},
+	"minecraft:lukewarm_ocean": {
+		"id": 45,
+		"humidity": 0.5,
+		"temp": 0.5,
+		"watercolor": 4566514
+	},
+	"minecraft:cold_ocean": {
+		"id": 46,
+		"humidity": 0.5,
+		"temp": 0.5,
+		"watercolor": 4020182
+	},
+	"minecraft:deep_warm_ocean": {
+		"id": 47,
+		"humidity": 0.5,
+		"temp": 0.5,
+		"watercolor": 4445678
+	},
+	"minecraft:deep_lukewarm_ocean": {
+		"id": 48,
+		"humidity": 0.5,
+		"temp": 0.5,
+		"watercolor": 4566514
+	},
+	"minecraft:deep_cold_ocean": {
+		"id": 49,
+		"humidity": 0.5,
+		"temp": 0.5,
+		"watercolor": 4020182
+	},
+	"minecraft:deep_frozen_ocean": {
+		"id": 50,
+		"humidity": 0.5,
+		"temp": 0.5,
+		"watercolor": 3750089
+	},
+	"minecraft:the_void": {
+		"id": 127,
+		"humidity": 0.5,
+		"temp": 0.5,
+		"watercolor": 4159204
+	},
+	"minecraft:sunflower_plains": {
+		"id": 129,
+		"humidity": 0.4,
+		"temp": 0.8,
+		"watercolor": 4159204
+	},
+	"minecraft:desert_lakes": {
+		"id": 130,
+		"humidity": 0.0,
+		"temp": 2.0,
+		"watercolor": 4159204
+	},
+	"minecraft:gravelly_mountains": {
+		"id": 131,
+		"humidity": 0.3,
+		"temp": 0.2,
+		"watercolor": 4159204
+	},
+	"minecraft:flower_forest": {
+		"id": 132,
+		"humidity": 0.8,
+		"temp": 0.7,
+		"watercolor": 4159204
+	},
+	"minecraft:taiga_mountains": {
+		"id": 133,
+		"humidity": 0.8,
+		"temp": 0.25,
+		"watercolor": 4159204
+	},
+	"minecraft:swamp_hills": {
+		"id": 134,
+		"humidity": 0.9,
+		"temp": 0.8,
+		"foliagecolor": "#6A7039",
+		"grasscolor": "#6A7039",
+		"watercolor": 6388580
+	},
+	"minecraft:ice_spikes": {
+		"id": 140,
+		"humidity": 0.5,
+		"temp": 0.0,
+		"watercolor": 4159204
+	},
+	"minecraft:modified_jungle": {
+		"id": 149,
+		"humidity": 0.9,
+		"temp": 0.95,
+		"watercolor": 4159204
+	},
+	"minecraft:modified_jungle_edge": {
+		"id": 151,
+		"humidity": 0.8,
+		"temp": 0.95,
+		"watercolor": 4159204
+	},
+	"minecraft:tall_birch_forest": {
+		"id": 155,
+		"humidity": 0.6,
+		"temp": 0.6,
+		"watercolor": 4159204
+	},
+	"minecraft:tall_birch_hills": {
+		"id": 156,
+		"humidity": 0.6,
+		"temp": 0.6,
+		"watercolor": 4159204
+	},
+	"minecraft:dark_forest_hills": {
+		"id": 157,
+		"humidity": 0.8,
+		"temp": 0.7,
+		"foliagecolor": "#5528340a",
+		"grasscolor": "#8828340a",
+		"watercolor": 4159204
+	},
+	"minecraft:snowy_taiga_mountains": {
+		"id": 158,
+		"humidity": 0.4,
+		"temp": -0.5,
+		"watercolor": 4020182
+	},
+	"minecraft:giant_spruce_taiga": {
+		"id": 160,
+		"humidity": 0.8,
+		"temp": 0.25,
+		"watercolor": 4159204
+	},
+	"minecraft:giant_spruce_taiga_hills": {
+		"id": 161,
+		"humidity": 0.8,
+		"temp": 0.25,
+		"watercolor": 4159204
+	},
+	"minecraft:modified_gravelly_mountains": {
+		"id": 162,
+		"humidity": 0.3,
+		"temp": 0.2,
+		"watercolor": 4159204
+	},
+	"minecraft:shattered_savanna": {
+		"id": 163,
+		"humidity": 0.0,
+		"temp": 1.1,
+		"watercolor": 4159204
+	},
+	"minecraft:shattered_savanna_plateau": {
+		"id": 164,
+		"humidity": 0.0,
+		"temp": 1.0,
+		"watercolor": 4159204
+	},
+	"minecraft:eroded_badlands": {
+		"id": 165,
+		"humidity": 0.0,
+		"temp": 2.0,
+		"foliagecolor": "#9e814d",
+		"grasscolor": "#90814d",
+		"watercolor": 4159204
+	},
+	"minecraft:modified_wooded_badlands_plateau": {
+		"id": 166,
+		"humidity": 0.0,
+		"temp": 2.0,
+		"watercolor": 4159204
+	},
+	"minecraft:modified_badlands_plateau": {
+		"id": 167,
+		"humidity": 0.0,
+		"temp": 2.0,
+		"foliagecolor": "#9e814d",
+		"grasscolor": "#90814d",
+		"watercolor": 4159204
+	},
+	"minecraft:bamboo_jungle": {
+		"id": 168,
+		"humidity": 0.9,
+		"temp": 0.95,
+		"watercolor": 4159204
+	},
+	"minecraft:bamboo_jungle_hills": {
+		"id": 169,
+		"humidity": 0.9,
+		"temp": 0.95,
+		"watercolor": 4159204
+	}
+}

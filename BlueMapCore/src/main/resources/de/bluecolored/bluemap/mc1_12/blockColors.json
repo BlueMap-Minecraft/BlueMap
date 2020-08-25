@@ -1,0 +1,14 @@
+{
+	"default": "@foliage",
+	"minecraft:water": "@water",
+	"minecraft:cauldron": "@water",
+	"minecraft:grass": "@grass",
+	"minecraft:tall_grass": "@grass",
+	"minecraft:double_grass": "@grass",
+	"minecraft:fern": "@grass",
+	"minecraft:double_fern": "@grass",
+	"minecraft:redstone_wire": "#ff0000",
+	"minecraft:birch_leaves": "#86a863",
+	"minecraft:spruce_leaves": "#51946b",
+	"minecraft:stonecutter": "#ffffff"
+}
