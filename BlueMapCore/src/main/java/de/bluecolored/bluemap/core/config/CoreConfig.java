@@ -22,51 +22,55 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.web;
+package de.bluecolored.bluemap.core.config;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URL;
-import java.util.Enumeration;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
-import org.apache.commons.io.FileUtils;
+import ninja.leaping.configurate.ConfigurationNode;
 
-public class WebFilesManager {
-
-	private File webRoot;
+public class CoreConfig {
 	
-	public WebFilesManager(File webRoot) {
-		this.webRoot = webRoot;
-	}
+	private boolean downloadAccepted = false;
+	private int renderThreadCount = 0;
+	private boolean metricsEnabled = false;
+	private File dataFolder = new File("data");
 	
-	public boolean needsUpdate() {
-		if (!new File(webRoot, "index.html").exists()) return true;
 	
-		return false;
-	}
-	
-	public void updateFiles() throws IOException {
-		URL fileResource = getClass().getResource("/de/bluecolored/bluemap/webroot.zip");
-		File tempFile = File.createTempFile("bluemap_webroot_extraction", null);
+	public CoreConfig(ConfigurationNode node) throws IOException {
 		
-		try {
-			FileUtils.copyURLToFile(fileResource, tempFile, 10000, 10000);
-			try (ZipFile zipFile = new ZipFile(tempFile)){
-				Enumeration<? extends ZipEntry> entries = zipFile.entries();
-				while(entries.hasMoreElements()) {
-					ZipEntry zipEntry = entries.nextElement();
-					if (zipEntry.isDirectory()) new File(webRoot, zipEntry.getName()).mkdirs();
-					else {
-						File target = new File(webRoot, zipEntry.getName());
-						FileUtils.copyInputStreamToFile(zipFile.getInputStream(zipEntry), target);
-					}
-				}
-			}
-		} finally {
-			tempFile.delete();
-		}
+		//accept-download
+		downloadAccepted = node.getNode("accept-download").getBoolean(false);
+
+		//renderThreadCount
+		int processors = Runtime.getRuntime().availableProcessors();
+		renderThreadCount = node.getNode("renderThreadCount").getInt(0);
+		if (renderThreadCount <= 0) renderThreadCount = processors + renderThreadCount;
+		if (renderThreadCount <= 0) renderThreadCount = 1;
+		
+		//metrics
+		metricsEnabled = node.getNode("metrics").getBoolean(false);
+		
+		//data
+		dataFolder = ConfigManager.toFolder(node.getNode("data").getString("data"));
+
 	}
 	
+	public File getDataFolder() {
+		if (!dataFolder.exists()) dataFolder.mkdirs();
+		return dataFolder;
+	}
+	
+	public boolean isDownloadAccepted() {
+		return downloadAccepted;
+	}
+	
+	public boolean isMetricsEnabled() {
+		return metricsEnabled;
+	}
+	
+	public int getRenderThreadCount() {
+		return renderThreadCount;
+	}
+
 }

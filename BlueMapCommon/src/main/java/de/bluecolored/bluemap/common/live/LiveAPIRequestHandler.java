@@ -31,9 +31,9 @@ import java.util.Map;
 
 import com.google.gson.stream.JsonWriter;
 
+import de.bluecolored.bluemap.common.plugin.PluginConfig;
 import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
-import de.bluecolored.bluemap.core.config.LiveAPISettings;
 import de.bluecolored.bluemap.core.webserver.HttpRequest;
 import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
 import de.bluecolored.bluemap.core.webserver.HttpResponse;
@@ -45,9 +45,9 @@ public class LiveAPIRequestHandler implements HttpRequestHandler {
 	private Map<String, HttpRequestHandler> liveAPIRequests;
 	private ServerInterface server;
 	
-	private LiveAPISettings config;
+	private PluginConfig config;
 	
-	public LiveAPIRequestHandler(ServerInterface server, LiveAPISettings config, HttpRequestHandler notFoundHandler) {
+	public LiveAPIRequestHandler(ServerInterface server, PluginConfig config, HttpRequestHandler notFoundHandler) {
 		this.server = server;
 		this.notFoundHandler = notFoundHandler;
 		
@@ -63,7 +63,13 @@ public class LiveAPIRequestHandler implements HttpRequestHandler {
 	public HttpResponse handle(HttpRequest request) {
 		if (!config.isLiveUpdatesEnabled()) return this.notFoundHandler.handle(request);
 		
-		HttpRequestHandler handler = liveAPIRequests.get(request.getPath());
+		String path = request.getPath();
+		
+		//normalize path
+		if (path.startsWith("/")) path = path.substring(1);
+		if (path.endsWith("/")) path = path.substring(0, path.length() - 1);
+		
+		HttpRequestHandler handler = liveAPIRequests.get(path);
 		if (handler != null) return handler.handle(request);
 		
 		return this.notFoundHandler.handle(request);

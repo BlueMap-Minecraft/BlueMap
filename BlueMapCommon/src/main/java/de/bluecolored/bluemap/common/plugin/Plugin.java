@@ -30,217 +30,113 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import org.apache.commons.io.FileUtils;
-
-import com.flowpowered.math.vector.Vector2i;
-
-import de.bluecolored.bluemap.common.BlueMapWebServer;
+import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.MapType;
+import de.bluecolored.bluemap.common.MissingResourcesException;
 import de.bluecolored.bluemap.common.RenderManager;
 import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
+import de.bluecolored.bluemap.common.live.LiveAPIRequestHandler;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.common.plugin.skins.PlayerSkinUpdater;
-import de.bluecolored.bluemap.core.config.ConfigManager;
-import de.bluecolored.bluemap.core.config.MainConfig;
-import de.bluecolored.bluemap.core.config.MainConfig.MapConfig;
+import de.bluecolored.bluemap.core.BlueMap;
+import de.bluecolored.bluemap.core.config.CoreConfig;
+import de.bluecolored.bluemap.core.config.RenderConfig;
+import de.bluecolored.bluemap.core.config.WebServerConfig;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.metrics.Metrics;
-import de.bluecolored.bluemap.core.render.RenderSettings;
-import de.bluecolored.bluemap.core.render.TileRenderer;
-import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
-import de.bluecolored.bluemap.core.render.lowres.LowresModelManager;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.web.WebFilesManager;
-import de.bluecolored.bluemap.core.web.WebSettings;
-import de.bluecolored.bluemap.core.world.SlicedWorld;
+import de.bluecolored.bluemap.core.web.FileRequestHandler;
+import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
+import de.bluecolored.bluemap.core.webserver.WebServer;
 import de.bluecolored.bluemap.core.world.World;
 
 public class Plugin {
 
 	public static final String PLUGIN_ID = "bluemap";
 	public static final String PLUGIN_NAME = "BlueMap";
-	
-	private BlueMapAPIImpl api;
-	
+
 	private String implementationType;
-	
 	private ServerInterface serverInterface;
-	
-	private MainConfig config;
-	private ResourcePack resourcePack;
+
+	private BlueMapService blueMap;
+	private BlueMapAPIImpl api;
 
 	private Map<UUID, World> worlds;
 	private Map<String, MapType> maps;
-	
+
+	private RenderManager renderManager;
+	private WebServer webServer;
+	private Thread periodicalSaveThread;
+	private Thread metricsThread;
+
+	private PluginConfig pluginConfig;
 	private MapUpdateHandler updateHandler;
 	private PlayerSkinUpdater skinUpdater;
 
-	private RenderManager renderManager;
-	private BlueMapWebServer webServer;
-	
-	private Thread periodicalSaveThread;
-	private Thread metricsThread;
-	
 	private boolean loaded = false;
 
 	public Plugin(String implementationType, ServerInterface serverInterface) {
 		this.implementationType = implementationType.toLowerCase();
-		
 		this.serverInterface = serverInterface;
-		
-		this.maps = new HashMap<>();
-		this.worlds = new HashMap<>();
 	}
 	
 	public synchronized void load() throws IOException, ParseResourceException {
 		if (loaded) return;
 		unload(); //ensure nothing is left running (from a failed load or something)
 		
-		//load configs
-		URL defaultSpongeConfig = Plugin.class.getResource("/bluemap-" + implementationType + ".conf");
-		URL spongeConfigDefaults = Plugin.class.getResource("/bluemap-" + implementationType + "-defaults.conf");
-		ConfigManager configManager = new ConfigManager(serverInterface.getConfigFolder(), defaultSpongeConfig, spongeConfigDefaults);
-		configManager.loadMainConfig();
-		config = configManager.getMainConfig();
-		
-		//load resources
-		File defaultResourceFile = config.getDataPath().resolve("minecraft-client-" + ResourcePack.MINECRAFT_CLIENT_VERSION + ".jar").toFile();
-		File resourceExtensionsFile = config.getDataPath().resolve("resourceExtensions.zip").toFile();
-		File textureExportFile = config.getWebDataPath().resolve("textures.json").toFile();
-		
-		if (!defaultResourceFile.exists()) {
-			if (config.isDownloadAccepted()) {
-				
-				//download file
-				try {
-					Logger.global.logInfo("Downloading " + ResourcePack.MINECRAFT_CLIENT_URL + " to " + defaultResourceFile + " ...");
-					ResourcePack.downloadDefaultResource(defaultResourceFile);
-				} catch (IOException e) {
-					Logger.global.logError("Failed to download resources!", e);
-					return;
-				}
-				
-			} else {
-				Logger.global.logWarning("BlueMap is missing important resources!");
-				Logger.global.logWarning("You need to accept the download of the required files in order of BlueMap to work!");
-				try { Logger.global.logWarning("Please check: " + configManager.getMainConfigFile().getCanonicalPath()); } catch (IOException ignored) {}
-				Logger.global.logInfo("If you have changed the config you can simply reload the plugin using: /bluemap reload");
-				
-				return;
-			}
-		}
+		blueMap = new BlueMapService(serverInterface);
 
-		resourceExtensionsFile.delete();
-		FileUtils.copyURLToFile(Plugin.class.getResource("/resourceExtensions.zip"), resourceExtensionsFile, 10000, 10000);
+		//load configs
+		CoreConfig coreConfig = blueMap.getCoreConfig();
+		RenderConfig renderConfig = blueMap.getRenderConfig();
+		WebServerConfig webServerConfig = blueMap.getWebServerConfig();
+
+		//load plugin config
+		pluginConfig = new PluginConfig(blueMap.getConfigManager().loadOrCreate(
+				new File(serverInterface.getConfigFolder(), "plugin.conf"), 
+				Plugin.class.getResource("/plugin.conf"), 
+				Plugin.class.getResource("/plugin-defaults.conf"), 
+				true,
+				true
+		));
 		
-		//find more resource packs
-		File resourcePackFolder = new File(serverInterface.getConfigFolder(), "resourcepacks");
-		resourcePackFolder.mkdirs();
-		File[] resourcePacks = resourcePackFolder.listFiles();
-		Arrays.sort(resourcePacks); //load resource packs in alphabetical order so you can reorder them by renaming
-		
-		List<File> resources = new ArrayList<>(resourcePacks.length + 1);
-		resources.add(defaultResourceFile);
-		for (File file : resourcePacks) resources.add(file);
-		resources.add(resourceExtensionsFile);
-		
-		resourcePack = new ResourcePack();
-		if (textureExportFile.exists()) resourcePack.loadTextureFile(textureExportFile);
-		resourcePack.load(resources);
-		resourcePack.saveTextureFile(textureExportFile);
-		
-		configManager.loadResourceConfigs(resourcePack);
-		
-		//load maps
-		for (MapConfig mapConfig : config.getMapConfigs()) {
-			String id = mapConfig.getId();
-			String name = mapConfig.getName();
+		//try load resources
+		try {
+			blueMap.getResourcePack();
+		} catch (MissingResourcesException ex) {
+			Logger.global.logWarning("BlueMap is missing important resources!");
+			Logger.global.logWarning("You need to accept the download of the required files in order of BlueMap to work!");
+			try { Logger.global.logWarning("Please check: " + blueMap.getCoreConfigFile().getCanonicalPath()); } catch (IOException ignored) {}
+			Logger.global.logInfo("If you have changed the config you can simply reload the plugin using: /bluemap reload");
 			
-			File worldFolder = new File(mapConfig.getWorldPath());
-			if (!worldFolder.exists() || !worldFolder.isDirectory()) {
-				Logger.global.logError("Failed to load map '" + id + "': '" + worldFolder.getCanonicalPath() + "' does not exist or is no directory!", new IOException());
-				continue;
-			}
-			
-			UUID worldUUID;
-			try {
-				worldUUID = serverInterface.getUUIDForWorld(worldFolder);
-			} catch (IOException e) {
-				Logger.global.logError("Failed to load map '" + id + "': Failed to get UUID for the world!", e);
-				continue;
-			}
-			
-			World world = worlds.get(worldUUID);
-			if (world == null) {
-				try {
-					world = MCAWorld.load(worldFolder.toPath(), worldUUID, configManager.getBlockIdConfig(), configManager.getBlockPropertiesConfig(), configManager.getBiomeConfig(), serverInterface.getWorldName(worldUUID), true);
-					worlds.put(worldUUID, world);
-				} catch (IOException e) {
-					Logger.global.logError("Failed to load map '" + id + "': Failed to read level.dat", e);
-					continue;
-				}
-			}
-			
-			//slice world if configured
-			if (!mapConfig.getMin().equals(RenderSettings.DEFAULT_MIN) || !mapConfig.getMax().equals(RenderSettings.DEFAULT_MAX)) {
-				if (mapConfig.isRenderEdges()) { 
-					world = new SlicedWorld(world, mapConfig.getMin(), mapConfig.getMax());
-				} else {
-					world = new SlicedWorld(
-							world, 
-							mapConfig.getMin().min(mapConfig.getMin().sub(2, 2, 2)), // protect from int-overflow
-							mapConfig.getMax().max(mapConfig.getMax().add(2, 2, 2))  // protect from int-overflow
-							);
-				}
-			}
-			
-			HiresModelManager hiresModelManager = new HiresModelManager(
-					config.getWebDataPath().resolve(id).resolve("hires"),
-					resourcePack,
-					mapConfig,
-					new Vector2i(mapConfig.getHiresTileSize(), mapConfig.getHiresTileSize())
-					);
-			
-			LowresModelManager lowresModelManager = new LowresModelManager(
-					config.getWebDataPath().resolve(id).resolve("lowres"), 
-					new Vector2i(mapConfig.getLowresPointsPerLowresTile(), mapConfig.getLowresPointsPerLowresTile()),
-					new Vector2i(mapConfig.getLowresPointsPerHiresTile(), mapConfig.getLowresPointsPerHiresTile()),
-					mapConfig.useGzipCompression()
-					);
-			
-			TileRenderer tileRenderer = new TileRenderer(hiresModelManager, lowresModelManager);
-			
-			MapType mapType = new MapType(id, name, world, tileRenderer);
-			maps.put(id, mapType);
-		}
-		if (maps.isEmpty()) {
-			Logger.global.logWarning("There are no valid maps configured, please check your config! Disabling BlueMap...");
 			unload();
 			return;
 		}
 		
+		//load worlds and maps
+		worlds = blueMap.getWorlds();
+		maps = blueMap.getMaps();
+		
+		//warn if no maps are configured
+		if (maps.isEmpty()) {
+			Logger.global.logWarning("There are no valid maps configured, please check your render-config! Disabling BlueMap...");
+		}
+		
 		//initialize render manager
-		renderManager = new RenderManager(config.getRenderThreadCount());
+		renderManager = new RenderManager(coreConfig.getRenderThreadCount());
 		renderManager.start();
 		
 		//load render-manager state
 		try {
-			File saveFile = config.getDataPath().resolve("rmstate").toFile();
-			saveFile.getParentFile().mkdirs();
+			File saveFile = getRenderManagerSaveFile();
 			if (saveFile.exists()) {
 				try (DataInputStream in = new DataInputStream(new GZIPInputStream(new FileInputStream(saveFile)))) {
 					renderManager.readState(in, getMapTypes());
@@ -272,38 +168,31 @@ public class Plugin {
 		this.updateHandler = new MapUpdateHandler(this);
 		serverInterface.registerListener(updateHandler);
 		
+		//update webapp and settings
+		blueMap.createOrUpdateWebApp(false);
+		blueMap.updateWebAppSettings();
+		
 		//start skin updater
-		if (config.isLiveUpdatesEnabled()) {
-			this.skinUpdater = new PlayerSkinUpdater(config.getWebRoot().resolve("assets").resolve("playerheads").toFile());
+		if (pluginConfig.isLiveUpdatesEnabled()) {
+			this.skinUpdater = new PlayerSkinUpdater(new File(renderConfig.getWebRoot(), "assets" + File.separator + "playerheads"));
 			serverInterface.registerListener(skinUpdater);
 		}
 		
-		//create/update webfiles
-		WebFilesManager webFilesManager = new WebFilesManager(config.getWebRoot());
-		if (webFilesManager.needsUpdate()) {
-			webFilesManager.updateFiles();
-		}
-
-		WebSettings webSettings = new WebSettings(config.getWebDataPath().resolve("settings.json").toFile());
-		webSettings.set(config.isUseCookies(), "useCookies");
-		webSettings.setAllMapsEnabled(false);
-		for (MapType map : maps.values()) {
-			webSettings.setMapEnabled(true, map.getId());
-			webSettings.setFrom(map.getTileRenderer(), map.getId());
-			webSettings.setFrom(map.getWorld(), map.getId());
-		}
-		int ordinal = 0;
-		for (MapConfig map : config.getMapConfigs()) {
-			if (!maps.containsKey(map.getId())) continue; //don't add not loaded maps
-			webSettings.setOrdinal(ordinal++, map.getId());
-			webSettings.setFrom(map, map.getId());
-		}
-		webSettings.save();
-		
-		//start webserver
-		if (config.isWebserverEnabled()) {
-			webServer = new BlueMapWebServer(config, config, serverInterface);
-			webServer.updateWebfiles();
+		//create and start webserver
+		if (webServerConfig.isWebserverEnabled()) {
+			HttpRequestHandler requestHandler = new FileRequestHandler(webServerConfig.getWebRoot().toPath(), "BlueMap v" + BlueMap.VERSION);
+			
+			//inject live api if enabled
+			if (pluginConfig.isLiveUpdatesEnabled()) {
+				requestHandler = new LiveAPIRequestHandler(serverInterface, pluginConfig, requestHandler);
+			}
+			
+			webServer = new WebServer(
+				webServerConfig.getWebserverPort(),
+				webServerConfig.getWebserverMaxConnections(),
+				webServerConfig.getWebserverBindAdress(),
+				requestHandler
+			);
 			webServer.start();
 		}
 		
@@ -313,7 +202,8 @@ public class Plugin {
 				Thread.sleep(TimeUnit.MINUTES.toMillis(1));
 				
 				while (true) {
-					if (serverInterface.isMetricsEnabled(config.isMetricsEnabled())) Metrics.sendReport(this.implementationType);
+					if (serverInterface.isMetricsEnabled(coreConfig.isMetricsEnabled())) Metrics.sendReport(this.implementationType);
+					
 					Thread.sleep(TimeUnit.MINUTES.toMillis(30));
 				}
 			} catch (InterruptedException ex){
@@ -369,25 +259,27 @@ public class Plugin {
 		}
 		
 		//save renders
-		for (MapType map : maps.values()) {
-			map.getTileRenderer().save();
+		if (maps != null) {
+			for (MapType map : maps.values()) {
+				map.getTileRenderer().save();
+			}
 		}
 		
 		//clear resources and configs
+		blueMap = null;
+		worlds = null;
+		maps = null;
 		renderManager = null;
 		webServer = null;
 		updateHandler = null;
-		resourcePack = null;
-		config = null;
-		maps.clear();
-		worlds.clear();
+		pluginConfig = null;
 		
 		loaded = false;
 	}
 	
 	public void saveRenderManagerState() throws IOException {
-		File saveFile = config.getDataPath().resolve("rmstate").toFile();
-		saveFile.getParentFile().mkdirs();
+		File saveFile = getRenderManagerSaveFile();
+		
 		if (saveFile.exists()) saveFile.delete();
 		saveFile.createNewFile();
 		
@@ -405,12 +297,24 @@ public class Plugin {
 		return serverInterface;
 	}
 	
-	public MainConfig getMainConfig() {
-		return config;
+	public CoreConfig getCoreConfig() throws IOException {
+		return blueMap.getCoreConfig();
 	}
 	
-	public ResourcePack getResourcePack() {
-		return resourcePack;
+	public RenderConfig getRenderConfig() throws IOException {
+		return blueMap.getRenderConfig();
+	}
+	
+	public WebServerConfig getWebServerConfig() throws IOException {
+		return blueMap.getWebServerConfig();
+	}
+	
+	public PluginConfig getPluginConfig() {
+		return pluginConfig;
+	}
+	
+	public ResourcePack getResourcePack() throws IOException {
+		return blueMap.getResourcePack();
 	}
 	
 	public World getWorld(UUID uuid){
@@ -429,11 +333,20 @@ public class Plugin {
 		return renderManager;
 	}
 	
+	public File getRenderManagerSaveFile() throws IOException {
+		if (blueMap == null) return null;
+		
+		File saveFile = new File(blueMap.getCoreConfig().getDataFolder(), "rmstate");
+		saveFile.getParentFile().mkdirs();
+		
+		return saveFile;
+	}
+	
 	public MapUpdateHandler getUpdateHandler() {
 		return updateHandler;
 	}
 	
-	public BlueMapWebServer getWebServer() {
+	public WebServer getWebServer() {
 		return webServer;
 	}
 	

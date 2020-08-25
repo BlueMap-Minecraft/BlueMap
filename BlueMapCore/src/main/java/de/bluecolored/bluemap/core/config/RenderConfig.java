@@ -24,19 +24,49 @@
  */
 package de.bluecolored.bluemap.core.config;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
-public class OutdatedConfigException extends IOException {
-	private static final long serialVersionUID = -942567050110586060L;
+import ninja.leaping.configurate.ConfigurationNode;
 
-	public OutdatedConfigException() {}
-	
-	public OutdatedConfigException(String message) {
-		super(message);
+public class RenderConfig {
+
+	private File webRoot = new File("web");
+	private boolean useCookies;
+	private List<MapConfig> mapConfigs = new ArrayList<>();
+
+	public RenderConfig(ConfigurationNode node) throws IOException {
+
+		//webroot
+		String webRootString = node.getNode("webroot").getString();
+		if (webRootString == null) throw new IOException("Invalid configuration: Node webroot is not defined");
+		webRoot = ConfigManager.toFolder(webRootString);
+		
+		//cookies
+		useCookies = node.getNode("useCookies").getBoolean(true);
+		
+		//maps
+		mapConfigs = new ArrayList<>();
+		for (ConfigurationNode mapConfigNode : node.getNode("maps").getChildrenList()) {
+			mapConfigs.add(new MapConfig(mapConfigNode));
+		}
+		
+	}
+
+	public File getWebRoot() {
+		if (!webRoot.exists()) webRoot.mkdirs();
+		return webRoot;
 	}
 	
-	public OutdatedConfigException(String message, Throwable cause) {
-		super(message, cause);
+	public boolean isUseCookies() {
+		return useCookies;
 	}
+	
+	public List<MapConfig> getMapConfigs(){
+		return mapConfigs;
+	}
+	
 	
 }

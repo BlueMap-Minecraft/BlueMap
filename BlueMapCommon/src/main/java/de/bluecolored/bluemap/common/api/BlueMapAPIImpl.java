@@ -55,25 +55,25 @@ public class BlueMapAPIImpl extends BlueMapAPI {
 
 	private static final String IMAGE_ROOT_PATH = "images";
 	
-	public Plugin blueMap;
+	public Plugin plugin;
 	public RenderAPIImpl renderer;
 	
 	public Map<UUID, BlueMapWorldImpl> worlds;
 	public Map<String, BlueMapMapImpl> maps;
 	
-	public BlueMapAPIImpl(Plugin blueMap) {
-		this.blueMap = blueMap;
+	public BlueMapAPIImpl(Plugin plugin) {
+		this.plugin = plugin;
 		
-		this.renderer = new RenderAPIImpl(this, blueMap.getRenderManager());
+		this.renderer = new RenderAPIImpl(this, plugin.getRenderManager());
 		
 		worlds = new HashMap<>();
-		for (World world : blueMap.getWorlds()) {
+		for (World world : plugin.getWorlds()) {
 			BlueMapWorldImpl w = new BlueMapWorldImpl(this, world);
 			worlds.put(w.getUuid(), w);
 		}
 		
 		maps = new HashMap<>();
-		for (MapType map : blueMap.getMapTypes()) {
+		for (MapType map : plugin.getMapTypes()) {
 			BlueMapMapImpl m = new BlueMapMapImpl(this, map);
 			maps.put(m.getId(), m);
 		}
@@ -86,7 +86,7 @@ public class BlueMapAPIImpl extends BlueMapAPI {
 
 	@Override
 	public MarkerAPIImpl getMarkerAPI() throws IOException {
-		return new MarkerAPIImpl(this, blueMap.getMainConfig().getWebDataPath().resolve("markers.json").toFile());
+		return new MarkerAPIImpl(this, new File(plugin.getRenderConfig().getWebRoot(), "data" + File.separator + "markers.json"));
 	}
 
 	@Override
@@ -104,15 +104,9 @@ public class BlueMapAPIImpl extends BlueMapAPI {
 		path = path.replaceAll("[^a-zA-Z_\\.\\-\\/]", "_");
 		String separator = FileSystems.getDefault().getSeparator();
 		
-		Path webRoot = blueMap.getMainConfig().getWebRoot().toAbsolutePath();
-		Path webDataRoot = blueMap.getMainConfig().getWebDataPath().toAbsolutePath();
-		
-		Path imagePath;
-		if (webDataRoot.startsWith(webRoot)) {
-			imagePath = webDataRoot.resolve(Paths.get(IMAGE_ROOT_PATH, path.replace("/", separator) + ".png")).toAbsolutePath();
-		} else {
-			imagePath = webRoot.resolve("assets").resolve(Paths.get(IMAGE_ROOT_PATH, path.replace("/", separator) + ".png")).toAbsolutePath();
-		}
+		Path webRoot = plugin.getRenderConfig().getWebRoot().toPath().toAbsolutePath();
+		Path webDataRoot = webRoot.resolve("data");
+		Path imagePath = webDataRoot.resolve(Paths.get(IMAGE_ROOT_PATH, path.replace("/", separator) + ".png")).toAbsolutePath();
 
 		File imageFile = imagePath.toFile();
 		imageFile.getParentFile().mkdirs();

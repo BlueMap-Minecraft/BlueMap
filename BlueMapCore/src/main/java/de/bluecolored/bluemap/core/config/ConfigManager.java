@@ -37,6 +37,8 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Preconditions;
+
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
@@ -58,157 +60,22 @@ public class ConfigManager {
 		CONFIG_PLACEHOLDERS.add(new Placeholder("minecraft-client-version", ResourcePack.MINECRAFT_CLIENT_VERSION));
 	}
 	
-	private File configFolder;
-	
-	private URL defaultMainConfig;
-	private URL mainConfigDefaultValues;
-	
-	private MainConfig mainConfig;
 	private BlockIdConfig blockIdConfig;
 	private BlockPropertiesConfig blockPropertiesConfig;
 	private BiomeConfig biomeConfig;
 	
 	/**
-	 * Manages all configurations BlueMap needs to render stuff.
+	 * Loads or creates a config file for BlueMap.
 	 * 
-	 * @param configFolder The folder containing all configuration-files
-	 * @param defaultMainConfig The default main-configuration file, used if a new configuration is generated 
-	 * @param mainConfigDefaultValues The default values that are used for the main-configuration file (if they are undefined)
+	 * @param configFile The config file to load
+	 * @param defaultConfig The default config that is used as a template if the config file does not exist (can be null)
+	 * @param defaultValues The default values used if a key is not present in the config (can be null)
+	 * @param usePlaceholders Whether to replace placeholders from the defaultConfig if it is newly generated 
+	 * @param generateEmptyConfig Whether to generate an empty config file if no default config is provided
+	 * @return
+	 * @throws IOException
 	 */
-	public ConfigManager(File configFolder, URL defaultMainConfig, URL mainConfigDefaultValues) {
-		this.defaultMainConfig = defaultMainConfig;
-		this.configFolder = configFolder;
-	}
-	
-	public MainConfig getMainConfig() {
-		return mainConfig;
-	}
-
-	public File getMainConfigFile() {
-		return new File(configFolder, "bluemap.conf");
-	}
-	
-	public BlockIdConfig getBlockIdConfig() {
-		return blockIdConfig;
-	}
-	
-	public File getBlockIdConfigFile() {
-		return new File(configFolder, "blockIds.json");
-	}
-
-	public BlockPropertiesConfig getBlockPropertiesConfig() {
-		return blockPropertiesConfig;
-	}
-	
-	public File getBlockPropertiesConfigFile() {
-		return new File(configFolder, "blockProperties.json");
-	}
-
-	public BiomeConfig getBiomeConfig() {
-		return biomeConfig;
-	}
-	
-	public File getBiomeConfigFile() {
-		return new File(configFolder, "biomes.json");
-	}
-	
-	public File getBlockColorConfigFile() {
-		return new File(configFolder, "blockColors.json");
-	}
-	
-	public void loadMainConfig() throws IOException {
-		mainConfig = new MainConfig(
-				loadOrCreate(
-						getMainConfigFile(), 
-						defaultMainConfig, 
-						mainConfigDefaultValues, 
-						true, 
-						true
-						)
-				);	
-	}
-	
-	public void loadResourceConfigs(ResourcePack resourcePack) throws IOException {
-		
-		//load blockColors.json from resources, config-folder and resourcepack
-		URL blockColorsConfigUrl = BlueMap.class.getResource("/blockColors.json");
-		ConfigurationNode blockColorsConfigNode = loadOrCreate(
-				getBlockColorConfigFile(), 
-				null, 
-				blockColorsConfigUrl, 
-				false,
-				false
-				);
-		blockColorsConfigNode = joinFromResourcePack(resourcePack, "blockColors.json", blockColorsConfigNode); 
-		resourcePack.getBlockColorCalculator().loadColorConfig(blockColorsConfigNode);
-
-		//load blockIds.json from resources, config-folder and resourcepack
-		URL blockIdsConfigUrl = BlueMap.class.getResource("/blockIds.json");
-		ConfigurationNode blockIdsConfigNode = loadOrCreate(
-						getBlockIdConfigFile(), 
-						null, 
-						blockIdsConfigUrl,
-						false,
-						false
-						);
-		blockIdsConfigNode = joinFromResourcePack(resourcePack, "blockIds.json", blockIdsConfigNode);
-		blockIdConfig = new BlockIdConfig(
-				blockIdsConfigNode, 
-				getLoader(makeAutogen(getBlockIdConfigFile()))
-				);
-
-		//load blockProperties.json from resources, config-folder and resourcepack
-		URL blockPropertiesConfigUrl = BlueMap.class.getResource("/blockProperties.json");
-		ConfigurationNode blockPropertiesConfigNode = loadOrCreate(
-						getBlockPropertiesConfigFile(), 
-						null,
-						blockPropertiesConfigUrl,
-						false, 
-						false
-						);
-		blockPropertiesConfigNode = joinFromResourcePack(resourcePack, "blockProperties.json", blockPropertiesConfigNode);
-		blockPropertiesConfig = new BlockPropertiesConfig(
-				blockPropertiesConfigNode,
-				resourcePack,
-				getLoader(makeAutogen(getBlockPropertiesConfigFile()))
-				);
-
-		//load biomes.json from resources, config-folder and resourcepack
-		URL biomeConfigUrl = BlueMap.class.getResource("/biomes.json");
-		ConfigurationNode biomeConfigNode = loadOrCreate(
-						getBiomeConfigFile(),
-						null, 
-						biomeConfigUrl,
-						false,
-						false
-						);
-		biomeConfigNode = joinFromResourcePack(resourcePack, "biomes.json", biomeConfigNode);
-		biomeConfig = new BiomeConfig(
-				biomeConfigNode,
-				getLoader(makeAutogen(getBiomeConfigFile()))
-				);
-	}
-	
-	private ConfigurationNode joinFromResourcePack(ResourcePack resourcePack, String configFileName, ConfigurationNode defaultConfig) {
-		ConfigurationNode joinedNode = null;
-		for (Resource resource : resourcePack.getConfigAdditions(configFileName)) {
-			try {
-				ConfigurationNode node = getLoader(configFileName, resource.read()).load();
-				if (joinedNode == null) joinedNode = node;
-				else joinedNode.mergeValuesFrom(node);
-			} catch (IOException ex) {
-				Logger.global.logWarning("Failed to load an additional " + configFileName + " from the resource-pack! " + ex);
-			}
-		}
-		
-		if (joinedNode == null) return defaultConfig;
-		
-		joinedNode.mergeValuesFrom(defaultConfig);
-		
-		return joinedNode;
-	}
-	
-	private ConfigurationNode loadOrCreate(File configFile, URL defaultConfig, URL defaultValues, boolean usePlaceholders, boolean generateEmptyConfig) throws IOException {
+	public ConfigurationNode loadOrCreate(File configFile, URL defaultConfig, URL defaultValues, boolean usePlaceholders, boolean generateEmptyConfig) throws IOException {
 		
 		ConfigurationNode configNode;
 		if (!configFile.exists()) {
@@ -255,6 +122,103 @@ public class ConfigManager {
 		return configNode;
 	}
 	
+	public void loadResourceConfigs(File configFolder, ResourcePack resourcePack) throws IOException {
+		
+		//load blockColors.json from resources, config-folder and resourcepack
+		URL blockColorsConfigUrl = BlueMap.class.getResource("/de/bluecolored/bluemap/blockColors.json");
+		File blockColorsConfigFile = new File(configFolder, "blockColors.json");
+		ConfigurationNode blockColorsConfigNode = loadOrCreate(
+				blockColorsConfigFile, 
+				null, 
+				blockColorsConfigUrl, 
+				false,
+				false
+				);
+		blockColorsConfigNode = joinFromResourcePack(resourcePack, "blockColors.json", blockColorsConfigNode); 
+		resourcePack.getBlockColorCalculator().loadColorConfig(blockColorsConfigNode);
+
+		//load blockIds.json from resources, config-folder and resourcepack
+		URL blockIdsConfigUrl = BlueMap.class.getResource("/de/bluecolored/bluemap/blockIds.json");
+		File blockIdsConfigFile = new File(configFolder, "blockIds.json");
+		ConfigurationNode blockIdsConfigNode = loadOrCreate(
+						blockIdsConfigFile, 
+						null, 
+						blockIdsConfigUrl,
+						false,
+						false
+						);
+		blockIdsConfigNode = joinFromResourcePack(resourcePack, "blockIds.json", blockIdsConfigNode);
+		blockIdConfig = new BlockIdConfig(
+				blockIdsConfigNode, 
+				getLoader(makeAutogen(blockIdsConfigFile))
+				);
+
+		//load blockProperties.json from resources, config-folder and resourcepack
+		URL blockPropertiesConfigUrl = BlueMap.class.getResource("/de/bluecolored/bluemap/blockProperties.json");
+		File blockPropertiesConfigFile = new File(configFolder, "blockProperties.json");
+		ConfigurationNode blockPropertiesConfigNode = loadOrCreate(
+						blockPropertiesConfigFile, 
+						null,
+						blockPropertiesConfigUrl,
+						false, 
+						false
+						);
+		blockPropertiesConfigNode = joinFromResourcePack(resourcePack, "blockProperties.json", blockPropertiesConfigNode);
+		blockPropertiesConfig = new BlockPropertiesConfig(
+				blockPropertiesConfigNode,
+				resourcePack,
+				getLoader(makeAutogen(blockPropertiesConfigFile))
+				);
+
+		//load biomes.json from resources, config-folder and resourcepack
+		URL biomeConfigUrl = BlueMap.class.getResource("/de/bluecolored/bluemap/biomes.json");
+		File biomeConfigFile = new File(configFolder, "biomes.json");
+		ConfigurationNode biomeConfigNode = loadOrCreate(
+						biomeConfigFile,
+						null, 
+						biomeConfigUrl,
+						false,
+						false
+						);
+		biomeConfigNode = joinFromResourcePack(resourcePack, "biomes.json", biomeConfigNode);
+		biomeConfig = new BiomeConfig(
+				biomeConfigNode,
+				getLoader(makeAutogen(biomeConfigFile))
+				);
+		
+	}
+
+	public BlockIdConfig getBlockIdConfig() {
+		return blockIdConfig;
+	}
+
+	public BlockPropertiesConfig getBlockPropertiesConfig() {
+		return blockPropertiesConfig;
+	}
+
+	public BiomeConfig getBiomeConfig() {
+		return biomeConfig;
+	}
+	
+	private ConfigurationNode joinFromResourcePack(ResourcePack resourcePack, String configFileName, ConfigurationNode defaultConfig) {
+		ConfigurationNode joinedNode = null;
+		for (Resource resource : resourcePack.getConfigAdditions(configFileName)) {
+			try {
+				ConfigurationNode node = getLoader(configFileName, resource.read()).load();
+				if (joinedNode == null) joinedNode = node;
+				else joinedNode.mergeValuesFrom(node);
+			} catch (IOException ex) {
+				Logger.global.logWarning("Failed to load an additional " + configFileName + " from the resource-pack! " + ex);
+			}
+		}
+		
+		if (joinedNode == null) return defaultConfig;
+		
+		joinedNode.mergeValuesFrom(defaultConfig);
+		
+		return joinedNode;
+	}
+	
 	private File makeAutogen(File file) throws IOException {
 		File autogenFile = file.getCanonicalFile().toPath().getParent().resolve("missing-configs").resolve(file.getName()).toFile();
 		autogenFile.getParentFile().mkdirs();
@@ -279,6 +243,14 @@ public class ConfigManager {
 		if (file.getName().endsWith(".json")) return GsonConfigurationLoader.builder().setFile(file).build();
 		if (file.getName().endsWith(".yaml") || file.getName().endsWith(".yml")) return YAMLConfigurationLoader.builder().setFile(file).build();
 		else return HoconConfigurationLoader.builder().setFile(file).build();
+	}
+
+	public static File toFolder(String pathString) throws IOException {
+		Preconditions.checkNotNull(pathString);
+		
+		File file = new File(pathString);
+		if (file.exists() && !file.isDirectory()) throw new IOException("Invalid configuration: Path '" + file.getAbsolutePath() + "' is a file (should be a directory)");
+		return file;
 	}
 	
 }

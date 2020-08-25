@@ -22,19 +22,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.web;
+package de.bluecolored.bluemap.common;
 
-import java.net.InetAddress;
-import java.nio.file.Path;
+public interface ThrowingFunction<T, R, E extends Throwable> {
 
-public interface WebServerConfig {
-
-	Path getWebRoot();
-
-	InetAddress getWebserverBindAdress();
+	R apply(T t) throws E;
 	
-	int getWebserverPort();
-
-	int getWebserverMaxConnections();
-
 }

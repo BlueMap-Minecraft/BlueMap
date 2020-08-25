@@ -9,6 +9,8 @@ The plugins/mods automatically update your map as soon as something changes in y
 It is however already quite stable and usable. There are just some features still missing, and some blocks - especially tile-entities - will not render correctly/at all.
 See below for a list of what is planned for future releases.
 
+![screenshot](https://bluecolored.de/paste/BlueMapScreenshot.jpg)
+
 ### Download
 You can choose a version and download BlueMap from [here](https://github.com/BlueMap-Minecraft/BlueMap/releases).
 
@@ -41,7 +43,6 @@ The `mc/xx`-branches are for other minecraft-versions.
 ### Todo / planned features
 Here is a *(surely incomplete)* list of things that i want to include in future versions. *(They are not in any specific order. There is no guarantee that any of those things will ever be included.)*
 
-- live player positions
 - render more tile-entities (banners, shulker-chests, etc..)
 - render entities (armor-stands, item-frames, maybe even cows and such..)
 - free-flight-controls

@@ -22,18 +22,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.config;
+package de.bluecolored.bluemap.common;
 
-import java.util.Collection;
+import java.io.IOException;
 
-public interface LiveAPISettings {
-
-	boolean isLiveUpdatesEnabled();
-	
-	Collection<String> getHiddenGameModes();
-
-	boolean isHideInvisible();
-
-	boolean isHideSneaking();
-	
+public class MissingResourcesException extends IOException {
+	private static final long serialVersionUID = 2084565069965755048L;
 }

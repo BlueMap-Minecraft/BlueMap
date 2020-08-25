@@ -58,6 +58,7 @@ public class HttpRequest {
 	
 	private String path = null;
 	private Map<String, String> getParams = null;
+	private String getParamString = null;
 	
 	public HttpRequest(String method, String adress, String version, Map<String, Set<String>> header) {
 		this.method = method;
@@ -119,26 +120,27 @@ public class HttpRequest {
 		if (getParams == null) parseAdress();
 		return Collections.unmodifiableMap(getParams);
 	}
+
+	public String getGETParamString() {
+		if (getParamString == null) parseAdress();
+		return getParamString;
+	}
 	
 	private void parseAdress() {
 		String adress = this.adress;
 		if (adress.isEmpty()) adress = "/";
 		String[] adressParts = adress.split("\\?", 2);
 		String path = adressParts[0];
-		String getParamString = adressParts.length > 1 ? adressParts[1] : ""; 
+		this.getParamString = adressParts.length > 1 ? adressParts[1] : ""; 
 		
 		Map<String, String> getParams = new HashMap<>();
-		for (String getParam : getParamString.split("&")){
+		for (String getParam : this.getParamString.split("&")){
 			if (getParam.isEmpty()) continue;
 			String[] kv = getParam.split("=", 2);
 			String key = kv[0];
 			String value = kv.length > 1 ? kv[1] : "";
 			getParams.put(key, value);
 		}
-		
-		//normalize path
-		if (path.startsWith("/")) path = path.substring(1);
-		if (path.endsWith("/")) path = path.substring(0, path.length() - 1);
 		
 		this.path = path;
 		this.getParams = getParams;
