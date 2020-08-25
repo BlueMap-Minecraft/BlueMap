@@ -24,26 +24,40 @@
  */
 package de.bluecolored.bluemap.core.mca.extensions;
 
-import java.util.Collection;
 import java.util.Objects;
+import java.util.Set;
 
 import com.flowpowered.math.vector.Vector3i;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
+import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.world.BlockState;
 
 public class DoublePlantExtension implements BlockStateExtension {
-
-	private static final Collection<String> AFFECTED_BLOCK_IDS = Lists.newArrayList(
-			"minecraft:sunflower",
-			"minecraft:lilac",
-			"minecraft:tall_grass",
-			"minecraft:large_fern",
-			"minecraft:rose_bush",
-			"minecraft:peony"
-		);
+	
+	private final Set<String> affectedBlockIds;
+	
+	public DoublePlantExtension(MinecraftVersion version) {
+		switch (version) {
+			case MC_1_12:
+				affectedBlockIds = Sets.newHashSet(
+					"minecraft:double_plant"
+				);	
+				break;
+			default:
+				affectedBlockIds = Sets.newHashSet(
+					"minecraft:sunflower",
+					"minecraft:lilac",
+					"minecraft:tall_grass",
+					"minecraft:large_fern",
+					"minecraft:rose_bush",
+					"minecraft:peony"
+				);	
+				break;
+		}
+	}
 	
 	@Override
 	public BlockState extend(MCAWorld world, Vector3i pos, BlockState state) {
@@ -57,8 +71,8 @@ public class DoublePlantExtension implements BlockStateExtension {
 	}
 
 	@Override
-	public Collection<String> getAffectedBlockIds() {
-		return AFFECTED_BLOCK_IDS;
+	public Set<String> getAffectedBlockIds() {
+		return affectedBlockIds;
 	}
 
 }

@@ -49,6 +49,7 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 
+import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.extensions.BlockStateExtension;
 import de.bluecolored.bluemap.core.mca.extensions.DoorExtension;
@@ -81,25 +82,10 @@ import net.querz.nbt.mca.MCAUtil;
 
 public class MCAWorld implements World {
 
-	private static final Multimap<String, BlockStateExtension> BLOCK_STATE_EXTENSIONS = MultimapBuilder.hashKeys().arrayListValues().build();
-
-	static {
-		registerBlockStateExtension(new SnowyExtension());
-		registerBlockStateExtension(new StairShapeExtension());
-		registerBlockStateExtension(new FireExtension());
-		registerBlockStateExtension(new RedstoneExtension());
-		registerBlockStateExtension(new DoorExtension());
-		registerBlockStateExtension(new NetherFenceConnectExtension());
-		registerBlockStateExtension(new TripwireConnectExtension());
-		registerBlockStateExtension(new WallConnectExtension());
-		registerBlockStateExtension(new WoodenFenceConnectExtension());
-		registerBlockStateExtension(new GlassPaneConnectExtension());
-		registerBlockStateExtension(new DoublePlantExtension());
-		registerBlockStateExtension(new DoubleChestExtension());
-	}
 
 	private final UUID uuid;
 	private final Path worldFolder;
+	private final MinecraftVersion minecraftVersion;
 	private String name;
 	private int seaLevel;
 	private Vector3i spawnPoint;
@@ -109,6 +95,8 @@ public class MCAWorld implements World {
 	private BlockIdMapper blockIdMapper;
 	private BlockPropertiesMapper blockPropertiesMapper;
 	private BiomeMapper biomeMapper;
+
+	private final Multimap<String, BlockStateExtension> blockStateExtensions;
 	
 	private boolean ignoreMissingLightData;
 	
@@ -117,6 +105,7 @@ public class MCAWorld implements World {
 	private MCAWorld(
 			Path worldFolder, 
 			UUID uuid, 
+			MinecraftVersion minecraftVersion,
 			String name, 
 			int worldHeight, 
 			int seaLevel, 
@@ -128,6 +117,7 @@ public class MCAWorld implements World {
 			) {
 		this.uuid = uuid;
 		this.worldFolder = worldFolder;
+		this.minecraftVersion = minecraftVersion;
 		this.name = name;
 		this.seaLevel = seaLevel;
 		this.spawnPoint = spawnPoint;
@@ -139,6 +129,20 @@ public class MCAWorld implements World {
 		this.ignoreMissingLightData = ignoreMissingLightData;
 		
 		this.forgeBlockMappings = new HashMap<>();
+		
+		this.blockStateExtensions = MultimapBuilder.hashKeys().arrayListValues().build();
+		registerBlockStateExtension(new SnowyExtension(minecraftVersion));
+		registerBlockStateExtension(new StairShapeExtension());
+		registerBlockStateExtension(new FireExtension());
+		registerBlockStateExtension(new RedstoneExtension());
+		registerBlockStateExtension(new DoorExtension(minecraftVersion));
+		registerBlockStateExtension(new NetherFenceConnectExtension());
+		registerBlockStateExtension(new TripwireConnectExtension());
+		registerBlockStateExtension(new WallConnectExtension());
+		registerBlockStateExtension(new WoodenFenceConnectExtension(minecraftVersion));
+		registerBlockStateExtension(new GlassPaneConnectExtension());
+		registerBlockStateExtension(new DoublePlantExtension(minecraftVersion));
+		registerBlockStateExtension(new DoubleChestExtension());
 		
 		this.chunkCache = Caffeine.newBuilder()
 			.maximumSize(500)
@@ -186,7 +190,7 @@ public class MCAWorld implements World {
 		BlockState blockState = chunk.getBlockState(pos);
 		
 		if (chunk instanceof ChunkAnvil112) { // only use extensions if old format chunk (1.12) in the new format block-states are saved with extensions
-			for (BlockStateExtension ext : BLOCK_STATE_EXTENSIONS.get(blockState.getFullId())) {
+			for (BlockStateExtension ext : blockStateExtensions.get(blockState.getFullId())) {
 				blockState = ext.extend(this, pos, blockState);
 			}
 		}
@@ -386,6 +390,10 @@ public class MCAWorld implements World {
 		return forgeBlockMappings.get(id);
 	}
 	
+	public MinecraftVersion getMinecraftVersion() {
+		return minecraftVersion;
+	}
+	
 	private Path getRegionFolder() {
 		return worldFolder.resolve("region");
 	}
@@ -394,11 +402,17 @@ public class MCAWorld implements World {
 		return getRegionFolder().resolve(MCAUtil.createNameFromRegionLocation(region.getX(), region.getY()));
 	}
 
-	public static MCAWorld load(Path worldFolder, UUID uuid, BlockIdMapper blockIdMapper, BlockPropertiesMapper blockPropertiesMapper, BiomeMapper biomeIdMapper) throws IOException {
-		return load(worldFolder, uuid, blockIdMapper, blockPropertiesMapper, biomeIdMapper, null, false);
+	private void registerBlockStateExtension(BlockStateExtension extension) {
+		for (String id : extension.getAffectedBlockIds()) {
+			this.blockStateExtensions.put(id, extension);
+		}
 	}
 	
-	public static MCAWorld load(Path worldFolder, UUID uuid, BlockIdMapper blockIdMapper, BlockPropertiesMapper blockPropertiesMapper, BiomeMapper biomeIdMapper, String name, boolean ignoreMissingLightData) throws IOException {
+	public static MCAWorld load(Path worldFolder, UUID uuid, MinecraftVersion version, BlockIdMapper blockIdMapper, BlockPropertiesMapper blockPropertiesMapper, BiomeMapper biomeIdMapper) throws IOException {
+		return load(worldFolder, uuid, version, blockIdMapper, blockPropertiesMapper, biomeIdMapper, null, false);
+	}
+	
+	public static MCAWorld load(Path worldFolder, UUID uuid, MinecraftVersion version, BlockIdMapper blockIdMapper, BlockPropertiesMapper blockPropertiesMapper, BiomeMapper biomeIdMapper, String name, boolean ignoreMissingLightData) throws IOException {
 		try {
 			boolean subDimension = false;
 			
@@ -430,6 +444,7 @@ public class MCAWorld implements World {
 			MCAWorld world = new MCAWorld(
 					worldFolder, 
 					uuid, 
+					version,
 					name, 
 					worldHeight, 
 					seaLevel, 
@@ -481,12 +496,6 @@ public class MCAWorld implements World {
 				MCAUtil.chunkToRegion(pos.getX()),
 				MCAUtil.chunkToRegion(pos.getY())
 			);
-	}
-	
-	public static void registerBlockStateExtension(BlockStateExtension extension) {
-		for (String id : extension.getAffectedBlockIds()) {
-			BLOCK_STATE_EXTENSIONS.put(id, extension);
-		}
 	}
 	
 }

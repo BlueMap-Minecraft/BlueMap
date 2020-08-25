@@ -45,6 +45,7 @@ import de.bluecolored.bluemap.common.plugin.commands.Commands;
 import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.fabric.events.PlayerJoinCallback;
@@ -78,7 +79,7 @@ public class FabricMod implements ModInitializer, ServerInterface {
 		this.onlinePlayerMap = new ConcurrentHashMap<>();
 		this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 		
-		pluginInstance = new Plugin("fabric", this);
+		pluginInstance = new Plugin(MinecraftVersion.MC_1_16, "fabric", this);
 		
 		this.worldUUIDs = new ConcurrentHashMap<>();
 		this.eventForwarder = new FabricEventForwarder(this);

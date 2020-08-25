@@ -55,6 +55,7 @@ import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 
@@ -72,12 +73,19 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 	
 	public BukkitPlugin() {
 		Logger.global = new JavaLogger(getLogger());
+
+		MinecraftVersion version = MinecraftVersion.getLatest();
+		try {
+			version = MinecraftVersion.fromVersionString(Bukkit.getVersion());
+		} catch (IllegalArgumentException e) {
+			Logger.global.logWarning("Failed to find a matching version for version-string '" + Bukkit.getVersion() + "'! Using latest version: " + version.getVersionString());
+		}
 		
 		this.onlinePlayerMap = new ConcurrentHashMap<>();
 		this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 
 		this.eventForwarder = new EventForwarder();
-		this.pluginInstance = new Plugin("bukkit", this);
+		this.pluginInstance = new Plugin(version, "bukkit", this);
 		this.commands = new BukkitCommands(this.pluginInstance);
 		
 		BukkitPlugin.instance = this;

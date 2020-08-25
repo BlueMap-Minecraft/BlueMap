@@ -56,8 +56,6 @@ public class ConfigManager {
 	static {
 		CONFIG_PLACEHOLDERS.add(new Placeholder("version", BlueMap.VERSION));
 		CONFIG_PLACEHOLDERS.add(new Placeholder("datetime-iso", () -> LocalDateTime.now().withNano(0).toString()));
-		CONFIG_PLACEHOLDERS.add(new Placeholder("minecraft-client-url", ResourcePack.MINECRAFT_CLIENT_URL));
-		CONFIG_PLACEHOLDERS.add(new Placeholder("minecraft-client-version", ResourcePack.MINECRAFT_CLIENT_VERSION));
 	}
 	
 	private BlockIdConfig blockIdConfig;

@@ -32,6 +32,7 @@ import com.flowpowered.math.vector.Vector3f;
 import com.flowpowered.math.vector.Vector4f;
 import com.google.common.collect.Sets;
 
+import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.model.ExtendedFace;
 import de.bluecolored.bluemap.core.model.ExtendedModel;
 import de.bluecolored.bluemap.core.render.RenderSettings;
@@ -58,10 +59,11 @@ public class LiquidModelBuilder {
 	
 	private BlockState liquidBlockState;
 	private Block block;
+	private MinecraftVersion minecraftVersion;
 	private RenderSettings renderSettings;
 	private BlockColorCalculator colorCalculator;
 	
-	public LiquidModelBuilder(Block block, BlockState liquidBlockState, RenderSettings renderSettings, BlockColorCalculator colorCalculator) {
+	public LiquidModelBuilder(Block block, BlockState liquidBlockState, MinecraftVersion minecraftVersion, RenderSettings renderSettings, BlockColorCalculator colorCalculator) {
 		this.block = block;
 		this.renderSettings = renderSettings;
 		this.liquidBlockState = liquidBlockState;
@@ -106,7 +108,7 @@ public class LiquidModelBuilder {
 
 		int textureId = texture.getId();
 		Vector3f tintcolor = Vector3f.ONE;
-		if (liquidBlockState.getFullId().equals("minecraft:water")) {
+		if (minecraftVersion != MinecraftVersion.MC_1_12 && liquidBlockState.getFullId().equals("minecraft:water")) {
 			tintcolor = colorCalculator.getWaterAverageColor(block);
 		}
 		

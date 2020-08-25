@@ -54,6 +54,7 @@ import de.bluecolored.bluemap.common.MissingResourcesException;
 import de.bluecolored.bluemap.common.RenderManager;
 import de.bluecolored.bluemap.common.RenderTask;
 import de.bluecolored.bluemap.core.BlueMap;
+import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.config.WebServerConfig;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
@@ -251,8 +252,21 @@ public class BlueMapCLI {
 				configFolder = new File(cmd.getOptionValue("c"));
 				configFolder.mkdirs();
 			}
+			
+			//minecraft version
+			MinecraftVersion version = MinecraftVersion.getLatest();
+			if (cmd.hasOption("v")) {
+				String versionString = cmd.getOptionValue("v");
+				try {
+					version = MinecraftVersion.fromVersionString(versionString);
+				} catch (IllegalArgumentException e) {
+					Logger.global.logWarning("Could not determine a version from the provided version-string: '" + versionString + "'");
+					System.exit(1);
+					return;
+				}
+			}
 
-			blueMap = new BlueMapService(configFolder);
+			blueMap = new BlueMapService(version, configFolder);
 			boolean noActions = true;
 
 			if (cmd.hasOption("w")) {
@@ -336,6 +350,15 @@ public class BlueMapCLI {
 				.hasArg()
 				.argName("config-folder")
 				.desc("Sets path of the folder containing the configuration-files to use (configurations will be generated here if they don't exist)")
+				.build()
+			);
+		
+		options.addOption(
+				Option.builder("v")
+				.longOpt("mc-version")
+				.hasArg()
+				.argName("version")
+				.desc("Sets the minecraft-version, used e.g. to load resource-packs correctly. Defaults to the latest compatible version.")
 				.build()
 			);
 		

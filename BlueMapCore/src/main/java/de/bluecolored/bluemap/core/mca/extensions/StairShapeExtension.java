@@ -24,8 +24,7 @@
  */
 package de.bluecolored.bluemap.core.mca.extensions;
 
-import java.util.Collection;
-import java.util.HashSet;
+import java.util.Set;
 
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.Sets;
@@ -36,7 +35,7 @@ import de.bluecolored.bluemap.core.world.BlockState;
 
 public class StairShapeExtension implements BlockStateExtension {
 
-	private static final HashSet<String> AFFECTED_BLOCK_IDS = Sets.newHashSet(
+	private static final Set<String> AFFECTED_BLOCK_IDS = Sets.newHashSet(
 			"minecraft:oak_stairs",
 			"minecraft:cobblestone_stairs",
 			"minecraft:brick_stairs",
@@ -112,7 +111,7 @@ public class StairShapeExtension implements BlockStateExtension {
 	}
 
 	@Override
-	public Collection<String> getAffectedBlockIds() {
+	public Set<String> getAffectedBlockIds() {
 		return AFFECTED_BLOCK_IDS;
 	}
 

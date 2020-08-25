@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.common;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -40,6 +41,7 @@ import com.flowpowered.math.vector.Vector2i;
 
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.config.ConfigManager;
 import de.bluecolored.bluemap.core.config.CoreConfig;
 import de.bluecolored.bluemap.core.config.MapConfig;
@@ -62,6 +64,7 @@ import de.bluecolored.bluemap.core.world.World;
  * This is the attempt to generalize as many actions as possible to have CLI and Plugins run on the same general setup-code.
  */
 public class BlueMapService {
+	private MinecraftVersion minecraftVersion;
 	private File configFolder;
 	private ThrowingFunction<File, UUID, IOException> worldUUIDProvider;
 	private ThrowingFunction<UUID, String, IOException> worldNameProvider;
@@ -78,7 +81,8 @@ public class BlueMapService {
 	private Map<UUID, World> worlds;
 	private Map<String, MapType> maps;
 	
-	public BlueMapService(File configFolder) {
+	public BlueMapService(MinecraftVersion minecraftVersion, File configFolder) {
+		this.minecraftVersion = minecraftVersion;
 		this.configFolder = configFolder;
 		
 		Map<File, UUID> uuids = new HashMap<>();
@@ -96,7 +100,8 @@ public class BlueMapService {
 		configManager = new ConfigManager();
 	}
 
-	public BlueMapService(ServerInterface serverInterface) {
+	public BlueMapService(MinecraftVersion minecraftVersion, ServerInterface serverInterface) {
+		this.minecraftVersion = minecraftVersion;
 		this.configFolder = serverInterface.getConfigFolder();
 		this.worldUUIDProvider = serverInterface::getUUIDForWorld;
 		this.worldNameProvider = serverInterface::getWorldName;
@@ -166,7 +171,7 @@ public class BlueMapService {
 			World world = worlds.get(worldUUID);
 			if (world == null) {
 				try {
-					world = MCAWorld.load(worldFolder.toPath(), worldUUID, getConfigManager().getBlockIdConfig(), getConfigManager().getBlockPropertiesConfig(), getConfigManager().getBiomeConfig(), worldNameProvider.apply(worldUUID), true);
+					world = MCAWorld.load(worldFolder.toPath(), worldUUID, minecraftVersion, getConfigManager().getBlockIdConfig(), getConfigManager().getBlockPropertiesConfig(), getConfigManager().getBiomeConfig(), worldNameProvider.apply(worldUUID), true);
 					worlds.put(worldUUID, world);
 				} catch (MissingResourcesException e) {
 					throw e; // rethrow this to stop loading and display resource-missing message
@@ -215,8 +220,8 @@ public class BlueMapService {
 	
 	public synchronized ResourcePack getResourcePack() throws IOException, MissingResourcesException {
 		if (resourcePack == null) {
-			File defaultResourceFile = new File(getCoreConfig().getDataFolder(), "minecraft-client-" + ResourcePack.MINECRAFT_CLIENT_VERSION + ".jar");
-			File resourceExtensionsFile = new File(getCoreConfig().getDataFolder(), "resourceExtensions.zip");
+			File defaultResourceFile = new File(getCoreConfig().getDataFolder(), "minecraft-client-" + minecraftVersion.getVersionString() + ".jar");
+			File resourceExtensionsFile = new File(getCoreConfig().getDataFolder(), minecraftVersion.getResourcePrefix() + File.separator + "resourceExtensions.zip");
 
 			File textureExportFile = new File(getRenderConfig().getWebRoot(), "data" + File.separator + "textures.json");
 			
@@ -225,8 +230,8 @@ public class BlueMapService {
 					
 					//download file
 					try {
-						Logger.global.logInfo("Downloading " + ResourcePack.MINECRAFT_CLIENT_URL + " to " + defaultResourceFile + " ...");
-						ResourcePack.downloadDefaultResource(defaultResourceFile);
+						Logger.global.logInfo("Downloading " + minecraftVersion.getClientDownloadUrl() + " to " + defaultResourceFile + " ...");
+						FileUtils.copyURLToFile(new URL(minecraftVersion.getClientDownloadUrl()), defaultResourceFile, 10000, 10000);
 					} catch (IOException e) {
 						throw new IOException("Failed to download resources!", e);
 					}
@@ -253,7 +258,7 @@ public class BlueMapService {
 			resources.add(resourceExtensionsFile);
 			
 			try {
-				resourcePack = new ResourcePack();
+				resourcePack = new ResourcePack(minecraftVersion);
 				if (textureExportFile.exists()) resourcePack.loadTextureFile(textureExportFile);
 				resourcePack.load(resources);
 				resourcePack.saveTextureFile(textureExportFile);

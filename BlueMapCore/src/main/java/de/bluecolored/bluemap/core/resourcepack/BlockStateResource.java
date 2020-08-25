@@ -181,6 +181,9 @@ public class BlockStateResource {
 					String conditionString = entry.getKey().toString();
 					ConfigurationNode transformedModelNode = entry.getValue();
 
+					//some exceptions in 1.12 resource packs that we ignore
+					if (conditionString.equals("all") || conditionString.equals("map")) continue;
+					
 					Variant variant = blockState.new Variant();
 					variant.condition = parseConditionString(conditionString);
 					variant.models = loadModels(transformedModelNode, blockstateFile, null);
@@ -242,8 +245,17 @@ public class BlockStateResource {
 			String namespacedModelPath = node.getNode("model").getString();
 			if (namespacedModelPath == null)
 				throw new ParseResourceException("No model defined!");
-
-			String modelPath = ResourcePack.namespacedToAbsoluteResourcePath(namespacedModelPath, "models") + ".json";
+			
+			
+			String modelPath;
+			switch (resourcePack.getMinecraftVersion()) {
+				case MC_1_12: 
+					modelPath = ResourcePack.namespacedToAbsoluteResourcePath(namespacedModelPath, "models/block") + ".json";
+					break;
+				default:
+					modelPath = ResourcePack.namespacedToAbsoluteResourcePath(namespacedModelPath, "models") + ".json";
+					break;
+			}
 
 			BlockModelResource model = resourcePack.blockModelResources.get(modelPath);
 			if (model == null) {

@@ -24,10 +24,10 @@
  */
 package de.bluecolored.bluemap.core.mca.extensions;
 
-import java.util.Collection;
+import java.util.Set;
 
 import com.flowpowered.math.vector.Vector3i;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.util.Direction;
@@ -35,7 +35,7 @@ import de.bluecolored.bluemap.core.world.BlockState;
 
 public class DoubleChestExtension implements BlockStateExtension {
 
-	private static final Collection<String> AFFECTED_BLOCK_IDS = Lists.newArrayList(
+	private static final Set<String> AFFECTED_BLOCK_IDS = Sets.newHashSet(
 			"minecraft:chest",
 			"minecraft:trapped_chest"
 		);
@@ -54,7 +54,7 @@ public class DoubleChestExtension implements BlockStateExtension {
 	}
 
 	@Override
-	public Collection<String> getAffectedBlockIds() {
+	public Set<String> getAffectedBlockIds() {
 		return AFFECTED_BLOCK_IDS;
 	}
 

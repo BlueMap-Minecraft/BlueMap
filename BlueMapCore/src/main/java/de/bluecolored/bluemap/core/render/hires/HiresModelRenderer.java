@@ -42,12 +42,23 @@ import de.bluecolored.bluemap.core.world.World;
 
 public class HiresModelRenderer {
 
+	private final String grassId; 
+	
 	private RenderSettings renderSettings;
 	private BlockStateModelFactory modelFactory;
 	
 	public HiresModelRenderer(ResourcePack resourcePack, RenderSettings renderSettings) {
 		this.renderSettings = renderSettings;
 		this.modelFactory = new BlockStateModelFactory(resourcePack, renderSettings);
+		
+		switch (resourcePack.getMinecraftVersion()) {
+			case MC_1_12:
+				grassId = "minecraft:tall_grass";
+				break;
+			default: 
+				grassId = "minecraft:grass";
+				break;
+		}
 	}
 	
 	public HiresModel render(WorldTile tile, AABB region) {
@@ -91,7 +102,7 @@ public class HiresModelRenderer {
 					color = MathUtils.overlayColors(blockModel.getMapColor(), color);
 					
 					//TODO: quick hack to random offset grass
-					if (block.getBlockState().getFullId().equals("minecraft:grass")){
+					if (block.getBlockState().getFullId().equals(grassId)){
 						float dx = (MathUtils.hashToFloat(x, y, z, 123984) - 0.5f) * 0.75f;
 						float dz = (MathUtils.hashToFloat(x, y, z, 345542) - 0.5f) * 0.75f;
 						blockModel.translate(new Vector3f(dx, 0, dz));

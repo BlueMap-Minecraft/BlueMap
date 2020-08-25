@@ -74,7 +74,7 @@ public class BlockStateModelFactory {
 		BlockStateModel model = new BlockStateModel();
 		BlockColorCalculator colorCalculator = resourcePack.getBlockColorCalculator();
 		ResourceModelBuilder modelBuilder = new ResourceModelBuilder(block, renderSettings, colorCalculator);
-		LiquidModelBuilder liquidBuilder = new LiquidModelBuilder(block, blockState, renderSettings, colorCalculator);
+		LiquidModelBuilder liquidBuilder = new LiquidModelBuilder(block, blockState, resourcePack.getMinecraftVersion(), renderSettings, colorCalculator);
 		
 		for (TransformedBlockModelResource bmr : resource.getModels(blockState, block.getPosition())){
 			switch (bmr.getModel().getType()){

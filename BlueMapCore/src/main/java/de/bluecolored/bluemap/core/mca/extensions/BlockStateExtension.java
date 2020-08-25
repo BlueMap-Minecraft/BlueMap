@@ -24,7 +24,7 @@
  */
 package de.bluecolored.bluemap.core.mca.extensions;
 
-import java.util.Collection;
+import java.util.Set;
 
 import com.flowpowered.math.vector.Vector3i;
 
@@ -35,6 +35,6 @@ public interface BlockStateExtension {
 
 	BlockState extend(MCAWorld world, Vector3i pos, BlockState state);
 	
-	Collection<String> getAffectedBlockIds();
+	Set<String> getAffectedBlockIds();
 	
 }

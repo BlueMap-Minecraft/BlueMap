@@ -46,6 +46,7 @@ import de.bluecolored.bluemap.common.live.LiveAPIRequestHandler;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.common.plugin.skins.PlayerSkinUpdater;
 import de.bluecolored.bluemap.core.BlueMap;
+import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.config.CoreConfig;
 import de.bluecolored.bluemap.core.config.RenderConfig;
 import de.bluecolored.bluemap.core.config.WebServerConfig;
@@ -63,6 +64,7 @@ public class Plugin {
 	public static final String PLUGIN_ID = "bluemap";
 	public static final String PLUGIN_NAME = "BlueMap";
 
+	private MinecraftVersion minecraftVersion;
 	private String implementationType;
 	private ServerInterface serverInterface;
 
@@ -83,7 +85,8 @@ public class Plugin {
 
 	private boolean loaded = false;
 
-	public Plugin(String implementationType, ServerInterface serverInterface) {
+	public Plugin(MinecraftVersion minecraftVersion, String implementationType, ServerInterface serverInterface) {
+		this.minecraftVersion = minecraftVersion;
 		this.implementationType = implementationType.toLowerCase();
 		this.serverInterface = serverInterface;
 	}
@@ -92,7 +95,7 @@ public class Plugin {
 		if (loaded) return;
 		unload(); //ensure nothing is left running (from a failed load or something)
 		
-		blueMap = new BlueMapService(serverInterface);
+		blueMap = new BlueMapService(minecraftVersion, serverInterface);
 
 		//load configs
 		CoreConfig coreConfig = blueMap.getCoreConfig();

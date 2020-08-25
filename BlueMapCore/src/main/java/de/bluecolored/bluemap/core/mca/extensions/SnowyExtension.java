@@ -24,26 +24,48 @@
  */
 package de.bluecolored.bluemap.core.mca.extensions;
 
-import java.util.Collection;
+import java.util.Set;
 
 import com.flowpowered.math.vector.Vector3i;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
+import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.world.BlockState;
 
 public class SnowyExtension implements BlockStateExtension {
 
-	private static final Collection<String> AFFECTED_BLOCK_IDS = Lists.newArrayList(
-			"minecraft:grass_block",
-			"minecraft:podzol"
-		);
+	private final Set<String> affectedBlockIds;
+	
+	private final String snowLayerId;
+	private final String snowBlockId; 
+	
+	public SnowyExtension(MinecraftVersion version) {
+		switch (version) {
+			case MC_1_12:
+				affectedBlockIds = Sets.newHashSet(
+					"minecraft:grass",
+					"minecraft:mycelium"
+				);
+				snowLayerId = "minecraft:snow_layer";
+				snowBlockId = "minecraft:snow";
+				break;
+			default:
+				affectedBlockIds = Sets.newHashSet(
+					"minecraft:grass_block",
+					"minecraft:podzol"
+				);
+				snowLayerId = "minecraft:snow";
+				snowBlockId = "minecraft:snow_block";
+				break;
+		}
+	}
 	
 	@Override
 	public BlockState extend(MCAWorld world, Vector3i pos, BlockState state) {
 		BlockState above = world.getBlockState(pos.add(0, 1, 0));
 
-		if (above.getFullId().equals("minecraft:snow") || above.getFullId().equals("minecraft:snow_block")) {
+		if (above.getFullId().equals(snowLayerId) || above.getFullId().equals(snowBlockId)) {
 			return state.with("snowy", "true");
 		} else {
 			return state.with("snowy", "false");
@@ -51,8 +73,8 @@ public class SnowyExtension implements BlockStateExtension {
 	}
 
 	@Override
-	public Collection<String> getAffectedBlockIds() {
-		return AFFECTED_BLOCK_IDS;
+	public Set<String> getAffectedBlockIds() {
+		return affectedBlockIds;
 	}
 
 }

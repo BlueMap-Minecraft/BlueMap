@@ -57,6 +57,7 @@ import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.sponge.SpongeCommands.SpongeCommandProxy;
@@ -95,7 +96,14 @@ public class SpongePlugin implements ServerInterface {
 		this.onlinePlayerMap = new ConcurrentHashMap<>();
 		this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 		
-		this.pluginInstance = new Plugin("sponge", this);
+		MinecraftVersion version = MinecraftVersion.MC_1_12;
+		try {
+			version = MinecraftVersion.fromVersionString(Sponge.getPlatform().getMinecraftVersion().getName());
+		} catch (IllegalArgumentException e) {
+			Logger.global.logWarning("Failed to find a matching version for version-name '" + Sponge.getPlatform().getMinecraftVersion().getName() + "'! Using latest known sponge-version: " + version.getVersionString());
+		}
+		
+		this.pluginInstance = new Plugin(version, "sponge", this);
 		this.commands = new SpongeCommands(pluginInstance);
 	}
 	

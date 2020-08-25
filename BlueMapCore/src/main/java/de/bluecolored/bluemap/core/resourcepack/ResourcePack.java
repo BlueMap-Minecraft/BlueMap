@@ -30,7 +30,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,6 +41,7 @@ import org.apache.commons.io.output.ByteArrayOutputStream;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 
+import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.BlockStateResource.Builder;
 import de.bluecolored.bluemap.core.resourcepack.fileaccess.BluemapAssetOverrideFileAccess;
@@ -54,9 +54,6 @@ import de.bluecolored.bluemap.core.world.BlockState;
  * Represents all resources (BlockStates / BlockModels and Textures) that are loaded and used to generate map-models. 
  */
 public class ResourcePack {
-
-	public static final String MINECRAFT_CLIENT_VERSION = "1.16.1";
-	public static final String MINECRAFT_CLIENT_URL = "https://launcher.mojang.com/v1/objects/c9abbe8ee4fa490751ca70635340b7cf00db83ff/client.jar";
 	
 	private static final String[] CONFIG_FILES = {
 		"blockColors.json",
@@ -64,6 +61,8 @@ public class ResourcePack {
 		"blockProperties.json",
 		"biomes.json"
 	};
+	
+	private MinecraftVersion minecraftVersion;
 	
 	protected Map<String, BlockStateResource> blockStateResources;
 	protected Map<String, BlockModelResource> blockModelResources;
@@ -76,7 +75,9 @@ public class ResourcePack {
 	
 	private Multimap<String, Resource> configs;
 	
-	public ResourcePack() {
+	public ResourcePack(MinecraftVersion minecraftVersion) {
+		this.minecraftVersion = minecraftVersion;
+		
 		blockStateResources = new HashMap<>();
 		blockModelResources = new HashMap<>();
 		textures = new TextureGallery();
@@ -210,15 +211,8 @@ public class ResourcePack {
 		return blockColorCalculator;
 	}
 	
-	/**
-	 * Synchronously downloads the default minecraft resources from the mojang-servers.
-	 * @param file The file to save the downloaded resources to
-	 * @throws IOException If an IOException occurs during the download
-	 */
-	public static void downloadDefaultResource(File file) throws IOException {
-		if (file.exists()) file.delete();
-		file.getParentFile().mkdirs();
-		org.apache.commons.io.FileUtils.copyURLToFile(new URL(MINECRAFT_CLIENT_URL), file, 10000, 10000);
+	public MinecraftVersion getMinecraftVersion() {
+		return minecraftVersion;
 	}
 	
 	protected static String namespacedToAbsoluteResourcePath(String namespacedPath, String resourceTypeFolder) {

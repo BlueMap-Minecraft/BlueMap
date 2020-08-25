@@ -24,28 +24,48 @@
  */
 package de.bluecolored.bluemap.core.mca.extensions;
 
-import java.util.Collection;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 
 import com.flowpowered.math.vector.Vector3i;
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
+import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.world.BlockState;
 
 public class DoorExtension implements BlockStateExtension {
 
-	private static final Collection<String> AFFECTED_BLOCK_IDS = Lists.newArrayList(
-			"minecraft:oak_door",
-			"minecraft:iron_door",
-			"minecraft:spruce_door",
-			"minecraft:birch_door",
-			"minecraft:jungle_door",
-			"minecraft:acacia_door",
-			"minecraft:dark_oak_door"
-		);
+	private final Set<String> affectedBlockIds;
+	
+	public DoorExtension(MinecraftVersion version) {
+		switch (version) {
+			case MC_1_12:
+				affectedBlockIds = Sets.newHashSet(
+					"minecraft:wooden_door",
+					"minecraft:iron_door",
+					"minecraft:spruce_door",
+					"minecraft:birch_door",
+					"minecraft:jungle_door",
+					"minecraft:acacia_door",
+					"minecraft:dark_oak_door"
+				);	
+				break;
+			default:
+				affectedBlockIds = Sets.newHashSet(
+					"minecraft:oak_door",
+					"minecraft:iron_door",
+					"minecraft:spruce_door",
+					"minecraft:birch_door",
+					"minecraft:jungle_door",
+					"minecraft:acacia_door",
+					"minecraft:dark_oak_door"
+				);	
+				break;
+		}
+	}
 	
 	@Override
 	public BlockState extend(MCAWorld world, Vector3i pos, BlockState state) {
@@ -76,8 +96,8 @@ public class DoorExtension implements BlockStateExtension {
 	}
 
 	@Override
-	public Collection<String> getAffectedBlockIds() {
-		return AFFECTED_BLOCK_IDS;
+	public Set<String> getAffectedBlockIds() {
+		return affectedBlockIds;
 	}
 
 }

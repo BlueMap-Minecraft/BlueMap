@@ -24,25 +24,44 @@
  */
 package de.bluecolored.bluemap.core.mca.extensions;
 
-import java.util.HashSet;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
 
-public class WoodenFenceConnectExtension extends ConnectSameOrFullBlockExtension {
+import de.bluecolored.bluemap.core.MinecraftVersion;
 
-	private static final HashSet<String> AFFECTED_BLOCK_IDS = Sets.newHashSet(
-			"minecraft:oak_fence",
-			"minecraft:spruce_fence",
-			"minecraft:birch_fence",
-			"minecraft:jungle_fence",
-			"minecraft:dark_oak_fence",
-			"minecraft:acacia_fence"
-		);
+public class WoodenFenceConnectExtension extends ConnectSameOrFullBlockExtension {
+	
+	private final Set<String> affectedBlockIds;
+	
+	public WoodenFenceConnectExtension(MinecraftVersion version) {
+		switch (version) {
+			case MC_1_12:
+				affectedBlockIds = Sets.newHashSet(
+					"minecraft:fence",
+					"minecraft:spruce_fence",
+					"minecraft:birch_fence",
+					"minecraft:jungle_fence",
+					"minecraft:dark_oak_fence",
+					"minecraft:acacia_fence"
+				);	
+				break;
+			default:
+				affectedBlockIds = Sets.newHashSet(
+					"minecraft:oak_fence",
+					"minecraft:spruce_fence",
+					"minecraft:birch_fence",
+					"minecraft:jungle_fence",
+					"minecraft:dark_oak_fence",
+					"minecraft:acacia_fence"
+				);	
+				break;
+		}
+	}
 	
 	@Override
 	public Set<String> getAffectedBlockIds() {
-		return AFFECTED_BLOCK_IDS;
+		return affectedBlockIds;
 	}
 
 }
