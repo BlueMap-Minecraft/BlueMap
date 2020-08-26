@@ -231,7 +231,7 @@ public class MCAWorld implements World {
 		Path regionPath = getMCAFilePath(regionPos);
 		
 		File regionFile = regionPath.toFile();
-		if (!regionFile.exists()) return Chunk.empty(this, chunkPos);
+		if (!regionFile.exists() || regionFile.length() <= 0) return Chunk.empty(this, chunkPos);
 		
 		try (RandomAccessFile raf = new RandomAccessFile(regionFile, "r")) {
 		
