@@ -82,7 +82,6 @@ import net.querz.nbt.mca.MCAUtil;
 
 public class MCAWorld implements World {
 
-
 	private final UUID uuid;
 	private final Path worldFolder;
 	private final MinecraftVersion minecraftVersion;
@@ -90,7 +89,7 @@ public class MCAWorld implements World {
 	private int seaLevel;
 	private Vector3i spawnPoint;
 
-	private final LoadingCache<Vector2i, Chunk> chunkCache;	
+	private final LoadingCache<Vector2i, Chunk> chunkCache;
 	
 	private BlockIdMapper blockIdMapper;
 	private BlockPropertiesMapper blockPropertiesMapper;
@@ -357,6 +356,11 @@ public class MCAWorld implements World {
 	@Override
 	public void invalidateChunkCache(Vector2i chunk) {
 		chunkCache.invalidate(chunk);
+	}
+	
+	@Override
+	public void cleanUpChunkCache() {
+		chunkCache.cleanUp();
 	}
 	
 	public BlockIdMapper getBlockIdMapper() {

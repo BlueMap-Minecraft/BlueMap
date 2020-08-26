@@ -157,6 +157,11 @@ public class SlicedWorld implements World {
 	}
 	
 	@Override
+	public void cleanUpChunkCache() {
+		world.cleanUpChunkCache();
+	}
+	
+	@Override
 	public Vector2i blockPosToChunkPos(Vector3i block) {
 		return world.blockPosToChunkPos(block);
 	}

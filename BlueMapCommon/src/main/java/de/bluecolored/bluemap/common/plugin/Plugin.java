@@ -156,6 +156,11 @@ public class Plugin {
 					Thread.sleep(TimeUnit.MINUTES.toMillis(5));
 					try {
 						saveRenderManagerState();
+						
+						//clean up caches
+						for (World world : blueMap.getWorlds().values()) {
+							world.cleanUpChunkCache();
+						}
 					} catch (IOException ex) {
 						Logger.global.logError("Failed to save render-manager state!", ex);
 					}

@@ -62,6 +62,7 @@ import de.bluecolored.bluemap.core.web.FileRequestHandler;
 import de.bluecolored.bluemap.core.web.WebSettings;
 import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
 import de.bluecolored.bluemap.core.webserver.WebServer;
+import de.bluecolored.bluemap.core.world.World;
 
 public class BlueMapCLI {
 	
@@ -190,6 +191,11 @@ public class BlueMapCLI {
 					renderManager.writeState(dos);
 				} catch (IOException ex) {
 					Logger.global.logError("Failed to save render-state!", ex);
+				}
+				
+				//clean up caches
+				for (World world : blueMap.getWorlds().values()) {
+					world.cleanUpChunkCache();
 				}
 			}
 		}

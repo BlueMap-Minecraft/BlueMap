@@ -157,6 +157,11 @@ public interface World {
 	public void invalidateChunkCache(Vector2i chunk);
 	
 	/**
+	 * Cleans up invalid cache-entries to free up memory
+	 */
+	public void cleanUpChunkCache();
+	
+	/**
 	 * Returns the ChunkPosition for a BlockPosition 
 	 */
 	public default Vector2i blockPosToChunkPos(Vector3i block) {
