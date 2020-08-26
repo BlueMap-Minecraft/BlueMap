@@ -70,7 +70,6 @@ public class BlueMapService {
 	private ThrowingFunction<UUID, String, IOException> worldNameProvider;
 
 	private ConfigManager configManager;
-	private boolean resourceConfigLoaded = false;
 	
 	private CoreConfig coreConfig;
 	private RenderConfig renderConfig;
@@ -168,10 +167,13 @@ public class BlueMapService {
 				continue;
 			}
 			
+			ConfigManager configManager = getConfigManager();
+			configManager.loadResourceConfigs(configFolder, getResourcePack());
+			
 			World world = worlds.get(worldUUID);
 			if (world == null) {
 				try {
-					world = MCAWorld.load(worldFolder.toPath(), worldUUID, minecraftVersion, getConfigManager().getBlockIdConfig(), getConfigManager().getBlockPropertiesConfig(), getConfigManager().getBiomeConfig(), worldNameProvider.apply(worldUUID), true);
+					world = MCAWorld.load(worldFolder.toPath(), worldUUID, minecraftVersion, configManager.getBlockIdConfig(), configManager.getBlockPropertiesConfig(), configManager.getBiomeConfig(), worldNameProvider.apply(worldUUID), true);
 					worlds.put(worldUUID, world);
 				} catch (MissingResourcesException e) {
 					throw e; // rethrow this to stop loading and display resource-missing message
@@ -272,11 +274,6 @@ public class BlueMapService {
 	}
 	
 	public synchronized ConfigManager getConfigManager() throws IOException {
-		if (!resourceConfigLoaded) {
-			configManager.loadResourceConfigs(configFolder, getResourcePack());
-			resourceConfigLoaded = true;
-		}
-		
 		return configManager;
 	}
 	
