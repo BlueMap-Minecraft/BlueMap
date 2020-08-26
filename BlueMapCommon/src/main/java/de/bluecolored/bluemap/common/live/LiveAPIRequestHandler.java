@@ -34,6 +34,7 @@ import com.google.gson.stream.JsonWriter;
 import de.bluecolored.bluemap.common.plugin.PluginConfig;
 import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.webserver.HttpRequest;
 import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
 import de.bluecolored.bluemap.core.webserver.HttpResponse;
@@ -70,7 +71,14 @@ public class LiveAPIRequestHandler implements HttpRequestHandler {
 		if (path.endsWith("/")) path = path.substring(0, path.length() - 1);
 		
 		HttpRequestHandler handler = liveAPIRequests.get(path);
-		if (handler != null) return handler.handle(request);
+		if (handler != null) {
+			HttpResponse response = handler.handle(request);
+			response.addHeader("Server", "BlueMap v" + BlueMap.VERSION);
+			response.addHeader("Cache-Control", "no-cache");
+			response.addHeader("Content-Type", "application/json");
+			
+			return response;
+		}
 		
 		return this.notFoundHandler.handle(request);
 	}
