@@ -283,6 +283,7 @@ public class MCAWorld implements World {
 		
 		for (File file : getRegionFolder().toFile().listFiles()) {
 			if (!file.getName().endsWith(".mca")) continue;
+			if (file.length() <= 0) continue;
 			
 			try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
 
