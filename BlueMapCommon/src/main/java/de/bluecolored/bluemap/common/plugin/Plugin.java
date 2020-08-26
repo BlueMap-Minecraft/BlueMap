@@ -105,8 +105,8 @@ public class Plugin {
 		//load plugin config
 		pluginConfig = new PluginConfig(blueMap.getConfigManager().loadOrCreate(
 				new File(serverInterface.getConfigFolder(), "plugin.conf"), 
-				Plugin.class.getResource("/plugin.conf"), 
-				Plugin.class.getResource("/plugin-defaults.conf"), 
+				Plugin.class.getResource("/de/bluecolored/bluemap/plugin.conf"), 
+				Plugin.class.getResource("/de/bluecolored/bluemap/plugin-defaults.conf"), 
 				true,
 				true
 		));
