@@ -147,8 +147,7 @@ public class ConfigManager {
 						);
 		blockIdsConfigNode = joinFromResourcePack(resourcePack, "blockIds.json", blockIdsConfigNode);
 		blockIdConfig = new BlockIdConfig(
-				blockIdsConfigNode, 
-				getLoader(makeAutogen(blockIdsConfigFile))
+				blockIdsConfigNode
 				);
 
 		//load blockProperties.json from resources, config-folder and resourcepack
@@ -164,8 +163,7 @@ public class ConfigManager {
 		blockPropertiesConfigNode = joinFromResourcePack(resourcePack, "blockProperties.json", blockPropertiesConfigNode);
 		blockPropertiesConfig = new BlockPropertiesConfig(
 				blockPropertiesConfigNode,
-				resourcePack,
-				getLoader(makeAutogen(blockPropertiesConfigFile))
+				resourcePack
 				);
 
 		//load biomes.json from resources, config-folder and resourcepack
@@ -180,8 +178,7 @@ public class ConfigManager {
 						);
 		biomeConfigNode = joinFromResourcePack(resourcePack, "biomes.json", biomeConfigNode);
 		biomeConfig = new BiomeConfig(
-				biomeConfigNode,
-				getLoader(makeAutogen(biomeConfigFile))
+				biomeConfigNode
 				);
 		
 	}
