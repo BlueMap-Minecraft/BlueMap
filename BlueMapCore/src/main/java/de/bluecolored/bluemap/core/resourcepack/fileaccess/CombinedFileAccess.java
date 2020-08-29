@@ -29,28 +29,43 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class CombinedFileAccess implements FileAccess {
 
 	public List<FileAccess> sources;
+	private Map<String, FileAccess> sourceMap;
 	
 	public CombinedFileAccess() {
 		sources = new ArrayList<>();
+		sourceMap = new HashMap<>();
 	}
 	
 	public void addFileAccess(FileAccess source) {
-		sources.add(source);
+		synchronized (sources) {
+			sources.add(source);
+		}
+		synchronized (sourceMap) {
+			for (String path : source.listFiles("", true)) {
+				sourceMap.put(FileAccess.normalize(path), source);
+			}
+		}
 	}
 
 	@Override
+	public String getName() {
+		return "CombinedFileAccess(" + sources.size() + ")";
+	}
+	
+	@Override
 	public InputStream readFile(String path) throws FileNotFoundException, IOException {
-		for (int i = sources.size() - 1; i >= 0; i--) { //reverse order because later sources override earlier ones 
-			try {
-				return sources.get(i).readFile(path);
-			} catch (FileNotFoundException ex) {}
+		synchronized (sourceMap) {
+			FileAccess source = sourceMap.get(FileAccess.normalize(path));
+			if (source != null) return source.readFile(path);
 		}
 		
 		throw new FileNotFoundException("File " + path + " does not exist in any of the sources!");
@@ -59,9 +74,11 @@ public class CombinedFileAccess implements FileAccess {
 	@Override
 	public Collection<String> listFiles(String path, boolean recursive) {
 		Set<String> files = new HashSet<>();
-		
-		for (int i = 0; i < sources.size(); i++) {
-			files.addAll(sources.get(i).listFiles(path, recursive));
+
+		synchronized (sources) {
+			for (int i = 0; i < sources.size(); i++) {
+				files.addAll(sources.get(i).listFiles(path, recursive));
+			}
 		}
 		
 		return files;
@@ -70,9 +87,11 @@ public class CombinedFileAccess implements FileAccess {
 	@Override
 	public Collection<String> listFolders(String path) {
 		Set<String> folders = new HashSet<>();
-		
-		for (int i = 0; i < sources.size(); i++) {
-			folders.addAll(sources.get(i).listFolders(path));
+
+		synchronized (sources) {
+			for (int i = 0; i < sources.size(); i++) {
+				folders.addAll(sources.get(i).listFolders(path));
+			}
 		}
 		
 		return folders;
@@ -81,13 +100,15 @@ public class CombinedFileAccess implements FileAccess {
 	@Override
 	public void close() throws IOException {
 		IOException exception = null;
-		
-		for (FileAccess source : sources) {
-			try {
-				source.close();
-			} catch (IOException ex) {
-				if (exception == null) exception = ex;
-				else exception.addSuppressed(ex);
+
+		synchronized (sources) {
+			for (FileAccess source : sources) {
+				try {
+					source.close();
+				} catch (IOException ex) {
+					if (exception == null) exception = ex;
+					else exception.addSuppressed(ex);
+				}
 			}
 		}
 		

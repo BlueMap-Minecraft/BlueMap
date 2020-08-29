@@ -33,6 +33,8 @@ import java.util.Collection;
 
 public interface FileAccess extends Closeable, AutoCloseable {
 
+	String getName();
+	
 	InputStream readFile(String path) throws FileNotFoundException, IOException;
 	
 	Collection<String> listFiles(String path, boolean recursive);

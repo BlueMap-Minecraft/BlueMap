@@ -47,6 +47,11 @@ public class FolderFileAccess implements FileAccess {
 	}
 	
 	@Override
+	public String getName() {
+		return folder.getName();
+	}
+	
+	@Override
 	public synchronized InputStream readFile(String path) throws FileNotFoundException {
 		InputStream stream = new FileInputStream(resolve(path).toFile());
 		tidy();

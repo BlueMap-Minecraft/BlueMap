@@ -43,7 +43,6 @@ import java.util.NoSuchElementException;
 import com.flowpowered.math.vector.Vector3f;
 import com.flowpowered.math.vector.Vector4f;
 
-import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.BlockModelResource.Element.Face;
 import de.bluecolored.bluemap.core.resourcepack.fileaccess.FileAccess;
 import de.bluecolored.bluemap.core.util.Axis;
@@ -285,18 +284,14 @@ public class BlockModelResource {
 						parentPath = ResourcePack.namespacedToAbsoluteResourcePath(parentPath, "models") + ".json";
 						blockModel = this.buildNoReset(parentPath, config.getNode("elements").isVirtual(), topModelPath);
 					} catch (IOException ex) {
-						Logger.global.logWarning("Failed to load parent model " + parentPath + " of model " + topModelPath + ": " + ex);
+						throw new ParseResourceException("Failed to load parent model " + parentPath + " of model " + topModelPath, ex);
 					}
 				}
 			}
 			
 			if (renderElements) {
 				for (ConfigurationNode elementNode : config.getNode("elements").getChildrenList()) {
-					try {
-						blockModel.elements.add(buildElement(blockModel, elementNode, topModelPath));
-					} catch (ParseResourceException ex) {
-						Logger.global.logWarning("Failed to parse element of model " + modelPath + " (" + topModelPath + "): " + ex);
-					}
+					blockModel.elements.add(buildElement(blockModel, elementNode, topModelPath));
 				}
 			}
 			
@@ -304,7 +299,7 @@ public class BlockModelResource {
 				try {
 					blockModel.textures.put(key, getTexture("#" + key));
 				} catch (NoSuchElementException | FileNotFoundException ex) {
-					Logger.global.logDebug("Failed to map Texture key '" + key + "': " + ex);
+					throw new ParseResourceException("Failed to map Texture key '" + key + "' for model '" + topModelPath + "': " + ex);
 				}
 			}
 			
@@ -365,7 +360,7 @@ public class BlockModelResource {
 						Face face = buildFace(element, direction, faceNode);
 						element.faces.put(direction, face);
 					} catch (ParseResourceException | IOException ex) {
-						Logger.global.logDebug("Failed to parse an " + direction + " face for the model " + topModelPath + "! " + ex);
+						throw new ParseResourceException("Failed to parse an " + direction + " face for the model " + topModelPath + "!", ex);
 					}
 				} else {
 					allDirs = false;

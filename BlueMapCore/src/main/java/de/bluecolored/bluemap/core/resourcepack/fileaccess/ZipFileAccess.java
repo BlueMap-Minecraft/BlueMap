@@ -43,6 +43,11 @@ public class ZipFileAccess implements FileAccess {
 	public ZipFileAccess(File file) throws ZipException, IOException {
 		this.file = new ZipFile(file);
 	}
+	
+	@Override
+	public String getName() {
+		return file.getName();
+	}
 
 	@Override
 	public InputStream readFile(String path) throws FileNotFoundException, IOException {

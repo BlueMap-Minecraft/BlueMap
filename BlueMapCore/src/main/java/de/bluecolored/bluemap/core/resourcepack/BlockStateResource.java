@@ -193,7 +193,7 @@ public class BlockStateResource {
 
 					blockState.variants.add(variant);
 				} catch (ParseResourceException | RuntimeException e) {
-					Logger.global.logWarning("Failed to parse a variant of " + blockstateFile + ": " + e);
+					Logger.global.logDebug("Failed to parse a variant of " + blockstateFile + ": " + e);
 				}
 			}
 
@@ -212,7 +212,7 @@ public class BlockStateResource {
 
 					blockState.multipart.add(variant);
 				} catch (ParseResourceException | RuntimeException e) {
-					Logger.global.logWarning("Failed to parse a multipart-part of " + blockstateFile + ": " + e);
+					Logger.global.logDebug("Failed to parse a multipart-part of " + blockstateFile + ": " + e);
 				}
 			}
 
@@ -227,14 +227,14 @@ public class BlockStateResource {
 					try {
 						models.add(loadModel(modelNode, overrideTextures));
 					} catch (ParseResourceException ex) {
-						Logger.global.logWarning("Failed to load a model trying to parse " + blockstateFile + ": " + ex);
+						Logger.global.logDebug("Failed to load a model trying to parse " + blockstateFile + ": " + ex);
 					}
 				}
 			} else if (node.hasMapChildren()) {
 				try {
 					models.add(loadModel(node, overrideTextures));
 				} catch (ParseResourceException ex) {
-					Logger.global.logWarning("Failed to load a model trying to parse " + blockstateFile + ": " + ex);
+					Logger.global.logDebug("Failed to load a model trying to parse " + blockstateFile + ": " + ex);
 				}
 			}
 
@@ -387,7 +387,7 @@ public class BlockStateResource {
 					variant.checkValid();
 					blockState.variants.add(variant);
 				} catch (ParseResourceException ex) {
-					Logger.global.logWarning("Failed to parse a variant (forge/property) of " + blockstateFile + ": " + ex);
+					Logger.global.logDebug("Failed to parse a variant (forge/property) of " + blockstateFile + ": " + ex);
 				}
 				
 			}
@@ -420,7 +420,7 @@ public class BlockStateResource {
 					variant.checkValid();
 					blockState.variants.add(variant);
 				} catch (ParseResourceException ex) {
-					Logger.global.logWarning("Failed to parse a variant (forge/straight) of " + blockstateFile + ": " + ex);
+					Logger.global.logDebug("Failed to parse a variant (forge/straight) of " + blockstateFile + ": " + ex);
 				}
 				
 			}

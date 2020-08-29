@@ -43,6 +43,11 @@ public class BluemapAssetOverrideFileAccess implements FileAccess {
 	}
 	
 	@Override
+	public String getName() {
+		return parent.getName() + "*";
+	}
+	
+	@Override
 	public InputStream readFile(String path) throws FileNotFoundException, IOException {
 		String[] pathParts = StringUtils.split(path, "/");
 		if (pathParts.length < 3 || !pathParts[0].equals("assets")) return parent.readFile(path);

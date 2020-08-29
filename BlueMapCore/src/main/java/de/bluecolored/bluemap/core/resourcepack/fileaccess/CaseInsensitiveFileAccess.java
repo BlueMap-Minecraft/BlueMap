@@ -41,6 +41,11 @@ public class CaseInsensitiveFileAccess implements FileAccess {
 	}
 	
 	@Override
+	public String getName() {
+		return parent.getName() + "(CI)";
+	}
+	
+	@Override
 	public InputStream readFile(String path) throws FileNotFoundException, IOException {
 		try {
 			return parent.readFile(path);

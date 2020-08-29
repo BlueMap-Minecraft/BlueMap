@@ -134,7 +134,8 @@ public class ResourcePack {
 	 */
 	public void load(File... sources) {
 		try (CombinedFileAccess combinedSources = new CombinedFileAccess()){
-			for (File file : sources) {
+			for (int i = 0; i < sources.length; i++) {
+				File file = sources[i];
 				try {
 					combinedSources.addFileAccess(FileAccess.of(file));
 				} catch (IOException e) {
@@ -149,11 +150,21 @@ public class ResourcePack {
 			Builder builder = BlockStateResource.builder(sourcesAccess, this);
 			
 			Collection<String> namespaces = sourcesAccess.listFolders("assets");
+			int i = 0;
 			for (String namespaceRoot : namespaces) {
+				i++;
+				
 				//load blockstates
 				String namespace = namespaceRoot.substring("assets/".length());
+				Logger.global.logInfo("Loading " + namespace + " assets (" + i + "/" + namespaces.size() + ")...");
+				
 				Collection<String> blockstateFiles = sourcesAccess.listFiles(namespaceRoot + "/blockstates", true);
 				for (String blockstateFile : blockstateFiles) {
+					if (Thread.interrupted()) {
+						Thread.currentThread().interrupt();
+						return;
+					}
+					
 					String filename = FileAccess.getFileName(blockstateFile);
 					if (!filename.endsWith(".json")) continue;
 
