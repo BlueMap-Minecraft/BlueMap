@@ -185,7 +185,7 @@ public class ChunkAnvil115 extends Chunk {
 				this.palette = new BlockState[0];
 			}
 
-			this.bitsPerBlock = blocks.length * 64 / 4096; //64 bits per long and 4096 blocks per section
+			this.bitsPerBlock = this.blocks.length >> 6; // available longs * 64 (bits per long) / 4096 (blocks per section) (floored result)
 		}
 		
 		public int getSectionY() {
