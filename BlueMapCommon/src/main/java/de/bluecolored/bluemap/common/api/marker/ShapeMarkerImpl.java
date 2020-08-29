@@ -194,7 +194,7 @@ public class ShapeMarkerImpl extends MarkerImpl implements ShapeMarker {
 	
 	private static void writeShape(ConfigurationNode node, Shape shape) {
 		for (int i = 0; i < shape.getPointCount(); i++) {
-			ConfigurationNode pointNode = node.getAppendedNode();
+			ConfigurationNode pointNode = node.appendListNode();
 			Vector2d point = shape.getPoint(i);
 			pointNode.getNode("x").setValue(Math.round(point.getX() * 1000d) / 1000d);
 			pointNode.getNode("z").setValue(Math.round(point.getY() * 1000d) / 1000d);

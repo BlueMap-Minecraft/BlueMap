@@ -222,7 +222,7 @@ public class BlockStateResource {
 		private Collection<Weighted<TransformedBlockModelResource>> loadModels(ConfigurationNode node, String blockstateFile, Map<String, String> overrideTextures) {
 			Collection<Weighted<TransformedBlockModelResource>> models = new ArrayList<>();
 
-			if (node.hasListChildren()) {
+			if (node.isList()) {
 				for (ConfigurationNode modelNode : node.getChildrenList()) {
 					try {
 						models.add(loadModel(modelNode, overrideTextures));
@@ -230,7 +230,7 @@ public class BlockStateResource {
 						Logger.global.logDebug("Failed to load a model trying to parse " + blockstateFile + ": " + ex);
 					}
 				}
-			} else if (node.hasMapChildren()) {
+			} else if (node.isMap()) {
 				try {
 					models.add(loadModel(node, overrideTextures));
 				} catch (ParseResourceException ex) {
@@ -429,12 +429,12 @@ public class BlockStateResource {
 		}
 
 		private boolean isForgeStraightVariant(ConfigurationNode node) {
-			if (node.hasListChildren())
+			if (node.isList())
 				return true;
 
 			for (Entry<Object, ? extends ConfigurationNode> entry : node.getChildrenMap().entrySet()) {
 				if (entry.getKey().equals(JSON_COMMENT)) continue;
-				if (!entry.getValue().hasMapChildren()) return true;
+				if (!entry.getValue().isMap()) return true;
 			}
 
 			return false;

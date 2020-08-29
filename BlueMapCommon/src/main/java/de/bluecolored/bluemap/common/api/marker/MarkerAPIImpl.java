@@ -149,7 +149,7 @@ public class MarkerAPIImpl implements MarkerAPI {
 		ConfigurationNode node = loader.createEmptyNode();
 		
 		for (MarkerSetImpl set : markerSets.values()) {
-			set.save(node.getNode("markerSets").getAppendedNode());
+			set.save(node.getNode("markerSets").appendListNode());
 		}
 		
 		loader.save(node);

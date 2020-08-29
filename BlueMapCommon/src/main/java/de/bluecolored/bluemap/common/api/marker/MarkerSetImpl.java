@@ -210,7 +210,7 @@ public class MarkerSetImpl implements MarkerSet {
 		node.getNode("defaultHide").setValue(this.isDefaultHidden);
 		
 		for (MarkerImpl marker : markers.values()) {
-			marker.save(node.getNode("marker").getAppendedNode());
+			marker.save(node.getNode("marker").appendListNode());
 		}
 
 		removedMarkers.clear();

@@ -39,7 +39,7 @@ public class ConfigUtils {
 	private ConfigUtils(){}
 	
 	public static Vector2i readVector2i(ConfigurationNode vectorNode){
-		if (vectorNode.hasListChildren()){
+		if (vectorNode.isList()){
 			List<? extends ConfigurationNode> list = vectorNode.getChildrenList();
 			return new Vector2i(
 					list.get(0).getInt(),
@@ -54,7 +54,7 @@ public class ConfigUtils {
 	}
 	
 	public static Vector3i readVector3i(ConfigurationNode vectorNode){
-		if (vectorNode.hasListChildren()){
+		if (vectorNode.isList()){
 			List<? extends ConfigurationNode> list = vectorNode.getChildrenList();
 			return new Vector3i(
 					list.get(0).getInt(),
@@ -71,7 +71,7 @@ public class ConfigUtils {
 	}
 	
 	public static Vector3f readVector3f(ConfigurationNode vectorNode){
-		if (vectorNode.hasListChildren()){
+		if (vectorNode.isList()){
 			List<? extends ConfigurationNode> list = vectorNode.getChildrenList();
 			return new Vector3f(
 					list.get(0).getFloat(),
@@ -88,7 +88,7 @@ public class ConfigUtils {
 	}
 	
 	public static Vector4i readVector4i(ConfigurationNode vectorNode){
-		if (vectorNode.hasListChildren()){
+		if (vectorNode.isList()){
 			List<? extends ConfigurationNode> list = vectorNode.getChildrenList();
 			return new Vector4i(
 					list.get(0).getInt(),
@@ -107,7 +107,7 @@ public class ConfigUtils {
 	}
 	
 	public static Vector4f readVector4f(ConfigurationNode vectorNode){
-		if (vectorNode.hasListChildren()){
+		if (vectorNode.isList()){
 			List<? extends ConfigurationNode> list = vectorNode.getChildrenList();
 			return new Vector4f(
 					list.get(0).getFloat(),
@@ -126,10 +126,10 @@ public class ConfigUtils {
 	}
 	
 	public static void writeVector4f(ConfigurationNode vectorNode, Vector4f v){
-		vectorNode.getAppendedNode().setValue(v.getX());
-		vectorNode.getAppendedNode().setValue(v.getY());
-		vectorNode.getAppendedNode().setValue(v.getZ());
-		vectorNode.getAppendedNode().setValue(v.getW());
+		vectorNode.appendListNode().setValue(v.getX());
+		vectorNode.appendListNode().setValue(v.getY());
+		vectorNode.appendListNode().setValue(v.getZ());
+		vectorNode.appendListNode().setValue(v.getW());
 	}
 	
 	/**

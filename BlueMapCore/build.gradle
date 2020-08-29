@@ -9,9 +9,9 @@ dependencies {
    compile 'org.apache.commons:commons-lang3:3.6'
    compile group: 'commons-io', name: 'commons-io', version: '2.5'
    compile 'com.flowpowered:flow-math:1.0.3'
-   compile 'ninja.leaping.configurate:configurate-hocon:3.3'
-   compile 'ninja.leaping.configurate:configurate-gson:3.3'
-   compile 'ninja.leaping.configurate:configurate-yaml:3.3'
+   compile 'org.spongepowered:configurate-hocon:3.7.1'
+   compile 'org.spongepowered:configurate-gson:3.7.1'
+   compile 'org.spongepowered:configurate-yaml:3.7.1'
    compile 'com.github.Querz:NBT:4.0'
 
    testCompile 'junit:junit:4.12'
