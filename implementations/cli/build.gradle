@@ -21,7 +21,7 @@ build.dependsOn shadowJar {
 	relocate 'org.apache', 'de.bluecolored.shadow.apache'
 	relocate 'com.github.benmanes.caffeine', 'de.bluecolored.shadow.benmanes.caffeine'
 	relocate 'org.aopalliance', 'de.bluecolored.shadow.aopalliance'
-	relocate 'javax', 'de.bluecolored.javax'
+	relocate 'javax', 'de.bluecolored.shadow.javax'
 	relocate 'com.mojang.brigadier', 'de.bluecolored.shadow.mojang.brigadier'
 	relocate 'org.checkerframework', 'de.bluecolored.shadow.checkerframework'
 	relocate 'org.codehaus', 'de.bluecolored.shadow.codehaus'

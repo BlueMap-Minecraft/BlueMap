@@ -47,7 +47,7 @@ shadowJar {
 	relocate 'com.github.benmanes.caffeine', 'de.bluecolored.shadow.benmanes.caffeine'
 	relocate 'com.google.errorprone', 'de.bluecolored.shadow.google.errorprone'
 	relocate 'org.aopalliance', 'de.bluecolored.shadow.aopalliance'
-	relocate 'javax.inject', 'de.bluecolored.javax.inject'
+	relocate 'javax.inject', 'de.bluecolored.shadow.javax.inject'
 	relocate 'com.google.inject', 'de.bluecolored.shadow.google.inject'
 	relocate 'org.checkerframework', 'de.bluecolored.shadow.checkerframework'
 	relocate 'org.codehaus', 'de.bluecolored.shadow.codehaus'
