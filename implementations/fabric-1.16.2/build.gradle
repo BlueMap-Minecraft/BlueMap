@@ -16,7 +16,7 @@ dependencies {
 
 	shadowInclude (project(':BlueMapCommon')) {
     	//exclude dependencies provided by fabric
-		exclude group: 'com.google.guava', module: 'guava'
+    	exclude group: 'com.google.guava', module: 'guava'
 		exclude group: 'com.google.code.gson', module: 'gson'
 		exclude group: 'org.apache.commons', module: 'commons-lang3'
 		exclude group: 'commons-io', module: 'commons-io'
@@ -44,10 +44,13 @@ shadowJar {
 	relocate 'com.typesafe.config', 'de.bluecolored.shadow.typesafe.config'
 	relocate 'net.querz.nbt', 'de.bluecolored.shadow.querz.nbt'
 	relocate 'ninja.leaping.configurate', 'de.bluecolored.shadow.ninja.leaping.configurate'
-	relocate 'org.yaml.snakeyaml', 'de.bluecolored.shadow.yaml.snakeyaml'
 	relocate 'com.github.benmanes.caffeine', 'de.bluecolored.shadow.benmanes.caffeine'
 	relocate 'com.google.errorprone', 'de.bluecolored.shadow.google.errorprone'
+	relocate 'org.aopalliance', 'de.bluecolored.shadow.aopalliance'
+	relocate 'javax.inject', 'de.bluecolored.javax.inject'
+	relocate 'com.google.inject', 'de.bluecolored.shadow.google.inject'
 	relocate 'org.checkerframework', 'de.bluecolored.shadow.checkerframework'
+	relocate 'org.codehaus', 'de.bluecolored.shadow.codehaus'
 }
 
 task ramappedShadowJar(type: RemapJarTask) {

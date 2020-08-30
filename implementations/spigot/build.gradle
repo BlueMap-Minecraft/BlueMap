@@ -15,9 +15,8 @@ dependencies {
     
     compile (project(':BlueMapCommon')) {
     	//exclude dependencies provided by bukkit
-		exclude group: 'com.google.guava', module: 'guava'
+    	exclude group: 'com.google.guava', module: 'guava'
 		exclude group: 'com.google.code.gson', module: 'gson'
-		exclude group: 'org.yaml', module: 'snakeyaml'
     }
 }
 
@@ -35,7 +34,11 @@ build.dependsOn shadowJar {
 	relocate 'com.mojang.brigadier', 'de.bluecolored.shadow.mojang.brigadier'
 	relocate 'com.github.benmanes.caffeine', 'de.bluecolored.shadow.benmanes.caffeine'
 	relocate 'com.google.errorprone', 'de.bluecolored.shadow.google.errorprone'
+	relocate 'org.aopalliance', 'de.bluecolored.shadow.aopalliance'
+	relocate 'javax.inject', 'de.bluecolored.javax.inject'
+	relocate 'com.google.inject', 'de.bluecolored.shadow.google.inject'
 	relocate 'org.checkerframework', 'de.bluecolored.shadow.checkerframework'
+	relocate 'org.codehaus', 'de.bluecolored.shadow.codehaus'
 }
 
 processResources {

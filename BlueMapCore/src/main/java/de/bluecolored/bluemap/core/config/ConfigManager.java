@@ -47,7 +47,6 @@ import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.gson.GsonConfigurationLoader;
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
-import ninja.leaping.configurate.yaml.YAMLConfigurationLoader;
 
 public class ConfigManager {
 
@@ -218,19 +217,16 @@ public class ConfigManager {
 		BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
 		
 		if (filename.endsWith(".json")) return GsonConfigurationLoader.builder().setSource(() -> reader).build();
-		if (filename.endsWith(".yaml") || filename.endsWith(".yml")) return YAMLConfigurationLoader.builder().setSource(() -> reader).build();
 		else return HoconConfigurationLoader.builder().setSource(() -> reader).build();
 	}
 	
 	private ConfigurationLoader<? extends ConfigurationNode> getLoader(URL url){
 		if (url.getFile().endsWith(".json")) return GsonConfigurationLoader.builder().setURL(url).build();
-		if (url.getFile().endsWith(".yaml") || url.getFile().endsWith(".yml")) return YAMLConfigurationLoader.builder().setURL(url).build();
 		else return HoconConfigurationLoader.builder().setURL(url).build();
 	}
 	
 	private ConfigurationLoader<? extends ConfigurationNode> getLoader(File file){
 		if (file.getName().endsWith(".json")) return GsonConfigurationLoader.builder().setFile(file).build();
-		if (file.getName().endsWith(".yaml") || file.getName().endsWith(".yml")) return YAMLConfigurationLoader.builder().setFile(file).build();
 		else return HoconConfigurationLoader.builder().setFile(file).build();
 	}
 

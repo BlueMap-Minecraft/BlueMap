@@ -14,18 +14,15 @@ build.dependsOn shadowJar {
 	archiveFileName = "BlueMap-${version}-cli.jar"
 	
 	//relocate 'com.flowpowered.math', 'de.bluecolored.shadow.flowpowered.math' //DON'T relocate this, because the API depends on it
-	relocate 'com.google.common', 'de.bluecolored.shadow.google.common'
-	relocate 'com.google.gson', 'de.bluecolored.shadow.google.gson'
-	relocate 'com.google.thirdparty', 'de.bluecolored.shadow.google.thirdparty'
-	relocate 'com.typesafe.config', 'de.bluecolored.shadow.typesafe.config'
+	relocate 'com.google', 'de.bluecolored.shadow.google'
+	relocate 'com.typesafe', 'de.bluecolored.shadow.typesafe'
 	relocate 'net.querz.nbt', 'de.bluecolored.shadow.querz.nbt'
 	relocate 'ninja.leaping.configurate', 'de.bluecolored.shadow.ninja.leaping.configurate'
-	relocate 'org.apache.commons.cli', 'de.bluecolored.shadow.apache.commons.cli'
-	relocate 'org.apache.commons.io', 'de.bluecolored.shadow.apache.commons.io'
-	relocate 'org.apache.commons.lang3', 'de.bluecolored.shadow.apache.commons.lang3'
-	relocate 'org.bstats.bukkit', 'de.bluecolored.shadow.bstats.bukkit'
-	relocate 'org.yaml.snakeyaml', 'de.bluecolored.shadow.yaml.snakeyaml'
+	relocate 'org.apache', 'de.bluecolored.shadow.apache'
 	relocate 'com.github.benmanes.caffeine', 'de.bluecolored.shadow.benmanes.caffeine'
-	relocate 'com.google.errorprone', 'de.bluecolored.shadow.google.errorprone'
+	relocate 'org.aopalliance', 'de.bluecolored.shadow.aopalliance'
+	relocate 'javax', 'de.bluecolored.javax'
+	relocate 'com.mojang.brigadier', 'de.bluecolored.shadow.mojang.brigadier'
 	relocate 'org.checkerframework', 'de.bluecolored.shadow.checkerframework'
+	relocate 'org.codehaus', 'de.bluecolored.shadow.codehaus'
 }

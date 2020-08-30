@@ -5,13 +5,12 @@ dependencies {
     
     compile (project(':BlueMapCommon')) {
     	//exclude dependencies provided by sponge
-		exclude group: 'com.google.guava', module: 'guava'
+    	exclude group: 'com.google.guava', module: 'guava'
 		exclude group: 'com.google.code.gson', module: 'gson'
 		exclude group: 'org.apache.commons', module: 'commons-lang3'
 		exclude group: 'com.flowpowered', module: 'flow-math'
-		exclude group: 'ninja.leaping.configurate', module: 'configurate-hocon'
-		exclude group: 'ninja.leaping.configurate', module: 'configurate-gson'
-		exclude group: 'ninja.leaping.configurate', module: 'configurate-yaml'
+		exclude group: 'javax.inject'
+		exclude group: 'com.google.inject'
 	}
 }
 
@@ -24,7 +23,11 @@ build.dependsOn shadowJar {
 	relocate 'com.mojang.brigadier', 'de.bluecolored.shadow.mojang.brigadier'
 	relocate 'com.github.benmanes.caffeine', 'de.bluecolored.shadow.benmanes.caffeine'
 	relocate 'com.google.errorprone', 'de.bluecolored.shadow.google.errorprone'
+	relocate 'ninja.leaping.configurate', 'de.bluecolored.shadow.ninja.leaping.configurate'
+	relocate 'org.aopalliance', 'de.bluecolored.shadow.aopalliance'
+	relocate 'com.typesafe.config', 'de.bluecolored.shadow.typesafe.config'
 	relocate 'org.checkerframework', 'de.bluecolored.shadow.checkerframework'
+	relocate 'org.codehaus', 'de.bluecolored.shadow.codehaus'
 }
 
 processResources {
