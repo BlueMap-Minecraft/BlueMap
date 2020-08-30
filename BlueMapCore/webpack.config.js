@@ -31,6 +31,7 @@ module.exports = {
 		}),
 		new HtmlWebpackPlugin({
 			template: path.resolve(WEBROOT_PATH, 'index.html'),
+			favicon: path.resolve(WEBROOT_PATH, 'assets/favicon.png'),
 			hash: true,
 		}),
 	],
