@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.sponge;
 
-import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,12 +62,9 @@ public class SpongePlayer implements Player {
 	private boolean sneaking;
 	private boolean invisible;
 	private Gamemode gamemode;
-
-	private WeakReference<org.spongepowered.api.entity.living.player.Player> delegate;
 	
-	public SpongePlayer(org.spongepowered.api.entity.living.player.Player delegate) {
-		this.uuid = delegate.getUniqueId();
-		this.delegate = new WeakReference<>(delegate);
+	public SpongePlayer(UUID playerUUID) {
+		this.uuid = playerUUID;
 		update();
 	}
 	
@@ -116,15 +112,10 @@ public class SpongePlayer implements Player {
 	 * API access, only call on server thread!
 	 */
 	public void update() {
-		org.spongepowered.api.entity.living.player.Player player = delegate.get();
+		org.spongepowered.api.entity.living.player.Player player = Sponge.getServer().getPlayer(uuid).orElse(null);
 		if (player == null) {
-			player = Sponge.getServer().getPlayer(uuid).orElse(null);
-			if (player == null) {
-				this.online = false;
-				return;
-			}
-
-			delegate = new WeakReference<>(player);
+			this.online = false;
+			return;
 		}
 		
 		this.gamemode = GAMEMODE_MAP.get(player.get(Keys.GAME_MODE).orElse(GameModes.NOT_SET));

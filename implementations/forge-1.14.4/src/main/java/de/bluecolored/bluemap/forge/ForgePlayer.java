@@ -25,7 +25,6 @@
 package de.bluecolored.bluemap.forge;
 
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.UUID;
@@ -65,12 +64,10 @@ public class ForgePlayer implements Player {
 	private Gamemode gamemode;
 
 	private ForgeMod mod;
-	private WeakReference<ServerPlayerEntity> delegate;
 	
-	public ForgePlayer(ForgeMod mod, ServerPlayerEntity delegate) {
-		this.uuid = delegate.getUniqueID();
+	public ForgePlayer(ForgeMod mod, UUID playerUuid) {
+		this.uuid = playerUuid;
 		this.mod = mod;
-		this.delegate = new WeakReference<>(delegate);
 		
 		update();
 	}
@@ -119,19 +116,16 @@ public class ForgePlayer implements Player {
 	 * Only call on server thread!
 	 */
 	public void update() {
-		ServerPlayerEntity player = delegate.get();
+		MinecraftServer server = mod.getServer();
+		if (server == null) {
+			this.online = false;
+			return;
+		}
+		
+		ServerPlayerEntity player = server.getPlayerList().getPlayerByUUID(uuid);
 		if (player == null) {
-			MinecraftServer server = mod.getServer();
-			if (server != null) {
-				player = server.getPlayerList().getPlayerByUUID(uuid);
-			}
-			
-			if (player == null) {
-				this.online = false;
-				return;
-			}
-
-			delegate = new WeakReference<>(player);
+			this.online = false;
+			return;
 		}
 		
 		this.gamemode = GAMEMODE_MAP.get(player.interactionManager.getGameType());

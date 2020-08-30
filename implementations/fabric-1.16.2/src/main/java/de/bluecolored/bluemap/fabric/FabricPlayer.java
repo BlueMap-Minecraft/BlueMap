@@ -25,7 +25,6 @@
 package de.bluecolored.bluemap.fabric;
 
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.UUID;
@@ -65,12 +64,10 @@ public class FabricPlayer implements Player {
 	private Gamemode gamemode;
 
 	private FabricMod mod;
-	private WeakReference<ServerPlayerEntity> delegate;
 	
-	public FabricPlayer(FabricMod mod, ServerPlayerEntity delegate) {
-		this.uuid = delegate.getUuid();
+	public FabricPlayer(FabricMod mod, UUID playerUuid) {
+		this.uuid = playerUuid;
 		this.mod = mod;
-		this.delegate = new WeakReference<>(delegate);
 		
 		update();
 	}
@@ -119,19 +116,16 @@ public class FabricPlayer implements Player {
 	 * Only call on server thread!
 	 */
 	public void update() {
-		ServerPlayerEntity player = delegate.get();
+		MinecraftServer server = mod.getServer();
+		if (server == null) {
+			this.online = false;
+			return;
+		}
+		
+		ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
 		if (player == null) {
-			MinecraftServer server = mod.getServer();
-			if (server != null) {
-				player = server.getPlayerManager().getPlayer(uuid);
-			}
-			
-			if (player == null) {
-				this.online = false;
-				return;
-			}
-
-			delegate = new WeakReference<>(player);
+			this.online = false;
+			return;
 		}
 		
 		this.gamemode = GAMEMODE_MAP.get(player.interactionManager.getGameMode());

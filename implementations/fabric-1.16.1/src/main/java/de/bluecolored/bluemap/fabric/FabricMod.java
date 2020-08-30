@@ -175,8 +175,8 @@ public class FabricMod implements ModInitializer, ServerInterface {
 
 	public void onPlayerJoin(MinecraftServer server, ServerPlayerEntity playerInstance) {
 		if (this.serverInstance != server) return;
-		
-		FabricPlayer player = new FabricPlayer(this, playerInstance);
+
+		FabricPlayer player = new FabricPlayer(this, playerInstance.getUuid());
 		onlinePlayerMap.put(player.getUuid(), player);
 		onlinePlayerList.add(player);
 	}

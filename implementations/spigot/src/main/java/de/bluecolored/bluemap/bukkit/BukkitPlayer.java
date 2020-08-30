@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.bukkit;
 
-import java.lang.ref.WeakReference;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.UUID;
@@ -58,12 +57,9 @@ public class BukkitPlayer implements Player {
 	private boolean sneaking;
 	private boolean invisible;
 	private Gamemode gamemode;
-
-	private WeakReference<org.bukkit.entity.Player> delegate;
 	
-	public BukkitPlayer(org.bukkit.entity.Player delegate) {
-		this.uuid = delegate.getUniqueId();
-		this.delegate = new WeakReference<>(delegate);
+	public BukkitPlayer(UUID playerUUID) {
+		this.uuid = playerUUID;
 		update();
 	}
 	
@@ -111,15 +107,10 @@ public class BukkitPlayer implements Player {
 	 * API access, only call on server thread!
 	 */
 	public void update() {
-		org.bukkit.entity.Player player = delegate.get();
+		org.bukkit.entity.Player player = Bukkit.getPlayer(uuid);
 		if (player == null) {
-			player = Bukkit.getPlayer(uuid);
-			if (player == null) {
-				this.online = false;
-				return;
-			}
-
-			delegate = new WeakReference<>(player);
+			this.online = false;
+			return;
 		}
 		
 		this.gamemode = GAMEMODE_MAP.get(player.getGameMode());

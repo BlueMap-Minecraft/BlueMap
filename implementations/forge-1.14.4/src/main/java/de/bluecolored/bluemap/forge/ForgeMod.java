@@ -194,7 +194,7 @@ public class ForgeMod implements ServerInterface {
 		PlayerEntity playerInstance = evt.getPlayer();
 		if (!(playerInstance instanceof ServerPlayerEntity)) return;
 		
-		ForgePlayer player = new ForgePlayer(this, (ServerPlayerEntity) playerInstance);
+		ForgePlayer player = new ForgePlayer(this, playerInstance.getUniqueID());
 		onlinePlayerMap.put(player.getUuid(), player);
 		onlinePlayerList.add(player);
 	}

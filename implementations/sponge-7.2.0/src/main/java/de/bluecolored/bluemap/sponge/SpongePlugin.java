@@ -163,7 +163,7 @@ public class SpongePlugin implements ServerInterface {
 
 	@Listener
 	public void onPlayerJoin(ClientConnectionEvent.Join evt) {
-		SpongePlayer player = new SpongePlayer(evt.getTargetEntity());
+		SpongePlayer player = new SpongePlayer(evt.getTargetEntity().getUniqueId());
 		onlinePlayerMap.put(evt.getTargetEntity().getUniqueId(), player);
 		onlinePlayerList.add(player);
 	}
