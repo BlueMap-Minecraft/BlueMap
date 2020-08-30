@@ -49,15 +49,13 @@ export default class PlayerMarker extends Marker {
 			this.blueMap.hudScene.remove(this.renderObject);
 
 			if (this.follow) {
-				this.follow = false;
-				this.iconElement.removeClass("following");
-				this.blueMap.controls.targetPosition.y = 0;
+				this.stopFollow();
 			}
 		}
 	}
 
 	updatePosition = () => {
-		if (this.renderObject && !this.renderObject.position.equals(this.position)) {
+		if (this.renderObject && (!this.renderObject.position.equals(this.position) || this.worldChanged)) {
 			if (this.visible) {
 				if (!this.animationRunning) {
 					this.animationRunning = true;
@@ -67,7 +65,24 @@ export default class PlayerMarker extends Marker {
 				this.renderObject.position.copy(this.position);
 			}
 
-			if (this.follow){
+			// try to find a map to follow player if he changes worlds
+			if (this.follow && this.worldChanged){
+				let found = false;
+				for (let id of this.blueMap.maps) {
+					let mapSettings = this.blueMap.settings.maps[id];
+					if (mapSettings.world === this.world) {
+						this.blueMap.changeMap(id);
+						found = true;
+						break;
+					}
+				}
+				if (!found){
+					this.stopFollow();
+				}
+			}
+
+			// still following? then update position
+			if (this.follow) {
 				this.blueMap.controls.targetPosition.copy(this.position);
 			}
 		}
@@ -99,18 +114,26 @@ export default class PlayerMarker extends Marker {
 	};
 
 	onClick = () => {
-		this.follow = true;
-		this.iconElement.addClass("following");
-
-		this.blueMap.controls.targetPosition.copy(this.position);
+		this.startFollow();
 	};
 
 	onUserInput = e => {
 		if ((e.type !== "mousedown" || e.button === 0) && this.follow) {
-			this.follow = false;
-			this.iconElement.removeClass("following");
-			this.blueMap.controls.targetPosition.y = 0;
+			this.stopFollow();
 		}
 	};
+
+	startFollow() {
+		this.follow = true;
+		this.iconElement.addClass("following");
+
+		this.blueMap.controls.targetPosition.copy(this.position);
+	}
+
+	stopFollow() {
+		this.follow = false;
+		this.iconElement.removeClass("following");
+		this.blueMap.controls.targetPosition.y = 0;
+	}
 
 }
