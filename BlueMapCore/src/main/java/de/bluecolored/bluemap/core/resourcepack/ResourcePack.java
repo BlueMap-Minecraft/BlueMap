@@ -135,6 +135,8 @@ public class ResourcePack {
 	public void load(File... sources) throws InterruptedException {
 		try (CombinedFileAccess combinedSources = new CombinedFileAccess()){
 			for (int i = 0; i < sources.length; i++) {
+				if (Thread.interrupted()) throw new InterruptedException();
+				
 				File file = sources[i];
 				try {
 					combinedSources.addFileAccess(FileAccess.of(file));
@@ -152,6 +154,8 @@ public class ResourcePack {
 			Collection<String> namespaces = sourcesAccess.listFolders("assets");
 			int i = 0;
 			for (String namespaceRoot : namespaces) {
+				if (Thread.interrupted()) throw new InterruptedException();
+				
 				i++;
 				
 				//load blockstates
@@ -160,10 +164,7 @@ public class ResourcePack {
 				
 				Collection<String> blockstateFiles = sourcesAccess.listFiles(namespaceRoot + "/blockstates", true);
 				for (String blockstateFile : blockstateFiles) {
-					if (Thread.interrupted()) {
-						Thread.currentThread().interrupt();
-						return;
-					}
+					if (Thread.interrupted()) throw new InterruptedException();
 					
 					String filename = FileAccess.getFileName(blockstateFile);
 					if (!filename.endsWith(".json")) continue;
