@@ -129,6 +129,7 @@ public class FabricPlayer implements Player {
 		}
 		
 		this.gamemode = GAMEMODE_MAP.get(player.interactionManager.getGameMode());
+		if (this.gamemode == null) this.gamemode = Gamemode.SURVIVAL;
 		
 		StatusEffectInstance invis = player.getStatusEffect(StatusEffects.INVISIBILITY);
 		this.invisible = invis != null && invis.getDuration() > 0;

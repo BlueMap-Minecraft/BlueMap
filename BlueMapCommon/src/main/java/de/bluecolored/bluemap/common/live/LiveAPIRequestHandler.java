@@ -100,6 +100,7 @@ public class LiveAPIRequestHandler implements HttpRequestHandler {
 			json.beginObject();
 			json.name("players").beginArray();
 			for (Player player : server.getOnlinePlayers()) {
+				if (!player.isOnline()) continue;
 				
 				if (config.isHideInvisible() && player.isInvisible()) continue;
 				if (config.isHideSneaking() && player.isSneaking()) continue;
@@ -116,6 +117,7 @@ public class LiveAPIRequestHandler implements HttpRequestHandler {
 				json.endObject();
 				json.endObject();
 			}
+			
 			json.endArray();
 			json.endObject();
 		

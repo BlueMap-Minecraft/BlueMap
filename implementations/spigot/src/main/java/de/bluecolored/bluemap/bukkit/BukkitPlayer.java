@@ -114,6 +114,7 @@ public class BukkitPlayer implements Player {
 		}
 		
 		this.gamemode = GAMEMODE_MAP.get(player.getGameMode());
+		if (this.gamemode == null) this.gamemode = Gamemode.SURVIVAL;
 		
 		this.invisible = player.hasPotionEffect(PotionEffectType.INVISIBILITY);
 		

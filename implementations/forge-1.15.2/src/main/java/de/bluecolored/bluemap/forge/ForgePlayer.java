@@ -129,6 +129,7 @@ public class ForgePlayer implements Player {
 		}
 		
 		this.gamemode = GAMEMODE_MAP.get(player.interactionManager.getGameType());
+		if (this.gamemode == null) this.gamemode = Gamemode.SURVIVAL;
 		
 		EffectInstance invis = player.getActivePotionEffect(Effects.INVISIBILITY);
 		this.invisible = invis != null && invis.getDuration() > 0;

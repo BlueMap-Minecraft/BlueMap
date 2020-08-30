@@ -98,12 +98,13 @@ public class ForgeMod implements ServerInterface {
 	@SubscribeEvent
     public void onServerStarting(FMLServerStartingEvent event) {
 		this.worldUUIDs.clear();
+		this.serverInstance = event.getServer();
 
 		//register commands
 		new Commands<>(pluginInstance, event.getServer().getCommandManager().getDispatcher(), forgeSource -> new ForgeCommandSource(this, pluginInstance, forgeSource));
 
 		//save worlds to generate level.dat files
-		event.getServer().save(false, true, true);
+		serverInstance.save(false, true, true);
 		
 		new Thread(() -> {
 			Logger.global.logInfo("Loading...");

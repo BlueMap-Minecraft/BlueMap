@@ -119,6 +119,7 @@ public class SpongePlayer implements Player {
 		}
 		
 		this.gamemode = GAMEMODE_MAP.get(player.get(Keys.GAME_MODE).orElse(GameModes.NOT_SET));
+		if (this.gamemode == null) this.gamemode = Gamemode.SURVIVAL;
 		
 		boolean invis = player.get(Keys.VANISH).orElse(false);
 		if (!invis && player.get(Keys.INVISIBLE).orElse(false)) invis = true;
