@@ -116,6 +116,24 @@ public class Plugin {
 						true,
 						true
 				));
+				
+				//create and start webserver
+				if (webServerConfig.isWebserverEnabled()) {
+					HttpRequestHandler requestHandler = new FileRequestHandler(webServerConfig.getWebRoot().toPath(), "BlueMap v" + BlueMap.VERSION);
+					
+					//inject live api if enabled
+					if (pluginConfig.isLiveUpdatesEnabled()) {
+						requestHandler = new LiveAPIRequestHandler(serverInterface, pluginConfig, requestHandler);
+					}
+					
+					webServer = new WebServer(
+						webServerConfig.getWebserverPort(),
+						webServerConfig.getWebserverMaxConnections(),
+						webServerConfig.getWebserverBindAdress(),
+						requestHandler
+					);
+					webServer.start();
+				}
 		
 				//try load resources
 				try {
@@ -190,24 +208,6 @@ public class Plugin {
 				if (pluginConfig.isLiveUpdatesEnabled()) {
 					this.skinUpdater = new PlayerSkinUpdater(new File(renderConfig.getWebRoot(), "assets" + File.separator + "playerheads"));
 					serverInterface.registerListener(skinUpdater);
-				}
-				
-				//create and start webserver
-				if (webServerConfig.isWebserverEnabled()) {
-					HttpRequestHandler requestHandler = new FileRequestHandler(webServerConfig.getWebRoot().toPath(), "BlueMap v" + BlueMap.VERSION);
-					
-					//inject live api if enabled
-					if (pluginConfig.isLiveUpdatesEnabled()) {
-						requestHandler = new LiveAPIRequestHandler(serverInterface, pluginConfig, requestHandler);
-					}
-					
-					webServer = new WebServer(
-						webServerConfig.getWebserverPort(),
-						webServerConfig.getWebserverMaxConnections(),
-						webServerConfig.getWebserverBindAdress(),
-						requestHandler
-					);
-					webServer.start();
 				}
 				
 				//metrics
@@ -318,7 +318,7 @@ public class Plugin {
 		}
 	}
 
-	public synchronized void reload() throws IOException, ParseResourceException {
+	public void reload() throws IOException, ParseResourceException {
 		unload();
 		load();
 	}
