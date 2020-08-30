@@ -66,7 +66,7 @@ import de.bluecolored.bluemap.core.world.World;
 
 public class BlueMapCLI {
 	
-	public void renderMaps(BlueMapService blueMap, boolean forceRender, boolean forceGenerateWebapp) throws IOException {
+	public void renderMaps(BlueMapService blueMap, boolean forceRender, boolean forceGenerateWebapp) throws IOException, InterruptedException {
 		blueMap.createOrUpdateWebApp(forceGenerateWebapp);
 		WebSettings webSettings = blueMap.updateWebAppSettings();
 		

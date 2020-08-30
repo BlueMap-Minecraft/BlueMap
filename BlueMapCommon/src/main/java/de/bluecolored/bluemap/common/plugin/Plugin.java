@@ -38,6 +38,7 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import de.bluecolored.bluemap.common.BlueMapService;
+import de.bluecolored.bluemap.common.InterruptableReentrantLock;
 import de.bluecolored.bluemap.common.MapType;
 import de.bluecolored.bluemap.common.MissingResourcesException;
 import de.bluecolored.bluemap.common.RenderManager;
@@ -53,7 +54,6 @@ import de.bluecolored.bluemap.core.config.WebServerConfig;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.metrics.Metrics;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
-import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.web.FileRequestHandler;
 import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
 import de.bluecolored.bluemap.core.webserver.WebServer;
@@ -64,6 +64,8 @@ public class Plugin {
 	public static final String PLUGIN_ID = "bluemap";
 	public static final String PLUGIN_NAME = "BlueMap";
 
+	private final InterruptableReentrantLock loadingLock = new InterruptableReentrantLock();
+	
 	private MinecraftVersion minecraftVersion;
 	private String implementationType;
 	private ServerInterface serverInterface;
@@ -91,198 +93,218 @@ public class Plugin {
 		this.serverInterface = serverInterface;
 	}
 	
-	public synchronized void load() throws IOException, ParseResourceException {
-		if (loaded) return;
-		unload(); //ensure nothing is left running (from a failed load or something)
-
-		blueMap = new BlueMapService(minecraftVersion, serverInterface);
-	
-		//load configs
-		CoreConfig coreConfig = blueMap.getCoreConfig();
-		RenderConfig renderConfig = blueMap.getRenderConfig();
-		WebServerConfig webServerConfig = blueMap.getWebServerConfig();
-		
-		//load plugin config
-		pluginConfig = new PluginConfig(blueMap.getConfigManager().loadOrCreate(
-				new File(serverInterface.getConfigFolder(), "plugin.conf"), 
-				Plugin.class.getResource("/de/bluecolored/bluemap/plugin.conf"), 
-				Plugin.class.getResource("/de/bluecolored/bluemap/plugin-defaults.conf"), 
-				true,
-				true
-		));
-
-		//try load resources
+	public void load() throws IOException, ParseResourceException {
 		try {
-			getResourcePack();
-		} catch (MissingResourcesException ex) {
-			Logger.global.logWarning("BlueMap is missing important resources!");
-			Logger.global.logWarning("You need to accept the download of the required files in order of BlueMap to work!");
-			try { Logger.global.logWarning("Please check: " + blueMap.getCoreConfigFile().getCanonicalPath()); } catch (IOException ignored) {}
-			Logger.global.logInfo("If you have changed the config you can simply reload the plugin using: /bluemap reload");
+			loadingLock.lock();
+			synchronized (this) {
+				
+				if (loaded) return;
+				unload(); //ensure nothing is left running (from a failed load or something)
+				
+				blueMap = new BlueMapService(minecraftVersion, serverInterface);
 			
-			unload();
-			return;
-		}
+				//load configs
+				CoreConfig coreConfig = blueMap.getCoreConfig();
+				RenderConfig renderConfig = blueMap.getRenderConfig();
+				WebServerConfig webServerConfig = blueMap.getWebServerConfig();
+				
+				//load plugin config
+				pluginConfig = new PluginConfig(blueMap.getConfigManager().loadOrCreate(
+						new File(serverInterface.getConfigFolder(), "plugin.conf"), 
+						Plugin.class.getResource("/de/bluecolored/bluemap/plugin.conf"), 
+						Plugin.class.getResource("/de/bluecolored/bluemap/plugin-defaults.conf"), 
+						true,
+						true
+				));
 		
-		//load worlds and maps
-		worlds = blueMap.getWorlds();
-		maps = blueMap.getMaps();
-		
-		//warn if no maps are configured
-		if (maps.isEmpty()) {
-			Logger.global.logWarning("There are no valid maps configured, please check your render-config! Disabling BlueMap...");
-		}
-		
-		//initialize render manager
-		renderManager = new RenderManager(coreConfig.getRenderThreadCount());
-		renderManager.start();
-		
-		//load render-manager state
-		try {
-			File saveFile = getRenderManagerSaveFile();
-			if (saveFile.exists()) {
-				try (DataInputStream in = new DataInputStream(new GZIPInputStream(new FileInputStream(saveFile)))) {
-					renderManager.readState(in, getMapTypes());
+				//try load resources
+				try {
+					blueMap.getResourcePack();
+				} catch (MissingResourcesException ex) {
+					Logger.global.logWarning("BlueMap is missing important resources!");
+					Logger.global.logWarning("You need to accept the download of the required files in order of BlueMap to work!");
+					try { Logger.global.logWarning("Please check: " + blueMap.getCoreConfigFile().getCanonicalPath()); } catch (IOException ignored) {}
+					Logger.global.logInfo("If you have changed the config you can simply reload the plugin using: /bluemap reload");
+					
+					unload();
+					return;
 				}
-			}
-		} catch (IOException ex) {
-			Logger.global.logError("Failed to load render-manager state!", ex);
-		}
+				
+				//load worlds and maps
+				worlds = blueMap.getWorlds();
+				maps = blueMap.getMaps();
+				
+				//warn if no maps are configured
+				if (maps.isEmpty()) {
+					Logger.global.logWarning("There are no valid maps configured, please check your render-config! Disabling BlueMap...");
+				}
+				
+				//initialize render manager
+				renderManager = new RenderManager(coreConfig.getRenderThreadCount());
+				renderManager.start();
+				
+				//load render-manager state
+				try {
+					File saveFile = getRenderManagerSaveFile();
+					if (saveFile.exists()) {
+						try (DataInputStream in = new DataInputStream(new GZIPInputStream(new FileInputStream(saveFile)))) {
+							renderManager.readState(in, getMapTypes());
+						}
+					}
+				} catch (IOException ex) {
+					Logger.global.logError("Failed to load render-manager state!", ex);
+				}
+				
+				//create periodical-save thread
+				periodicalSaveThread = new Thread(() -> {
+					try {
+						while (true) {
+							Thread.sleep(TimeUnit.MINUTES.toMillis(5));
+							try {
+								saveRenderManagerState();
+								
+								//clean up caches
+								for (World world : blueMap.getWorlds().values()) {
+									world.cleanUpChunkCache();
+								}
+							} catch (IOException ex) {
+								Logger.global.logError("Failed to save render-manager state!", ex);
+							}
+						}
+					} catch (InterruptedException ex){
+						Thread.currentThread().interrupt();
+						return;
+					}
+				});
+				periodicalSaveThread.start();
+				
+				//start map updater
+				this.updateHandler = new MapUpdateHandler(this);
+				serverInterface.registerListener(updateHandler);
+				
+				//update webapp and settings
+				blueMap.createOrUpdateWebApp(false);
+				blueMap.updateWebAppSettings();
+				
+				//start skin updater
+				if (pluginConfig.isLiveUpdatesEnabled()) {
+					this.skinUpdater = new PlayerSkinUpdater(new File(renderConfig.getWebRoot(), "assets" + File.separator + "playerheads"));
+					serverInterface.registerListener(skinUpdater);
+				}
+				
+				//create and start webserver
+				if (webServerConfig.isWebserverEnabled()) {
+					HttpRequestHandler requestHandler = new FileRequestHandler(webServerConfig.getWebRoot().toPath(), "BlueMap v" + BlueMap.VERSION);
+					
+					//inject live api if enabled
+					if (pluginConfig.isLiveUpdatesEnabled()) {
+						requestHandler = new LiveAPIRequestHandler(serverInterface, pluginConfig, requestHandler);
+					}
+					
+					webServer = new WebServer(
+						webServerConfig.getWebserverPort(),
+						webServerConfig.getWebserverMaxConnections(),
+						webServerConfig.getWebserverBindAdress(),
+						requestHandler
+					);
+					webServer.start();
+				}
+				
+				//metrics
+				metricsThread = new Thread(() -> {
+					try {
+						Thread.sleep(TimeUnit.MINUTES.toMillis(1));
+						
+						while (true) {
+							if (serverInterface.isMetricsEnabled(coreConfig.isMetricsEnabled())) Metrics.sendReport(this.implementationType);
+							
+							Thread.sleep(TimeUnit.MINUTES.toMillis(30));
+						}
+					} catch (InterruptedException ex){
+						Thread.currentThread().interrupt();
+						return;
+					}
+				});
+				metricsThread.start();
 		
-		//create periodical-save thread
-		periodicalSaveThread = new Thread(() -> {
-			try {
-				while (true) {
-					Thread.sleep(TimeUnit.MINUTES.toMillis(5));
+				loaded = true;
+				
+				//enable api
+				this.api = new BlueMapAPIImpl(this);
+				this.api.register();
+				
+			}
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			Logger.global.logWarning("Loading has been interrupted!");
+		} finally {
+			loadingLock.unlock();
+		}
+	}
+	
+	public void unload() {
+		try {
+			loadingLock.interruptAndLock();
+			synchronized (this) {
+				
+				//disable api
+				if (api != null) api.unregister();
+				api = null;
+				
+				//unregister listeners
+				serverInterface.unregisterAllListeners();
+		
+				//stop scheduled threads
+				if (metricsThread != null) {
+					metricsThread.interrupt();
+					try {metricsThread.join(1000);} catch (InterruptedException ignore) { Thread.currentThread().interrupt(); }
+					if (metricsThread.isAlive()) Logger.global.logWarning("The metricsThread did not terminate correctly in time!");
+					metricsThread = null;
+				}
+				
+				if (periodicalSaveThread != null) {
+					periodicalSaveThread.interrupt();
+					try {periodicalSaveThread.join(1000);} catch (InterruptedException ignore) { Thread.currentThread().interrupt(); }
+					if (periodicalSaveThread.isAlive()) Logger.global.logWarning("The periodicalSaveThread did not terminate correctly in time!");
+					periodicalSaveThread = null;
+				}
+				
+				//stop services
+				if (renderManager != null) renderManager.stop();
+				if (webServer != null) webServer.close();
+				
+				//save render-manager state
+				if (updateHandler != null) updateHandler.flushTileBuffer(); //first write all buffered tiles to the render manager to save them too
+				if (renderManager != null) {
 					try {
 						saveRenderManagerState();
-						
-						//clean up caches
-						for (World world : blueMap.getWorlds().values()) {
-							world.cleanUpChunkCache();
-						}
 					} catch (IOException ex) {
 						Logger.global.logError("Failed to save render-manager state!", ex);
 					}
 				}
-			} catch (InterruptedException ex){
-				Thread.currentThread().interrupt();
-				return;
-			}
-		});
-		periodicalSaveThread.start();
-		
-		//start map updater
-		this.updateHandler = new MapUpdateHandler(this);
-		serverInterface.registerListener(updateHandler);
-		
-		//update webapp and settings
-		blueMap.createOrUpdateWebApp(false);
-		blueMap.updateWebAppSettings();
-		
-		//start skin updater
-		if (pluginConfig.isLiveUpdatesEnabled()) {
-			this.skinUpdater = new PlayerSkinUpdater(new File(renderConfig.getWebRoot(), "assets" + File.separator + "playerheads"));
-			serverInterface.registerListener(skinUpdater);
-		}
-		
-		//create and start webserver
-		if (webServerConfig.isWebserverEnabled()) {
-			HttpRequestHandler requestHandler = new FileRequestHandler(webServerConfig.getWebRoot().toPath(), "BlueMap v" + BlueMap.VERSION);
-			
-			//inject live api if enabled
-			if (pluginConfig.isLiveUpdatesEnabled()) {
-				requestHandler = new LiveAPIRequestHandler(serverInterface, pluginConfig, requestHandler);
-			}
-			
-			webServer = new WebServer(
-				webServerConfig.getWebserverPort(),
-				webServerConfig.getWebserverMaxConnections(),
-				webServerConfig.getWebserverBindAdress(),
-				requestHandler
-			);
-			webServer.start();
-		}
-		
-		//metrics
-		metricsThread = new Thread(() -> {
-			try {
-				Thread.sleep(TimeUnit.MINUTES.toMillis(1));
 				
-				while (true) {
-					if (serverInterface.isMetricsEnabled(coreConfig.isMetricsEnabled())) Metrics.sendReport(this.implementationType);
-					
-					Thread.sleep(TimeUnit.MINUTES.toMillis(30));
+				//save renders
+				if (maps != null) {
+					for (MapType map : maps.values()) {
+						map.getTileRenderer().save();
+					}
 				}
-			} catch (InterruptedException ex){
-				Thread.currentThread().interrupt();
-				return;
+				
+				//clear resources and configs
+				blueMap = null;
+				worlds = null;
+				maps = null;
+				renderManager = null;
+				webServer = null;
+				updateHandler = null;
+				pluginConfig = null;
+				
+				loaded = false;
+				
 			}
-		});
-		metricsThread.start();
-
-		loaded = true;
-		
-		//enable api
-		this.api = new BlueMapAPIImpl(this);
-		this.api.register();
-	}
-	
-	public synchronized void unload() {
-		
-		//disable api
-		if (api != null) api.unregister();
-		api = null;
-		
-		//unregister listeners
-		serverInterface.unregisterAllListeners();
-
-		//stop scheduled threads
-		if (metricsThread != null) {
-			metricsThread.interrupt();
-			try {metricsThread.join(1000);} catch (InterruptedException ignore) { Thread.currentThread().interrupt(); }
-			if (metricsThread.isAlive()) Logger.global.logWarning("The metricsThread did not terminate correctly in time!");
-			metricsThread = null;
+		} finally {
+			loadingLock.unlock();
 		}
-		
-		if (periodicalSaveThread != null) {
-			periodicalSaveThread.interrupt();
-			try {periodicalSaveThread.join(1000);} catch (InterruptedException ignore) { Thread.currentThread().interrupt(); }
-			if (periodicalSaveThread.isAlive()) Logger.global.logWarning("The periodicalSaveThread did not terminate correctly in time!");
-			periodicalSaveThread = null;
-		}
-		
-		//stop services
-		if (renderManager != null) renderManager.stop();
-		if (webServer != null) webServer.close();
-		
-		//save render-manager state
-		if (updateHandler != null) updateHandler.flushTileBuffer(); //first write all buffered tiles to the render manager to save them too
-		if (renderManager != null) {
-			try {
-				saveRenderManagerState();
-			} catch (IOException ex) {
-				Logger.global.logError("Failed to save render-manager state!", ex);
-			}
-		}
-		
-		//save renders
-		if (maps != null) {
-			for (MapType map : maps.values()) {
-				map.getTileRenderer().save();
-			}
-		}
-		
-		//clear resources and configs
-		blueMap = null;
-		worlds = null;
-		maps = null;
-		renderManager = null;
-		webServer = null;
-		updateHandler = null;
-		pluginConfig = null;
-		
-		loaded = false;
 	}
 	
 	public void saveRenderManagerState() throws IOException {
@@ -319,10 +341,6 @@ public class Plugin {
 	
 	public PluginConfig getPluginConfig() {
 		return pluginConfig;
-	}
-	
-	public ResourcePack getResourcePack() throws IOException {
-		return blueMap.getResourcePack();
 	}
 	
 	public World getWorld(UUID uuid){

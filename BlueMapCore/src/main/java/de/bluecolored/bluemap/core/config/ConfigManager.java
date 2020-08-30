@@ -214,12 +214,6 @@ public class ConfigManager {
 		return joinedNode;
 	}
 	
-	private File makeAutogen(File file) throws IOException {
-		File autogenFile = file.getCanonicalFile().toPath().getParent().resolve("missing-configs").resolve(file.getName()).toFile();
-		autogenFile.getParentFile().mkdirs();
-		return autogenFile;
-	}
-	
 	private ConfigurationLoader<? extends ConfigurationNode> getLoader(String filename, InputStream is){
 		BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
 		

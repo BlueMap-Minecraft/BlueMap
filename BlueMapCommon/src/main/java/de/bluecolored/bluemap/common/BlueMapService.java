@@ -115,7 +115,7 @@ public class BlueMapService {
 		}
 	}
 	
-	public synchronized WebSettings updateWebAppSettings() throws IOException {
+	public synchronized WebSettings updateWebAppSettings() throws IOException, InterruptedException {
 		WebSettings webSettings = new WebSettings(new File(getRenderConfig().getWebRoot(), "data" + File.separator + "settings.json"));
 		webSettings.set(getRenderConfig().isUseCookies(), "useCookies");
 		webSettings.setAllMapsEnabled(false);
@@ -135,17 +135,17 @@ public class BlueMapService {
 		return webSettings;
 	}
 	
-	public synchronized Map<UUID, World> getWorlds() throws IOException {
+	public synchronized Map<UUID, World> getWorlds() throws IOException, InterruptedException {
 		if (worlds == null) loadWorldsAndMaps();
 		return worlds;
 	}
 	
-	public synchronized Map<String, MapType> getMaps() throws IOException {
+	public synchronized Map<String, MapType> getMaps() throws IOException, InterruptedException {
 		if (maps == null) loadWorldsAndMaps();
 		return maps;
 	}
 	
-	private synchronized void loadWorldsAndMaps() throws IOException {
+	private synchronized void loadWorldsAndMaps() throws IOException, InterruptedException {
 		maps = new HashMap<>();
 		worlds = new HashMap<>();
 		
@@ -220,7 +220,7 @@ public class BlueMapService {
 		maps = Collections.unmodifiableMap(maps);
 	}
 	
-	public synchronized ResourcePack getResourcePack() throws IOException, MissingResourcesException {
+	public synchronized ResourcePack getResourcePack() throws IOException, MissingResourcesException, InterruptedException {
 		if (resourcePack == null) {
 			File defaultResourceFile = new File(getCoreConfig().getDataFolder(), "minecraft-client-" + minecraftVersion.getVersionString() + ".jar");
 			File resourceExtensionsFile = new File(getCoreConfig().getDataFolder(), "resourceExtensions.zip");

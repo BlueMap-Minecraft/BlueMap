@@ -120,7 +120,7 @@ public class ResourcePack {
 	 *  
 	 * @param sources The list of {@link File} sources. Each can be a folder or any zip-compressed file. (E.g. .zip or .jar)
 	 */
-	public void load(Collection<File> sources) throws IOException {
+	public void load(Collection<File> sources) throws IOException, InterruptedException {
 		load(sources.toArray(new File[sources.size()]));
 	}
 	
@@ -132,7 +132,7 @@ public class ResourcePack {
 	 *  
 	 * @param sources The list of {@link File} sources. Each can be a folder or any zip-compressed file. (E.g. .zip or .jar)
 	 */
-	public void load(File... sources) {
+	public void load(File... sources) throws InterruptedException {
 		try (CombinedFileAccess combinedSources = new CombinedFileAccess()){
 			for (int i = 0; i < sources.length; i++) {
 				File file = sources[i];
