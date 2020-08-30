@@ -24,11 +24,14 @@
  */
 package de.bluecolored.bluemap.common.plugin.commands;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Predicate;
+
+import org.apache.commons.io.FileUtils;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3d;
@@ -150,6 +153,13 @@ public class Commands<S> {
 												.executes(this::renderCommand))))) // /bluemap render <world|map> <x> <z> <radius>
 				.build();
 		
+		LiteralCommandNode<S> purgeCommand = 
+				literal("purge")
+				.requires(requirements("bluemap.render"))
+				.then(argument("map", StringArgumentType.string()).suggests(new MapSuggestionProvider<>(plugin))
+						.executes(this::purgeCommand))
+				.build();
+		
 		LiteralCommandNode<S> prioRenderCommand = 
 				literal("prioritize")
 				.requires(requirements("bluemap.render"))
@@ -211,6 +221,7 @@ public class Commands<S> {
 		baseCommand.addChild(pauseCommand);
 		baseCommand.addChild(resumeCommand);
 		baseCommand.addChild(renderCommand);
+		baseCommand.addChild(purgeCommand);
 		renderCommand.addChild(prioRenderCommand);
 		renderCommand.addChild(cancelRenderCommand);
 		baseCommand.addChild(worldsCommand);
@@ -473,6 +484,31 @@ public class Commands<S> {
 			}
 		}).start();
 		
+		return 1;
+	}
+	
+	public int purgeCommand(CommandContext<S> context) {
+		CommandSource source = commandSourceInterface.apply(context.getSource());
+		
+		// parse map argument
+		String mapId = context.getArgument("map", String.class);
+		
+		new Thread(() -> {
+			try {
+				File mapFolder = new File(plugin.getRenderConfig().getWebRoot(), "data" + File.separator + mapId);
+				if (!mapFolder.exists() || !mapFolder.isDirectory()) {
+					source.sendMessage(Text.of(TextColor.RED, "There is no map-data to purge for the map-id '" + mapId + "'!"));
+					return;
+				}
+				
+				FileUtils.deleteDirectory(mapFolder);
+				source.sendMessage(Text.of(TextColor.GREEN, "Map '" + mapId + "' has been successfully purged!"));
+			} catch (IOException | IllegalArgumentException e) {
+				source.sendMessage(Text.of(TextColor.RED, "There was an error trying to purge '" + mapId + "', see console for details."));
+				Logger.global.logError("Failed to purge map '" + mapId + "'!", e);
+			}
+		}).start();
+
 		return 1;
 	}
 	
