@@ -8,7 +8,7 @@ assignees: ''
 ---
 
 **BlueMap Version:**
-*Full version including the target, e.g. `1.0.0-fabric-1.16.1`
+*Full version including the target, e.g. `1.0.0-fabric-1.16.1`*
 
 I am using:
 - [ ] mods (on the rendered world)
