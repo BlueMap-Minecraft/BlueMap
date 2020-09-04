@@ -57,6 +57,7 @@ import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.config.WebServerConfig;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.metrics.Metrics;
 import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.web.FileRequestHandler;
 import de.bluecolored.bluemap.core.web.WebSettings;
@@ -67,6 +68,10 @@ import de.bluecolored.bluemap.core.world.World;
 public class BlueMapCLI {
 	
 	public void renderMaps(BlueMapService blueMap, boolean forceRender, boolean forceGenerateWebapp) throws IOException, InterruptedException {
+		
+		//metrics report
+		if (blueMap.getCoreConfig().isMetricsEnabled()) Metrics.sendReportAsync("cli");
+		
 		blueMap.createOrUpdateWebApp(forceGenerateWebapp);
 		WebSettings webSettings = blueMap.updateWebAppSettings();
 		
