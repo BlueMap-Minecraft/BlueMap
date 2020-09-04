@@ -78,7 +78,7 @@ public class FabricMod implements ModInitializer, ServerInterface {
 		this.onlinePlayerMap = new ConcurrentHashMap<>();
 		this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 		
-		pluginInstance = new Plugin(MinecraftVersion.MC_1_15, "fabric", this);
+		pluginInstance = new Plugin(MinecraftVersion.MC_1_15, "fabric-1.15.2", this);
 		
 		this.worldUUIDs = new ConcurrentHashMap<>();
 		this.eventForwarder = new FabricEventForwarder(this);
