@@ -4,8 +4,6 @@ BlueMap is a tool that generates 3d-maps of your Minecraft worlds and displays t
 
 The plugins/mods automatically update your map as soon as something changes in your world, as well as rendering newly generated terrain and managing the render-tasks.
 
-The mod automatically updates your map as soon as something changes in your world, as well as rendering newly generated terrain and managing the render-tasks.
-
 Some features and some blocks are still missing. Especially some tile-entities will not render correctly/at all. See below for a list of what is planned for future releases.
 
 ![screenshot](https://bluecolored.de/paste/BlueMapScreenshot.jpg)
