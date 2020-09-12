@@ -14,12 +14,12 @@ A 3d-map of your Minecraft worlds view-able in your browser using three.js (WebG
 [[dependencies.bluemap]]
     modId="forge"
     mandatory=true
-    versionRange="[28,)"
+    versionRange="[32,)"
     ordering="NONE"
     side="SERVER"
 [[dependencies.bluemap]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.16.1]"
+    versionRange="[1.16.1,1.16.3]"
     ordering="NONE"
     side="SERVER"

@@ -20,7 +20,7 @@ configurations {
 }
 
 dependencies {
-	minecraft 'net.minecraftforge:forge:1.16.2-33.0.7'
+	minecraft 'net.minecraftforge:forge:1.16.3-34.0.0'
 	
     include (project(':BlueMapCommon')) {
     	//exclude dependencies provided by forge
@@ -34,7 +34,7 @@ dependencies {
 
 build.dependsOn shadowJar {
 	destinationDir = file '../../build/release'
-	archiveFileName = "BlueMap-${version}-forge-1.16.2.jar"
+	archiveFileName = "BlueMap-${version}-forge-1.16.3.jar"
 	
 	configurations = [project.configurations.include]
 	
