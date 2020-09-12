@@ -60,6 +60,12 @@ public class MapUpdateHandler implements ServerEventListener {
 					while (iterator.hasNext()) {
 						MapType map = iterator.next();
 						if (map.getWorld().getUUID().equals(world)) {
+
+							//invalidate caches of updated chunks
+							for (Vector2i chunk : updateBuffer.get(map)) {
+								map.getWorld().invalidateChunkCache(chunk);
+							}
+							
 							renderManager.createTickets(map, updateBuffer.get(map));
 							iterator.remove();
 						}
@@ -111,8 +117,6 @@ public class MapUpdateHandler implements ServerEventListener {
 		synchronized (updateBuffer) {
 			for (MapType mapType : plugin.getMapTypes()) {
 				if (mapType.getWorld().getUUID().equals(world)) {
-					mapType.getWorld().invalidateChunkCache(mapType.getWorld().blockPosToChunkPos(pos));
-					
 					Vector2i tile = mapType.getTileRenderer().getHiresModelManager().posToTile(pos);
 					updateBuffer.put(mapType, tile);
 				}
@@ -129,6 +133,12 @@ public class MapUpdateHandler implements ServerEventListener {
 		
 		synchronized (updateBuffer) {
 			for (MapType map : updateBuffer.keySet()) {
+
+				//invalidate caches of updated chunks
+				for (Vector2i chunk : updateBuffer.get(map)) {
+					map.getWorld().invalidateChunkCache(chunk);
+				}
+				
 				renderManager.createTickets(map, updateBuffer.get(map));
 			}
 			updateBuffer.clear();
