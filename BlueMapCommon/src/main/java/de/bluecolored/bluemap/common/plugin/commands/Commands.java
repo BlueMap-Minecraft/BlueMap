@@ -95,6 +95,12 @@ public class Commands<S> {
 				.executes(this::statusCommand)
 				.build();
 		
+		LiteralCommandNode<S> helpCommand = 
+				literal("help")
+				.requires(requirementsUnloaded("bluemap.help"))
+				.executes(this::helpCommand)
+				.build();
+		
 		LiteralCommandNode<S> reloadCommand = 
 				literal("reload")
 				.requires(requirementsUnloaded("bluemap.reload"))
@@ -216,6 +222,7 @@ public class Commands<S> {
 		
 		// command tree
 		dispatcher.getRoot().addChild(baseCommand);
+		baseCommand.addChild(helpCommand);
 		baseCommand.addChild(reloadCommand);
 		baseCommand.addChild(debugCommand);
 		baseCommand.addChild(pauseCommand);
@@ -301,6 +308,34 @@ public class Commands<S> {
 		}
 		
 		source.sendMessages(helper.createStatusMessage());
+		return 1;
+	}
+	
+	public int helpCommand(CommandContext<S> context) {
+		CommandSource source = commandSourceInterface.apply(context.getSource());
+		
+		source.sendMessage(Text.of(TextColor.BLUE, "BlueMap Commands:"));
+		for (String usage : dispatcher.getAllUsage(dispatcher.getRoot().getChild("bluemap"), context.getSource(), true)) {
+			Text usageText = Text.of(TextColor.GREEN, "/bluemap");
+			
+			String[] arguments = usage.split(" ");
+			for (String arg : arguments) {
+				if (arg.isEmpty()) continue;
+				if (arg.charAt(0) == '<' && arg.charAt(arg.length() - 1) == '>') {
+					usageText.addChild(Text.of(TextColor.GRAY, " " + arg));
+				} else {
+					usageText.addChild(Text.of(TextColor.WHITE, " " + arg));
+				}
+			}
+			
+			source.sendMessage(usageText);
+		}
+		
+		source.sendMessage(
+				Text.of(TextColor.BLUE, "\nOpen this link to get a description for each command:\n")
+				.addChild(Text.of(TextColor.GRAY, "https://bluecolo.red/bluemap-commands").setClickLink("https://bluecolo.red/bluemap-commands"))
+				);
+		
 		return 1;
 	}
 	

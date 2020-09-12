@@ -36,6 +36,7 @@ public class Text {
 	private Set<TextFormat> formats = new HashSet<>();
 	private Text hoverText;
 	private String clickCommand;
+	private String clickLink;
 	private List<Text> children = new ArrayList<>();
 	
 	public Text setHoverText(Text hoverText) {
@@ -46,6 +47,12 @@ public class Text {
 	
 	public Text setClickCommand(String clickCommand) {
 		this.clickCommand = clickCommand;
+		
+		return this;
+	}
+	
+	public Text setClickLink(String clickLink) {
+		this.clickLink = clickLink;
 		
 		return this;
 	}
@@ -81,6 +88,13 @@ public class Text {
 			sb.append(quote("clickEvent")).append(":{");
 			sb.append(quote("action")).append(":").append(quote("run_command")).append(',');
 			sb.append(quote("value")).append(":").append(quote(clickCommand));
+			sb.append("},");
+		} 
+		
+		else if (clickLink != null) {
+			sb.append(quote("clickEvent")).append(":{");
+			sb.append(quote("action")).append(":").append(quote("open_url")).append(',');
+			sb.append(quote("value")).append(":").append(quote(clickLink));
 			sb.append("},");
 		}
 		

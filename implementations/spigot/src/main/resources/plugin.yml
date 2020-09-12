@@ -10,6 +10,7 @@ permissions:
   bluemap.*:
     children:
       bluemap.status: true
+      bluemap.help: true
       bluemap.reload: true
       bluemap.pause: true
       bluemap.resume: true
@@ -18,6 +19,8 @@ permissions:
       bluemap.marker: true
     default: op
   bluemap.status:
+    default: op
+  bluemap.help:
     default: op
   bluemap.reload:
     default: op
