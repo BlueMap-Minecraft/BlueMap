@@ -214,6 +214,10 @@ public class ForgeMod implements ServerInterface {
 	public MinecraftServer getServer() {
 		return this.serverInstance;
 	}
+	
+	public Plugin getPlugin() {
+		return this.pluginInstance;
+	}
 
 	@Override
 	public Collection<Player> getOnlinePlayers() {

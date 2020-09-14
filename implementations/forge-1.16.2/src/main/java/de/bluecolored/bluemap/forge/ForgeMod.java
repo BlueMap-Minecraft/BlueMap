@@ -97,7 +97,6 @@ public class ForgeMod implements ServerInterface {
 	
 	@SubscribeEvent
     public void onServerStarting(FMLServerStartingEvent event) {
-		this.worldUUIDs.clear();
 		this.serverInstance = event.getServer();
 
 		//register commands
@@ -157,9 +156,7 @@ public class ForgeMod implements ServerInterface {
 		try {
 			return worldUuidCache.get(world);
 		} catch (RuntimeException e) {
-			Throwable cause = e.getCause();
-			if (cause instanceof IOException) throw (IOException) cause;
-			else throw new IOException(cause);
+			throw new IOException(e);
 		}
 	}
 	
@@ -212,6 +209,10 @@ public class ForgeMod implements ServerInterface {
 
 	public MinecraftServer getServer() {
 		return this.serverInstance;
+	}
+	
+	public Plugin getPlugin() {
+		return this.pluginInstance;
 	}
 
 	@Override
