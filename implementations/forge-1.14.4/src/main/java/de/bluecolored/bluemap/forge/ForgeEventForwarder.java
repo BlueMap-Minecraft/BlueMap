@@ -136,8 +136,6 @@ public class ForgeEventForwarder  {
 			UUID world = mod.getUUIDForWorld((ServerWorld) evt.getWorld());
 			Vector2i chunk = new Vector2i(evt.getChunk().getPos().x, evt.getChunk().getPos().z);
 
-			Logger.global.logInfo("Adding chunk: " + chunk);
-			
 			synchronized (loadChunkEvents) {
 				loadChunkEvents.add(new WorldChunk(world, chunk));
 				loadChunkEvents.notify();
