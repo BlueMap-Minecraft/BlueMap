@@ -57,6 +57,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.WorldSavePath;
 import net.minecraft.world.dimension.DimensionType;
 
 public class FabricMod implements ModInitializer, ServerInterface {
@@ -161,8 +162,7 @@ public class FabricMod implements ModInitializer, ServerInterface {
 
 	private UUID loadUUIDForWorld(ServerWorld world) throws IOException {
 		MinecraftServer server = world.getServer();
-		String worldName = server.getSaveProperties().getLevelName();
-		File worldFolder = new File(world.getServer().getRunDirectory(), worldName);
+		File worldFolder = world.getServer().getRunDirectory().toPath().resolve(server.getSavePath(WorldSavePath.ROOT)).toFile();
 		File dimensionFolder = DimensionType.getSaveDirectory(world.getRegistryKey(), worldFolder);
 		File dimensionDir = dimensionFolder.getCanonicalFile();
 		return getUUIDForWorld(dimensionDir);

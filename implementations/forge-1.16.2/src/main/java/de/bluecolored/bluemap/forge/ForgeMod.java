@@ -53,6 +53,7 @@ import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.DimensionType;
 import net.minecraft.world.server.ServerWorld;
+import net.minecraft.world.storage.FolderName;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent.ServerTickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
@@ -174,8 +175,7 @@ public class ForgeMod implements ServerInterface {
 	
 	private File getFolderForWorld(ServerWorld world) throws IOException {
 		MinecraftServer server = world.getServer();
-		String worldName = server.func_240793_aU_().getWorldName();
-		File worldFolder = new File(world.getServer().getDataDirectory(), worldName);
+		File worldFolder = world.getServer().getDataDirectory().toPath().resolve(server.func_240776_a_(FolderName.field_237253_i_)).toFile();
 		File dimensionFolder = DimensionType.func_236031_a_(world.func_234923_W_(), worldFolder);
 		return dimensionFolder.getCanonicalFile();
 	}
