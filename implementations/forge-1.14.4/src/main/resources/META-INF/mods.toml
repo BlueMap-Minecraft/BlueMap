@@ -1,5 +1,6 @@
 modLoader="javafml"
 loaderVersion="[28,)"
+license="MIT"
 issueTrackerURL="https://github.com/BlueMap-Minecraft/BlueMap/issues"
 [[mods]]
 modId="bluemap"
