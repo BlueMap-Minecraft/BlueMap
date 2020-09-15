@@ -45,6 +45,7 @@ import de.bluecolored.bluemap.common.plugin.commands.Commands;
 import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
@@ -85,6 +86,7 @@ public class FabricMod implements ModInitializer, ServerInterface {
 		this.worldUUIDs = new ConcurrentHashMap<>();
 		this.eventForwarder = new FabricEventForwarder(this);
 		this.worldUuidCache = Caffeine.newBuilder()
+				.executor(BlueMap.THREAD_POOL)
 				.weakKeys()
 				.maximumSize(1000)
 				.build(this::loadUUIDForWorld);

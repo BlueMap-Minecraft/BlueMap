@@ -33,6 +33,7 @@ import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 import com.google.common.collect.Multimaps;
 
+import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.mapping.BlockPropertiesMapper;
 import de.bluecolored.bluemap.core.resourcepack.NoSuchResourceException;
@@ -79,6 +80,7 @@ public class BlockPropertiesConfig implements BlockPropertiesMapper {
 		}
 		
 		mappingCache = Caffeine.newBuilder()
+				.executor(BlueMap.THREAD_POOL)
 				.maximumSize(10000)
 				.build(key -> mapNoCache(key));
 	}

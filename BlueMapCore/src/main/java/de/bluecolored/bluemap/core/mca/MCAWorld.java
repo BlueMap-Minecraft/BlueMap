@@ -49,6 +49,7 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 
+import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.extensions.BlockStateExtension;
@@ -144,6 +145,7 @@ public class MCAWorld implements World {
 		registerBlockStateExtension(new DoubleChestExtension());
 		
 		this.chunkCache = Caffeine.newBuilder()
+			.executor(BlueMap.THREAD_POOL)
 			.maximumSize(500)
 			.expireAfterWrite(1, TimeUnit.MINUTES)
 			.build(chunkPos -> this.loadChunkOrEmpty(chunkPos, 2, 1000));

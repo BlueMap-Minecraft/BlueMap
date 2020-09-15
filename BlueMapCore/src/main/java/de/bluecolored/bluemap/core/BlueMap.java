@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.core;
 
 import java.io.IOException;
+import java.util.concurrent.ForkJoinPool;
 
 import de.bluecolored.bluemap.core.logger.Logger;
 import ninja.leaping.configurate.gson.GsonConfigurationLoader;
@@ -45,4 +46,6 @@ public class BlueMap {
 		VERSION = version;
 	}
 
+	public static final ForkJoinPool THREAD_POOL = new ForkJoinPool();
+	
 }
