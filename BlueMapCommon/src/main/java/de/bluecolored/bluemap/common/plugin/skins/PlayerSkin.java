@@ -132,7 +132,7 @@ public class PlayerSkin {
 			}
 			
 			throw new IOException("No texture info found!");
-		} catch (IllegalStateException | ClassCastException e) {
+		} catch (NullPointerException | IllegalStateException | ClassCastException e) {
 			throw new IOException(e);
 		}
 		
@@ -144,7 +144,7 @@ public class PlayerSkin {
 					.getAsJsonObject("textures")
 					.getAsJsonObject("SKIN")
 					.get("url").getAsString();
-		} catch (IllegalStateException | ClassCastException e) {
+		} catch (NullPointerException | IllegalStateException | ClassCastException e) {
 			throw new IOException(e);
 		}
 	}
