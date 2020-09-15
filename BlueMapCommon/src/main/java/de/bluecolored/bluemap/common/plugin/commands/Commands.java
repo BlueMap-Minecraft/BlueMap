@@ -176,8 +176,11 @@ public class Commands<S> {
 		LiteralCommandNode<S> cancelRenderCommand = 
 				literal("cancel")
 				.requires(requirements("bluemap.render"))
+				.executes(this::cancelLastRenderTaskCommand)
+
 				.then(argument("uuid", StringArgumentType.string())
 						.executes(this::cancelRenderTaskCommand))
+				
 				.build();
 		
 		LiteralCommandNode<S> worldsCommand = 
@@ -568,6 +571,22 @@ public class Commands<S> {
 
 		source.sendMessage(Text.of(TextColor.RED, "There is no render-task with this UUID: " + uuidString));
 		return 0;
+	}
+	
+	public int cancelLastRenderTaskCommand(CommandContext<S> context) {
+		CommandSource source = commandSourceInterface.apply(context.getSource());
+		
+		RenderTask[] tasks = plugin.getRenderManager().getRenderTasks();
+		if (tasks.length == 0) {
+			source.sendMessage(Text.of(TextColor.RED, "There is currently no render task scheduled!"));
+			return 0;
+		}
+
+		RenderTask task = tasks[tasks.length - 1];
+		
+		plugin.getRenderManager().removeRenderTask(task);
+		source.sendMessage(Text.of(TextColor.GREEN, "The render-task '" + task.getName() + "' has been canceled!"));
+		return 1;
 	}
 	
 	public int cancelRenderTaskCommand(CommandContext<S> context) {
