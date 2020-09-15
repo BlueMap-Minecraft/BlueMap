@@ -31,6 +31,7 @@ import java.util.UUID;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.metadata.MetadataValue;
 import org.bukkit.potion.PotionEffectType;
 
 import com.flowpowered.math.vector.Vector3d;
@@ -117,6 +118,11 @@ public class BukkitPlayer implements Player {
 		if (this.gamemode == null) this.gamemode = Gamemode.SURVIVAL;
 		
 		this.invisible = player.hasPotionEffect(PotionEffectType.INVISIBILITY);
+		
+		//also check for "vanished" players
+        for (MetadataValue meta : player.getMetadata("vanished")) {
+            if (meta.asBoolean()) this.invisible = true;
+        }
 		
 		this.name = Text.of(player.getName());
 		this.online = player.isOnline();
