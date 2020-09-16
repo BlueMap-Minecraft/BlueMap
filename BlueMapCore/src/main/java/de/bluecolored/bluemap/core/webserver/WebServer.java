@@ -59,7 +59,7 @@ public class WebServer extends Thread {
 	}
 	
 	@Override
-	public void run(){
+	public synchronized void start() {
 		close();
 
 		connectionThreads = new ThreadPoolExecutor(maxConnections, maxConnections, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
@@ -72,6 +72,13 @@ public class WebServer extends Thread {
 			Logger.global.logError("Error while starting the WebServer!", e);
 			return;
 		}
+		
+		super.start();
+	}
+	
+	@Override
+	public void run(){
+		if (server == null) return;
 		
 		Logger.global.logInfo("WebServer started.");
 		
@@ -98,7 +105,7 @@ public class WebServer extends Thread {
 		Logger.global.logInfo("WebServer closed.");
 	}
 	
-	public void close(){
+	public synchronized void close(){
 		if (connectionThreads != null) connectionThreads.shutdown();
 		
 		try {
