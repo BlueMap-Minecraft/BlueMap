@@ -123,6 +123,7 @@ public class CommandHelper {
 		source.sendMessage(Text.of(TextColor.GOLD, "Collecting chunks..."));
 		
 		String taskName = "world-render";
+		Vector2i renderCenter = map.getWorld().getSpawnPoint().toVector2(true);
 		
 		Predicate<Vector2i> filter;
 		if (center == null || blockRadius < 0) {
@@ -130,6 +131,7 @@ public class CommandHelper {
 		} else {
 			filter = c -> c.mul(16).distanceSquared(center) <= blockRadius * blockRadius;
 			taskName = "radius-render";
+			renderCenter = center;
 		}
 		
 		Collection<Vector2i> chunks = map.getWorld().getChunkList(filter);
@@ -142,7 +144,7 @@ public class CommandHelper {
 		
 		RenderTask task = new RenderTask(taskName, map);
 		task.addTiles(tiles);
-		task.optimizeQueue();
+		task.optimizeQueue(renderCenter);
 		plugin.getRenderManager().addRenderTask(task);
 		
 		source.sendMessage(Text.of(TextColor.GREEN, tiles.size() + " tiles found! Task created."));

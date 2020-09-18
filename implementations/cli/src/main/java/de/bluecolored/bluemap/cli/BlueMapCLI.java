@@ -112,10 +112,12 @@ public class BlueMapCLI {
 				if (tiles.isEmpty()) {
 					continue;
 				}
+
+				Vector2i renderCenter = map.getWorld().getSpawnPoint().toVector2(true);
 				
 				RenderTask task = new RenderTask(map.getId(), map);
 				task.addTiles(tiles);
-				task.optimizeQueue();
+				task.optimizeQueue(renderCenter);
 				
 				renderManager.addRenderTask(task);
 			}
