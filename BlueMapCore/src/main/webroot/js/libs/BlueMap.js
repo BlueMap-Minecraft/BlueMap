@@ -248,7 +248,7 @@ export default class BlueMap {
 			this.hiresTileManager.setPosition(this.controls.targetPosition);
 		}
 
-		this.locationHash =
+		let newHash =
 				'#' + this.map
 				+ ':' + Math.floor(this.controls.targetPosition.x)
 				+ ':' + Math.floor(this.controls.targetPosition.z)
@@ -256,10 +256,18 @@ export default class BlueMap {
 				+ ':' + Math.round(this.controls.targetDistance * 100) / 100
 				+ ':' + Math.ceil(this.controls.targetAngle * 100) / 100
 				+ ':' + Math.floor(this.controls.terrainHeight);
+
 		// only update hash when changed
-		if (window.location.hash !== this.locationHash) {
-			history.replaceState(undefined, undefined, this.locationHash);
+		if (window.location.hash !== newHash) {
+
+			// but wait until it has finished changing (update when camera is no longer moving, to reduce the number of updates and history spam)
+			if (this.locationHash === newHash) {
+				history.replaceState(undefined, undefined, this.locationHash);
+			}
+
+			this.locationHash = newHash;
 		}
+
 	};
 
 	render = () => {
