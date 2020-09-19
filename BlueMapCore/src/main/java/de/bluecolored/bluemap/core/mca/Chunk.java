@@ -84,9 +84,9 @@ public abstract class Chunk {
 	public static Chunk create(MCAWorld world, CompoundTag chunkTag, boolean ignoreMissingLightData) throws IOException {
 		int version = chunkTag.getInt("DataVersion");
 		
-		if (version <= 1343) return new ChunkAnvil112(world, chunkTag, ignoreMissingLightData);
-		if (version <= 1976) return new ChunkAnvil113(world, chunkTag, ignoreMissingLightData);
-		if (version < 2534) return new ChunkAnvil115(world, chunkTag, ignoreMissingLightData);
+		if (version < 1400) return new ChunkAnvil112(world, chunkTag, ignoreMissingLightData);
+		if (version < 2200) return new ChunkAnvil113(world, chunkTag, ignoreMissingLightData);
+		if (version < 2500) return new ChunkAnvil115(world, chunkTag, ignoreMissingLightData);
 		return new ChunkAnvil116(world, chunkTag, ignoreMissingLightData);
 	}
 	
