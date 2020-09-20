@@ -42,8 +42,8 @@ import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
 import net.minecraftforge.event.world.BlockEvent;
+import net.minecraftforge.event.world.ChunkDataEvent;
 import net.minecraftforge.event.world.ChunkEvent;
-import net.minecraftforge.event.world.WorldEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
 public class ForgeEventForwarder  {
@@ -105,6 +105,21 @@ public class ForgeEventForwarder  {
 	}
 	
 	@SubscribeEvent
+	public synchronized void onChunkSave(ChunkDataEvent.Save evt) {
+		if (!(evt.getWorld() instanceof ServerWorld)) return;
+		
+		Vector2i chunkPos = new Vector2i(evt.getChunk().getPos().x, evt.getChunk().getPos().z);
+		
+		try {
+			UUID world = mod.getUUIDForWorld((ServerWorld) evt.getWorld());
+			for (ServerEventListener listener : eventListeners) listener.onChunkSaveToDisk(world, chunkPos);
+		} catch (IOException e) {
+			Logger.global.noFloodError("Failed to get the UUID for a world!", e);
+		}
+	}
+
+	/* Use ChunkSaveToDisk as it is the preferred event to use and more reliable on the chunk actually saved to disk
+	@SubscribeEvent
 	public synchronized void onWorldSave(WorldEvent.Save evt) {
 		if (!(evt.getWorld() instanceof ServerWorld)) return;
 		
@@ -115,6 +130,7 @@ public class ForgeEventForwarder  {
 			Logger.global.noFloodError("Failed to get the UUID for a world!", e);
 		}
 	}
+	*/
 
 	@SubscribeEvent
 	public synchronized void onPlayerJoin(PlayerLoggedInEvent evt) {

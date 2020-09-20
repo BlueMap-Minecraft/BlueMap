@@ -34,8 +34,8 @@ import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.filter.type.Exclude;
 import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
-import org.spongepowered.api.event.world.SaveWorldEvent;
 import org.spongepowered.api.event.world.chunk.PopulateChunkEvent;
+import org.spongepowered.api.event.world.chunk.SaveChunkEvent;
 import org.spongepowered.api.world.Location;
 
 import com.flowpowered.math.vector.Vector2i;
@@ -52,9 +52,16 @@ public class EventForwarder {
 		this.listener = listener;
 	}
 
+	/* Use ChunkSaveToDisk as it is the preferred event to use and more reliable on the chunk actually saved to disk
 	@Listener(order = Order.POST)
 	public void onWorldSaveToDisk(SaveWorldEvent evt) {
 		listener.onWorldSaveToDisk(evt.getTargetWorld().getUniqueId());		
+	}
+	*/
+	
+	@Listener(order = Order.POST)
+	public void onChunkSaveToDisk(SaveChunkEvent.Pre evt) {
+		listener.onChunkSaveToDisk(evt.getTargetChunk().getWorld().getUniqueId(), evt.getTargetChunk().getPosition().toVector2(true));
 	}
 	
 	@Listener(order = Order.POST)

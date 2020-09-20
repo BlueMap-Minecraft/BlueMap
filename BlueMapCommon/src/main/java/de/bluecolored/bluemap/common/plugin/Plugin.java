@@ -274,7 +274,7 @@ public class Plugin {
 				if (webServer != null) webServer.close();
 				
 				//save render-manager state
-				if (updateHandler != null) updateHandler.flushTileBuffer(); //first write all buffered tiles to the render manager to save them too
+				if (updateHandler != null) updateHandler.flushUpdateBuffer(); //first write all buffered changes to the render manager to save them too
 				if (renderManager != null) {
 					try {
 						saveRenderManagerState();

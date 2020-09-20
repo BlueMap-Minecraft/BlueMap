@@ -46,7 +46,7 @@ import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.world.ChunkPopulateEvent;
-import org.bukkit.event.world.WorldSaveEvent;
+import org.bukkit.event.world.ChunkUnloadEvent;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
@@ -71,9 +71,19 @@ public class EventForwarder implements Listener {
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+	public synchronized void onChunkSaveToDisk(ChunkUnloadEvent evt) {
+		if (evt.isSaveChunk()) {
+			Vector2i chunkPos = new Vector2i(evt.getChunk().getX(), evt.getChunk().getZ());
+			for (ServerEventListener listener : listeners) listener.onChunkSaveToDisk(evt.getWorld().getUID(), chunkPos);		
+		}
+	}
+	
+	/* Use ChunkSaveToDisk as it is the preferred event to use and more reliable on the chunk actually saved to disk
+	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public synchronized void onWorldSaveToDisk(WorldSaveEvent evt) {
 		for (ServerEventListener listener : listeners) listener.onWorldSaveToDisk(evt.getWorld().getUID());		
 	}
+	*/
 
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onBlockChange(BlockPlaceEvent evt) {
