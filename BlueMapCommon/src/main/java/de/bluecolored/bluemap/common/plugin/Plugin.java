@@ -372,12 +372,25 @@ public class Plugin {
 		return updateHandler;
 	}
 	
+	public boolean flushWorldUpdates(UUID worldUUID) throws IOException {
+		if (serverInterface.persistWorldChanges(worldUUID)) {
+			updateHandler.onWorldSaveToDisk(worldUUID);
+			return true;
+		}
+		
+		return false;
+	}
+	
 	public WebServer getWebServer() {
 		return webServer;
 	}
 	
 	public boolean isLoaded() {
 		return loaded;
+	}
+	
+	public String getImplementationType() {
+		return implementationType;
 	}
 	
 }

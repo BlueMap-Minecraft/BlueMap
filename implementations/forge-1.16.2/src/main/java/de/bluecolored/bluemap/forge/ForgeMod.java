@@ -33,7 +33,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.logging.log4j.LogManager;
 
@@ -182,6 +184,37 @@ public class ForgeMod implements ServerInterface {
 		File worldFolder = world.getServer().getDataDirectory().toPath().resolve(server.func_240776_a_(FolderName.field_237253_i_)).toFile();
 		File dimensionFolder = DimensionType.func_236031_a_(world.func_234923_W_(), worldFolder);
 		return dimensionFolder.getCanonicalFile();
+	}
+	
+	@Override
+	public boolean persistWorldChanges(UUID worldUUID) throws IOException, IllegalArgumentException {
+		final CompletableFuture<Boolean> taskResult = new CompletableFuture<>();
+		
+		serverInstance.execute(() -> {
+			try {
+				for (ServerWorld world : serverInstance.getWorlds()) {
+					if (getUUIDForWorld(world).equals(worldUUID)) {
+						world.save(null, true, false);
+					}
+				}
+				
+				taskResult.complete(true);
+			} catch (Exception e) {
+				taskResult.completeExceptionally(e);
+			}
+		});
+		
+		try {
+			return taskResult.get();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new IOException(e);
+		} catch (ExecutionException e) {
+			Throwable t = e.getCause();
+			if (t instanceof IOException) throw (IOException) t;
+			if (t instanceof IllegalArgumentException) throw (IllegalArgumentException) t;
+			throw new IOException(t);
+		}
 	}
 
 	@Override

@@ -119,6 +119,12 @@ public class Commands<S> {
 										.then(argument("y", DoubleArgumentType.doubleArg())
 												.then(argument("z", DoubleArgumentType.doubleArg())
 														.executes(this::debugBlockCommand))))))
+
+				.then(literal("flush")
+						.executes(this::debugFlushCommand)
+						
+						.then(argument("world", StringArgumentType.string()).suggests(new WorldSuggestionProvider<>(plugin))
+								.executes(this::debugFlushCommand)))
 				
 				.then(literal("cache")
 						.executes(this::debugClearCacheCommand))
@@ -377,6 +383,47 @@ public class Commands<S> {
 		return 1;
 	}
 	
+
+	public int debugFlushCommand(CommandContext<S> context) throws CommandSyntaxException {
+		CommandSource source = commandSourceInterface.apply(context.getSource());
+		
+		// parse arguments
+		Optional<String> worldName = getOptionalArgument(context, "world", String.class);
+		
+		final World world;
+		if (worldName.isPresent()) {
+			world = parseWorld(worldName.get()).orElse(null);
+			
+			if (world == null) {
+				source.sendMessage(Text.of(TextColor.RED, "There is no ", helper.worldHelperHover(), " with this name: ", TextColor.WHITE, worldName.get()));
+				return 0;
+			}
+		} else {
+			world = source.getWorld().orElse(null);
+			
+			if (world == null) {
+				source.sendMessage(Text.of(TextColor.RED, "Can't detect a location from this command-source, you'll have to define a world!"));
+				return 0;
+			}
+		}
+		
+		new Thread(() -> {
+			source.sendMessage(Text.of(TextColor.GOLD, "Saving world and flushing changes..."));
+			try {
+				if (plugin.flushWorldUpdates(world.getUUID())) {
+					source.sendMessage(Text.of(TextColor.GREEN, "Successfully saved and flushed all changes."));
+				} else {
+					source.sendMessage(Text.of(TextColor.RED, "This operation is not supported by this implementation (" + plugin.getImplementationType() + ")"));
+				}
+			} catch (IOException ex) {
+				source.sendMessage(Text.of(TextColor.RED, "There was an unexpected exception trying to save the world. Please check the console for more details..."));
+				Logger.global.logError("Unexpected exception trying to save the world!", ex);
+			}
+		}).start();
+		
+		return 1;
+	}
+	
 	public int debugBlockCommand(CommandContext<S> context) throws CommandSyntaxException {
 		final CommandSource source = commandSourceInterface.apply(context.getSource());
 		
@@ -515,10 +562,17 @@ public class Commands<S> {
 		
 		// execute render
 		new Thread(() -> {
-			if (world != null) {
-				helper.createWorldRenderTask(source, world, center, radius);
-			} else {
-				helper.createMapRenderTask(source, map, center, radius);
+			try {
+				if (world != null) {
+					plugin.getServerInterface().persistWorldChanges(world.getUUID());
+					helper.createWorldRenderTask(source, world, center, radius);
+				} else {
+					plugin.getServerInterface().persistWorldChanges(map.getWorld().getUUID());
+					helper.createMapRenderTask(source, map, center, radius);
+				}
+			} catch (IOException ex) {
+				source.sendMessage(Text.of(TextColor.RED, "There was an unexpected exception trying to save the world. Please check the console for more details..."));
+				Logger.global.logError("Unexpected exception trying to save the world!", ex);
 			}
 		}).start();
 		

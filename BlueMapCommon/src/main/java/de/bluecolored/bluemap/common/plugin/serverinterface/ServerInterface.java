@@ -64,6 +64,19 @@ public interface ServerInterface {
 	}
 	
 	/**
+	 * Attempts to persist all changes that have been made in a world to disk.
+	 * 
+	 * @param worldUUID The {@link UUID} of the world to be persisted.
+	 * @return <code>true</code> if the changes have been successfully persisted, <code>false</code> if this operation is not supported by the implementation
+	 * 
+	 * @throws IOException if something went wrong trying to persist the changes
+	 * @throws IllegalArgumentException if there is no world with this UUID
+	 */
+	default boolean persistWorldChanges(UUID worldUUID) throws IOException, IllegalArgumentException {
+		return false;
+	}
+	
+	/**
 	 * Returns the Folder containing the configurations for the plugin
 	 */
 	File getConfigFolder();

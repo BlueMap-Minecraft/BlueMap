@@ -42,6 +42,7 @@ import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.plugin.text.TextColor;
+import de.bluecolored.bluemap.common.plugin.text.TextFormat;
 import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.world.World;
 
@@ -62,12 +63,29 @@ public class CommandHelper {
 		lines.add(Text.of(TextColor.BLUE, "Tile-Updates:"));
 		
 		if (renderer.isRunning()) {
-			lines.add(Text.of(TextColor.WHITE, " Render-Threads are ", Text.of(TextColor.GREEN, "running").setHoverText(Text.of("click to pause rendering")).setClickCommand("/bluemap pause"), TextColor.GRAY, "!"));
+			lines.add(Text.of(TextColor.WHITE, " Render-Threads are ", 
+					Text.of(TextColor.GREEN, "running")
+					.setHoverText(Text.of("click to pause rendering"))
+					.setClickCommand("/bluemap pause"), 
+					TextColor.GRAY, "!"));
 		} else {
-			lines.add(Text.of(TextColor.WHITE, " Render-Threads are ", Text.of(TextColor.RED, "paused").setHoverText(Text.of("click to resume rendering")).setClickCommand("/bluemap resume"), TextColor.GRAY, "!"));
+			lines.add(Text.of(TextColor.WHITE, " Render-Threads are ", 
+					Text.of(TextColor.RED, "paused")
+					.setHoverText(Text.of("click to resume rendering"))
+					.setClickCommand("/bluemap resume"),
+					TextColor.GRAY, "!"));
 		}
 		
-		lines.add(Text.of(TextColor.WHITE, " Scheduled tile-updates: ", Text.of(TextColor.GOLD, renderer.getQueueSize()).setHoverText(Text.of("tiles waiting for a free render-thread")), TextColor.GRAY, " + " , Text.of(TextColor.GRAY, plugin.getUpdateHandler().getUpdateBufferCount()).setHoverText(Text.of("tiles waiting for world-save"))));
+		lines.add(Text.of(
+				TextColor.WHITE, " Scheduled tile-updates: ", 
+				TextColor.GOLD, renderer.getQueueSize()).setHoverText(
+						Text.of(
+								TextColor.WHITE, "Tiles waiting for a free render-thread: ", TextColor.GOLD, renderer.getQueueSize(), 
+								TextColor.WHITE, "\n\nChunks marked as changed: ", TextColor.GOLD, plugin.getUpdateHandler().getUpdateBufferCount(),
+								TextColor.GRAY, TextFormat.ITALIC, "\n(Changed chunks will be rendered as soon as they are saved back to the world-files)"
+								)
+						)
+				);
 		
 		RenderTask[] tasks = renderer.getRenderTasks();
 		if (tasks.length > 0) {

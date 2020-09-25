@@ -259,6 +259,27 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 		return Optional.ofNullable(onlinePlayerMap.get(uuid));
 	}
 	
+	@Override
+	public boolean persistWorldChanges(UUID worldUUID) throws IOException, IllegalArgumentException {
+		try {
+			return Bukkit.getScheduler().callSyncMethod(this, () -> {
+				World world = Bukkit.getWorld(worldUUID);
+				if (world == null) throw new IllegalArgumentException("There is no world with this uuid: " + worldUUID);
+				world.save();
+				
+				return true;
+			}).get();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new IOException(e);
+		} catch (ExecutionException e) {
+			Throwable t = e.getCause();
+			if (t instanceof IOException) throw (IOException) t;
+			if (t instanceof IllegalArgumentException) throw (IllegalArgumentException) t;
+			throw new IOException(t);
+		}
+	}
+	
 	/**
 	 * Only update some of the online players each tick to minimize performance impact on the server-thread.
 	 * Only call this method on the server-thread.

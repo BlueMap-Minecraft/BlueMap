@@ -72,10 +72,8 @@ public class EventForwarder implements Listener {
 
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public synchronized void onChunkSaveToDisk(ChunkUnloadEvent evt) {
-		if (evt.isSaveChunk()) {
-			Vector2i chunkPos = new Vector2i(evt.getChunk().getX(), evt.getChunk().getZ());
-			for (ServerEventListener listener : listeners) listener.onChunkSaveToDisk(evt.getWorld().getUID(), chunkPos);		
-		}
+		Vector2i chunkPos = new Vector2i(evt.getChunk().getX(), evt.getChunk().getZ());
+		for (ServerEventListener listener : listeners) listener.onChunkSaveToDisk(evt.getWorld().getUID(), chunkPos);		
 	}
 	
 	/* Use ChunkSaveToDisk as it is the preferred event to use and more reliable on the chunk actually saved to disk
