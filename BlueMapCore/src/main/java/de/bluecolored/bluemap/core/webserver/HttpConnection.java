@@ -34,6 +34,9 @@ import java.net.SocketTimeoutException;
 import java.util.concurrent.TimeUnit;
 
 import de.bluecolored.bluemap.core.logger.Logger;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class HttpConnection implements Runnable {
 
@@ -66,6 +69,19 @@ public class HttpConnection implements Runnable {
 				HttpRequest request = acceptRequest();
 				HttpResponse response = handler.handle(request);
 				sendResponse(response);
+                                
+                                DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                                Date date = new Date();
+                                Logger.global.logInfo(
+                                        connection.getInetAddress().toString() +
+                                        " [ " +
+                                        dateFormat.format(date) +
+                                        " ] \"" +
+                                        request.getMethod() +
+                                        " " + request.getPath() +
+                                        " " + request.getVersion() +
+                                        "\" " +
+                                        response.getStatusCode().toString());
 			} catch (InvalidRequestException e){
 				try {
 					sendResponse(new HttpResponse(HttpStatusCode.BAD_REQUEST));
