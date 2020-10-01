@@ -227,7 +227,7 @@ public class BlueMapCLI {
 		Logger.global.logInfo("Render finished!");
 	}
 	
-	public void startWebserver(BlueMapService blueMap) throws IOException {
+	public void startWebserver(BlueMapService blueMap, boolean verbose) throws IOException {
 		Logger.global.logInfo("Starting webserver ...");
 		
 		WebServerConfig config = blueMap.getWebServerConfig();
@@ -237,7 +237,8 @@ public class BlueMapCLI {
 			config.getWebserverPort(),
 			config.getWebserverMaxConnections(),
 			config.getWebserverBindAdress(),
-			requestHandler
+			requestHandler,
+                        verbose
 		);
 		webServer.start();
 	}
@@ -283,7 +284,7 @@ public class BlueMapCLI {
 			if (cmd.hasOption("w")) {
 				noActions = false;
 				
-				cli.startWebserver(blueMap);
+				cli.startWebserver(blueMap, cmd.hasOption("b"));
 				Thread.sleep(1000); //wait a second to let the webserver start, looks nicer in the log if anything comes after that
 			}
 			
@@ -374,6 +375,7 @@ public class BlueMapCLI {
 			);
 		
 		options.addOption("w", "webserver", false, "Starts the web-server, configured in the 'webserver.conf' file");
+                options.addOption("b", "verbose", false, "Causes the web-server to log requests to the console");
 
 		options.addOption("g", "generate-webapp", false, "Generates the files for the web-app to the folder, configured in the 'render.conf' file (this is done automatically when rendering if the 'index.html' file in the webroot can't be found)");
 		options.addOption("s", "generate-websettings", false, "Generates the settings for the web-app, using the settings from the 'render.conf' file (this is done automatically when rendering)");
