@@ -41,6 +41,7 @@ public class WebServer extends Thread {
 	private final int port;
 	private final int maxConnections;
 	private final InetAddress bindAdress;
+        private final boolean verbose;
 
 	private HttpRequestHandler handler;
 	
@@ -48,10 +49,11 @@ public class WebServer extends Thread {
 	
 	private ServerSocket server;
 
-	public WebServer(int port, int maxConnections, InetAddress bindAdress, HttpRequestHandler handler) {
+	public WebServer(int port, int maxConnections, InetAddress bindAdress, HttpRequestHandler handler, boolean verbose) {
 		this.port = port;
 		this.maxConnections = maxConnections;
 		this.bindAdress = bindAdress;
+                this.verbose = verbose;
 		
 		this.handler = handler;
 		
@@ -81,7 +83,7 @@ public class WebServer extends Thread {
 				Socket connection = server.accept();
 				
 				try {
-					connectionThreads.execute(new HttpConnection(server, connection, handler, 10, TimeUnit.SECONDS));
+					connectionThreads.execute(new HttpConnection(server, connection, handler, 10, TimeUnit.SECONDS, verbose));
 				} catch (RejectedExecutionException e){
 					connection.close();
 					Logger.global.logWarning("Dropped an incoming HttpConnection! (Too many connections?)");
