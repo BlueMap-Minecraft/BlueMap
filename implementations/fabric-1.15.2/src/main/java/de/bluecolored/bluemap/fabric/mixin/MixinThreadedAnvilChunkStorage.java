@@ -24,24 +24,35 @@
  */
 package de.bluecolored.bluemap.fabric.mixin;
 
+import java.util.concurrent.CompletableFuture;
+
 import org.spongepowered.asm.mixin.Mixin;
+import org.spongepowered.asm.mixin.gen.Accessor;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
-import org.spongepowered.asm.mixin.injection.callback.CallbackInfo;
+import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 
 import com.flowpowered.math.vector.Vector2i;
+import com.mojang.datafixers.util.Either;
 
 import de.bluecolored.bluemap.fabric.events.ChunkFinalizeCallback;
-import net.minecraft.world.ChunkRegion;
-import net.minecraft.world.gen.StructureAccessor;
-import net.minecraft.world.gen.chunk.ChunkGenerator;
+import net.minecraft.server.world.ChunkHolder;
+import net.minecraft.server.world.ServerWorld;
+import net.minecraft.server.world.ThreadedAnvilChunkStorage;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.ChunkStatus;
 
-@Mixin(ChunkGenerator.class)
-public class MixinChunkGenerator {
+@Mixin(ThreadedAnvilChunkStorage.class)
+public abstract class MixinThreadedAnvilChunkStorage {
 
-	@Inject(at = @At("RETURN"), method = "generateFeatures")
-	public void generateFeatures(ChunkRegion region, StructureAccessor accessor, CallbackInfo ci) {
-		ChunkFinalizeCallback.EVENT.invoker().onChunkFinalized(region.toServerWorld(), new Vector2i(region.getCenterChunkX(), region.getCenterChunkZ()));
+	@Accessor("world")
+	public abstract ServerWorld getWorld();
+	
+	@Inject(at = @At("RETURN"), method = "method_20617")
+	public void upgradeChunk(ChunkHolder holder, ChunkStatus requiredStatus, CallbackInfoReturnable<CompletableFuture<Either<Chunk, ChunkHolder.Unloaded>>> ci) {
+		if (requiredStatus == ChunkStatus.FULL) {
+			ChunkFinalizeCallback.EVENT.invoker().onChunkFinalized(getWorld(), new Vector2i(holder.getPos().x, holder.getPos().z));
+		}
 	}
 	
 }
