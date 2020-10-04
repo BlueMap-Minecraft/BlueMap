@@ -234,13 +234,13 @@ public class BlueMapCLI {
 		
 		WebServerConfig config = blueMap.getWebServerConfig();
 		HttpRequestHandler requestHandler = new FileRequestHandler(config.getWebRoot().toPath(), "BlueMap v" + BlueMap.VERSION);
-		
+
 		WebServer webServer = new WebServer(
-			config.getWebserverPort(),
-			config.getWebserverMaxConnections(),
-			config.getWebserverBindAdress(),
-			requestHandler,
-                        verbose
+				config.getWebserverPort(),
+				config.getWebserverMaxConnections(),
+				config.getWebserverBindAdress(),
+				requestHandler,
+				verbose
 		);
 		webServer.start();
 	}
@@ -375,9 +375,9 @@ public class BlueMapCLI {
 				.desc("Sets the minecraft-version, used e.g. to load resource-packs correctly. Defaults to the latest compatible version.")
 				.build()
 			);
-		
+
 		options.addOption("w", "webserver", false, "Starts the web-server, configured in the 'webserver.conf' file");
-                options.addOption("b", "verbose", false, "Causes the web-server to log requests to the console");
+		options.addOption("b", "verbose", false, "Causes the web-server to log requests to the console");
 
 		options.addOption("g", "generate-webapp", false, "Generates the files for the web-app to the folder, configured in the 'render.conf' file (this is done automatically when rendering if the 'index.html' file in the webroot can't be found)");
 		options.addOption("s", "generate-websettings", false, "Generates the settings for the web-app, using the settings from the 'render.conf' file (this is done automatically when rendering)");

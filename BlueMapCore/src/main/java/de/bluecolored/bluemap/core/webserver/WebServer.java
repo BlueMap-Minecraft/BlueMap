@@ -41,7 +41,7 @@ public class WebServer extends Thread {
 	private final int port;
 	private final int maxConnections;
 	private final InetAddress bindAdress;
-        private final boolean verbose;
+	private final boolean verbose;
 
 	private HttpRequestHandler handler;
 	

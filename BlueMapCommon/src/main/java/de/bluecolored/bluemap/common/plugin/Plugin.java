@@ -127,11 +127,11 @@ public class Plugin {
 					}
 					
 					webServer = new WebServer(
-						webServerConfig.getWebserverPort(),
-						webServerConfig.getWebserverMaxConnections(),
-						webServerConfig.getWebserverBindAdress(),
-						requestHandler,
-                                                false
+							webServerConfig.getWebserverPort(),
+							webServerConfig.getWebserverMaxConnections(),
+							webServerConfig.getWebserverBindAdress(),
+							requestHandler,
+							false
 					);
 					webServer.start();
 				}
