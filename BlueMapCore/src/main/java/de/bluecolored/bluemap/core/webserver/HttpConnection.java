@@ -34,6 +34,9 @@ import java.net.SocketTimeoutException;
 import java.util.concurrent.TimeUnit;
 
 import de.bluecolored.bluemap.core.logger.Logger;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class HttpConnection implements Runnable {
 
@@ -43,11 +46,14 @@ public class HttpConnection implements Runnable {
 	private Socket connection;
 	private InputStream in;
 	private OutputStream out;
+        
+        private final boolean verbose;
 	
-	public HttpConnection(ServerSocket server, Socket connection, HttpRequestHandler handler, int timeout, TimeUnit timeoutUnit) throws IOException {
+	public HttpConnection(ServerSocket server, Socket connection, HttpRequestHandler handler, int timeout, TimeUnit timeoutUnit, boolean verbose) throws IOException {
 		this.server = server;
 		this.connection = connection;
 		this.handler = handler;
+                this.verbose = verbose;
 		
 		if (isClosed()){
 			throw new IOException("Socket already closed!");
@@ -66,6 +72,9 @@ public class HttpConnection implements Runnable {
 				HttpRequest request = acceptRequest();
 				HttpResponse response = handler.handle(request);
 				sendResponse(response);
+				if (verbose) {
+					log(request, response);
+				}
 			} catch (InvalidRequestException e){
 				try {
 					sendResponse(new HttpResponse(HttpStatusCode.BAD_REQUEST));
@@ -89,6 +98,21 @@ public class HttpConnection implements Runnable {
 			Logger.global.logError("Error while closing HttpConnection!", e);
 		}
 	}
+        
+        private void log(HttpRequest request, HttpResponse response) {
+		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		Date date = new Date();
+		Logger.global.logInfo(
+			connection.getInetAddress().toString()
+			+ " [ "
+			+ dateFormat.format(date)
+			+ " ] \""
+			+ request.getMethod()
+			+ " " + request.getPath()
+			+ " " + request.getVersion()
+			+ "\" "
+			+ response.getStatusCode().toString());
+        }
 	
 	private void sendResponse(HttpResponse response) throws IOException {
 		response.write(out);

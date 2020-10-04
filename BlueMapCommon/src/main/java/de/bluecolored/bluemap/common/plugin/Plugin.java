@@ -130,7 +130,8 @@ public class Plugin {
 						webServerConfig.getWebserverPort(),
 						webServerConfig.getWebserverMaxConnections(),
 						webServerConfig.getWebserverBindAdress(),
-						requestHandler
+						requestHandler,
+                                                false
 					);
 					webServer.start();
 				}
