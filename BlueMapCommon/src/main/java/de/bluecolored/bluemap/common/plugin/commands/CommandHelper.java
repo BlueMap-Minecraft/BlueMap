@@ -61,18 +61,18 @@ public class CommandHelper {
 		
 		lines.add(Text.of());
 		lines.add(Text.of(TextColor.BLUE, "Tile-Updates:"));
-		
+
 		if (renderer.isRunning()) {
-			lines.add(Text.of(TextColor.WHITE, " Render-Threads are ", 
+			lines.add(Text.of(TextColor.WHITE, " Render-Threads are ",
 					Text.of(TextColor.GREEN, "running")
-					.setHoverText(Text.of("click to pause rendering"))
-					.setClickCommand("/bluemap pause"), 
+							.setHoverText(Text.of("click to pause rendering"))
+							.setClickAction(Text.ClickAction.RUN_COMMAND, "/bluemap pause"),
 					TextColor.GRAY, "!"));
 		} else {
-			lines.add(Text.of(TextColor.WHITE, " Render-Threads are ", 
+			lines.add(Text.of(TextColor.WHITE, " Render-Threads are ",
 					Text.of(TextColor.RED, "paused")
-					.setHoverText(Text.of("click to resume rendering"))
-					.setClickCommand("/bluemap resume"),
+							.setHoverText(Text.of("click to resume rendering"))
+							.setClickAction(Text.ClickAction.RUN_COMMAND, "/bluemap resume"),
 					TextColor.GRAY, "!"));
 		}
 		
@@ -118,11 +118,11 @@ public class CommandHelper {
 	}
 	
 	private Text createCancelTaskText(RenderTask task) {
-		return Text.of(TextColor.RED, "[X]").setHoverText(Text.of(TextColor.GRAY, "click to cancel this render-task")).setClickCommand("/bluemap render cancel " + task.getUuid());
+		return Text.of(TextColor.RED, "[X]").setHoverText(Text.of(TextColor.GRAY, "click to cancel this render-task")).setClickAction(Text.ClickAction.RUN_COMMAND,"/bluemap render cancel " + task.getUuid());
 	}
 	
 	private Text createPrioritizeTaskText(RenderTask task) {
-		return Text.of(TextColor.GREEN, "[^]").setHoverText(Text.of(TextColor.GRAY, "click to prioritize this render-task")).setClickCommand("/bluemap render prioritize " + task.getUuid());
+		return Text.of(TextColor.GREEN, "[^]").setHoverText(Text.of(TextColor.GRAY, "click to prioritize this render-task")).setClickAction(Text.ClickAction.RUN_COMMAND,"/bluemap render prioritize " + task.getUuid());
 	}
 	
 	public void createWorldRenderTask(CommandSource source, World world, Vector2i center, long blockRadius) {

@@ -35,8 +35,8 @@ public class Text {
 	private TextColor color;
 	private Set<TextFormat> formats = new HashSet<>();
 	private Text hoverText;
-	private String clickCommand;
-	private String clickLink;
+	private ClickAction clickAction;
+	private String clickActionValue;
 	private List<Text> children = new ArrayList<>();
 	
 	public Text setHoverText(Text hoverText) {
@@ -45,14 +45,9 @@ public class Text {
 		return this;
 	}
 	
-	public Text setClickCommand(String clickCommand) {
-		this.clickCommand = clickCommand;
-		
-		return this;
-	}
-	
-	public Text setClickLink(String clickLink) {
-		this.clickLink = clickLink;
+	public Text setClickAction(ClickAction action, String value) {
+		this.clickAction = action;
+		this.clickActionValue = value;
 		
 		return this;
 	}
@@ -84,17 +79,10 @@ public class Text {
 			sb.append("},");
 		}
 
-		if (clickCommand != null) {
+		if (clickAction != null && clickActionValue != null) {
 			sb.append(quote("clickEvent")).append(":{");
-			sb.append(quote("action")).append(":").append(quote("run_command")).append(',');
-			sb.append(quote("value")).append(":").append(quote(clickCommand));
-			sb.append("},");
-		} 
-		
-		else if (clickLink != null) {
-			sb.append(quote("clickEvent")).append(":{");
-			sb.append(quote("action")).append(":").append(quote("open_url")).append(',');
-			sb.append(quote("value")).append(":").append(quote(clickLink));
+			sb.append(quote("action")).append(":").append(quote(clickAction.getActionId())).append(',');
+			sb.append(quote("value")).append(":").append(quote(clickActionValue));
 			sb.append("},");
 		}
 		
@@ -151,7 +139,9 @@ public class Text {
 		Text text = new Text();
 		
 		text.content = this.content;
-		text.clickCommand = this.clickCommand;
+		text.clickAction = this.clickAction;
+		text.clickActionValue = this.clickActionValue;
+		text.hoverText = this.hoverText;
 		text.children = this.children;
 		
 		text.color = this.color != null ? this.color : parent.color;
@@ -240,6 +230,25 @@ public class Text {
 		if (text.children.size() == 1) return text.children.get(0);
 		
 		return text;
+	}
+
+	public enum ClickAction {
+
+		OPEN_URL ("open_url"),
+		RUN_COMMAND ("run_command"),
+		SUGGEST_COMMAND ("suggest_command"),
+		COPY_TO_CLIPBOARD ("copy_to_clipboard");
+
+		private final String action;
+
+		ClickAction (String action) {
+			this.action = action;
+		}
+
+		public String getActionId() {
+			return action;
+		}
+
 	}
 	
 }

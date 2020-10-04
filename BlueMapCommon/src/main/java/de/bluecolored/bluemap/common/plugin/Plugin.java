@@ -393,5 +393,9 @@ public class Plugin {
 	public String getImplementationType() {
 		return implementationType;
 	}
+
+	public MinecraftVersion getMinecraftVersion() {
+		return minecraftVersion;
+	}
 	
 }
