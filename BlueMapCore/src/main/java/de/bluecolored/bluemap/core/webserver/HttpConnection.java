@@ -72,20 +72,9 @@ public class HttpConnection implements Runnable {
 				HttpRequest request = acceptRequest();
 				HttpResponse response = handler.handle(request);
 				sendResponse(response);
-                                if (verbose) {
-                                    DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-                                    Date date = new Date();
-                                    Logger.global.logInfo(
-                                            connection.getInetAddress().toString() +
-                                            " [ " +
-                                            dateFormat.format(date) +
-                                            " ] \"" +
-                                            request.getMethod() +
-                                            " " + request.getPath() +
-                                            " " + request.getVersion() +
-                                            "\" " +
-                                            response.getStatusCode().toString());
-                                }
+				if (verbose) {
+					log(request, response);
+				}
 			} catch (InvalidRequestException e){
 				try {
 					sendResponse(new HttpResponse(HttpStatusCode.BAD_REQUEST));
@@ -109,6 +98,21 @@ public class HttpConnection implements Runnable {
 			Logger.global.logError("Error while closing HttpConnection!", e);
 		}
 	}
+        
+        private void log(HttpRequest request, HttpResponse response) {
+		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		Date date = new Date();
+		Logger.global.logInfo(
+			connection.getInetAddress().toString()
+			+ " [ "
+			+ dateFormat.format(date)
+			+ " ] \""
+			+ request.getMethod()
+			+ " " + request.getPath()
+			+ " " + request.getVersion()
+			+ "\" "
+			+ response.getStatusCode().toString());
+        }
 	
 	private void sendResponse(HttpResponse response) throws IOException {
 		response.write(out);
