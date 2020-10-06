@@ -37,6 +37,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
+import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import org.apache.logging.log4j.LogManager;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -101,20 +102,23 @@ public class ForgeMod implements ServerInterface {
 		
 		
 	}
-	
+
 	@SubscribeEvent
-    public void onServerStarting(FMLServerStartingEvent event) {
+	public void onServerStarting(FMLServerStartingEvent event) {
 		this.serverInstance = event.getServer();
 
 		//register commands
 		new Commands<>(pluginInstance, event.getServer().getCommandManager().getDispatcher(), forgeSource -> new ForgeCommandSource(this, pluginInstance, forgeSource));
+	}
 
+	@SubscribeEvent
+	public void onServerStarted(FMLServerStartedEvent event) {
 		//save worlds to generate level.dat files
 		serverInstance.save(false, true, true);
-		
+
 		new Thread(() -> {
 			Logger.global.logInfo("Loading...");
-			
+
 			try {
 				pluginInstance.load();
 				if (pluginInstance.isLoaded()) Logger.global.logInfo("Loaded!");
@@ -123,7 +127,7 @@ public class ForgeMod implements ServerInterface {
 				pluginInstance.unload();
 			}
 		}).start();
-    }
+	}
 	
 	@SubscribeEvent
     public void onServerStopping(FMLServerStoppingEvent event) {
