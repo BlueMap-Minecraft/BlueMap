@@ -57,6 +57,7 @@ import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.config.WebServerConfig;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.logger.LoggerLogger;
 import de.bluecolored.bluemap.core.metrics.Metrics;
 import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.web.FileRequestHandler;
@@ -254,6 +255,12 @@ public class BlueMapCLI {
 		try {
 			CommandLine cmd = parser.parse(BlueMapCLI.createOptions(), args, false);
 			
+			if (cmd.hasOption("l")) {
+				if (Logger.global instanceof LoggerLogger) {
+					((LoggerLogger) Logger.global).addFileHandler(cmd.getOptionValue("l"), cmd.hasOption("a"));
+				}
+			}
+			
 			//help
 			if (cmd.hasOption("h")) {
 				BlueMapCLI.printHelp();
@@ -375,6 +382,16 @@ public class BlueMapCLI {
 				.desc("Sets the minecraft-version, used e.g. to load resource-packs correctly. Defaults to the latest compatible version.")
 				.build()
 			);
+		
+		options.addOption(
+				Option.builder("l")
+				.longOpt("log-file")
+				.hasArg()
+				.argName("file-name")
+				.desc("Sets a file to save the log to. If not specified, no log will be saved.")
+				.build()
+			);
+		options.addOption("a", "append", false, "Causes log save file to be appended rather than replaced.");
 
 		options.addOption("w", "webserver", false, "Starts the web-server, configured in the 'webserver.conf' file");
 		options.addOption("b", "verbose", false, "Causes the web-server to log requests to the console");

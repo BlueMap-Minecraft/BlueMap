@@ -24,9 +24,9 @@
  */
 package de.bluecolored.bluemap.core.logger;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.io.IOException;
 import java.util.logging.ConsoleHandler;
+import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
@@ -36,20 +36,21 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 public class LoggerLogger extends AbstractLogger {
 	private static LoggerLogger instance = null;
 	
-	Logger logger;
+	private Logger logger;
+	private SimpleFormatter formatter;
 
 	private LoggerLogger() {
 		this.logger = Logger.getLogger("bluemap");
 		this.logger.setUseParentHandlers(false);
 		ConsoleHandler cHandler = new ConsoleHandler();
-		cHandler.setFormatter(new SimpleFormatter() {
+		formatter = new SimpleFormatter() {
 			@Override
 			public synchronized String format(LogRecord record) {
 				String stackTrace = record.getThrown() == null ? "" : ExceptionUtils.getStackTrace(record.getThrown());
 				return String.format("[%1$s] %2$s%3$s%n", record.getLevel(), record.getMessage(), stackTrace);
 			}
-			
-		});
+		};
+		cHandler.setFormatter(formatter);
 		this.logger.addHandler(cHandler);
 		
 	}
@@ -59,6 +60,16 @@ public class LoggerLogger extends AbstractLogger {
 			instance = new LoggerLogger();
 		}
 		return instance;
+	}
+	
+	public void addFileHandler(String filename, boolean append) {
+		try {
+			FileHandler fHandler = new FileHandler(filename, append);
+			fHandler.setFormatter(formatter);
+			this.logger.addHandler(fHandler);
+		} catch (IOException e) {
+			de.bluecolored.bluemap.core.logger.Logger.global.logError("Error while opening log file!", e);
+		}
 	}
 
 	@Override
