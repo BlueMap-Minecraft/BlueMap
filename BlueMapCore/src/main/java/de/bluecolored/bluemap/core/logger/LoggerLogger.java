@@ -24,7 +24,10 @@
  */
 package de.bluecolored.bluemap.core.logger;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Paths;
 import java.util.logging.ConsoleHandler;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -67,6 +70,15 @@ public class LoggerLogger extends AbstractLogger {
 			FileHandler fHandler = new FileHandler(filename, append);
 			fHandler.setFormatter(formatter);
 			this.logger.addHandler(fHandler);
+		} catch (NoSuchFileException e) {
+			// Directory may not exist. Create it and try again.
+			File parent = Paths.get(e.getFile()).getParent().toFile();
+			if (!parent.exists()) {
+				parent.mkdirs();
+				addFileHandler(filename, append);
+			} else {
+				de.bluecolored.bluemap.core.logger.Logger.global.logError("Error while opening log file!", e);
+			}
 		} catch (IOException e) {
 			de.bluecolored.bluemap.core.logger.Logger.global.logError("Error while opening log file!", e);
 		}

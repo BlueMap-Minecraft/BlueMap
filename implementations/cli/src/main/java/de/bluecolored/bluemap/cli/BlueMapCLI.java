@@ -256,9 +256,8 @@ public class BlueMapCLI {
 			CommandLine cmd = parser.parse(BlueMapCLI.createOptions(), args, false);
 			
 			if (cmd.hasOption("l")) {
-				if (Logger.global instanceof LoggerLogger) {
-					((LoggerLogger) Logger.global).addFileHandler(cmd.getOptionValue("l"), cmd.hasOption("a"));
-				}
+				Logger.global = LoggerLogger.getInstance();
+				((LoggerLogger) Logger.global).addFileHandler(cmd.getOptionValue("l"), cmd.hasOption("a"));
 			}
 			
 			//help

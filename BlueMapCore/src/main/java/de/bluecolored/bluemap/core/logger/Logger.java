@@ -93,7 +93,7 @@ public abstract class Logger {
 	}
 	
 	public static Logger stdOut(){
-		return LoggerLogger.getInstance();
+		return new PrintStreamLogger(System.out, System.err);
 	}
 	
 }
