@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.function.Predicate;
 
+import com.flowpowered.math.vector.Vector2l;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import com.flowpowered.math.GenericMath;
@@ -147,7 +148,8 @@ public class CommandHelper {
 		if (center == null || blockRadius < 0) {
 			filter = c -> true;
 		} else {
-			filter = c -> c.mul(16).distanceSquared(center) <= blockRadius * blockRadius;
+			Vector2l centerL = center.toLong(); //use longs to avoid int-overflow
+			filter = c -> c.toLong().mul(16).distanceSquared(centerL) <= blockRadius * blockRadius;
 			taskName = "radius-render";
 			renderCenter = center;
 		}
