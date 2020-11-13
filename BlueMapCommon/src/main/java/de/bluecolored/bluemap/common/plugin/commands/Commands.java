@@ -332,10 +332,15 @@ public class Commands<S> {
 	public int versionCommand(CommandContext<S> context) {
 		CommandSource source = commandSourceInterface.apply(context.getSource());
 
+		int renderThreadCount = 0;
+		if (plugin.isLoaded()) {
+			renderThreadCount = plugin.getRenderManager().getRenderThreadCount();
+		}
+
 		source.sendMessage(Text.of(TextFormat.BOLD, TextColor.BLUE, "Version: ", TextColor.WHITE, BlueMap.VERSION));
 		source.sendMessage(Text.of(TextColor.GRAY, "Implementation: ", TextColor.WHITE, plugin.getImplementationType()));
 		source.sendMessage(Text.of(TextColor.GRAY, "Minecraft compatibility: ", TextColor.WHITE, plugin.getMinecraftVersion().getVersionString()));
-		source.sendMessage(Text.of(TextColor.GRAY, "Render-threads: ", TextColor.WHITE, plugin.getRenderManager().getRenderThreadCount()));
+		source.sendMessage(Text.of(TextColor.GRAY, "Render-threads: ", TextColor.WHITE, renderThreadCount));
 		source.sendMessage(Text.of(TextColor.GRAY, "Available processors: ", TextColor.WHITE, Runtime.getRuntime().availableProcessors()));
 		source.sendMessage(Text.of(TextColor.GRAY, "Available memory: ", TextColor.WHITE, (Runtime.getRuntime().maxMemory() / 1024L / 1024L) + " MiB"));
 
@@ -344,7 +349,7 @@ public class Commands<S> {
 					"Version: " + BlueMap.VERSION + "\n" +
 					"Implementation: " + plugin.getImplementationType() + "\n" +
 					"Minecraft compatibility: " + plugin.getMinecraftVersion().getVersionString() + "\n" +
-					"Render-threads: " + plugin.getRenderManager().getRenderThreadCount() + "\n" +
+					"Render-threads: " + renderThreadCount + "\n" +
 					"Available processors: " + Runtime.getRuntime().availableProcessors() + "\n" +
 					"Available memory: " + Runtime.getRuntime().maxMemory() / 1024L / 1024L + " MiB";
 			source.sendMessage(Text.of(TextColor.DARK_GRAY, "[copy to clipboard]")
