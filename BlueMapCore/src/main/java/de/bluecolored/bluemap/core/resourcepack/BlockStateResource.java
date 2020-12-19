@@ -344,13 +344,18 @@ public class BlockStateResource {
 				}
 
 				// join variants
-				List<ForgeVariant> oldVariants = variants;
-				variants = new ArrayList<>(oldVariants.size() * propertyVariants.size());
-				for (ForgeVariant oldVariant : oldVariants) {
-					for (ForgeVariant addVariant : propertyVariants) {
-						variants.add(oldVariant.createMerge(addVariant));
+				if (variants.isEmpty()){
+					variants = propertyVariants;
+				} else {
+					List<ForgeVariant> oldVariants = variants;
+					variants = new ArrayList<>(oldVariants.size() * propertyVariants.size());
+					for (ForgeVariant oldVariant : oldVariants) {
+						for (ForgeVariant addVariant : propertyVariants) {
+							variants.add(oldVariant.createMerge(addVariant));
+						}
 					}
 				}
+
 			}
 
 			//create all possible property-variants
