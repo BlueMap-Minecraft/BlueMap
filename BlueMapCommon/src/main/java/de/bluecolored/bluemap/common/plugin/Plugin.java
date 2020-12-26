@@ -141,7 +141,7 @@ public class Plugin {
 					blueMap.getResourcePack();
 				} catch (MissingResourcesException ex) {
 					Logger.global.logWarning("BlueMap is missing important resources!");
-					Logger.global.logWarning("You need to accept the download of the required files in order of BlueMap to work!");
+					Logger.global.logWarning("You must accept the required file download in order for BlueMap to work!");
 					try { Logger.global.logWarning("Please check: " + blueMap.getCoreConfigFile().getCanonicalPath()); } catch (IOException ignored) {}
 					Logger.global.logInfo("If you have changed the config you can simply reload the plugin using: /bluemap reload");
 					
