@@ -327,7 +327,7 @@ public class BlueMapCLI {
 			
 		} catch (MissingResourcesException e) {
 			Logger.global.logWarning("BlueMap is missing important resources!");
-			Logger.global.logWarning("You need to accept the download of the required files in order of BlueMap to work!");
+			Logger.global.logWarning("You must accept the required file download in order for BlueMap to work!");
 			try { Logger.global.logWarning("Please check: " + blueMap.getCoreConfigFile().getCanonicalPath()); } catch (NullPointerException | IOException ignored) {}
 			System.exit(2);
 			return;
