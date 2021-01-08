@@ -107,7 +107,7 @@ export default class MarkerManager {
 		this.markerSets.forEach(markerSet => {
 			if (markerSet.toggleable) {
 				if (!addedLabel){
-					menu.addElement(new Label("marker:"));
+					menu.addElement(new Label("Markers:"));
 					addedLabel = true;
 				}
 

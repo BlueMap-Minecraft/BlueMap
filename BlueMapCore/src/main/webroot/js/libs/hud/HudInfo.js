@@ -103,7 +103,7 @@ export default class HudInfo {
 			};
 			if (hiresData) {
 				$(`
-					<div class="label">block:</div>
+					<div class="label">Block:</div>
 					<div class="coords block">
 						<div class="coord"><span class="label">x</span><span class="value">${block.x}</span></div>
 						<div class="coord"><span class="label">y</span><span class="value">${block.y}</span></div>
@@ -112,7 +112,7 @@ export default class HudInfo {
 				`).appendTo(content);
 			} else {
 				$(`
-					<div class="label">position:</div>
+					<div class="label">Position:</div>
 					<div class="coords block">
 						<div class="coord"><span class="label">x</span><span class="value">${block.x}</span></div>
 						<div class="coord"><span class="label">z</span><span class="value">${block.z}</span></div>

@@ -1,16 +1,16 @@
 // colors
-$normal_fg: #333;
-$normal_bg: #fff;
+$normal_fg: white;
+$normal_bg: rgb(70, 70, 70);
 
-$label_fg: #666;
+$label_fg: rgb(200, 200, 200);
 
 $hover_fg: $normal_fg;
-$hover_bg: #aaa;
+$hover_bg: rgb(80, 80, 80);
 
-$active_fg: $normal_bg;
-$active_bg: $normal_fg;
+$active_fg: $label_fg;
+$active_bg: rgb(60, 60, 60);
 
-$line_color: #aaa;
+$line_color: rgb(100, 100, 100);
 
 // breakpoints
 $super-small-max: 500px;

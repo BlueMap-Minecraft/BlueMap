@@ -36,7 +36,7 @@
 
         border-radius: 1rem;
 
-        background-color: $normal_fg;
+        background-color: rgb(40, 40, 40);
 
         transition: background-color 0.2s;
 
@@ -62,7 +62,7 @@
     }
 
     &.selected > .switch {
-        background-color: #008800;
+        background-color: #00ffc3;
 
         &::after {
             left: calc(100% - 1rem);
