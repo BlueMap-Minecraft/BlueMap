@@ -6,7 +6,7 @@
 	"mixins": [],
 	"client": [],
 	"server": [
-		"MixinChunkGenerator",
+		"MixinThreadedAnvilChunkStorage",
 		"MixinPlayerManager",
 		"MixinServerWorld"
 	],

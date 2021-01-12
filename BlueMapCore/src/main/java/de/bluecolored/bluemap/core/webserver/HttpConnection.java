@@ -34,6 +34,9 @@ import java.net.SocketTimeoutException;
 import java.util.concurrent.TimeUnit;
 
 import de.bluecolored.bluemap.core.logger.Logger;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class HttpConnection implements Runnable {
 
@@ -43,18 +46,21 @@ public class HttpConnection implements Runnable {
 	private Socket connection;
 	private InputStream in;
 	private OutputStream out;
-	
-	public HttpConnection(ServerSocket server, Socket connection, HttpRequestHandler handler, int timeout, TimeUnit timeoutUnit) throws IOException {
+
+        private final boolean verbose;
+
+	public HttpConnection(ServerSocket server, Socket connection, HttpRequestHandler handler, int timeout, TimeUnit timeoutUnit, boolean verbose) throws IOException {
 		this.server = server;
 		this.connection = connection;
 		this.handler = handler;
-		
+                this.verbose = verbose;
+
 		if (isClosed()){
 			throw new IOException("Socket already closed!");
 		}
-		
+
 		connection.setSoTimeout((int) timeoutUnit.toMillis(timeout));
-		
+
 		in = this.connection.getInputStream();
 		out = this.connection.getOutputStream();
 	}
@@ -66,6 +72,9 @@ public class HttpConnection implements Runnable {
 				HttpRequest request = acceptRequest();
 				HttpResponse response = handler.handle(request);
 				sendResponse(response);
+				if (verbose) {
+					log(request, response);
+				}
 			} catch (InvalidRequestException e){
 				try {
 					sendResponse(new HttpResponse(HttpStatusCode.BAD_REQUEST));
@@ -82,27 +91,42 @@ public class HttpConnection implements Runnable {
 				break;
 			}
 		}
-		
+
 		try {
 			close();
 		} catch (IOException e){
 			Logger.global.logError("Error while closing HttpConnection!", e);
 		}
 	}
-	
+
+	private void log(HttpRequest request, HttpResponse response) {
+		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		Date date = new Date();
+		Logger.global.logInfo(
+				connection.getInetAddress().toString()
+				+ " [ "
+				+ dateFormat.format(date)
+				+ " ] \""
+				+ request.getMethod()
+				+ " " + request.getPath()
+				+ " " + request.getVersion()
+				+ "\" "
+				+ response.getStatusCode().toString());
+	}
+
 	private void sendResponse(HttpResponse response) throws IOException {
 		response.write(out);
 		out.flush();
 	}
-	
+
 	private HttpRequest acceptRequest() throws ConnectionClosedException, InvalidRequestException, IOException {
 		return HttpRequest.read(in);
 	}
-	
+
 	public boolean isClosed(){
 		return !connection.isBound() || connection.isClosed() || !connection.isConnected() || connection.isOutputShutdown() || connection.isInputShutdown();
 	}
-	
+
 	public void close() throws IOException {
 		try {
 			in.close();
@@ -114,13 +138,13 @@ public class HttpConnection implements Runnable {
 			}
 		}
 	}
-	
+
 	public static class ConnectionClosedException extends IOException {
 		private static final long serialVersionUID = 1L;
 	}
-	
+
 	public static class InvalidRequestException extends IOException {
 		private static final long serialVersionUID = 1L;
 	}
-	
+
 }

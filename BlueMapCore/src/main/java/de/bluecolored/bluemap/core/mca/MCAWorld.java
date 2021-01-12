@@ -49,6 +49,7 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
 
+import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.extensions.BlockStateExtension;
@@ -144,6 +145,7 @@ public class MCAWorld implements World {
 		registerBlockStateExtension(new DoubleChestExtension());
 		
 		this.chunkCache = Caffeine.newBuilder()
+			.executor(BlueMap.THREAD_POOL)
 			.maximumSize(500)
 			.expireAfterWrite(1, TimeUnit.MINUTES)
 			.build(chunkPos -> this.loadChunkOrEmpty(chunkPos, 2, 1000));
@@ -207,7 +209,7 @@ public class MCAWorld implements World {
 		}
 	}
 	
-	private Chunk loadChunkOrEmpty(Vector2i chunkPos, int tries, long tryInterval) throws InterruptedException {
+	private Chunk loadChunkOrEmpty(Vector2i chunkPos, int tries, long tryInterval) {
 		Exception loadException = null;
 		for (int i = 0; i < tries; i++) {
 			try {
@@ -217,7 +219,12 @@ public class MCAWorld implements World {
 				loadException = e;
 				
 				if (tryInterval > 0 && i+1 < tries) {
-					Thread.sleep(tryInterval);
+					try {
+						Thread.sleep(tryInterval);
+					} catch (InterruptedException ex) {
+						Thread.currentThread().interrupt();
+						break;
+					}
 				}
 			}
 		}
@@ -263,8 +270,9 @@ public class MCAWorld implements World {
 			} else {
 				throw new IOException("Invalid data tag: " + (tag == null ? "null" : tag.getClass().getName()));
 			}
-		} catch (RuntimeException | IOException e) {
-			throw new IOException("Exception trying to load chunk (" + chunkPos + ")", e);
+			
+		} catch (RuntimeException e) {
+			throw new IOException(e);
 		}
 	}
 	

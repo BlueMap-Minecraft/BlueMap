@@ -1,5 +1,6 @@
 modLoader="javafml"
 loaderVersion="[28,)"
+license="MIT"
 issueTrackerURL="https://github.com/BlueMap-Minecraft/BlueMap/issues"
 [[mods]]
 modId="bluemap"
@@ -14,12 +15,12 @@ A 3d-map of your Minecraft worlds view-able in your browser using three.js (WebG
 [[dependencies.bluemap]]
     modId="forge"
     mandatory=true
-    versionRange="[28,)"
+    versionRange="[29,)"
     ordering="NONE"
     side="SERVER"
 [[dependencies.bluemap]]
     modId="minecraft"
     mandatory=true
-    versionRange="[1.15.2]"
+    versionRange="[1.15,1.15.2]"
     ordering="NONE"
     side="SERVER"

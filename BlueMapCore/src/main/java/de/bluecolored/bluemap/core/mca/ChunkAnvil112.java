@@ -35,6 +35,7 @@ import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.LightData;
 import net.querz.nbt.CompoundTag;
 import net.querz.nbt.ListTag;
+import net.querz.nbt.NumberTag;
 import net.querz.nbt.mca.MCAUtil;
 
 public class ChunkAnvil112 extends Chunk {
@@ -134,7 +135,7 @@ public class ChunkAnvil112 extends Chunk {
 		private byte[] data;
 		
 		public Section(CompoundTag sectionData) {
-			this.sectionY = sectionData.getByte("Y");
+			this.sectionY = sectionData.get("Y", NumberTag.class).asInt();
 			this.blocks = sectionData.getByteArray("Blocks");
 			this.add = sectionData.getByteArray("Add");
 			this.blockLight = sectionData.getByteArray("BlockLight");

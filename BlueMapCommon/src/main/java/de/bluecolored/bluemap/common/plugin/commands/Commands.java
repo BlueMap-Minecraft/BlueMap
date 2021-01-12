@@ -31,6 +31,9 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+import de.bluecolored.bluemap.common.plugin.text.TextFormat;
+import de.bluecolored.bluemap.core.BlueMap;
+import de.bluecolored.bluemap.core.MinecraftVersion;
 import org.apache.commons.io.FileUtils;
 
 import com.flowpowered.math.vector.Vector2i;
@@ -45,7 +48,6 @@ import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 
 import de.bluecolored.bluemap.api.BlueMapAPI;
@@ -73,9 +75,9 @@ public class Commands<S> {
 
 	private final Plugin plugin;
 	private final CommandDispatcher<S> dispatcher;
-	private Function<S, CommandSource> commandSourceInterface;
+	private final Function<S, CommandSource> commandSourceInterface;
 	
-	private CommandHelper helper;
+	private final CommandHelper helper;
 	
 	public Commands(Plugin plugin, CommandDispatcher<S> dispatcher, Function<S, CommandSource> commandSourceInterface) {
 		this.plugin = plugin;
@@ -93,6 +95,18 @@ public class Commands<S> {
 				literal("bluemap")
 				.requires(requirementsUnloaded("bluemap.status"))
 				.executes(this::statusCommand)
+				.build();
+
+		LiteralCommandNode<S> versionCommand =
+				literal("version")
+						.requires(requirementsUnloaded("bluemap.version"))
+						.executes(this::versionCommand)
+						.build();
+		
+		LiteralCommandNode<S> helpCommand = 
+				literal("help")
+				.requires(requirementsUnloaded("bluemap.help"))
+				.executes(this::helpCommand)
 				.build();
 		
 		LiteralCommandNode<S> reloadCommand = 
@@ -113,6 +127,12 @@ public class Commands<S> {
 										.then(argument("y", DoubleArgumentType.doubleArg())
 												.then(argument("z", DoubleArgumentType.doubleArg())
 														.executes(this::debugBlockCommand))))))
+
+				.then(literal("flush")
+						.executes(this::debugFlushCommand)
+						
+						.then(argument("world", StringArgumentType.string()).suggests(new WorldSuggestionProvider<>(plugin))
+								.executes(this::debugFlushCommand)))
 				
 				.then(literal("cache")
 						.executes(this::debugClearCacheCommand))
@@ -130,34 +150,27 @@ public class Commands<S> {
 				.requires(requirements("bluemap.resume"))
 				.executes(this::resumeCommand)
 				.build();
-		
-		LiteralCommandNode<S> renderCommand = 
+
+		LiteralCommandNode<S> renderCommand =
 				literal("render")
 				.requires(requirements("bluemap.render"))
 				.executes(this::renderCommand) // /bluemap render
 
 				.then(argument("radius", IntegerArgumentType.integer())
 						.executes(this::renderCommand)) // /bluemap render <radius>
-				
+
 				.then(argument("x", DoubleArgumentType.doubleArg())
 						.then(argument("z", DoubleArgumentType.doubleArg())
 								.then(argument("radius", IntegerArgumentType.integer())
 										.executes(this::renderCommand)))) // /bluemap render <x> <z> <radius>
-				
+
 				.then(argument("world|map", StringArgumentType.string()).suggests(new WorldOrMapSuggestionProvider<>(plugin))
 						.executes(this::renderCommand) // /bluemap render <world|map>
-						
+
 						.then(argument("x", DoubleArgumentType.doubleArg())
 								.then(argument("z", DoubleArgumentType.doubleArg())
 										.then(argument("radius", IntegerArgumentType.integer())
 												.executes(this::renderCommand))))) // /bluemap render <world|map> <x> <z> <radius>
-				.build();
-		
-		LiteralCommandNode<S> purgeCommand = 
-				literal("purge")
-				.requires(requirements("bluemap.render"))
-				.then(argument("map", StringArgumentType.string()).suggests(new MapSuggestionProvider<>(plugin))
-						.executes(this::purgeCommand))
 				.build();
 		
 		LiteralCommandNode<S> prioRenderCommand = 
@@ -170,9 +183,19 @@ public class Commands<S> {
 		LiteralCommandNode<S> cancelRenderCommand = 
 				literal("cancel")
 				.requires(requirements("bluemap.render"))
+				.executes(this::cancelLastRenderTaskCommand)
+
 				.then(argument("uuid", StringArgumentType.string())
 						.executes(this::cancelRenderTaskCommand))
+				
 				.build();
+
+		LiteralCommandNode<S> purgeCommand =
+				literal("purge")
+						.requires(requirements("bluemap.render"))
+						.then(argument("map", StringArgumentType.string()).suggests(new MapSuggestionProvider<>(plugin))
+								.executes(this::purgeCommand))
+						.build();
 		
 		LiteralCommandNode<S> worldsCommand = 
 				literal("worlds")
@@ -216,6 +239,8 @@ public class Commands<S> {
 		
 		// command tree
 		dispatcher.getRoot().addChild(baseCommand);
+		baseCommand.addChild(versionCommand);
+		baseCommand.addChild(helpCommand);
 		baseCommand.addChild(reloadCommand);
 		baseCommand.addChild(debugCommand);
 		baseCommand.addChild(pauseCommand);
@@ -246,11 +271,11 @@ public class Commands<S> {
 	}
 	
 	private LiteralArgumentBuilder<S> literal(String name){
-		return LiteralArgumentBuilder.<S>literal(name);
+		return LiteralArgumentBuilder.literal(name);
 	}
 	
 	private <T> RequiredArgumentBuilder<S, T> argument(String name, ArgumentType<T> type){
-		return RequiredArgumentBuilder.<S, T>argument(name, type);
+		return RequiredArgumentBuilder.argument(name, type);
 	}
 	
 	private <T> Optional<T> getOptionalArgument(CommandContext<S> context, String argumentName, Class<T> type) {
@@ -303,6 +328,60 @@ public class Commands<S> {
 		source.sendMessages(helper.createStatusMessage());
 		return 1;
 	}
+
+	public int versionCommand(CommandContext<S> context) {
+		CommandSource source = commandSourceInterface.apply(context.getSource());
+
+		source.sendMessage(Text.of(TextFormat.BOLD, TextColor.BLUE, "Version: ", TextColor.WHITE, BlueMap.VERSION));
+		source.sendMessage(Text.of(TextColor.GRAY, "Implementation: ", TextColor.WHITE, plugin.getImplementationType()));
+		source.sendMessage(Text.of(TextColor.GRAY, "Minecraft compatibility: ", TextColor.WHITE, plugin.getMinecraftVersion().getVersionString()));
+		source.sendMessage(Text.of(TextColor.GRAY, "Render-threads: ", TextColor.WHITE, plugin.getRenderManager().getRenderThreadCount()));
+		source.sendMessage(Text.of(TextColor.GRAY, "Available processors: ", TextColor.WHITE, Runtime.getRuntime().availableProcessors()));
+		source.sendMessage(Text.of(TextColor.GRAY, "Available memory: ", TextColor.WHITE, (Runtime.getRuntime().maxMemory() / 1024L / 1024L) + " MiB"));
+
+		if (plugin.getMinecraftVersion().isAtLeast(MinecraftVersion.MC_1_15)) {
+			String clipboardValue =
+					"Version: " + BlueMap.VERSION + "\n" +
+					"Implementation: " + plugin.getImplementationType() + "\n" +
+					"Minecraft compatibility: " + plugin.getMinecraftVersion().getVersionString() + "\n" +
+					"Render-threads: " + plugin.getRenderManager().getRenderThreadCount() + "\n" +
+					"Available processors: " + Runtime.getRuntime().availableProcessors() + "\n" +
+					"Available memory: " + Runtime.getRuntime().maxMemory() / 1024L / 1024L + " MiB";
+			source.sendMessage(Text.of(TextColor.DARK_GRAY, "[copy to clipboard]")
+					.setClickAction(Text.ClickAction.COPY_TO_CLIPBOARD, clipboardValue)
+					.setHoverText(Text.of(TextColor.GRAY, "click to copy the above text .. ", TextFormat.ITALIC, TextColor.GRAY, "duh!")));
+		}
+
+		return 1;
+	}
+	
+	public int helpCommand(CommandContext<S> context) {
+		CommandSource source = commandSourceInterface.apply(context.getSource());
+		
+		source.sendMessage(Text.of(TextColor.BLUE, "BlueMap Commands:"));
+		for (String usage : dispatcher.getAllUsage(dispatcher.getRoot().getChild("bluemap"), context.getSource(), true)) {
+			Text usageText = Text.of(TextColor.GREEN, "/bluemap");
+			
+			String[] arguments = usage.split(" ");
+			for (String arg : arguments) {
+				if (arg.isEmpty()) continue;
+				if (arg.charAt(0) == '<' && arg.charAt(arg.length() - 1) == '>') {
+					usageText.addChild(Text.of(TextColor.GRAY, " " + arg));
+				} else {
+					usageText.addChild(Text.of(TextColor.WHITE, " " + arg));
+				}
+			}
+			
+			source.sendMessage(usageText);
+		}
+		
+		source.sendMessage(
+				Text.of(TextColor.BLUE, "\nOpen this link to get a description for each command:\n")
+				.addChild(Text.of(TextColor.GRAY, "https://bluecolo.red/bluemap-commands").setClickAction(Text.ClickAction.OPEN_URL, "https://bluecolo.red/bluemap-commands"))
+				);
+		
+		return 1;
+	}
 	
 	public int reloadCommand(CommandContext<S> context) {
 		CommandSource source = commandSourceInterface.apply(context.getSource());
@@ -328,7 +407,7 @@ public class Commands<S> {
 		return 1;
 	}
 
-	public int debugClearCacheCommand(CommandContext<S> context) throws CommandSyntaxException {
+	public int debugClearCacheCommand(CommandContext<S> context) {
 		CommandSource source = commandSourceInterface.apply(context.getSource());
 		
 		for (World world : plugin.getWorlds()) {
@@ -339,7 +418,48 @@ public class Commands<S> {
 		return 1;
 	}
 	
-	public int debugBlockCommand(CommandContext<S> context) throws CommandSyntaxException {
+
+	public int debugFlushCommand(CommandContext<S> context) {
+		CommandSource source = commandSourceInterface.apply(context.getSource());
+		
+		// parse arguments
+		Optional<String> worldName = getOptionalArgument(context, "world", String.class);
+		
+		final World world;
+		if (worldName.isPresent()) {
+			world = parseWorld(worldName.get()).orElse(null);
+			
+			if (world == null) {
+				source.sendMessage(Text.of(TextColor.RED, "There is no ", helper.worldHelperHover(), " with this name: ", TextColor.WHITE, worldName.get()));
+				return 0;
+			}
+		} else {
+			world = source.getWorld().orElse(null);
+			
+			if (world == null) {
+				source.sendMessage(Text.of(TextColor.RED, "Can't detect a location from this command-source, you'll have to define a world!"));
+				return 0;
+			}
+		}
+		
+		new Thread(() -> {
+			source.sendMessage(Text.of(TextColor.GOLD, "Saving world and flushing changes..."));
+			try {
+				if (plugin.flushWorldUpdates(world.getUUID())) {
+					source.sendMessage(Text.of(TextColor.GREEN, "Successfully saved and flushed all changes."));
+				} else {
+					source.sendMessage(Text.of(TextColor.RED, "This operation is not supported by this implementation (" + plugin.getImplementationType() + ")"));
+				}
+			} catch (IOException ex) {
+				source.sendMessage(Text.of(TextColor.RED, "There was an unexpected exception trying to save the world. Please check the console for more details..."));
+				Logger.global.logError("Unexpected exception trying to save the world!", ex);
+			}
+		}).start();
+		
+		return 1;
+	}
+	
+	public int debugBlockCommand(CommandContext<S> context) {
 		final CommandSource source = commandSourceInterface.apply(context.getSource());
 		
 		// parse arguments
@@ -477,10 +597,17 @@ public class Commands<S> {
 		
 		// execute render
 		new Thread(() -> {
-			if (world != null) {
-				helper.createWorldRenderTask(source, world, center, radius);
-			} else {
-				helper.createMapRenderTask(source, map, center, radius);
+			try {
+				if (world != null) {
+					plugin.getServerInterface().persistWorldChanges(world.getUUID());
+					helper.createWorldRenderTask(source, world, center, radius);
+				} else {
+					plugin.getServerInterface().persistWorldChanges(map.getWorld().getUUID());
+					helper.createMapRenderTask(source, map, center, radius);
+				}
+			} catch (IOException ex) {
+				source.sendMessage(Text.of(TextColor.RED, "There was an unexpected exception trying to save the world. Please check the console for more details..."));
+				Logger.global.logError("Unexpected exception trying to save the world!", ex);
 			}
 		}).start();
 		
@@ -535,6 +662,22 @@ public class Commands<S> {
 		return 0;
 	}
 	
+	public int cancelLastRenderTaskCommand(CommandContext<S> context) {
+		CommandSource source = commandSourceInterface.apply(context.getSource());
+		
+		RenderTask[] tasks = plugin.getRenderManager().getRenderTasks();
+		if (tasks.length == 0) {
+			source.sendMessage(Text.of(TextColor.RED, "There is currently no render task scheduled!"));
+			return 0;
+		}
+
+		RenderTask task = tasks[tasks.length - 1];
+		
+		plugin.getRenderManager().removeRenderTask(task);
+		source.sendMessage(Text.of(TextColor.GREEN, "The render-task '" + task.getName() + "' has been canceled!"));
+		return 1;
+	}
+	
 	public int cancelRenderTaskCommand(CommandContext<S> context) {
 		CommandSource source = commandSourceInterface.apply(context.getSource());
 		
@@ -563,7 +706,7 @@ public class Commands<S> {
 		
 		source.sendMessage(Text.of(TextColor.BLUE, "Worlds loaded by BlueMap:"));
 		for (World world : plugin.getWorlds()) {
-			source.sendMessage(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, world.getName()).setHoverText(Text.of(TextColor.GRAY, world.getUUID())));
+			source.sendMessage(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, world.getName()).setHoverText(Text.of(world.getSaveFolder(), TextColor.GRAY, " (" + world.getUUID() + ")")));
 		}
 		
 		return 1;

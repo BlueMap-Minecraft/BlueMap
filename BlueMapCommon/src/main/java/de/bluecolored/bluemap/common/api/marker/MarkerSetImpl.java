@@ -95,7 +95,7 @@ public class MarkerSetImpl implements MarkerSet {
 	}
 
 	@Override
-	public boolean isDefautHidden() {
+	public boolean isDefaultHidden() {
 		return this.isDefaultHidden;
 	}
 

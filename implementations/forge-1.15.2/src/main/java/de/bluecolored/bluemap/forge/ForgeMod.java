@@ -33,8 +33,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 
+import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import org.apache.logging.log4j.LogManager;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
@@ -45,6 +48,7 @@ import de.bluecolored.bluemap.common.plugin.commands.Commands;
 import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
@@ -87,6 +91,7 @@ public class ForgeMod implements ServerInterface {
 		this.worldUUIDs = new ConcurrentHashMap<>();
 		this.eventForwarder = new ForgeEventForwarder(this);
 		this.worldUuidCache = Caffeine.newBuilder()
+				.executor(BlueMap.THREAD_POOL)
 				.weakKeys()
 				.maximumSize(1000)
 				.build(this::loadUUIDForWorld);
@@ -96,17 +101,20 @@ public class ForgeMod implements ServerInterface {
 	
 	@SubscribeEvent
     public void onServerStarting(FMLServerStartingEvent event) {
-		this.worldUUIDs.clear();
-
-		//save worlds to generate level.dat files
-		event.getServer().save(false, true, true);
+		this.serverInstance = event.getServer();
 
 		//register commands
 		new Commands<>(pluginInstance, event.getServer().getCommandManager().getDispatcher(), forgeSource -> new ForgeCommandSource(this, pluginInstance, forgeSource));
-		
+    }
+
+	@SubscribeEvent
+	public void onServerStarted(FMLServerStartedEvent event) {
+		//save worlds to generate level.dat files
+		serverInstance.save(false, true, true);
+
 		new Thread(() -> {
 			Logger.global.logInfo("Loading...");
-			
+
 			try {
 				pluginInstance.load();
 				if (pluginInstance.isLoaded()) Logger.global.logInfo("Loaded!");
@@ -115,7 +123,7 @@ public class ForgeMod implements ServerInterface {
 				pluginInstance.unload();
 			}
 		}).start();
-    }
+	}
 	
 	@SubscribeEvent
     public void onServerStopping(FMLServerStoppingEvent event) {
@@ -183,6 +191,37 @@ public class ForgeMod implements ServerInterface {
 		
 		return worldFolder.getCanonicalFile();
 	}
+	
+	@Override
+	public boolean persistWorldChanges(UUID worldUUID) throws IOException, IllegalArgumentException {
+		final CompletableFuture<Boolean> taskResult = new CompletableFuture<>();
+		
+		serverInstance.execute(() -> {
+			try {
+				for (ServerWorld world : serverInstance.getWorlds()) {
+					if (getUUIDForWorld(world).equals(worldUUID)) {
+						world.save(null, true, false);
+					}
+				}
+				
+				taskResult.complete(true);
+			} catch (Exception e) {
+				taskResult.completeExceptionally(e);
+			}
+		});
+		
+		try {
+			return taskResult.get();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new IOException(e);
+		} catch (ExecutionException e) {
+			Throwable t = e.getCause();
+			if (t instanceof IOException) throw (IOException) t;
+			if (t instanceof IllegalArgumentException) throw (IllegalArgumentException) t;
+			throw new IOException(t);
+		}
+	}
 
 	@Override
 	public File getConfigFolder() {
@@ -213,6 +252,10 @@ public class ForgeMod implements ServerInterface {
 
 	public MinecraftServer getServer() {
 		return this.serverInstance;
+	}
+	
+	public Plugin getPlugin() {
+		return this.pluginInstance;
 	}
 
 	@Override

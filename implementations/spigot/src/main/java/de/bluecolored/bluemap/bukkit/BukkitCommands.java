@@ -88,8 +88,16 @@ public class BukkitCommands implements Listener {
 			}
 			
 			if (!completions.isEmpty()) {
-				completions.sort((s1, s2) -> s1.compareToIgnoreCase(s2));
-				evt.getCompletions().addAll(completions);
+				completions.sort(String::compareToIgnoreCase);
+
+				try {
+					evt.getCompletions().addAll(completions);
+				} catch (UnsupportedOperationException ex){
+					// fix for a bug with paper where the completion-Collection is not mutable for some reason
+					List<String> mutableCompletions = new ArrayList<>(evt.getCompletions());
+					mutableCompletions.addAll(completions);
+					evt.setCompletions(mutableCompletions);
+				}
 			}
 		} catch (InterruptedException ignore) {
 			Thread.currentThread().interrupt();

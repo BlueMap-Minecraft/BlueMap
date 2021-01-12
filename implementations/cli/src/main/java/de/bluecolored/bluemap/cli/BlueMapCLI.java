@@ -57,6 +57,7 @@ import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.config.WebServerConfig;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.logger.LoggerLogger;
 import de.bluecolored.bluemap.core.metrics.Metrics;
 import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.web.FileRequestHandler;
@@ -112,10 +113,12 @@ public class BlueMapCLI {
 				if (tiles.isEmpty()) {
 					continue;
 				}
+
+				Vector2i renderCenter = map.getWorld().getSpawnPoint().toVector2(true);
 				
 				RenderTask task = new RenderTask(map.getId(), map);
 				task.addTiles(tiles);
-				task.optimizeQueue();
+				task.optimizeQueue(renderCenter);
 				
 				renderManager.addRenderTask(task);
 			}
@@ -227,17 +230,18 @@ public class BlueMapCLI {
 		Logger.global.logInfo("Render finished!");
 	}
 	
-	public void startWebserver(BlueMapService blueMap) throws IOException {
+	public void startWebserver(BlueMapService blueMap, boolean verbose) throws IOException {
 		Logger.global.logInfo("Starting webserver ...");
 		
 		WebServerConfig config = blueMap.getWebServerConfig();
 		HttpRequestHandler requestHandler = new FileRequestHandler(config.getWebRoot().toPath(), "BlueMap v" + BlueMap.VERSION);
-		
+
 		WebServer webServer = new WebServer(
-			config.getWebserverPort(),
-			config.getWebserverMaxConnections(),
-			config.getWebserverBindAdress(),
-			requestHandler
+				config.getWebserverPort(),
+				config.getWebserverMaxConnections(),
+				config.getWebserverBindAdress(),
+				requestHandler,
+				verbose
 		);
 		webServer.start();
 	}
@@ -250,6 +254,11 @@ public class BlueMapCLI {
 		
 		try {
 			CommandLine cmd = parser.parse(BlueMapCLI.createOptions(), args, false);
+			
+			if (cmd.hasOption("l")) {
+				Logger.global = LoggerLogger.getInstance();
+				((LoggerLogger) Logger.global).addFileHandler(cmd.getOptionValue("l"), cmd.hasOption("a"));
+			}
 			
 			//help
 			if (cmd.hasOption("h")) {
@@ -283,7 +292,7 @@ public class BlueMapCLI {
 			if (cmd.hasOption("w")) {
 				noActions = false;
 				
-				cli.startWebserver(blueMap);
+				cli.startWebserver(blueMap, cmd.hasOption("b"));
 				Thread.sleep(1000); //wait a second to let the webserver start, looks nicer in the log if anything comes after that
 			}
 			
@@ -373,7 +382,18 @@ public class BlueMapCLI {
 				.build()
 			);
 		
+		options.addOption(
+				Option.builder("l")
+				.longOpt("log-file")
+				.hasArg()
+				.argName("file-name")
+				.desc("Sets a file to save the log to. If not specified, no log will be saved.")
+				.build()
+			);
+		options.addOption("a", "append", false, "Causes log save file to be appended rather than replaced.");
+
 		options.addOption("w", "webserver", false, "Starts the web-server, configured in the 'webserver.conf' file");
+		options.addOption("b", "verbose", false, "Causes the web-server to log requests to the console");
 
 		options.addOption("g", "generate-webapp", false, "Generates the files for the web-app to the folder, configured in the 'render.conf' file (this is done automatically when rendering if the 'index.html' file in the webroot can't be found)");
 		options.addOption("s", "generate-websettings", false, "Generates the settings for the web-app, using the settings from the 'render.conf' file (this is done automatically when rendering)");

@@ -127,10 +127,11 @@ public class Plugin {
 					}
 					
 					webServer = new WebServer(
-						webServerConfig.getWebserverPort(),
-						webServerConfig.getWebserverMaxConnections(),
-						webServerConfig.getWebserverBindAdress(),
-						requestHandler
+							webServerConfig.getWebserverPort(),
+							webServerConfig.getWebserverMaxConnections(),
+							webServerConfig.getWebserverBindAdress(),
+							requestHandler,
+							false
 					);
 					webServer.start();
 				}
@@ -274,7 +275,7 @@ public class Plugin {
 				if (webServer != null) webServer.close();
 				
 				//save render-manager state
-				if (updateHandler != null) updateHandler.flushTileBuffer(); //first write all buffered tiles to the render manager to save them too
+				if (updateHandler != null) updateHandler.flushUpdateBuffer(); //first write all buffered changes to the render manager to save them too
 				if (renderManager != null) {
 					try {
 						saveRenderManagerState();
@@ -372,12 +373,29 @@ public class Plugin {
 		return updateHandler;
 	}
 	
+	public boolean flushWorldUpdates(UUID worldUUID) throws IOException {
+		if (serverInterface.persistWorldChanges(worldUUID)) {
+			updateHandler.onWorldSaveToDisk(worldUUID);
+			return true;
+		}
+		
+		return false;
+	}
+	
 	public WebServer getWebServer() {
 		return webServer;
 	}
 	
 	public boolean isLoaded() {
 		return loaded;
+	}
+	
+	public String getImplementationType() {
+		return implementationType;
+	}
+
+	public MinecraftVersion getMinecraftVersion() {
+		return minecraftVersion;
 	}
 	
 }

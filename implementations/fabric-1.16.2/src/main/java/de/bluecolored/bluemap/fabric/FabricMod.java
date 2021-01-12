@@ -33,7 +33,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.logging.log4j.LogManager;
 
@@ -45,6 +47,7 @@ import de.bluecolored.bluemap.common.plugin.commands.Commands;
 import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
@@ -57,6 +60,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.util.WorldSavePath;
 import net.minecraft.world.dimension.DimensionType;
 
 public class FabricMod implements ModInitializer, ServerInterface {
@@ -84,6 +88,7 @@ public class FabricMod implements ModInitializer, ServerInterface {
 		this.worldUUIDs = new ConcurrentHashMap<>();
 		this.eventForwarder = new FabricEventForwarder(this);
 		this.worldUuidCache = Caffeine.newBuilder()
+				.executor(BlueMap.THREAD_POOL)
 				.weakKeys()
 				.maximumSize(1000)
 				.build(this::loadUUIDForWorld);
@@ -161,11 +166,41 @@ public class FabricMod implements ModInitializer, ServerInterface {
 
 	private UUID loadUUIDForWorld(ServerWorld world) throws IOException {
 		MinecraftServer server = world.getServer();
-		String worldName = server.getSaveProperties().getLevelName();
-		File worldFolder = new File(world.getServer().getRunDirectory(), worldName);
+		File worldFolder = world.getServer().getRunDirectory().toPath().resolve(server.getSavePath(WorldSavePath.ROOT)).toFile();
 		File dimensionFolder = DimensionType.getSaveDirectory(world.getRegistryKey(), worldFolder);
 		File dimensionDir = dimensionFolder.getCanonicalFile();
 		return getUUIDForWorld(dimensionDir);
+	}
+	
+	@Override
+	public boolean persistWorldChanges(UUID worldUUID) throws IOException, IllegalArgumentException {
+		final CompletableFuture<Boolean> taskResult = new CompletableFuture<>();
+		
+		serverInstance.execute(() -> {
+			try {
+				for (ServerWorld world : serverInstance.getWorlds()) {
+					if (getUUIDForWorld(world).equals(worldUUID)) {
+						world.save(null, true, false);
+					}
+				}
+				
+				taskResult.complete(true);
+			} catch (Exception e) {
+				taskResult.completeExceptionally(e);
+			}
+		});
+		
+		try {
+			return taskResult.get();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new IOException(e);
+		} catch (ExecutionException e) {
+			Throwable t = e.getCause();
+			if (t instanceof IOException) throw (IOException) t;
+			if (t instanceof IllegalArgumentException) throw (IllegalArgumentException) t;
+			throw new IOException(t);
+		}
 	}
 
 	@Override

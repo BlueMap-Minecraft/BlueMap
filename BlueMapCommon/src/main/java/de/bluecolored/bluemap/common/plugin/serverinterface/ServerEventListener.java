@@ -35,6 +35,8 @@ public interface ServerEventListener {
 
 	default void onWorldSaveToDisk(UUID world) {};
 	
+	default void onChunkSaveToDisk(UUID world, Vector2i chunkPos) {};
+	
 	default void onBlockChange(UUID world, Vector3i blockPos) {};
 	
 	default void onChunkFinishedGeneration(UUID world, Vector2i chunkPos) {};

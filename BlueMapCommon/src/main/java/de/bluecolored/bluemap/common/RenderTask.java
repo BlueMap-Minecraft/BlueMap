@@ -36,6 +36,7 @@ import java.util.UUID;
 
 import com.flowpowered.math.vector.Vector2d;
 import com.flowpowered.math.vector.Vector2i;
+import com.flowpowered.math.vector.Vector3i;
 
 public class RenderTask {
 
@@ -59,13 +60,18 @@ public class RenderTask {
 		this.renderedTiles = 0;
 	}
 	
-	public void optimizeQueue() {
+	public void optimizeQueue(Vector2i centerBlockPos) {
 		//Find a good grid size to match the MCAWorlds chunk-cache size of 500
 		Vector2d sortGridSize = new Vector2d(20, 20).div(mapType.getTileRenderer().getHiresModelManager().getTileSize().toDouble().div(16)).ceil().max(1, 1);
+		
+		Vector2i centerTile = mapType.getTileRenderer().getHiresModelManager().posToTile(new Vector3i(centerBlockPos.getX(), 0, centerBlockPos.getY()));
 		
 		synchronized (renderTiles) {
 			ArrayList<Vector2i> tileList = new ArrayList<>(renderTiles);
 			tileList.sort((v1, v2) -> {
+				v1 = v1.sub(centerTile);
+				v2 = v2.sub(centerTile);
+				
 				Vector2i v1SortGridPos = v1.toDouble().div(sortGridSize).floor().toInt();
 				Vector2i v2SortGridPos = v2.toDouble().div(sortGridSize).floor().toInt();
 				

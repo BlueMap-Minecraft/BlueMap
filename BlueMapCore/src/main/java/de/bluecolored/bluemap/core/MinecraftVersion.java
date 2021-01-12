@@ -29,19 +29,21 @@ import java.util.regex.Pattern;
 
 public enum MinecraftVersion {
 
-	MC_1_12 ("1.12", "mc1_12", "https://launcher.mojang.com/v1/objects/0f275bc1547d01fa5f56ba34bdc87d981ee12daf/client.jar"),
-	MC_1_13 ("1.13", "mc1_13", "https://launcher.mojang.com/v1/objects/30bfe37a8db404db11c7edf02cb5165817afb4d9/client.jar"),
-	MC_1_14 ("1.14", "mc1_13", "https://launcher.mojang.com/v1/objects/8c325a0c5bd674dd747d6ebaa4c791fd363ad8a9/client.jar"),
-	MC_1_15 ("1.15", "mc1_15", "https://launcher.mojang.com/v1/objects/e3f78cd16f9eb9a52307ed96ebec64241cc5b32d/client.jar"),
-	MC_1_16 ("1.16", "mc1_16", "https://launcher.mojang.com/v1/objects/653e97a2d1d76f87653f02242d243cdee48a5144/client.jar");
+	MC_1_12 (101200, "1.12", "mc1_12", "https://launcher.mojang.com/v1/objects/0f275bc1547d01fa5f56ba34bdc87d981ee12daf/client.jar"),
+	MC_1_13 (101300, "1.13", "mc1_13", "https://launcher.mojang.com/v1/objects/30bfe37a8db404db11c7edf02cb5165817afb4d9/client.jar"),
+	MC_1_14 (101400, "1.14", "mc1_13", "https://launcher.mojang.com/v1/objects/8c325a0c5bd674dd747d6ebaa4c791fd363ad8a9/client.jar"),
+	MC_1_15 (101500, "1.15", "mc1_15", "https://launcher.mojang.com/v1/objects/e3f78cd16f9eb9a52307ed96ebec64241cc5b32d/client.jar"),
+	MC_1_16 (101600, "1.16", "mc1_16", "https://launcher.mojang.com/v1/objects/653e97a2d1d76f87653f02242d243cdee48a5144/client.jar");
 
 	private static final Pattern VERSION_REGEX = Pattern.compile("(?:(?<major>\\d+)\\.(?<minor>\\d+))(?:\\.(?<patch>\\d+))?(?:\\-(?:pre|rc)\\d+)?");
-	
+
+	private final int versionOrdinal;
 	private final String versionString;
 	private final String resourcePrefix;
 	private final String clientDownloadUrl;
 	
-	MinecraftVersion(String versionString, String resourcePrefix, String clientDownloadUrl) {
+	MinecraftVersion(int versionOrdinal, String versionString, String resourcePrefix, String clientDownloadUrl) {
+		this.versionOrdinal = versionOrdinal;
 		this.versionString = versionString;
 		this.resourcePrefix = resourcePrefix;
 		this.clientDownloadUrl = clientDownloadUrl;
@@ -58,7 +60,15 @@ public enum MinecraftVersion {
 	public String getClientDownloadUrl() {
 		return this.clientDownloadUrl;
 	}
-	
+
+	public boolean isAtLeast(MinecraftVersion minVersion) {
+		return this.versionOrdinal >= minVersion.versionOrdinal;
+	}
+
+	public boolean isAtMost(MinecraftVersion maxVersion) {
+		return this.versionOrdinal <= maxVersion.versionOrdinal;
+	}
+
 	public static MinecraftVersion fromVersionString(String versionString) {
 		Matcher matcher = VERSION_REGEX.matcher(versionString);
 		if (!matcher.matches()) throw new IllegalArgumentException("Not a valid version string!");
@@ -71,7 +81,7 @@ public enum MinecraftVersion {
 		
 		throw new IllegalArgumentException("No matching version found!");
 	}
-	
+
 	public static MinecraftVersion getLatest() {
 		return MC_1_16;
 	}

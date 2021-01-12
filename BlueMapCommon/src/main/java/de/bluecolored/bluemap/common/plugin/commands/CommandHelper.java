@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.function.Predicate;
 
+import com.flowpowered.math.vector.Vector2l;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import com.flowpowered.math.GenericMath;
@@ -42,6 +43,7 @@ import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.plugin.text.TextColor;
+import de.bluecolored.bluemap.common.plugin.text.TextFormat;
 import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.world.World;
 
@@ -60,14 +62,31 @@ public class CommandHelper {
 		
 		lines.add(Text.of());
 		lines.add(Text.of(TextColor.BLUE, "Tile-Updates:"));
-		
+
 		if (renderer.isRunning()) {
-			lines.add(Text.of(TextColor.WHITE, " Render-Threads are ", Text.of(TextColor.GREEN, "running").setHoverText(Text.of("click to pause rendering")).setClickCommand("/bluemap pause"), TextColor.GRAY, "!"));
+			lines.add(Text.of(TextColor.WHITE, " Render-Threads are ",
+					Text.of(TextColor.GREEN, "running")
+							.setHoverText(Text.of("click to pause rendering"))
+							.setClickAction(Text.ClickAction.RUN_COMMAND, "/bluemap pause"),
+					TextColor.GRAY, "!"));
 		} else {
-			lines.add(Text.of(TextColor.WHITE, " Render-Threads are ", Text.of(TextColor.RED, "paused").setHoverText(Text.of("click to resume rendering")).setClickCommand("/bluemap resume"), TextColor.GRAY, "!"));
+			lines.add(Text.of(TextColor.WHITE, " Render-Threads are ",
+					Text.of(TextColor.RED, "paused")
+							.setHoverText(Text.of("click to resume rendering"))
+							.setClickAction(Text.ClickAction.RUN_COMMAND, "/bluemap resume"),
+					TextColor.GRAY, "!"));
 		}
 		
-		lines.add(Text.of(TextColor.WHITE, " Scheduled tile-updates: ", Text.of(TextColor.GOLD, renderer.getQueueSize()).setHoverText(Text.of("tiles waiting for a free render-thread")), TextColor.GRAY, " + " , Text.of(TextColor.GRAY, plugin.getUpdateHandler().getUpdateBufferCount()).setHoverText(Text.of("tiles waiting for world-save"))));
+		lines.add(Text.of(
+				TextColor.WHITE, " Scheduled tile-updates: ", 
+				TextColor.GOLD, renderer.getQueueSize()).setHoverText(
+						Text.of(
+								TextColor.WHITE, "Tiles waiting for a free render-thread: ", TextColor.GOLD, renderer.getQueueSize(), 
+								TextColor.WHITE, "\n\nChunks marked as changed: ", TextColor.GOLD, plugin.getUpdateHandler().getUpdateBufferCount(),
+								TextColor.GRAY, TextFormat.ITALIC, "\n(Changed chunks will be rendered as soon as they are saved back to the world-files)"
+								)
+						)
+				);
 		
 		RenderTask[] tasks = renderer.getRenderTasks();
 		if (tasks.length > 0) {
@@ -100,11 +119,11 @@ public class CommandHelper {
 	}
 	
 	private Text createCancelTaskText(RenderTask task) {
-		return Text.of(TextColor.RED, "[X]").setHoverText(Text.of(TextColor.GRAY, "click to cancel this render-task")).setClickCommand("/bluemap render cancel " + task.getUuid());
+		return Text.of(TextColor.RED, "[X]").setHoverText(Text.of(TextColor.GRAY, "click to cancel this render-task")).setClickAction(Text.ClickAction.RUN_COMMAND,"/bluemap render cancel " + task.getUuid());
 	}
 	
 	private Text createPrioritizeTaskText(RenderTask task) {
-		return Text.of(TextColor.GREEN, "[^]").setHoverText(Text.of(TextColor.GRAY, "click to prioritize this render-task")).setClickCommand("/bluemap render prioritize " + task.getUuid());
+		return Text.of(TextColor.GREEN, "[^]").setHoverText(Text.of(TextColor.GRAY, "click to prioritize this render-task")).setClickAction(Text.ClickAction.RUN_COMMAND,"/bluemap render prioritize " + task.getUuid());
 	}
 	
 	public void createWorldRenderTask(CommandSource source, World world, Vector2i center, long blockRadius) {
@@ -123,13 +142,16 @@ public class CommandHelper {
 		source.sendMessage(Text.of(TextColor.GOLD, "Collecting chunks..."));
 		
 		String taskName = "world-render";
+		Vector2i renderCenter = map.getWorld().getSpawnPoint().toVector2(true);
 		
 		Predicate<Vector2i> filter;
 		if (center == null || blockRadius < 0) {
 			filter = c -> true;
 		} else {
-			filter = c -> c.mul(16).distanceSquared(center) <= blockRadius * blockRadius;
+			Vector2l centerL = center.toLong(); //use longs to avoid int-overflow
+			filter = c -> c.toLong().mul(16).distanceSquared(centerL) <= blockRadius * blockRadius;
 			taskName = "radius-render";
+			renderCenter = center;
 		}
 		
 		Collection<Vector2i> chunks = map.getWorld().getChunkList(filter);
@@ -142,7 +164,7 @@ public class CommandHelper {
 		
 		RenderTask task = new RenderTask(taskName, map);
 		task.addTiles(tiles);
-		task.optimizeQueue();
+		task.optimizeQueue(renderCenter);
 		plugin.getRenderManager().addRenderTask(task);
 		
 		source.sendMessage(Text.of(TextColor.GREEN, tiles.size() + " tiles found! Task created."));

@@ -24,7 +24,10 @@
  */
 package de.bluecolored.bluemap.common.plugin;
 
-import java.util.Iterator;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 
 import com.flowpowered.math.vector.Vector2i;
@@ -35,47 +38,44 @@ import com.google.common.collect.MultimapBuilder;
 import de.bluecolored.bluemap.common.MapType;
 import de.bluecolored.bluemap.common.RenderManager;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
+import de.bluecolored.bluemap.core.world.World;
 
 public class MapUpdateHandler implements ServerEventListener {
 
 	private Plugin plugin;
-	
-	private Multimap<MapType, Vector2i> updateBuffer;
+	private Multimap<UUID, Vector2i> updateBuffer;
+	private Timer flushTimer;
 	
 	public MapUpdateHandler(Plugin plugin) {
 		this.plugin = plugin;
 		updateBuffer = MultimapBuilder.hashKeys().hashSetValues().build();
+		
+		flushTimer = new Timer("MapUpdateHandlerTimer", true);
 	}
 	
 	@Override
 	public void onWorldSaveToDisk(final UUID world) {
-		RenderManager renderManager = plugin.getRenderManager();
 		
-		new Thread(() -> {
-			try {
-				Thread.sleep(5000); // wait 5 sec before rendering so saving has finished to avoid render-errors
-				
-				synchronized (updateBuffer) {
-					Iterator<MapType> iterator = updateBuffer.keys().iterator();
-					while (iterator.hasNext()) {
-						MapType map = iterator.next();
-						if (map.getWorld().getUUID().equals(world)) {
-							renderManager.createTickets(map, updateBuffer.get(map));
-							iterator.remove();
-						}
-					}
-					
-				}
-			} catch (InterruptedException ignore) { Thread.currentThread().interrupt(); } 
-			
-		}).start();
+		// wait 5 sec before rendering so saving has finished
+		flushTimer.schedule(new TimerTask() {
+			@Override public void run() { flushUpdateBufferForWorld(world); }
+		}, 5000);
+		
+	}
+	
+	@Override
+	public void onChunkSaveToDisk(final UUID world, final Vector2i chunkPos) {
+		
+		// wait 5 sec before rendering so saving has finished
+		flushTimer.schedule(new TimerTask() {
+			@Override public void run() { flushUpdateBufferForChunk(world, chunkPos); }
+		}, 5000);
+		
 	}
 	
 	@Override
 	public void onBlockChange(UUID world, Vector3i blockPos) {
-		synchronized (updateBuffer) {
-			updateBlock(world, blockPos);
-		}
+		updateBlock(world, blockPos);
 	}
 	
 	@Override
@@ -91,32 +91,22 @@ public class MapUpdateHandler implements ServerEventListener {
 		}
 	}
 	
-	private void updateChunk(UUID world, Vector2i chunkPos) {
-		Vector3i min = new Vector3i(chunkPos.getX() * 16, 0, chunkPos.getY() * 16);
-		Vector3i max = min.add(15, 255, 15);
+	private void updateChunk(UUID worldUUID, Vector2i chunkPos) {
+		World world = plugin.getWorld(worldUUID);
+		if (world == null) return;
 		
-		Vector3i xmin = new Vector3i(min.getX(), 0, max.getY());
-		Vector3i xmax = new Vector3i(max.getX(), 255, min.getY());
-		
-		//update all corners so we always update all tiles containing this chunk
 		synchronized (updateBuffer) {
-			updateBlock(world, min);
-			updateBlock(world, max);
-			updateBlock(world, xmin);
-			updateBlock(world, xmax);
+			updateBuffer.put(worldUUID, chunkPos);
 		}
 	}
 	
-	private void updateBlock(UUID world, Vector3i pos){
+	private void updateBlock(UUID worldUUID, Vector3i pos){
+		World world = plugin.getWorld(worldUUID);
+		if (world == null) return;
+		
 		synchronized (updateBuffer) {
-			for (MapType mapType : plugin.getMapTypes()) {
-				if (mapType.getWorld().getUUID().equals(world)) {
-					mapType.getWorld().invalidateChunkCache(mapType.getWorld().blockPosToChunkPos(pos));
-					
-					Vector2i tile = mapType.getTileRenderer().getHiresModelManager().posToTile(pos);
-					updateBuffer.put(mapType, tile);
-				}
-			}
+			Vector2i chunkPos = world.blockPosToChunkPos(pos);
+			updateBuffer.put(worldUUID, chunkPos);
 		}
 	}
 	
@@ -124,14 +114,106 @@ public class MapUpdateHandler implements ServerEventListener {
 		return updateBuffer.size();
 	}
 	
-	public void flushTileBuffer() {
+	public void flushUpdateBuffer() {
 		RenderManager renderManager = plugin.getRenderManager();
 		
 		synchronized (updateBuffer) {
-			for (MapType map : updateBuffer.keySet()) {
-				renderManager.createTickets(map, updateBuffer.get(map));
+			for (MapType map : plugin.getMapTypes()) {
+				Collection<Vector2i> chunks = updateBuffer.get(map.getWorld().getUUID());
+				Collection<Vector2i> tiles = new HashSet<>(chunks.size() * 2);
+				
+				for (Vector2i chunk : chunks) {
+					Vector3i min = new Vector3i(chunk.getX() * 16, 0, chunk.getY() * 16);
+					Vector3i max = min.add(15, 255, 15);
+					
+					Vector3i xmin = new Vector3i(min.getX(), 0, max.getY());
+					Vector3i xmax = new Vector3i(max.getX(), 255, min.getY());
+					
+					tiles.add(map.getTileRenderer().getHiresModelManager().posToTile(min));
+					tiles.add(map.getTileRenderer().getHiresModelManager().posToTile(max));
+					tiles.add(map.getTileRenderer().getHiresModelManager().posToTile(xmin));
+					tiles.add(map.getTileRenderer().getHiresModelManager().posToTile(xmax));
+				}
+				
+				//invalidate caches of updated chunks
+				for (Vector2i chunk : chunks) {
+					map.getWorld().invalidateChunkCache(chunk);
+				}
+
+				//create render-tickets
+				renderManager.createTickets(map, tiles);
 			}
+			
 			updateBuffer.clear();
+		}
+	}
+	
+	public void flushUpdateBufferForWorld(UUID world) {
+		RenderManager renderManager = plugin.getRenderManager();
+		
+		synchronized (updateBuffer) {
+			for (MapType map : plugin.getMapTypes()) {
+				if (!map.getWorld().getUUID().equals(world)) continue;
+
+				Collection<Vector2i> chunks = updateBuffer.get(world);
+				Collection<Vector2i> tiles = new HashSet<>(chunks.size() * 2);
+				
+				for (Vector2i chunk : chunks) {
+					Vector3i min = new Vector3i(chunk.getX() * 16, 0, chunk.getY() * 16);
+					Vector3i max = min.add(15, 255, 15);
+					
+					Vector3i xmin = new Vector3i(min.getX(), 0, max.getY());
+					Vector3i xmax = new Vector3i(max.getX(), 255, min.getY());
+					
+					tiles.add(map.getTileRenderer().getHiresModelManager().posToTile(min));
+					tiles.add(map.getTileRenderer().getHiresModelManager().posToTile(max));
+					tiles.add(map.getTileRenderer().getHiresModelManager().posToTile(xmin));
+					tiles.add(map.getTileRenderer().getHiresModelManager().posToTile(xmax));
+				}
+				
+				//invalidate caches of updated chunks
+				for (Vector2i chunk : chunks) {
+					map.getWorld().invalidateChunkCache(chunk);
+				}
+				
+				//create render-tickets
+				renderManager.createTickets(map, tiles);
+			}
+			
+			updateBuffer.removeAll(world);
+		}
+	}
+	
+	public void flushUpdateBufferForChunk(UUID world, Vector2i chunkPos) {
+		RenderManager renderManager = plugin.getRenderManager();
+		
+		synchronized (updateBuffer) {
+			if (!updateBuffer.containsEntry(world, chunkPos)) return;
+			
+			for (MapType map : plugin.getMapTypes()) {
+				if (!map.getWorld().getUUID().equals(world)) continue;
+
+				Collection<Vector2i> tiles = new HashSet<>(4);
+				
+				Vector3i min = new Vector3i(chunkPos.getX() * 16, 0, chunkPos.getY() * 16);
+				Vector3i max = min.add(15, 255, 15);
+				
+				Vector3i xmin = new Vector3i(min.getX(), 0, max.getY());
+				Vector3i xmax = new Vector3i(max.getX(), 255, min.getY());
+				
+				tiles.add(map.getTileRenderer().getHiresModelManager().posToTile(min));
+				tiles.add(map.getTileRenderer().getHiresModelManager().posToTile(max));
+				tiles.add(map.getTileRenderer().getHiresModelManager().posToTile(xmin));
+				tiles.add(map.getTileRenderer().getHiresModelManager().posToTile(xmax));
+				
+				//invalidate caches of updated chunk
+				map.getWorld().invalidateChunkCache(chunkPos);
+
+				//create render-tickets
+				renderManager.createTickets(map, tiles);
+			}
+			
+			updateBuffer.remove(world, chunkPos);
 		}
 	}
 	

@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 
 import javax.inject.Inject;
 
@@ -84,6 +85,7 @@ public class SpongePlugin implements ServerInterface {
 	private SpongeCommands commands;
 
 	private SpongeExecutorService asyncExecutor;
+	private SpongeExecutorService syncExecutor;
 	
 	private int playerUpdateIndex = 0;
 	private Map<UUID, Player> onlinePlayerMap;
@@ -110,6 +112,7 @@ public class SpongePlugin implements ServerInterface {
 	@Listener
 	public void onServerStart(GameStartingServerEvent evt) {
 		asyncExecutor = Sponge.getScheduler().createAsyncExecutor(this);
+		syncExecutor = Sponge.getScheduler().createSyncExecutor(this);
 		
 		//save all world properties to generate level_sponge.dat files
 		for (WorldProperties properties : Sponge.getServer().getAllWorldProperties()) {
@@ -235,6 +238,27 @@ public class SpongePlugin implements ServerInterface {
 		}
 		
 		return Sponge.getMetricsConfigManager().getGlobalCollectionState().asBoolean();
+	}
+	
+	@Override
+	public boolean persistWorldChanges(UUID worldUUID) throws IOException, IllegalArgumentException {
+		try {
+			return syncExecutor.submit(() -> {
+				World world = Sponge.getServer().getWorld(worldUUID).orElse(null);
+				if (world == null) throw new IllegalArgumentException("There is no world with this uuid: " + worldUUID);
+				world.save();
+				
+				return true;
+			}).get();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new IOException(e);
+		} catch (ExecutionException e) {
+			Throwable t = e.getCause();
+			if (t instanceof IOException) throw (IOException) t;
+			if (t instanceof IllegalArgumentException) throw (IllegalArgumentException) t;
+			throw new IOException(t);
+		}
 	}
 	
 	/**

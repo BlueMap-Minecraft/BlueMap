@@ -33,7 +33,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.logging.log4j.LogManager;
 
@@ -45,6 +47,7 @@ import de.bluecolored.bluemap.common.plugin.commands.Commands;
 import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
@@ -83,6 +86,7 @@ public class FabricMod implements ModInitializer, ServerInterface {
 		this.worldUUIDs = new ConcurrentHashMap<>();
 		this.eventForwarder = new FabricEventForwarder(this);
 		this.worldUuidCache = Caffeine.newBuilder()
+				.executor(BlueMap.THREAD_POOL)
 				.weakKeys()
 				.maximumSize(1000)
 				.build(this::loadUUIDForWorld);
@@ -161,6 +165,37 @@ public class FabricMod implements ModInitializer, ServerInterface {
 	private UUID loadUUIDForWorld(ServerWorld world) throws IOException {
 		File dimensionDir = world.getDimension().getType().getSaveDirectory(world.getSaveHandler().getWorldDir());
 		return getUUIDForWorld(dimensionDir.getCanonicalFile());
+	}
+	
+	@Override
+	public boolean persistWorldChanges(UUID worldUUID) throws IOException, IllegalArgumentException {
+		final CompletableFuture<Boolean> taskResult = new CompletableFuture<>();
+		
+		serverInstance.execute(() -> {
+			try {
+				for (ServerWorld world : serverInstance.getWorlds()) {
+					if (getUUIDForWorld(world).equals(worldUUID)) {
+						world.save(null, true, false);
+					}
+				}
+				
+				taskResult.complete(true);
+			} catch (Exception e) {
+				taskResult.completeExceptionally(e);
+			}
+		});
+		
+		try {
+			return taskResult.get();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			throw new IOException(e);
+		} catch (ExecutionException e) {
+			Throwable t = e.getCause();
+			if (t instanceof IOException) throw (IOException) t;
+			if (t instanceof IllegalArgumentException) throw (IllegalArgumentException) t;
+			throw new IOException(t);
+		}
 	}
 
 	@Override

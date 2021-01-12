@@ -36,12 +36,7 @@ import de.bluecolored.bluemap.core.mca.mapping.BiomeMapper;
 import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.LightData;
-import net.querz.nbt.ByteArrayTag;
-import net.querz.nbt.CompoundTag;
-import net.querz.nbt.IntArrayTag;
-import net.querz.nbt.ListTag;
-import net.querz.nbt.StringTag;
-import net.querz.nbt.Tag;
+import net.querz.nbt.*;
 import net.querz.nbt.mca.MCAUtil;
 
 public class ChunkAnvil113 extends Chunk {
@@ -147,7 +142,7 @@ public class ChunkAnvil113 extends Chunk {
 		
 		@SuppressWarnings("unchecked")
 		public Section(CompoundTag sectionData) {
-			this.sectionY = sectionData.getByte("Y");
+			this.sectionY = sectionData.get("Y", NumberTag.class).asInt();
 			this.blockLight = sectionData.getByteArray("BlockLight");
 			this.skyLight = sectionData.getByteArray("SkyLight");
 			this.blocks = sectionData.getLongArray("BlockStates");

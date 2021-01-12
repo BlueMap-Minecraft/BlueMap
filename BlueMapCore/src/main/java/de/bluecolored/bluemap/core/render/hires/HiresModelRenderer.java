@@ -81,8 +81,6 @@ public class HiresModelRenderer {
 				for (int y = min.getY(); y <= max.getY(); y++){
 					Block block = world.getBlock(x, y, z);
 					if (block.getBlockState().equals(BlockState.AIR)) continue;
-					
-					maxHeight = y;
 
 					BlockStateModel blockModel;
 					try {
@@ -98,8 +96,13 @@ public class HiresModelRenderer {
 					}
 					
 					blockModel.translate(new Vector3f(x, y, z).sub(modelMin.toFloat()));
-
-					color = MathUtils.overlayColors(blockModel.getMapColor(), color);
+					
+					//update color and height (only if not 100% translucent)
+					Vector4f blockColor = blockModel.getMapColor();
+					if (blockColor.getW() > 0) {
+						maxHeight = y;
+						color = MathUtils.overlayColors(blockModel.getMapColor(), color);
+					}
 					
 					//TODO: quick hack to random offset grass
 					if (block.getBlockState().getFullId().equals(grassId)){
