@@ -13,7 +13,7 @@ allprojects {
 		}
 		maven {
 			name 'sponge'
-			url 'http://repo.spongepowered.org/maven/'
+			url 'https://repo.spongepowered.org/repository/maven-public/'
 		}
 		maven {
 			name 'CodeMC'
