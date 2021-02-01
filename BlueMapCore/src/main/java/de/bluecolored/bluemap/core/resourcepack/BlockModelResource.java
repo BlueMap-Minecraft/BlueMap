@@ -24,31 +24,19 @@
  */
 package de.bluecolored.bluemap.core.resourcepack;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.NoSuchElementException;
-
 import com.flowpowered.math.vector.Vector3f;
 import com.flowpowered.math.vector.Vector4f;
-
 import de.bluecolored.bluemap.core.resourcepack.BlockModelResource.Element.Face;
 import de.bluecolored.bluemap.core.resourcepack.fileaccess.FileAccess;
 import de.bluecolored.bluemap.core.util.Axis;
 import de.bluecolored.bluemap.core.util.Direction;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.gson.GsonConfigurationLoader;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.Map.Entry;
 
 public class BlockModelResource {
 
@@ -282,7 +270,7 @@ public class BlockModelResource {
 				} else {
 					try {
 						parentPath = ResourcePack.namespacedToAbsoluteResourcePath(parentPath, "models") + ".json";
-						blockModel = this.buildNoReset(parentPath, config.getNode("elements").isVirtual(), topModelPath);
+						blockModel = this.buildNoReset(parentPath, renderElements && config.getNode("elements").isVirtual(), topModelPath);
 					} catch (IOException ex) {
 						throw new ParseResourceException("Failed to load parent model " + parentPath + " of model " + topModelPath, ex);
 					}
