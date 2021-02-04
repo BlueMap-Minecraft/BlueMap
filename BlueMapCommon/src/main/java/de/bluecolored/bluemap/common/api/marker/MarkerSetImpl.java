@@ -24,17 +24,8 @@
  */
 package de.bluecolored.bluemap.common.api.marker;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-
 import com.flowpowered.math.vector.Vector3d;
 import com.google.common.collect.Sets;
-
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.marker.Marker;
@@ -42,6 +33,9 @@ import de.bluecolored.bluemap.api.marker.MarkerSet;
 import de.bluecolored.bluemap.api.marker.Shape;
 import de.bluecolored.bluemap.core.logger.Logger;
 import ninja.leaping.configurate.ConfigurationNode;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MarkerSetImpl implements MarkerSet {
 
@@ -215,6 +209,19 @@ public class MarkerSetImpl implements MarkerSet {
 
 		removedMarkers.clear();
 		this.hasUnsavedChanges = false;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		MarkerSetImpl markerSet = (MarkerSetImpl) o;
+		return id.equals(markerSet.id);
+	}
+
+	@Override
+	public int hashCode() {
+		return id.hashCode();
 	}
 
 }

@@ -24,15 +24,15 @@
  */
 package de.bluecolored.bluemap.common.api.marker;
 
-import java.util.Optional;
-
 import com.flowpowered.math.vector.Vector3d;
 import com.google.common.base.Preconditions;
-
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.marker.Marker;
 import ninja.leaping.configurate.ConfigurationNode;
+
+import java.util.Objects;
+import java.util.Optional;
 
 public abstract class MarkerImpl implements Marker {
 
@@ -205,5 +205,18 @@ public abstract class MarkerImpl implements Marker {
 		node.getNode("y").setValue(Math.round(pos.getY() * 1000d) / 1000d);
 		node.getNode("z").setValue(Math.round(pos.getZ() * 1000d) / 1000d);
 	}
-	
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		MarkerImpl marker = (MarkerImpl) o;
+		return id.equals(marker.id);
+	}
+
+	@Override
+	public int hashCode() {
+		return id.hashCode();
+	}
+
 }
