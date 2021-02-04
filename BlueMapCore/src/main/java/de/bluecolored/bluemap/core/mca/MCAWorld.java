@@ -24,62 +24,32 @@
  */
 package de.bluecolored.bluemap.core.mca;
 
-import java.io.BufferedInputStream;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.RandomAccessFile;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
-
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.common.collect.Multimap;
 import com.google.common.collect.MultimapBuilder;
-
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.mca.extensions.BlockStateExtension;
-import de.bluecolored.bluemap.core.mca.extensions.DoorExtension;
-import de.bluecolored.bluemap.core.mca.extensions.DoubleChestExtension;
-import de.bluecolored.bluemap.core.mca.extensions.DoublePlantExtension;
-import de.bluecolored.bluemap.core.mca.extensions.FireExtension;
-import de.bluecolored.bluemap.core.mca.extensions.GlassPaneConnectExtension;
-import de.bluecolored.bluemap.core.mca.extensions.NetherFenceConnectExtension;
-import de.bluecolored.bluemap.core.mca.extensions.RedstoneExtension;
-import de.bluecolored.bluemap.core.mca.extensions.SnowyExtension;
-import de.bluecolored.bluemap.core.mca.extensions.StairShapeExtension;
-import de.bluecolored.bluemap.core.mca.extensions.TripwireConnectExtension;
-import de.bluecolored.bluemap.core.mca.extensions.WallConnectExtension;
-import de.bluecolored.bluemap.core.mca.extensions.WoodenFenceConnectExtension;
+import de.bluecolored.bluemap.core.mca.extensions.*;
 import de.bluecolored.bluemap.core.mca.mapping.BiomeMapper;
 import de.bluecolored.bluemap.core.mca.mapping.BlockIdMapper;
 import de.bluecolored.bluemap.core.mca.mapping.BlockPropertiesMapper;
-import de.bluecolored.bluemap.core.world.Biome;
-import de.bluecolored.bluemap.core.world.Block;
-import de.bluecolored.bluemap.core.world.BlockProperties;
-import de.bluecolored.bluemap.core.world.BlockState;
-import de.bluecolored.bluemap.core.world.LightData;
-import de.bluecolored.bluemap.core.world.World;
+import de.bluecolored.bluemap.core.world.*;
 import net.querz.nbt.CompoundTag;
 import net.querz.nbt.ListTag;
 import net.querz.nbt.NBTUtil;
 import net.querz.nbt.Tag;
 import net.querz.nbt.mca.CompressionType;
 import net.querz.nbt.mca.MCAUtil;
+
+import java.io.*;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 public class MCAWorld implements World {
 
@@ -427,23 +397,30 @@ public class MCAWorld implements World {
 	
 	public static MCAWorld load(Path worldFolder, UUID uuid, MinecraftVersion version, BlockIdMapper blockIdMapper, BlockPropertiesMapper blockPropertiesMapper, BiomeMapper biomeIdMapper, String name, boolean ignoreMissingLightData) throws IOException {
 		try {
-			boolean subDimension = false;
-			
-			File levelFile = new File(worldFolder.toFile(), "level.dat");
+			StringBuilder subDimensionName = new StringBuilder();
+
+			File levelFolder = worldFolder.toFile();
+			File levelFile = new File(levelFolder, "level.dat");
+			int searchDepth = 0;
+
+			while (!levelFile.exists() && searchDepth < 4) {
+				searchDepth++;
+				subDimensionName.insert(0, "/").insert(1, levelFolder.getName());
+				levelFolder = levelFolder.getParentFile();
+				if (levelFolder == null) break;
+
+				levelFile = new File(levelFolder, "level.dat");
+			}
+
 			if (!levelFile.exists()) {
-				subDimension = true;
-				levelFile = new File(worldFolder.toFile().getParentFile(), "level.dat");
-				if (!levelFile.exists()) {
-					throw new FileNotFoundException("Could not find a level.dat file for this world!");
-				}
+				throw new FileNotFoundException("Could not find a level.dat file for this world!");
 			}
 			
 			CompoundTag level = (CompoundTag) NBTUtil.readTag(levelFile);
 			CompoundTag levelData = level.getCompoundTag("Data");
 			
 			if (name == null) {
-				name = levelData.getString("LevelName");
-				if (subDimension) name += "/" + worldFolder.toFile().getName();
+				name = levelData.getString("LevelName") + subDimensionName;
 			}
 			
 			int worldHeight = 255;
