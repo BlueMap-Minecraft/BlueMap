@@ -24,27 +24,22 @@
  */
 package de.bluecolored.bluemap.common;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Deque;
-import java.util.List;
-import java.util.UUID;
-
 import com.flowpowered.math.vector.Vector2d;
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.util.*;
+
 public class RenderTask {
 
 	private final UUID uuid;
-	private String name;
+	private final String name;
 	
 	private final MapType mapType;
-	private Deque<Vector2i> renderTiles;
+	private final Deque<Vector2i> renderTiles;
 
 	private long firstTileTime;
 	private long additionalRunTime;
@@ -92,14 +87,12 @@ public class RenderTask {
 				if (v1.getY() > v2.getY()) return 1;
 				if (v1.getX() < v2.getX()) return -1;
 				if (v1.getX() > v2.getX()) return 1;
-				
+
 				return 0;
 			});
 			
 			renderTiles.clear();
-			for (Vector2i tile : tileList) {
-				renderTiles.add(tile);
-			}
+			renderTiles.addAll(tileList);
 		}
 	}
 	
