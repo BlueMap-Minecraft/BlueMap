@@ -24,23 +24,8 @@
  */
 package de.bluecolored.bluemap.core.resourcepack;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-
-import org.apache.commons.lang3.StringUtils;
-
 import com.flowpowered.math.vector.Vector2f;
 import com.flowpowered.math.vector.Vector3i;
-
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.PropertyCondition.All;
 import de.bluecolored.bluemap.core.resourcepack.fileaccess.FileAccess;
@@ -48,6 +33,15 @@ import de.bluecolored.bluemap.core.util.MathUtils;
 import de.bluecolored.bluemap.core.world.BlockState;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.gson.GsonConfigurationLoader;
+import org.apache.commons.lang3.StringUtils;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.Map.Entry;
 
 public class BlockStateResource {
 	
@@ -193,7 +187,7 @@ public class BlockStateResource {
 
 					blockState.variants.add(variant);
 				} catch (ParseResourceException | RuntimeException e) {
-					Logger.global.logDebug("Failed to parse a variant of " + blockstateFile + ": " + e);
+					logParseError("Failed to parse a variant of " + blockstateFile, e);
 				}
 			}
 
@@ -212,7 +206,7 @@ public class BlockStateResource {
 
 					blockState.multipart.add(variant);
 				} catch (ParseResourceException | RuntimeException e) {
-					Logger.global.logDebug("Failed to parse a multipart-part of " + blockstateFile + ": " + e);
+					logParseError("Failed to parse a multipart-part of " + blockstateFile, e);
 				}
 			}
 
@@ -227,14 +221,14 @@ public class BlockStateResource {
 					try {
 						models.add(loadModel(modelNode, overrideTextures));
 					} catch (ParseResourceException ex) {
-						Logger.global.logDebug("Failed to load a model trying to parse " + blockstateFile + ": " + ex);
+						logParseError("Failed to load a model trying to parse " + blockstateFile, ex);
 					}
 				}
 			} else if (node.isMap()) {
 				try {
 					models.add(loadModel(node, overrideTextures));
 				} catch (ParseResourceException ex) {
-					Logger.global.logDebug("Failed to load a model trying to parse " + blockstateFile + ": " + ex);
+					logParseError("Failed to load a model trying to parse " + blockstateFile, ex);
 				}
 			}
 
@@ -392,7 +386,7 @@ public class BlockStateResource {
 					variant.checkValid();
 					blockState.variants.add(variant);
 				} catch (ParseResourceException ex) {
-					Logger.global.logDebug("Failed to parse a variant (forge/property) of " + blockstateFile + ": " + ex);
+					logParseError("Failed to parse a variant (forge/property) of " + blockstateFile, ex);
 				}
 				
 			}
@@ -425,7 +419,7 @@ public class BlockStateResource {
 					variant.checkValid();
 					blockState.variants.add(variant);
 				} catch (ParseResourceException ex) {
-					Logger.global.logDebug("Failed to parse a variant (forge/straight) of " + blockstateFile + ": " + ex);
+					logParseError("Failed to parse a variant (forge/straight) of " + blockstateFile, ex);
 				}
 				
 			}
@@ -445,7 +439,7 @@ public class BlockStateResource {
 			return false;
 		}
 
-		private class ForgeVariant {
+		private static class ForgeVariant {
 			public Map<String, String> properties = new HashMap<>();
 			public ConfigurationNode node = GsonConfigurationLoader.builder().build().createEmptyNode();
 
@@ -462,5 +456,17 @@ public class BlockStateResource {
 			}
 		}
 
+		private static void logParseError(String message, Throwable throwable) {
+			Logger.global.logDebug(message);
+			while (throwable != null){
+				String errorMessage = throwable.getMessage();
+				if (errorMessage == null) errorMessage = throwable.toString();
+				Logger.global.logDebug(" > " + errorMessage);
+
+				throwable = throwable.getCause();
+			}
+		}
+
 	}
+
 }

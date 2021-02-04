@@ -256,7 +256,13 @@ public class BlockModelResource {
 			
 			for (Entry<Object, ? extends ConfigurationNode> entry : config.getNode("textures").getChildrenMap().entrySet()) {
 				if (entry.getKey().equals(JSON_COMMENT)) continue;
-				textures.putIfAbsent(entry.getKey().toString(), entry.getValue().getString(null));
+
+				String key = entry.getKey().toString();
+				String value = entry.getValue().getString(null);
+
+				if (("#" + key).equals(value)) continue; // skip direct loop
+
+				textures.putIfAbsent(key, value);
 			}
 			
 			String parentPath = config.getNode("parent").getString();
@@ -286,8 +292,10 @@ public class BlockModelResource {
 			for (String key : textures.keySet()) {
 				try {
 					blockModel.textures.put(key, getTexture("#" + key));
-				} catch (NoSuchElementException | FileNotFoundException ex) {
-					throw new ParseResourceException("Failed to map Texture key '" + key + "' for model '" + topModelPath + "': " + ex);
+				} catch (NoSuchElementException | FileNotFoundException ignore) {
+					// ignore this so unused textures can remain unresolved. See issue #147
+
+					//throw new ParseResourceException("Failed to map Texture key '" + key + "' for model '" + topModelPath + "': " + ex);
 				}
 			}
 			
@@ -365,12 +373,12 @@ public class BlockModelResource {
 				Face face = element.new Face(direction);
 				
 				if (!node.getNode("uv").isVirtual()) face.uv = readVector4f(node.getNode("uv")); 
-				face.texture = getTexture(node.getNode("texture").getString());
+				face.texture = getTexture(node.getNode("texture").getString(""));
 				face.tinted = node.getNode("tintindex").getInt(-1) >= 0;
 				face.rotation = node.getNode("rotation").getInt(0);
 				
 				if (!node.getNode("cullface").isVirtual()) {
-					String dirString = node.getNode("cullface").getString();
+					String dirString = node.getNode("cullface").getString("");
 					if (dirString.equals("bottom")) dirString = "down";
 					if (dirString.equals("top")) dirString = "up";
 					
@@ -409,14 +417,20 @@ public class BlockModelResource {
 					nodeList.get(3).getFloat(0)
 				);
 		}
-		
+
 		private Texture getTexture(String key) throws NoSuchElementException, FileNotFoundException, IOException {
+			return getTexture(key, 0);
+		}
+
+		private Texture getTexture(String key, int depth) throws NoSuchElementException, FileNotFoundException, IOException {
 			if (key.isEmpty() || key.equals("#")) throw new NoSuchElementException("Empty texture key or name!");
+
+			if (depth > 10) throw new NoSuchElementException("Recursive texture-variable!");
 			
 			if (key.charAt(0) == '#') {
 				String value = textures.get(key.substring(1));
 				if (value == null) throw new NoSuchElementException("There is no texture defined for the key " + key);
-				return getTexture(value);
+				return getTexture(value, depth + 1);
 			}
 			
 			String path = ResourcePack.namespacedToAbsoluteResourcePath(key, "textures") + ".png";
