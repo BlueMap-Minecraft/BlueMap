@@ -24,24 +24,26 @@
  */
 package de.bluecolored.bluemap.core.config;
 
-import java.io.IOException;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
-
 import com.google.common.base.Preconditions;
-
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.mapping.BlockIdMapper;
 import de.bluecolored.bluemap.core.world.BlockState;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
 
+import java.io.IOException;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 public class BlockIdConfig implements BlockIdMapper {
 
-	private ConfigurationLoader<? extends ConfigurationNode> autopoulationConfigLoader;
-	private Map<BlockNumeralIDMeta, BlockState> numeralMappings;
-	private Map<BlockIDMeta, BlockState> idMappings;
+	private final ConfigurationLoader<? extends ConfigurationNode> autopoulationConfigLoader;
+	private final Map<BlockNumeralIDMeta, BlockState> numeralMappings;
+	private final Map<BlockIDMeta, BlockState> idMappings;
+
+	private final ReentrantReadWriteLock lock;
 
 	public BlockIdConfig(ConfigurationNode node) {
 		this(node, null);
@@ -50,8 +52,10 @@ public class BlockIdConfig implements BlockIdMapper {
 	public BlockIdConfig(ConfigurationNode node, ConfigurationLoader<? extends ConfigurationNode> autopoulationConfigLoader) {
 		this.autopoulationConfigLoader = autopoulationConfigLoader;
 		
-		numeralMappings = new ConcurrentHashMap<>(200, 0.5f, 8); 
-		idMappings = new ConcurrentHashMap<>(200, 0.5f, 8); 
+		this.numeralMappings = new ConcurrentHashMap<>(200, 0.5f, 8);
+		this.idMappings = new ConcurrentHashMap<>(200, 0.5f, 8);
+
+		this.lock = new ReentrantReadWriteLock();
 		
 		for (Entry<Object, ? extends ConfigurationNode> e : node.getChildrenMap().entrySet()){
 			String key = e.getKey().toString();
@@ -94,69 +98,93 @@ public class BlockIdConfig implements BlockIdMapper {
 	@Override
 	public BlockState get(int numeralId, int meta) {
 		if (numeralId == 0) return BlockState.AIR;
-		
-		BlockNumeralIDMeta numidmeta = new BlockNumeralIDMeta(numeralId, meta);
-		BlockState state = numeralMappings.get(numidmeta);
-		
+
+		BlockNumeralIDMeta numidmeta;
+		BlockState state;
+
+		try { lock.readLock().lock();
+
+			numidmeta = new BlockNumeralIDMeta(numeralId, meta);
+			state = numeralMappings.get(numidmeta);
+
+		} finally { lock.readLock().unlock(); }
+
 		if (state == null) {
-			state = numeralMappings.getOrDefault(new BlockNumeralIDMeta(numeralId, 0), BlockState.MISSING); //meta-fallback
-			
-			numeralMappings.put(numidmeta, state);
-			
-			if (autopoulationConfigLoader != null) {
-				synchronized (autopoulationConfigLoader) {
+
+			try { lock.writeLock().lock();
+
+				state = numeralMappings.getOrDefault(new BlockNumeralIDMeta(numeralId, 0), BlockState.MISSING); //meta-fallback
+				numeralMappings.put(numidmeta, state);
+
+				if (autopoulationConfigLoader != null) {
 					try {
 						ConfigurationNode node = autopoulationConfigLoader.load();
 						node.getNode(numeralId + ":" + meta).setValue(state.toString());
 						autopoulationConfigLoader.save(node);
 					} catch (IOException ex) {
 						Logger.global.noFloodError("blockidconf-autopopulate-ioex", "Failed to auto-populate BlockIdConfig!", ex);
-					}	
+					}
 				}
-			}
+
+			} finally { lock.writeLock().unlock(); }
+
 		}
-		
+
 		return state;
+
 	}
 
 	@Override
 	public BlockState get(String id, int numeralId, int meta) {
 		if (numeralId == 0) return BlockState.AIR;
 
-		BlockNumeralIDMeta numidmeta = new BlockNumeralIDMeta(numeralId, meta);
-		BlockState state = numeralMappings.get(numidmeta);
-		if (state == null) {
-			BlockIDMeta idmeta = new BlockIDMeta(id, meta);
-			state = idMappings.get(idmeta);
+		BlockNumeralIDMeta numidmeta;
+		BlockState state;
+		BlockIDMeta idmeta = null;
+
+		try { lock.readLock().lock();
+
+			numidmeta = new BlockNumeralIDMeta(numeralId, meta);
+			state = numeralMappings.get(numidmeta);
+
 			if (state == null) {
+				idmeta = new BlockIDMeta(id, meta);
+				state = idMappings.get(idmeta);
+			}
+
+		} finally { lock.readLock().unlock(); }
+
+		if (state == null) {
+
+			try { lock.writeLock().lock();
+
 				state = idMappings.get(new BlockIDMeta(id, 0));
 				if (state == null) {
 					state = numeralMappings.get(new BlockNumeralIDMeta(numeralId, 0));
 					if (state == null) state = new BlockState(id);
 				}
-				
+
 				idMappings.put(idmeta, state);
 				Preconditions.checkArgument(numeralMappings.put(numidmeta, state) == null);
-				
+
 				if (autopoulationConfigLoader != null) {
-					synchronized (autopoulationConfigLoader) {
-						try {
-							ConfigurationNode node = autopoulationConfigLoader.load();
-							node.getNode(id + ":" + meta).setValue(state.toString());
-							autopoulationConfigLoader.save(node);
-						} catch (IOException ex) {
-							Logger.global.noFloodError("blockidconf-autopopulate-ioex", "Failed to auto-populate BlockIdConfig!", ex);
-						}	
+					try {
+						ConfigurationNode node = autopoulationConfigLoader.load();
+						node.getNode(id + ":" + meta).setValue(state.toString());
+						autopoulationConfigLoader.save(node);
+					} catch (IOException ex) {
+						Logger.global.noFloodError("blockidconf-autopopulate-ioex", "Failed to auto-populate BlockIdConfig!", ex);
 					}
 				}
-				
-			}
+
+			} finally { lock.writeLock().unlock(); }
+
 		}
-		
+
 		return state;
 	}
 	
-	class BlockNumeralIDMeta {
+	static class BlockNumeralIDMeta {
 		private final int id;
 		private final int meta;
 		
@@ -189,7 +217,7 @@ public class BlockIdConfig implements BlockIdMapper {
 		}
 	}
 	
-	class BlockIDMeta {
+	static class BlockIDMeta {
 		private final String id;
 		private final int meta;
 		
