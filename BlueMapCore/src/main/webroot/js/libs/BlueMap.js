@@ -328,7 +328,7 @@ export default class BlueMap {
 	};
 
 	async loadSettings() {
-		return new Promise(resolve => {
+		return new Promise((resolve, reject) => {
 			this.fileLoader.load(this.dataRoot + 'settings.json?' + cachePreventionNr(), settings => {
 				try {
 					this.settings = JSON.parse(settings);
