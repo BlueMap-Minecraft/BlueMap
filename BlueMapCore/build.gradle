@@ -1,7 +1,3 @@
-plugins {
-   id 'com.moowork.node' version '1.3.1'
-}
-
 dependencies {
    compile 'com.github.ben-manes.caffeine:caffeine:2.8.5'
    compile 'com.google.code.gson:gson:2.8.0'
@@ -25,44 +21,8 @@ processResources {
 	}
 }
 
-node {
-  version = '12.14.1'
-  download = true
-}
-
 license {
 	exclude('**/AABB.java')
-}
-
-task fixPackageLock() {
-  if (!file("./package-lock.json").exists()) {
-    file("./package-lock.json").text = ""
-  }
-}
-
-task cleanWebroot(type: Delete) {
-  delete 'build/generated/webroot/'
-}
-
-// Run WebPack build to generate resources into the generated resources
-task webpackWebroot(type: NpmTask) {
-  args = ['run', 'build']
-}
-
-task zipWebroot(type: Zip) {
-   from fileTree('build/generated/webroot/')
-   archiveName 'webroot.zip'
-   destinationDir(file('src/main/resources/de/bluecolored/bluemap/'))
-   outputs.upToDateWhen { false }
-}
-
-// removes tmp build directory, build project with webpack, zip contents for the shaded jar
-task buildWebroot {
-   dependsOn 'fixPackageLock'
-   dependsOn 'npmInstall'
-   dependsOn 'cleanWebroot'
-   dependsOn 'webpackWebroot'
-   dependsOn 'zipWebroot'
 }
 
 //resource Extensions
@@ -102,5 +62,4 @@ task zipResourceExtensions1_16(type: Zip) {
 }
 
 //always update the zip before build
-processResources.dependsOn(buildWebroot)
 processResources.dependsOn(zipResourceExtensions)

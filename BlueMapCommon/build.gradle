@@ -1,7 +1,38 @@
+plugins {
+    id "com.github.node-gradle.node" version "3.0.0"
+}
+
 dependencies {
     compile 'com.mojang:brigadier:1.0.17'
     
     compile project(':BlueMapCore')
     compile project(':BlueMapAPI')
 }
+
+node {
+    version = '14.15.5'
+    download = true
+    nodeProjectDir = file("BlueMapVue/")
+}
+
+task cleanWebapp(type: Delete) {
+    delete 'BlueMapVue/dist'
+}
+
+task buildWebapp(type: NpmTask) {
+    dependsOn 'cleanWebapp'
+    dependsOn 'npmInstall'
+    args = ['run', 'build']
+}
+
+task zipWebapp(type: Zip) {
+    dependsOn 'buildWebapp'
+    from fileTree('BlueMapVue/dist/')
+    archiveName 'webapp.zip'
+    destinationDir(file('src/main/resources/de/bluecolored/bluemap/'))
+    outputs.upToDateWhen { false }
+}
+
+//always update the zip before build
+processResources.dependsOn(zipWebapp)
 
