@@ -22,7 +22,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.web;
+package de.bluecolored.bluemap.common;
+
+import de.bluecolored.bluemap.core.logger.Logger;
+import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,24 +34,20 @@ import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
-import org.apache.commons.io.FileUtils;
-
 public class WebFilesManager {
 
-	private File webRoot;
+	private final File webRoot;
 	
 	public WebFilesManager(File webRoot) {
 		this.webRoot = webRoot;
 	}
 	
 	public boolean needsUpdate() {
-		if (!new File(webRoot, "index.html").exists()) return true;
-	
-		return false;
+		return !new File(webRoot, "index.html").exists();
 	}
 	
 	public void updateFiles() throws IOException {
-		URL fileResource = getClass().getResource("/de/bluecolored/bluemap/webroot.zip");
+		URL fileResource = getClass().getResource("/de/bluecolored/bluemap/webapp.zip");
 		File tempFile = File.createTempFile("bluemap_webroot_extraction", null);
 		
 		try {
@@ -57,15 +56,21 @@ public class WebFilesManager {
 				Enumeration<? extends ZipEntry> entries = zipFile.entries();
 				while(entries.hasMoreElements()) {
 					ZipEntry zipEntry = entries.nextElement();
-					if (zipEntry.isDirectory()) new File(webRoot, zipEntry.getName()).mkdirs();
-					else {
+					if (zipEntry.isDirectory()) {
+						File dir = new File(webRoot, zipEntry.getName());
+						if (!dir.mkdirs()) {
+							Logger.global.logWarning("Failed to create directory: " + dir);
+						}
+					} else {
 						File target = new File(webRoot, zipEntry.getName());
 						FileUtils.copyInputStreamToFile(zipFile.getInputStream(zipEntry), target);
 					}
 				}
 			}
 		} finally {
-			tempFile.delete();
+			if (!tempFile.delete()) {
+				Logger.global.logWarning("Failed to delete file: " + tempFile);
+			}
 		}
 	}
 	

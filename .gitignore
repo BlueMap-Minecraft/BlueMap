@@ -36,12 +36,11 @@ run/*
 */.idea
 
 node_modules/
-package-lock.json
 
 *.launch
 
 # exclude generated resource
-BlueMapCore/src/main/resources/de/bluecolored/bluemap/webroot.zip
+BlueMapCommon/src/main/resources/de/bluecolored/bluemap/webapp.zip
 BlueMapCore/src/main/resources/de/bluecolored/bluemap/*/resourceExtensions.zip
 
 #exclude-test-data
