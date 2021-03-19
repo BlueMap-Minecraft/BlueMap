@@ -1,41 +1,15 @@
 .gradle/
-.gradle/*
-*/.gradle/*
-
 build/
-build/*
-*/build/*
-
 .settings/
-.settings/*
-*/.settings/*
-
 bin/
-bin/*
-*/bin/*
-
 doc/
-doc/*
-*/doc/*
-
 logs/
-logs/*
-*/logs/*
-
 run/
-run/*
-*/run/*
+node_modules/
 
 .classpath
-*/.classpath
-
 .project
-*/.project
-
 .idea
-*/.idea
-
-node_modules/
 
 *.launch
 
