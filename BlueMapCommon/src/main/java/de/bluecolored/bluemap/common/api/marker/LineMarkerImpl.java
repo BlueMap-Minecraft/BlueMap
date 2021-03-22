@@ -24,39 +24,35 @@
  */
 package de.bluecolored.bluemap.common.api.marker;
 
-import com.flowpowered.math.vector.Vector2d;
 import com.flowpowered.math.vector.Vector3d;
 import com.google.common.base.Preconditions;
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
-import de.bluecolored.bluemap.api.marker.Shape;
-import de.bluecolored.bluemap.api.marker.ShapeMarker;
+import de.bluecolored.bluemap.api.marker.Line;
+import de.bluecolored.bluemap.api.marker.LineMarker;
 import ninja.leaping.configurate.ConfigurationNode;
 
 import java.awt.*;
 import java.util.List;
 
-public class ShapeMarkerImpl extends ObjectMarkerImpl implements ShapeMarker {
-	public static final String MARKER_TYPE = "shape";
+public class LineMarkerImpl extends ObjectMarkerImpl implements LineMarker {
+	public static final String MARKER_TYPE = "line";
 
-	private Shape shape;
-	private float shapeY;
+	private Line line;
 	private boolean depthTest;
 	private int lineWidth;
-	private Color lineColor, fillColor;
+	private Color lineColor;
 
 	private boolean hasUnsavedChanges;
-	
-	public ShapeMarkerImpl(String id, BlueMapMap map, Vector3d position, Shape shape, float shapeY) {
+
+	public LineMarkerImpl(String id, BlueMapMap map, Vector3d position, Line line) {
 		super(id, map, position);
 
-		Preconditions.checkNotNull(shape);
+		Preconditions.checkNotNull(line);
 		
-		this.shape = shape;
-		this.shapeY = shapeY;
+		this.line = line;
 		this.lineWidth = 2;
 		this.lineColor = new Color(255, 0, 0, 200);
-		this.fillColor = new Color(200, 0, 0, 100);
 
 		this.hasUnsavedChanges = true;
 	}
@@ -67,21 +63,15 @@ public class ShapeMarkerImpl extends ObjectMarkerImpl implements ShapeMarker {
 	}
 
 	@Override
-	public Shape getShape() {
-		return this.shape;
+	public Line getLine() {
+		return line;
 	}
 
 	@Override
-	public float getShapeY() {
-		return this.shapeY;
-	}
-
-	@Override
-	public synchronized void setShape(Shape shape, float shapeY) {
-		Preconditions.checkNotNull(shape);
+	public synchronized void setLine(Line line) {
+		Preconditions.checkNotNull(line);
 		
-		this.shape = shape;
-		this.shapeY = shapeY;
+		this.line = line;
 		this.hasUnsavedChanges = true;
 	}
 	
@@ -119,19 +109,6 @@ public class ShapeMarkerImpl extends ObjectMarkerImpl implements ShapeMarker {
 		this.lineColor = color;
 		this.hasUnsavedChanges = true;
 	}
-
-	@Override
-	public Color getFillColor() {
-		return this.fillColor;
-	}
-
-	@Override
-	public synchronized void setFillColor(Color color) {
-		Preconditions.checkNotNull(color);
-		
-		this.fillColor = color;
-		this.hasUnsavedChanges = true;
-	}
 	
 	@Override
 	public void load(BlueMapAPI api, ConfigurationNode markerNode, boolean overwriteChanges) throws MarkerFileFormatException {
@@ -140,54 +117,49 @@ public class ShapeMarkerImpl extends ObjectMarkerImpl implements ShapeMarker {
 		if (!overwriteChanges && hasUnsavedChanges) return;
 		this.hasUnsavedChanges = false;
 		
-		this.shape = readShape(markerNode.getNode("shape"));
-		this.shapeY = markerNode.getNode("shapeY").getFloat(markerNode.getNode("height").getFloat(64)); // fallback to deprecated "height"
+		this.line = readLine(markerNode.getNode("line"));
 		this.depthTest = markerNode.getNode("depthTest").getBoolean(true);
 		this.lineWidth = markerNode.getNode("lineWidth").getInt(2);
-
-		ConfigurationNode lineColorNode = markerNode.getNode("lineColor");
-		if (lineColorNode.isVirtual()) lineColorNode = markerNode.getNode("borderColor"); // fallback to deprecated "borderColor"
-		this.lineColor = readColor(lineColorNode);
-
-		this.fillColor = readColor(markerNode.getNode("fillColor"));
+		this.lineColor = readColor(markerNode.getNode("lineColor"));
 	}
 	
 	@Override
 	public void save(ConfigurationNode markerNode) {
 		super.save(markerNode);
 
-		writeShape(markerNode.getNode("shape"), this.shape);
-		markerNode.getNode("shapeY").setValue(Math.round(shapeY * 1000f) / 1000f);
+		writeLine(markerNode.getNode("line"), this.line);
 		markerNode.getNode("depthTest").setValue(this.depthTest);
 		markerNode.getNode("lineWidth").setValue(this.lineWidth);
 		writeColor(markerNode.getNode("lineColor"), this.lineColor);
-		writeColor(markerNode.getNode("fillColor"), this.fillColor);
+
 		
 		hasUnsavedChanges = false;
 	}
 	
-	private Shape readShape(ConfigurationNode node) throws MarkerFileFormatException {
+	private Line readLine(ConfigurationNode node) throws MarkerFileFormatException {
 		List<? extends ConfigurationNode> posNodes = node.getChildrenList();
 		
-		if (posNodes.size() < 3) throw new MarkerFileFormatException("Failed to read shape: point-list has fewer than 3 entries!");
+		if (posNodes.size() < 3) throw new MarkerFileFormatException("Failed to read line: point-list has fewer than 2 entries!");
 		
-		Vector2d[] positions = new Vector2d[posNodes.size()];
+		Vector3d[] positions = new Vector3d[posNodes.size()];
 		for (int i = 0; i < positions.length; i++) {
-			positions[i] = readShapePos(posNodes.get(i));
+			positions[i] = readLinePos(posNodes.get(i));
 		}
 		
-		return new Shape(positions);
+		return new Line(positions);
 	}
 	
-	private static Vector2d readShapePos(ConfigurationNode node) throws MarkerFileFormatException {
-		ConfigurationNode nx, nz;
+	private static Vector3d readLinePos(ConfigurationNode node) throws MarkerFileFormatException {
+		ConfigurationNode nx, ny, nz;
 		nx = node.getNode("x");
+		ny = node.getNode("y");
 		nz = node.getNode("z");
 		
-		if (nx.isVirtual() || nz.isVirtual()) throw new MarkerFileFormatException("Failed to read shape position: Node x or z is not set!");
+		if (nx.isVirtual() || ny.isVirtual() || nz.isVirtual()) throw new MarkerFileFormatException("Failed to read line position: Node x, y or z is not set!");
 		
-		return new Vector2d(
+		return new Vector3d(
 				nx.getDouble(),
+				ny.getDouble(),
 				nz.getDouble()
 			);
 	}
@@ -211,12 +183,13 @@ public class ShapeMarkerImpl extends ObjectMarkerImpl implements ShapeMarker {
 		}
 	}
 	
-	private static void writeShape(ConfigurationNode node, Shape shape) {
-		for (int i = 0; i < shape.getPointCount(); i++) {
+	private static void writeLine(ConfigurationNode node, Line line) {
+		for (int i = 0; i < line.getPointCount(); i++) {
 			ConfigurationNode pointNode = node.appendListNode();
-			Vector2d point = shape.getPoint(i);
+			Vector3d point = line.getPoint(i);
 			pointNode.getNode("x").setValue(Math.round(point.getX() * 1000d) / 1000d);
-			pointNode.getNode("z").setValue(Math.round(point.getY() * 1000d) / 1000d);
+			pointNode.getNode("y").setValue(Math.round(point.getY() * 1000d) / 1000d);
+			pointNode.getNode("z").setValue(Math.round(point.getZ() * 1000d) / 1000d);
 		}
 	}
 	

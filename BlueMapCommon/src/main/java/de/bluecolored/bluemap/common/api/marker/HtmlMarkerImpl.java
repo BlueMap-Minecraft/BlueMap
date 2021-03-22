@@ -26,24 +26,23 @@ package de.bluecolored.bluemap.common.api.marker;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3d;
-
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
-import de.bluecolored.bluemap.api.marker.POIMarker;
+import de.bluecolored.bluemap.api.marker.HtmlMarker;
 import ninja.leaping.configurate.ConfigurationNode;
 
-public class POIMarkerImpl extends MarkerImpl implements POIMarker {
-	public static final String MARKER_TYPE = "poi";  
-	
-	private String iconAddress;
+public class HtmlMarkerImpl extends MarkerImpl implements HtmlMarker {
+	public static final String MARKER_TYPE = "html";
+
+	private String html;
 	private Vector2i anchor;
-	
+
 	private boolean hasUnsavedChanges;
-	
-	public POIMarkerImpl(String id, BlueMapMap map, Vector3d position) {
+
+	public HtmlMarkerImpl(String id, BlueMapMap map, Vector3d position, String html) {
 		super(id, map, position);
 		
-		this.iconAddress = "assets/poi.svg";
+		this.html = html;
 		this.anchor = new Vector2i(25, 45);
 		
 		this.hasUnsavedChanges = true;
@@ -55,19 +54,24 @@ public class POIMarkerImpl extends MarkerImpl implements POIMarker {
 	}
 
 	@Override
-	public String getIconAddress() {
-		return iconAddress;
-	}
-
-	@Override
 	public Vector2i getAnchor() {
 		return anchor;
 	}
 
 	@Override
-	public synchronized void setIcon(String iconAddress, Vector2i anchor) {
-		this.iconAddress = iconAddress;
+	public void setAnchor(Vector2i anchor) {
 		this.anchor = anchor;
+		this.hasUnsavedChanges = true;
+	}
+
+	@Override
+	public String getHtml() {
+		return html;
+	}
+
+	@Override
+	public synchronized void setHtml(String html) {
+		this.html = html;
 		this.hasUnsavedChanges = true;
 	}
 	
@@ -78,18 +82,15 @@ public class POIMarkerImpl extends MarkerImpl implements POIMarker {
 		if (!overwriteChanges && hasUnsavedChanges) return;
 		this.hasUnsavedChanges = false;
 
-		this.iconAddress = markerNode.getNode("icon").getString("assets/poi.svg");
-
-		ConfigurationNode anchorNode = markerNode.getNode("anchor");
-		if (anchorNode.isVirtual()) anchorNode = markerNode.getNode("iconAnchor"); //fallback to deprecated "iconAnchor"
-		this.anchor = readAnchor(anchorNode);
+		this.html = markerNode.getNode("html").getString("");
+		this.anchor = readAnchor(markerNode.getNode("anchor"));
 	}
 	
 	@Override
 	public synchronized void save(ConfigurationNode markerNode) {
 		super.save(markerNode);
 		
-		markerNode.getNode("icon").setValue(this.iconAddress);
+		markerNode.getNode("html").setValue(this.html);
 		writeAnchor(markerNode.getNode("anchor"), this.anchor);
 		
 		hasUnsavedChanges = false;

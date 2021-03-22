@@ -24,87 +24,55 @@
  */
 package de.bluecolored.bluemap.common.api.marker;
 
-import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3d;
-
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
-import de.bluecolored.bluemap.api.marker.POIMarker;
+import de.bluecolored.bluemap.api.marker.ObjectMarker;
 import ninja.leaping.configurate.ConfigurationNode;
 
-public class POIMarkerImpl extends MarkerImpl implements POIMarker {
-	public static final String MARKER_TYPE = "poi";  
-	
-	private String iconAddress;
-	private Vector2i anchor;
-	
+public abstract class ObjectMarkerImpl extends MarkerImpl implements ObjectMarker {
+
+	private String detail;
+
 	private boolean hasUnsavedChanges;
-	
-	public POIMarkerImpl(String id, BlueMapMap map, Vector3d position) {
+
+	public ObjectMarkerImpl(String id, BlueMapMap map, Vector3d position) {
 		super(id, map, position);
-		
-		this.iconAddress = "assets/poi.svg";
-		this.anchor = new Vector2i(25, 45);
-		
+
+		this.detail = null;
+
 		this.hasUnsavedChanges = true;
 	}
-	
+
 	@Override
-	public String getType() {
-		return MARKER_TYPE;
+	public String getDetail() {
+		if (detail == null) return getLabel();
+		return detail;
 	}
 
 	@Override
-	public String getIconAddress() {
-		return iconAddress;
-	}
-
-	@Override
-	public Vector2i getAnchor() {
-		return anchor;
-	}
-
-	@Override
-	public synchronized void setIcon(String iconAddress, Vector2i anchor) {
-		this.iconAddress = iconAddress;
-		this.anchor = anchor;
+	public void setDetail(String detail) {
+		this.detail = detail;
 		this.hasUnsavedChanges = true;
 	}
-	
+
 	@Override
-	public synchronized void load(BlueMapAPI api, ConfigurationNode markerNode, boolean overwriteChanges) throws MarkerFileFormatException {
+	public void load(BlueMapAPI api, ConfigurationNode markerNode, boolean overwriteChanges) throws MarkerFileFormatException {
 		super.load(api, markerNode, overwriteChanges);
 
 		if (!overwriteChanges && hasUnsavedChanges) return;
 		this.hasUnsavedChanges = false;
 
-		this.iconAddress = markerNode.getNode("icon").getString("assets/poi.svg");
+		this.detail = markerNode.getNode("detail").getString();
+	}
 
-		ConfigurationNode anchorNode = markerNode.getNode("anchor");
-		if (anchorNode.isVirtual()) anchorNode = markerNode.getNode("iconAnchor"); //fallback to deprecated "iconAnchor"
-		this.anchor = readAnchor(anchorNode);
-	}
-	
 	@Override
-	public synchronized void save(ConfigurationNode markerNode) {
+	public void save(ConfigurationNode markerNode) {
 		super.save(markerNode);
-		
-		markerNode.getNode("icon").setValue(this.iconAddress);
-		writeAnchor(markerNode.getNode("anchor"), this.anchor);
-		
+
+		if (this.detail != null) markerNode.getNode("detail").setValue(this.detail);
+
 		hasUnsavedChanges = false;
-	}
-	
-	private static Vector2i readAnchor(ConfigurationNode node) {
-		return new Vector2i(
-				node.getNode("x").getInt(0),
-				node.getNode("y").getInt(0)
-			);
-	}
-	
-	private static void writeAnchor(ConfigurationNode node, Vector2i anchor) {
-		node.getNode("x").setValue(anchor.getX());
-		node.getNode("y").setValue(anchor.getY());
 	}
 
 }

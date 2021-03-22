@@ -28,6 +28,7 @@ import com.flowpowered.math.vector.Vector3d;
 import com.google.common.collect.Sets;
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
+import de.bluecolored.bluemap.api.marker.Line;
 import de.bluecolored.bluemap.api.marker.Marker;
 import de.bluecolored.bluemap.api.marker.MarkerSet;
 import de.bluecolored.bluemap.api.marker.Shape;
@@ -43,9 +44,9 @@ public class MarkerSetImpl implements MarkerSet {
 	private String label;
 	private boolean toggleable;
 	private boolean isDefaultHidden;
-	private Map<String, MarkerImpl> markers;
+	private final Map<String, MarkerImpl> markers;
 	
-	private Set<String> removedMarkers; 
+	private final Set<String> removedMarkers;
 	
 	private boolean hasUnsavedChanges;
 	
@@ -120,12 +121,42 @@ public class MarkerSetImpl implements MarkerSet {
 	}
 
 	@Override
-	public synchronized ShapeMarkerImpl createShapeMarker(String id, BlueMapMap map, Vector3d position, Shape shape, float height) {
+	public HtmlMarkerImpl createHtmlMarker(String id, BlueMapMap map, Vector3d position, String html) {
+		removeMarker(id);
+
+		HtmlMarkerImpl marker = new HtmlMarkerImpl(id, map, position, html);
+		markers.put(id, marker);
+
+		return marker;
+	}
+
+	@Override
+	public synchronized ShapeMarkerImpl createShapeMarker(String id, BlueMapMap map, Vector3d position, Shape shape, float y) {
 		removeMarker(id);
 		
-		ShapeMarkerImpl marker = new ShapeMarkerImpl(id, map, position, shape, height);
+		ShapeMarkerImpl marker = new ShapeMarkerImpl(id, map, position, shape, y);
 		markers.put(id, marker);
 		
+		return marker;
+	}
+
+	@Override
+	public ExtrudeMarkerImpl createExtrudeMarker(String id, BlueMapMap map, Vector3d position, Shape shape, float minY, float maxY) {
+		removeMarker(id);
+
+		ExtrudeMarkerImpl marker = new ExtrudeMarkerImpl(id, map, position, shape, minY, maxY);
+		markers.put(id, marker);
+
+		return marker;
+	}
+
+	@Override
+	public LineMarkerImpl createLineMarker(String id, BlueMapMap map, Vector3d position, Line line) {
+		removeMarker(id);
+
+		LineMarkerImpl marker = new LineMarkerImpl(id, map, position, line);
+		markers.put(id, marker);
+
 		return marker;
 	}
 
@@ -141,6 +172,7 @@ public class MarkerSetImpl implements MarkerSet {
 	public synchronized void load(BlueMapAPI api, ConfigurationNode node, boolean overwriteChanges) throws MarkerFileFormatException {
 		BlueMapMap dummyMap = api.getMaps().iterator().next();
 		Shape dummyShape = Shape.createRect(0d, 0d, 1d, 1d);
+		Line dummyLine = new Line(Vector3d.ZERO, Vector3d.ONE);
 		
 		Set<String> externallyRemovedMarkers = new HashSet<>(this.markers.keySet());
 		for (ConfigurationNode markerNode : node.getNode("marker").getChildrenList()) {
@@ -160,22 +192,36 @@ public class MarkerSetImpl implements MarkerSet {
 			try {
 				if (marker == null || !marker.getType().equals(type)) {
 					switch (type) {
-					case POIMarkerImpl.MARKER_TYPE:
-						marker = new POIMarkerImpl(id, dummyMap, Vector3d.ZERO);
-						break;
-					case ShapeMarkerImpl.MARKER_TYPE:
-						marker = new ShapeMarkerImpl(id, dummyMap, Vector3d.ZERO, dummyShape, 0f);
-						break;
-					default:
-						Logger.global.logDebug("Marker-API: Failed to load marker '" + id + "' in the set '" + this.id + "': Unknown marker-type '" + type + "'!");
-						continue;
+						case HtmlMarkerImpl.MARKER_TYPE :
+							marker = new HtmlMarkerImpl(id, dummyMap, Vector3d.ZERO, "");
+							break;
+						case POIMarkerImpl.MARKER_TYPE:
+							marker = new POIMarkerImpl(id, dummyMap, Vector3d.ZERO);
+							break;
+						case ShapeMarkerImpl.MARKER_TYPE:
+							marker = new ShapeMarkerImpl(id, dummyMap, Vector3d.ZERO, dummyShape, 0f);
+							break;
+						case ExtrudeMarkerImpl.MARKER_TYPE:
+							marker = new ExtrudeMarkerImpl(id, dummyMap, Vector3d.ZERO, dummyShape, 0f, 1f);
+							break;
+						case LineMarkerImpl.MARKER_TYPE:
+							marker = new LineMarkerImpl(id, dummyMap, Vector3d.ZERO, dummyLine);
+							break;
+						default:
+							Logger.global.logDebug("Marker-API: Failed to load marker '" + id + "' in the set '" + this.id + "': Unknown marker-type '" + type + "'!");
+							continue;
 					}
 
 					marker.load(api, markerNode, true);
 				} else {
 					marker.load(api, markerNode, overwriteChanges);					
 				}
-				markers.put(id, marker);
+
+				if (overwriteChanges) {
+					markers.put(id, marker);
+				} else {
+					markers.putIfAbsent(id, marker);
+				}
 			} catch (MarkerFileFormatException ex) {
 				Logger.global.logDebug("Marker-API: Failed to load marker '" + id + "' in the set '" + this.id + "': " + ex);
 			}

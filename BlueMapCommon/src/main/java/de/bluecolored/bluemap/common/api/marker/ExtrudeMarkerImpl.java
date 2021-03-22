@@ -29,31 +29,33 @@ import com.flowpowered.math.vector.Vector3d;
 import com.google.common.base.Preconditions;
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
+import de.bluecolored.bluemap.api.marker.ExtrudeMarker;
 import de.bluecolored.bluemap.api.marker.Shape;
-import de.bluecolored.bluemap.api.marker.ShapeMarker;
 import ninja.leaping.configurate.ConfigurationNode;
 
 import java.awt.*;
 import java.util.List;
 
-public class ShapeMarkerImpl extends ObjectMarkerImpl implements ShapeMarker {
-	public static final String MARKER_TYPE = "shape";
+public class ExtrudeMarkerImpl extends ObjectMarkerImpl implements ExtrudeMarker {
+	public static final String MARKER_TYPE = "extrude";
 
 	private Shape shape;
-	private float shapeY;
+	private float shapeMinY;
+	private float shapeMaxY;
 	private boolean depthTest;
 	private int lineWidth;
 	private Color lineColor, fillColor;
 
 	private boolean hasUnsavedChanges;
-	
-	public ShapeMarkerImpl(String id, BlueMapMap map, Vector3d position, Shape shape, float shapeY) {
+
+	public ExtrudeMarkerImpl(String id, BlueMapMap map, Vector3d position, Shape shape, float shapeMinY, float shapeMaxY) {
 		super(id, map, position);
 
 		Preconditions.checkNotNull(shape);
 		
 		this.shape = shape;
-		this.shapeY = shapeY;
+		this.shapeMinY = shapeMinY;
+		this.shapeMaxY = shapeMaxY;
 		this.lineWidth = 2;
 		this.lineColor = new Color(255, 0, 0, 200);
 		this.fillColor = new Color(200, 0, 0, 100);
@@ -72,16 +74,22 @@ public class ShapeMarkerImpl extends ObjectMarkerImpl implements ShapeMarker {
 	}
 
 	@Override
-	public float getShapeY() {
-		return this.shapeY;
+	public float getShapeMinY() {
+		return shapeMinY;
 	}
 
 	@Override
-	public synchronized void setShape(Shape shape, float shapeY) {
+	public float getShapeMaxY() {
+		return shapeMaxY;
+	}
+
+	@Override
+	public synchronized void setShape(Shape shape, float shapeMinY, float shapeMaxY) {
 		Preconditions.checkNotNull(shape);
 		
 		this.shape = shape;
-		this.shapeY = shapeY;
+		this.shapeMinY = shapeMinY;
+		this.shapeMaxY = shapeMaxY;
 		this.hasUnsavedChanges = true;
 	}
 	
@@ -141,14 +149,11 @@ public class ShapeMarkerImpl extends ObjectMarkerImpl implements ShapeMarker {
 		this.hasUnsavedChanges = false;
 		
 		this.shape = readShape(markerNode.getNode("shape"));
-		this.shapeY = markerNode.getNode("shapeY").getFloat(markerNode.getNode("height").getFloat(64)); // fallback to deprecated "height"
+		this.shapeMinY = markerNode.getNode("shapeMinY").getFloat(0);
+		this.shapeMaxY = markerNode.getNode("shapeMaxY").getFloat(255);
 		this.depthTest = markerNode.getNode("depthTest").getBoolean(true);
 		this.lineWidth = markerNode.getNode("lineWidth").getInt(2);
-
-		ConfigurationNode lineColorNode = markerNode.getNode("lineColor");
-		if (lineColorNode.isVirtual()) lineColorNode = markerNode.getNode("borderColor"); // fallback to deprecated "borderColor"
-		this.lineColor = readColor(lineColorNode);
-
+		this.lineColor = readColor(markerNode.getNode("lineColor"));
 		this.fillColor = readColor(markerNode.getNode("fillColor"));
 	}
 	
@@ -157,7 +162,8 @@ public class ShapeMarkerImpl extends ObjectMarkerImpl implements ShapeMarker {
 		super.save(markerNode);
 
 		writeShape(markerNode.getNode("shape"), this.shape);
-		markerNode.getNode("shapeY").setValue(Math.round(shapeY * 1000f) / 1000f);
+		markerNode.getNode("shapeMinY").setValue(Math.round(shapeMinY * 1000f) / 1000f);
+		markerNode.getNode("shapeMaxY").setValue(Math.round(shapeMaxY * 1000f) / 1000f);
 		markerNode.getNode("depthTest").setValue(this.depthTest);
 		markerNode.getNode("lineWidth").setValue(this.lineWidth);
 		writeColor(markerNode.getNode("lineColor"), this.lineColor);
