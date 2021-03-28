@@ -24,19 +24,19 @@
  */
 package de.bluecolored.bluemap.core.config;
 
+import ninja.leaping.configurate.ConfigurationNode;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
-
-import ninja.leaping.configurate.ConfigurationNode;
 
 public class WebServerConfig {
 
 	private boolean enabled = true;
 	private File webRoot = new File("web");
 
-	private InetAddress bindAdress = null;
+	private InetAddress bindAddress = null;
 	private int port = 8100;
 	private int maxConnections = 100;
 
@@ -52,13 +52,13 @@ public class WebServerConfig {
 			webRoot = ConfigManager.toFolder(webRootString);
 			
 			//ip
-			String bindAdressString = node.getNode("ip").getString("");
-			if (bindAdressString.isEmpty() || bindAdressString.equals("0.0.0.0") || bindAdressString.equals("::0")) {
-				bindAdress = new InetSocketAddress(0).getAddress(); // 0.0.0.0
-			} else if (bindAdressString.equals("#getLocalHost")) {
-				bindAdress = InetAddress.getLocalHost();
+			String bindAddressString = node.getNode("ip").getString("");
+			if (bindAddressString.isEmpty() || bindAddressString.equals("0.0.0.0") || bindAddressString.equals("::0")) {
+				bindAddress = new InetSocketAddress(0).getAddress(); // 0.0.0.0
+			} else if (bindAddressString.equals("#getLocalHost")) {
+				bindAddress = InetAddress.getLocalHost();
 			} else {
-				bindAdress = InetAddress.getByName(bindAdressString);
+				bindAddress = InetAddress.getByName(bindAddressString);
 			}
 			
 			//port
@@ -75,12 +75,11 @@ public class WebServerConfig {
 	}
 	
 	public File getWebRoot() {
-		if (!webRoot.exists()) webRoot.mkdirs();
 		return webRoot;
 	}
 
-	public InetAddress getWebserverBindAdress() {
-		return bindAdress;
+	public InetAddress getWebserverBindAddress() {
+		return bindAddress;
 	}
 
 	public int getWebserverPort() {

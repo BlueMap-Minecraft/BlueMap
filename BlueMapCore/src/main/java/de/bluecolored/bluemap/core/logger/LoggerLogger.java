@@ -24,17 +24,13 @@
  */
 package de.bluecolored.bluemap.core.logger;
 
+import de.bluecolored.bluemap.core.util.FileUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
+
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.NoSuchFileException;
-import java.nio.file.Paths;
-import java.util.logging.ConsoleHandler;
-import java.util.logging.FileHandler;
-import java.util.logging.Level;
-import java.util.logging.LogRecord;
 import java.util.logging.Logger;
-import java.util.logging.SimpleFormatter;
-import org.apache.commons.lang3.exception.ExceptionUtils;
+import java.util.logging.*;
 
 public class LoggerLogger extends AbstractLogger {
 	private static LoggerLogger instance = null;
@@ -67,18 +63,11 @@ public class LoggerLogger extends AbstractLogger {
 	
 	public void addFileHandler(String filename, boolean append) {
 		try {
+			File file = new File(filename);
+			FileUtils.mkDirsParent(file);
 			FileHandler fHandler = new FileHandler(filename, append);
 			fHandler.setFormatter(formatter);
 			this.logger.addHandler(fHandler);
-		} catch (NoSuchFileException e) {
-			// Directory may not exist. Create it and try again.
-			File parent = Paths.get(e.getFile()).getParent().toFile();
-			if (!parent.exists()) {
-				parent.mkdirs();
-				addFileHandler(filename, append);
-			} else {
-				de.bluecolored.bluemap.core.logger.Logger.global.logError("Error while opening log file!", e);
-			}
 		} catch (IOException e) {
 			de.bluecolored.bluemap.core.logger.Logger.global.logError("Error while opening log file!", e);
 		}

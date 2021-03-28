@@ -24,35 +24,9 @@
  */
 package de.bluecolored.bluemap.cli;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Collection;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.lang3.time.DurationFormatUtils;
-
 import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.vector.Vector2i;
-
-import de.bluecolored.bluemap.common.BlueMapService;
-import de.bluecolored.bluemap.common.MapType;
-import de.bluecolored.bluemap.common.MissingResourcesException;
-import de.bluecolored.bluemap.common.RenderManager;
-import de.bluecolored.bluemap.common.RenderTask;
+import de.bluecolored.bluemap.common.*;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.config.WebServerConfig;
@@ -60,11 +34,19 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.logger.LoggerLogger;
 import de.bluecolored.bluemap.core.metrics.Metrics;
 import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
+import de.bluecolored.bluemap.core.util.FileUtils;
 import de.bluecolored.bluemap.core.web.FileRequestHandler;
 import de.bluecolored.bluemap.core.web.WebSettings;
 import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
 import de.bluecolored.bluemap.core.webserver.WebServer;
 import de.bluecolored.bluemap.core.world.World;
+import org.apache.commons.cli.*;
+import org.apache.commons.lang3.time.DurationFormatUtils;
+
+import java.io.*;
+import java.util.Collection;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 public class BlueMapCLI {
 	
@@ -137,14 +119,18 @@ public class BlueMapCLI {
 				currentTask.getMapType().getTileRenderer().save();
 			}
 
-			Logger.global.logInfo("Saving render-state ...");
-			try (
-				OutputStream os = new GZIPOutputStream(new FileOutputStream(rmstate));
-				DataOutputStream dos = new DataOutputStream(os);
-			){
-				renderManager.writeState(dos);
-				
-				Logger.global.logInfo("Render saved and stopped! Restart the render (without using -f) to resume.");
+			try {
+				Logger.global.logInfo("Saving render-state ...");
+				FileUtils.createFile(rmstate);
+
+				try (
+					OutputStream os = new GZIPOutputStream(new FileOutputStream(rmstate));
+					DataOutputStream dos = new DataOutputStream(os);
+				) {
+					renderManager.writeState(dos);
+
+					Logger.global.logInfo("Render saved and stopped! Restart the render (without using -f) to resume.");
+				}
 			} catch (IOException ex) {
 				Logger.global.logError("Failed to save render-state!", ex);
 			}
@@ -215,7 +201,7 @@ public class BlueMapCLI {
 		renderManager.stop();
 
 		//render finished, so remove render state file
-		rmstate.delete();
+		FileUtils.delete(rmstate);
 
 		for (MapType map : blueMap.getMaps().values()) {
 			webSettings.set(startTime, "maps", map.getId(), "last-render");
@@ -234,12 +220,13 @@ public class BlueMapCLI {
 		Logger.global.logInfo("Starting webserver ...");
 		
 		WebServerConfig config = blueMap.getWebServerConfig();
+		FileUtils.mkDirs(config.getWebRoot());
 		HttpRequestHandler requestHandler = new FileRequestHandler(config.getWebRoot().toPath(), "BlueMap v" + BlueMap.VERSION);
 
 		WebServer webServer = new WebServer(
 				config.getWebserverPort(),
 				config.getWebserverMaxConnections(),
-				config.getWebserverBindAdress(),
+				config.getWebserverBindAddress(),
 				requestHandler,
 				verbose
 		);
@@ -270,7 +257,7 @@ public class BlueMapCLI {
 			File configFolder = new File(".");
 			if (cmd.hasOption("c")) {
 				configFolder = new File(cmd.getOptionValue("c"));
-				configFolder.mkdirs();
+				FileUtils.mkDirs(configFolder);
 			}
 			
 			//minecraft version
@@ -327,6 +314,9 @@ public class BlueMapCLI {
 				blueMap.getCoreConfig();
 				blueMap.getRenderConfig();
 				blueMap.getWebServerConfig();
+
+				//create resourcepacks folder
+				FileUtils.mkDirs(new File(configFolder, "resourcepacks"));
 				
 				//print help
 				BlueMapCLI.printHelp();

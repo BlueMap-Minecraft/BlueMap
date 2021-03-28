@@ -24,29 +24,11 @@
  */
 package de.bluecolored.bluemap.common;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import org.apache.commons.io.FileUtils;
-
 import com.flowpowered.math.vector.Vector2i;
-
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.MinecraftVersion;
-import de.bluecolored.bluemap.core.config.ConfigManager;
-import de.bluecolored.bluemap.core.config.CoreConfig;
-import de.bluecolored.bluemap.core.config.MapConfig;
-import de.bluecolored.bluemap.core.config.RenderConfig;
-import de.bluecolored.bluemap.core.config.WebServerConfig;
+import de.bluecolored.bluemap.core.config.*;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.render.RenderSettings;
@@ -58,6 +40,12 @@ import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.web.WebSettings;
 import de.bluecolored.bluemap.core.world.SlicedWorld;
 import de.bluecolored.bluemap.core.world.World;
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.*;
 
 /**
  * This is the attempt to generalize as many actions as possible to have CLI and Plugins run on the same general setup-code.
@@ -219,12 +207,15 @@ public class BlueMapService {
 		maps = Collections.unmodifiableMap(maps);
 	}
 	
-	public synchronized ResourcePack getResourcePack() throws IOException, MissingResourcesException, InterruptedException {
+	public synchronized ResourcePack getResourcePack() throws IOException, InterruptedException {
 		if (resourcePack == null) {
 			File defaultResourceFile = new File(getCoreConfig().getDataFolder(), "minecraft-client-" + minecraftVersion.getVersionString() + ".jar");
 			File resourceExtensionsFile = new File(getCoreConfig().getDataFolder(), "resourceExtensions.zip");
 
 			File textureExportFile = new File(getRenderConfig().getWebRoot(), "data" + File.separator + "textures.json");
+
+			File resourcePackFolder = new File(configFolder, "resourcepacks");
+			FileUtils.forceMkdir(resourcePackFolder);
 			
 			if (!defaultResourceFile.exists()) {
 				if (getCoreConfig().isDownloadAccepted()) {
@@ -232,6 +223,7 @@ public class BlueMapService {
 					//download file
 					try {
 						Logger.global.logInfo("Downloading " + minecraftVersion.getClientDownloadUrl() + " to " + defaultResourceFile + " ...");
+						FileUtils.forceMkdirParent(defaultResourceFile);
 						FileUtils.copyURLToFile(new URL(minecraftVersion.getClientDownloadUrl()), defaultResourceFile, 10000, 10000);
 					} catch (IOException e) {
 						throw new IOException("Failed to download resources!", e);
@@ -244,18 +236,18 @@ public class BlueMapService {
 
 			Logger.global.logInfo("Loading resources...");
 			
-			resourceExtensionsFile.delete();
+			if (resourceExtensionsFile.exists()) FileUtils.forceDelete(resourceExtensionsFile);
+			FileUtils.forceMkdirParent(resourceExtensionsFile);
 			FileUtils.copyURLToFile(Plugin.class.getResource("/de/bluecolored/bluemap/" + minecraftVersion.getResourcePrefix() + "/resourceExtensions.zip"), resourceExtensionsFile, 10000, 10000);
 			
 			//find more resource packs
-			File resourcePackFolder = new File(configFolder, "resourcepacks");
-			resourcePackFolder.mkdirs();
 			File[] resourcePacks = resourcePackFolder.listFiles();
+			if (resourcePacks == null) resourcePacks = new File[0];
 			Arrays.sort(resourcePacks); //load resource packs in alphabetical order so you can reorder them by renaming
 			
 			List<File> resources = new ArrayList<>(resourcePacks.length + 1);
 			resources.add(defaultResourceFile);
-			for (File file : resourcePacks) resources.add(file);
+			resources.addAll(Arrays.asList(resourcePacks));
 			resources.add(resourceExtensionsFile);
 			
 			try {
@@ -272,7 +264,7 @@ public class BlueMapService {
 		return resourcePack;
 	}
 	
-	public synchronized ConfigManager getConfigManager() throws IOException {
+	public synchronized ConfigManager getConfigManager() {
 		return configManager;
 	}
 	

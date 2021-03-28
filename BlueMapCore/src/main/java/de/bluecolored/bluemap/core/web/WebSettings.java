@@ -24,21 +24,21 @@
  */
 package de.bluecolored.bluemap.core.web;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.stream.Collectors;
-
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3f;
-
 import de.bluecolored.bluemap.core.config.MapConfig;
 import de.bluecolored.bluemap.core.render.TileRenderer;
+import de.bluecolored.bluemap.core.util.FileUtils;
 import de.bluecolored.bluemap.core.util.MathUtils;
 import de.bluecolored.bluemap.core.world.World;
 import ninja.leaping.configurate.ConfigurationNode;
 import ninja.leaping.configurate.gson.GsonConfigurationLoader;
 import ninja.leaping.configurate.loader.ConfigurationLoader;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 public class WebSettings {
 
@@ -46,11 +46,7 @@ public class WebSettings {
 	private ConfigurationNode rootNode;
 	
 	public WebSettings(File settingsFile) throws IOException {
-		
-		if (!settingsFile.exists()) {
-			settingsFile.getParentFile().mkdirs();
-			settingsFile.createNewFile();
-		}
+		FileUtils.createFile(settingsFile);
 		
 		configLoader = GsonConfigurationLoader.builder()
 				.setFile(settingsFile)

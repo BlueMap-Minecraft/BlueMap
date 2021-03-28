@@ -24,22 +24,6 @@
  */
 package de.bluecolored.bluemap.common.api;
 
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-
-import javax.imageio.ImageIO;
-
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.BlueMapWorld;
@@ -50,6 +34,17 @@ import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.world.World;
+import org.apache.commons.io.FileUtils;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.FileSystems;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 public class BlueMapAPIImpl extends BlueMapAPI {
 
@@ -109,9 +104,8 @@ public class BlueMapAPIImpl extends BlueMapAPI {
 		Path imagePath = webDataRoot.resolve(Paths.get(IMAGE_ROOT_PATH, path.replace("/", separator) + ".png")).toAbsolutePath();
 
 		File imageFile = imagePath.toFile();
-		imageFile.getParentFile().mkdirs();
-		imageFile.delete();
-		imageFile.createNewFile();
+		if (imageFile.exists()) FileUtils.forceDelete(imageFile);
+		de.bluecolored.bluemap.core.util.FileUtils.createFile(imageFile);
 		
 		if (!ImageIO.write(image, "png", imagePath.toFile()))
 			throw new IOException("The format 'png' is not supported!");

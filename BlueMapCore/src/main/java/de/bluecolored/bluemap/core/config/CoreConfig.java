@@ -24,10 +24,10 @@
  */
 package de.bluecolored.bluemap.core.config;
 
+import ninja.leaping.configurate.ConfigurationNode;
+
 import java.io.File;
 import java.io.IOException;
-
-import ninja.leaping.configurate.ConfigurationNode;
 
 public class CoreConfig {
 	
@@ -57,7 +57,6 @@ public class CoreConfig {
 	}
 	
 	public File getDataFolder() {
-		if (!dataFolder.exists()) dataFolder.mkdirs();
 		return dataFolder;
 	}
 	

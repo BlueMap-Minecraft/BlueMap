@@ -24,12 +24,14 @@
  */
 package de.bluecolored.bluemap.core.render.lowres;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import com.flowpowered.math.vector.Vector2i;
+import com.flowpowered.math.vector.Vector3f;
+import de.bluecolored.bluemap.core.threejs.BufferGeometry;
+import de.bluecolored.bluemap.core.util.FileUtils;
+import de.bluecolored.bluemap.core.util.MathUtils;
+import de.bluecolored.bluemap.core.util.ModelUtils;
+
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,14 +41,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.zip.GZIPOutputStream;
-
-import com.flowpowered.math.vector.Vector2i;
-import com.flowpowered.math.vector.Vector3f;
-
-import de.bluecolored.bluemap.core.threejs.BufferGeometry;
-import de.bluecolored.bluemap.core.util.FileUtils;
-import de.bluecolored.bluemap.core.util.MathUtils;
-import de.bluecolored.bluemap.core.util.ModelUtils;
 
 public class LowresModel {
 	
@@ -109,10 +103,7 @@ public class LowresModel {
 		}
 		
 		synchronized (fileLock) {
-			if (!file.exists()){
-				file.getParentFile().mkdirs();
-				file.createNewFile();
-			}
+			FileUtils.createFile(file);
 			
 			try {
 				FileUtils.waitForFile(file, 10, TimeUnit.SECONDS);

@@ -24,11 +24,18 @@
  */
 package de.bluecolored.bluemap.core.config;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import com.google.common.base.Preconditions;
+import de.bluecolored.bluemap.core.BlueMap;
+import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resourcepack.ResourcePack.Resource;
+import de.bluecolored.bluemap.core.util.FileUtils;
+import ninja.leaping.configurate.ConfigurationNode;
+import ninja.leaping.configurate.gson.GsonConfigurationLoader;
+import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
+import ninja.leaping.configurate.loader.ConfigurationLoader;
+
+import java.io.*;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -36,17 +43,6 @@ import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import com.google.common.base.Preconditions;
-
-import de.bluecolored.bluemap.core.BlueMap;
-import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.resourcepack.ResourcePack.Resource;
-import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.gson.GsonConfigurationLoader;
-import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
-import ninja.leaping.configurate.loader.ConfigurationLoader;
 
 public class ConfigManager {
 
@@ -76,7 +72,7 @@ public class ConfigManager {
 		
 		ConfigurationNode configNode;
 		if (!configFile.exists()) {
-			configFile.getParentFile().mkdirs();
+			FileUtils.mkDirsParent(configFile);
 			
 			if (defaultConfig != null) {
 				//load content of default config

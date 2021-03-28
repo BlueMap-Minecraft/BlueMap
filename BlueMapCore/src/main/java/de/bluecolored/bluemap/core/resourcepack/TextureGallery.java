@@ -24,32 +24,16 @@
  */
 package de.bluecolored.bluemap.core.resourcepack;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-
-import javax.imageio.ImageIO;
-
 import com.flowpowered.math.vector.Vector4f;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonStreamParser;
-
+import com.google.gson.*;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.fileaccess.FileAccess;
+import de.bluecolored.bluemap.core.util.FileUtils;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.util.*;
 
 /**
  * A {@link TextureGallery} is managing {@link Texture}s and their id's and path's.<br>
@@ -131,9 +115,8 @@ public class TextureGallery {
 				.create();
 		String json = gson.toJson(root);
 		
-		file.delete();
-		file.getParentFile().mkdirs();
-		file.createNewFile();
+		if (file.exists()) FileUtils.delete(file);
+		FileUtils.createFile(file);
 		
 		try (FileWriter fileWriter = new FileWriter(file)) {
 			fileWriter.append(json);

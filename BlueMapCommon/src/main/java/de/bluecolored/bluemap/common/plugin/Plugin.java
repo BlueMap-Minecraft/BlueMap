@@ -37,6 +37,7 @@ import de.bluecolored.bluemap.core.config.WebServerConfig;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.metrics.Metrics;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
+import de.bluecolored.bluemap.core.util.FileUtils;
 import de.bluecolored.bluemap.core.web.FileRequestHandler;
 import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
 import de.bluecolored.bluemap.core.webserver.WebServer;
@@ -110,6 +111,7 @@ public class Plugin {
 				
 				//create and start webserver
 				if (webServerConfig.isWebserverEnabled()) {
+					FileUtils.mkDirs(webServerConfig.getWebRoot());
 					HttpRequestHandler requestHandler = new FileRequestHandler(webServerConfig.getWebRoot().toPath(), "BlueMap v" + BlueMap.VERSION);
 					
 					//inject live api if enabled
@@ -120,7 +122,7 @@ public class Plugin {
 					webServer = new WebServer(
 							webServerConfig.getWebserverPort(),
 							webServerConfig.getWebserverMaxConnections(),
-							webServerConfig.getWebserverBindAdress(),
+							webServerConfig.getWebserverBindAddress(),
 							requestHandler,
 							false
 					);
@@ -305,8 +307,8 @@ public class Plugin {
 	public void saveRenderManagerState() throws IOException {
 		File saveFile = getRenderManagerSaveFile();
 		
-		if (saveFile.exists()) saveFile.delete();
-		saveFile.createNewFile();
+		if (saveFile.exists()) FileUtils.delete(saveFile);
+		FileUtils.createFile(saveFile);
 		
 		try (DataOutputStream out = new DataOutputStream(new GZIPOutputStream(new FileOutputStream(saveFile)))) {
 			renderManager.writeState(out);
@@ -356,11 +358,7 @@ public class Plugin {
 	
 	public File getRenderManagerSaveFile() throws IOException {
 		if (blueMap == null) return null;
-		
-		File saveFile = new File(blueMap.getCoreConfig().getDataFolder(), "rmstate");
-		saveFile.getParentFile().mkdirs();
-		
-		return saveFile;
+		return new File(blueMap.getCoreConfig().getDataFolder(), "rmstate");
 	}
 	
 	public MapUpdateHandler getUpdateHandler() {

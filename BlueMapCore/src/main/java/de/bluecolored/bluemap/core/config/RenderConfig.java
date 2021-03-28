@@ -24,12 +24,12 @@
  */
 package de.bluecolored.bluemap.core.config;
 
+import ninja.leaping.configurate.ConfigurationNode;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import ninja.leaping.configurate.ConfigurationNode;
 
 public class RenderConfig {
 
@@ -56,7 +56,6 @@ public class RenderConfig {
 	}
 
 	public File getWebRoot() {
-		if (!webRoot.exists()) webRoot.mkdirs();
 		return webRoot;
 	}
 	

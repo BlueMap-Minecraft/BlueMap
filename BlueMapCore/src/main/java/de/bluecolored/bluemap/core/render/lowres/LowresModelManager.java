@@ -24,6 +24,13 @@
  */
 package de.bluecolored.bluemap.core.render.lowres;
 
+import com.flowpowered.math.vector.*;
+import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.render.hires.HiresModel;
+import de.bluecolored.bluemap.core.threejs.BufferGeometry;
+import de.bluecolored.bluemap.core.util.FileUtils;
+import org.apache.commons.io.IOUtils;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -37,19 +44,6 @@ import java.util.Map.Entry;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.GZIPInputStream;
-
-import org.apache.commons.io.IOUtils;
-
-import com.flowpowered.math.vector.Vector2i;
-import com.flowpowered.math.vector.Vector3d;
-import com.flowpowered.math.vector.Vector3f;
-import com.flowpowered.math.vector.Vector3i;
-import com.flowpowered.math.vector.Vector4f;
-
-import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.render.hires.HiresModel;
-import de.bluecolored.bluemap.core.threejs.BufferGeometry;
-import de.bluecolored.bluemap.core.util.FileUtils;
 
 public class LowresModelManager {
 	
@@ -196,15 +190,11 @@ public class LowresModelManager {
 						} catch (IllegalArgumentException | IOException ex){
 							Logger.global.logError("Failed to load lowres model: " + modelFile, ex);
 
-							modelFile.delete();
-							
-							/*
-							File brokenFile = modelFile.toPath().getParent().resolve(modelFile.getName() + ".broken").toFile();
-							if (brokenFile.exists()) brokenFile.delete();
-							if (!modelFile.renameTo(brokenFile)) {
-								modelFile.delete();
+							try {
+								FileUtils.delete(modelFile);
+							} catch (IOException ex2) {
+								Logger.global.logError("Failed to delete lowres-file: " + modelFile, ex2);
 							}
-							*/
 						}
 					}
 

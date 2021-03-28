@@ -24,29 +24,23 @@
  */
 package de.bluecolored.bluemap.core.render.hires;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.zip.GZIPOutputStream;
-
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
-
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.render.RenderSettings;
 import de.bluecolored.bluemap.core.render.WorldTile;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.AABB;
 import de.bluecolored.bluemap.core.util.FileUtils;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.zip.GZIPOutputStream;
 
 public class HiresModelManager {
 
@@ -90,10 +84,7 @@ public class HiresModelManager {
 		File file = getFile(model.getTile(), useGzip);
 		
 		try {
-			if (!file.exists()){
-				file.getParentFile().mkdirs();
-				file.createNewFile();
-			}
+			FileUtils.createFile(file);
 	
 			OutputStream os = new FileOutputStream(file);
 			if (useGzip) os = new GZIPOutputStream(os);

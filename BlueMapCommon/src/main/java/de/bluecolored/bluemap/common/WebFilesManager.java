@@ -58,11 +58,10 @@ public class WebFilesManager {
 					ZipEntry zipEntry = entries.nextElement();
 					if (zipEntry.isDirectory()) {
 						File dir = new File(webRoot, zipEntry.getName());
-						if (!dir.mkdirs()) {
-							Logger.global.logWarning("Failed to create directory: " + dir);
-						}
+						FileUtils.forceMkdir(dir);
 					} else {
 						File target = new File(webRoot, zipEntry.getName());
+						FileUtils.forceMkdirParent(target);
 						FileUtils.copyInputStreamToFile(zipFile.getInputStream(zipEntry), target);
 					}
 				}
