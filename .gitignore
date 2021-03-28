@@ -4,6 +4,7 @@ build/
 bin/
 doc/
 logs/
+.run/
 run/
 node_modules/
 

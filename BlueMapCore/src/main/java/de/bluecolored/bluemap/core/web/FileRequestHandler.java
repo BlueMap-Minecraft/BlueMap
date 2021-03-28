@@ -24,12 +24,14 @@
  */
 package de.bluecolored.bluemap.core.web;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import de.bluecolored.bluemap.core.webserver.HttpRequest;
+import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
+import de.bluecolored.bluemap.core.webserver.HttpResponse;
+import de.bluecolored.bluemap.core.webserver.HttpStatusCode;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
+
+import java.io.*;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.GregorianCalendar;
@@ -40,26 +42,22 @@ import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.time.DateFormatUtils;
-
-import de.bluecolored.bluemap.core.webserver.HttpRequest;
-import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
-import de.bluecolored.bluemap.core.webserver.HttpResponse;
-import de.bluecolored.bluemap.core.webserver.HttpStatusCode;
-
 public class FileRequestHandler implements HttpRequestHandler {
 
 	private static final long DEFLATE_MIN_SIZE = 10L * 1024L;
 	private static final long DEFLATE_MAX_SIZE = 10L * 1024L * 1024L;
 	private static final long INFLATE_MAX_SIZE = 10L * 1024L * 1024L;
 	
-	private Path webRoot;
-	private String serverName;
+	private final Path webRoot;
+	private final String serverName;
+
+	private final File emptyTileFile;
 	
 	public FileRequestHandler(Path webRoot, String serverName) {
-		this.webRoot = webRoot;
+		this.webRoot = webRoot.normalize();
 		this.serverName = serverName;
+
+		this.emptyTileFile = webRoot.resolve("assets").resolve("emptyTile.json").toFile();
 	}
 	
 	@Override
@@ -84,10 +82,10 @@ public class FileRequestHandler implements HttpRequestHandler {
 	private HttpResponse generateResponse(HttpRequest request) {
 		String path = request.getPath();
 		
-		//normalize path
+		// normalize path
 		if (path.startsWith("/")) path = path.substring(1);
 		if (path.endsWith("/")) path = path.substring(0, path.length() - 1);
-		
+
 		Path filePath = webRoot;
 		try {
 			filePath = webRoot.resolve(path);
@@ -95,12 +93,12 @@ public class FileRequestHandler implements HttpRequestHandler {
 			return new HttpResponse(HttpStatusCode.NOT_FOUND);
 		}
 		
-		//can we use deflation?
+		// can we use deflation?
 		boolean isDeflationPossible = request.getLowercaseHeader("Accept-Encoding").contains("gzip");
 		boolean isDeflated = false;
 		
-		//check if file is in web-root
-		if (!filePath.normalize().startsWith(webRoot.normalize())){
+		// check if file is in web-root
+		if (!filePath.normalize().startsWith(webRoot)){
 			return new HttpResponse(HttpStatusCode.FORBIDDEN);
 		}
 		
@@ -128,7 +126,12 @@ public class FileRequestHandler implements HttpRequestHandler {
 			isDeflated = true;
 		}
 		
-		if (!file.exists()){
+		if (!file.exists() && file.toPath().startsWith(webRoot.resolve("data"))){
+			file = emptyTileFile;
+			isDeflated = false;
+		}
+
+		if (!file.exists() || file.isDirectory()) {
 			return new HttpResponse(HttpStatusCode.NOT_FOUND);
 		}
 		
@@ -140,12 +143,12 @@ public class FileRequestHandler implements HttpRequestHandler {
 			}
 		}
 		
-		//check if file is still in web-root
-		if (!file.toPath().normalize().startsWith(webRoot.normalize())){
+		// check if file is still in web-root and is not a directory
+		if (!file.toPath().normalize().startsWith(webRoot) || file.isDirectory()){
 			return new HttpResponse(HttpStatusCode.FORBIDDEN);
 		}
 
-		//check modified
+		// check modified
 		long lastModified = file.lastModified();
 		Set<String> modStringSet = request.getHeader("If-Modified-Since");
 		if (!modStringSet.isEmpty()){
@@ -154,7 +157,7 @@ public class FileRequestHandler implements HttpRequestHandler {
 				if (since + 1000 >= lastModified){
 					return new HttpResponse(HttpStatusCode.NOT_MODIFIED);
 				}
-			} catch (IllegalArgumentException e){}
+			} catch (IllegalArgumentException ignored){}
 		}
 		
 		//check ETag
@@ -174,7 +177,7 @@ public class FileRequestHandler implements HttpRequestHandler {
 		response.addHeader("Cache-Control", "max-age=" + TimeUnit.HOURS.toSeconds(1));
 		
 		//add content type header
-		String filetype = file.getName().toString();
+		String filetype = file.getName();
 		if (filetype.endsWith(".gz")) filetype = filetype.substring(0, filetype.length() - 3);
 		int pointIndex = filetype.lastIndexOf('.');
 		if (pointIndex >= 0) filetype = filetype.substring(pointIndex + 1);

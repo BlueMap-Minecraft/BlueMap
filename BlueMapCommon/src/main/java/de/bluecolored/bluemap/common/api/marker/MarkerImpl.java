@@ -31,7 +31,6 @@ import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.marker.Marker;
 import ninja.leaping.configurate.ConfigurationNode;
 
-import java.util.Objects;
 import java.util.Optional;
 
 public abstract class MarkerImpl implements Marker {

@@ -24,24 +24,7 @@
  */
 package de.bluecolored.bluemap.common.plugin;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.util.Collection;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
-
-import de.bluecolored.bluemap.common.BlueMapService;
-import de.bluecolored.bluemap.common.InterruptableReentrantLock;
-import de.bluecolored.bluemap.common.MapType;
-import de.bluecolored.bluemap.common.MissingResourcesException;
-import de.bluecolored.bluemap.common.RenderManager;
+import de.bluecolored.bluemap.common.*;
 import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.live.LiveAPIRequestHandler;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
@@ -58,6 +41,14 @@ import de.bluecolored.bluemap.core.web.FileRequestHandler;
 import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
 import de.bluecolored.bluemap.core.webserver.WebServer;
 import de.bluecolored.bluemap.core.world.World;
+
+import java.io.*;
+import java.util.Collection;
+import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 public class Plugin {
 
@@ -207,7 +198,10 @@ public class Plugin {
 				
 				//start skin updater
 				if (pluginConfig.isLiveUpdatesEnabled()) {
-					this.skinUpdater = new PlayerSkinUpdater(new File(renderConfig.getWebRoot(), "assets" + File.separator + "playerheads"));
+					this.skinUpdater = new PlayerSkinUpdater(
+							new File(renderConfig.getWebRoot(), "assets" + File.separator + "playerheads"),
+							new File(renderConfig.getWebRoot(), "assets" + File.separator + "steve.png")
+					);
 					serverInterface.registerListener(skinUpdater);
 				}
 				

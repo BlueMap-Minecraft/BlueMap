@@ -24,24 +24,28 @@
  */
 package de.bluecolored.bluemap.common.plugin.skins;
 
+import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
+import org.apache.commons.io.FileUtils;
+
 import java.io.File;
+import java.io.IOException;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
-
 public class PlayerSkinUpdater implements ServerEventListener {
 
 	private File storageFolder;
+	private File defaultSkin;
 	
-	private Map<UUID, PlayerSkin> skins;
+	private final Map<UUID, PlayerSkin> skins;
 	
-	public PlayerSkinUpdater(File storageFolder) {
+	public PlayerSkinUpdater(File storageFolder, File defaultSkin) throws IOException {
 		this.storageFolder = storageFolder;
+		this.defaultSkin = defaultSkin;
 		this.skins = new ConcurrentHashMap<>();
-		
-		this.storageFolder.mkdirs();
+
+		FileUtils.forceMkdir(this.storageFolder);
 	}
 	
 	public void updateSkin(UUID playerUuid) {
@@ -52,12 +56,28 @@ public class PlayerSkinUpdater implements ServerEventListener {
 			skins.put(playerUuid, skin);
 		}
 		
-		skin.update(storageFolder);
+		skin.update(storageFolder, defaultSkin);
 	}
 	
 	@Override
 	public void onPlayerJoin(UUID playerUuid) {
 		updateSkin(playerUuid);
 	}
-	
+
+	public File getStorageFolder() {
+		return storageFolder;
+	}
+
+	public void setStorageFolder(File storageFolder) {
+		this.storageFolder = storageFolder;
+	}
+
+	public File getDefaultSkin() {
+		return defaultSkin;
+	}
+
+	public void setDefaultSkin(File defaultSkin) {
+		this.defaultSkin = defaultSkin;
+	}
+
 }

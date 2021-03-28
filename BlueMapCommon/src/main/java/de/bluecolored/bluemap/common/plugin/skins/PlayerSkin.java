@@ -24,7 +24,13 @@
  */
 package de.bluecolored.bluemap.common.plugin.skins;
 
-import java.awt.Graphics2D;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import de.bluecolored.bluemap.core.logger.Logger;
+
+import javax.imageio.ImageIO;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -33,19 +39,7 @@ import java.io.Reader;
 import java.net.URL;
 import java.util.Base64;
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import javax.imageio.ImageIO;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParser;
-
-import de.bluecolored.bluemap.core.logger.Logger;
+import java.util.concurrent.*;
 
 public class PlayerSkin {
 	
@@ -57,23 +51,32 @@ public class PlayerSkin {
 		this.lastUpdate = -1;
 	}
 	
-	public void update(File storageFolder) {
+	public void update(File storageFolder, File fallback) {
 		long now = System.currentTimeMillis();
 		if (lastUpdate > 0 && lastUpdate + 600000 > now) return; // only update if skin is older than 10 minutes
 		
 		lastUpdate = now;
 		
 		new Thread(() -> {
+			BufferedImage head = null;
+
 			try {
 				Future<BufferedImage> futureSkin = loadSkin();
 				BufferedImage skin = futureSkin.get(10, TimeUnit.SECONDS);
-				BufferedImage head = createHead(skin);
-				ImageIO.write(head, "png", new File(storageFolder, uuid.toString() + ".png"));
+				head = createHead(skin);
 			} catch (ExecutionException | TimeoutException e) {
 				Logger.global.logDebug("Failed to load player-skin from mojang-servers: " + e);
+			} catch (InterruptedException ignore) {
+				Thread.currentThread().interrupt();
+				return;
+			}
+
+			try {
+				if (head == null) head = ImageIO.read(fallback);
+				ImageIO.write(head, "png", new File(storageFolder, uuid.toString() + ".png"));
 			} catch (IOException e) {
 				Logger.global.logError("Failed to write player-head image!", e);
-			} catch (InterruptedException ignore) { Thread.currentThread().interrupt(); }
+			}
 		}).start();
 	}
 	
