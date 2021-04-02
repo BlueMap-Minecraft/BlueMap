@@ -120,9 +120,9 @@ public class Plugin {
 					}
 					
 					webServer = new WebServer(
+							webServerConfig.getWebserverBindAddress(),
 							webServerConfig.getWebserverPort(),
 							webServerConfig.getWebserverMaxConnections(),
-							webServerConfig.getWebserverBindAddress(),
 							requestHandler,
 							false
 					);

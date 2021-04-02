@@ -24,6 +24,8 @@
  */
 package de.bluecolored.bluemap.core.webserver;
 
+import de.bluecolored.bluemap.core.logger.Logger;
+
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
@@ -34,26 +36,28 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-import de.bluecolored.bluemap.core.logger.Logger;
-
 public class WebServer extends Thread {
 
 	private final int port;
 	private final int maxConnections;
-	private final InetAddress bindAdress;
+	private final InetAddress bindAddress;
 	private final boolean verbose;
 
-	private HttpRequestHandler handler;
+	private final HttpRequestHandler handler;
 	
 	private ThreadPoolExecutor connectionThreads;
 	
 	private ServerSocket server;
 
-	public WebServer(int port, int maxConnections, InetAddress bindAdress, HttpRequestHandler handler, boolean verbose) {
+	public WebServer(InetAddress bindAddress, int port, int maxConnections, HttpRequestHandler handler) {
+		this(bindAddress, port, maxConnections, handler, false);
+	}
+
+	public WebServer(InetAddress bindAddress, int port, int maxConnections, HttpRequestHandler handler, boolean verbose) {
 		this.port = port;
 		this.maxConnections = maxConnections;
-		this.bindAdress = bindAdress;
-                this.verbose = verbose;
+		this.bindAddress = bindAddress;
+		this.verbose = verbose;
 		
 		this.handler = handler;
 		
@@ -68,7 +72,7 @@ public class WebServer extends Thread {
 		connectionThreads.allowCoreThreadTimeOut(true);
 		
 		try {
-			server = new ServerSocket(port, maxConnections, bindAdress);
+			server = new ServerSocket(port, maxConnections, bindAddress);
 			server.setSoTimeout(0);
 		} catch (IOException e){
 			Logger.global.logError("Error while starting the WebServer!", e);

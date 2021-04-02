@@ -224,9 +224,9 @@ public class BlueMapCLI {
 		HttpRequestHandler requestHandler = new FileRequestHandler(config.getWebRoot().toPath(), "BlueMap v" + BlueMap.VERSION);
 
 		WebServer webServer = new WebServer(
+				config.getWebserverBindAddress(),
 				config.getWebserverPort(),
 				config.getWebserverMaxConnections(),
-				config.getWebserverBindAddress(),
 				requestHandler,
 				verbose
 		);
