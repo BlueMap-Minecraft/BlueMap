@@ -44,9 +44,7 @@ import de.bluecolored.bluemap.core.webserver.WebServer;
 import de.bluecolored.bluemap.core.world.World;
 
 import java.io.*;
-import java.util.Collection;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
@@ -58,8 +56,8 @@ public class Plugin {
 
 	private final InterruptableReentrantLock loadingLock = new InterruptableReentrantLock();
 	
-	private MinecraftVersion minecraftVersion;
-	private String implementationType;
+	private final MinecraftVersion minecraftVersion;
+	private final String implementationType;
 	private ServerInterface serverInterface;
 
 	private BlueMapService blueMap;
@@ -70,8 +68,10 @@ public class Plugin {
 
 	private RenderManager renderManager;
 	private WebServer webServer;
-	private Thread periodicalSaveThread;
-	private Thread metricsThread;
+
+	private final Timer daemonTimer;
+	private TimerTask periodicalSaveTask;
+	private TimerTask metricsTask;
 
 	private PluginConfig pluginConfig;
 	private MapUpdateHandler updateHandler;
@@ -83,6 +83,8 @@ public class Plugin {
 		this.minecraftVersion = minecraftVersion;
 		this.implementationType = implementationType.toLowerCase();
 		this.serverInterface = serverInterface;
+
+		this.daemonTimer = new Timer("BlueMap-Daemon-Timer", true);
 	}
 	
 	public void load() throws IOException, ParseResourceException {
@@ -167,28 +169,26 @@ public class Plugin {
 					Logger.global.logError("Failed to load render-manager state!", ex);
 				}
 				
-				//create periodical-save thread
-				periodicalSaveThread = new Thread(() -> {
-					try {
-						while (true) {
-							Thread.sleep(TimeUnit.MINUTES.toMillis(5));
-							try {
-								saveRenderManagerState();
-								
-								//clean up caches
-								for (World world : blueMap.getWorlds().values()) {
-									world.cleanUpChunkCache();
-								}
-							} catch (IOException ex) {
-								Logger.global.logError("Failed to save render-manager state!", ex);
+				//do periodical saves
+				periodicalSaveTask = new TimerTask() {
+					@Override
+					public void run() {
+						try {
+							saveRenderManagerState();
+
+							//clean up caches
+							for (World world : blueMap.getWorlds().values()) {
+								world.cleanUpChunkCache();
 							}
+						} catch (IOException ex) {
+							Logger.global.logError("Failed to save render-manager state!", ex);
+						} catch (InterruptedException ex) {
+							this.cancel();
+							Thread.currentThread().interrupt();
 						}
-					} catch (InterruptedException ex){
-						Thread.currentThread().interrupt();
-						return;
 					}
-				});
-				periodicalSaveThread.start();
+				};
+				daemonTimer.schedule(periodicalSaveTask, TimeUnit.MINUTES.toMillis(5), TimeUnit.MINUTES.toMillis(5));
 				
 				//start map updater
 				this.updateHandler = new MapUpdateHandler(this);
@@ -208,21 +208,14 @@ public class Plugin {
 				}
 				
 				//metrics
-				metricsThread = new Thread(() -> {
-					try {
-						Thread.sleep(TimeUnit.MINUTES.toMillis(1));
-						
-						while (true) {
-							if (serverInterface.isMetricsEnabled(coreConfig.isMetricsEnabled())) Metrics.sendReport(this.implementationType);
-							
-							Thread.sleep(TimeUnit.MINUTES.toMillis(30));
-						}
-					} catch (InterruptedException ex){
-						Thread.currentThread().interrupt();
-						return;
+				metricsTask = new TimerTask() {
+					@Override
+					public void run() {
+						if (Plugin.this.serverInterface.isMetricsEnabled(coreConfig.isMetricsEnabled()))
+							Metrics.sendReport(Plugin.this.implementationType);
 					}
-				});
-				metricsThread.start();
+				};
+				daemonTimer.scheduleAtFixedRate(metricsTask, TimeUnit.MINUTES.toMillis(1), TimeUnit.MINUTES.toMillis(30));
 		
 				loaded = true;
 				
@@ -252,19 +245,8 @@ public class Plugin {
 				serverInterface.unregisterAllListeners();
 		
 				//stop scheduled threads
-				if (metricsThread != null) {
-					metricsThread.interrupt();
-					try {metricsThread.join(1000);} catch (InterruptedException ignore) { Thread.currentThread().interrupt(); }
-					if (metricsThread.isAlive()) Logger.global.logWarning("The metricsThread did not terminate correctly in time!");
-					metricsThread = null;
-				}
-				
-				if (periodicalSaveThread != null) {
-					periodicalSaveThread.interrupt();
-					try {periodicalSaveThread.join(1000);} catch (InterruptedException ignore) { Thread.currentThread().interrupt(); }
-					if (periodicalSaveThread.isAlive()) Logger.global.logWarning("The periodicalSaveThread did not terminate correctly in time!");
-					periodicalSaveThread = null;
-				}
+				metricsTask.cancel();
+				periodicalSaveTask.cancel();
 				
 				//stop services
 				if (renderManager != null) renderManager.stop();
