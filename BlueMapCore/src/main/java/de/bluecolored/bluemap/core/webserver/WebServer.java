@@ -31,10 +31,7 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class WebServer extends Thread {
 
@@ -68,8 +65,7 @@ public class WebServer extends Thread {
 	public synchronized void start() {
 		close();
 
-		connectionThreads = new ThreadPoolExecutor(maxConnections, maxConnections, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
-		connectionThreads.allowCoreThreadTimeOut(true);
+		connectionThreads = new ThreadPoolExecutor(Math.min(maxConnections, 8), maxConnections, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
 		
 		try {
 			server = new ServerSocket(port, maxConnections, bindAddress);
