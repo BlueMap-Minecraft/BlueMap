@@ -1,0 +1,40 @@
+dependencies {
+    shadow "org.spongepowered:spongeapi:8.0.0-SNAPSHOT"
+
+    compile group: 'org.bstats', name: 'bstats-sponge-lite', version: '1.5'
+    
+    compile (project(':BlueMapCommon')) {
+    	//exclude dependencies provided by sponge
+    	exclude group: 'com.google.guava', module: 'guava'
+		exclude group: 'com.google.code.gson', module: 'gson'
+		exclude group: 'org.apache.commons', module: 'commons-lang3'
+		exclude group: 'javax.inject'
+		exclude group: 'com.google.inject'
+	}
+}
+
+build.dependsOn shadowJar {
+	destinationDirectory = file '../../build/release'
+	archiveFileName = "BlueMap-${version}-sponge-8.0.0.jar"
+	
+	relocate 'net.querz.nbt', 'de.bluecolored.shadow.querz.nbt'
+	relocate 'org.apache.commons.io', 'de.bluecolored.shadow.apache.commons.io'
+	relocate 'com.mojang.brigadier', 'de.bluecolored.shadow.mojang.brigadier'
+	relocate 'com.github.benmanes.caffeine', 'de.bluecolored.shadow.benmanes.caffeine'
+	relocate 'com.google.errorprone', 'de.bluecolored.shadow.google.errorprone'
+	relocate 'ninja.leaping.configurate', 'de.bluecolored.shadow.ninja.leaping.configurate'
+	relocate 'org.aopalliance', 'de.bluecolored.shadow.aopalliance'
+	relocate 'com.typesafe.config', 'de.bluecolored.shadow.typesafe.config'
+	relocate 'org.checkerframework', 'de.bluecolored.shadow.checkerframework'
+	relocate 'org.codehaus', 'de.bluecolored.shadow.codehaus'
+}
+
+processResources {
+	from(sourceSets.main.resources.srcDirs) {
+		include 'META-INF/plugins.json'
+		
+		expand (
+			version: project.version
+		)
+	}
+}
