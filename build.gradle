@@ -19,15 +19,12 @@ allprojects {
 			name 'CodeMC'
 			url 'https://repo.codemc.org/repository/maven-public/'
 		}
-        maven { 
-        	url = 'https://files.minecraftforge.net/maven/'
-        }
 		maven {
 		    url "https://libraries.minecraft.net"
 		}
         maven {
-            name = 'Fabric'
-            url = 'https://maven.fabricmc.net/'
+            name 'Fabric'
+            url 'https://maven.fabricmc.net/'
         }
 	}
 
