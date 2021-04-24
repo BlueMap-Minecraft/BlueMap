@@ -1,5 +1,5 @@
 plugins {
-    id "com.github.node-gradle.node" version "3.0.0"
+    id "com.github.node-gradle.node" version "3.0.1"
 }
 
 dependencies {
@@ -7,10 +7,16 @@ dependencies {
     
     compile project(':BlueMapCore')
     compile project(':BlueMapAPI')
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.4.2'
+}
+
+test {
+    useJUnitPlatform()
 }
 
 node {
-    version = '14.15.5'
+    version = '14.16.1'
     download = true
     nodeProjectDir = file("BlueMapVue/")
 }
