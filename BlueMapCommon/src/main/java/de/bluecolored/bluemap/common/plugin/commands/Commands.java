@@ -24,18 +24,6 @@
  */
 package de.bluecolored.bluemap.common.plugin.commands;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.function.Function;
-import java.util.function.Predicate;
-
-import de.bluecolored.bluemap.common.plugin.text.TextFormat;
-import de.bluecolored.bluemap.core.BlueMap;
-import de.bluecolored.bluemap.core.MinecraftVersion;
-import org.apache.commons.io.FileUtils;
-
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
@@ -49,25 +37,34 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.marker.MarkerAPI;
 import de.bluecolored.bluemap.api.marker.MarkerSet;
 import de.bluecolored.bluemap.api.marker.POIMarker;
-import de.bluecolored.bluemap.common.MapType;
-import de.bluecolored.bluemap.common.RenderTask;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.plugin.text.TextColor;
+import de.bluecolored.bluemap.common.plugin.text.TextFormat;
+import de.bluecolored.bluemap.core.BlueMap;
+import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.mca.Chunk;
+import de.bluecolored.bluemap.core.map.BmMap;
+import de.bluecolored.bluemap.core.mca.MCAChunk;
 import de.bluecolored.bluemap.core.mca.ChunkAnvil112;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.World;
+import org.apache.commons.io.FileUtils;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Function;
+import java.util.function.Predicate;
 
 public class Commands<S> {
 	
@@ -172,23 +169,6 @@ public class Commands<S> {
 										.then(argument("radius", IntegerArgumentType.integer())
 												.executes(this::renderCommand))))) // /bluemap render <world|map> <x> <z> <radius>
 				.build();
-		
-		LiteralCommandNode<S> prioRenderCommand = 
-				literal("prioritize")
-				.requires(requirements("bluemap.render"))
-				.then(argument("uuid", StringArgumentType.string())
-						.executes(this::prioritizeRenderTaskCommand))
-				.build();
-		
-		LiteralCommandNode<S> cancelRenderCommand = 
-				literal("cancel")
-				.requires(requirements("bluemap.render"))
-				.executes(this::cancelLastRenderTaskCommand)
-
-				.then(argument("uuid", StringArgumentType.string())
-						.executes(this::cancelRenderTaskCommand))
-				
-				.build();
 
 		LiteralCommandNode<S> purgeCommand =
 				literal("purge")
@@ -247,8 +227,6 @@ public class Commands<S> {
 		baseCommand.addChild(resumeCommand);
 		baseCommand.addChild(renderCommand);
 		baseCommand.addChild(purgeCommand);
-		renderCommand.addChild(prioRenderCommand);
-		renderCommand.addChild(cancelRenderCommand);
 		baseCommand.addChild(worldsCommand);
 		baseCommand.addChild(mapsCommand);
 		baseCommand.addChild(markerCommand);
@@ -296,8 +274,8 @@ public class Commands<S> {
 		return Optional.empty();
 	}
 	
-	private Optional<MapType> parseMap(String mapId) {
-		for (MapType map : plugin.getMapTypes()) {
+	private Optional<BmMap> parseMap(String mapId) {
+		for (BmMap map : plugin.getMapTypes()) {
 			if (map.getId().equalsIgnoreCase(mapId)) {
 				return Optional.of(map);
 			}
@@ -334,7 +312,7 @@ public class Commands<S> {
 
 		int renderThreadCount = 0;
 		if (plugin.isLoaded()) {
-			renderThreadCount = plugin.getRenderManager().getRenderThreadCount();
+			renderThreadCount = plugin.getRenderManager().getWorkerThreadCount();
 		}
 
 		source.sendMessage(Text.of(TextFormat.BOLD, TextColor.BLUE, "Version: ", TextColor.WHITE, BlueMap.VERSION));
@@ -504,7 +482,7 @@ public class Commands<S> {
 			String blockBelowIdMeta = "";
 			
 			if (world instanceof MCAWorld) {
-				Chunk chunk = ((MCAWorld) world).getChunk(MCAWorld.blockToChunk(blockPos));
+				MCAChunk chunk = ((MCAWorld) world).getChunk(MCAWorld.blockToChunk(blockPos));
 				if (chunk instanceof ChunkAnvil112) {
 					blockIdMeta = " (" + ((ChunkAnvil112) chunk).getBlockIdMeta(blockPos) + ")";
 					blockBelowIdMeta = " (" + ((ChunkAnvil112) chunk).getBlockIdMeta(blockPos.add(0, -1, 0)) + ")";
@@ -512,7 +490,6 @@ public class Commands<S> {
 			}
 			
 			source.sendMessages(Lists.newArrayList(
-					Text.of(TextColor.GOLD, "Is generated: ", TextColor.WHITE, world.isChunkGenerated(world.blockPosToChunkPos(blockPos))),
 					Text.of(TextColor.GOLD, "Block at you: ", TextColor.WHITE, block, TextColor.GRAY, blockIdMeta),
 					Text.of(TextColor.GOLD, "Block below you: ", TextColor.WHITE, blockBelow, TextColor.GRAY, blockBelowIdMeta)
 				));
@@ -538,7 +515,7 @@ public class Commands<S> {
 		CommandSource source = commandSourceInterface.apply(context.getSource());
 		
 		if (!plugin.getRenderManager().isRunning()) {
-			plugin.getRenderManager().start();
+			plugin.getRenderManager().start(plugin.getCoreConfig().getRenderThreadCount());
 			source.sendMessage(Text.of(TextColor.GREEN, "BlueMap renders resumed!"));
 			return 1;
 		} else {
@@ -554,7 +531,7 @@ public class Commands<S> {
 		Optional<String> worldOrMap = getOptionalArgument(context, "world|map", String.class);
 		
 		final World world;
-		final MapType map;
+		final BmMap map;
 		if (worldOrMap.isPresent()) {
 			world = parseWorld(worldOrMap.get()).orElse(null);
 			
@@ -605,10 +582,10 @@ public class Commands<S> {
 			try {
 				if (world != null) {
 					plugin.getServerInterface().persistWorldChanges(world.getUUID());
-					helper.createWorldRenderTask(source, world, center, radius);
+					//TODO: helper.createWorldRenderTask(source, world, center, radius);
 				} else {
 					plugin.getServerInterface().persistWorldChanges(map.getWorld().getUUID());
-					helper.createMapRenderTask(source, map, center, radius);
+					//TODO: helper.createMapRenderTask(source, map, center, radius);
 				}
 			} catch (IOException ex) {
 				source.sendMessage(Text.of(TextColor.RED, "There was an unexpected exception trying to save the world. Please check the console for more details..."));
@@ -644,68 +621,6 @@ public class Commands<S> {
 		return 1;
 	}
 	
-	public int prioritizeRenderTaskCommand(CommandContext<S> context) {
-		CommandSource source = commandSourceInterface.apply(context.getSource());
-		
-		String uuidString = context.getArgument("uuid", String.class);
-		Optional<UUID> taskUUID = parseUUID(uuidString);
-		if (!taskUUID.isPresent()) {
-			source.sendMessage(Text.of(TextColor.RED, "Not a valid UUID: " + uuidString));
-			return 0;
-		}
-		
-		for (RenderTask task : plugin.getRenderManager().getRenderTasks()) {
-			if (task.getUuid().equals(taskUUID.get())) {
-				plugin.getRenderManager().prioritizeRenderTask(task);
-
-				source.sendMessages(helper.createStatusMessage());
-				return 1;
-			}
-		}
-
-		source.sendMessage(Text.of(TextColor.RED, "There is no render-task with this UUID: " + uuidString));
-		return 0;
-	}
-	
-	public int cancelLastRenderTaskCommand(CommandContext<S> context) {
-		CommandSource source = commandSourceInterface.apply(context.getSource());
-		
-		RenderTask[] tasks = plugin.getRenderManager().getRenderTasks();
-		if (tasks.length == 0) {
-			source.sendMessage(Text.of(TextColor.RED, "There is currently no render task scheduled!"));
-			return 0;
-		}
-
-		RenderTask task = tasks[tasks.length - 1];
-		
-		plugin.getRenderManager().removeRenderTask(task);
-		source.sendMessage(Text.of(TextColor.GREEN, "The render-task '" + task.getName() + "' has been canceled!"));
-		return 1;
-	}
-	
-	public int cancelRenderTaskCommand(CommandContext<S> context) {
-		CommandSource source = commandSourceInterface.apply(context.getSource());
-		
-		String uuidString = context.getArgument("uuid", String.class);
-		Optional<UUID> taskUUID = parseUUID(uuidString);
-		if (!taskUUID.isPresent()) {
-			source.sendMessage(Text.of(TextColor.RED, "Not a valid UUID: " + uuidString));
-			return 0;
-		}
-		
-		for (RenderTask task : plugin.getRenderManager().getRenderTasks()) {
-			if (task.getUuid().equals(taskUUID.get())) {
-				plugin.getRenderManager().removeRenderTask(task);
-
-				source.sendMessages(helper.createStatusMessage());
-				return 1;
-			}
-		}
-
-		source.sendMessage(Text.of(TextColor.RED, "There is no render-task with this UUID: " + uuidString));
-		return 0;
-	}
-	
 	public int worldsCommand(CommandContext<S> context) {
 		CommandSource source = commandSourceInterface.apply(context.getSource());
 		
@@ -721,7 +636,7 @@ public class Commands<S> {
 		CommandSource source = commandSourceInterface.apply(context.getSource());
 		
 		source.sendMessage(Text.of(TextColor.BLUE, "Maps loaded by BlueMap:"));
-		for (MapType map : plugin.getMapTypes()) {
+		for (BmMap map : plugin.getMapTypes()) {
 			source.sendMessage(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, map.getId(), TextColor.GRAY, " (" + map.getName() + ")").setHoverText(Text.of(TextColor.WHITE, "World: ", TextColor.GRAY, map.getWorld().getName())));
 		}
 		
@@ -738,7 +653,7 @@ public class Commands<S> {
 		
 		// parse world/map argument
 		String mapString = context.getArgument("map", String.class);
-		MapType map = parseMap(mapString).orElse(null);
+		BmMap map = parseMap(mapString).orElse(null);
 		
 		if (map == null) {
 			source.sendMessage(Text.of(TextColor.RED, "There is no ", helper.mapHelperHover(), " with this name: ", TextColor.WHITE, mapString));

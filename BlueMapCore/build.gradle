@@ -8,7 +8,11 @@ dependencies {
    compile 'org.spongepowered:configurate-gson:3.7.1'
    compile 'com.github.Querz:NBT:4.0'
 
-   testCompile 'junit:junit:4.12'
+   testImplementation 'org.junit.jupiter:junit-jupiter:5.4.2'
+}
+
+test {
+   useJUnitPlatform()
 }
 
 processResources {

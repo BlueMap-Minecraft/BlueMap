@@ -41,6 +41,7 @@ public class WebServer extends Thread {
 	private final boolean verbose;
 
 	private final HttpRequestHandler handler;
+	private final Semaphore processingSemaphore;
 	
 	private ThreadPoolExecutor connectionThreads;
 	
@@ -57,6 +58,7 @@ public class WebServer extends Thread {
 		this.verbose = verbose;
 		
 		this.handler = handler;
+		this.processingSemaphore = new Semaphore(18);
 		
 		connectionThreads = null;
 	}
@@ -90,7 +92,7 @@ public class WebServer extends Thread {
 				Socket connection = server.accept();
 				
 				try {
-					connectionThreads.execute(new HttpConnection(server, connection, handler, 10, TimeUnit.SECONDS, verbose));
+					connectionThreads.execute(new HttpConnection(server, connection, handler, processingSemaphore, 10, TimeUnit.SECONDS, verbose));
 				} catch (RejectedExecutionException e){
 					connection.close();
 					Logger.global.logWarning("Dropped an incoming HttpConnection! (Too many connections?)");

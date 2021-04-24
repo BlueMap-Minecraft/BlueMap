@@ -24,29 +24,24 @@
  */
 package de.bluecolored.bluemap.cli;
 
-import com.flowpowered.math.GenericMath;
-import com.flowpowered.math.vector.Vector2i;
-import de.bluecolored.bluemap.common.*;
+import de.bluecolored.bluemap.common.BlueMapService;
+import de.bluecolored.bluemap.common.MissingResourcesException;
+import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.config.WebServerConfig;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.logger.LoggerLogger;
 import de.bluecolored.bluemap.core.metrics.Metrics;
-import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.util.FileUtils;
-import de.bluecolored.bluemap.core.web.FileRequestHandler;
-import de.bluecolored.bluemap.core.web.WebSettings;
+import de.bluecolored.bluemap.common.web.FileRequestHandler;
+import de.bluecolored.bluemap.common.web.WebSettings;
 import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
 import de.bluecolored.bluemap.core.webserver.WebServer;
-import de.bluecolored.bluemap.core.world.World;
 import org.apache.commons.cli.*;
-import org.apache.commons.lang3.time.DurationFormatUtils;
 
-import java.io.*;
-import java.util.Collection;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
+import java.io.File;
+import java.io.IOException;
 
 public class BlueMapCLI {
 	
@@ -58,162 +53,9 @@ public class BlueMapCLI {
 		blueMap.createOrUpdateWebApp(forceGenerateWebapp);
 		WebSettings webSettings = blueMap.updateWebAppSettings();
 		
-		RenderManager renderManager = new RenderManager(blueMap.getCoreConfig().getRenderThreadCount());
-		File rmstate = new File(blueMap.getCoreConfig().getDataFolder(), "rmstate");
-		
-		if (!forceRender && rmstate.exists()) {
-			try (
-				InputStream in = new GZIPInputStream(new FileInputStream(rmstate));
-				DataInputStream din = new DataInputStream(in);
-			){
-				renderManager.readState(din, blueMap.getMaps().values());
-				Logger.global.logInfo("Found unfinished render, continuing ... (If you want to start a new render, delete the this file: " + rmstate.getCanonicalPath() + " or force a full render using -f)");
-			} catch (IOException ex) {
-				Logger.global.logError("Failed to read saved render-state! Remove the file " + rmstate.getCanonicalPath() + " to start a new render.", ex);
-				return;
-			}
-		} else {
-			for (MapType map : blueMap.getMaps().values()) {
-				Logger.global.logInfo("Creating render-task for map '" + map.getId() + "' ...");
-				Logger.global.logInfo("Collecting tiles ...");
-		
-				Collection<Vector2i> chunks;
-				if (!forceRender) {
-					long lastRender = webSettings.getLong("maps", map.getId(), "last-render");
-					chunks = map.getWorld().getChunkList(lastRender);
-				} else {
-					chunks = map.getWorld().getChunkList();
-				}
-				
-				HiresModelManager hiresModelManager = map.getTileRenderer().getHiresModelManager();
-				Collection<Vector2i> tiles = hiresModelManager.getTilesForChunks(chunks);
-				Logger.global.logInfo("Found " + tiles.size() + " tiles to render! (" + chunks.size() + " chunks)");
-				if (!forceRender && chunks.size() == 0) {
-					Logger.global.logInfo("(This is normal if nothing has changed in the world since the last render. Use -f on the command-line to force a render of all chunks)");
-				}
-				
-				if (tiles.isEmpty()) {
-					continue;
-				}
+		RenderManager renderManager = new RenderManager();
 
-				Vector2i renderCenter = map.getWorld().getSpawnPoint().toVector2(true);
-				
-				RenderTask task = new RenderTask(map.getId(), map);
-				task.addTiles(tiles);
-				task.optimizeQueue(renderCenter);
-				
-				renderManager.addRenderTask(task);
-			}
-		}
-
-		Logger.global.logInfo("Starting render ...");
-		renderManager.start();
-		
-		Thread shutdownHook = new Thread(() -> {
-			Logger.global.logInfo("Stopping render ...");
-			renderManager.stop();
-			
-			Logger.global.logInfo("Saving tiles ...");
-			RenderTask currentTask = renderManager.getCurrentRenderTask();
-			if (currentTask != null){
-				currentTask.getMapType().getTileRenderer().save();
-			}
-
-			try {
-				Logger.global.logInfo("Saving render-state ...");
-				FileUtils.createFile(rmstate);
-
-				try (
-					OutputStream os = new GZIPOutputStream(new FileOutputStream(rmstate));
-					DataOutputStream dos = new DataOutputStream(os);
-				) {
-					renderManager.writeState(dos);
-
-					Logger.global.logInfo("Render saved and stopped! Restart the render (without using -f) to resume.");
-				}
-			} catch (IOException ex) {
-				Logger.global.logError("Failed to save render-state!", ex);
-			}
-		});
-		Runtime.getRuntime().addShutdownHook(shutdownHook);
-		
-		long startTime = System.currentTimeMillis();
-		
-		long lastLogUpdate = startTime;
-		long lastSave = startTime;
-		
-		while(renderManager.getRenderTaskCount() != 0) {
-			try {
-				Thread.sleep(200);
-			} catch (InterruptedException e) { Thread.currentThread().interrupt(); return; }
-			
-
-			long now = System.currentTimeMillis();
-			
-			if (lastLogUpdate < now - 10000) { // print update all 10 seconds
-				RenderTask currentTask = renderManager.getCurrentRenderTask();
-				if (currentTask == null) continue;
-				
-				lastLogUpdate = now;
-				long time = currentTask.getActiveTime();
-				
-				String durationString = DurationFormatUtils.formatDurationWords(time, true, true);
-				int tileCount = currentTask.getRemainingTileCount() + currentTask.getRenderedTileCount();
-				double pct = (double)currentTask.getRenderedTileCount() / (double) tileCount;
-				
-				long ert = (long)((time / pct) * (1d - pct));
-				String ertDurationString = DurationFormatUtils.formatDurationWords(ert, true, true);
-				
-				double tps = currentTask.getRenderedTileCount() / (time / 1000.0);
-				
-				Logger.global.logInfo("Rendering map '" + currentTask.getName() + "':");
-				Logger.global.logInfo("Rendered " + currentTask.getRenderedTileCount() + " of " + tileCount + " tiles in " + durationString + " | " + GenericMath.round(tps, 3) + " tiles/s");
-				Logger.global.logInfo(GenericMath.round(pct * 100, 3) + "% | Estimated remaining time: " + ertDurationString);
-			}
-			
-			if (lastSave < now - 1 * 60000) { // save every minute
-				RenderTask currentTask = renderManager.getCurrentRenderTask();
-				if (currentTask == null) continue;
-				
-				lastSave = now;
-				currentTask.getMapType().getTileRenderer().save();
-
-				try (
-					OutputStream os = new GZIPOutputStream(new FileOutputStream(rmstate));
-					DataOutputStream dos = new DataOutputStream(os);
-				){
-					renderManager.writeState(dos);
-				} catch (IOException ex) {
-					Logger.global.logError("Failed to save render-state!", ex);
-				}
-				
-				//clean up caches
-				for (World world : blueMap.getWorlds().values()) {
-					world.cleanUpChunkCache();
-				}
-			}
-		}
-
-		//render finished and saved, so this is no longer needed
-		Runtime.getRuntime().removeShutdownHook(shutdownHook);
-		
-		//stop render-threads
-		renderManager.stop();
-
-		//render finished, so remove render state file
-		FileUtils.delete(rmstate);
-
-		for (MapType map : blueMap.getMaps().values()) {
-			webSettings.set(startTime, "maps", map.getId(), "last-render");
-		}
-		
-		try {
-			webSettings.save();
-		} catch (IOException e) {
-			Logger.global.logError("Failed to update web-settings!", e);
-		}
-
-		Logger.global.logInfo("Render finished!");
+		//TODO
 	}
 	
 	public void startWebserver(BlueMapService blueMap, boolean verbose) throws IOException {

@@ -34,10 +34,8 @@ import com.flowpowered.math.vector.Vector3i;
 
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.fabric.events.ChunkFinalizeCallback;
 import de.bluecolored.bluemap.fabric.events.PlayerJoinCallback;
 import de.bluecolored.bluemap.fabric.events.PlayerLeaveCallback;
-import de.bluecolored.bluemap.fabric.events.WorldSaveCallback;
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
 import net.fabricmc.fabric.api.event.player.UseBlockCallback;
 import net.minecraft.entity.player.PlayerEntity;
@@ -59,9 +57,7 @@ public class FabricEventForwarder {
 	public FabricEventForwarder(FabricMod mod) {
 		this.mod = mod;
 		this.eventListeners = new ArrayList<>(1);
-		
-		WorldSaveCallback.EVENT.register(this::onWorldSave);
-		ChunkFinalizeCallback.EVENT.register(this::onChunkFinalize);
+
 		AttackBlockCallback.EVENT.register(this::onBlockAttack);
 		UseBlockCallback.EVENT.register(this::onBlockUse);
 		
@@ -100,24 +96,6 @@ public class FabricEventForwarder {
 		try {
 			UUID uuid = mod.getUUIDForWorld(world);
 			for (ServerEventListener listener : eventListeners) listener.onBlockChange(uuid, position);
-		} catch (IOException e) {
-			Logger.global.noFloodError("Failed to get the UUID for a world!", e);
-		}
-	}
-	
-	public synchronized void onWorldSave(ServerWorld world) {
-		try {
-			UUID uuid = mod.getUUIDForWorld(world);
-			for (ServerEventListener listener : eventListeners) listener.onWorldSaveToDisk(uuid);
-		} catch (IOException e) {
-			Logger.global.noFloodError("Failed to get the UUID for a world!", e);
-		}
-	}
-	
-	public synchronized void onChunkFinalize(ServerWorld world, Vector2i chunkPos) {
-		try {
-			UUID uuid = mod.getUUIDForWorld(world);
-			for (ServerEventListener listener : eventListeners) listener.onChunkFinishedGeneration(uuid, chunkPos);
 		} catch (IOException e) {
 			Logger.global.noFloodError("Failed to get the UUID for a world!", e);
 		}

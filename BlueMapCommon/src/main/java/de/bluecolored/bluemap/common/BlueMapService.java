@@ -24,20 +24,17 @@
  */
 package de.bluecolored.bluemap.common;
 
-import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.config.*;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
-import de.bluecolored.bluemap.core.render.RenderSettings;
-import de.bluecolored.bluemap.core.render.TileRenderer;
-import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
-import de.bluecolored.bluemap.core.render.lowres.LowresModelManager;
+import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.web.WebSettings;
+import de.bluecolored.bluemap.common.web.WebSettings;
 import de.bluecolored.bluemap.core.world.SlicedWorld;
 import de.bluecolored.bluemap.core.world.World;
 import org.apache.commons.io.FileUtils;
@@ -51,12 +48,12 @@ import java.util.*;
  * This is the attempt to generalize as many actions as possible to have CLI and Plugins run on the same general setup-code.
  */
 public class BlueMapService {
-	private MinecraftVersion minecraftVersion;
-	private File configFolder;
-	private ThrowingFunction<File, UUID, IOException> worldUUIDProvider;
-	private ThrowingFunction<UUID, String, IOException> worldNameProvider;
+	private final MinecraftVersion minecraftVersion;
+	private final File configFolder;
+	private final ThrowingFunction<File, UUID, IOException> worldUUIDProvider;
+	private final ThrowingFunction<UUID, String, IOException> worldNameProvider;
 
-	private ConfigManager configManager;
+	private final ConfigManager configManager;
 	
 	private CoreConfig coreConfig;
 	private RenderConfig renderConfig;
@@ -65,7 +62,7 @@ public class BlueMapService {
 	private ResourcePack resourcePack;
 
 	private Map<UUID, World> worlds;
-	private Map<String, MapType> maps;
+	private Map<String, BmMap> maps;
 	
 	public BlueMapService(MinecraftVersion minecraftVersion, File configFolder) {
 		this.minecraftVersion = minecraftVersion;
@@ -106,16 +103,15 @@ public class BlueMapService {
 		WebSettings webSettings = new WebSettings(new File(getRenderConfig().getWebRoot(), "data" + File.separator + "settings.json"));
 		webSettings.set(getRenderConfig().isUseCookies(), "useCookies");
 		webSettings.setAllMapsEnabled(false);
-		for (MapType map : getMaps().values()) {
+		for (BmMap map : getMaps().values()) {
 			webSettings.setMapEnabled(true, map.getId());
-			webSettings.setFrom(map.getTileRenderer(), map.getId());
-			webSettings.setFrom(map.getWorld(), map.getId());
+			webSettings.setFrom(map);
 		}
 		int ordinal = 0;
 		for (MapConfig map : getRenderConfig().getMapConfigs()) {
 			if (!getMaps().containsKey(map.getId())) continue; //don't add not loaded maps
 			webSettings.setOrdinal(ordinal++, map.getId());
-			webSettings.setFrom(map, map.getId());
+			webSettings.setFrom(map);
 		}
 		webSettings.save();
 		
@@ -127,7 +123,7 @@ public class BlueMapService {
 		return worlds;
 	}
 	
-	public synchronized Map<String, MapType> getMaps() throws IOException, InterruptedException {
+	public synchronized Map<String, BmMap> getMaps() throws IOException, InterruptedException {
 		if (maps == null) loadWorldsAndMaps();
 		return maps;
 	}
@@ -135,6 +131,9 @@ public class BlueMapService {
 	private synchronized void loadWorldsAndMaps() throws IOException, InterruptedException {
 		maps = new HashMap<>();
 		worlds = new HashMap<>();
+
+		ConfigManager configManager = getConfigManager();
+		configManager.loadResourceConfigs(configFolder, getResourcePack());
 		
 		for (MapConfig mapConfig : getRenderConfig().getMapConfigs()) {
 			String id = mapConfig.getId();
@@ -154,9 +153,6 @@ public class BlueMapService {
 				continue;
 			}
 			
-			ConfigManager configManager = getConfigManager();
-			configManager.loadResourceConfigs(configFolder, getResourcePack());
-			
 			World world = worlds.get(worldUUID);
 			if (world == null) {
 				try {
@@ -165,7 +161,7 @@ public class BlueMapService {
 				} catch (MissingResourcesException e) {
 					throw e; // rethrow this to stop loading and display resource-missing message
 				} catch (IOException e) {
-					Logger.global.logError("Failed to load map '" + id + "': Failed to read level.dat", e);
+					Logger.global.logError("Failed to load map '" + id + "'!", e);
 					continue;
 				}
 			}
@@ -179,28 +175,20 @@ public class BlueMapService {
 							world, 
 							mapConfig.getMin().min(mapConfig.getMin().sub(2, 2, 2)), // protect from int-overflow
 							mapConfig.getMax().max(mapConfig.getMax().add(2, 2, 2))  // protect from int-overflow
-							);
+					);
 				}
 			}
-			
-			HiresModelManager hiresModelManager = new HiresModelManager(
-					getRenderConfig().getWebRoot().toPath().resolve("data").resolve(id).resolve("hires"),
+
+			BmMap map = new BmMap(
+					id,
+					name,
+					world,
+					getRenderConfig().getWebRoot().toPath().resolve("data").resolve(id),
 					getResourcePack(),
-					mapConfig,
-					new Vector2i(mapConfig.getHiresTileSize(), mapConfig.getHiresTileSize())
-					);
-			
-			LowresModelManager lowresModelManager = new LowresModelManager(
-					getRenderConfig().getWebRoot().toPath().resolve("data").resolve(id).resolve("lowres"), 
-					new Vector2i(mapConfig.getLowresPointsPerLowresTile(), mapConfig.getLowresPointsPerLowresTile()),
-					new Vector2i(mapConfig.getLowresPointsPerHiresTile(), mapConfig.getLowresPointsPerHiresTile()),
-					mapConfig.useGzipCompression()
-					);
-			
-			TileRenderer tileRenderer = new TileRenderer(hiresModelManager, lowresModelManager);
-			
-			MapType mapType = new MapType(id, name, world, tileRenderer);
-			maps.put(id, mapType);
+					mapConfig
+			);
+
+			maps.put(id, map);
 		}
 		
 		worlds = Collections.unmodifiableMap(worlds);

@@ -24,10 +24,7 @@
  */
 package de.bluecolored.bluemap.core.mca;
 
-import java.util.Arrays;
-
 import com.flowpowered.math.vector.Vector3i;
-
 import de.bluecolored.bluemap.core.mca.mapping.BiomeMapper;
 import de.bluecolored.bluemap.core.mca.mapping.BlockIdMapper;
 import de.bluecolored.bluemap.core.world.Biome;
@@ -38,9 +35,13 @@ import net.querz.nbt.ListTag;
 import net.querz.nbt.NumberTag;
 import net.querz.nbt.mca.MCAUtil;
 
-public class ChunkAnvil112 extends Chunk {
-	private BlockIdMapper blockIdMapper;
-	private BiomeMapper biomeIdMapper;
+import java.util.Arrays;
+import java.util.function.IntFunction;
+
+public class ChunkAnvil112 extends MCAChunk {
+	private final BiomeMapper biomeIdMapper;
+	private final BlockIdMapper blockIdMapper;
+	private final IntFunction<String> forgeBlockIdMapper;
 	
 	private boolean isGenerated;
 	private boolean hasLight;
@@ -48,11 +49,12 @@ public class ChunkAnvil112 extends Chunk {
 	private byte[] biomes;
 	
 	@SuppressWarnings("unchecked")
-	public ChunkAnvil112(MCAWorld world, CompoundTag chunkTag, boolean ignoreMissingLightData) {
-		super(world, chunkTag);
+	public ChunkAnvil112(CompoundTag chunkTag, boolean ignoreMissingLightData, BiomeMapper biomeIdMapper, BlockIdMapper blockIdMapper, IntFunction<String> forgeBlockIdMapper) {
+		super(chunkTag);
 		
-		blockIdMapper = getWorld().getBlockIdMapper();
-		biomeIdMapper = getWorld().getBiomeIdMapper();
+		this.blockIdMapper = blockIdMapper;
+		this.biomeIdMapper = biomeIdMapper;
+		this.forgeBlockIdMapper = forgeBlockIdMapper;
 		
 		CompoundTag levelData = chunkTag.getCompoundTag("Level");
 		
@@ -118,9 +120,9 @@ public class ChunkAnvil112 extends Chunk {
 	}
 
 	@Override
-	public Biome getBiome(Vector3i pos) {
-		int x = pos.getX() & 0xF; // Math.floorMod(pos.getX(), 16)
-		int z = pos.getZ() & 0xF;
+	public Biome getBiome(int x, int y, int z) {
+		x = x & 0xF; // Math.floorMod(pos.getX(), 16)
+		z = z & 0xF;
 		int biomeByteIndex = z * 16 + x;
 		
 		return biomeIdMapper.get(biomes[biomeByteIndex] & 0xFF);
@@ -168,7 +170,7 @@ public class ChunkAnvil112 extends Chunk {
 			
 			int blockData = getByteHalf(this.data[blockHalfByteIndex], largeHalf);
 			
-			String forgeIdMapping = getWorld().getForgeBlockIdMapping(blockId);
+			String forgeIdMapping = forgeBlockIdMapper.apply(blockId);
 			if (forgeIdMapping != null) {
 				return blockIdMapper.get(forgeIdMapping, blockId, blockData);
 			} else {
@@ -191,7 +193,7 @@ public class ChunkAnvil112 extends Chunk {
 			}
 			
 			int blockData = getByteHalf(this.data[blockHalfByteIndex], largeHalf);
-			String forgeIdMapping = getWorld().getForgeBlockIdMapping(blockId);
+			String forgeIdMapping = forgeBlockIdMapper.apply(blockId);
 			
 			return blockId + ":" + blockData + " " + forgeIdMapping;
 		}

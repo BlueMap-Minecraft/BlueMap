@@ -24,24 +24,22 @@
  */
 package de.bluecolored.bluemap.core.world;
 
+import com.flowpowered.math.vector.Vector2i;
+import com.flowpowered.math.vector.Vector3i;
+
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.UUID;
 import java.util.function.Predicate;
-
-import com.flowpowered.math.vector.Vector2i;
-import com.flowpowered.math.vector.Vector3i;
-
-import de.bluecolored.bluemap.core.util.AABB;
 
 /**
  * A sliced view of a world. Everything outside the defined bounds is seen as "not generated" and "air".
  */
 public class SlicedWorld implements World {
 
-	private World world;
-	private Vector3i min;
-	private Vector3i max;
+	private final World world;
+	private final Vector3i min;
+	private final Vector3i max;
 	
 	public SlicedWorld(World world, Vector3i min, Vector3i max) {
 		this.world = world;
@@ -83,7 +81,17 @@ public class SlicedWorld implements World {
 	public int getMinY() {
 		return world.getMinY();
 	}
-	
+
+	@Override
+	public Grid getChunkGrid() {
+		return world.getChunkGrid();
+	}
+
+	@Override
+	public Grid getRegionGrid() {
+		return world.getRegionGrid();
+	}
+
 	@Override
 	public Biome getBiome(Vector3i pos) {
 		return world.getBiome(pos);
@@ -106,45 +114,6 @@ public class SlicedWorld implements World {
 		block.setWorld(this);
 		return block;
 	}
-	
-	@Override
-	public Collection<Vector2i> getChunkList(long modifiedSince, Predicate<Vector2i> filter) {
-		return world.getChunkList(modifiedSince, filter.and(chunk -> isInside(chunk)));
-	}
-
-	@Override
-	public boolean isChunkGenerated(Vector2i chunkPos) {
-		if (!isInside(chunkPos)) return false;
-		
-		return world.isChunkGenerated(chunkPos);
-	}
-	
-	@Override
-	public boolean isAreaGenerated(AABB area) {
-		return isAreaGenerated(area.getMin(), area.getMax());
-	}
-	
-	@Override
-	public boolean isAreaGenerated(Vector3i blockMin, Vector3i blockMax) {
-		return isAreaGenerated(blockPosToChunkPos(blockMin), blockPosToChunkPos(blockMax));
-	}
-	
-	@Override
-	public boolean isAreaGenerated(Vector2i chunkMin, Vector2i chunkMax) {
-		if (!isInside(chunkMin) && 
-			!isInside(chunkMax) && 
-			!isInside(new Vector2i(chunkMin.getX(), chunkMax.getY())) && 
-			!isInside(new Vector2i(chunkMax.getX(), chunkMin.getY()))
-			) return false;
-		
-		for (int x = chunkMin.getX(); x <= chunkMax.getX(); x++) {
-			for (int z = chunkMin.getY(); z <= chunkMax.getY(); z++) {
-				if (!world.isChunkGenerated(new Vector2i(x, z))) return false;
-			}
-		}
-		
-		return true;
-	}
 
 	@Override
 	public void invalidateChunkCache() {
@@ -152,18 +121,13 @@ public class SlicedWorld implements World {
 	}
 
 	@Override
-	public void invalidateChunkCache(Vector2i chunk) {
-		world.invalidateChunkCache(chunk);
+	public void invalidateChunkCache(int x, int z) {
+		world.invalidateChunkCache(x, z);
 	}
 	
 	@Override
 	public void cleanUpChunkCache() {
 		world.cleanUpChunkCache();
-	}
-	
-	@Override
-	public Vector2i blockPosToChunkPos(Vector3i block) {
-		return world.blockPosToChunkPos(block);
 	}
 	
 	private boolean isInside(Vector3i blockPos) {
@@ -178,19 +142,6 @@ public class SlicedWorld implements World {
 				z <= max.getZ() &&
 				y >= min.getY() &&
 				y <= max.getY();
-	}
-	
-	private boolean isInside(Vector2i chunkPos) {
-		return isInside(chunkPos.getX(), chunkPos.getY());
-	}
-	
-	private boolean isInside(int chunkX, int chunkZ) {
-		return 
-			chunkX * 16 <= max.getX() &&
-			chunkX * 16 + 15 >= min.getX() &&
-			chunkZ * 16 <= max.getZ() &&
-			chunkZ * 16 + 15 >= min.getZ(); 
-				
 	}
 	
 	private Block createAirBlock(Vector3i pos) {

@@ -24,8 +24,8 @@
  */
 package de.bluecolored.bluemap.sponge;
 
-import java.util.Optional;
-
+import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
+import de.bluecolored.bluemap.common.plugin.text.Text;
 import org.spongepowered.api.block.BlockSnapshot;
 import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.event.Listener;
@@ -34,15 +34,9 @@ import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.filter.type.Exclude;
 import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
-import org.spongepowered.api.event.world.chunk.PopulateChunkEvent;
-import org.spongepowered.api.event.world.chunk.SaveChunkEvent;
 import org.spongepowered.api.world.Location;
 
-import com.flowpowered.math.vector.Vector2i;
-import com.flowpowered.math.vector.Vector3i;
-
-import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
-import de.bluecolored.bluemap.common.plugin.text.Text;
+import java.util.Optional;
 
 public class EventForwarder {
 
@@ -50,18 +44,6 @@ public class EventForwarder {
 	
 	public EventForwarder(ServerEventListener listener) {
 		this.listener = listener;
-	}
-
-	/* Use ChunkSaveToDisk as it is the preferred event to use and more reliable on the chunk actually saved to disk
-	@Listener(order = Order.POST)
-	public void onWorldSaveToDisk(SaveWorldEvent evt) {
-		listener.onWorldSaveToDisk(evt.getTargetWorld().getUniqueId());		
-	}
-	*/
-	
-	@Listener(order = Order.POST)
-	public void onChunkSaveToDisk(SaveChunkEvent.Pre evt) {
-		listener.onChunkSaveToDisk(evt.getTargetChunk().getWorld().getUniqueId(), evt.getTargetChunk().getPosition().toVector2(true));
 	}
 	
 	@Listener(order = Order.POST)
@@ -71,16 +53,8 @@ public class EventForwarder {
 			if(!tr.isValid()) continue;
 			
 			Optional<Location<org.spongepowered.api.world.World>> ow = tr.getFinal().getLocation();
-			if (ow.isPresent()) {
-				listener.onBlockChange(ow.get().getExtent().getUniqueId(), ow.get().getPosition().toInt());
-			}
+			ow.ifPresent(worldLocation -> listener.onBlockChange(worldLocation.getExtent().getUniqueId(), worldLocation.getPosition().toInt()));
 		}
-	}
-
-	@Listener(order = Order.POST)
-	public void onChunkFinishedGeneration(PopulateChunkEvent.Post evt) {
-		Vector3i chunkPos = evt.getTargetChunk().getPosition();
-		listener.onChunkFinishedGeneration(evt.getTargetChunk().getWorld().getUniqueId(), new Vector2i(chunkPos.getX(), chunkPos.getZ()));
 	}
 
 	@Listener(order = Order.POST)

@@ -51,21 +51,11 @@ public class ForgeEventForwarder  {
 	private ForgeMod mod;
 	private Collection<ServerEventListener> eventListeners;
 	
-	private Deque<WorldChunk> loadChunkEvents;
-	private Thread loadChunkEventProcessor;
-	
 	public ForgeEventForwarder(ForgeMod mod) {
 		this.mod = mod;
 		this.eventListeners = new ArrayList<>(1);
-		
-		loadChunkEvents = new ConcurrentLinkedDeque<>();
 
 		MinecraftForge.EVENT_BUS.register(this);
-		
-		//see processLoadChunkEvents JavaDoc comment
-		loadChunkEventProcessor = new Thread(this::processLoadChunkEvents);
-		loadChunkEventProcessor.setDaemon(true);
-		loadChunkEventProcessor.start();
 	}
 
 	public synchronized void addEventListener(ServerEventListener listener) {
@@ -105,34 +95,6 @@ public class ForgeEventForwarder  {
 	}
 
 	@SubscribeEvent
-	public synchronized void onChunkSave(ChunkDataEvent.Save evt) {
-		if (!(evt.getWorld() instanceof ServerWorld)) return;
-		
-		Vector2i chunkPos = new Vector2i(evt.getChunk().getPos().x, evt.getChunk().getPos().z);
-		
-		try {
-			UUID world = mod.getUUIDForWorld((ServerWorld) evt.getWorld());
-			for (ServerEventListener listener : eventListeners) listener.onChunkSaveToDisk(world, chunkPos);
-		} catch (IOException e) {
-			Logger.global.noFloodError("Failed to get the UUID for a world!", e);
-		}
-	}
-
-	/* Use ChunkSaveToDisk as it is the preferred event to use and more reliable on the chunk actually saved to disk
-	@SubscribeEvent
-	public synchronized void onWorldSave(WorldEvent.Save evt) {
-		if (!(evt.getWorld() instanceof ServerWorld)) return;
-		
-		try {
-			UUID world = mod.getUUIDForWorld((ServerWorld) evt.getWorld());
-			for (ServerEventListener listener : eventListeners) listener.onWorldSaveToDisk(world);
-		} catch (IOException e) {
-			Logger.global.noFloodError("Failed to get the UUID for a world!", e);
-		}
-	}
-	*/
-
-	@SubscribeEvent
 	public synchronized void onPlayerJoin(PlayerLoggedInEvent evt) {
 		UUID uuid = evt.getPlayer().getUniqueID();
 		for (ServerEventListener listener : eventListeners) listener.onPlayerJoin(uuid);
@@ -142,65 +104,6 @@ public class ForgeEventForwarder  {
 	public synchronized void onPlayerLeave(PlayerLoggedOutEvent evt) {
 		UUID uuid = evt.getPlayer().getUniqueID();
 		for (ServerEventListener listener : eventListeners) listener.onPlayerLeave(uuid);
-	}
-	
-	@SubscribeEvent
-	public void onChunkLoad(ChunkEvent.Load evt) {
-		if (!(evt.getWorld() instanceof ServerWorld)) return;
-
-		try {
-			UUID world = mod.getUUIDForWorld((ServerWorld) evt.getWorld());
-			Vector2i chunk = new Vector2i(evt.getChunk().getPos().x, evt.getChunk().getPos().z);
-
-			synchronized (loadChunkEvents) {
-				loadChunkEvents.add(new WorldChunk(world, chunk));
-				loadChunkEvents.notify();
-			}
-		} catch (IOException e) {
-			Logger.global.noFloodError("Failed to get the UUID for a world!", e);
-		}
-	}
-	
-	/**
-	 * This is a workaround for forge not providing a way to detect if chunks are newly generated:
-	 * Each time a chunk-load-event occurs, it is (asynchronously) tested if the chunk is already generated on the world files.
-	 * If it is a new chunk it will likely not be saved to the disk right away.
-	 */
-	private void processLoadChunkEvents() {
-		while (!Thread.interrupted()) {
-			WorldChunk worldChunk;
-			if (mod.getPlugin().isLoaded() && (worldChunk = loadChunkEvents.poll()) != null) {
-				try {
-					World world = mod.getPlugin().getWorld(worldChunk.world);
-					if (world == null || world.isChunkGenerated(worldChunk.chunk)) continue;
-	
-					for (ServerEventListener listener : eventListeners) listener.onChunkFinishedGeneration(worldChunk.world, worldChunk.chunk);
-					
-				} catch (RuntimeException e) {
-					Logger.global.noFloodWarning("processLoadChunkEventsError", "Failed to test if a chunk is newly generated:" + e);
-				}
-			} else {
-				synchronized (loadChunkEvents) {
-					try {
-						loadChunkEvents.wait(10000);
-					} catch (InterruptedException e) {
-						break;
-					}	
-				}
-			}
-		}
-		
-		Thread.currentThread().interrupt();
-	}
-	
-	private class WorldChunk {
-		final UUID world;
-		final Vector2i chunk;
-		
-		public WorldChunk(UUID world, Vector2i chunk) {
-			this.world = world;
-			this.chunk = chunk;
-		}
 	}
 
 }

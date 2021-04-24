@@ -24,36 +24,39 @@
  */
 package de.bluecolored.bluemap.core.webserver;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import de.bluecolored.bluemap.core.logger.Logger;
+
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.util.concurrent.TimeUnit;
-
-import de.bluecolored.bluemap.core.logger.Logger;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 
 public class HttpConnection implements Runnable {
 
-	private HttpRequestHandler handler;
+	private final HttpRequestHandler handler;
 
-	private ServerSocket server;
-	private Socket connection;
-	private InputStream in;
-	private OutputStream out;
+	private final ServerSocket server;
+	private final Socket connection;
+	private final InputStream in;
+	private final OutputStream out;
 
-        private final boolean verbose;
+	private final Semaphore processingSemaphore;
 
-	public HttpConnection(ServerSocket server, Socket connection, HttpRequestHandler handler, int timeout, TimeUnit timeoutUnit, boolean verbose) throws IOException {
+    private final boolean verbose;
+
+	public HttpConnection(ServerSocket server, Socket connection, HttpRequestHandler handler, Semaphore processingSemaphore, int timeout, TimeUnit timeoutUnit, boolean verbose) throws IOException {
 		this.server = server;
 		this.connection = connection;
 		this.handler = handler;
-                this.verbose = verbose;
+        this.verbose = verbose;
+
+        this.processingSemaphore = processingSemaphore;
 
 		if (isClosed()){
 			throw new IOException("Socket already closed!");
@@ -61,8 +64,8 @@ public class HttpConnection implements Runnable {
 
 		connection.setSoTimeout((int) timeoutUnit.toMillis(timeout));
 
-		in = this.connection.getInputStream();
-		out = this.connection.getOutputStream();
+		in = new BufferedInputStream(this.connection.getInputStream());
+		out = new BufferedOutputStream(this.connection.getOutputStream());
 	}
 
 	@Override
@@ -70,25 +73,30 @@ public class HttpConnection implements Runnable {
 		while (!isClosed() && !server.isClosed()){
 			try {
 				HttpRequest request = acceptRequest();
-				HttpResponse response = handler.handle(request);
-				sendResponse(response);
-				if (verbose) {
-					log(request, response);
+
+				try {
+					processingSemaphore.acquire();
+
+					HttpResponse response = handler.handle(request);
+					sendResponse(response);
+
+					if (verbose) log(request, response);
+				} finally {
+					processingSemaphore.release();
 				}
+
 			} catch (InvalidRequestException e){
 				try {
 					sendResponse(new HttpResponse(HttpStatusCode.BAD_REQUEST));
-				} catch (IOException e1) {}
+				} catch (IOException ignored) {}
 				break;
-			} catch (SocketTimeoutException e) {
-				break;
-			} catch (SocketException e){
-				break;
-			} catch (ConnectionClosedException e){
+			} catch (SocketTimeoutException | ConnectionClosedException | SocketException e) {
 				break;
 			} catch (IOException e) {
 				Logger.global.logError("Unexpected error while processing a HttpRequest!", e);
 				break;
+			} catch (InterruptedException ex) {
+				Thread.currentThread().interrupt();
 			}
 		}
 

@@ -24,22 +24,14 @@
  */
 package de.bluecolored.bluemap.common.plugin.serverinterface;
 
-import java.util.UUID;
-
-import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
-
 import de.bluecolored.bluemap.common.plugin.text.Text;
+
+import java.util.UUID;
 
 public interface ServerEventListener {
 
-	default void onWorldSaveToDisk(UUID world) {};
-	
-	default void onChunkSaveToDisk(UUID world, Vector2i chunkPos) {};
-	
 	default void onBlockChange(UUID world, Vector3i blockPos) {};
-	
-	default void onChunkFinishedGeneration(UUID world, Vector2i chunkPos) {};
 	
 	default void onPlayerJoin(UUID playerUuid) {};
 	

@@ -27,14 +27,14 @@ package de.bluecolored.bluemap.common.api;
 import com.flowpowered.math.vector.Vector2i;
 
 import de.bluecolored.bluemap.api.BlueMapMap;
-import de.bluecolored.bluemap.common.MapType;
+import de.bluecolored.bluemap.core.map.BmMap;
 
 public class BlueMapMapImpl implements BlueMapMap {
 	
 	private BlueMapAPIImpl api;
-	private MapType delegate;
+	private BmMap delegate;
 
-	protected BlueMapMapImpl(BlueMapAPIImpl api, MapType delegate) {
+	protected BlueMapMapImpl(BlueMapAPIImpl api, BmMap delegate) {
 		this.api = api;
 		this.delegate = delegate;
 	}
@@ -56,15 +56,15 @@ public class BlueMapMapImpl implements BlueMapMap {
 
 	@Override
 	public Vector2i getTileSize() {
-		return delegate.getTileRenderer().getHiresModelManager().getTileSize();
+		return delegate.getHiresModelManager().getTileGrid().getGridSize();
 	}
 
 	@Override
 	public Vector2i getTileOffset() {
-		return delegate.getTileRenderer().getHiresModelManager().getGridOrigin();
+		return delegate.getHiresModelManager().getTileGrid().getOffset();
 	}
 
-	public MapType getMapType() {
+	public BmMap getMapType() {
 		return delegate;
 	}
 	

@@ -42,26 +42,28 @@ import net.querz.nbt.CompoundTag;
 import net.querz.nbt.ListTag;
 import net.querz.nbt.NBTUtil;
 import net.querz.nbt.Tag;
-import net.querz.nbt.mca.CompressionType;
-import net.querz.nbt.mca.MCAUtil;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
 
 public class MCAWorld implements World {
+
+	private static final Grid CHUNK_GRID = new Grid(16);
+	private static final Grid REGION_GRID = new Grid(32).multiply(CHUNK_GRID);
 
 	private final UUID uuid;
 	private final Path worldFolder;
 	private final MinecraftVersion minecraftVersion;
 	private String name;
-	private int seaLevel;
 	private Vector3i spawnPoint;
 
-	private final LoadingCache<Vector2i, Chunk> chunkCache;
-	
+	private final LoadingCache<Vector2i, MCARegion> regionCache;
+	private final LoadingCache<Vector2i, MCAChunk> chunkCache;
+
 	private BlockIdMapper blockIdMapper;
 	private BlockPropertiesMapper blockPropertiesMapper;
 	private BiomeMapper biomeMapper;
@@ -70,15 +72,13 @@ public class MCAWorld implements World {
 	
 	private boolean ignoreMissingLightData;
 	
-	private Map<Integer, String> forgeBlockMappings;
+	private final Map<Integer, String> forgeBlockMappings;
 	
 	private MCAWorld(
 			Path worldFolder, 
 			UUID uuid, 
 			MinecraftVersion minecraftVersion,
-			String name, 
-			int worldHeight, 
-			int seaLevel, 
+			String name,
 			Vector3i spawnPoint, 
 			BlockIdMapper blockIdMapper,
 			BlockPropertiesMapper blockPropertiesMapper, 
@@ -89,7 +89,6 @@ public class MCAWorld implements World {
 		this.worldFolder = worldFolder;
 		this.minecraftVersion = minecraftVersion;
 		this.name = name;
-		this.seaLevel = seaLevel;
 		this.spawnPoint = spawnPoint;
 		
 		this.blockIdMapper = blockIdMapper;
@@ -114,30 +113,33 @@ public class MCAWorld implements World {
 		registerBlockStateExtension(new DoublePlantExtension(minecraftVersion));
 		registerBlockStateExtension(new DoubleChestExtension());
 		
+		this.regionCache = Caffeine.newBuilder()
+				.executor(BlueMap.THREAD_POOL)
+				.maximumSize(100)
+				.expireAfterWrite(1, TimeUnit.MINUTES)
+				.build(this::loadRegion);
+
 		this.chunkCache = Caffeine.newBuilder()
-			.executor(BlueMap.THREAD_POOL)
-			.maximumSize(500)
-			.expireAfterWrite(1, TimeUnit.MINUTES)
-			.build(chunkPos -> this.loadChunkOrEmpty(chunkPos, 2, 1000));
+				.executor(BlueMap.THREAD_POOL)
+				.maximumSize(500)
+				.expireAfterWrite(1, TimeUnit.MINUTES)
+				.build(this::loadChunk);
 	}
-	
+
 	public BlockState getBlockState(Vector3i pos) {
-		Vector2i chunkPos = blockToChunk(pos);
-		Chunk chunk = getChunk(chunkPos);
-		return chunk.getBlockState(pos);
+		return getChunk(blockToChunk(pos)).getBlockState(pos);
 	}
 	
 	@Override
-	public Biome getBiome(Vector3i pos) {
-		if (pos.getY() < getMinY()) {
-			pos = new Vector3i(pos.getX(), getMinY(), pos.getZ());
-		} else if (pos.getY() > getMaxY()) {
-			pos = new Vector3i(pos.getX(), getMaxY(), pos.getZ());
+	public Biome getBiome(int x, int y, int z) {
+		if (y < getMinY()) {
+			y = getMinY();
+		} else if (y > getMaxY()) {
+			y = getMaxY();
 		}
-		
-		Vector2i chunkPos = blockToChunk(pos);
-		Chunk chunk = getChunk(chunkPos);
-		return chunk.getBiome(pos);
+
+		MCAChunk chunk = getChunk(x >> 4, z >> 4);
+		return chunk.getBiome(x, y, z);
 	}
 	
 	@Override
@@ -147,17 +149,16 @@ public class MCAWorld implements World {
 		} else if (pos.getY() > getMaxY()) {
 			return new Block(this, BlockState.AIR, LightData.SKY, Biome.DEFAULT, BlockProperties.TRANSPARENT, pos);
 		}
-		
-		Vector2i chunkPos = blockToChunk(pos);
-		Chunk chunk = getChunk(chunkPos);
+
+		MCAChunk chunk = getChunk(blockToChunk(pos));
 		BlockState blockState = getExtendedBlockState(chunk, pos);
 		LightData lightData = chunk.getLightData(pos);
-		Biome biome = chunk.getBiome(pos);
+		Biome biome = chunk.getBiome(pos.getX(), pos.getY(), pos.getZ());
 		BlockProperties properties = blockPropertiesMapper.get(blockState);
 		return new Block(this, blockState, lightData, biome, properties, pos);
 	}
 
-	private BlockState getExtendedBlockState(Chunk chunk, Vector3i pos) {
+	private BlockState getExtendedBlockState(MCAChunk chunk, Vector3i pos) {
 		BlockState blockState = chunk.getBlockState(pos);
 		
 		if (chunk instanceof ChunkAnvil112) { // only use extensions if old format chunk (1.12) in the new format block-states are saved with extensions
@@ -168,137 +169,42 @@ public class MCAWorld implements World {
 		
 		return blockState;
 	}
-	
-	public Chunk getChunk(Vector2i chunkPos) {
-		try {
-			Chunk chunk = chunkCache.get(chunkPos);
-			return chunk;
-		} catch (RuntimeException e) {
-			if (e.getCause() instanceof InterruptedException) Thread.currentThread().interrupt();
-			throw e;
-		}
-	}
-	
-	private Chunk loadChunkOrEmpty(Vector2i chunkPos, int tries, long tryInterval) {
-		Exception loadException = null;
-		for (int i = 0; i < tries; i++) {
-			try {
-				return loadChunk(chunkPos);
-			} catch (IOException | RuntimeException e) {
-				if (loadException != null) e.addSuppressed(loadException);
-				loadException = e;
-				
-				if (tryInterval > 0 && i+1 < tries) {
-					try {
-						Thread.sleep(tryInterval);
-					} catch (InterruptedException ex) {
-						Thread.currentThread().interrupt();
-						break;
-					}
-				}
-			}
-		}
 
-		Logger.global.logDebug("Unexpected exception trying to load chunk (" + chunkPos + "):" + loadException);
-		return Chunk.empty(this, chunkPos);
-	}
-	
-	private Chunk loadChunk(Vector2i chunkPos) throws IOException {
-		Vector2i regionPos = chunkToRegion(chunkPos);
-		Path regionPath = getMCAFilePath(regionPos);
-		
-		File regionFile = regionPath.toFile();
-		if (!regionFile.exists() || regionFile.length() <= 0) return Chunk.empty(this, chunkPos);
-		
-		try (RandomAccessFile raf = new RandomAccessFile(regionFile, "r")) {
-		
-			int xzChunk = Math.floorMod(chunkPos.getY(), 32) * 32 + Math.floorMod(chunkPos.getX(), 32);
-			
-			raf.seek(xzChunk * 4);
-			int offset = raf.read() << 16;
-			offset |= (raf.read() & 0xFF) << 8;
-			offset |= raf.read() & 0xFF;
-			offset *= 4096;
-			
-			int size = raf.readByte() * 4096;
-			if (size == 0) {
-				return Chunk.empty(this, chunkPos);
-			}
-			
-			raf.seek(offset + 4); // +4 skip chunk size
-			
-			byte compressionTypeByte = raf.readByte();
-			CompressionType compressionType = CompressionType.getFromID(compressionTypeByte);
-			if (compressionType == null) {
-				throw new IOException("Invalid compression type " + compressionTypeByte);
-			}
-			
-			DataInputStream dis = new DataInputStream(new BufferedInputStream(compressionType.decompress(new FileInputStream(raf.getFD()))));
-			Tag<?> tag = Tag.deserialize(dis, Tag.DEFAULT_MAX_DEPTH);
-			if (tag instanceof CompoundTag) {
-				return Chunk.create(this, (CompoundTag) tag, ignoreMissingLightData);
-			} else {
-				throw new IOException("Invalid data tag: " + (tag == null ? "null" : tag.getClass().getName()));
-			}
-			
-		} catch (RuntimeException e) {
-			throw new IOException(e);
-		}
-	}
-	
 	@Override
-	public boolean isChunkGenerated(Vector2i chunkPos) {
-		Chunk chunk = getChunk(chunkPos);
-		return chunk.isGenerated();
+	public MCAChunk getChunk(int x, int z) {
+		return getChunk(new Vector2i(x, z));
 	}
-	
+
+	public MCAChunk getChunk(Vector2i pos) {
+		return chunkCache.get(pos);
+	}
+
 	@Override
-	public Collection<Vector2i> getChunkList(long modifiedSinceMillis, Predicate<Vector2i> filter){
-		List<Vector2i> chunks = new ArrayList<>(10000);
-		
-		if (!getRegionFolder().toFile().isDirectory()) return Collections.emptyList();
-		
-		for (File file : getRegionFolder().toFile().listFiles()) {
+	public MCARegion getRegion(int x, int z) {
+		return regionCache.get(new Vector2i(x, z));
+	}
+
+	@Override
+	public Collection<Vector2i> listRegions() {
+		File[] regionFiles = getRegionFolder().toFile().listFiles();
+		if (regionFiles == null) return Collections.emptyList();
+
+		List<Vector2i> regions = new ArrayList<>(regionFiles.length);
+
+		for (File file : regionFiles) {
 			if (!file.getName().endsWith(".mca")) continue;
 			if (file.length() <= 0) continue;
-			
-			try (RandomAccessFile raf = new RandomAccessFile(file, "r")) {
 
+			try {
 				String[] filenameParts = file.getName().split("\\.");
 				int rX = Integer.parseInt(filenameParts[1]);
 				int rZ = Integer.parseInt(filenameParts[2]);
-				
-				for (int x = 0; x < 32; x++) {
-					for (int z = 0; z < 32; z++) {
-						Vector2i chunk = new Vector2i(rX * 32 + x, rZ * 32 + z);
-						if (filter.test(chunk)) {
-							
-							int xzChunk = z * 32 + x;
-							
-							raf.seek(xzChunk * 4 + 3);
-							int size = raf.readByte() * 4096;
-	
-							if (size == 0) continue;
-							
-							raf.seek(xzChunk * 4 + 4096);
-							int timestamp = raf.read() << 24;
-							timestamp |= (raf.read() & 0xFF) << 16;
-							timestamp |= (raf.read() & 0xFF) << 8;
-							timestamp |= raf.read() & 0xFF;
-							
-							if (timestamp >= (modifiedSinceMillis / 1000)) {
-								chunks.add(chunk);
-							}
-							
-						}
-					}
-				}
-			} catch (RuntimeException | IOException ex) {
-				Logger.global.logWarning("Failed to read .mca file: " + file.getAbsolutePath() + " (" + ex.toString() + ")");
-			}
+
+				regions.add(new Vector2i(rX, rZ));
+			} catch (NumberFormatException ignore) {}
 		}
-		
-		return chunks;
+
+		return regions;
 	}
 
 	@Override
@@ -318,7 +224,27 @@ public class MCAWorld implements World {
 
 	@Override
 	public int getSeaLevel() {
-		return seaLevel;
+		return 63;
+	}
+
+	@Override
+	public int getMinY() {
+		return 0;
+	}
+
+	@Override
+	public int getMaxY() {
+		return 255;
+	}
+
+	@Override
+	public Grid getChunkGrid() {
+		return CHUNK_GRID;
+	}
+
+	@Override
+	public Grid getRegionGrid() {
+		return REGION_GRID;
 	}
 
 	@Override
@@ -332,8 +258,8 @@ public class MCAWorld implements World {
 	}
 	
 	@Override
-	public void invalidateChunkCache(Vector2i chunk) {
-		chunkCache.invalidate(chunk);
+	public void invalidateChunkCache(int x, int z) {
+		chunkCache.invalidate(new Vector2i(x, z));
 	}
 	
 	@Override
@@ -381,8 +307,8 @@ public class MCAWorld implements World {
 		return worldFolder.resolve("region");
 	}
 	
-	private Path getMCAFilePath(Vector2i region) {
-		return getRegionFolder().resolve(MCAUtil.createNameFromRegionLocation(region.getX(), region.getY()));
+	private File getMCAFile(int regionX, int regionZ) {
+		return getRegionFolder().resolve("r." + regionX + "." + regionZ + ".mca").toFile();
 	}
 
 	private void registerBlockStateExtension(BlockStateExtension extension) {
@@ -390,7 +316,48 @@ public class MCAWorld implements World {
 			this.blockStateExtensions.put(id, extension);
 		}
 	}
-	
+
+	private MCARegion loadRegion(Vector2i regionPos) {
+		return loadRegion(regionPos.getX(), regionPos.getY());
+	}
+
+	private MCARegion loadRegion(int x, int z) {
+		File regionPath = getMCAFile(x, z);
+		return new MCARegion(this, regionPath);
+	}
+
+	private MCAChunk loadChunk(Vector2i chunkPos) {
+		return loadChunk(chunkPos.getX(), chunkPos.getY());
+	}
+
+	private MCAChunk loadChunk(int x, int z) {
+		final int tries = 3;
+		final int tryInterval = 1000;
+
+		Exception loadException = null;
+		for (int i = 0; i < tries; i++) {
+			try {
+				return getRegion(x >> 5, z >> 5)
+						.loadChunk(x, z, ignoreMissingLightData);
+			} catch (IOException | RuntimeException e) {
+				if (loadException != null) e.addSuppressed(loadException);
+				loadException = e;
+
+				if (i + 1 < tries) {
+					try {
+						Thread.sleep(tryInterval);
+					} catch (InterruptedException ex) {
+						Thread.currentThread().interrupt();
+						break;
+					}
+				}
+			}
+		}
+
+		Logger.global.logDebug("Unexpected exception trying to load chunk (x:" + x + ", z:" + z + "):" + loadException);
+		return MCAChunk.empty();
+	}
+
 	public static MCAWorld load(Path worldFolder, UUID uuid, MinecraftVersion version, BlockIdMapper blockIdMapper, BlockPropertiesMapper blockPropertiesMapper, BiomeMapper biomeIdMapper) throws IOException {
 		return load(worldFolder, uuid, version, blockIdMapper, blockPropertiesMapper, biomeIdMapper, null, false);
 	}
@@ -422,9 +389,7 @@ public class MCAWorld implements World {
 			if (name == null) {
 				name = levelData.getString("LevelName") + subDimensionName;
 			}
-			
-			int worldHeight = 255;
-			int seaLevel = 63;
+
 			Vector3i spawnPoint = new Vector3i(
 					levelData.getInt("SpawnX"),
 					levelData.getInt("SpawnY"),
@@ -435,9 +400,7 @@ public class MCAWorld implements World {
 					worldFolder, 
 					uuid, 
 					version,
-					name, 
-					worldHeight, 
-					seaLevel, 
+					name,
 					spawnPoint,
 					blockIdMapper,
 					blockPropertiesMapper,
@@ -469,22 +432,8 @@ public class MCAWorld implements World {
 	
 	public static Vector2i blockToChunk(Vector3i pos) {
 		return new Vector2i(
-				MCAUtil.blockToChunk(pos.getX()),
-				MCAUtil.blockToChunk(pos.getZ())
-			);
-	}
-	
-	public static Vector2i blockToRegion(Vector3i pos) {
-		return new Vector2i(
-				MCAUtil.blockToRegion(pos.getX()),
-				MCAUtil.blockToRegion(pos.getZ())
-			);
-	}
-	
-	public static Vector2i chunkToRegion(Vector2i pos) {
-		return new Vector2i(
-				MCAUtil.chunkToRegion(pos.getX()),
-				MCAUtil.chunkToRegion(pos.getY())
+				pos.getX() >> 4,
+				pos.getZ() >> 4
 			);
 	}
 	

@@ -24,17 +24,17 @@
  */
 package de.bluecolored.bluemap.core.config;
 
-import java.io.IOException;
-import java.util.regex.Pattern;
-
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
-
-import de.bluecolored.bluemap.core.render.RenderSettings;
+import de.bluecolored.bluemap.core.map.MapSettings;
+import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.util.ConfigUtils;
 import ninja.leaping.configurate.ConfigurationNode;
 
-public class MapConfig implements RenderSettings {
+import java.io.IOException;
+import java.util.regex.Pattern;
+
+public class MapConfig implements MapSettings {
 	private static final Pattern VALID_ID_PATTERN = Pattern.compile("[a-zA-Z0-9_]+");
 	
 	private String id;
@@ -86,12 +86,12 @@ public class MapConfig implements RenderSettings {
 		this.renderCaves = node.getNode("renderCaves").getBoolean(false);
 
 		//bounds
-		int minX = node.getNode("minX").getInt(RenderSettings.super.getMin().getX());
-		int maxX = node.getNode("maxX").getInt(RenderSettings.super.getMax().getX());
-		int minZ = node.getNode("minZ").getInt(RenderSettings.super.getMin().getZ());
-		int maxZ = node.getNode("maxZ").getInt(RenderSettings.super.getMax().getZ());
-		int minY = node.getNode("minY").getInt(RenderSettings.super.getMin().getY());
-		int maxY = node.getNode("maxY").getInt(RenderSettings.super.getMax().getY());
+		int minX = node.getNode("minX").getInt(MapSettings.super.getMin().getX());
+		int maxX = node.getNode("maxX").getInt(MapSettings.super.getMax().getX());
+		int minZ = node.getNode("minZ").getInt(MapSettings.super.getMin().getZ());
+		int maxZ = node.getNode("maxZ").getInt(MapSettings.super.getMax().getZ());
+		int minY = node.getNode("minY").getInt(MapSettings.super.getMin().getY());
+		int maxY = node.getNode("maxY").getInt(MapSettings.super.getMax().getY());
 		this.min = new Vector3i(minX, minY, minZ);
 		this.max = new Vector3i(maxX, maxY, maxZ);
 		
@@ -146,15 +146,18 @@ public class MapConfig implements RenderSettings {
 	public boolean isIgnoreMissingLightData() {
 		return ignoreMissingLightData;
 	}
-	
+
+	@Override
 	public int getHiresTileSize() {
 		return hiresTileSize;
 	}
 
+	@Override
 	public int getLowresPointsPerHiresTile() {
 		return lowresPointsPerHiresTile;
 	}
 
+	@Override
 	public int getLowresPointsPerLowresTile() {
 		return lowresPointsPerLowresTile;
 	}

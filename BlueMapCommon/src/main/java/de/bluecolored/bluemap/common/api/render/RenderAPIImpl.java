@@ -24,16 +24,15 @@
  */
 package de.bluecolored.bluemap.common.api.render;
 
-import java.util.UUID;
-
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
-
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.renderer.RenderAPI;
-import de.bluecolored.bluemap.common.RenderManager;
 import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.api.BlueMapMapImpl;
+import de.bluecolored.bluemap.common.rendermanager.RenderManager;
+
+import java.util.UUID;
 
 public class RenderAPIImpl implements RenderAPI {
 
@@ -68,18 +67,19 @@ public class RenderAPIImpl implements RenderAPI {
 		} else {
 			cmap = api.getMapForId(map.getId());
 		}
-		
-		renderManager.createTicket(cmap.getMapType(), tile);
+
+		//TODO
+		//renderManager.createTicket(cmap.getMapType(), tile);
 	}
 
 	@Override
 	public int renderQueueSize() {
-		return renderManager.getQueueSize();
+		return renderManager.getScheduledRenderTasks().size();
 	}
 
 	@Override
 	public int renderThreadCount() {
-		return renderManager.getRenderThreadCount();
+		return renderManager.getWorkerThreadCount();
 	}
 
 	@Override
@@ -89,7 +89,7 @@ public class RenderAPIImpl implements RenderAPI {
 
 	@Override
 	public void start() {
-		if (!isRunning()) renderManager.start();
+		if (!isRunning()) renderManager.start(api.plugin.getCoreConfig().getRenderThreadCount());
 	}
 
 	@Override

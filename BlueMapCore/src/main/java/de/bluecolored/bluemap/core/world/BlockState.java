@@ -42,7 +42,7 @@ import java.util.StringJoiner;
  */
 public class BlockState {
 	
-	private static Pattern BLOCKSTATE_SERIALIZATION_PATTERN = Pattern.compile("^(.+?)(?:\\[(.*)\\])?$");
+	private static final Pattern BLOCKSTATE_SERIALIZATION_PATTERN = Pattern.compile("^(.+?)(?:\\[(.*)\\])?$");
 	
 	public static final BlockState AIR = new BlockState("minecraft:air", Collections.emptyMap());
 	public static final BlockState MISSING = new BlockState("bluemap:missing", Collections.emptyMap());

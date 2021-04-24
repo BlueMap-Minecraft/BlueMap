@@ -27,7 +27,7 @@ package de.bluecolored.bluemap.common.api;
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.BlueMapWorld;
-import de.bluecolored.bluemap.common.MapType;
+import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.common.api.marker.MarkerAPIImpl;
 import de.bluecolored.bluemap.common.api.render.RenderAPIImpl;
 import de.bluecolored.bluemap.common.plugin.Plugin;
@@ -68,7 +68,7 @@ public class BlueMapAPIImpl extends BlueMapAPI {
 		}
 		
 		maps = new HashMap<>();
-		for (MapType map : plugin.getMapTypes()) {
+		for (BmMap map : plugin.getMapTypes()) {
 			BlueMapMapImpl m = new BlueMapMapImpl(this, map);
 			maps.put(m.getId(), m);
 		}

@@ -95,7 +95,7 @@ public interface ServerInterface {
 	
 	/**
 	 * Returns the state of the player with that UUID if present<br>
-	 * this method is only guaranteed to return a {@link PlayerState} if the player is currently online.
+	 * this method is only guaranteed to return a {@link Player} if the player is currently online.
 	 */
 	Optional<Player> getPlayer(UUID uuid);
 	
