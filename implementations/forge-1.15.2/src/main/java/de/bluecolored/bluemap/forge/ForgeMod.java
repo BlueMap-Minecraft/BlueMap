@@ -24,25 +24,8 @@
  */
 package de.bluecolored.bluemap.forge;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-
-import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
-import org.apache.logging.log4j.LogManager;
-
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
-
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.commands.Commands;
 import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
@@ -62,8 +45,17 @@ import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
 import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
 import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
+import org.apache.logging.log4j.LogManager;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 
 @Mod(Plugin.PLUGIN_ID)
 public class ForgeMod implements ServerInterface {
@@ -89,7 +81,7 @@ public class ForgeMod implements ServerInterface {
 		this.pluginInstance = new Plugin(MinecraftVersion.MC_1_15, "forge-1.15.2", this);
 		
 		this.worldUUIDs = new ConcurrentHashMap<>();
-		this.eventForwarder = new ForgeEventForwarder(this);
+		this.eventForwarder = new ForgeEventForwarder();
 		this.worldUuidCache = Caffeine.newBuilder()
 				.executor(BlueMap.THREAD_POOL)
 				.weakKeys()

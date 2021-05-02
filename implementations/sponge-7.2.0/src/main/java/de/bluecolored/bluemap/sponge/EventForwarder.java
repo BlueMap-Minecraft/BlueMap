@@ -26,35 +26,17 @@ package de.bluecolored.bluemap.sponge;
 
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.text.Text;
-import org.spongepowered.api.block.BlockSnapshot;
-import org.spongepowered.api.data.Transaction;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
-import org.spongepowered.api.event.block.ChangeBlockEvent;
-import org.spongepowered.api.event.filter.type.Exclude;
 import org.spongepowered.api.event.message.MessageChannelEvent;
 import org.spongepowered.api.event.network.ClientConnectionEvent;
-import org.spongepowered.api.world.Location;
-
-import java.util.Optional;
 
 public class EventForwarder {
 
-	private ServerEventListener listener;
+	private final ServerEventListener listener;
 	
 	public EventForwarder(ServerEventListener listener) {
 		this.listener = listener;
-	}
-	
-	@Listener(order = Order.POST)
-	@Exclude({ChangeBlockEvent.Post.class, ChangeBlockEvent.Pre.class, ChangeBlockEvent.Modify.class})
-	public void onBlockChange(ChangeBlockEvent evt) {
-		for (Transaction<BlockSnapshot> tr : evt.getTransactions()) {
-			if(!tr.isValid()) continue;
-			
-			Optional<Location<org.spongepowered.api.world.World>> ow = tr.getFinal().getLocation();
-			ow.ifPresent(worldLocation -> listener.onBlockChange(worldLocation.getExtent().getUniqueId(), worldLocation.getPosition().toInt()));
-		}
 	}
 
 	@Listener(order = Order.POST)

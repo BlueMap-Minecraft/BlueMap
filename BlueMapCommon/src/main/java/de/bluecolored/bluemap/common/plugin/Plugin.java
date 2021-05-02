@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.common.plugin;
 
+import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.InterruptableReentrantLock;
 import de.bluecolored.bluemap.common.MissingResourcesException;
@@ -32,6 +33,7 @@ import de.bluecolored.bluemap.common.live.LiveAPIRequestHandler;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.common.plugin.skins.PlayerSkinUpdater;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
+import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.config.CoreConfig;
@@ -81,6 +83,8 @@ public class Plugin {
 	private TimerTask saveTask;
 	private TimerTask metricsTask;
 
+	private Collection<RegionFileWatchService> regionFileWatchServices;
+
 	private PlayerSkinUpdater skinUpdater;
 
 	private boolean loaded = false;
@@ -90,7 +94,7 @@ public class Plugin {
 		this.implementationType = implementationType.toLowerCase();
 		this.serverInterface = serverInterface;
 
-		this.daemonTimer = new Timer("BlueMap-Daemon-Timer", true);
+		this.daemonTimer = new Timer("BlueMap-Plugin-Daemon-Timer", true);
 	}
 	
 	public void load() throws IOException, ParseResourceException {
@@ -110,9 +114,9 @@ public class Plugin {
 				
 				//load plugin config
 				pluginConfig = new PluginConfig(blueMap.getConfigManager().loadOrCreate(
-						new File(serverInterface.getConfigFolder(), "plugin.conf"), 
-						Plugin.class.getResource("/de/bluecolored/bluemap/plugin.conf"), 
-						Plugin.class.getResource("/de/bluecolored/bluemap/plugin-defaults.conf"), 
+						new File(serverInterface.getConfigFolder(), "plugin.conf"),
+						Plugin.class.getResource("/de/bluecolored/bluemap/plugin.conf"),
+						Plugin.class.getResource("/de/bluecolored/bluemap/plugin-defaults.conf"),
 						true,
 						true
 				));
@@ -188,7 +192,7 @@ public class Plugin {
 						}
 					}
 				};
-				daemonTimer.schedule(saveTask, TimeUnit.MINUTES.toMillis(10));
+				daemonTimer.schedule(saveTask, TimeUnit.MINUTES.toMillis(2), TimeUnit.MINUTES.toMillis(2));
 				
 				//metrics
 				metricsTask = new TimerTask() {
@@ -206,7 +210,24 @@ public class Plugin {
 				this.api = new BlueMapAPIImpl(this);
 				this.api.register();
 
-				//
+				//watch map-changes
+				this.regionFileWatchServices = new ArrayList<>();
+				for (BmMap map : maps.values()) {
+					try {
+						RegionFileWatchService watcher = new RegionFileWatchService(renderManager, map, false);
+						watcher.start();
+						regionFileWatchServices.add(watcher);
+					} catch (IOException ex) {
+						Logger.global.logError("Failed to create file-watcher for map: " + map.getId() + " (This map might not automatically update)", ex);
+					}
+				}
+
+				//update all maps
+				for (BmMap map : maps.values()) {
+					for (Vector2i region : map.getWorld().listRegions()){
+						renderManager.scheduleRenderTask(new WorldRegionRenderTask(map, region));
+					}
+				}
 				
 			}
 		} catch (InterruptedException e) {
@@ -230,12 +251,21 @@ public class Plugin {
 				serverInterface.unregisterAllListeners();
 		
 				//stop scheduled threads
-				metricsTask.cancel();
-				
+				if (metricsTask != null) metricsTask.cancel();
+				if (saveTask != null) saveTask.cancel();
+
+				// stop file-watchers
+				if (regionFileWatchServices != null) {
+					for (RegionFileWatchService watcher : regionFileWatchServices) {
+						watcher.close();
+					}
+					regionFileWatchServices.clear();
+				}
+
 				//stop services
 				if (renderManager != null) renderManager.stop();
 				if (webServer != null) webServer.close();
-				
+
 				//save renders
 				if (maps != null) {
 					for (BmMap map : maps.values()) {
@@ -249,7 +279,6 @@ public class Plugin {
 				maps = null;
 				renderManager = null;
 				webServer = null;
-
 
 				pluginConfig = null;
 				

@@ -29,6 +29,7 @@ import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.util.AtomicFileHelper;
 import de.bluecolored.bluemap.core.util.FileUtils;
 import de.bluecolored.bluemap.core.world.Grid;
 import de.bluecolored.bluemap.core.world.World;
@@ -85,9 +86,7 @@ public class HiresModelManager {
 		File file = getFile(tile, useGzip);
 		
 		try {
-			FileUtils.createFile(file);
-	
-			OutputStream os = new FileOutputStream(file);
+			OutputStream os = new BufferedOutputStream(AtomicFileHelper.createFilepartOutputStream(file));
 			if (useGzip) os = new GZIPOutputStream(os);
 			OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
 			try (

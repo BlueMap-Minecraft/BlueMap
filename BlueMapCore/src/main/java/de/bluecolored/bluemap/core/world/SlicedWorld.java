@@ -28,9 +28,9 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
-import java.util.function.Predicate;
 
 /**
  * A sliced view of a world. Everything outside the defined bounds is seen as "not generated" and "air".
@@ -93,8 +93,8 @@ public class SlicedWorld implements World {
 	}
 
 	@Override
-	public Biome getBiome(Vector3i pos) {
-		return world.getBiome(pos);
+	public Biome getBiome(int x, int y, int z) {
+		return world.getBiome(x, y, z);
 	}
 	
 	@Override
@@ -116,6 +116,30 @@ public class SlicedWorld implements World {
 	}
 
 	@Override
+	public Chunk getChunk(int x, int z) {
+		return world.getChunk(x, z);
+	}
+
+	@Override
+	public Region getRegion(int x, int z) {
+		return world.getRegion(x, z);
+	}
+
+	@Override
+	public Collection<Vector2i> listRegions() {
+		Grid regionGrid = getRegionGrid();
+		Collection<Vector2i> regions = new ArrayList<>();
+
+		for (Vector2i region : world.listRegions()) {
+			Vector2i min = regionGrid.getCellMin(region);
+			Vector2i max = regionGrid.getCellMax(region);
+			if (isInside(min.getX(), min.getY()) || isInside(max.getX(), max.getY())) regions.add(region);
+		}
+
+		return regions;
+	}
+
+	@Override
 	public void invalidateChunkCache() {
 		world.invalidateChunkCache();
 	}
@@ -133,7 +157,15 @@ public class SlicedWorld implements World {
 	private boolean isInside(Vector3i blockPos) {
 		return isInside(blockPos.getX(), blockPos.getY(), blockPos.getZ());
 	}
-	
+
+	private boolean isInside(int x, int z) {
+		return
+				x >= min.getX() &&
+				x <= max.getX() &&
+				z >= min.getZ() &&
+				z <= max.getZ();
+	}
+
 	private boolean isInside(int x, int y, int z) {
 		return 
 				x >= min.getX() &&

@@ -22,10 +22,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.world;
+package de.bluecolored.bluemap.core.util;
 
-public interface Chunk {
+@FunctionalInterface
+public interface ThrowingRunnable<E extends Throwable>  {
 
-	boolean isGenerated();
+	void run() throws E;
 
 }

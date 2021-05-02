@@ -24,7 +24,19 @@
  */
 package de.bluecolored.bluemap.core.resourcepack;
 
-import java.awt.Color;
+import com.flowpowered.math.GenericMath;
+import com.flowpowered.math.vector.Vector2f;
+import com.flowpowered.math.vector.Vector2i;
+import com.flowpowered.math.vector.Vector3f;
+import com.flowpowered.math.vector.Vector3i;
+import de.bluecolored.bluemap.core.util.ConfigUtils;
+import de.bluecolored.bluemap.core.util.MathUtils;
+import de.bluecolored.bluemap.core.world.Biome;
+import de.bluecolored.bluemap.core.world.Block;
+import de.bluecolored.bluemap.core.world.World;
+import ninja.leaping.configurate.ConfigurationNode;
+
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.HashMap;
@@ -32,19 +44,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Function;
-
-import com.flowpowered.math.GenericMath;
-import com.flowpowered.math.vector.Vector2f;
-import com.flowpowered.math.vector.Vector2i;
-import com.flowpowered.math.vector.Vector3f;
-import com.flowpowered.math.vector.Vector3i;
-
-import de.bluecolored.bluemap.core.util.ConfigUtils;
-import de.bluecolored.bluemap.core.util.MathUtils;
-import de.bluecolored.bluemap.core.world.Biome;
-import de.bluecolored.bluemap.core.world.Block;
-import de.bluecolored.bluemap.core.world.World;
-import ninja.leaping.configurate.ConfigurationNode;
 
 public class BlockColorCalculator {
 
@@ -200,7 +199,7 @@ public class BlockColorCalculator {
 					z++;
 				}
 				
-				return world.getBiome(new Vector3i(x, y, z));
+				return world.getBiome(x, y, z);
 			}
 		};
 	}

@@ -1,3 +1,27 @@
+/*
+ * This file is part of BlueMap, licensed under the MIT License (MIT).
+ *
+ * Copyright (c) Blue (Lukas Rieger) <https://bluecolored.de>
+ * Copyright (c) contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 package de.bluecolored.bluemap.core.mca;
 
 import com.flowpowered.math.vector.Vector2i;
@@ -10,6 +34,7 @@ import net.querz.nbt.mca.CompressionType;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 public class MCARegion implements Region {
@@ -31,6 +56,8 @@ public class MCARegion implements Region {
 
 	@Override
 	public MCAChunk loadChunk(int chunkX, int chunkZ, boolean ignoreMissingLightData) throws IOException {
+		if (!regionFile.exists() || regionFile.length() == 0) return MCAChunk.empty();
+
 		try (RandomAccessFile raf = new RandomAccessFile(regionFile, "r")) {
 
 			int xzChunk = Math.floorMod(chunkZ, 32) * 32 + Math.floorMod(chunkX, 32);
@@ -57,7 +84,9 @@ public class MCARegion implements Region {
 			DataInputStream dis = new DataInputStream(new BufferedInputStream(compressionType.decompress(new FileInputStream(raf.getFD()))));
 			Tag<?> tag = Tag.deserialize(dis, Tag.DEFAULT_MAX_DEPTH);
 			if (tag instanceof CompoundTag) {
-				return MCAChunk.create(world, (CompoundTag) tag, ignoreMissingLightData);
+				MCAChunk chunk = MCAChunk.create(world, (CompoundTag) tag, ignoreMissingLightData);
+				if (!chunk.isGenerated()) return MCAChunk.empty();
+				return chunk;
 			} else {
 				throw new IOException("Invalid data tag: " + (tag == null ? "null" : tag.getClass().getName()));
 			}
@@ -69,6 +98,8 @@ public class MCARegion implements Region {
 
 	@Override
 	public Collection<Vector2i> listChunks(long modifiedSince) {
+		if (!regionFile.exists() || regionFile.length() == 0) return Collections.emptyList();
+
 		List<Vector2i> chunks = new ArrayList<>(1024); //1024 = 32 x 32 chunks per region-file
 
 		try (RandomAccessFile raf = new RandomAccessFile(regionFile, "r")) {

@@ -156,7 +156,7 @@ public class BlueMapService {
 			World world = worlds.get(worldUUID);
 			if (world == null) {
 				try {
-					world = MCAWorld.load(worldFolder.toPath(), worldUUID, minecraftVersion, configManager.getBlockIdConfig(), configManager.getBlockPropertiesConfig(), configManager.getBiomeConfig(), worldNameProvider.apply(worldUUID), true);
+					world = MCAWorld.load(worldFolder.toPath(), worldUUID, minecraftVersion, configManager.getBlockIdConfig(), configManager.getBlockPropertiesConfig(), configManager.getBiomeConfig(), worldNameProvider.apply(worldUUID), mapConfig.isIgnoreMissingLightData());
 					worlds.put(worldUUID, world);
 				} catch (MissingResourcesException e) {
 					throw e; // rethrow this to stop loading and display resource-missing message

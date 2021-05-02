@@ -24,14 +24,11 @@
  */
 package de.bluecolored.bluemap.common.plugin.serverinterface;
 
-import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 
 import java.util.UUID;
 
 public interface ServerEventListener {
-
-	default void onBlockChange(UUID world, Vector3i blockPos) {};
 	
 	default void onPlayerJoin(UUID playerUuid) {};
 	

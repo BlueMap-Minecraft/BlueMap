@@ -24,35 +24,21 @@
  */
 package de.bluecolored.bluemap.forge;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Deque;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentLinkedDeque;
-
-import com.flowpowered.math.vector.Vector2i;
-import com.flowpowered.math.vector.Vector3i;
-
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
-import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.world.World;
-import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
-import net.minecraftforge.event.world.BlockEvent;
-import net.minecraftforge.event.world.ChunkDataEvent;
-import net.minecraftforge.event.world.ChunkEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.UUID;
+
 public class ForgeEventForwarder  {
+
+	private final Collection<ServerEventListener> eventListeners;
 	
-	private ForgeMod mod;
-	private Collection<ServerEventListener> eventListeners;
-	
-	public ForgeEventForwarder(ForgeMod mod) {
-		this.mod = mod;
+	public ForgeEventForwarder() {
 		this.eventListeners = new ArrayList<>(1);
 
 		MinecraftForge.EVENT_BUS.register(this);
@@ -64,34 +50,6 @@ public class ForgeEventForwarder  {
 	
 	public synchronized void removeAllListeners() {
 		this.eventListeners.clear();
-	}
-	
-	@SubscribeEvent
-	public void onBlockBreak(BlockEvent.BreakEvent evt) {
-		onBlockChange(evt);
-	}
-	
-	@SubscribeEvent
-	public void onBlockPlace(BlockEvent.EntityPlaceEvent evt) {
-		onBlockChange(evt);
-	}
-	
-	private synchronized void onBlockChange(BlockEvent evt) {
-		if (!(evt.getWorld() instanceof ServerWorld)) return;
-		
-		try {
-			UUID world = mod.getUUIDForWorld((ServerWorld) evt.getWorld());
-			Vector3i position = new Vector3i(
-					evt.getPos().getX(),
-					evt.getPos().getY(),
-					evt.getPos().getZ()
-				);
-			
-			for (ServerEventListener listener : eventListeners) listener.onBlockChange(world, position);
-			
-		} catch (IOException e) {
-			Logger.global.noFloodError("Failed to get the UUID for a world!", e);
-		}
 	}
 
 	@SubscribeEvent

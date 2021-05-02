@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.core.map.lowres;
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3f;
 import de.bluecolored.bluemap.core.threejs.BufferGeometry;
+import de.bluecolored.bluemap.core.util.AtomicFileHelper;
 import de.bluecolored.bluemap.core.util.FileUtils;
 import de.bluecolored.bluemap.core.util.MathUtils;
 import de.bluecolored.bluemap.core.util.ModelUtils;
@@ -35,8 +36,6 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.zip.GZIPOutputStream;
 
 public class LowresModel {
@@ -93,27 +92,14 @@ public class LowresModel {
 		}
 		
 		synchronized (fileLock) {
-			FileUtils.createFile(file);
-			
-			try {
-				FileUtils.waitForFile(file, 10, TimeUnit.SECONDS);
-			} catch (InterruptedException e) {
-				Thread.currentThread().interrupt();
-				throw new IOException("Failed to get write-access to file: " + file, e);
-			} catch (TimeoutException e) {
-				throw new IOException("Failed to get write-access to file: " + file, e);
-			}
-
-			OutputStream os = new FileOutputStream(file);
+			OutputStream os = new BufferedOutputStream(AtomicFileHelper.createFilepartOutputStream(file));
 			if (useGzip) os = new GZIPOutputStream(os);
 			OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
 			try (
 				PrintWriter pw = new PrintWriter(osw);
 			){
 				pw.print(json);
-				pw.flush();
 			}
-		
 		}
 	}
 	

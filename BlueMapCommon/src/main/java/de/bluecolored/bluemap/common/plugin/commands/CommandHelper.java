@@ -27,6 +27,8 @@ package de.bluecolored.bluemap.common.plugin.commands;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.plugin.text.TextColor;
+import de.bluecolored.bluemap.common.rendermanager.RenderManager;
+import de.bluecolored.bluemap.common.rendermanager.RenderTask;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.world.World;
 
@@ -36,7 +38,7 @@ import java.util.StringJoiner;
 
 public class CommandHelper {
 
-	private Plugin plugin;
+	private final Plugin plugin;
 	
 	public CommandHelper(Plugin plugin) {
 		this.plugin = plugin;
@@ -45,8 +47,27 @@ public class CommandHelper {
 	public List<Text> createStatusMessage(){
 		List<Text> lines = new ArrayList<>();
 
-		//TODO
-		
+		RenderManager renderer = plugin.getRenderManager();
+
+		lines.add(Text.of(TextColor.BLUE, "BlueMap - Status:"));
+
+		if (renderer.isRunning()) {
+			lines.add(Text.of(TextColor.WHITE, " Render-Threads are ",
+					Text.of(TextColor.GREEN, "running")
+							.setHoverText(Text.of("click to pause rendering"))
+							.setClickAction(Text.ClickAction.RUN_COMMAND, "/bluemap pause"),
+					TextColor.GRAY, "!"));
+		} else {
+			lines.add(Text.of(TextColor.WHITE, " Render-Threads are ",
+					Text.of(TextColor.RED, "paused")
+							.setHoverText(Text.of("click to resume rendering"))
+							.setClickAction(Text.ClickAction.RUN_COMMAND, "/bluemap resume"),
+					TextColor.GRAY, "!"));
+		}
+
+		List<RenderTask> tasks = renderer.getScheduledRenderTasks();
+		lines.add(Text.of(TextColor.WHITE, " Scheduled tasks: ", TextColor.GOLD, tasks.size()));
+
 		return lines;
 	}
 	

@@ -24,25 +24,21 @@
  */
 package de.bluecolored.bluemap.bukkit;
 
-import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.text.Text;
-import org.bukkit.Location;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.block.*;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.UUID;
 
 public class EventForwarder implements Listener {
 
-	private Collection<ServerEventListener> listeners;
+	private final Collection<ServerEventListener> listeners;
 	
 	public EventForwarder() {
 		listeners = new ArrayList<>();
@@ -54,57 +50,6 @@ public class EventForwarder implements Listener {
 	
 	public synchronized void removeAllListeners() {
 		listeners.clear();
-	}
-
-	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-	public void onBlockChange(BlockPlaceEvent evt) {
-		onBlockChange(evt.getBlock().getLocation());
-	}
-	
-	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-	public void onBlockChange(BlockBreakEvent evt) {
-		onBlockChange(evt.getBlock().getLocation());
-	}
-	
-	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-	public void onBlockChange(BlockGrowEvent evt) {
-		onBlockChange(evt.getBlock().getLocation());
-	}
-	
-	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-	public void onBlockChange(BlockBurnEvent evt) {
-		onBlockChange(evt.getBlock().getLocation());
-	}
-	
-	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-	public void onBlockChange(BlockExplodeEvent evt) {
-		onBlockChange(evt.getBlock().getLocation());
-	}
-	
-	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-	public void onBlockChange(BlockFadeEvent evt) {
-		onBlockChange(evt.getBlock().getLocation());
-	}
-	
-	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-	public void onBlockChange(BlockSpreadEvent evt) {
-		onBlockChange(evt.getBlock().getLocation());
-	}
-	
-	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-	public void onBlockChange(BlockFormEvent evt) {
-		onBlockChange(evt.getBlock().getLocation());
-	}
-	
-	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-	public void onBlockChange(BlockFertilizeEvent evt) {
-		onBlockChange(evt.getBlock().getLocation());
-	}
-	
-	private synchronized void onBlockChange(Location loc) {
-		UUID world = loc.getWorld().getUID();
-		Vector3i pos = new Vector3i(loc.getBlockX(), loc.getBlockY(), loc.getBlockZ());
-		for (ServerEventListener listener : listeners) listener.onBlockChange(world, pos);
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)

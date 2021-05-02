@@ -225,7 +225,7 @@ public class Commands<S> {
 		baseCommand.addChild(debugCommand);
 		baseCommand.addChild(pauseCommand);
 		baseCommand.addChild(resumeCommand);
-		baseCommand.addChild(renderCommand);
+		//baseCommand.addChild(renderCommand);
 		baseCommand.addChild(purgeCommand);
 		baseCommand.addChild(worldsCommand);
 		baseCommand.addChild(mapsCommand);

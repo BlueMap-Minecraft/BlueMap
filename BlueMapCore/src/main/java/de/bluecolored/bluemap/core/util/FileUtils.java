@@ -83,21 +83,6 @@ public class FileUtils {
 	}
 	
 	/**
-	 * Blocks until a file can be read and written.<br>
-	 * <i>(Do not use this method to sync file-access from different threads!)</i>
-	 */
-	public static void waitForFile(File file, long time, TimeUnit unit) throws InterruptedException, TimeoutException {
-		long start = System.currentTimeMillis();
-		long timeout = start + TimeUnit.MILLISECONDS.convert(time, unit);
-		long sleepTime = 1;
-		while(!file.canWrite() || !file.canRead()){
-			Thread.sleep(sleepTime);
-			sleepTime = (long) Math.min(Math.ceil(sleepTime * 1.5), 1000);
-			if (System.currentTimeMillis() > timeout) throw new TimeoutException();
-		}
-	}
-	
-	/**
 	 * The path-elements are being matched to the pattern-elements, 
 	 * each pattern-element can be a regex pattern to match against one path-element or "*" to represent any number of arbitrary elements (lazy: until the next pattern matches).
 	 */

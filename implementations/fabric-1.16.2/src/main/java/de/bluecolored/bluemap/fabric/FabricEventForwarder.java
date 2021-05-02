@@ -24,30 +24,15 @@
  */
 package de.bluecolored.bluemap.fabric;
 
-import java.io.IOException;
+import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
+import de.bluecolored.bluemap.fabric.events.PlayerJoinCallback;
+import de.bluecolored.bluemap.fabric.events.PlayerLeaveCallback;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayerEntity;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
-
-import com.flowpowered.math.vector.Vector2i;
-import com.flowpowered.math.vector.Vector3i;
-
-import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
-import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.fabric.events.PlayerJoinCallback;
-import de.bluecolored.bluemap.fabric.events.PlayerLeaveCallback;
-import net.fabricmc.fabric.api.event.player.AttackBlockCallback;
-import net.fabricmc.fabric.api.event.player.UseBlockCallback;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-import net.minecraft.util.hit.BlockHitResult;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.Direction;
-import net.minecraft.world.World;
 
 public class FabricEventForwarder {
 
@@ -57,9 +42,6 @@ public class FabricEventForwarder {
 	public FabricEventForwarder(FabricMod mod) {
 		this.mod = mod;
 		this.eventListeners = new ArrayList<>(1);
-
-		AttackBlockCallback.EVENT.register(this::onBlockAttack);
-		UseBlockCallback.EVENT.register(this::onBlockUse);
 		
 		PlayerJoinCallback.EVENT.register(this::onPlayerJoin);
 		PlayerLeaveCallback.EVENT.register(this::onPlayerLeave);
@@ -71,34 +53,6 @@ public class FabricEventForwarder {
 	
 	public synchronized void removeAllListeners() {
 		this.eventListeners.clear();
-	}
-	
-
-	public ActionResult onBlockUse(PlayerEntity player, World world, Hand hand, BlockHitResult hitResult) {
-		if (world instanceof ServerWorld) {
-			onBlockChange((ServerWorld) world, hitResult.getBlockPos());
-		}
-		
-		return ActionResult.PASS;
-	}
-	
-	public ActionResult onBlockAttack(PlayerEntity player, World world, Hand hand, BlockPos pos, Direction direction) {
-		if (world instanceof ServerWorld) {
-			onBlockChange((ServerWorld) world, pos);
-		}
-		
-		return ActionResult.PASS;
-	}
-	
-	public synchronized void onBlockChange(ServerWorld world, BlockPos blockPos) {
-		Vector3i position = new Vector3i(blockPos.getX(), blockPos.getY(), blockPos.getZ());
-		
-		try {
-			UUID uuid = mod.getUUIDForWorld(world);
-			for (ServerEventListener listener : eventListeners) listener.onBlockChange(uuid, position);
-		} catch (IOException e) {
-			Logger.global.noFloodError("Failed to get the UUID for a world!", e);
-		}
 	}
 	
 	public synchronized void onPlayerJoin(MinecraftServer server, ServerPlayerEntity player) {

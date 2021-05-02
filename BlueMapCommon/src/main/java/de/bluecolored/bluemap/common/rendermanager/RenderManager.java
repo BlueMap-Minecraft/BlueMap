@@ -80,10 +80,6 @@ public class RenderManager {
 		}
 	}
 
-	public boolean isIdle() {
-		return busyCount.get() == 0;
-	}
-
 	public boolean isRunning() {
 		synchronized (this.workerThreads) {
 			for (WorkerThread worker : workerThreads) {
@@ -91,6 +87,13 @@ public class RenderManager {
 			}
 
 			return false;
+		}
+	}
+
+	public void awaitIdle() throws InterruptedException {
+		synchronized (this.renderTasks) {
+			while (!this.renderTasks.isEmpty())
+				this.renderTasks.wait(10000);
 		}
 	}
 
@@ -186,6 +189,7 @@ public class RenderManager {
 			if (!task.hasMoreWork()) {
 				if (busyCount.get() <= 0) {
 					this.renderTaskSet.remove(this.renderTasks.removeFirst());
+					this.renderTasks.notifyAll();
 					busyCount.set(0);
 				} else {
 					this.renderTasks.wait(10000);

@@ -1,3 +1,27 @@
+/*
+ * This file is part of BlueMap, licensed under the MIT License (MIT).
+ *
+ * Copyright (c) Blue (Lukas Rieger) <https://bluecolored.de>
+ * Copyright (c) contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 package de.bluecolored.bluemap.common.rendermanager;
 
 import com.flowpowered.math.vector.Vector2i;
@@ -39,7 +63,7 @@ public class WorldRegionRenderTask implements RenderTask {
 	}
 
 	private synchronized void init() {
-		tiles = new TreeSet<>();
+		tiles = new TreeSet<>(WorldRegionRenderTask::tileComparator);
 		startTime = System.currentTimeMillis();
 
 		long changesSince = 0;
@@ -55,8 +79,8 @@ public class WorldRegionRenderTask implements RenderTask {
 			Vector2i tileMin = chunkGrid.getCellMin(chunk, tileGrid);
 			Vector2i tileMax = chunkGrid.getCellMax(chunk, tileGrid);
 
-			for (int x = tileMin.getX(); x < tileMax.getX(); x++) {
-				for (int z = tileMin.getY(); z < tileMax.getY(); z++) {
+			for (int x = tileMin.getX(); x <= tileMax.getX(); x++) {
+				for (int z = tileMin.getY(); z <= tileMax.getY(); z++) {
 					tiles.add(new Vector2i(x, z));
 				}
 			}
@@ -99,7 +123,7 @@ public class WorldRegionRenderTask implements RenderTask {
 
 	@Override
 	public boolean hasMoreWork() {
-		return !cancelled && !tiles.isEmpty();
+		return !cancelled && (tiles == null || !tiles.isEmpty());
 	}
 
 	@Override
@@ -108,7 +132,7 @@ public class WorldRegionRenderTask implements RenderTask {
 		if (tileCount == 0) return 1;
 
 		double remainingTiles = tiles.size();
-		return remainingTiles / this.tileCount;
+		return 1 - (remainingTiles / this.tileCount);
 	}
 
 	@Override
@@ -131,6 +155,13 @@ public class WorldRegionRenderTask implements RenderTask {
 	@Override
 	public int hashCode() {
 		return worldRegion.hashCode();
+	}
+
+	private static int tileComparator(Vector2i v1, Vector2i v2) {
+		int comp = v1.compareTo(v2);
+		if (comp != 0) return comp;
+		if (v1.getX() != v2.getX()) return v2.getX() - v1.getX();
+		return v2.getY() - v1.getY();
 	}
 
 }

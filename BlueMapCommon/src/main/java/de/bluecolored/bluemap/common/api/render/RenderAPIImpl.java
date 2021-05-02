@@ -31,6 +31,8 @@ import de.bluecolored.bluemap.api.renderer.RenderAPI;
 import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.api.BlueMapMapImpl;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
+import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
+import de.bluecolored.bluemap.core.world.Grid;
 
 import java.util.UUID;
 
@@ -68,8 +70,12 @@ public class RenderAPIImpl implements RenderAPI {
 			cmap = api.getMapForId(map.getId());
 		}
 
-		//TODO
-		//renderManager.createTicket(cmap.getMapType(), tile);
+		Grid regionGrid = cmap.getWorld().getWorld().getRegionGrid();
+		Grid tileGrid = cmap.getMapType().getHiresModelManager().getTileGrid();
+
+		for (Vector2i region : tileGrid.getIntersecting(tile, regionGrid)) {
+			renderManager.scheduleRenderTask(new WorldRegionRenderTask(cmap.getMapType(), region));
+		}
 	}
 
 	@Override
