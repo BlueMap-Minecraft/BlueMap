@@ -38,7 +38,7 @@ public class InterruptableReentrantLock extends ReentrantLock {
 	}
 
 	/**
-	 * Aquires the lock and interrupts the currently holding thread if there is any.
+	 * Acquires the lock and interrupts the currently holding thread if there is any.
 	 */
 	public void interruptAndLock() {
 		while (!tryLock()) {

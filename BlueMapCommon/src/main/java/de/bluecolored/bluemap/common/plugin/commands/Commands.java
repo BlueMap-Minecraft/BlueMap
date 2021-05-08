@@ -28,11 +28,13 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.common.collect.Lists;
+import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.ArgumentType;
 import com.mojang.brigadier.arguments.DoubleArgumentType;
 import com.mojang.brigadier.arguments.IntegerArgumentType;
 import com.mojang.brigadier.arguments.StringArgumentType;
+import com.mojang.brigadier.builder.ArgumentBuilder;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
@@ -47,12 +49,15 @@ import de.bluecolored.bluemap.common.plugin.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.plugin.text.TextColor;
 import de.bluecolored.bluemap.common.plugin.text.TextFormat;
+import de.bluecolored.bluemap.common.rendermanager.CombinedRenderTask;
+import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
-import de.bluecolored.bluemap.core.mca.MCAChunk;
+import de.bluecolored.bluemap.core.map.MapRenderState;
 import de.bluecolored.bluemap.core.mca.ChunkAnvil112;
+import de.bluecolored.bluemap.core.mca.MCAChunk;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.core.world.Block;
@@ -61,6 +66,8 @@ import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Function;
@@ -137,45 +144,37 @@ public class Commands<S> {
 				.build();
 		
 		LiteralCommandNode<S> pauseCommand = 
-				literal("pause")
-				.requires(requirements("bluemap.pause"))
-				.executes(this::pauseCommand)
+				literal("stop")
+				.requires(requirements("bluemap.stop"))
+				.executes(this::stopCommand)
 				.build();
 		
 		LiteralCommandNode<S> resumeCommand = 
-				literal("resume")
-				.requires(requirements("bluemap.resume"))
-				.executes(this::resumeCommand)
+				literal("start")
+				.requires(requirements("bluemap.start"))
+				.executes(this::startCommand)
 				.build();
 
 		LiteralCommandNode<S> renderCommand =
-				literal("render")
-				.requires(requirements("bluemap.render"))
-				.executes(this::renderCommand) // /bluemap render
+				addRenderArguments(
+						literal("render")
+						.requires(requirements("bluemap.render")),
+						this::renderCommand
+				).build();
 
-				.then(argument("radius", IntegerArgumentType.integer())
-						.executes(this::renderCommand)) // /bluemap render <radius>
-
-				.then(argument("x", DoubleArgumentType.doubleArg())
-						.then(argument("z", DoubleArgumentType.doubleArg())
-								.then(argument("radius", IntegerArgumentType.integer())
-										.executes(this::renderCommand)))) // /bluemap render <x> <z> <radius>
-
-				.then(argument("world|map", StringArgumentType.string()).suggests(new WorldOrMapSuggestionProvider<>(plugin))
-						.executes(this::renderCommand) // /bluemap render <world|map>
-
-						.then(argument("x", DoubleArgumentType.doubleArg())
-								.then(argument("z", DoubleArgumentType.doubleArg())
-										.then(argument("radius", IntegerArgumentType.integer())
-												.executes(this::renderCommand))))) // /bluemap render <world|map> <x> <z> <radius>
-				.build();
+		LiteralCommandNode<S> updateCommand =
+				addRenderArguments(
+						literal("update")
+						.requires(requirements("bluemap.update")),
+						this::updateCommand
+				).build();
 
 		LiteralCommandNode<S> purgeCommand =
 				literal("purge")
-						.requires(requirements("bluemap.render"))
-						.then(argument("map", StringArgumentType.string()).suggests(new MapSuggestionProvider<>(plugin))
-								.executes(this::purgeCommand))
-						.build();
+				.requires(requirements("bluemap.render"))
+				.then(argument("map", StringArgumentType.string()).suggests(new MapSuggestionProvider<>(plugin))
+						.executes(this::purgeCommand))
+				.build();
 		
 		LiteralCommandNode<S> worldsCommand = 
 				literal("worlds")
@@ -225,13 +224,35 @@ public class Commands<S> {
 		baseCommand.addChild(debugCommand);
 		baseCommand.addChild(pauseCommand);
 		baseCommand.addChild(resumeCommand);
-		//baseCommand.addChild(renderCommand);
+		baseCommand.addChild(renderCommand);
+		baseCommand.addChild(updateCommand);
 		baseCommand.addChild(purgeCommand);
 		baseCommand.addChild(worldsCommand);
 		baseCommand.addChild(mapsCommand);
 		baseCommand.addChild(markerCommand);
 		markerCommand.addChild(createMarkerCommand);
 		markerCommand.addChild(removeMarkerCommand);
+	}
+
+	private <B extends ArgumentBuilder<S, B>> B addRenderArguments(B builder, Command<S> command) {
+		return builder
+			.executes(command) // /bluemap render
+
+			.then(argument("radius", IntegerArgumentType.integer())
+					.executes(command)) // /bluemap render <radius>
+
+			.then(argument("x", DoubleArgumentType.doubleArg())
+					.then(argument("z", DoubleArgumentType.doubleArg())
+							.then(argument("radius", IntegerArgumentType.integer())
+									.executes(command)))) // /bluemap render <x> <z> <radius>
+
+			.then(argument("world|map", StringArgumentType.string()).suggests(new WorldOrMapSuggestionProvider<>(plugin))
+					.executes(command) // /bluemap render <world|map>
+
+					.then(argument("x", DoubleArgumentType.doubleArg())
+							.then(argument("z", DoubleArgumentType.doubleArg())
+									.then(argument("radius", IntegerArgumentType.integer())
+											.executes(command))))); // /bluemap render <world|map> <x> <z> <radius>
 	}
 	
 	private Predicate<S> requirements(String permission){
@@ -498,58 +519,66 @@ public class Commands<S> {
 		return 1;
 	}
 	
-	public int pauseCommand(CommandContext<S> context) {
+	public int stopCommand(CommandContext<S> context) {
 		CommandSource source = commandSourceInterface.apply(context.getSource());
 		
 		if (plugin.getRenderManager().isRunning()) {
 			plugin.getRenderManager().stop();
-			source.sendMessage(Text.of(TextColor.GREEN, "BlueMap rendering paused!"));
+			source.sendMessage(Text.of(TextColor.GREEN, "Render-Threads stopped!"));
 			return 1;
 		} else {
-			source.sendMessage(Text.of(TextColor.RED, "BlueMap rendering are already paused!"));
+			source.sendMessage(Text.of(TextColor.RED, "Render-Threads are already stopped!"));
 			return 0;
 		}
 	}
 	
-	public int resumeCommand(CommandContext<S> context) {
+	public int startCommand(CommandContext<S> context) {
 		CommandSource source = commandSourceInterface.apply(context.getSource());
 		
 		if (!plugin.getRenderManager().isRunning()) {
 			plugin.getRenderManager().start(plugin.getCoreConfig().getRenderThreadCount());
-			source.sendMessage(Text.of(TextColor.GREEN, "BlueMap renders resumed!"));
+			source.sendMessage(Text.of(TextColor.GREEN, "Render-Threads started!"));
 			return 1;
 		} else {
-			source.sendMessage(Text.of(TextColor.RED, "BlueMap renders are already running!"));
+			source.sendMessage(Text.of(TextColor.RED, "Render-Threads are already running!"));
 			return 0;
 		}
 	}
 
 	public int renderCommand(CommandContext<S> context) {
+		return updateCommand(context, true);
+	}
+
+	public int updateCommand(CommandContext<S> context) {
+		return updateCommand(context, false);
+	}
+
+	public int updateCommand(CommandContext<S> context, boolean force) {
 		final CommandSource source = commandSourceInterface.apply(context.getSource());
 		
 		// parse world/map argument
 		Optional<String> worldOrMap = getOptionalArgument(context, "world|map", String.class);
 		
-		final World world;
-		final BmMap map;
+		final World worldToRender;
+		final BmMap mapToRender;
 		if (worldOrMap.isPresent()) {
-			world = parseWorld(worldOrMap.get()).orElse(null);
+			worldToRender = parseWorld(worldOrMap.get()).orElse(null);
 			
-			if (world == null) {
-				map = parseMap(worldOrMap.get()).orElse(null);
+			if (worldToRender == null) {
+				mapToRender = parseMap(worldOrMap.get()).orElse(null);
 				
-				if (map == null) {
+				if (mapToRender == null) {
 					source.sendMessage(Text.of(TextColor.RED, "There is no ", helper.worldHelperHover(), " or ", helper.mapHelperHover(), " with this name: ", TextColor.WHITE, worldOrMap.get()));
 					return 0;
 				}
 			} else {
-				map = null;
+				mapToRender = null;
 			}
 		} else {
-			world = source.getWorld().orElse(null);
-			map = null;
+			worldToRender = source.getWorld().orElse(null);
+			mapToRender = null;
 			
-			if (world == null) {
+			if (worldToRender == null) {
 				source.sendMessage(Text.of(TextColor.RED, "Can't detect a world from this command-source, you'll have to define a world or a map to render!").setHoverText(Text.of(TextColor.GRAY, "/bluemap render <world|map>")));
 				return 0;
 			}
@@ -580,13 +609,45 @@ public class Commands<S> {
 		// execute render
 		new Thread(() -> {
 			try {
-				if (world != null) {
-					plugin.getServerInterface().persistWorldChanges(world.getUUID());
-					//TODO: helper.createWorldRenderTask(source, world, center, radius);
+				List<BmMap> maps = new ArrayList<>();
+				World world = worldToRender;
+				if (worldToRender != null) {
+					plugin.getServerInterface().persistWorldChanges(worldToRender.getUUID());
+					for (BmMap map : plugin.getMapTypes()) {
+						if (map.getWorld().equals(worldToRender)) maps.add(map);
+					}
 				} else {
-					plugin.getServerInterface().persistWorldChanges(map.getWorld().getUUID());
-					//TODO: helper.createMapRenderTask(source, map, center, radius);
+					plugin.getServerInterface().persistWorldChanges(mapToRender.getWorld().getUUID());
+					maps.add(mapToRender);
+					world = mapToRender.getWorld();
 				}
+
+				String taskType = "Update";
+				List<Vector2i> regions = helper.getRegions(world, center, radius);
+
+				if (force) {
+					taskType = "Render";
+					for (BmMap map : maps) {
+						MapRenderState state = map.getRenderState();
+						regions.forEach(region -> state.setRenderTime(region, -1));
+					}
+				}
+
+				if (center != null) {
+					taskType = "Radius-" + taskType;
+				}
+
+				for (BmMap map : maps) {
+					List<WorldRegionRenderTask> tasks = new ArrayList<>(regions.size());
+					regions.forEach(region -> tasks.add(new WorldRegionRenderTask(map, region)));
+					tasks.sort(WorldRegionRenderTask::compare);
+					plugin.getRenderManager().scheduleRenderTask(new CombinedRenderTask<>(
+							taskType + " map '" + map.getId() + "'",
+							tasks
+					));
+					source.sendMessage(Text.of(TextColor.GREEN, "Created new " + taskType + "-Task for map '" + map.getId() + "' ", TextColor.GRAY, "(" + regions.size() + " regions, ~" + regions.size() * 1024L + " chunks)"));
+				}
+				source.sendMessage(Text.of(TextColor.GREEN, "Use ", TextColor.GRAY, "/bluemap", TextColor.GREEN, " to see the progress."));
 			} catch (IOException ex) {
 				source.sendMessage(Text.of(TextColor.RED, "There was an unexpected exception trying to save the world. Please check the console for more details..."));
 				Logger.global.logError("Unexpected exception trying to save the world!", ex);

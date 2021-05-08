@@ -24,13 +24,16 @@
  */
 package de.bluecolored.bluemap.common.plugin.commands;
 
+import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.plugin.text.TextColor;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.rendermanager.RenderTask;
 import de.bluecolored.bluemap.core.map.BmMap;
+import de.bluecolored.bluemap.core.world.Grid;
 import de.bluecolored.bluemap.core.world.World;
+import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -48,25 +51,61 @@ public class CommandHelper {
 		List<Text> lines = new ArrayList<>();
 
 		RenderManager renderer = plugin.getRenderManager();
+		List<RenderTask> tasks = renderer.getScheduledRenderTasks();
 
 		lines.add(Text.of(TextColor.BLUE, "BlueMap - Status:"));
 
 		if (renderer.isRunning()) {
-			lines.add(Text.of(TextColor.WHITE, " Render-Threads are ",
-					Text.of(TextColor.GREEN, "running")
-							.setHoverText(Text.of("click to pause rendering"))
-							.setClickAction(Text.ClickAction.RUN_COMMAND, "/bluemap pause"),
-					TextColor.GRAY, "!"));
+			Text status;
+			if (tasks.isEmpty()) {
+				status = Text.of(TextColor.GRAY, "idle");
+			} else {
+				status = Text.of(TextColor.GREEN, "running");
+			}
+
+			status.setHoverText(Text.of("click to stop rendering"));
+			status.setClickAction(Text.ClickAction.RUN_COMMAND, "/bluemap stop");
+
+			lines.add(Text.of(TextColor.WHITE, " Render-Threads are ", status, TextColor.WHITE, "!"));
+
+			if (!tasks.isEmpty()) {
+				lines.add(Text.of(TextColor.WHITE, " Queued Tasks (" + tasks.size() + "):"));
+				for (int i = 0; i < tasks.size(); i++) {
+					if (i >= 10){
+						lines.add(Text.of(TextColor.GRAY, "..."));
+						break;
+					}
+
+					RenderTask task = tasks.get(i);
+					lines.add(Text.of(TextColor.GRAY, " - ", TextColor.GOLD, task.getDescription()));
+
+					if (i == 0) {
+						lines.add(Text.of(TextColor.GRAY, "    Progress: ", TextColor.WHITE,
+								(Math.round(task.estimateProgress() * 10000) / 100.0) + "%"));
+						lines.add(Text.of(TextColor.GRAY, "    ETA: ", TextColor.WHITE, DurationFormatUtils.formatDuration(renderer.estimateCurrentRenderTaskTimeRemaining(), "HH:mm:ss")));
+					}
+				}
+			}
 		} else {
 			lines.add(Text.of(TextColor.WHITE, " Render-Threads are ",
-					Text.of(TextColor.RED, "paused")
-							.setHoverText(Text.of("click to resume rendering"))
-							.setClickAction(Text.ClickAction.RUN_COMMAND, "/bluemap resume"),
+					Text.of(TextColor.RED, "stopped")
+							.setHoverText(Text.of("click to start rendering"))
+							.setClickAction(Text.ClickAction.RUN_COMMAND, "/bluemap start"),
 					TextColor.GRAY, "!"));
-		}
 
-		List<RenderTask> tasks = renderer.getScheduledRenderTasks();
-		lines.add(Text.of(TextColor.WHITE, " Scheduled tasks: ", TextColor.GOLD, tasks.size()));
+			if (!tasks.isEmpty()) {
+				lines.add(Text.of(TextColor.WHITE, " Queued Tasks (" + tasks.size() + "):"));
+				for (int i = 0; i < tasks.size(); i++) {
+					if (i >= 10){
+						lines.add(Text.of(TextColor.GRAY, "..."));
+						break;
+					}
+
+					RenderTask task = tasks.get(i);
+					lines.add(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, task.getDescription()));
+				}
+			}
+		}
 
 		return lines;
 	}
@@ -88,4 +127,25 @@ public class CommandHelper {
 		
 		return Text.of("map").setHoverText(Text.of(TextColor.WHITE, "Available maps: \n", TextColor.GRAY, joiner.toString()));
 	}
+
+	public List<Vector2i> getRegions(World world, Vector2i center, int radius) {
+		if (center == null || radius < 0) return new ArrayList<>(world.listRegions());
+
+		List<Vector2i> regions = new ArrayList<>();
+
+		Grid regionGrid = world.getRegionGrid();
+		Vector2i halfCell = regionGrid.getGridSize().div(2);
+		int increasedRadiusSquared = (int) Math.pow(radius + Math.ceil(halfCell.length()), 2);
+
+		for (Vector2i region : world.listRegions()) {
+			Vector2i min = regionGrid.getCellMin(region);
+			Vector2i regionCenter = min.add(halfCell);
+
+			if (regionCenter.distanceSquared(center) <= increasedRadiusSquared)
+				regions.add(region);
+		}
+
+		return regions;
+	}
+
 }

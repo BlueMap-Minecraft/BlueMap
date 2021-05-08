@@ -32,8 +32,7 @@ import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.live.LiveAPIRequestHandler;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.common.plugin.skins.PlayerSkinUpdater;
-import de.bluecolored.bluemap.common.rendermanager.RenderManager;
-import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
+import de.bluecolored.bluemap.common.rendermanager.*;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.config.CoreConfig;
@@ -79,7 +78,7 @@ public class Plugin {
 	private RenderManager renderManager;
 	private WebServer webServer;
 
-	private final Timer daemonTimer;
+	private Timer daemonTimer;
 	private TimerTask saveTask;
 	private TimerTask metricsTask;
 
@@ -93,8 +92,6 @@ public class Plugin {
 		this.minecraftVersion = minecraftVersion;
 		this.implementationType = implementationType.toLowerCase();
 		this.serverInterface = serverInterface;
-
-		this.daemonTimer = new Timer("BlueMap-Plugin-Daemon-Timer", true);
 	}
 	
 	public void load() throws IOException, ParseResourceException {
@@ -120,7 +117,7 @@ public class Plugin {
 						true,
 						true
 				));
-				
+
 				//create and start webserver
 				if (webServerConfig.isWebserverEnabled()) {
 					FileUtils.mkDirs(webServerConfig.getWebRoot());
@@ -161,10 +158,28 @@ public class Plugin {
 				//warn if no maps are configured
 				if (maps.isEmpty()) {
 					Logger.global.logWarning("There are no valid maps configured, please check your render-config! Disabling BlueMap...");
+
+					unload();
+					return;
 				}
 				
 				//initialize render manager
 				renderManager = new RenderManager();
+
+				//update all maps
+				for (BmMap map : maps.values()) {
+					Collection<Vector2i> regions = map.getWorld().listRegions();
+					List<WorldRegionRenderTask> mapTasks = new ArrayList<>(regions.size());
+
+					for (Vector2i region : regions)
+						mapTasks.add(new WorldRegionRenderTask(map, region));
+					mapTasks.sort(WorldRegionRenderTask::compare);
+
+					CombinedRenderTask<WorldRegionRenderTask> mapUpdateTask = new CombinedRenderTask<>("Update map '" + map.getId() + "'", mapTasks);
+					renderManager.scheduleRenderTask(mapUpdateTask);
+				}
+
+				//start render-manager
 				renderManager.start(coreConfig.getRenderThreadCount());
 				
 				//update webapp and settings
@@ -180,6 +195,9 @@ public class Plugin {
 					serverInterface.registerListener(skinUpdater);
 				}
 
+				//init timer
+				daemonTimer = new Timer("BlueMap-Plugin-Daemon-Timer", true);
+
 				//periodically save
 				saveTask = new TimerTask() {
 					@Override
@@ -193,7 +211,7 @@ public class Plugin {
 					}
 				};
 				daemonTimer.schedule(saveTask, TimeUnit.MINUTES.toMillis(2), TimeUnit.MINUTES.toMillis(2));
-				
+
 				//metrics
 				metricsTask = new TimerTask() {
 					@Override
@@ -203,12 +221,6 @@ public class Plugin {
 					}
 				};
 				daemonTimer.scheduleAtFixedRate(metricsTask, TimeUnit.MINUTES.toMillis(1), TimeUnit.MINUTES.toMillis(30));
-		
-				loaded = true;
-				
-				//enable api
-				this.api = new BlueMapAPIImpl(this);
-				this.api.register();
 
 				//watch map-changes
 				this.regionFileWatchServices = new ArrayList<>();
@@ -222,13 +234,12 @@ public class Plugin {
 					}
 				}
 
-				//update all maps
-				for (BmMap map : maps.values()) {
-					for (Vector2i region : map.getWorld().listRegions()){
-						renderManager.scheduleRenderTask(new WorldRegionRenderTask(map, region));
-					}
-				}
-				
+				//enable api
+				this.api = new BlueMapAPIImpl(this);
+				this.api.register();
+
+				//done
+				loaded = true;
 			}
 		} catch (InterruptedException e) {
 			Thread.currentThread().interrupt();
@@ -249,22 +260,31 @@ public class Plugin {
 				
 				//unregister listeners
 				serverInterface.unregisterAllListeners();
+				skinUpdater = null;
 		
 				//stop scheduled threads
 				if (metricsTask != null) metricsTask.cancel();
+				metricsTask = null;
 				if (saveTask != null) saveTask.cancel();
+				saveTask = null;
+				if (daemonTimer != null) daemonTimer.cancel();
+				daemonTimer = null;
 
-				// stop file-watchers
+				//stop file-watchers
 				if (regionFileWatchServices != null) {
 					for (RegionFileWatchService watcher : regionFileWatchServices) {
 						watcher.close();
 					}
 					regionFileWatchServices.clear();
 				}
+				regionFileWatchServices = null;
 
 				//stop services
 				if (renderManager != null) renderManager.stop();
+				renderManager = null;
+
 				if (webServer != null) webServer.close();
+				webServer = null;
 
 				//save renders
 				if (maps != null) {
@@ -277,13 +297,14 @@ public class Plugin {
 				blueMap = null;
 				worlds = null;
 				maps = null;
-				renderManager = null;
-				webServer = null;
 
+				coreConfig = null;
+				renderConfig = null;
+				webServerConfig = null;
 				pluginConfig = null;
-				
+
+				//done
 				loaded = false;
-				
 			}
 		} finally {
 			loadingLock.unlock();
@@ -334,7 +355,7 @@ public class Plugin {
 	public RenderManager getRenderManager() {
 		return renderManager;
 	}
-	
+
 	public WebServer getWebServer() {
 		return webServer;
 	}

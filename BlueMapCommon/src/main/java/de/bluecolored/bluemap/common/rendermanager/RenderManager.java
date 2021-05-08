@@ -36,6 +36,9 @@ public class RenderManager {
 	private final int id;
 	private volatile boolean running;
 
+	private volatile long currentTaskStartTime;
+	private volatile double currentTaskStartProgress;
+
 	private final AtomicInteger nextWorkerThreadIndex;
 	private final Collection<WorkerThread> workerThreads;
 	private final AtomicInteger busyCount;
@@ -53,6 +56,9 @@ public class RenderManager {
 
 		this.renderTasks = new LinkedList<>();
 		this.renderTaskSet = new HashSet<>();
+
+		this.currentTaskStartTime = System.currentTimeMillis();
+		this.currentTaskStartProgress = -1;
 	}
 
 	public void start(int threadCount) throws IllegalStateException {
@@ -64,6 +70,9 @@ public class RenderManager {
 			this.busyCount.set(0);
 
 			this.running = true;
+
+			this.currentTaskStartTime = System.currentTimeMillis();
+			this.currentTaskStartProgress = -1;
 
 			for (int i = 0; i < threadCount; i++) {
 				WorkerThread worker = new WorkerThread();
@@ -106,27 +115,38 @@ public class RenderManager {
 
 	public boolean scheduleRenderTask(RenderTask task) {
 		synchronized (this.renderTasks) {
-			if (renderTaskSet.add(task)) {
-				renderTasks.addLast(task);
-				renderTasks.notifyAll();
-				return true;
-			} else {
-				return false;
+			if (containsRenderTask(task)) return false;
+
+			renderTaskSet.add(task);
+			renderTasks.addLast(task);
+			renderTasks.notifyAll();
+			return true;
+		}
+	}
+
+	public int scheduleRenderTasks(RenderTask... tasks) {
+		return scheduleRenderTasks(Arrays.asList(tasks));
+	}
+
+	public int scheduleRenderTasks(Collection<RenderTask> tasks) {
+		synchronized (this.renderTasks) {
+			int count = 0;
+			for (RenderTask task : tasks) {
+				if (scheduleRenderTask(task)) count++;
 			}
+			return count;
 		}
 	}
 
 	public boolean scheduleRenderTaskNext(RenderTask task) {
 		synchronized (this.renderTasks) {
 			if (renderTasks.size() <= 1) return scheduleRenderTask(task);
+			if (containsRenderTask(task)) return false;
 
-			if (renderTaskSet.add(task)) {
-				renderTasks.add(1, task);
-				renderTasks.notifyAll();
-				return true;
-			} else {
-				return false;
-			}
+			renderTaskSet.add(task);
+			renderTasks.add(1, task);
+			renderTasks.notifyAll();
+			return true;
 		}
 	}
 
@@ -140,7 +160,7 @@ public class RenderManager {
 		}
 	}
 
-	public boolean removeTask(RenderTask task) {
+	public boolean removeRenderTask(RenderTask task) {
 		synchronized (this.renderTasks) {
 			if (this.renderTasks.isEmpty()) return false;
 
@@ -156,7 +176,7 @@ public class RenderManager {
 		}
 	}
 
-	public void removeAllTasks() {
+	public void removeAllRenderTasks() {
 		synchronized (this.renderTasks) {
 			if (this.renderTasks.isEmpty()) return;
 
@@ -167,8 +187,51 @@ public class RenderManager {
 		}
 	}
 
+	public long estimateCurrentRenderTaskTimeRemaining() {
+		synchronized (this.renderTasks) {
+			long now = System.currentTimeMillis();
+			double progress = getCurrentRenderTask().estimateProgress();
+
+			long deltaTime = now - currentTaskStartTime;
+			double deltaProgress = progress - currentTaskStartProgress;
+
+			double estimatedTotalDuration = deltaTime / deltaProgress;
+			double estimatedRemainingDuration = (1 - progress) * estimatedTotalDuration;
+
+			return (long) estimatedRemainingDuration;
+		}
+	}
+
+	public RenderTask getCurrentRenderTask() {
+		synchronized (this.renderTasks) {
+			return this.renderTasks.getFirst();
+		}
+	}
+
 	public List<RenderTask> getScheduledRenderTasks() {
-		return Collections.unmodifiableList(renderTasks);
+		synchronized (this.renderTasks) {
+			return new ArrayList<>(this.renderTasks);
+		}
+	}
+
+	public boolean containsRenderTask(RenderTask task) {
+		synchronized (this.renderTasks) {
+			// checking all scheduled renderTasks except the first one, since that is already being processed
+
+			// quick check
+			if (renderTaskSet.contains(task) && !getCurrentRenderTask().equals(task)) return true;
+
+			// iterate over all (skipping the first) using the "contains" method
+			Iterator<RenderTask> iterator = renderTasks.iterator();
+			if (!iterator.hasNext()) return false;
+			iterator.next(); // skip first
+
+			while(iterator.hasNext()) {
+				if (iterator.next().contains(task)) return true;
+			}
+
+			return false;
+		}
 	}
 
 	public int getWorkerThreadCount() {
@@ -184,12 +247,21 @@ public class RenderManager {
 
 			task = this.renderTasks.getFirst();
 
+			if (this.currentTaskStartProgress < 0) {
+				this.currentTaskStartTime = System.currentTimeMillis();
+				this.currentTaskStartProgress = task.estimateProgress();
+			}
+
 			// the following is making sure every render-thread is done working on this task (no thread is "busy")
 			// before continuing working on the next RenderTask
 			if (!task.hasMoreWork()) {
 				if (busyCount.get() <= 0) {
 					this.renderTaskSet.remove(this.renderTasks.removeFirst());
 					this.renderTasks.notifyAll();
+
+					this.currentTaskStartTime = System.currentTimeMillis();
+					this.currentTaskStartProgress = -1;
+
 					busyCount.set(0);
 				} else {
 					this.renderTasks.wait(10000);

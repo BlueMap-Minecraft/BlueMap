@@ -46,4 +46,13 @@ public interface RenderTask {
 	 */
 	void cancel();
 
+	/**
+	 * Checks if the given task is somehow included with this task
+	 */
+	default boolean contains(RenderTask task) {
+		return equals(task);
+	}
+
+	String getDescription();
+
 }

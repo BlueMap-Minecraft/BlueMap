@@ -24,15 +24,15 @@
  */
 package de.bluecolored.bluemap.common.plugin.commands;
 
-import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
-
 import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.SuggestionProvider;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+
+import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
 
 public abstract class AbstractSuggestionProvider<S> implements SuggestionProvider<S> {
 	

@@ -24,18 +24,20 @@
  */
 package de.bluecolored.bluemap.common.rendermanager;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 
 public class CombinedRenderTask<T extends RenderTask> implements RenderTask {
 
+	private final String description;
 	private final List<T> tasks;
+	private final Set<T> taskSet;
 	private int currentTaskIndex;
 
-	public CombinedRenderTask(Collection<T> tasks) {
-		this.tasks = new ArrayList<>();
-		this.tasks.addAll(tasks);
+	public CombinedRenderTask(String description, Collection<T> tasks) {
+		this.description = description;
+		this.tasks = Collections.unmodifiableList(new ArrayList<>(tasks));
+		this.taskSet = Collections.unmodifiableSet(new HashSet<>(tasks));
+
 		this.currentTaskIndex = 0;
 	}
 
@@ -43,7 +45,7 @@ public class CombinedRenderTask<T extends RenderTask> implements RenderTask {
 	public void doWork() throws Exception {
 		T task;
 
-		synchronized (this.tasks) {
+		synchronized (this) {
 			if (!hasMoreWork()) return;
 			task = this.tasks.get(this.currentTaskIndex);
 
@@ -57,25 +59,41 @@ public class CombinedRenderTask<T extends RenderTask> implements RenderTask {
 	}
 
 	@Override
-	public boolean hasMoreWork() {
+	public synchronized boolean hasMoreWork() {
 		return this.currentTaskIndex < this.tasks.size();
 	}
 
 	@Override
-	public double estimateProgress() {
-		synchronized (this.tasks) {
-			if (!hasMoreWork()) return 1;
+	public synchronized double estimateProgress() {
+		if (!hasMoreWork()) return 1;
 
-			double total = currentTaskIndex;
-			total += this.tasks.get(this.currentTaskIndex).estimateProgress();
+		double total = currentTaskIndex;
+		total += this.tasks.get(this.currentTaskIndex).estimateProgress();
 
-			return total / tasks.size();
-		}
+		return total / tasks.size();
 	}
 
 	@Override
 	public void cancel() {
 		for (T task : tasks) task.cancel();
+	}
+
+	@Override
+	public boolean contains(RenderTask task) {
+		if (this.equals(task)) return true;
+		if (taskSet.contains(task)) return true;
+
+		for (RenderTask subTask : this.tasks) {
+			if (subTask.contains(task)) return true;
+		}
+
+		return false;
+	}
+
+	@Override
+	public String getDescription() {
+		//return description + " (" + (this.currentTaskIndex + 1) + "/" + tasks.size() + ")";
+		return description;
 	}
 
 }

@@ -86,11 +86,13 @@ public class BlueMapCLI {
 		}
 
 		//update all maps
-		for (BmMap map : maps.values()) {
-			for (Vector2i region : map.getWorld().listRegions()){
-				renderManager.scheduleRenderTask(new WorldRegionRenderTask(map, region, forceRender));
-			}
-		}
+		List<WorldRegionRenderTask> tasks = new ArrayList<>();
+		for (BmMap map : maps.values())
+			for (Vector2i region : map.getWorld().listRegions())
+				tasks.add(new WorldRegionRenderTask(map, region, forceRender));
+		tasks.sort(WorldRegionRenderTask::compare);
+		tasks.forEach(renderManager::scheduleRenderTask);
+
 		int totalRegions = renderManager.getScheduledRenderTasks().size();
 
 		Logger.global.logInfo("Start " + (forceRender ? "rendering " : "updating ") + maps.size() + " maps (" + totalRegions + " regions, ~" + totalRegions * 1024L + " chunks)...");
@@ -115,7 +117,7 @@ public class BlueMapCLI {
 				long etr = (long) ((elapsedTime / progress) * (1 - progress));
 				String etrDurationString = DurationFormatUtils.formatDuration(etr, "HH:mm:ss");
 
-				Logger.global.logInfo("Rendering: " + (Math.round(progress * 100000) / 1000.0) + "% (ETR: " + etrDurationString + ")");
+				Logger.global.logInfo("Rendering: " + (Math.round(progress * 100000) / 1000.0) + "% (ETA: " + etrDurationString + ")");
 			}
 		};
 		timer.scheduleAtFixedRate(updateInfoTask, TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(10));

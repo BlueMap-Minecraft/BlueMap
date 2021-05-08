@@ -136,15 +136,7 @@ public class HttpConnection implements Runnable {
 	}
 
 	public void close() throws IOException {
-		try {
-			in.close();
-		} finally {
-			try {
-				out.close();
-			} finally {
-				connection.close();
-			}
-		}
+		connection.close();
 	}
 
 	public static class ConnectionClosedException extends IOException {
