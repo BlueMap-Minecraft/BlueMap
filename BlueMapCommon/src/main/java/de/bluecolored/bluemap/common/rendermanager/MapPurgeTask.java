@@ -68,20 +68,22 @@ public class MapPurgeTask implements RenderTask {
 			this.hasMoreWork = false;
 		}
 
-		// delete subFiles first to be able to track the progress and cancel
-		while (!subFiles.isEmpty()) {
-			Path subFile = subFiles.getLast();
-			FileUtils.delete(subFile.toFile());
-			subFiles.removeLast();
-			if (this.cancelled) return;
-		}
+		try {
+			// delete subFiles first to be able to track the progress and cancel
+			while (!subFiles.isEmpty()) {
+				Path subFile = subFiles.getLast();
+				FileUtils.delete(subFile.toFile());
+				subFiles.removeLast();
+				if (this.cancelled) return;
+			}
 
-		// make sure everything is deleted
-		FileUtils.delete(directory.toFile());
-
-		// reset map render state
-		if (this.map != null) {
-			this.map.getRenderState().reset();
+			// make sure everything is deleted
+			FileUtils.delete(directory.toFile());
+		} finally {
+			// reset map render state
+			if (this.map != null) {
+				this.map.getRenderState().reset();
+			}
 		}
 	}
 
