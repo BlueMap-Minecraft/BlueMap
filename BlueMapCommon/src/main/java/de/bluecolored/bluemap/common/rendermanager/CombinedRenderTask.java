@@ -30,13 +30,11 @@ public class CombinedRenderTask<T extends RenderTask> implements RenderTask {
 
 	private final String description;
 	private final List<T> tasks;
-	private final Set<T> taskSet;
 	private int currentTaskIndex;
 
 	public CombinedRenderTask(String description, Collection<T> tasks) {
 		this.description = description;
 		this.tasks = Collections.unmodifiableList(new ArrayList<>(tasks));
-		this.taskSet = Collections.unmodifiableSet(new HashSet<>(tasks));
 
 		this.currentTaskIndex = 0;
 	}
@@ -81,7 +79,16 @@ public class CombinedRenderTask<T extends RenderTask> implements RenderTask {
 	@Override
 	public boolean contains(RenderTask task) {
 		if (this.equals(task)) return true;
-		if (taskSet.contains(task)) return true;
+
+		if (task instanceof CombinedRenderTask) {
+			CombinedRenderTask<?> combinedTask = (CombinedRenderTask<?>) task;
+
+			for (RenderTask subTask : combinedTask.tasks) {
+				if (!this.contains(subTask)) return false;
+			}
+
+			return true;
+		}
 
 		for (RenderTask subTask : this.tasks) {
 			if (subTask.contains(task)) return true;

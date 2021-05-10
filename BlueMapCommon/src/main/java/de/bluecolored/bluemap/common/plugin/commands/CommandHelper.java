@@ -82,7 +82,11 @@ public class CommandHelper {
 					if (i == 0) {
 						lines.add(Text.of(TextColor.GRAY, "    Progress: ", TextColor.WHITE,
 								(Math.round(task.estimateProgress() * 10000) / 100.0) + "%"));
-						lines.add(Text.of(TextColor.GRAY, "    ETA: ", TextColor.WHITE, DurationFormatUtils.formatDuration(renderer.estimateCurrentRenderTaskTimeRemaining(), "HH:mm:ss")));
+
+						long etaMs = renderer.estimateCurrentRenderTaskTimeRemaining();
+						if (etaMs > 0) {
+							lines.add(Text.of(TextColor.GRAY, "    ETA: ", TextColor.WHITE, DurationFormatUtils.formatDuration(etaMs, "HH:mm:ss")));
+						}
 					}
 				}
 			}

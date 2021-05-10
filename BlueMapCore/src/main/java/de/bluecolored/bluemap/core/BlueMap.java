@@ -24,11 +24,11 @@
  */
 package de.bluecolored.bluemap.core;
 
-import java.io.IOException;
-import java.util.concurrent.ForkJoinPool;
-
 import de.bluecolored.bluemap.core.logger.Logger;
 import ninja.leaping.configurate.gson.GsonConfigurationLoader;
+
+import java.io.IOException;
+import java.util.concurrent.ForkJoinPool;
 
 public class BlueMap {
 

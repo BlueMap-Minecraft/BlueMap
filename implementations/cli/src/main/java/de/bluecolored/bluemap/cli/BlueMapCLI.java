@@ -28,11 +28,11 @@ import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.MissingResourcesException;
 import de.bluecolored.bluemap.common.plugin.RegionFileWatchService;
+import de.bluecolored.bluemap.common.rendermanager.CombinedRenderTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.rendermanager.RenderTask;
 import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
 import de.bluecolored.bluemap.common.web.FileRequestHandler;
-import de.bluecolored.bluemap.common.web.WebSettings;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.config.WebServerConfig;
@@ -59,7 +59,7 @@ public class BlueMapCLI {
 		if (blueMap.getCoreConfig().isMetricsEnabled()) Metrics.sendReportAsync("cli");
 		
 		blueMap.createOrUpdateWebApp(forceGenerateWebapp);
-		WebSettings webSettings = blueMap.updateWebAppSettings();
+		blueMap.updateWebAppSettings();
 
 		//try load resources
 		blueMap.getResourcePack();
@@ -91,10 +91,11 @@ public class BlueMapCLI {
 			for (Vector2i region : map.getWorld().listRegions())
 				tasks.add(new WorldRegionRenderTask(map, region, forceRender));
 		tasks.sort(WorldRegionRenderTask::compare);
-		tasks.forEach(renderManager::scheduleRenderTask);
+		RenderTask mainTask = new CombinedRenderTask<>("CLI Render", tasks);
 
-		int totalRegions = renderManager.getScheduledRenderTasks().size();
+		renderManager.scheduleRenderTask(mainTask);
 
+		int totalRegions = tasks.size();
 		Logger.global.logInfo("Start " + (forceRender ? "rendering " : "updating ") + maps.size() + " maps (" + totalRegions + " regions, ~" + totalRegions * 1024L + " chunks)...");
 
 		// start rendering
@@ -105,19 +106,18 @@ public class BlueMapCLI {
 		TimerTask updateInfoTask = new TimerTask() {
 			@Override
 			public void run() {
-				List<RenderTask> tasks = renderManager.getScheduledRenderTasks();
+				RenderTask task = renderManager.getCurrentRenderTask();
+				if (task == null) return;
 
-				double remainingRegions = tasks.size();
-				if (!tasks.isEmpty()) remainingRegions -= tasks.get(0).estimateProgress();
+				double progress = task.estimateProgress();
+				long etaMs = renderManager.estimateCurrentRenderTaskTimeRemaining();
 
-				double progress = 1 - (remainingRegions / totalRegions);
-
-				long now = System.currentTimeMillis();
-				long elapsedTime = now - startTime;
-				long etr = (long) ((elapsedTime / progress) * (1 - progress));
-				String etrDurationString = DurationFormatUtils.formatDuration(etr, "HH:mm:ss");
-
-				Logger.global.logInfo("Rendering: " + (Math.round(progress * 100000) / 1000.0) + "% (ETA: " + etrDurationString + ")");
+				String eta = "";
+				if (etaMs > 0) {
+					String etrDurationString = DurationFormatUtils.formatDuration(etaMs, "HH:mm:ss");
+					eta = " (ETA: " + etrDurationString + ")";
+				}
+				Logger.global.logInfo("Rendering: " + (Math.round(progress * 100000) / 1000.0) + "%" + eta);
 			}
 		};
 		timer.scheduleAtFixedRate(updateInfoTask, TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(10));
@@ -162,7 +162,10 @@ public class BlueMapCLI {
 		renderManager.awaitIdle();
 		Logger.global.logInfo("Your maps are now up-to-date!");
 
-		if (!watch) {
+		if (watch) {
+			updateInfoTask.cancel();
+			Logger.global.logInfo("Waiting for changes on the world-files...");
+		} else {
 			Runtime.getRuntime().removeShutdownHook(shutdownHook);
 			shutdown.run();
 		}
@@ -261,7 +264,7 @@ public class BlueMapCLI {
 						!blueMap.getRenderConfigFile().exists() ||
 						!blueMap.getWebServerConfigFile().exists()
 				) {
-					Logger.global.logInfo("Generating default config files for you, here: " + configFolder.getCanonicalPath().toString() + "\n");
+					Logger.global.logInfo("Generating default config files for you, here: " + configFolder.getCanonicalPath() + "\n");
 				}
 				
 				//generate all configs
@@ -275,31 +278,25 @@ public class BlueMapCLI {
 				//print help
 				BlueMapCLI.printHelp();
 				System.exit(1);
-				return;
 			}
 			
 		} catch (MissingResourcesException e) {
 			Logger.global.logWarning("BlueMap is missing important resources!");
 			Logger.global.logWarning("You must accept the required file download in order for BlueMap to work!");
-			try { Logger.global.logWarning("Please check: " + blueMap.getCoreConfigFile().getCanonicalPath()); } catch (NullPointerException | IOException ignored) {}
+			try { if (blueMap != null) Logger.global.logWarning("Please check: " + blueMap.getCoreConfigFile().getCanonicalPath()); } catch (IOException ignored) {}
 			System.exit(2);
-			return;
 		} catch (ParseException e) {
 			Logger.global.logError("Failed to parse provided arguments!", e);
 			BlueMapCLI.printHelp();
 			System.exit(1);
-			return;
 		} catch (IOException e) {
 			Logger.global.logError("An IO-error occurred!", e);
 			System.exit(1);
-			return;
 		} catch (InterruptedException ex) {
 			System.exit(1);
-			return;
 		} catch (RuntimeException e) {
 			Logger.global.logError("An unexpected error occurred!", e);
 			System.exit(1);
-			return;
 		}
 	}
 	
@@ -370,18 +367,19 @@ public class BlueMapCLI {
 		} catch (IOException ignore) {}
 		
 		String command = "java -jar " + filename;
-		
+
+		@SuppressWarnings("StringBufferReplaceableByString")
 		StringBuilder footer = new StringBuilder();
 		footer.append("Examples:\n\n");
-		footer.append(command + " -c './config/'\n");
+		footer.append(command).append(" -c './config/'\n");
 		footer.append("Generates the default/example configurations in a folder named 'config' if they are not already present\n\n");
-		footer.append(command + " -r\n");
+		footer.append(command).append(" -r\n");
 		footer.append("Render the configured maps\n\n");
-		footer.append(command + " -w\n");
+		footer.append(command).append(" -w\n");
 		footer.append("Start only the webserver without doing anything else\n\n");
-		footer.append(command + " -gs\n");
+		footer.append(command).append(" -gs\n");
 		footer.append("Generate the web-app and settings without starting a render\n\n");
-		
+
 		formatter.printHelp(command + " [options]", "\nOptions:", createOptions(), "\n" + footer.toString());
 	}
 	
