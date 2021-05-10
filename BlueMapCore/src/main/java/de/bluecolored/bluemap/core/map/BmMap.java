@@ -112,6 +112,10 @@ public class BmMap {
 		return world;
 	}
 
+	public Path getFileRoot() {
+		return fileRoot;
+	}
+
 	public MapRenderState getRenderState() {
 		return renderState;
 	}

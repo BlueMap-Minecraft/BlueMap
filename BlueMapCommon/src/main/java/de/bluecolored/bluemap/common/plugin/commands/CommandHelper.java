@@ -28,23 +28,26 @@ import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.plugin.text.TextColor;
+import de.bluecolored.bluemap.common.rendermanager.CombinedRenderTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.rendermanager.RenderTask;
+import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.world.Grid;
 import de.bluecolored.bluemap.core.world.World;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.StringJoiner;
+import java.lang.ref.WeakReference;
+import java.util.*;
 
 public class CommandHelper {
 
 	private final Plugin plugin;
+	private final Map<String, WeakReference<RenderTask>> taskRefMap;
 	
 	public CommandHelper(Plugin plugin) {
 		this.plugin = plugin;
+		this.taskRefMap = new HashMap<>();
 	}
 	
 	public List<Text> createStatusMessage(){
@@ -77,15 +80,15 @@ public class CommandHelper {
 					}
 
 					RenderTask task = tasks.get(i);
-					lines.add(Text.of(TextColor.GRAY, " - ", TextColor.GOLD, task.getDescription()));
+					lines.add(Text.of(TextColor.GRAY, "  [" + getRefForTask(task) + "] ", TextColor.GOLD, task.getDescription()));
 
 					if (i == 0) {
-						lines.add(Text.of(TextColor.GRAY, "    Progress: ", TextColor.WHITE,
+						lines.add(Text.of(TextColor.GRAY, "   Progress: ", TextColor.WHITE,
 								(Math.round(task.estimateProgress() * 10000) / 100.0) + "%"));
 
 						long etaMs = renderer.estimateCurrentRenderTaskTimeRemaining();
 						if (etaMs > 0) {
-							lines.add(Text.of(TextColor.GRAY, "    ETA: ", TextColor.WHITE, DurationFormatUtils.formatDuration(etaMs, "HH:mm:ss")));
+							lines.add(Text.of(TextColor.GRAY, "   ETA: ", TextColor.WHITE, DurationFormatUtils.formatDuration(etaMs, "HH:mm:ss")));
 						}
 					}
 				}
@@ -132,6 +135,10 @@ public class CommandHelper {
 		return Text.of("map").setHoverText(Text.of(TextColor.WHITE, "Available maps: \n", TextColor.GRAY, joiner.toString()));
 	}
 
+	public List<Vector2i> getRegions(World world) {
+		return getRegions(world, null, -1);
+	}
+
 	public List<Vector2i> getRegions(World world, Vector2i center, int radius) {
 		if (center == null || radius < 0) return new ArrayList<>(world.listRegions());
 
@@ -150,6 +157,51 @@ public class CommandHelper {
 		}
 
 		return regions;
+	}
+
+	public RenderTask createMapUpdateTask(BmMap map) {
+		return createMapUpdateTask(map, getRegions(map.getWorld()));
+	}
+
+	public RenderTask createMapUpdateTask(BmMap map, Collection<Vector2i> regions) {
+		List<WorldRegionRenderTask> tasks = new ArrayList<>(regions.size());
+		regions.forEach(region -> tasks.add(new WorldRegionRenderTask(map, region)));
+		tasks.sort(WorldRegionRenderTask::compare);
+		return new CombinedRenderTask<>("Update map '" + map.getId() + "'", tasks);
+	}
+
+	public synchronized Optional<RenderTask> getTaskForRef(String ref) {
+		return Optional.ofNullable(taskRefMap.get(ref)).map(WeakReference::get);
+	}
+
+	public synchronized Collection<String> getTaskRefs() {
+		return new ArrayList<>(taskRefMap.keySet());
+	}
+
+	private synchronized String getRefForTask(RenderTask task) {
+		Iterator<Map.Entry<String, WeakReference<RenderTask>>> iterator = taskRefMap.entrySet().iterator();
+		while (iterator.hasNext()){
+			Map.Entry<String, WeakReference<RenderTask>> entry = iterator.next();
+			if (entry.getValue().get() == null) iterator.remove();
+			if (entry.getValue().get() == task) return entry.getKey();
+		}
+
+		String newRef = safeRandomRef();
+
+		taskRefMap.put(newRef, new WeakReference<>(task));
+		return newRef;
+	}
+
+	private synchronized String safeRandomRef() {
+		String ref = randomRef();
+		while (taskRefMap.containsKey(ref)) ref = randomRef();
+		return ref;
+	}
+
+	private String randomRef() {
+		StringBuilder ref = new StringBuilder(Integer.toString(Math.abs(new Random().nextInt()), 16));
+		while (ref.length() < 4) ref.insert(0, "0");
+		return ref.subSequence(0, 4).toString();
 	}
 
 }

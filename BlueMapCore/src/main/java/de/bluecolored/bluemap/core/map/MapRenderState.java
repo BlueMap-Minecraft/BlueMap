@@ -51,6 +51,10 @@ public class MapRenderState {
 		else return renderTime;
 	}
 
+	public synchronized void reset() {
+		regionRenderTimes.clear();
+	}
+
 	public synchronized void save(File file) throws IOException {
 		OutputStream fOut = AtomicFileHelper.createFilepartOutputStream(file);
 		GZIPOutputStream gOut = new GZIPOutputStream(fOut);
