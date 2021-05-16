@@ -11,7 +11,7 @@ repositories {
 dependencies {
     shadow "org.spigotmc:spigot-api:1.13-R0.1-SNAPSHOT"
     
-    implementation group: 'org.bstats', name: 'bstats-bukkit-lite', version: '1.5'
+    implementation group: 'org.bstats', name: 'bstats-bukkit', version: '2.2.1'
 
 	implementation (project(':BlueMapCommon')) {
     	//exclude dependencies provided by bukkit
@@ -30,7 +30,7 @@ build.dependsOn shadowJar {
 	relocate 'org.spongepowered.configurate', 'de.bluecolored.shadow.configurate'
 	relocate 'org.apache.commons.io', 'de.bluecolored.shadow.apache.commons.io'
 	relocate 'org.apache.commons.lang3', 'de.bluecolored.shadow.apache.commons.lang3'
-	relocate 'org.bstats.bukkit', 'de.bluecolored.shadow.bstats.bukkit'
+	relocate 'org.bstats', 'de.bluecolored.shadow.bstats'
 	relocate 'com.mojang.brigadier', 'de.bluecolored.shadow.mojang.brigadier'
 	relocate 'com.github.benmanes.caffeine', 'de.bluecolored.shadow.benmanes.caffeine'
 	relocate 'com.google.errorprone', 'de.bluecolored.shadow.google.errorprone'

@@ -34,7 +34,7 @@ import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.sponge.SpongeCommands.SpongeCommandProxy;
 import net.querz.nbt.CompoundTag;
 import net.querz.nbt.NBTUtil;
-import org.bstats.sponge.MetricsLite2;
+import org.bstats.sponge.Metrics;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.event.Listener;
@@ -69,10 +69,6 @@ public class SpongePlugin implements ServerInterface {
 	@ConfigDir(sharedRoot = false)
 	private Path configurationDir;
 	
-	@Inject
-	@SuppressWarnings("unused")
-	private MetricsLite2 metrics;
-	
 	private final Plugin pluginInstance;
 	private final SpongeCommands commands;
 
@@ -84,7 +80,7 @@ public class SpongePlugin implements ServerInterface {
 	private final List<SpongePlayer> onlinePlayerList;
 	
 	@Inject
-	public SpongePlugin(org.slf4j.Logger logger) {
+	public SpongePlugin(org.slf4j.Logger logger, Metrics.Factory metricsFactory) {
 		Logger.global = new Slf4jLogger(logger);
 		
 		this.onlinePlayerMap = new ConcurrentHashMap<>();
@@ -99,6 +95,9 @@ public class SpongePlugin implements ServerInterface {
 		
 		this.pluginInstance = new Plugin(version, "sponge", this);
 		this.commands = new SpongeCommands(pluginInstance);
+
+		//bstats
+		metricsFactory.make(5911);
 	}
 	
 	@Listener

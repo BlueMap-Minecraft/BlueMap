@@ -31,7 +31,7 @@ import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
-import org.bstats.bukkit.MetricsLite;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.CommandMap;
@@ -58,13 +58,13 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 	
 	private static BukkitPlugin instance;
 	
-	private Plugin pluginInstance;
-	private EventForwarder eventForwarder;
-	private BukkitCommands commands;
+	private final Plugin pluginInstance;
+	private final EventForwarder eventForwarder;
+	private final BukkitCommands commands;
 	
 	private int playerUpdateIndex = 0;
-	private Map<UUID, Player> onlinePlayerMap;
-	private List<BukkitPlayer> onlinePlayerList;
+	private final Map<UUID, Player> onlinePlayerMap;
+	private final List<BukkitPlayer> onlinePlayerList;
 	
 	public BukkitPlugin() {
 		Logger.global = new JavaLogger(getLogger());
@@ -145,8 +145,8 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 			}
 		});
 		
-		//init bstats
-		new MetricsLite(this);
+		//bstats
+		new Metrics(this, 5912);
 	}
 	
 	@Override

@@ -1,7 +1,7 @@
 dependencies {
     shadow "org.spongepowered:spongeapi:8.0.0-SNAPSHOT"
 
-	implementation group: 'org.bstats', name: 'bstats-sponge-lite', version: '1.5'
+	implementation group: 'org.bstats', name: 'bstats-sponge', version: '2.2.1'
 
 	implementation (project(':BlueMapCommon')) {
     	//exclude dependencies provided by sponge
@@ -23,7 +23,7 @@ build.dependsOn shadowJar {
 	relocate 'com.mojang.brigadier', 'de.bluecolored.shadow.mojang.brigadier'
 	relocate 'com.github.benmanes.caffeine', 'de.bluecolored.shadow.benmanes.caffeine'
 	relocate 'com.google.errorprone', 'de.bluecolored.shadow.google.errorprone'
-	relocate 'ninja.leaping.configurate', 'de.bluecolored.shadow.ninja.leaping.configurate'
+	relocate 'org.spongepowered.configurate', 'de.bluecolored.shadow.configurate'
 	relocate 'org.aopalliance', 'de.bluecolored.shadow.aopalliance'
 	relocate 'com.typesafe.config', 'de.bluecolored.shadow.typesafe.config'
 	relocate 'org.checkerframework', 'de.bluecolored.shadow.checkerframework'
