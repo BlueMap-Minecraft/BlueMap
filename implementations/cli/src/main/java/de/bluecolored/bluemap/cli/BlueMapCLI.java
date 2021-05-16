@@ -24,14 +24,12 @@
  */
 package de.bluecolored.bluemap.cli;
 
-import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.MissingResourcesException;
 import de.bluecolored.bluemap.common.plugin.RegionFileWatchService;
-import de.bluecolored.bluemap.common.rendermanager.CombinedRenderTask;
+import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.rendermanager.RenderTask;
-import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
 import de.bluecolored.bluemap.common.web.FileRequestHandler;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
@@ -86,20 +84,16 @@ public class BlueMapCLI {
 		}
 
 		//update all maps
-		List<WorldRegionRenderTask> tasks = new ArrayList<>();
-		for (BmMap map : maps.values())
-			for (Vector2i region : map.getWorld().listRegions())
-				tasks.add(new WorldRegionRenderTask(map, region, forceRender));
-		tasks.sort(WorldRegionRenderTask::compare);
-		RenderTask mainTask = new CombinedRenderTask<>("CLI Render", tasks);
+		int totalRegions = 0;
+		for (BmMap map : maps.values()) {
+			MapUpdateTask updateTask = new MapUpdateTask(map, forceRender);
+			renderManager.scheduleRenderTask(updateTask);
+			totalRegions += updateTask.getRegions().size();
+		}
 
-		renderManager.scheduleRenderTask(mainTask);
-
-		int totalRegions = tasks.size();
-		Logger.global.logInfo("Start " + (forceRender ? "rendering " : "updating ") + maps.size() + " maps (" + totalRegions + " regions, ~" + totalRegions * 1024L + " chunks)...");
+		Logger.global.logInfo("Start updating " + maps.size() + " maps (" + totalRegions + " regions, ~" + totalRegions * 1024L + " chunks)...");
 
 		// start rendering
-		long startTime = System.currentTimeMillis();
 		renderManager.start(blueMap.getCoreConfig().getRenderThreadCount());
 
 		Timer timer = new Timer("BlueMap-CLI-Timer", true);
@@ -117,7 +111,7 @@ public class BlueMapCLI {
 					String etrDurationString = DurationFormatUtils.formatDuration(etaMs, "HH:mm:ss");
 					eta = " (ETA: " + etrDurationString + ")";
 				}
-				Logger.global.logInfo("Rendering: " + (Math.round(progress * 100000) / 1000.0) + "%" + eta);
+				Logger.global.logInfo(task.getDescription() + ": " + (Math.round(progress * 100000) / 1000.0) + "%" + eta);
 			}
 		};
 		timer.scheduleAtFixedRate(updateInfoTask, TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(10));
@@ -160,7 +154,7 @@ public class BlueMapCLI {
 
 		// wait until done, then shutdown if not watching
 		renderManager.awaitIdle();
-		Logger.global.logInfo("Your maps are now up-to-date!");
+		Logger.global.logInfo("Your maps are now all up-to-date!");
 
 		if (watch) {
 			updateInfoTask.cancel();

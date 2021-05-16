@@ -25,7 +25,6 @@
 package de.bluecolored.bluemap.common.rendermanager;
 
 import com.flowpowered.math.vector.Vector2i;
-import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.world.Grid;
 import de.bluecolored.bluemap.core.world.Region;
@@ -165,11 +164,7 @@ public class WorldRegionRenderTask implements RenderTask {
 
 	@Override
 	public String getDescription() {
-		if (force) {
-			return "Render region " + getWorldRegion() + " for map '" + map.getId() + "'";
-		} else {
-			return "Update region " + getWorldRegion() + " for map '" + map.getId() + "'";
-		}
+		return "Update region " + getWorldRegion() + " for map '" + map.getId() + "'";
 	}
 
 	@Override
@@ -177,7 +172,7 @@ public class WorldRegionRenderTask implements RenderTask {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
 		WorldRegionRenderTask that = (WorldRegionRenderTask) o;
-		return force == that.force && map.equals(that.map) && worldRegion.equals(that.worldRegion);
+		return force == that.force && map.getId().equals(that.map.getId()) && worldRegion.equals(that.worldRegion);
 	}
 
 	@Override
@@ -195,24 +190,27 @@ public class WorldRegionRenderTask implements RenderTask {
 	public static int compare(WorldRegionRenderTask task1, WorldRegionRenderTask task2) {
 		if (task1.equals(task2)) return 0;
 
-		int comp = task1.getMap().getId().compareTo(task2.getMap().getId());
+		int comp = task1.map.getId().compareTo(task2.map.getId());
 		if (comp != 0) return comp;
 
-		//sort based on the worlds spawn-point
-		World world = task1.getMap().getWorld();
-		Vector2i spawnPoint = world.getSpawnPoint().toVector2(true);
-		Grid regionGrid = world.getRegionGrid();
-		Vector2i spawnRegion = regionGrid.getCell(spawnPoint);
+		if (task1.map == task2.map) { //should always be true
+			//sort based on the worlds spawn-point
+			World world = task1.map.getWorld();
+			Vector2i spawnPoint = world.getSpawnPoint().toVector2(true);
+			Grid regionGrid = world.getRegionGrid();
 
-		Vector2i task1Rel = task1.getWorldRegion().sub(spawnRegion);
-		Vector2i task2Rel = task2.getWorldRegion().sub(spawnRegion);
+			Vector2i spawnRegion = regionGrid.getCell(spawnPoint);
 
-		comp = tileComparator(task1Rel, task2Rel);
+			Vector2i task1Rel = task1.worldRegion.sub(spawnRegion);
+			Vector2i task2Rel = task2.worldRegion.sub(spawnRegion);
+
+			comp = tileComparator(task1Rel, task2Rel);
+		} else {
+			comp = tileComparator(task1.worldRegion, task2.worldRegion);
+		}
 		if (comp != 0) return comp;
 
-		if (task1.isForce() == task2.isForce()) return 0;
-		if (task1.isForce()) return -1;
-		return 1;
+		return -Boolean.compare(task1.force, task2.force);
 	}
 
 }

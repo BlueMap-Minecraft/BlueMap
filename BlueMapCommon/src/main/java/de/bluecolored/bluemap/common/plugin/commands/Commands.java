@@ -50,6 +50,7 @@ import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.plugin.text.TextColor;
 import de.bluecolored.bluemap.common.plugin.text.TextFormat;
 import de.bluecolored.bluemap.common.rendermanager.MapPurgeTask;
+import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderTask;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
@@ -619,7 +620,6 @@ public class Commands<S> {
 		new Thread(() -> {
 			try {
 				List<BmMap> maps = new ArrayList<>();
-				World world = worldToRender;
 				if (worldToRender != null) {
 					plugin.getServerInterface().persistWorldChanges(worldToRender.getUUID());
 					for (BmMap map : plugin.getMapTypes()) {
@@ -628,21 +628,18 @@ public class Commands<S> {
 				} else {
 					plugin.getServerInterface().persistWorldChanges(mapToRender.getWorld().getUUID());
 					maps.add(mapToRender);
-					world = mapToRender.getWorld();
-				}
-
-				List<Vector2i> regions = helper.getRegions(world, center, radius);
-
-				if (force) {
-					for (BmMap map : maps) {
-						MapRenderState state = map.getRenderState();
-						regions.forEach(region -> state.setRenderTime(region, -1));
-					}
 				}
 
 				for (BmMap map : maps) {
-					plugin.getRenderManager().scheduleRenderTask(helper.createMapUpdateTask(map, regions));
-					source.sendMessage(Text.of(TextColor.GREEN, "Created new Update-Task for map '" + map.getId() + "' ", TextColor.GRAY, "(" + regions.size() + " regions, ~" + regions.size() * 1024L + " chunks)"));
+					MapUpdateTask updateTask = new MapUpdateTask(map, center, radius);
+					plugin.getRenderManager().scheduleRenderTask(updateTask);
+
+					if (force) {
+						MapRenderState state = map.getRenderState();
+						updateTask.getRegions().forEach(region -> state.setRenderTime(region, -1));
+					}
+
+					source.sendMessage(Text.of(TextColor.GREEN, "Created new Update-Task for map '" + map.getId() + "' ", TextColor.GRAY, "(" + updateTask.getRegions().size() + " regions, ~" + updateTask.getRegions().size() * 1024L + " chunks)"));
 				}
 				source.sendMessage(Text.of(TextColor.GREEN, "Use ", TextColor.GRAY, "/bluemap", TextColor.GREEN, " to see the progress."));
 
@@ -710,7 +707,7 @@ public class Commands<S> {
 
 				// if map is loaded, reset it and start updating it after the purge
 				if (optMap.isPresent()) {
-					RenderTask updateTask = helper.createMapUpdateTask(optMap.get());
+					RenderTask updateTask = new MapUpdateTask(optMap.get());
 					plugin.getRenderManager().scheduleRenderTask(updateTask);
 					source.sendMessage(Text.of(TextColor.GREEN, "Created new Update-Task for map '" + mapId + "'"));
 					source.sendMessage(Text.of(TextColor.GRAY, "If you don't want to render this map again, you need to remove it from your configuration first!"));

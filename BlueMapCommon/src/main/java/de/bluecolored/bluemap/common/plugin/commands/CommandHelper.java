@@ -24,16 +24,12 @@
  */
 package de.bluecolored.bluemap.common.plugin.commands;
 
-import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.plugin.text.TextColor;
-import de.bluecolored.bluemap.common.rendermanager.CombinedRenderTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.rendermanager.RenderTask;
-import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
 import de.bluecolored.bluemap.core.map.BmMap;
-import de.bluecolored.bluemap.core.world.Grid;
 import de.bluecolored.bluemap.core.world.World;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
@@ -133,41 +129,6 @@ public class CommandHelper {
 		}
 		
 		return Text.of("map").setHoverText(Text.of(TextColor.WHITE, "Available maps: \n", TextColor.GRAY, joiner.toString()));
-	}
-
-	public List<Vector2i> getRegions(World world) {
-		return getRegions(world, null, -1);
-	}
-
-	public List<Vector2i> getRegions(World world, Vector2i center, int radius) {
-		if (center == null || radius < 0) return new ArrayList<>(world.listRegions());
-
-		List<Vector2i> regions = new ArrayList<>();
-
-		Grid regionGrid = world.getRegionGrid();
-		Vector2i halfCell = regionGrid.getGridSize().div(2);
-		int increasedRadiusSquared = (int) Math.pow(radius + Math.ceil(halfCell.length()), 2);
-
-		for (Vector2i region : world.listRegions()) {
-			Vector2i min = regionGrid.getCellMin(region);
-			Vector2i regionCenter = min.add(halfCell);
-
-			if (regionCenter.distanceSquared(center) <= increasedRadiusSquared)
-				regions.add(region);
-		}
-
-		return regions;
-	}
-
-	public RenderTask createMapUpdateTask(BmMap map) {
-		return createMapUpdateTask(map, getRegions(map.getWorld()));
-	}
-
-	public RenderTask createMapUpdateTask(BmMap map, Collection<Vector2i> regions) {
-		List<WorldRegionRenderTask> tasks = new ArrayList<>(regions.size());
-		regions.forEach(region -> tasks.add(new WorldRegionRenderTask(map, region)));
-		tasks.sort(WorldRegionRenderTask::compare);
-		return new CombinedRenderTask<>("Update map '" + map.getId() + "'", tasks);
 	}
 
 	public synchronized Optional<RenderTask> getTaskForRef(String ref) {

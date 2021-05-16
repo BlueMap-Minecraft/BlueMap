@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.common.plugin;
 
-import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.InterruptableReentrantLock;
 import de.bluecolored.bluemap.common.MissingResourcesException;
@@ -32,7 +31,9 @@ import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.live.LiveAPIRequestHandler;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.common.plugin.skins.PlayerSkinUpdater;
-import de.bluecolored.bluemap.common.rendermanager.*;
+import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
+import de.bluecolored.bluemap.common.rendermanager.RenderManager;
+import de.bluecolored.bluemap.common.web.FileRequestHandler;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.config.CoreConfig;
@@ -43,7 +44,6 @@ import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.metrics.Metrics;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.core.util.FileUtils;
-import de.bluecolored.bluemap.common.web.FileRequestHandler;
 import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
 import de.bluecolored.bluemap.core.webserver.WebServer;
 import de.bluecolored.bluemap.core.world.World;
@@ -168,15 +168,7 @@ public class Plugin {
 
 				//update all maps
 				for (BmMap map : maps.values()) {
-					Collection<Vector2i> regions = map.getWorld().listRegions();
-					List<WorldRegionRenderTask> mapTasks = new ArrayList<>(regions.size());
-
-					for (Vector2i region : regions)
-						mapTasks.add(new WorldRegionRenderTask(map, region));
-					mapTasks.sort(WorldRegionRenderTask::compare);
-
-					CombinedRenderTask<WorldRegionRenderTask> mapUpdateTask = new CombinedRenderTask<>("Update map '" + map.getId() + "'", mapTasks);
-					renderManager.scheduleRenderTask(mapUpdateTask);
+					renderManager.scheduleRenderTask(new MapUpdateTask(map));
 				}
 
 				//start render-manager
