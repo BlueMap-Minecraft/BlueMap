@@ -25,6 +25,7 @@ build.dependsOn shadowJar {
 	relocate 'com.google.errorprone', 'de.bluecolored.shadow.google.errorprone'
 	relocate 'org.spongepowered.configurate', 'de.bluecolored.shadow.configurate'
 	relocate 'org.aopalliance', 'de.bluecolored.shadow.aopalliance'
+	relocate 'org.bstats', 'de.bluecolored.shadow.bstats'
 	relocate 'com.typesafe.config', 'de.bluecolored.shadow.typesafe.config'
 	relocate 'org.checkerframework', 'de.bluecolored.shadow.checkerframework'
 	relocate 'org.codehaus', 'de.bluecolored.shadow.codehaus'

@@ -38,7 +38,6 @@ import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.sponge8.SpongeCommands.SpongeCommandProxy;
 import net.querz.nbt.CompoundTag;
 import net.querz.nbt.NBTUtil;
-import org.bstats.sponge.Metrics;
 import org.spongepowered.api.Platform;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
