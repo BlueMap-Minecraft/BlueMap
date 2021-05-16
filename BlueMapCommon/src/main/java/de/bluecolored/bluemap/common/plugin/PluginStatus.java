@@ -24,11 +24,44 @@
  */
 package de.bluecolored.bluemap.common.plugin;
 
+import de.bluecolored.bluemap.core.map.BmMap;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
+import java.util.HashMap;
+import java.util.Map;
+
+@SuppressWarnings("FieldMayBeFinal")
 @ConfigSerializable
 public class PluginStatus {
 
+	private boolean renderThreadsEnabled = true;
+	private Map<String, MapStatus> maps = new HashMap<>();
 
+	public boolean isRenderThreadsEnabled() {
+		return renderThreadsEnabled;
+	}
+
+	public void setRenderThreadsEnabled(boolean renderThreadsEnabled) {
+		this.renderThreadsEnabled = renderThreadsEnabled;
+	}
+
+	public MapStatus getMapStatus(BmMap map) {
+		return maps.computeIfAbsent(map.getId(), k -> new MapStatus());
+	}
+
+	@ConfigSerializable
+	public static class MapStatus {
+
+		private boolean updateEnabled = true;
+
+		public boolean isUpdateEnabled() {
+			return updateEnabled;
+		}
+
+		public void setUpdateEnabled(boolean update) {
+			this.updateEnabled = update;
+		}
+
+	}
 
 }

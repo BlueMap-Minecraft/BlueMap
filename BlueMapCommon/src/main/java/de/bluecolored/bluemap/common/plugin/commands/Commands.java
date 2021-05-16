@@ -44,13 +44,12 @@ import de.bluecolored.bluemap.api.marker.MarkerAPI;
 import de.bluecolored.bluemap.api.marker.MarkerSet;
 import de.bluecolored.bluemap.api.marker.POIMarker;
 import de.bluecolored.bluemap.common.plugin.Plugin;
+import de.bluecolored.bluemap.common.plugin.PluginStatus;
 import de.bluecolored.bluemap.common.plugin.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.plugin.text.TextColor;
 import de.bluecolored.bluemap.common.plugin.text.TextFormat;
-import de.bluecolored.bluemap.common.rendermanager.MapPurgeTask;
-import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
-import de.bluecolored.bluemap.common.rendermanager.RenderTask;
+import de.bluecolored.bluemap.common.rendermanager.*;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -140,17 +139,31 @@ public class Commands<S> {
 						
 				.build();
 		
-		LiteralCommandNode<S> pauseCommand = 
+		LiteralCommandNode<S> stopCommand =
 				literal("stop")
 				.requires(requirements("bluemap.stop"))
 				.executes(this::stopCommand)
 				.build();
 		
-		LiteralCommandNode<S> resumeCommand = 
+		LiteralCommandNode<S> startCommand =
 				literal("start")
 				.requires(requirements("bluemap.start"))
 				.executes(this::startCommand)
 				.build();
+
+		LiteralCommandNode<S> freezeCommand =
+				literal("freeze")
+				.requires(requirements("bluemap.freeze"))
+				.then(argument("map", StringArgumentType.string()).suggests(new MapSuggestionProvider<>(plugin))
+						.executes(this::freezeCommand))
+						.build();
+
+		LiteralCommandNode<S> unfreezeCommand =
+				literal("unfreeze")
+						.requires(requirements("bluemap.freeze"))
+						.then(argument("map", StringArgumentType.string()).suggests(new MapSuggestionProvider<>(plugin))
+								.executes(this::unfreezeCommand))
+						.build();
 
 		LiteralCommandNode<S> forceUpdateCommand =
 				addRenderArguments(
@@ -227,8 +240,10 @@ public class Commands<S> {
 		baseCommand.addChild(helpCommand);
 		baseCommand.addChild(reloadCommand);
 		baseCommand.addChild(debugCommand);
-		baseCommand.addChild(pauseCommand);
-		baseCommand.addChild(resumeCommand);
+		baseCommand.addChild(stopCommand);
+		baseCommand.addChild(startCommand);
+		baseCommand.addChild(freezeCommand);
+		baseCommand.addChild(unfreezeCommand);
 		baseCommand.addChild(forceUpdateCommand);
 		baseCommand.addChild(updateCommand);
 		baseCommand.addChild(cancelCommand);
@@ -521,26 +536,113 @@ public class Commands<S> {
 		CommandSource source = commandSourceInterface.apply(context.getSource());
 		
 		if (plugin.getRenderManager().isRunning()) {
-			plugin.getRenderManager().stop();
-			source.sendMessage(Text.of(TextColor.GREEN, "Render-Threads stopped!"));
-			return 1;
+			new Thread(() -> {
+				plugin.getPluginStatus().setRenderThreadsEnabled(false);
+
+				plugin.getRenderManager().stop();
+				source.sendMessage(Text.of(TextColor.GREEN, "Render-Threads stopped!"));
+
+				plugin.save();
+			}).start();
 		} else {
 			source.sendMessage(Text.of(TextColor.RED, "Render-Threads are already stopped!"));
 			return 0;
 		}
+
+		return 1;
 	}
 	
 	public int startCommand(CommandContext<S> context) {
 		CommandSource source = commandSourceInterface.apply(context.getSource());
 		
 		if (!plugin.getRenderManager().isRunning()) {
-			plugin.getRenderManager().start(plugin.getCoreConfig().getRenderThreadCount());
-			source.sendMessage(Text.of(TextColor.GREEN, "Render-Threads started!"));
-			return 1;
+			new Thread(() -> {
+				plugin.getPluginStatus().setRenderThreadsEnabled(true);
+
+				plugin.getRenderManager().start(plugin.getCoreConfig().getRenderThreadCount());
+				source.sendMessage(Text.of(TextColor.GREEN, "Render-Threads started!"));
+
+				plugin.save();
+			}).start();
 		} else {
 			source.sendMessage(Text.of(TextColor.RED, "Render-Threads are already running!"));
 			return 0;
 		}
+
+		return 1;
+	}
+
+	public int freezeCommand(CommandContext<S> context) {
+		CommandSource source = commandSourceInterface.apply(context.getSource());
+
+		// parse map argument
+		String mapString = context.getArgument("map", String.class);
+		BmMap map = parseMap(mapString).orElse(null);
+
+		if (map == null) {
+			source.sendMessage(Text.of(TextColor.RED, "There is no ", helper.mapHelperHover(), " with this name: ", TextColor.WHITE, mapString));
+			return 0;
+		}
+
+		PluginStatus.MapStatus mapStatus = plugin.getPluginStatus().getMapStatus(map);
+		if (mapStatus.isUpdateEnabled()) {
+			new Thread(() -> {
+				mapStatus.setUpdateEnabled(false);
+
+				plugin.stopWatchingMap(map);
+				plugin.getRenderManager().removeRenderTasksIf(task -> {
+					if (task instanceof MapUpdateTask)
+						return ((MapUpdateTask) task).getMap().equals(map);
+
+					if (task instanceof WorldRegionRenderTask)
+						return ((WorldRegionRenderTask) task).getMap().equals(map);
+
+					return false;
+				});
+
+				source.sendMessage(Text.of(TextColor.GREEN, "Map ", TextColor.WHITE, mapString, TextColor.GREEN, " is now frozen and will no longer be automatically updated!"));
+				source.sendMessage(Text.of(TextColor.GRAY, "Any currently scheduled updates for this map have been cancelled."));
+
+				plugin.save();
+			}).start();
+		} else {
+			source.sendMessage(Text.of(TextColor.RED, "This map is already frozen!"));
+			return 0;
+		}
+
+		return 1;
+	}
+
+	public int unfreezeCommand(CommandContext<S> context) {
+		CommandSource source = commandSourceInterface.apply(context.getSource());
+
+		// parse map argument
+		String mapString = context.getArgument("map", String.class);
+		BmMap map = parseMap(mapString).orElse(null);
+
+		if (map == null) {
+			source.sendMessage(Text.of(TextColor.RED, "There is no ", helper.mapHelperHover(), " with this name: ", TextColor.WHITE, mapString));
+			return 0;
+		}
+
+		PluginStatus.MapStatus mapStatus = plugin.getPluginStatus().getMapStatus(map);
+		if (!mapStatus.isUpdateEnabled()) {
+			new Thread(() -> {
+				mapStatus.setUpdateEnabled(true);
+
+				plugin.startWatchingMap(map);
+				plugin.getRenderManager().scheduleRenderTask(new MapUpdateTask(map));
+
+				source.sendMessage(Text.of(TextColor.GREEN, "Map ", TextColor.WHITE, mapString, TextColor.GREEN, " is no longer frozen and will be automatically updated!"));
+
+				plugin.save();
+			}).start();
+		} else {
+			source.sendMessage(Text.of(TextColor.RED, "This map is not frozen!"));
+			return 0;
+		}
+
+		return 1;
 	}
 
 	public int forceUpdateCommand(CommandContext<S> context) {
@@ -727,7 +829,21 @@ public class Commands<S> {
 		
 		source.sendMessage(Text.of(TextColor.BLUE, "Maps loaded by BlueMap:"));
 		for (BmMap map : plugin.getMapTypes()) {
-			source.sendMessage(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, map.getId(), TextColor.GRAY, " (" + map.getName() + ")").setHoverText(Text.of(TextColor.WHITE, "World: ", TextColor.GRAY, map.getWorld().getName())));
+			boolean unfrozen = plugin.getPluginStatus().getMapStatus(map).isUpdateEnabled();
+			if (unfrozen) {
+				source.sendMessage(Text.of(
+						TextColor.GRAY, " - ",
+						TextColor.WHITE, map.getId(),
+						TextColor.GRAY, " (" + map.getName() + ")"
+				).setHoverText(Text.of(TextColor.WHITE, "World: ", TextColor.GRAY, map.getWorld().getName())));
+			} else {
+				source.sendMessage(Text.of(
+						TextColor.GRAY, " - ",
+						TextColor.WHITE, map.getId(),
+						TextColor.GRAY, " (" + map.getName() + ") - ",
+						TextColor.AQUA, TextFormat.ITALIC, "frozen!"
+				).setHoverText(Text.of(TextColor.WHITE, "World: ", TextColor.GRAY, map.getWorld().getName())));
+			}
 		}
 		
 		return 1;
@@ -741,7 +857,7 @@ public class Commands<S> {
 				.replace("<", "&lt;")
 				.replace(">", "&gt;");  //no html via commands
 		
-		// parse world/map argument
+		// parse map argument
 		String mapString = context.getArgument("map", String.class);
 		BmMap map = parseMap(mapString).orElse(null);
 		

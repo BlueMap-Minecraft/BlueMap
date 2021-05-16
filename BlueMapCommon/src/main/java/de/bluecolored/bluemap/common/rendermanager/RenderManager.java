@@ -29,6 +29,7 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 
 public class RenderManager {
 	private static final AtomicInteger nextRenderManagerIndex = new AtomicInteger(0);
@@ -173,6 +174,17 @@ public class RenderManager {
 
 			// else remove it
 			return renderTasks.remove(task);
+		}
+	}
+
+	public void removeRenderTasksIf(Predicate<RenderTask> removeCondition) {
+		synchronized (this.renderTasks) {
+			if (this.renderTasks.isEmpty()) return;
+
+			RenderTask first = renderTasks.removeFirst();
+			if (removeCondition.test(first)) first.cancel();
+			renderTasks.removeIf(removeCondition);
+			renderTasks.addFirst(first);
 		}
 	}
 
