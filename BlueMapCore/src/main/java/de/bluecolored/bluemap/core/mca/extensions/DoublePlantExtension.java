@@ -24,16 +24,16 @@
  */
 package de.bluecolored.bluemap.core.mca.extensions;
 
-import java.util.Objects;
-import java.util.Set;
-
 import com.flowpowered.math.vector.Vector3i;
-import com.google.common.collect.Sets;
-
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.world.BlockState;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
 public class DoublePlantExtension implements BlockStateExtension {
 	
@@ -42,19 +42,19 @@ public class DoublePlantExtension implements BlockStateExtension {
 	public DoublePlantExtension(MinecraftVersion version) {
 		switch (version) {
 			case MC_1_12:
-				affectedBlockIds = Sets.newHashSet(
+				affectedBlockIds = new HashSet<>(Arrays.asList(
 					"minecraft:double_plant"
-				);	
+				));
 				break;
 			default:
-				affectedBlockIds = Sets.newHashSet(
+				affectedBlockIds = new HashSet<>(Arrays.asList(
 					"minecraft:sunflower",
 					"minecraft:lilac",
 					"minecraft:tall_grass",
 					"minecraft:large_fern",
 					"minecraft:rose_bush",
 					"minecraft:peony"
-				);	
+				));
 				break;
 		}
 	}

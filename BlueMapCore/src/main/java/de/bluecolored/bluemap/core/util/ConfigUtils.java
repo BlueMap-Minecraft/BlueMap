@@ -24,15 +24,12 @@
  */
 package de.bluecolored.bluemap.core.util;
 
+import com.flowpowered.math.vector.*;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.NodePath;
+import org.spongepowered.configurate.serialize.SerializationException;
+
 import java.util.List;
-
-import com.flowpowered.math.vector.Vector2i;
-import com.flowpowered.math.vector.Vector3f;
-import com.flowpowered.math.vector.Vector3i;
-import com.flowpowered.math.vector.Vector4f;
-import com.flowpowered.math.vector.Vector4i;
-
-import ninja.leaping.configurate.ConfigurationNode;
 
 public class ConfigUtils {
 
@@ -40,7 +37,7 @@ public class ConfigUtils {
 	
 	public static Vector2i readVector2i(ConfigurationNode vectorNode){
 		if (vectorNode.isList()){
-			List<? extends ConfigurationNode> list = vectorNode.getChildrenList();
+			List<? extends ConfigurationNode> list = vectorNode.childrenList();
 			return new Vector2i(
 					list.get(0).getInt(),
 					list.get(1).getInt()
@@ -48,14 +45,14 @@ public class ConfigUtils {
 		}
 		
 		return new Vector2i(
-				vectorNode.getNode("x").getInt(),
-				vectorNode.getNode("y").getInt()
+				vectorNode.node("x").getInt(),
+				vectorNode.node("y").getInt()
 			);
 	}
 	
 	public static Vector3i readVector3i(ConfigurationNode vectorNode){
 		if (vectorNode.isList()){
-			List<? extends ConfigurationNode> list = vectorNode.getChildrenList();
+			List<? extends ConfigurationNode> list = vectorNode.childrenList();
 			return new Vector3i(
 					list.get(0).getInt(),
 					list.get(1).getInt(),
@@ -64,15 +61,15 @@ public class ConfigUtils {
 		}
 		
 		return new Vector3i(
-				vectorNode.getNode("x").getInt(),
-				vectorNode.getNode("y").getInt(),
-				vectorNode.getNode("z").getInt()
+				vectorNode.node("x").getInt(),
+				vectorNode.node("y").getInt(),
+				vectorNode.node("z").getInt()
 			);
 	}
 	
 	public static Vector3f readVector3f(ConfigurationNode vectorNode){
 		if (vectorNode.isList()){
-			List<? extends ConfigurationNode> list = vectorNode.getChildrenList();
+			List<? extends ConfigurationNode> list = vectorNode.childrenList();
 			return new Vector3f(
 					list.get(0).getFloat(),
 					list.get(1).getFloat(),
@@ -81,15 +78,15 @@ public class ConfigUtils {
 		}
 		
 		return new Vector3f(
-				vectorNode.getNode("x").getFloat(),
-				vectorNode.getNode("y").getFloat(),
-				vectorNode.getNode("z").getFloat()
+				vectorNode.node("x").getFloat(),
+				vectorNode.node("y").getFloat(),
+				vectorNode.node("z").getFloat()
 			);
 	}
 	
 	public static Vector4i readVector4i(ConfigurationNode vectorNode){
 		if (vectorNode.isList()){
-			List<? extends ConfigurationNode> list = vectorNode.getChildrenList();
+			List<? extends ConfigurationNode> list = vectorNode.childrenList();
 			return new Vector4i(
 					list.get(0).getInt(),
 					list.get(1).getInt(),
@@ -99,16 +96,16 @@ public class ConfigUtils {
 		}
 		
 		return new Vector4i(
-				vectorNode.getNode("x").getInt(),
-				vectorNode.getNode("y").getInt(),
-				vectorNode.getNode("z").getInt(),
-				vectorNode.getNode("w").getInt()
+				vectorNode.node("x").getInt(),
+				vectorNode.node("y").getInt(),
+				vectorNode.node("z").getInt(),
+				vectorNode.node("w").getInt()
 			);
 	}
 	
 	public static Vector4f readVector4f(ConfigurationNode vectorNode){
 		if (vectorNode.isList()){
-			List<? extends ConfigurationNode> list = vectorNode.getChildrenList();
+			List<? extends ConfigurationNode> list = vectorNode.childrenList();
 			return new Vector4f(
 					list.get(0).getFloat(),
 					list.get(1).getFloat(),
@@ -118,18 +115,18 @@ public class ConfigUtils {
 		}
 		
 		return new Vector4f(
-				vectorNode.getNode("x").getFloat(),
-				vectorNode.getNode("y").getFloat(),
-				vectorNode.getNode("z").getFloat(),
-				vectorNode.getNode("w").getFloat()
+				vectorNode.node("x").getFloat(),
+				vectorNode.node("y").getFloat(),
+				vectorNode.node("z").getFloat(),
+				vectorNode.node("w").getFloat()
 			);
 	}
 	
-	public static void writeVector4f(ConfigurationNode vectorNode, Vector4f v){
-		vectorNode.appendListNode().setValue(v.getX());
-		vectorNode.appendListNode().setValue(v.getY());
-		vectorNode.appendListNode().setValue(v.getZ());
-		vectorNode.appendListNode().setValue(v.getW());
+	public static void writeVector4f(ConfigurationNode vectorNode, Vector4f v) throws SerializationException {
+		vectorNode.appendListNode().set(v.getX());
+		vectorNode.appendListNode().set(v.getY());
+		vectorNode.appendListNode().set(v.getZ());
+		vectorNode.appendListNode().set(v.getW());
 	}
 	
 	/**
@@ -139,7 +136,7 @@ public class ConfigUtils {
 	 * @throws NumberFormatException If the value is not formatted correctly or if there is no value present.
 	 */
 	public static int readColorInt(ConfigurationNode node) throws NumberFormatException {
-		Object value = node.getValue();
+		Object value = node.raw();
 
 		if (value == null) throw new NumberFormatException("No value!");
 		
@@ -161,10 +158,10 @@ public class ConfigUtils {
 	}
 	
 	public static String nodePathToString(ConfigurationNode node) {
-		Object[] keys = node.getPath();
-		String[] stringKeys = new String[keys.length];
-		for (int i = 0; i < keys.length; i++) {
-			stringKeys[i] = keys[i].toString();
+		NodePath keys = node.path();
+		String[] stringKeys = new String[keys.size()];
+		for (int i = 0; i < keys.size(); i++) {
+			stringKeys[i] = keys.get(i).toString();
 		}
 		return String.join(".", stringKeys);
 	}

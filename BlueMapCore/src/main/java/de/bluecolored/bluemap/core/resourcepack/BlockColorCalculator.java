@@ -34,11 +34,10 @@ import de.bluecolored.bluemap.core.util.MathUtils;
 import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.World;
-import ninja.leaping.configurate.ConfigurationNode;
+import org.spongepowered.configurate.ConfigurationNode;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -50,7 +49,7 @@ public class BlockColorCalculator {
 	private BufferedImage foliageMap;
 	private BufferedImage grassMap;
 	
-	private Map<String, Function<Block, Vector3f>> blockColorMap;
+	private final Map<String, Function<Block, Vector3f>> blockColorMap;
 	
 	public BlockColorCalculator(BufferedImage foliageMap, BufferedImage grassMap) {
 		this.foliageMap = foliageMap;
@@ -59,12 +58,12 @@ public class BlockColorCalculator {
 		this.blockColorMap = new HashMap<>();
 	}
 	
-	public void loadColorConfig(ConfigurationNode colorConfig) throws IOException {
+	public void loadColorConfig(ConfigurationNode colorConfig) {
 		blockColorMap.clear();
 		
-		for (Entry<Object, ? extends ConfigurationNode> entry : colorConfig.getChildrenMap().entrySet()){
+		for (Entry<Object, ? extends ConfigurationNode> entry : colorConfig.childrenMap().entrySet()){
 			String key = entry.getKey().toString();
-			String value = entry.getValue().getString();
+			String value = entry.getValue().getString("");
 			
 			Function<Block, Vector3f> colorFunction;
 			switch (value) {

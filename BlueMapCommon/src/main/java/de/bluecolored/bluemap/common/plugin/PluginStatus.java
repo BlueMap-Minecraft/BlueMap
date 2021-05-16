@@ -22,54 +22,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.config;
+package de.bluecolored.bluemap.common.plugin;
 
-import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
-import java.io.File;
-import java.io.IOException;
+@ConfigSerializable
+public class PluginStatus {
 
-public class CoreConfig {
-	
-	private boolean downloadAccepted = false;
-	private int renderThreadCount = 0;
-	private boolean metricsEnabled = false;
-	private File dataFolder = new File("data");
-	
-	
-	public CoreConfig(ConfigurationNode node) throws IOException {
-		
-		//accept-download
-		downloadAccepted = node.node("accept-download").getBoolean(false);
 
-		//renderThreadCount
-		int processors = Runtime.getRuntime().availableProcessors();
-		renderThreadCount = node.node("renderThreadCount").getInt(0);
-		if (renderThreadCount <= 0) renderThreadCount = processors + renderThreadCount;
-		if (renderThreadCount <= 0) renderThreadCount = 1;
-		
-		//metrics
-		metricsEnabled = node.node("metrics").getBoolean(false);
-		
-		//data
-		dataFolder = ConfigManager.toFolder(node.node("data").getString("data"));
-
-	}
-	
-	public File getDataFolder() {
-		return dataFolder;
-	}
-	
-	public boolean isDownloadAccepted() {
-		return downloadAccepted;
-	}
-	
-	public boolean isMetricsEnabled() {
-		return metricsEnabled;
-	}
-	
-	public int getRenderThreadCount() {
-		return renderThreadCount;
-	}
 
 }

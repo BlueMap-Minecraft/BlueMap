@@ -24,12 +24,11 @@
  */
 package de.bluecolored.bluemap.core.config;
 
-import com.google.common.base.Preconditions;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.mapping.BlockIdMapper;
 import de.bluecolored.bluemap.core.world.BlockState;
-import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.loader.ConfigurationLoader;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.loader.ConfigurationLoader;
 
 import java.io.IOException;
 import java.util.Map;
@@ -57,7 +56,7 @@ public class BlockIdConfig implements BlockIdMapper {
 
 		this.lock = new ReentrantReadWriteLock();
 		
-		for (Entry<Object, ? extends ConfigurationNode> e : node.getChildrenMap().entrySet()){
+		for (Entry<Object, ? extends ConfigurationNode> e : node.childrenMap().entrySet()){
 			String key = e.getKey().toString();
 			String value = e.getValue().getString();
 
@@ -119,7 +118,7 @@ public class BlockIdConfig implements BlockIdMapper {
 				if (autopoulationConfigLoader != null) {
 					try {
 						ConfigurationNode node = autopoulationConfigLoader.load();
-						node.getNode(numeralId + ":" + meta).setValue(state.toString());
+						node.node(numeralId + ":" + meta).set(state.toString());
 						autopoulationConfigLoader.save(node);
 					} catch (IOException ex) {
 						Logger.global.noFloodError("blockidconf-autopopulate-ioex", "Failed to auto-populate BlockIdConfig!", ex);
@@ -165,12 +164,11 @@ public class BlockIdConfig implements BlockIdMapper {
 				}
 
 				idMappings.put(idmeta, state);
-				Preconditions.checkArgument(numeralMappings.put(numidmeta, state) == null);
 
 				if (autopoulationConfigLoader != null) {
 					try {
 						ConfigurationNode node = autopoulationConfigLoader.load();
-						node.getNode(id + ":" + meta).setValue(state.toString());
+						node.node(id + ":" + meta).set(state.toString());
 						autopoulationConfigLoader.save(node);
 					} catch (IOException ex) {
 						Logger.global.noFloodError("blockidconf-autopopulate-ioex", "Failed to auto-populate BlockIdConfig!", ex);

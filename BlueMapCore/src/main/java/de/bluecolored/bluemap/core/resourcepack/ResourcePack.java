@@ -24,23 +24,6 @@
  */
 package de.bluecolored.bluemap.core.resourcepack;
 
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.imageio.ImageIO;
-
-import org.apache.commons.io.output.ByteArrayOutputStream;
-
-import com.google.common.collect.Multimap;
-import com.google.common.collect.MultimapBuilder;
-
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.BlockStateResource.Builder;
@@ -49,6 +32,12 @@ import de.bluecolored.bluemap.core.resourcepack.fileaccess.CaseInsensitiveFileAc
 import de.bluecolored.bluemap.core.resourcepack.fileaccess.CombinedFileAccess;
 import de.bluecolored.bluemap.core.resourcepack.fileaccess.FileAccess;
 import de.bluecolored.bluemap.core.world.BlockState;
+import org.apache.commons.io.output.ByteArrayOutputStream;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.*;
+import java.util.*;
 
 /**
  * Represents all resources (BlockStates / BlockModels and Textures) that are loaded and used to generate map-models. 
@@ -62,18 +51,18 @@ public class ResourcePack {
 		"biomes.json"
 	};
 	
-	private MinecraftVersion minecraftVersion;
+	private final MinecraftVersion minecraftVersion;
 	
 	protected Map<String, BlockStateResource> blockStateResources;
 	protected Map<String, BlockModelResource> blockModelResources;
 	protected TextureGallery textures;
 	
-	private BlockColorCalculator blockColorCalculator;
+	private final BlockColorCalculator blockColorCalculator;
 	
 	private BufferedImage foliageMap;
 	private BufferedImage grassMap;
 	
-	private Multimap<String, Resource> configs;
+	private Map<String, List<Resource>> configs;
 	
 	public ResourcePack(MinecraftVersion minecraftVersion) {
 		this.minecraftVersion = minecraftVersion;
@@ -86,14 +75,14 @@ public class ResourcePack {
 		grassMap = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
 		grassMap.setRGB(0, 0, 0xFF00FF00);
 		blockColorCalculator = new BlockColorCalculator(foliageMap, grassMap);
-		configs = MultimapBuilder.hashKeys().arrayListValues().build();
+		configs = new HashMap<>();
 	}
 	
 	/**
 	 * Returns all config-files found in the namespaces of the ResourcePack with that filename
 	 */
 	public Collection<Resource> getConfigAdditions(String configFileName){
-		return configs.get(configFileName);
+		return configs.getOrDefault(configFileName, Collections.emptyList());
 	}
 	
 	/**
@@ -121,7 +110,7 @@ public class ResourcePack {
 	 * @param sources The list of {@link File} sources. Each can be a folder or any zip-compressed file. (E.g. .zip or .jar)
 	 */
 	public void load(Collection<File> sources) throws IOException, InterruptedException {
-		load(sources.toArray(new File[sources.size()]));
+		load(sources.toArray(new File[0]));
 	}
 	
 	/**
@@ -134,10 +123,9 @@ public class ResourcePack {
 	 */
 	public void load(File... sources) throws InterruptedException {
 		try (CombinedFileAccess combinedSources = new CombinedFileAccess()){
-			for (int i = 0; i < sources.length; i++) {
+			for (File file : sources) {
 				if (Thread.interrupted()) throw new InterruptedException();
-				
-				File file = sources[i];
+
 				try {
 					combinedSources.addFileAccess(FileAccess.of(file));
 				} catch (IOException e) {
@@ -179,8 +167,9 @@ public class ResourcePack {
 				//load configs
 				for (String configName : CONFIG_FILES) {
 					try {
-						Resource config = new Resource(sourcesAccess.readFile("assets/" + namespace + "/" + configName));
-						configs.put(configName, config);
+						Resource config = new Resource(sourcesAccess.readFile(
+								"assets/" + namespace + "/" + configName));
+						configs.computeIfAbsent(configName, t -> new ArrayList<>()).add(config);
 					} catch (FileNotFoundException ignore) {
 					} catch (IOException ex) {
 						Logger.global.logError("Failed to load config for " + namespace + ": " + configName, ex);
@@ -251,9 +240,9 @@ public class ResourcePack {
 	/**
 	 * Caches a full InputStream in a byte-array that can be read later
 	 */
-	public class Resource {
+	public static class Resource {
 		
-		private byte[] data;
+		private final byte[] data;
 		
 		public Resource(InputStream data) throws FileNotFoundException, IOException {
 			try (ByteArrayOutputStream bout = new ByteArrayOutputStream()) {

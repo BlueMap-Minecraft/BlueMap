@@ -27,7 +27,6 @@ package de.bluecolored.bluemap.common.plugin.commands;
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
-import com.google.common.collect.Lists;
 import com.mojang.brigadier.Command;
 import com.mojang.brigadier.CommandDispatcher;
 import com.mojang.brigadier.arguments.ArgumentType;
@@ -67,10 +66,7 @@ import de.bluecolored.bluemap.core.world.World;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -315,14 +311,6 @@ public class Commands<S> {
 		return Optional.empty();
 	}
 	
-	private Optional<UUID> parseUUID(String uuidString) {
-		try {
-			return Optional.of(UUID.fromString(uuidString));
-		} catch (IllegalArgumentException ex) {
-			return Optional.empty();			
-		}
-	}
-	
 	
 	// --- COMMANDS ---
 	
@@ -520,7 +508,7 @@ public class Commands<S> {
 				}
 			}
 			
-			source.sendMessages(Lists.newArrayList(
+			source.sendMessages(Arrays.asList(
 					Text.of(TextColor.GOLD, "Block at you: ", TextColor.WHITE, block, TextColor.GRAY, blockIdMeta),
 					Text.of(TextColor.GOLD, "Block below you: ", TextColor.WHITE, blockBelow, TextColor.GRAY, blockBelowIdMeta)
 				));

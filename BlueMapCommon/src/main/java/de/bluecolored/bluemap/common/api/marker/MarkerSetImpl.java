@@ -25,7 +25,6 @@
 package de.bluecolored.bluemap.common.api.marker;
 
 import com.flowpowered.math.vector.Vector3d;
-import com.google.common.collect.Sets;
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.marker.Line;
@@ -33,7 +32,8 @@ import de.bluecolored.bluemap.api.marker.Marker;
 import de.bluecolored.bluemap.api.marker.MarkerSet;
 import de.bluecolored.bluemap.api.marker.Shape;
 import de.bluecolored.bluemap.core.logger.Logger;
-import ninja.leaping.configurate.ConfigurationNode;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.serialize.SerializationException;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -57,7 +57,7 @@ public class MarkerSetImpl implements MarkerSet {
 		this.isDefaultHidden = false;
 		this.markers = new ConcurrentHashMap<>();
 
-		this.removedMarkers = Sets.newConcurrentHashSet();
+		this.removedMarkers = Collections.newSetFromMap(new ConcurrentHashMap<>());
 		
 		this.hasUnsavedChanges = true;
 	}
@@ -175,9 +175,9 @@ public class MarkerSetImpl implements MarkerSet {
 		Line dummyLine = new Line(Vector3d.ZERO, Vector3d.ONE);
 		
 		Set<String> externallyRemovedMarkers = new HashSet<>(this.markers.keySet());
-		for (ConfigurationNode markerNode : node.getNode("marker").getChildrenList()) {
-			String id = markerNode.getNode("id").getString();
-			String type = markerNode.getNode("type").getString();
+		for (ConfigurationNode markerNode : node.node("marker").childrenList()) {
+			String id = markerNode.node("id").getString();
+			String type = markerNode.node("type").getString();
 			
 			if (id == null || type == null) {
 				Logger.global.logDebug("Marker-API: Failed to load a marker in the set '" + this.id + "': No id or type defined!");
@@ -238,19 +238,19 @@ public class MarkerSetImpl implements MarkerSet {
 		if (!overwriteChanges && hasUnsavedChanges) return;
 		hasUnsavedChanges = false;
 		
-		this.label = node.getNode("label").getString(id);
-		this.toggleable = node.getNode("toggleable").getBoolean(true);
-		this.isDefaultHidden = node.getNode("defaultHide").getBoolean(false);
+		this.label = node.node("label").getString(id);
+		this.toggleable = node.node("toggleable").getBoolean(true);
+		this.isDefaultHidden = node.node("defaultHide").getBoolean(false);
 	}
 	
-	public synchronized void save(ConfigurationNode node) {
-		node.getNode("id").setValue(this.id);
-		node.getNode("label").setValue(this.label);
-		node.getNode("toggleable").setValue(this.toggleable);
-		node.getNode("defaultHide").setValue(this.isDefaultHidden);
+	public synchronized void save(ConfigurationNode node) throws SerializationException {
+		node.node("id").set(this.id);
+		node.node("label").set(this.label);
+		node.node("toggleable").set(this.toggleable);
+		node.node("defaultHide").set(this.isDefaultHidden);
 		
 		for (MarkerImpl marker : markers.values()) {
-			marker.save(node.getNode("marker").appendListNode());
+			marker.save(node.node("marker").appendListNode());
 		}
 
 		removedMarkers.clear();

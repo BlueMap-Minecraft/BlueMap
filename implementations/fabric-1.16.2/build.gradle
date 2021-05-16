@@ -1,11 +1,11 @@
 import net.fabricmc.loom.task.RemapJarTask
 
 plugins {
-	id 'fabric-loom' version '0.4-SNAPSHOT'
+	id 'fabric-loom' version '0.6-SNAPSHOT'
 }
 
 configurations {
-	compile.extendsFrom shadowInclude
+	implementation.extendsFrom shadowInclude
 }
 
 dependencies {
@@ -43,7 +43,7 @@ shadowJar {
 	//relocate 'com.flowpowered.math', 'de.bluecolored.shadow.flowpowered.math' //DON'T relocate this, because the API depends on it
 	relocate 'com.typesafe.config', 'de.bluecolored.shadow.typesafe.config'
 	relocate 'net.querz.nbt', 'de.bluecolored.shadow.querz.nbt'
-	relocate 'ninja.leaping.configurate', 'de.bluecolored.shadow.ninja.leaping.configurate'
+	relocate 'org.spongepowered.configurate', 'de.bluecolored.shadow.configurate'
 	relocate 'com.github.benmanes.caffeine', 'de.bluecolored.shadow.benmanes.caffeine'
 	relocate 'com.google.errorprone', 'de.bluecolored.shadow.google.errorprone'
 	relocate 'org.aopalliance', 'de.bluecolored.shadow.aopalliance'
@@ -51,18 +51,19 @@ shadowJar {
 	relocate 'com.google.inject', 'de.bluecolored.shadow.google.inject'
 	relocate 'org.checkerframework', 'de.bluecolored.shadow.checkerframework'
 	relocate 'org.codehaus', 'de.bluecolored.shadow.codehaus'
+	relocate 'io.leangen.geantyref', 'de.bluecolored.shadow.geantyref'
 }
 
 task ramappedShadowJar(type: RemapJarTask) {
-	destinationDir = file '../../build/release'
+	destinationDirectory = file '../../build/release'
 	dependsOn tasks.shadowJar
-	input = tasks.shadowJar.archivePath
-	addNestedDependencies = true
-	archiveName = "BlueMap-${version}-fabric-1.16.4.jar"
+	input.set(tasks.shadowJar.archiveFile.get())
+	addNestedDependencies.set(true)
+	archiveFileName.set("BlueMap-${archiveVersion.get()}-fabric-1.16.4.jar")
 }
 build.dependsOn ramappedShadowJar
 
 task sourcesJar(type: Jar, dependsOn: classes) {
-	classifier = "sources"
+	archiveClassifier.set("sources")
 	from sourceSets.main.allSource
 }

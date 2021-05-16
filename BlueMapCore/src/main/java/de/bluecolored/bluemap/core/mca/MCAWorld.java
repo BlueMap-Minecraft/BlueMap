@@ -28,8 +28,6 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.MultimapBuilder;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -68,7 +66,7 @@ public class MCAWorld implements World {
 	private BlockPropertiesMapper blockPropertiesMapper;
 	private BiomeMapper biomeMapper;
 
-	private final Multimap<String, BlockStateExtension> blockStateExtensions;
+	private final Map<String, List<BlockStateExtension>> blockStateExtensions;
 	
 	private boolean ignoreMissingLightData;
 	
@@ -99,7 +97,7 @@ public class MCAWorld implements World {
 		
 		this.forgeBlockMappings = new HashMap<>();
 		
-		this.blockStateExtensions = MultimapBuilder.hashKeys().arrayListValues().build();
+		this.blockStateExtensions = new HashMap<>();
 		registerBlockStateExtension(new SnowyExtension(minecraftVersion));
 		registerBlockStateExtension(new StairShapeExtension());
 		registerBlockStateExtension(new FireExtension());
@@ -162,7 +160,7 @@ public class MCAWorld implements World {
 		BlockState blockState = chunk.getBlockState(pos);
 		
 		if (chunk instanceof ChunkAnvil112) { // only use extensions if old format chunk (1.12) in the new format block-states are saved with extensions
-			for (BlockStateExtension ext : blockStateExtensions.get(blockState.getFullId())) {
+			for (BlockStateExtension ext : blockStateExtensions.getOrDefault(blockState.getFullId(), Collections.emptyList())) {
 				blockState = ext.extend(this, pos, blockState);
 			}
 		}
@@ -313,7 +311,7 @@ public class MCAWorld implements World {
 
 	private void registerBlockStateExtension(BlockStateExtension extension) {
 		for (String id : extension.getAffectedBlockIds()) {
-			this.blockStateExtensions.put(id, extension);
+			this.blockStateExtensions.computeIfAbsent(id, t -> new ArrayList<>()).add(extension);
 		}
 	}
 

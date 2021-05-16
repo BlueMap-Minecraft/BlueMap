@@ -24,11 +24,11 @@
  */
 package de.bluecolored.bluemap.core.mca.extensions;
 
-import java.util.Set;
-
-import com.google.common.collect.Sets;
-
 import de.bluecolored.bluemap.core.MinecraftVersion;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public class WoodenFenceConnectExtension extends ConnectSameOrFullBlockExtension {
 	
@@ -37,24 +37,24 @@ public class WoodenFenceConnectExtension extends ConnectSameOrFullBlockExtension
 	public WoodenFenceConnectExtension(MinecraftVersion version) {
 		switch (version) {
 			case MC_1_12:
-				affectedBlockIds = Sets.newHashSet(
+				affectedBlockIds = new HashSet<>(Arrays.asList(
 					"minecraft:fence",
 					"minecraft:spruce_fence",
 					"minecraft:birch_fence",
 					"minecraft:jungle_fence",
 					"minecraft:dark_oak_fence",
 					"minecraft:acacia_fence"
-				);	
+				));
 				break;
 			default:
-				affectedBlockIds = Sets.newHashSet(
+				affectedBlockIds = new HashSet<>(Arrays.asList(
 					"minecraft:oak_fence",
 					"minecraft:spruce_fence",
 					"minecraft:birch_fence",
 					"minecraft:jungle_fence",
 					"minecraft:dark_oak_fence",
 					"minecraft:acacia_fence"
-				);	
+				));
 				break;
 		}
 	}

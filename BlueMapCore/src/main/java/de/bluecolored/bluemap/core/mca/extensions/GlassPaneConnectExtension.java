@@ -24,14 +24,13 @@
  */
 package de.bluecolored.bluemap.core.mca.extensions;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
-
 public class GlassPaneConnectExtension extends ConnectSameOrFullBlockExtension {
 
-	private static final HashSet<String> AFFECTED_BLOCK_IDS = Sets.newHashSet(
+	private static final HashSet<String> AFFECTED_BLOCK_IDS = new HashSet<>(Arrays.asList(
 			"minecraft:glass_pane",
 			"minecraft:white_stained_glass_pane",
 			"minecraft:orange_stained_glass_pane",
@@ -49,7 +48,7 @@ public class GlassPaneConnectExtension extends ConnectSameOrFullBlockExtension {
 			"minecraft:red_stained_glass_pane",
 			"minecraft:black_stained_glass_pane",
 			"minecraft:iron_bars"
-		);
+		));
 	
 	@Override
 	public Set<String> getAffectedBlockIds() {

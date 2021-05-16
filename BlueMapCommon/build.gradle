@@ -3,10 +3,10 @@ plugins {
 }
 
 dependencies {
-    compile 'com.mojang:brigadier:1.0.17'
-    
-    compile project(':BlueMapCore')
-    compile project(':BlueMapAPI')
+    api 'com.mojang:brigadier:1.0.17'
+
+    api project(':BlueMapCore')
+    api project(':BlueMapAPI')
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.4.2'
 }
@@ -34,8 +34,8 @@ task buildWebapp(type: NpmTask) {
 task zipWebapp(type: Zip) {
     dependsOn 'buildWebapp'
     from fileTree('BlueMapVue/dist/')
-    archiveName 'webapp.zip'
-    destinationDir(file('src/main/resources/de/bluecolored/bluemap/'))
+    archiveFileName.set('webapp.zip')
+    destinationDirectory.set(file('src/main/resources/de/bluecolored/bluemap/'))
     outputs.upToDateWhen { false }
 }
 

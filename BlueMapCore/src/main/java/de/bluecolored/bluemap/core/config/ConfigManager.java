@@ -24,16 +24,17 @@
  */
 package de.bluecolored.bluemap.core.config;
 
-import com.google.common.base.Preconditions;
+
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack.Resource;
 import de.bluecolored.bluemap.core.util.FileUtils;
-import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.gson.GsonConfigurationLoader;
-import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
-import ninja.leaping.configurate.loader.ConfigurationLoader;
+import de.bluecolored.bluemap.core.util.Preconditions;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.gson.GsonConfigurationLoader;
+import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
+import org.spongepowered.configurate.loader.ConfigurationLoader;
 
 import java.io.*;
 import java.net.URL;
@@ -41,6 +42,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -96,7 +98,7 @@ public class ConfigManager {
 			} else {
 				//create empty config
 				ConfigurationLoader<? extends ConfigurationNode> loader = getLoader(configFile);
-				configNode = loader.createEmptyNode();
+				configNode = loader.createNode();
 				
 				//save to create file
 				if (generateEmptyConfig) loader.save(configNode);
@@ -109,7 +111,7 @@ public class ConfigManager {
 		//populate missing values with default values
 		if (defaultValues != null) {
 			ConfigurationNode defaultValuesNode = getLoader(defaultValues).load();
-			configNode.mergeValuesFrom(defaultValuesNode);
+			configNode.mergeFrom(defaultValuesNode);
 		}
 		
 		return configNode;
@@ -196,7 +198,7 @@ public class ConfigManager {
 			try {
 				ConfigurationNode node = getLoader(configFileName, resource.read()).load();
 				if (joinedNode == null) joinedNode = node;
-				else joinedNode.mergeValuesFrom(node);
+				else joinedNode.mergeFrom(node);
 			} catch (IOException ex) {
 				Logger.global.logWarning("Failed to load an additional " + configFileName + " from the resource-pack! " + ex);
 			}
@@ -204,7 +206,7 @@ public class ConfigManager {
 		
 		if (joinedNode == null) return defaultConfig;
 		
-		joinedNode.mergeValuesFrom(defaultConfig);
+		joinedNode.mergeFrom(defaultConfig);
 		
 		return joinedNode;
 	}
@@ -212,22 +214,22 @@ public class ConfigManager {
 	private ConfigurationLoader<? extends ConfigurationNode> getLoader(String filename, InputStream is){
 		BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
 		
-		if (filename.endsWith(".json")) return GsonConfigurationLoader.builder().setSource(() -> reader).build();
-		else return HoconConfigurationLoader.builder().setSource(() -> reader).build();
+		if (filename.endsWith(".json")) return GsonConfigurationLoader.builder().source(() -> reader).build();
+		else return HoconConfigurationLoader.builder().source(() -> reader).build();
 	}
 	
 	private ConfigurationLoader<? extends ConfigurationNode> getLoader(URL url){
-		if (url.getFile().endsWith(".json")) return GsonConfigurationLoader.builder().setURL(url).build();
-		else return HoconConfigurationLoader.builder().setURL(url).build();
+		if (url.getFile().endsWith(".json")) return GsonConfigurationLoader.builder().url(url).build();
+		else return HoconConfigurationLoader.builder().url(url).build();
 	}
 	
 	private ConfigurationLoader<? extends ConfigurationNode> getLoader(File file){
-		if (file.getName().endsWith(".json")) return GsonConfigurationLoader.builder().setFile(file).build();
-		else return HoconConfigurationLoader.builder().setFile(file).build();
+		if (file.getName().endsWith(".json")) return GsonConfigurationLoader.builder().file(file).build();
+		else return HoconConfigurationLoader.builder().file(file).build();
 	}
 
 	public static File toFolder(String pathString) throws IOException {
-		Preconditions.checkNotNull(pathString);
+		Objects.requireNonNull(pathString);
 		
 		File file = new File(pathString);
 		if (file.exists() && !file.isDirectory()) throw new IOException("Invalid configuration: Path '" + file.getAbsolutePath() + "' is a file (should be a directory)");

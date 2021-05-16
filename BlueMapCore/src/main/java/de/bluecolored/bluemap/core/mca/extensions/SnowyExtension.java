@@ -24,14 +24,14 @@
  */
 package de.bluecolored.bluemap.core.mca.extensions;
 
-import java.util.Set;
-
 import com.flowpowered.math.vector.Vector3i;
-import com.google.common.collect.Sets;
-
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.world.BlockState;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 public class SnowyExtension implements BlockStateExtension {
 
@@ -43,18 +43,18 @@ public class SnowyExtension implements BlockStateExtension {
 	public SnowyExtension(MinecraftVersion version) {
 		switch (version) {
 			case MC_1_12:
-				affectedBlockIds = Sets.newHashSet(
+				affectedBlockIds = new HashSet<>(Arrays.asList(
 					"minecraft:grass",
 					"minecraft:mycelium"
-				);
+				));
 				snowLayerId = "minecraft:snow_layer";
 				snowBlockId = "minecraft:snow";
 				break;
 			default:
-				affectedBlockIds = Sets.newHashSet(
+				affectedBlockIds = new HashSet<>(Arrays.asList(
 					"minecraft:grass_block",
 					"minecraft:podzol"
-				);
+				));
 				snowLayerId = "minecraft:snow";
 				snowBlockId = "minecraft:snow_block";
 				break;

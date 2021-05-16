@@ -24,18 +24,14 @@
  */
 package de.bluecolored.bluemap.core.map.hires.blockmodel;
 
-import java.util.HashSet;
-
 import com.flowpowered.math.matrix.Matrix3f;
 import com.flowpowered.math.vector.Vector2f;
 import com.flowpowered.math.vector.Vector3f;
 import com.flowpowered.math.vector.Vector4f;
-import com.google.common.collect.Sets;
-
 import de.bluecolored.bluemap.core.MinecraftVersion;
+import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.model.ExtendedFace;
 import de.bluecolored.bluemap.core.model.ExtendedModel;
-import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.resourcepack.BlockColorCalculator;
 import de.bluecolored.bluemap.core.resourcepack.BlockModelResource;
 import de.bluecolored.bluemap.core.resourcepack.Texture;
@@ -44,18 +40,21 @@ import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.BlockState;
 
+import java.util.Arrays;
+import java.util.HashSet;
+
 /**
  * A model builder for all liquid blocks
  */
 public class LiquidModelBuilder {
 	
-	private static final HashSet<String> DEFAULT_WATERLOGGED_BLOCK_IDS = Sets.newHashSet(
+	private static final HashSet<String> DEFAULT_WATERLOGGED_BLOCK_IDS = new HashSet<>(Arrays.asList(
 			"minecraft:seagrass",
 			"minecraft:tall_seagrass",
 			"minecraft:kelp",
 			"minecraft:kelp_plant",
 			"minecraft:bubble_column"
-		);
+	));
 	
 	private BlockState liquidBlockState;
 	private Block block;

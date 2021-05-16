@@ -30,9 +30,10 @@ import de.bluecolored.bluemap.core.config.MapConfig;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.util.FileUtils;
 import de.bluecolored.bluemap.core.util.MathUtils;
-import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.gson.GsonConfigurationLoader;
-import ninja.leaping.configurate.loader.ConfigurationLoader;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.gson.GsonConfigurationLoader;
+import org.spongepowered.configurate.loader.ConfigurationLoader;
+import org.spongepowered.configurate.serialize.SerializationException;
 
 import java.io.File;
 import java.io.IOException;
@@ -41,14 +42,14 @@ import java.util.stream.Collectors;
 
 public class WebSettings {
 
-	private ConfigurationLoader<? extends ConfigurationNode> configLoader;
+	private final ConfigurationLoader<? extends ConfigurationNode> configLoader;
 	private ConfigurationNode rootNode;
 	
 	public WebSettings(File settingsFile) throws IOException {
 		FileUtils.createFile(settingsFile);
 		
 		configLoader = GsonConfigurationLoader.builder()
-				.setFile(settingsFile)
+				.file(settingsFile)
 				.build();
 		
 		load();
@@ -62,49 +63,49 @@ public class WebSettings {
 		configLoader.save(rootNode);
 	}
 	
-	public void set(Object value, Object... path) {
-		rootNode.getNode(path).setValue(value);
+	public void set(Object value, Object... path) throws SerializationException {
+		rootNode.node(path).set(value);
 	}
 
 	public Object get(Object... path) {
-		return rootNode.getNode(path).getValue();
+		return rootNode.node(path).raw();
 	}
 	
 	public String getString(Object... path) {
-		return rootNode.getNode(path).getString();
+		return rootNode.node(path).getString();
 	}
 	
 	public int getInt(Object... path) {
-		return rootNode.getNode(path).getInt();
+		return rootNode.node(path).getInt();
 	}
 	
 	public long getLong(Object... path) {
-		return rootNode.getNode(path).getLong();
+		return rootNode.node(path).getLong();
 	}
 	
 	public float getFloat(Object... path) {
-		return rootNode.getNode(path).getFloat();
+		return rootNode.node(path).getFloat();
 	}
 	
 	public double getDouble(Object... path) {
-		return rootNode.getNode(path).getDouble();
+		return rootNode.node(path).getDouble();
 	}
 	
 	public Collection<String> getMapIds() {
-		return rootNode.getNode("maps").getChildrenMap().keySet().stream().map(Object::toString).collect(Collectors.toSet());
+		return rootNode.node("maps").childrenMap().keySet().stream().map(Object::toString).collect(Collectors.toSet());
 	}
 	
-	public void setAllMapsEnabled(boolean enabled) {
-		for (ConfigurationNode mapNode : rootNode.getNode("maps").getChildrenMap().values()) {
-			mapNode.getNode("enabled").setValue(enabled);
+	public void setAllMapsEnabled(boolean enabled) throws SerializationException {
+		for (ConfigurationNode mapNode : rootNode.node("maps").childrenMap().values()) {
+			mapNode.node("enabled").set(enabled);
 		}
 	}
 	
-	public void setMapEnabled(boolean enabled, String mapId) {
+	public void setMapEnabled(boolean enabled, String mapId) throws SerializationException {
 		set(enabled, "maps", mapId, "enabled");
 	}
 	
-	public void setFrom(BmMap map) {
+	public void setFrom(BmMap map) throws SerializationException {
 		Vector2i hiresTileSize = map.getHiresModelManager().getTileGrid().getGridSize();
 		Vector2i gridOrigin = map.getHiresModelManager().getTileGrid().getOffset();
 		Vector2i lowresTileSize = map.getLowresModelManager().getTileSize();
@@ -132,7 +133,7 @@ public class WebSettings {
 		set(map.getWorld().getUUID().toString(), "maps", map.getId(), "world");
 	}
 	
-	public void setFrom(MapConfig mapConfig) {
+	public void setFrom(MapConfig mapConfig) throws SerializationException {
 		Vector2i startPos = mapConfig.getStartPos();
 		if (startPos != null) {
 			set(startPos.getX(), "maps", mapConfig.getId(), "startPos", "x");
@@ -149,7 +150,7 @@ public class WebSettings {
 		setName(mapConfig.getName(), mapConfig.getId());
 	}
 	
-	public void setOrdinal(int ordinal, String mapId) {
+	public void setOrdinal(int ordinal, String mapId) throws SerializationException {
 		set(ordinal, "maps", mapId, "ordinal");
 	}
 	
@@ -157,7 +158,7 @@ public class WebSettings {
 		return getInt("maps", mapId, "ordinal");
 	}
 	
-	public void setName(String name, String mapId) {
+	public void setName(String name, String mapId) throws SerializationException {
 		set(name, "maps", mapId, "name");
 	}
 	

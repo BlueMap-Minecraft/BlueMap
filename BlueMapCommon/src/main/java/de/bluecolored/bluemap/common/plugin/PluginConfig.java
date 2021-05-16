@@ -24,11 +24,11 @@
  */
 package de.bluecolored.bluemap.common.plugin;
 
+import org.spongepowered.configurate.ConfigurationNode;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-
-import ninja.leaping.configurate.ConfigurationNode;
 
 public class PluginConfig {
 
@@ -41,23 +41,23 @@ public class PluginConfig {
 	public PluginConfig(ConfigurationNode node) {
 
 		//liveUpdates
-		liveUpdatesEnabled = node.getNode("liveUpdates").getBoolean(true);
+		liveUpdatesEnabled = node.node("liveUpdates").getBoolean(true);
 
 		//skinDownloadEnabled
-		skinDownloadEnabled = node.getNode("skinDownload").getBoolean(true);
+		skinDownloadEnabled = node.node("skinDownload").getBoolean(true);
 		
 		//hiddenGameModes
 		hiddenGameModes = new ArrayList<>();
-		for (ConfigurationNode gameModeNode : node.getNode("hiddenGameModes").getChildrenList()) {
+		for (ConfigurationNode gameModeNode : node.node("hiddenGameModes").childrenList()) {
 			hiddenGameModes.add(gameModeNode.getString());
 		}
 		hiddenGameModes = Collections.unmodifiableCollection(hiddenGameModes);
 		
 		//hideInvisible
-		hideInvisible = node.getNode("hideInvisible").getBoolean(true);
+		hideInvisible = node.node("hideInvisible").getBoolean(true);
 		
 		//hideSneaking
-		hideSneaking = node.getNode("hideSneaking").getBoolean(false);
+		hideSneaking = node.node("hideSneaking").getBoolean(false);
 		
 	}
 

@@ -25,7 +25,7 @@
 package de.bluecolored.bluemap.core;
 
 import de.bluecolored.bluemap.core.logger.Logger;
-import ninja.leaping.configurate.gson.GsonConfigurationLoader;
+import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 
 import java.io.IOException;
 import java.util.concurrent.ForkJoinPool;
@@ -36,7 +36,7 @@ public class BlueMap {
 	static {
 		String version = "DEV";
 		try {
-			version = GsonConfigurationLoader.builder().setURL(BlueMap.class.getResource("/de/bluecolored/bluemap/version.json")).build().load().getNode("version").getString("DEV");
+			version = GsonConfigurationLoader.builder().url(BlueMap.class.getResource("/de/bluecolored/bluemap/version.json")).build().load().node("version").getString("DEV");
 		} catch (IOException ex) {
 			Logger.global.logError("Failed to load version.json from resources!", ex);
 		}

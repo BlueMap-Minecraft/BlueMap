@@ -24,22 +24,22 @@
  */
 package de.bluecolored.bluemap.core.resourcepack;
 
-import com.google.common.base.Preconditions;
 
+import de.bluecolored.bluemap.core.util.Preconditions;
 import de.bluecolored.bluemap.core.world.BlockState;
 
 @FunctionalInterface
 public interface PropertyCondition {
 
-	static final PropertyCondition MATCH_ALL = new All();
-	static final PropertyCondition MATCH_NONE = new None(); 
+	PropertyCondition MATCH_ALL = new All();
+	PropertyCondition MATCH_NONE = new None();
 	
 	boolean matches(BlockState state);
 	
-	public class Property implements PropertyCondition {
+	class Property implements PropertyCondition {
 		
-		private String key;
-		private String value;
+		private final String key;
+		private final String value;
 		
 		private Property (String key, String value) {
 			this.key = key.toLowerCase();
@@ -57,7 +57,7 @@ public interface PropertyCondition {
 
 	class And implements PropertyCondition {
 		
-		private PropertyCondition[] conditions;
+		private final PropertyCondition[] conditions;
 		
 		private And (PropertyCondition... conditions) {
 			Preconditions.checkArgument(conditions.length > 0, "Must be at least one condition!");
@@ -77,7 +77,7 @@ public interface PropertyCondition {
 	
 	class Or implements PropertyCondition {
 		
-		private PropertyCondition[] conditions;
+		private final PropertyCondition[] conditions;
 		
 		private Or (PropertyCondition... conditions) {
 			Preconditions.checkArgument(conditions.length > 0, "Must be at least one condition!");
