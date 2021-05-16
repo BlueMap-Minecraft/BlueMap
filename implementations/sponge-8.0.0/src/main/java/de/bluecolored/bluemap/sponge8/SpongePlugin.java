@@ -86,7 +86,7 @@ public class SpongePlugin implements ServerInterface {
 	private final List<SpongePlayer> onlinePlayerList;
 	
 	@Inject
-	public SpongePlugin(org.apache.logging.log4j.Logger logger, PluginContainer pluginContainer, Metrics.Factory metricsFactory) {
+	public SpongePlugin(org.apache.logging.log4j.Logger logger, PluginContainer pluginContainer/*, Metrics.Factory metricsFactory*/) {
 		Logger.global = new Log4J2Logger(logger);
 		this.pluginContainer = pluginContainer;
 
@@ -105,7 +105,7 @@ public class SpongePlugin implements ServerInterface {
 		this.commands = new SpongeCommands(pluginInstance);
 
 		//bstats
-		metricsFactory.make(5911);
+		//metricsFactory.make(5911);
 	}
 
 	@Listener
