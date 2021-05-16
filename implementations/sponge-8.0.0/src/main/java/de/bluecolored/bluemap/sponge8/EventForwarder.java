@@ -50,41 +50,6 @@ public class EventForwarder {
 		this.listener = listener;
 	}
 
-	/* Use ChunkSaveToDisk as it is the preferred event to use and more reliable on the chunk actually saved to disk
-	@Listener(order = Order.POST)
-	public void onWorldSaveToDisk(SaveWorldEvent evt) {
-		listener.onWorldSaveToDisk(evt.getTargetWorld().getUniqueId());		
-	}
-	*/
-	
-	@Listener(order = Order.POST)
-	public void onChunkSaveToDisk(ChunkEvent.Save.Pre evt) {
-		ResourceKey worldKey = evt.chunkWorld();
-		Optional<ServerWorld> world = Sponge.server().worldManager().world(worldKey);
-		if (world.isPresent()) {
-			listener.onChunkSaveToDisk(world.get().uniqueId(), SpongePlugin.fromSpongePoweredVector(evt.targetChunk().chunkPosition().toVector2(true)));
-		}
-	}
-
-	@Listener(order = Order.POST)
-	public void onBlockChange(ChangeBlockEvent.All evt) {
-		for (Transaction<BlockSnapshot> tr : evt.transactions()) {
-			if(!tr.isValid()) continue;
-
-			Optional<ServerLocation> ow = tr.finalReplacement().location();
-			if (ow.isPresent()) {
-				listener.onBlockChange(ow.get().world().uniqueId(), SpongePlugin.fromSpongePoweredVector(ow.get().position().toInt()));
-			}
-		}
-	}
-
-	// TODO event missing in Sponge
-//	@Listener(order = Order.POST)
-//	public void onChunkFinishedGeneration(PopulateChunkEvent.Post evt) {
-//		Vector3i chunkPos = evt.getTargetChunk().getPosition();
-//		listener.onChunkFinishedGeneration(evt.getTargetChunk().getWorld().getUniqueId(), new Vector2i(chunkPos.getX(), chunkPos.getZ()));
-//	}
-
 	@Listener(order = Order.POST)
 	public void onPlayerJoin(ServerSideConnectionEvent.Join evt) {
 		listener.onPlayerJoin(evt.player().uniqueId());

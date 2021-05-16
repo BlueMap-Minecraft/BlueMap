@@ -23,25 +23,23 @@
  * THE SOFTWARE.
  */
 package de.bluecolored.bluemap.sponge8;
-import java.util.Optional;
-
+import com.flowpowered.math.vector.Vector3d;
+import de.bluecolored.bluemap.common.plugin.Plugin;
+import de.bluecolored.bluemap.common.plugin.serverinterface.CommandSource;
+import de.bluecolored.bluemap.common.plugin.text.Text;
+import de.bluecolored.bluemap.core.world.World;
 import net.kyori.adventure.audience.Audience;
 import org.spongepowered.api.adventure.SpongeComponents;
 import org.spongepowered.api.service.permission.Subject;
 import org.spongepowered.api.world.Locatable;
 
-import com.flowpowered.math.vector.Vector3d;
-
-import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.common.plugin.serverinterface.CommandSource;
-import de.bluecolored.bluemap.common.plugin.text.Text;
-import de.bluecolored.bluemap.core.world.World;
+import java.util.Optional;
 
 public class SpongeCommandSource implements CommandSource {
 
-	private Plugin plugin;
-	private Audience audience;
-	private Subject subject;
+	private final Plugin plugin;
+	private final Audience audience;
+	private final Subject subject;
 
 	public SpongeCommandSource(Plugin plugin, Audience audience, Subject subject) {
 		this.plugin = plugin;

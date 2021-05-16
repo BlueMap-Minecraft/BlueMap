@@ -24,21 +24,16 @@
  */
 package de.bluecolored.bluemap.sponge;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-
-import javax.inject.Inject;
-
+import de.bluecolored.bluemap.common.plugin.Plugin;
+import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
+import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
+import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.core.MinecraftVersion;
+import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
+import de.bluecolored.bluemap.sponge.SpongeCommands.SpongeCommandProxy;
+import net.querz.nbt.CompoundTag;
+import net.querz.nbt.NBTUtil;
 import org.bstats.sponge.MetricsLite2;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.config.ConfigDir;
@@ -54,16 +49,13 @@ import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.World;
 import org.spongepowered.api.world.storage.WorldProperties;
 
-import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
-import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
-import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
-import de.bluecolored.bluemap.core.MinecraftVersion;
-import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
-import de.bluecolored.bluemap.sponge.SpongeCommands.SpongeCommandProxy;
-import net.querz.nbt.CompoundTag;
-import net.querz.nbt.NBTUtil;
+import javax.inject.Inject;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
 
 @org.spongepowered.api.plugin.Plugin (
 		id = Plugin.PLUGIN_ID, 
@@ -81,15 +73,15 @@ public class SpongePlugin implements ServerInterface {
 	@SuppressWarnings("unused")
 	private MetricsLite2 metrics;
 	
-	private Plugin pluginInstance;
-	private SpongeCommands commands;
+	private final Plugin pluginInstance;
+	private final SpongeCommands commands;
 
 	private SpongeExecutorService asyncExecutor;
 	private SpongeExecutorService syncExecutor;
 	
 	private int playerUpdateIndex = 0;
-	private Map<UUID, Player> onlinePlayerMap;
-	private List<SpongePlayer> onlinePlayerList;
+	private final Map<UUID, Player> onlinePlayerMap;
+	private final List<SpongePlayer> onlinePlayerList;
 	
 	@Inject
 	public SpongePlugin(org.slf4j.Logger logger) {
@@ -145,7 +137,7 @@ public class SpongePlugin implements ServerInterface {
 	@Listener
 	public void onServerStop(GameStoppingEvent evt) {
 		Logger.global.logInfo("Stopping...");
-		Sponge.getScheduler().getScheduledTasks(this).forEach(t -> t.cancel());
+		Sponge.getScheduler().getScheduledTasks(this).forEach(Task::cancel);
 		pluginInstance.unload();
 		Logger.global.logInfo("Saved and stopped!");
 	}
@@ -207,9 +199,7 @@ public class SpongePlugin implements ServerInterface {
 	@Override
 	public String getWorldName(UUID worldUUID) {
 		Optional<World> world = Sponge.getServer().getWorld(worldUUID);
-		if (world.isPresent()) return world.get().getName();
-		
-		return null;
+		return world.map(World::getName).orElse(null);
 	}
 
 	@Override
@@ -233,7 +223,7 @@ public class SpongePlugin implements ServerInterface {
 		if (pluginContainer != null) {
 			Tristate metricsEnabled = Sponge.getMetricsConfigManager().getCollectionState(pluginContainer);
 			if (metricsEnabled != Tristate.UNDEFINED) {
-				return metricsEnabled == Tristate.TRUE ? true : false;
+				return metricsEnabled == Tristate.TRUE;
 			}
 		}
 		

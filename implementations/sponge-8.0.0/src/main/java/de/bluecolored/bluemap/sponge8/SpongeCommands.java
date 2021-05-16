@@ -24,48 +24,42 @@
  */
 package de.bluecolored.bluemap.sponge8;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-
-import net.kyori.adventure.audience.Audience;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import org.spongepowered.api.command.Command;
-import org.spongepowered.api.command.CommandCause;
-import org.spongepowered.api.command.CommandResult;
-import org.spongepowered.api.command.parameter.ArgumentReader;
-import org.spongepowered.api.service.permission.Subject;
-
 import com.mojang.brigadier.CommandDispatcher;
+import com.mojang.brigadier.Message;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.suggestion.Suggestion;
 import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.tree.CommandNode;
-
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.commands.Commands;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.spongepowered.api.command.Command;
+import org.spongepowered.api.command.CommandCause;
+import org.spongepowered.api.command.CommandCompletion;
+import org.spongepowered.api.command.CommandResult;
+import org.spongepowered.api.command.parameter.ArgumentReader;
+
+import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class SpongeCommands {
 
-	private CommandDispatcher<Subject> dispatcher;
+	private final CommandDispatcher<CommandCause> dispatcher;
 	
 	public SpongeCommands(final Plugin plugin) {
 		this.dispatcher = new CommandDispatcher<>();
 		
 		// register commands
-		// this assumes that every Subject will also be an Audience
-		new Commands<>(plugin, dispatcher, subject -> new SpongeCommandSource(plugin, (Audience) subject, subject));
+		new Commands<>(plugin, dispatcher, cause -> new SpongeCommandSource(plugin, cause.audience(), cause.subject()));
 	}
 	
 	public Collection<SpongeCommandProxy> getRootCommands(){
 		Collection<SpongeCommandProxy> rootCommands = new ArrayList<>();
 		
-		for (CommandNode<Subject> node : this.dispatcher.getRoot().getChildren()) {
+		for (CommandNode<CommandCause> node : this.dispatcher.getRoot().getChildren()) {
 			rootCommands.add(new SpongeCommandProxy(node.getName()));
 		}
 		
@@ -92,7 +86,7 @@ public class SpongeCommands {
 			}
 
 			try {
-				return CommandResult.builder().result(dispatcher.execute(command, cause.subject())).build();
+				return CommandResult.builder().result(dispatcher.execute(command, cause)).build();
 			} catch (CommandSyntaxException ex) {
 				cause.audience().sendMessage(Component.text(ex.getRawMessage().getString(), NamedTextColor.RED));
 
@@ -104,28 +98,34 @@ public class SpongeCommands {
 		}
 
 		@Override
-		public List<String> suggestions(CommandCause cause, ArgumentReader.Mutable arguments) {
+		public List<CommandCompletion> complete(CommandCause cause, ArgumentReader.Mutable arguments) {
 			String command = label;
 			if (!arguments.input().isEmpty()) {
 				command += " " + arguments.input();
 			}
 
-			List<String> completions = new ArrayList<>();
+			List<CommandCompletion> completions = new ArrayList<>();
 
 			try {
-				Suggestions suggestions = dispatcher.getCompletionSuggestions(dispatcher.parse(command, cause.subject())).get(100, TimeUnit.MILLISECONDS);
+				Suggestions suggestions = dispatcher.getCompletionSuggestions(dispatcher.parse(command, cause)).get(100, TimeUnit.MILLISECONDS);
 				for (Suggestion suggestion : suggestions.getList()) {
 					String text = suggestion.getText();
 
 					if (text.indexOf(' ') == -1) {
-						completions.add(text);
+						Message tooltip = suggestion.getTooltip();
+						if (tooltip == null) {
+							completions.add(CommandCompletion.of(text));
+						} else {
+							completions.add(CommandCompletion.of(text, Component.text(tooltip.getString())));
+						}
 					}
 				}
 			} catch (InterruptedException ignore) {
 				Thread.currentThread().interrupt();
 			} catch (ExecutionException | TimeoutException ignore) {}
 
-			completions.sort(String::compareToIgnoreCase);
+			completions.sort(Comparator.comparing(CommandCompletion::completion));
+
 			return completions;
 		}
 
@@ -146,11 +146,11 @@ public class SpongeCommands {
 
 		@Override
 		public Component usage(CommandCause cause) {
-			CommandNode<Subject> node = dispatcher.getRoot().getChild(label);
+			CommandNode<CommandCause> node = dispatcher.getRoot().getChild(label);
 			if (node == null) return Component.text("/" + label);
 
 			List<Component> lines = new ArrayList<>();
-			for (String usageString : dispatcher.getSmartUsage(node, cause.subject()).values()) {
+			for (String usageString : dispatcher.getSmartUsage(node, cause).values()) {
 				lines.add(Component.text("/" + label + " ", NamedTextColor.WHITE).append(Component.text(usageString, NamedTextColor.GRAY)));
 			}
 

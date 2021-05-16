@@ -24,24 +24,19 @@
  */
 package de.bluecolored.bluemap.sponge8;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-
 import com.flowpowered.math.vector.Vector3d;
+import de.bluecolored.bluemap.common.plugin.serverinterface.Gamemode;
+import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
+import de.bluecolored.bluemap.common.plugin.text.Text;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.effect.potion.PotionEffect;
 import org.spongepowered.api.effect.potion.PotionEffectTypes;
 import org.spongepowered.api.entity.living.player.gamemode.GameMode;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
-
-import de.bluecolored.bluemap.common.plugin.serverinterface.Gamemode;
-import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
-import de.bluecolored.bluemap.common.plugin.text.Text;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
+
+import java.util.*;
 
 public class SpongePlayer implements Player {
 	
@@ -54,7 +49,7 @@ public class SpongePlayer implements Player {
 		GAMEMODE_MAP.put(GameModes.NOT_SET.get(), Gamemode.SURVIVAL);
 	}
 	
-	private UUID uuid;
+	private final UUID uuid;
 	private Text name;
 	private UUID world;
 	private Vector3d position;

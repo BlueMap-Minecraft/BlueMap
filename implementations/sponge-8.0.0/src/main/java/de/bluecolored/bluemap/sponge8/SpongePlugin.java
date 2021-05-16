@@ -24,29 +24,21 @@
  */
 package de.bluecolored.bluemap.sponge8;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import com.google.inject.Inject;
+import de.bluecolored.bluemap.common.plugin.Plugin;
+import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
+import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
+import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.core.MinecraftVersion;
+import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
+import de.bluecolored.bluemap.sponge8.SpongeCommands.SpongeCommandProxy;
+import net.querz.nbt.CompoundTag;
+import net.querz.nbt.NBTUtil;
 import org.spongepowered.api.Platform;
-import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.adventure.SpongeComponents;
@@ -63,21 +55,21 @@ import org.spongepowered.api.scheduler.Task;
 import org.spongepowered.api.util.Ticks;
 import org.spongepowered.api.util.Tristate;
 import org.spongepowered.api.world.server.ServerWorld;
-
-import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
-import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
-import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
-import de.bluecolored.bluemap.core.MinecraftVersion;
-import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
-import de.bluecolored.bluemap.sponge8.SpongeCommands.SpongeCommandProxy;
 import org.spongepowered.plugin.PluginContainer;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 
 @org.spongepowered.plugin.jvm.Plugin(Plugin.PLUGIN_ID)
 public class SpongePlugin implements ServerInterface {
 
 	private final PluginContainer pluginContainer;
+
 	@Inject
 	@ConfigDir(sharedRoot = false)
 	private Path configurationDir;
@@ -87,17 +79,15 @@ public class SpongePlugin implements ServerInterface {
 //	@SuppressWarnings("unused")
 //	private MetricsLite2 metrics;
 	
-	private Plugin pluginInstance;
-	private SpongeCommands commands;
-
-	private Map<File, UUID> worldUUIDs = new ConcurrentHashMap<>();
+	private final Plugin pluginInstance;
+	private final SpongeCommands commands;
 
 	private ExecutorService asyncExecutor;
 	private ExecutorService syncExecutor;
 	
 	private int playerUpdateIndex = 0;
-	private Map<UUID, Player> onlinePlayerMap;
-	private List<SpongePlayer> onlinePlayerList;
+	private final Map<UUID, Player> onlinePlayerMap;
+	private final List<SpongePlayer> onlinePlayerList;
 	
 	@Inject
 	public SpongePlugin(org.apache.logging.log4j.Logger logger, PluginContainer pluginContainer) {
@@ -107,7 +97,7 @@ public class SpongePlugin implements ServerInterface {
 		this.onlinePlayerMap = new ConcurrentHashMap<>();
 		this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 
-		final String versionFromSponge = Sponge.platform().container(Platform.Component.GAME).getMetadata().getVersion();
+		final String versionFromSponge = Sponge.platform().container(Platform.Component.GAME).metadata().version();
 		MinecraftVersion version = MinecraftVersion.MC_1_16;
 		try {
 			version = MinecraftVersion.fromVersionString(versionFromSponge);
@@ -156,7 +146,7 @@ public class SpongePlugin implements ServerInterface {
 	@Listener
 	public void onServerStop(StoppingEngineEvent<Server> evt) {
 		Logger.global.logInfo("Stopping...");
-		evt.engine().scheduler().tasksByPlugin(pluginContainer).forEach(ScheduledTask::cancel);
+		evt.engine().scheduler().tasks(pluginContainer).forEach(ScheduledTask::cancel);
 		pluginInstance.unload();
 		Logger.global.logInfo("Saved and stopped!");
 	}
@@ -204,39 +194,35 @@ public class SpongePlugin implements ServerInterface {
 
 	@Override
 	public UUID getUUIDForWorld(File worldFolder) throws IOException {
-		// this logic derives the the world key from the folder structure
-		final Pattern customDimension = Pattern.compile(".+/dimensions/([a-z0-9_.-]+)/([a-z0-9._-]+)$".replace("/", File.separator));
-		final Matcher matcher = customDimension.matcher(worldFolder.toString());
-		final ResourceKey key;
-		if (matcher.matches()) {
-			key = ResourceKey.of(matcher.group(1), matcher.group(2));
-		} else if ("DIM-1".equals(worldFolder.getName())) {
-			key = ResourceKey.minecraft("the_nether");
-		} else if ("DIM1".equals(worldFolder.getName())) {
-			key = ResourceKey.minecraft("the_end");
-		} else {
-			// assume it's the main world
-			key = Sponge.server().worldManager().defaultWorld().key();
+		try {
+			CompoundTag levelSponge = (CompoundTag) NBTUtil.readTag(new File(worldFolder, "level.dat"));
+			CompoundTag spongeData = levelSponge.getCompoundTag("SpongeData");
+			int[] uuidIntArray = spongeData.getIntArray("UUID");
+			if (uuidIntArray.length != 4) throw new IOException("World-UUID is stored in a wrong format! Is the worlds level.dat corrupted?");
+			return intArrayToUuid(uuidIntArray);
+		} catch (IOException | RuntimeException e) {
+			throw new IOException("Failed to read the worlds level.dat!", e);
 		}
-
-		return Sponge.server().worldManager().world(key)
-				.map(ServerWorld::uniqueId)
-				.orElse(null);
 	}
-	
+
 	@Override
 	public String getWorldName(UUID worldUUID) {
 		return getServerWorld(worldUUID)
-				.map(serverWorld -> serverWorld
-						.properties()
-						.displayName()
-						.map(SpongeComponents.plainSerializer()::serialize)
-						.orElse(serverWorld.key().asString()))
+				.flatMap(
+						serverWorld -> serverWorld
+								.properties()
+								.displayName()
+								.map(SpongeComponents.plainSerializer()::serialize)
+				)
 				.orElse(null);
 	}
 
 	private Optional<ServerWorld> getServerWorld(UUID worldUUID) {
-		return Sponge.server().worldManager().worldKey(worldUUID).flatMap(k -> Sponge.server().worldManager().world(k));
+		for (ServerWorld world : Sponge.server().worldManager().worlds()) {
+			if (world.uniqueId().equals(worldUUID)) return Optional.of(world);
+		}
+
+		return Optional.empty();
 	}
 
 	@Override
@@ -259,7 +245,7 @@ public class SpongePlugin implements ServerInterface {
 		if (pluginContainer != null) {
 			Tristate metricsEnabled = Sponge.metricsConfigManager().collectionState(pluginContainer);
 			if (metricsEnabled != Tristate.UNDEFINED) {
-				return metricsEnabled == Tristate.TRUE ? true : false;
+				return metricsEnabled == Tristate.TRUE;
 			}
 		}
 		
@@ -309,15 +295,23 @@ public class SpongePlugin implements ServerInterface {
 	}
 
 	public static Vector3d fromSpongePoweredVector(org.spongepowered.math.vector.Vector3d vec) {
-		return new Vector3d(vec.getX(), vec.getY(), vec.getZ());
+		return new Vector3d(vec.x(), vec.y(), vec.z());
 	}
 
 	public static Vector3i fromSpongePoweredVector(org.spongepowered.math.vector.Vector3i vec) {
-		return new Vector3i(vec.getX(), vec.getY(), vec.getZ());
+		return new Vector3i(vec.x(), vec.y(), vec.z());
 	}
 
 	public static Vector2i fromSpongePoweredVector(org.spongepowered.math.vector.Vector2i vec) {
-		return new Vector2i(vec.getX(), vec.getY());
+		return new Vector2i(vec.x(), vec.y());
+	}
+
+	private static UUID intArrayToUuid(int[] array) {
+		if (array.length != 4) throw new IllegalArgumentException("Int array has to contain exactly 4 ints!");
+		return new UUID(
+				(long) array[0] << 32 | (long) array[1] & 0x00000000FFFFFFFFL,
+				(long) array[2] << 32 | (long) array[3] & 0x00000000FFFFFFFFL
+		);
 	}
 	
 }
