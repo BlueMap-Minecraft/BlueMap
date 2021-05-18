@@ -1,19 +1,36 @@
 ---
 name: Bug report
-about: Found a bug? Report it to help BlueMap improve!
+about: 'Use this if you want to report a bug!'
 title: ''
 labels: ''
 assignees: ''
-
 ---
 
-**BlueMap Version:**
-*Full version including the target, e.g. `1.0.0-fabric-1.16.1`*
+<!-- 
+Make sure you read the Contribution-Guidlines (https://github.com/BlueMap-Minecraft/BlueMap/blob/master/.github/CONTRIBUTING.md) before submitting your Bug-Report!
+Issues that don't follow these Guidlines will likely be closed!
+-->
 
-I am using:
-- [ ] mods (on the rendered world)
-- [ ] resourcepacks (in bluemaps `config/resourcepack` folder)
+### What i did / Steps to reproduce
+<!-- What did you do before it happened? (How can the bug be reproduced?) -->
 
-**Description:**
-*Describe the bug in full detail, including a way to reproduce it.
-Sometimes a full log of your server-startup or a crash-report can be of much help!*
+### Expected result
+<!-- What did you expect to happen? -->
+
+### Actual result
+<!-- What happened instead? -->
+
+### Context
+**BlueMap Version:** <!-- Full BlueMap-version including the target, for example: --> 
+`1.0.0-fabric-1.16.1`
+
+<!-- 
+Add more context here!
+- The used os and platform (Windows/Linux, Spigot/Paper/Forge/Fabric/Sponge)
+- Has the world been generated using any minecraft-mods?
+etc..
+
+Also:
+- Is there a log- or a config-file that might help? Include it.
+- Maybe add a screenshot or video for illustration.
+-->
