@@ -7,8 +7,8 @@ assignees: ''
 ---
 
 <!-- 
-Make sure you read the Contribution-Guidlines (https://github.com/BlueMap-Minecraft/BlueMap/blob/master/.github/CONTRIBUTING.md) before submitting your Bug-Report!
-Issues that don't follow these Guidlines will likely be closed!
+Make sure you read the Contribution-Guidelines (https://github.com/BlueMap-Minecraft/BlueMap/blob/master/.github/CONTRIBUTING.md) before submitting your Bug-Report!
+Issues that don't follow these Guidelines will likely be closed!
 -->
 
 ### What i did / Steps to reproduce
