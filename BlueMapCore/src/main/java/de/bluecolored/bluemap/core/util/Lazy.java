@@ -44,6 +44,7 @@ public class Lazy<T> {
 	public T getValue() {
 		if (!isLoaded()) {
 			this.value = loader.get();
+			this.loader = null;
 		}
 		
 		return this.value;

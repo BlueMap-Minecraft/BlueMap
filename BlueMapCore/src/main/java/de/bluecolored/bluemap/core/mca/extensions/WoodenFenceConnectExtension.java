@@ -35,27 +35,24 @@ public class WoodenFenceConnectExtension extends ConnectSameOrFullBlockExtension
 	private final Set<String> affectedBlockIds;
 	
 	public WoodenFenceConnectExtension(MinecraftVersion version) {
-		switch (version) {
-			case MC_1_12:
-				affectedBlockIds = new HashSet<>(Arrays.asList(
+		if (version.isBefore(MinecraftVersion.THE_FLATTENING)) {
+			affectedBlockIds = new HashSet<>(Arrays.asList(
 					"minecraft:fence",
 					"minecraft:spruce_fence",
 					"minecraft:birch_fence",
 					"minecraft:jungle_fence",
 					"minecraft:dark_oak_fence",
 					"minecraft:acacia_fence"
-				));
-				break;
-			default:
-				affectedBlockIds = new HashSet<>(Arrays.asList(
+			));
+		} else {
+			affectedBlockIds = new HashSet<>(Arrays.asList(
 					"minecraft:oak_fence",
 					"minecraft:spruce_fence",
 					"minecraft:birch_fence",
 					"minecraft:jungle_fence",
 					"minecraft:dark_oak_fence",
 					"minecraft:acacia_fence"
-				));
-				break;
+			));
 		}
 	}
 	

@@ -41,23 +41,20 @@ public class SnowyExtension implements BlockStateExtension {
 	private final String snowBlockId; 
 	
 	public SnowyExtension(MinecraftVersion version) {
-		switch (version) {
-			case MC_1_12:
-				affectedBlockIds = new HashSet<>(Arrays.asList(
+		if (version.isBefore(MinecraftVersion.THE_FLATTENING)) {
+			affectedBlockIds = new HashSet<>(Arrays.asList(
 					"minecraft:grass",
 					"minecraft:mycelium"
-				));
-				snowLayerId = "minecraft:snow_layer";
-				snowBlockId = "minecraft:snow";
-				break;
-			default:
-				affectedBlockIds = new HashSet<>(Arrays.asList(
-					"minecraft:grass_block",
-					"minecraft:podzol"
-				));
-				snowLayerId = "minecraft:snow";
-				snowBlockId = "minecraft:snow_block";
-				break;
+			));
+			snowLayerId = "minecraft:snow_layer";
+			snowBlockId = "minecraft:snow";
+		} else {
+			affectedBlockIds = new HashSet<>(Arrays.asList(
+				"minecraft:grass_block",
+				"minecraft:podzol"
+			));
+			snowLayerId = "minecraft:snow";
+			snowBlockId = "minecraft:snow_block";
 		}
 	}
 	

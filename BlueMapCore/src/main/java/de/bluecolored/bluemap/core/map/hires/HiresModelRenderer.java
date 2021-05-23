@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.core.map.hires;
 import com.flowpowered.math.vector.Vector3f;
 import com.flowpowered.math.vector.Vector3i;
 import com.flowpowered.math.vector.Vector4f;
+import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.map.hires.blockmodel.BlockStateModel;
 import de.bluecolored.bluemap.core.map.hires.blockmodel.BlockStateModelFactory;
 import de.bluecolored.bluemap.core.resourcepack.NoSuchResourceException;
@@ -46,14 +47,11 @@ public class HiresModelRenderer {
 	public HiresModelRenderer(ResourcePack resourcePack, RenderSettings renderSettings) {
 		this.renderSettings = renderSettings;
 		this.modelFactory = new BlockStateModelFactory(resourcePack, renderSettings);
-		
-		switch (resourcePack.getMinecraftVersion()) {
-			case MC_1_12:
-				grassId = "minecraft:tall_grass";
-				break;
-			default: 
-				grassId = "minecraft:grass";
-				break;
+
+		if (resourcePack.getMinecraftVersion().isBefore(MinecraftVersion.THE_FLATTENING)) {
+			grassId = "minecraft:tall_grass";
+		} else {
+			grassId = "minecraft:grass";
 		}
 	}
 	

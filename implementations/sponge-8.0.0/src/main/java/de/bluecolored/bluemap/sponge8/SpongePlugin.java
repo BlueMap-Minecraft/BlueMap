@@ -93,14 +93,14 @@ public class SpongePlugin implements ServerInterface {
 		this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 
 		final String versionFromSponge = Sponge.platform().container(Platform.Component.GAME).metadata().version();
-		MinecraftVersion version = MinecraftVersion.MC_1_16;
+		MinecraftVersion version = new MinecraftVersion(1, 16);
 		try {
-			version = MinecraftVersion.fromVersionString(versionFromSponge);
+			version = MinecraftVersion.of(versionFromSponge);
 		} catch (IllegalArgumentException e) {
 			Logger.global.logWarning("Failed to find a matching version for version-name '" + versionFromSponge + "'! Using latest known sponge-version: " + version.getVersionString());
 		}
 		
-		this.pluginInstance = new Plugin(version, "sponge", this);
+		this.pluginInstance = new Plugin(version, "sponge-8.0.0", this);
 		this.commands = new SpongeCommands(pluginInstance);
 
 		//bstats

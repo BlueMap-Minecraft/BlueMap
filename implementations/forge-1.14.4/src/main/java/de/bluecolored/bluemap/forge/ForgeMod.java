@@ -78,7 +78,7 @@ public class ForgeMod implements ServerInterface {
 		this.onlinePlayerMap = new ConcurrentHashMap<>();
 		this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 		
-		this.pluginInstance = new Plugin(MinecraftVersion.MC_1_14, "forge-1.14.4", this);
+		this.pluginInstance = new Plugin(new MinecraftVersion(1, 14, 4), "forge-1.14.4", this);
 		
 		this.worldUUIDs = new ConcurrentHashMap<>();
 		this.eventForwarder = new ForgeEventForwarder();

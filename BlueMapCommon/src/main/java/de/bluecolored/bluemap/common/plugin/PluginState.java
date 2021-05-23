@@ -32,10 +32,10 @@ import java.util.Map;
 
 @SuppressWarnings("FieldMayBeFinal")
 @ConfigSerializable
-public class PluginStatus {
+public class PluginState {
 
 	private boolean renderThreadsEnabled = true;
-	private Map<String, MapStatus> maps = new HashMap<>();
+	private Map<String, MapState> maps = new HashMap<>();
 
 	public boolean isRenderThreadsEnabled() {
 		return renderThreadsEnabled;
@@ -45,12 +45,12 @@ public class PluginStatus {
 		this.renderThreadsEnabled = renderThreadsEnabled;
 	}
 
-	public MapStatus getMapStatus(BmMap map) {
-		return maps.computeIfAbsent(map.getId(), k -> new MapStatus());
+	public MapState getMapState(BmMap map) {
+		return maps.computeIfAbsent(map.getId(), k -> new MapState());
 	}
 
 	@ConfigSerializable
-	public static class MapStatus {
+	public static class MapState {
 
 		private boolean updateEnabled = true;
 

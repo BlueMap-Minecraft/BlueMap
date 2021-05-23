@@ -30,7 +30,6 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack.Resource;
 import de.bluecolored.bluemap.core.util.FileUtils;
-import de.bluecolored.bluemap.core.util.Preconditions;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
@@ -120,7 +119,7 @@ public class ConfigManager {
 	public void loadResourceConfigs(File configFolder, ResourcePack resourcePack) throws IOException {
 		
 		//load blockColors.json from resources, config-folder and resourcepack
-		URL blockColorsConfigUrl = BlueMap.class.getResource("/de/bluecolored/bluemap/" + resourcePack.getMinecraftVersion().getResourcePrefix() + "/blockColors.json");
+		URL blockColorsConfigUrl = BlueMap.class.getResource("/de/bluecolored/bluemap/" + resourcePack.getMinecraftVersion().getResource().getResourcePrefix() + "/blockColors.json");
 		File blockColorsConfigFile = new File(configFolder, "blockColors.json");
 		ConfigurationNode blockColorsConfigNode = loadOrCreate(
 				blockColorsConfigFile, 
@@ -133,7 +132,7 @@ public class ConfigManager {
 		resourcePack.getBlockColorCalculator().loadColorConfig(blockColorsConfigNode);
 
 		//load blockIds.json from resources, config-folder and resourcepack
-		URL blockIdsConfigUrl = BlueMap.class.getResource("/de/bluecolored/bluemap/" + resourcePack.getMinecraftVersion().getResourcePrefix() + "/blockIds.json");
+		URL blockIdsConfigUrl = BlueMap.class.getResource("/de/bluecolored/bluemap/" + resourcePack.getMinecraftVersion().getResource().getResourcePrefix() + "/blockIds.json");
 		File blockIdsConfigFile = new File(configFolder, "blockIds.json");
 		ConfigurationNode blockIdsConfigNode = loadOrCreate(
 						blockIdsConfigFile, 
@@ -148,7 +147,7 @@ public class ConfigManager {
 				);
 
 		//load blockProperties.json from resources, config-folder and resourcepack
-		URL blockPropertiesConfigUrl = BlueMap.class.getResource("/de/bluecolored/bluemap/" + resourcePack.getMinecraftVersion().getResourcePrefix() + "/blockProperties.json");
+		URL blockPropertiesConfigUrl = BlueMap.class.getResource("/de/bluecolored/bluemap/" + resourcePack.getMinecraftVersion().getResource().getResourcePrefix() + "/blockProperties.json");
 		File blockPropertiesConfigFile = new File(configFolder, "blockProperties.json");
 		ConfigurationNode blockPropertiesConfigNode = loadOrCreate(
 						blockPropertiesConfigFile, 
@@ -164,7 +163,7 @@ public class ConfigManager {
 				);
 
 		//load biomes.json from resources, config-folder and resourcepack
-		URL biomeConfigUrl = BlueMap.class.getResource("/de/bluecolored/bluemap/" + resourcePack.getMinecraftVersion().getResourcePrefix() + "/biomes.json");
+		URL biomeConfigUrl = BlueMap.class.getResource("/de/bluecolored/bluemap/" + resourcePack.getMinecraftVersion().getResource().getResourcePrefix() + "/biomes.json");
 		File biomeConfigFile = new File(configFolder, "biomes.json");
 		ConfigurationNode biomeConfigNode = loadOrCreate(
 						biomeConfigFile,

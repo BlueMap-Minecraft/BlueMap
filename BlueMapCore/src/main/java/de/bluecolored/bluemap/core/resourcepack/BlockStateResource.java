@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.core.resourcepack;
 
 import com.flowpowered.math.vector.Vector2f;
 import com.flowpowered.math.vector.Vector3i;
+import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.PropertyCondition.All;
 import de.bluecolored.bluemap.core.resourcepack.fileaccess.FileAccess;
@@ -44,7 +45,9 @@ import java.util.*;
 import java.util.Map.Entry;
 
 public class BlockStateResource {
-	
+
+	private static final MinecraftVersion NEW_MODEL_PATH_VERSION = new MinecraftVersion(1, 13);
+
 	private final List<Variant> variants = new ArrayList<>(0);
 	private final Collection<Variant> multipart = new ArrayList<>(0);
 
@@ -242,13 +245,10 @@ public class BlockStateResource {
 			
 			
 			String modelPath;
-			switch (resourcePack.getMinecraftVersion()) {
-				case MC_1_12: 
-					modelPath = ResourcePack.namespacedToAbsoluteResourcePath(namespacedModelPath, "models/block") + ".json";
-					break;
-				default:
-					modelPath = ResourcePack.namespacedToAbsoluteResourcePath(namespacedModelPath, "models") + ".json";
-					break;
+			if (resourcePack.getMinecraftVersion().isBefore(NEW_MODEL_PATH_VERSION)) {
+				modelPath =	ResourcePack.namespacedToAbsoluteResourcePath(namespacedModelPath, "models/block") + ".json";
+			}else {
+				modelPath = ResourcePack.namespacedToAbsoluteResourcePath(namespacedModelPath, "models") + ".json";
 			}
 
 			BlockModelResource model = resourcePack.blockModelResources.get(modelPath);

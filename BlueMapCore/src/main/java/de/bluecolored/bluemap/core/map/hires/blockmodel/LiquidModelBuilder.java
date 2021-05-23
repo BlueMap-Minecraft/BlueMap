@@ -56,18 +56,20 @@ public class LiquidModelBuilder {
 			"minecraft:bubble_column"
 	));
 	
-	private BlockState liquidBlockState;
-	private Block block;
-	private MinecraftVersion minecraftVersion;
-	private RenderSettings renderSettings;
-	private BlockColorCalculator colorCalculator;
+	private final BlockState liquidBlockState;
+	private final Block block;
+	private final RenderSettings renderSettings;
+	private final BlockColorCalculator colorCalculator;
+
+	private final boolean useWaterColorMap;
 	
 	public LiquidModelBuilder(Block block, BlockState liquidBlockState, MinecraftVersion minecraftVersion, RenderSettings renderSettings, BlockColorCalculator colorCalculator) {
 		this.block = block;
-		this.minecraftVersion = minecraftVersion;
 		this.renderSettings = renderSettings;
 		this.liquidBlockState = liquidBlockState;
 		this.colorCalculator = colorCalculator;
+
+		this.useWaterColorMap = minecraftVersion.isAtLeast(new MinecraftVersion(1, 13));
 	}
 
 	public BlockStateModel build(TransformedBlockModelResource bmr) {
@@ -108,7 +110,7 @@ public class LiquidModelBuilder {
 
 		int textureId = texture.getId();
 		Vector3f tintcolor = Vector3f.ONE;
-		if (minecraftVersion != MinecraftVersion.MC_1_12 && liquidBlockState.getFullId().equals("minecraft:water")) {
+		if (useWaterColorMap && liquidBlockState.getFullId().equals("minecraft:water")) {
 			tintcolor = colorCalculator.getWaterAverageColor(block);
 		}
 		

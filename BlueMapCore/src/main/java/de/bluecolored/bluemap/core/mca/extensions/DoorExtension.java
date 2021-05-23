@@ -37,13 +37,11 @@ import java.util.Objects;
 import java.util.Set;
 
 public class DoorExtension implements BlockStateExtension {
-
 	private final Set<String> affectedBlockIds;
 	
 	public DoorExtension(MinecraftVersion version) {
-		switch (version) {
-			case MC_1_12:
-				affectedBlockIds = new HashSet<>(Arrays.asList(
+		if (version.isBefore(MinecraftVersion.THE_FLATTENING)) {
+			affectedBlockIds = new HashSet<>(Arrays.asList(
 					"minecraft:wooden_door",
 					"minecraft:iron_door",
 					"minecraft:spruce_door",
@@ -51,10 +49,9 @@ public class DoorExtension implements BlockStateExtension {
 					"minecraft:jungle_door",
 					"minecraft:acacia_door",
 					"minecraft:dark_oak_door"
-				));
-				break;
-			default:
-				affectedBlockIds = new HashSet<>(Arrays.asList(
+			));
+		} else {
+			affectedBlockIds = new HashSet<>(Arrays.asList(
 					"minecraft:oak_door",
 					"minecraft:iron_door",
 					"minecraft:spruce_door",
@@ -62,8 +59,7 @@ public class DoorExtension implements BlockStateExtension {
 					"minecraft:jungle_door",
 					"minecraft:acacia_door",
 					"minecraft:dark_oak_door"
-				));
-				break;
+			));
 		}
 	}
 	

@@ -30,32 +30,25 @@ import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.world.BlockState;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 public class DoublePlantExtension implements BlockStateExtension {
-	
 	private final Set<String> affectedBlockIds;
 	
 	public DoublePlantExtension(MinecraftVersion version) {
-		switch (version) {
-			case MC_1_12:
-				affectedBlockIds = new HashSet<>(Arrays.asList(
+		if (version.isBefore(MinecraftVersion.THE_FLATTENING)) {
+			affectedBlockIds = new HashSet<>(Collections.singletonList(
 					"minecraft:double_plant"
-				));
-				break;
-			default:
-				affectedBlockIds = new HashSet<>(Arrays.asList(
+			));
+		} else {
+			affectedBlockIds = new HashSet<>(Arrays.asList(
 					"minecraft:sunflower",
 					"minecraft:lilac",
 					"minecraft:tall_grass",
 					"minecraft:large_fern",
 					"minecraft:rose_bush",
 					"minecraft:peony"
-				));
-				break;
+			));
 		}
 	}
 	

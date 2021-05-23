@@ -69,14 +69,14 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 	public BukkitPlugin() {
 		Logger.global = new JavaLogger(getLogger());
 
-		MinecraftVersion version = MinecraftVersion.getLatest();
+		MinecraftVersion version = MinecraftVersion.LATEST_SUPPORTED;
 		
 		//try to get best matching minecraft-version
 		try {
 			String versionString = getServer().getBukkitVersion();
 			Matcher versionMatcher = Pattern.compile("(\\d+\\.\\d+\\.\\d+)[-_].*").matcher(versionString);
 			if (!versionMatcher.matches()) throw new IllegalArgumentException();
-			version = MinecraftVersion.fromVersionString(versionMatcher.group(1));
+			version = MinecraftVersion.of(versionMatcher.group(1));
 		} catch (IllegalArgumentException e) {
 			Logger.global.logWarning("Failed to detect the minecraft version of this server! Using latest version: " + version.getVersionString());
 		}

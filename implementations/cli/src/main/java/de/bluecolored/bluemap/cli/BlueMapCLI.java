@@ -210,11 +210,11 @@ public class BlueMapCLI {
 			}
 			
 			//minecraft version
-			MinecraftVersion version = MinecraftVersion.getLatest();
+			MinecraftVersion version = MinecraftVersion.LATEST_SUPPORTED;
 			if (cmd.hasOption("v")) {
 				String versionString = cmd.getOptionValue("v");
 				try {
-					version = MinecraftVersion.fromVersionString(versionString);
+					version = MinecraftVersion.of(versionString);
 				} catch (IllegalArgumentException e) {
 					Logger.global.logWarning("Could not determine a version from the provided version-string: '" + versionString + "'");
 					System.exit(1);
