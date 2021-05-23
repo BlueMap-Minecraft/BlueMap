@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.core.util;
 
+import java.util.Objects;
 import java.util.function.Supplier;
 
 public class Lazy<T> {
@@ -32,11 +33,15 @@ public class Lazy<T> {
 	private T value;
 	
 	public Lazy(Supplier<T> loader) {
+		Objects.requireNonNull(loader);
+
 		this.loader = loader;
 		this.value = null;
 	}
 	
 	public Lazy(T value) {
+		Objects.requireNonNull(value);
+
 		this.loader = null;
 		this.value = value;
 	}
