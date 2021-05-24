@@ -59,7 +59,7 @@ public class BlueMapAPIImpl extends BlueMapAPI {
 	public BlueMapAPIImpl(Plugin plugin) {
 		this.plugin = plugin;
 		
-		this.renderer = new RenderAPIImpl(this, plugin.getRenderManager());
+		this.renderer = new RenderAPIImpl(this, plugin);
 		
 		worlds = new HashMap<>();
 		for (World world : plugin.getWorlds()) {

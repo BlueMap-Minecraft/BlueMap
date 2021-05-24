@@ -30,20 +30,28 @@ import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.renderer.RenderAPI;
 import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.api.BlueMapMapImpl;
+import de.bluecolored.bluemap.common.plugin.Plugin;
+import de.bluecolored.bluemap.common.rendermanager.MapPurgeTask;
+import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
+import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.world.Grid;
 
+import java.io.IOException;
+import java.util.Collection;
 import java.util.UUID;
 
 public class RenderAPIImpl implements RenderAPI {
 
-	private BlueMapAPIImpl api;
-	private RenderManager renderManager;
+	private final BlueMapAPIImpl api;
+	private final Plugin plugin;
+	private final RenderManager renderManager;
 	
-	public RenderAPIImpl(BlueMapAPIImpl api, RenderManager renderManager) {
+	public RenderAPIImpl(BlueMapAPIImpl api, Plugin plugin) {
 		this.api = api;
-		this.renderManager = renderManager;
+		this.plugin = plugin;
+		this.renderManager = plugin.getRenderManager();
 	}
 
 	@Override
@@ -63,12 +71,7 @@ public class RenderAPIImpl implements RenderAPI {
 
 	@Override
 	public void render(BlueMapMap map, Vector2i tile) {
-		BlueMapMapImpl cmap;
-		if (map instanceof BlueMapMapImpl) {
-			cmap = (BlueMapMapImpl) map;
-		} else {
-			cmap = api.getMapForId(map.getId());
-		}
+		BlueMapMapImpl cmap = castMap(map);
 
 		Grid regionGrid = cmap.getWorld().getWorld().getRegionGrid();
 		Grid tileGrid = cmap.getMapType().getHiresModelManager().getTileGrid();
@@ -76,6 +79,24 @@ public class RenderAPIImpl implements RenderAPI {
 		for (Vector2i region : tileGrid.getIntersecting(tile, regionGrid)) {
 			renderManager.scheduleRenderTask(new WorldRegionRenderTask(cmap.getMapType(), region));
 		}
+	}
+
+	@Override
+	public boolean scheduleMapUpdateTask(BlueMapMap map, boolean force) {
+		BlueMapMapImpl cmap = castMap(map);
+		return renderManager.scheduleRenderTask(new MapUpdateTask(cmap.getMapType(), force));
+	}
+
+	@Override
+	public boolean scheduleMapUpdateTask(BlueMapMap map, Collection<Vector2i> regions, boolean force) {
+		BlueMapMapImpl cmap = castMap(map);
+		return renderManager.scheduleRenderTask(new MapUpdateTask(cmap.getMapType(), regions, force));
+	}
+
+	@Override
+	public boolean scheduleMapPurgeTask(BlueMapMap map) throws IOException {
+		BlueMapMapImpl cmap = castMap(map);
+		return renderManager.scheduleRenderTask(new MapPurgeTask(cmap.getMapType()));
 	}
 
 	@Override
@@ -95,12 +116,27 @@ public class RenderAPIImpl implements RenderAPI {
 
 	@Override
 	public void start() {
-		if (!isRunning()) renderManager.start(api.plugin.getCoreConfig().getRenderThreadCount());
+		if (!isRunning()){
+			renderManager.start(api.plugin.getCoreConfig().getRenderThreadCount());
+		}
+		plugin.getPluginState().setRenderThreadsEnabled(true);
 	}
 
 	@Override
 	public void pause() {
 		renderManager.stop();
+		plugin.getPluginState().setRenderThreadsEnabled(false);
+	}
+
+	private BlueMapMapImpl castMap(BlueMapMap map) {
+		BlueMapMapImpl cmap;
+		if (map instanceof BlueMapMapImpl) {
+			cmap = (BlueMapMapImpl) map;
+		} else {
+			cmap = api.getMapForId(map.getId());
+		}
+
+		return cmap;
 	}
 	
 }

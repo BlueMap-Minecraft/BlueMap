@@ -37,6 +37,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.function.Predicate;
 
 public class BmMap {
 
@@ -49,6 +50,8 @@ public class BmMap {
 
 	private final HiresModelManager hiresModelManager;
 	private final LowresModelManager lowresModelManager;
+
+	private Predicate<Vector2i> tileFilter;
 
 	public BmMap(String id, String name, World world, Path fileRoot, ResourcePack resourcePack, MapSettings settings) throws IOException {
 		this.id = Objects.requireNonNull(id);
@@ -79,9 +82,13 @@ public class BmMap {
 				new Vector2i(settings.getLowresPointsPerHiresTile(), settings.getLowresPointsPerHiresTile()),
 				settings.useGzipCompression()
 		);
+
+		this.tileFilter = t -> true;
 	}
 
 	public void renderTile(Vector2i tile) {
+		if (!tileFilter.test(tile)) return;
+
 		HiresModel hiresModel = hiresModelManager.render(world, tile);
 		lowresModelManager.render(hiresModel);
 	}
@@ -127,7 +134,15 @@ public class BmMap {
 	public LowresModelManager getLowresModelManager() {
 		return lowresModelManager;
 	}
-	
+
+	public Predicate<Vector2i> getTileFilter() {
+		return tileFilter;
+	}
+
+	public void setTileFilter(Predicate<Vector2i> tileFilter) {
+		this.tileFilter = tileFilter;
+	}
+
 	@Override
 	public int hashCode() {
 		return id.hashCode();
