@@ -53,6 +53,9 @@ public class BmMap {
 
 	private Predicate<Vector2i> tileFilter;
 
+	private long renderTimeSumNanos;
+	private long tilesRendered;
+
 	public BmMap(String id, String name, World world, Path fileRoot, ResourcePack resourcePack, MapSettings settings) throws IOException {
 		this.id = Objects.requireNonNull(id);
 		this.name = Objects.requireNonNull(name);
@@ -84,13 +87,24 @@ public class BmMap {
 		);
 
 		this.tileFilter = t -> true;
+
+		this.renderTimeSumNanos = 0;
+		this.tilesRendered = 0;
 	}
 
 	public void renderTile(Vector2i tile) {
 		if (!tileFilter.test(tile)) return;
 
+		long start = System.nanoTime();
+
 		HiresModel hiresModel = hiresModelManager.render(world, tile);
 		lowresModelManager.render(hiresModel);
+
+		long end = System.nanoTime();
+		long delta = end - start;
+
+		renderTimeSumNanos += delta;
+		tilesRendered ++;
 	}
 
 	public synchronized void save() {
@@ -141,6 +155,10 @@ public class BmMap {
 
 	public void setTileFilter(Predicate<Vector2i> tileFilter) {
 		this.tileFilter = tileFilter;
+	}
+
+	public long getAverageNanosPerTile() {
+		return renderTimeSumNanos / tilesRendered;
 	}
 
 	@Override
