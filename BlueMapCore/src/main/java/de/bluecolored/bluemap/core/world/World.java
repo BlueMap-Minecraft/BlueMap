@@ -49,9 +49,9 @@ public interface World {
 	
 	Vector3i getSpawnPoint();
 	
-	int getMaxY();
+	int getMaxY(int x, int z);
 	
-	int getMinY();
+	int getMinY(int x, int z);
 
 	Grid getChunkGrid();
 

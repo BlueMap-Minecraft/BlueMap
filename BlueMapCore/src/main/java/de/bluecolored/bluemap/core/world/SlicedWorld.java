@@ -73,13 +73,13 @@ public class SlicedWorld implements World {
 	}
 	
 	@Override
-	public int getMaxY() {
-		return world.getMaxY();
+	public int getMaxY(int x, int z) {
+		return world.getMaxY(x, z);
 	}
 	
 	@Override
-	public int getMinY() {
-		return world.getMinY();
+	public int getMinY(int x, int z) {
+		return world.getMinY(x, z);
 	}
 
 	@Override

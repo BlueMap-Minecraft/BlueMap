@@ -130,24 +130,11 @@ public class MCAWorld implements World {
 	
 	@Override
 	public Biome getBiome(int x, int y, int z) {
-		if (y < getMinY()) {
-			y = getMinY();
-		} else if (y > getMaxY()) {
-			y = getMaxY();
-		}
-
-		MCAChunk chunk = getChunk(x >> 4, z >> 4);
-		return chunk.getBiome(x, y, z);
+		return getChunk(x >> 4, z >> 4).getBiome(x, y, z);
 	}
 	
 	@Override
 	public Block getBlock(Vector3i pos) {
-		if (pos.getY() < getMinY()) {
-			return new Block(this, BlockState.AIR, LightData.ZERO, Biome.DEFAULT, BlockProperties.TRANSPARENT, pos);
-		} else if (pos.getY() > getMaxY()) {
-			return new Block(this, BlockState.AIR, LightData.SKY, Biome.DEFAULT, BlockProperties.TRANSPARENT, pos);
-		}
-
 		MCAChunk chunk = getChunk(blockToChunk(pos));
 		BlockState blockState = getExtendedBlockState(chunk, pos);
 		LightData lightData = chunk.getLightData(pos);
@@ -226,13 +213,13 @@ public class MCAWorld implements World {
 	}
 
 	@Override
-	public int getMinY() {
-		return 0;
+	public int getMinY(int x, int z) {
+		return getChunk(x >> 4, z >> 4).getMinY(x, z);
 	}
 
 	@Override
-	public int getMaxY() {
-		return 255;
+	public int getMaxY(int x, int z) {
+		return getChunk(x >> 4, z >> 4).getMaxY(x, z);
 	}
 
 	@Override

@@ -57,6 +57,14 @@ public abstract class MCAChunk implements Chunk {
 	public abstract LightData getLightData(Vector3i pos);
 	
 	public abstract Biome getBiome(int x, int y, int z);
+
+	public int getMaxY(int x, int z) {
+		return 255;
+	}
+
+	public int getMinY(int x, int z) {
+		return 0;
+	}
 	
 	public static MCAChunk create(MCAWorld world, CompoundTag chunkTag, boolean ignoreMissingLightData) throws IOException {
 		int version = chunkTag.getInt("DataVersion");

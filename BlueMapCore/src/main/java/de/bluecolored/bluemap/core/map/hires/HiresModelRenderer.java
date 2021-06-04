@@ -58,6 +58,7 @@ public class HiresModelRenderer {
 	public HiresModel render(World world, Vector3i modelMin, Vector3i modelMax) {
 		Vector3i min = modelMin.max(renderSettings.getMin());
 		Vector3i max = modelMax.min(renderSettings.getMax());
+		Vector3f modelAnchor = new Vector3f(modelMin.getX(), 0, modelMin.getZ());
 		
 		HiresModel model = new HiresModel(world.getUUID(), modelMin, modelMax);
 		
@@ -66,8 +67,11 @@ public class HiresModelRenderer {
 
 				int maxHeight = 0;
 				Vector4f color = Vector4f.ZERO;
-				
-				for (int y = min.getY(); y <= max.getY(); y++){
+
+				int minY = Math.max(min.getY(), world.getMinY(x, z));
+				int maxY = Math.min(max.getY(), world.getMaxY(x, z));
+
+				for (int y = minY; y <= maxY; y++){
 					Block block = world.getBlock(x, y, z);
 					if (block.getBlockState().equals(BlockState.AIR)) continue;
 
@@ -83,8 +87,12 @@ public class HiresModelRenderer {
 						}
 						//Logger.global.noFloodDebug(block.getBlockState().getFullId() + "-hiresModelRenderer-blockmodelerr", "Failed to create BlockModel for BlockState: " + block.getBlockState() + " (" + e.toString() + ")");
 					}
-					
-					blockModel.translate(new Vector3f(x, y, z).sub(modelMin.toFloat()));
+
+					// skip empty blocks
+					if (blockModel.getFaces().isEmpty()) continue;
+
+					// move block-model to correct position
+					blockModel.translate(new Vector3f(x - modelAnchor.getX(), y - modelAnchor.getY(), z - modelAnchor.getZ()));
 					
 					//update color and height (only if not 100% translucent)
 					Vector4f blockColor = blockModel.getMapColor();

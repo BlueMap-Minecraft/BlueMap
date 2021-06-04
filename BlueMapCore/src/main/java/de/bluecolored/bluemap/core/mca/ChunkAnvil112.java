@@ -33,7 +33,6 @@ import de.bluecolored.bluemap.core.world.LightData;
 import net.querz.nbt.CompoundTag;
 import net.querz.nbt.ListTag;
 import net.querz.nbt.NumberTag;
-import net.querz.nbt.mca.MCAUtil;
 
 import java.util.Arrays;
 import java.util.function.IntFunction;
@@ -90,7 +89,8 @@ public class ChunkAnvil112 extends MCAChunk {
 
 	@Override
 	public BlockState getBlockState(Vector3i pos) {
-		int sectionY = MCAUtil.blockToChunk(pos.getY());
+		int sectionY = pos.getY() >> 4;
+		if (sectionY < 0 || sectionY >= this.sections.length) return BlockState.AIR;
 		
 		Section section = this.sections[sectionY];
 		if (section == null) return BlockState.AIR;
@@ -99,7 +99,8 @@ public class ChunkAnvil112 extends MCAChunk {
 	}
 	
 	public String getBlockIdMeta(Vector3i pos) {
-		int sectionY = MCAUtil.blockToChunk(pos.getY());
+		int sectionY = pos.getY() >> 4;
+		if (sectionY < 0 || sectionY >= this.sections.length) return "0:0";
 		
 		Section section = this.sections[sectionY];
 		if (section == null) return "0:0";
@@ -110,8 +111,10 @@ public class ChunkAnvil112 extends MCAChunk {
 	@Override
 	public LightData getLightData(Vector3i pos) {
 		if (!hasLight) return LightData.SKY;
-		
-		int sectionY = MCAUtil.blockToChunk(pos.getY());
+
+		int sectionY = pos.getY() >> 4;
+		if (sectionY < 0 || sectionY >= this.sections.length)
+			return (pos.getY() < 0) ? LightData.ZERO : LightData.SKY;
 		
 		Section section = this.sections[sectionY];
 		if (section == null) return LightData.SKY;
@@ -124,7 +127,8 @@ public class ChunkAnvil112 extends MCAChunk {
 		x = x & 0xF; // Math.floorMod(pos.getX(), 16)
 		z = z & 0xF;
 		int biomeByteIndex = z * 16 + x;
-		
+
+		if (biomeByteIndex >= this.biomes.length) return Biome.DEFAULT;
 		return biomeIdMapper.get(biomes[biomeByteIndex] & 0xFF);
 	}
 

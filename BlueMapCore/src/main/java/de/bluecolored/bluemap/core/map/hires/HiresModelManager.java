@@ -69,8 +69,8 @@ public class HiresModelManager {
 		Vector2i tileMin = tileGrid.getCellMin(tile);
 		Vector2i tileMax = tileGrid.getCellMax(tile);
 
-		Vector3i modelMin = new Vector3i(tileMin.getX(), world.getMinY(), tileMin.getY());
-		Vector3i modelMax = new Vector3i(tileMax.getX(), world.getMaxY(), tileMax.getY());
+		Vector3i modelMin = new Vector3i(tileMin.getX(), Integer.MIN_VALUE, tileMin.getY());
+		Vector3i modelMax = new Vector3i(tileMax.getX(), Integer.MAX_VALUE, tileMax.getY());
 
 		HiresModel model = renderer.render(world, modelMin, modelMax);
 		save(model, tile);
