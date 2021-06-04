@@ -26,21 +26,11 @@ package de.bluecolored.bluemap.sponge8;
 
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.text.Text;
-import org.spongepowered.api.ResourceKey;
-import org.spongepowered.api.Sponge;
-import org.spongepowered.api.adventure.SpongeComponents;
-import org.spongepowered.api.block.BlockSnapshot;
-import org.spongepowered.api.data.Transaction;
+import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
-import org.spongepowered.api.event.block.ChangeBlockEvent;
 import org.spongepowered.api.event.message.PlayerChatEvent;
 import org.spongepowered.api.event.network.ServerSideConnectionEvent;
-import org.spongepowered.api.event.world.chunk.ChunkEvent;
-import org.spongepowered.api.world.server.ServerLocation;
-import org.spongepowered.api.world.server.ServerWorld;
-
-import java.util.Optional;
 
 public class EventForwarder {
 
@@ -62,7 +52,7 @@ public class EventForwarder {
 	
 	@Listener(order = Order.POST)
 	public void onPlayerChat(PlayerChatEvent evt) {
-		listener.onChatMessage(Text.of(SpongeComponents.plainSerializer().serialize(evt.message())));
+		listener.onChatMessage(Text.of(PlainComponentSerializer.plain().serialize(evt.message())));
 	}
 	
 }

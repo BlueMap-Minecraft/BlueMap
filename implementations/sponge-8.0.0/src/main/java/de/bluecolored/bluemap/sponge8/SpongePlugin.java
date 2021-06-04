@@ -36,12 +36,12 @@ import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.sponge8.SpongeCommands.SpongeCommandProxy;
+import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
 import net.querz.nbt.CompoundTag;
 import net.querz.nbt.NBTUtil;
 import org.spongepowered.api.Platform;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
-import org.spongepowered.api.adventure.SpongeComponents;
 import org.spongepowered.api.command.Command;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.event.Listener;
@@ -210,7 +210,7 @@ public class SpongePlugin implements ServerInterface {
 						serverWorld -> serverWorld
 								.properties()
 								.displayName()
-								.map(SpongeComponents.plainSerializer()::serialize)
+								.map(PlainComponentSerializer.plain()::serialize)
 				)
 				.orElse(null);
 	}

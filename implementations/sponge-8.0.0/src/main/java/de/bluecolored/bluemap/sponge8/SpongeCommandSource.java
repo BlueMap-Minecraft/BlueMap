@@ -23,13 +23,14 @@
  * THE SOFTWARE.
  */
 package de.bluecolored.bluemap.sponge8;
+
 import com.flowpowered.math.vector.Vector3d;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.core.world.World;
 import net.kyori.adventure.audience.Audience;
-import org.spongepowered.api.adventure.SpongeComponents;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.spongepowered.api.service.permission.Subject;
 import org.spongepowered.api.world.Locatable;
 
@@ -49,7 +50,7 @@ public class SpongeCommandSource implements CommandSource {
 	
 	@Override
 	public void sendMessage(Text text) {
-		audience.sendMessage(SpongeComponents.gsonSerializer().deserialize(text.toJSONString()));
+		audience.sendMessage(GsonComponentSerializer.gson().deserialize(text.toJSONString()));
 	}
 
 	@Override
