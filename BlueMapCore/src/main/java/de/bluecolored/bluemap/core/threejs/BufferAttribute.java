@@ -118,7 +118,7 @@ public class BufferAttribute {
 			if(name.equals("array")){
 				json.beginArray(); //array
 				while (json.hasNext()){
-					list.add(new Float(json.nextDouble()));
+					list.add((float) json.nextDouble());
 				}
 				json.endArray(); //array
 			}

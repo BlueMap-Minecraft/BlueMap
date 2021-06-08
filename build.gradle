@@ -2,7 +2,7 @@ plugins {
 	id 'java'
 	id 'java-library'
 	id 'com.github.johnrengelman.shadow' version '6.1.0'
-	id 'com.github.hierynomus.license' version '0.15.0'
+	id 'com.github.hierynomus.license' version '0.16.1'
 }
 
 allprojects {
