@@ -83,8 +83,6 @@ public class Plugin {
 	private WebServer webServer;
 
 	private Timer daemonTimer;
-	private TimerTask saveTask;
-	private TimerTask metricsTask;
 
 	private Map<String, RegionFileWatchService> regionFileWatchServices;
 
@@ -212,7 +210,7 @@ public class Plugin {
 				daemonTimer = new Timer("BlueMap-Plugin-Daemon-Timer", true);
 
 				//periodically save
-				saveTask = new TimerTask() {
+				TimerTask saveTask = new TimerTask() {
 					@Override
 					public void run() {
 						save();
@@ -220,8 +218,35 @@ public class Plugin {
 				};
 				daemonTimer.schedule(saveTask, TimeUnit.MINUTES.toMillis(2), TimeUnit.MINUTES.toMillis(2));
 
+				//periodically restart the file-watchers
+				TimerTask fileWatcherRestartTask = new TimerTask() {
+					@Override
+					public void run() {
+						regionFileWatchServices.values().forEach(RegionFileWatchService::close);
+						regionFileWatchServices.clear();
+						initFileWatcherTasks();
+					}
+				};
+				daemonTimer.schedule(fileWatcherRestartTask, TimeUnit.HOURS.toMillis(1), TimeUnit.HOURS.toMillis(1));
+
+				//periodically update all (non frozen) maps
+				if (pluginConfig.getFullUpdateIntervalMinutes() > 0) {
+					long fullUpdateTime = TimeUnit.MINUTES.toMillis(pluginConfig.getFullUpdateIntervalMinutes());
+					TimerTask updateAllMapsTask = new TimerTask() {
+						@Override
+						public void run() {
+							for (BmMap map : maps.values()) {
+								if (pluginState.getMapState(map).isUpdateEnabled()) {
+									renderManager.scheduleRenderTask(new MapUpdateTask(map));
+								}
+							}
+						}
+					};
+					daemonTimer.scheduleAtFixedRate(updateAllMapsTask, fullUpdateTime, fullUpdateTime);
+				}
+
 				//metrics
-				metricsTask = new TimerTask() {
+				TimerTask metricsTask = new TimerTask() {
 					@Override
 					public void run() {
 						if (Plugin.this.serverInterface.isMetricsEnabled(coreConfig.isMetricsEnabled()))
@@ -232,11 +257,7 @@ public class Plugin {
 
 				//watch map-changes
 				this.regionFileWatchServices = new HashMap<>();
-				for (BmMap map : maps.values()) {
-					if (pluginState.getMapState(map).isUpdateEnabled()) {
-						startWatchingMap(map);
-					}
-				}
+				initFileWatcherTasks();
 
 				//enable api
 				this.api = new BlueMapAPIImpl(this);
@@ -269,18 +290,12 @@ public class Plugin {
 				skinUpdater = null;
 		
 				//stop scheduled threads
-				if (metricsTask != null) metricsTask.cancel();
-				metricsTask = null;
-				if (saveTask != null) saveTask.cancel();
-				saveTask = null;
 				if (daemonTimer != null) daemonTimer.cancel();
 				daemonTimer = null;
 
 				//stop file-watchers
 				if (regionFileWatchServices != null) {
-					for (RegionFileWatchService watcher : regionFileWatchServices.values()) {
-						watcher.close();
-					}
+					regionFileWatchServices.values().forEach(RegionFileWatchService::close);
 					regionFileWatchServices.clear();
 				}
 				regionFileWatchServices = null;
@@ -414,5 +429,13 @@ public class Plugin {
 	public MinecraftVersion getMinecraftVersion() {
 		return minecraftVersion;
 	}
-	
+
+	private void initFileWatcherTasks() {
+		for (BmMap map : maps.values()) {
+			if (pluginState.getMapState(map).isUpdateEnabled()) {
+				startWatchingMap(map);
+			}
+		}
+	}
+
 }

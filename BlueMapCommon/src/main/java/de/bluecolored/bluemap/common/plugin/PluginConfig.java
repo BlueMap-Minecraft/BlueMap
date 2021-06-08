@@ -29,6 +29,7 @@ import org.spongepowered.configurate.ConfigurationNode;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 
 public class PluginConfig {
 
@@ -37,6 +38,7 @@ public class PluginConfig {
 	private Collection<String> hiddenGameModes = Collections.emptyList();
 	private boolean hideInvisible = false;
 	private boolean hideSneaking = false;
+	private long fullUpdateIntervalMinutes = TimeUnit.HOURS.toMinutes(24);
 	
 	public PluginConfig(ConfigurationNode node) {
 
@@ -58,6 +60,9 @@ public class PluginConfig {
 		
 		//hideSneaking
 		hideSneaking = node.node("hideSneaking").getBoolean(false);
+
+		//periodic map updates
+		fullUpdateIntervalMinutes = node.node("fullUpdateInterval").getLong(TimeUnit.HOURS.toMinutes(24));
 		
 	}
 
@@ -80,5 +85,9 @@ public class PluginConfig {
 	public boolean isHideSneaking() {
 		return this.hideSneaking;
 	}
-	
+
+	public long getFullUpdateIntervalMinutes() {
+		return fullUpdateIntervalMinutes;
+	}
+
 }
