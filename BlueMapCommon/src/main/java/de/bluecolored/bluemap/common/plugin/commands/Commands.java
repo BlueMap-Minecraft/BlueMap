@@ -233,6 +233,12 @@ public class Commands<S> {
 				.then(argument("id", StringArgumentType.word()).suggests(MarkerIdSuggestionProvider.getInstance())
 						.executes(this::removeMarkerCommand))
 				.build();
+
+		LiteralCommandNode<S> listMarkersCommand =
+				literal("list")
+				.requires(requirements("bluemap.marker"))
+				.executes(this::listMarkersCommand)
+				.build();
 		
 		// command tree
 		dispatcher.getRoot().addChild(baseCommand);
@@ -253,6 +259,7 @@ public class Commands<S> {
 		baseCommand.addChild(markerCommand);
 		markerCommand.addChild(createMarkerCommand);
 		markerCommand.addChild(removeMarkerCommand);
+		markerCommand.addChild(listMarkersCommand);
 	}
 
 	private <B extends ArgumentBuilder<S, B>> B addRenderArguments(B builder, Command<S> command) {
@@ -957,6 +964,31 @@ public class Commands<S> {
 		}
 
 		source.sendMessage(Text.of(TextColor.GREEN, "Marker removed!"));
+		return 1;
+	}
+
+	public int listMarkersCommand(CommandContext<S> context) {
+		CommandSource source = commandSourceInterface.apply(context.getSource());
+
+		BlueMapAPI api = BlueMapAPI.getInstance().orElse(null);
+		if (api == null) {
+			source.sendMessage(Text.of(TextColor.RED, "MarkerAPI is not available, try ", TextColor.GRAY, "/bluemap reload"));
+			return 0;
+		}
+
+		source.sendMessage(Text.of(TextColor.BLUE, "All Markers:"));
+
+		int i = 0;
+		Collection<String> markerIds = MarkerIdSuggestionProvider.getInstance().getPossibleValues();
+		for (String markerId : markerIds) {
+			if (i++ >= 40) {
+				source.sendMessage(Text.of(TextColor.GRAY, "[" + (markerIds.size() - 40) + " more ...]"));
+				break;
+			}
+
+			source.sendMessage(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, markerId));
+		}
+
 		return 1;
 	}
 	
