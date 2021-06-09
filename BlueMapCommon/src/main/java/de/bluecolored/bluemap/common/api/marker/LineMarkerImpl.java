@@ -173,7 +173,7 @@ public class LineMarkerImpl extends ObjectMarkerImpl implements LineMarker {
 		
 		if (nr.virtual() || ng.virtual() || nb.virtual()) throw new MarkerFileFormatException("Failed to read color: Node r,g or b is not set!");
 		
-		float alpha = na.getFloat(1);
+		float alpha = (float) na.getDouble(1);
 		if (alpha < 0 || alpha > 1) throw new MarkerFileFormatException("Failed to read color: alpha value out of range (0-1)!");
 		
 		try {

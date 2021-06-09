@@ -151,7 +151,7 @@ public class ExtrudeMarkerImpl extends ObjectMarkerImpl implements ExtrudeMarker
 		
 		this.shape = readShape(markerNode.node("shape"));
 		this.shapeMinY = markerNode.node("shapeMinY").getFloat(0);
-		this.shapeMaxY = markerNode.node("shapeMaxY").getFloat(255);
+		this.shapeMaxY = (float) markerNode.node("shapeMaxY").getDouble(255);
 		this.depthTest = markerNode.node("depthTest").getBoolean(true);
 		this.lineWidth = markerNode.node("lineWidth").getInt(2);
 		this.lineColor = readColor(markerNode.node("lineColor"));
@@ -208,7 +208,7 @@ public class ExtrudeMarkerImpl extends ObjectMarkerImpl implements ExtrudeMarker
 		
 		if (nr.virtual() || ng.virtual() || nb.virtual()) throw new MarkerFileFormatException("Failed to read color: Node r,g or b is not set!");
 		
-		float alpha = na.getFloat(1);
+		float alpha = (float) na.getDouble(1);
 		if (alpha < 0 || alpha > 1) throw new MarkerFileFormatException("Failed to read color: alpha value out of range (0-1)!");
 		
 		try {

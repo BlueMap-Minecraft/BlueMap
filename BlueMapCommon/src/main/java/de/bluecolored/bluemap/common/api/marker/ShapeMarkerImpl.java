@@ -142,7 +142,7 @@ public class ShapeMarkerImpl extends ObjectMarkerImpl implements ShapeMarker {
 		this.hasUnsavedChanges = false;
 		
 		this.shape = readShape(markerNode.node("shape"));
-		this.shapeY = markerNode.node("shapeY").getFloat(markerNode.node("height").getFloat(64)); // fallback to deprecated "height"
+		this.shapeY = (float) markerNode.node("shapeY").getDouble(markerNode.node("height").getDouble(64)); // fallback to deprecated "height"
 		this.depthTest = markerNode.node("depthTest").getBoolean(true);
 		this.lineWidth = markerNode.node("lineWidth").getInt(2);
 
@@ -202,7 +202,7 @@ public class ShapeMarkerImpl extends ObjectMarkerImpl implements ShapeMarker {
 		
 		if (nr.virtual() || ng.virtual() || nb.virtual()) throw new MarkerFileFormatException("Failed to read color: Node r,g or b is not set!");
 		
-		float alpha = na.getFloat(1);
+		float alpha = (float) na.getDouble(1);
 		if (alpha < 0 || alpha > 1) throw new MarkerFileFormatException("Failed to read color: alpha value out of range (0-1)!");
 		
 		try {
