@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.core.map;
 
 import com.flowpowered.math.vector.Vector2i;
+import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.hires.HiresModel;
 import de.bluecolored.bluemap.core.map.hires.HiresModelManager;
@@ -69,7 +70,11 @@ public class BmMap {
 
 		File rstateFile = getRenderStateFile();
 		if (rstateFile.exists()) {
-			this.renderState.load(rstateFile);
+			try {
+				this.renderState.load(rstateFile);
+			} catch (IOException ex) {
+				Logger.global.logWarning("Failed to load render-state for map '" + getId() + "': " + ex);
+			}
 		}
 
 		this.hiresModelManager = new HiresModelManager(
