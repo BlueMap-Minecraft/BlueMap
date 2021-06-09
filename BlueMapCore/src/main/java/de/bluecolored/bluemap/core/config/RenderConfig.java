@@ -35,6 +35,7 @@ public class RenderConfig {
 
 	private File webRoot = new File("web");
 	private boolean useCookies;
+	private boolean enableFreeFlight;
 	private List<MapConfig> mapConfigs = new ArrayList<>();
 
 	public RenderConfig(ConfigurationNode node) throws IOException {
@@ -46,6 +47,9 @@ public class RenderConfig {
 		
 		//cookies
 		useCookies = node.node("useCookies").getBoolean(true);
+
+		// free-flight mode
+		enableFreeFlight = node.node("enableFreeFlight").getBoolean(true);
 		
 		//maps
 		mapConfigs = new ArrayList<>();
@@ -62,7 +66,11 @@ public class RenderConfig {
 	public boolean isUseCookies() {
 		return useCookies;
 	}
-	
+
+	public boolean isEnableFreeFlight() {
+		return enableFreeFlight;
+	}
+
 	public List<MapConfig> getMapConfigs(){
 		return mapConfigs;
 	}

@@ -102,6 +102,7 @@ public class BlueMapService {
 	public synchronized WebSettings updateWebAppSettings() throws IOException, InterruptedException {
 		WebSettings webSettings = new WebSettings(new File(getRenderConfig().getWebRoot(), "data" + File.separator + "settings.json"));
 		webSettings.set(getRenderConfig().isUseCookies(), "useCookies");
+		webSettings.set(getRenderConfig().isEnableFreeFlight(), "freeFlightEnabled");
 		webSettings.setAllMapsEnabled(false);
 		for (BmMap map : getMaps().values()) {
 			webSettings.setMapEnabled(true, map.getId());
