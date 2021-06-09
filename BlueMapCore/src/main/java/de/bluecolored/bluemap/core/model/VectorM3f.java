@@ -64,8 +64,8 @@ public class VectorM3f {
 
     public void add(Vector3f translation) {
         this.x += translation.getX();
-        this.y += translation.getX();
-        this.z += translation.getX();
+        this.y += translation.getY();
+        this.z += translation.getZ();
     }
 
     public void rotate(Quaternionf rotation) {
