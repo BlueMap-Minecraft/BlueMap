@@ -31,6 +31,7 @@ import de.bluecolored.bluemap.core.world.Region;
 import de.bluecolored.bluemap.core.world.World;
 
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.TreeSet;
 
 public class WorldRegionRenderTask implements RenderTask {
@@ -187,30 +188,12 @@ public class WorldRegionRenderTask implements RenderTask {
 		return v2.getY() - v1.getY();
 	}
 
-	public static int compare(WorldRegionRenderTask task1, WorldRegionRenderTask task2) {
-		if (task1.equals(task2)) return 0;
-
-		int comp = task1.map.getId().compareTo(task2.map.getId());
-		if (comp != 0) return comp;
-
-		if (task1.map == task2.map) { //should always be true
-			//sort based on the worlds spawn-point
-			World world = task1.map.getWorld();
-			Vector2i spawnPoint = world.getSpawnPoint().toVector2(true);
-			Grid regionGrid = world.getRegionGrid();
-
-			Vector2i spawnRegion = regionGrid.getCell(spawnPoint);
-
-			Vector2i task1Rel = task1.worldRegion.sub(spawnRegion);
-			Vector2i task2Rel = task2.worldRegion.sub(spawnRegion);
-
-			comp = tileComparator(task1Rel, task2Rel);
-		} else {
-			comp = tileComparator(task1.worldRegion, task2.worldRegion);
-		}
-		if (comp != 0) return comp;
-
-		return -Boolean.compare(task1.force, task2.force);
+	public static Comparator<WorldRegionRenderTask> defaultComparator(final Vector2i centerRegion) {
+		return (task1, task2) -> {
+			Vector2i task1Rel = task1.worldRegion.sub(centerRegion);
+			Vector2i task2Rel = task2.worldRegion.sub(centerRegion);
+			return tileComparator(task1Rel, task2Rel);
+		};
 	}
 
 }

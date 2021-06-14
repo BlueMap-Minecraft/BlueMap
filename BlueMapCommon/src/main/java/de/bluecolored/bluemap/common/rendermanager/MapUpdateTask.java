@@ -76,7 +76,14 @@ public class MapUpdateTask extends CombinedRenderTask<WorldRegionRenderTask> {
 	private static Collection<WorldRegionRenderTask> createTasks(BmMap map, Collection<Vector2i> regions, boolean force) {
 		List<WorldRegionRenderTask> tasks = new ArrayList<>(regions.size());
 		regions.forEach(region -> tasks.add(new WorldRegionRenderTask(map, region, force)));
-		tasks.sort(WorldRegionRenderTask::compare);
+
+		// get spawn region
+		World world = map.getWorld();
+		Vector2i spawnPoint = world.getSpawnPoint().toVector2(true);
+		Grid regionGrid = world.getRegionGrid();
+		Vector2i spawnRegion = regionGrid.getCell(spawnPoint);
+
+		tasks.sort(WorldRegionRenderTask.defaultComparator(spawnRegion));
 		return tasks;
 	}
 
