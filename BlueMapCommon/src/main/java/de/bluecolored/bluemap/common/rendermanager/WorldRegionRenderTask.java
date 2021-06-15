@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.common.rendermanager;
 
 import com.flowpowered.math.vector.Vector2i;
+import com.flowpowered.math.vector.Vector2l;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.world.Grid;
 import de.bluecolored.bluemap.core.world.Region;
@@ -63,7 +64,7 @@ public class WorldRegionRenderTask implements RenderTask {
 	}
 
 	private synchronized void init() {
-		Set<Vector2i> tileSet = new HashSet<>();
+		Set<Vector2l> tileSet = new HashSet<>();
 		startTime = System.currentTimeMillis();
 
 		//Logger.global.logInfo("Starting: " + worldRegion);
@@ -83,14 +84,15 @@ public class WorldRegionRenderTask implements RenderTask {
 
 			for (int x = tileMin.getX(); x <= tileMax.getX(); x++) {
 				for (int z = tileMin.getY(); z <= tileMax.getY(); z++) {
-					tileSet.add(new Vector2i(x, z));
+					tileSet.add(new Vector2l(x, z));
 				}
 			}
 		}
 
 		this.tileCount = tileSet.size();
 		this.tiles = tileSet.stream()
-				.sorted()
+				.sorted(WorldRegionRenderTask::compareVec2L) //sort with longs to avoid overflow (comparison uses distanceSquared)
+				.map(Vector2l::toInt) // back to ints
 				.collect(Collectors.toCollection(ArrayDeque::new));
 
 		if (tiles.isEmpty()) complete();
@@ -184,10 +186,18 @@ public class WorldRegionRenderTask implements RenderTask {
 
 	public static Comparator<WorldRegionRenderTask> defaultComparator(final Vector2i centerRegion) {
 		return (task1, task2) -> {
-			Vector2i task1Rel = task1.worldRegion.sub(centerRegion);
-			Vector2i task2Rel = task2.worldRegion.sub(centerRegion);
-			return task1Rel.compareTo(task2Rel);
+			// use long to compare to avoid overflow (comparison uses distanceSquared)
+			Vector2l task1Rel = new Vector2l(task1.worldRegion.getX() - centerRegion.getX(), task1.worldRegion.getY() - centerRegion.getY());
+			Vector2l task2Rel = new Vector2l(task2.worldRegion.getX() - centerRegion.getX(), task2.worldRegion.getY() - centerRegion.getY());
+			return compareVec2L(task1Rel, task2Rel);
 		};
+	}
+
+	/**
+	 * Comparison method that doesn't overflow that easily
+	 */
+	private static int compareVec2L(Vector2l v1, Vector2l v2) {
+		return Long.signum(v1.lengthSquared() - v2.lengthSquared());
 	}
 
 }
