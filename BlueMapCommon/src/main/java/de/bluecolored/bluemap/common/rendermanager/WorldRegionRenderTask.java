@@ -28,11 +28,9 @@ import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.world.Grid;
 import de.bluecolored.bluemap.core.world.Region;
-import de.bluecolored.bluemap.core.world.World;
 
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.TreeSet;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class WorldRegionRenderTask implements RenderTask {
 
@@ -40,7 +38,7 @@ public class WorldRegionRenderTask implements RenderTask {
 	private final Vector2i worldRegion;
 	private final boolean force;
 
-	private TreeSet<Vector2i> tiles;
+	private Deque<Vector2i> tiles;
 	private int tileCount;
 	private long startTime;
 
@@ -65,7 +63,7 @@ public class WorldRegionRenderTask implements RenderTask {
 	}
 
 	private synchronized void init() {
-		tiles = new TreeSet<>(WorldRegionRenderTask::tileComparator);
+		Set<Vector2i> tileSet = new HashSet<>();
 		startTime = System.currentTimeMillis();
 
 		//Logger.global.logInfo("Starting: " + worldRegion);
@@ -85,12 +83,15 @@ public class WorldRegionRenderTask implements RenderTask {
 
 			for (int x = tileMin.getX(); x <= tileMax.getX(); x++) {
 				for (int z = tileMin.getY(); z <= tileMax.getY(); z++) {
-					tiles.add(new Vector2i(x, z));
+					tileSet.add(new Vector2i(x, z));
 				}
 			}
 		}
 
-		this.tileCount = tiles.size();
+		this.tileCount = tileSet.size();
+		this.tiles = tileSet.stream()
+				.sorted()
+				.collect(Collectors.toCollection(ArrayDeque::new));
 
 		if (tiles.isEmpty()) complete();
 	}
@@ -181,18 +182,11 @@ public class WorldRegionRenderTask implements RenderTask {
 		return worldRegion.hashCode();
 	}
 
-	private static int tileComparator(Vector2i v1, Vector2i v2) {
-		int comp = v1.compareTo(v2);
-		if (comp != 0) return comp;
-		if (v1.getX() != v2.getX()) return v2.getX() - v1.getX();
-		return v2.getY() - v1.getY();
-	}
-
 	public static Comparator<WorldRegionRenderTask> defaultComparator(final Vector2i centerRegion) {
 		return (task1, task2) -> {
 			Vector2i task1Rel = task1.worldRegion.sub(centerRegion);
 			Vector2i task2Rel = task2.worldRegion.sub(centerRegion);
-			return tileComparator(task1Rel, task2Rel);
+			return task1Rel.compareTo(task2Rel);
 		};
 	}
 
