@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.core.config;
 
+import de.bluecolored.bluemap.core.debug.DebugDump;
 import org.spongepowered.configurate.ConfigurationNode;
 
 import java.io.File;
@@ -31,10 +32,10 @@ import java.io.IOException;
 
 public class CoreConfig {
 	
-	private boolean downloadAccepted = false;
-	private int renderThreadCount = 0;
-	private boolean metricsEnabled = false;
-	private File dataFolder = new File("data");
+	@DebugDump private boolean downloadAccepted = false;
+	@DebugDump private int renderThreadCount = 0;
+	@DebugDump private boolean metricsEnabled = false;
+	@DebugDump private File dataFolder = new File("data");
 	
 	
 	public CoreConfig(ConfigurationNode node) throws IOException {

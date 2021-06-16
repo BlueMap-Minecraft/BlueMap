@@ -25,7 +25,7 @@
 package de.bluecolored.bluemap.core.map;
 
 import com.flowpowered.math.vector.Vector2i;
-import de.bluecolored.bluemap.core.BlueMap;
+import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.hires.HiresModel;
 import de.bluecolored.bluemap.core.map.hires.HiresModelManager;
@@ -40,6 +40,7 @@ import java.nio.file.Path;
 import java.util.Objects;
 import java.util.function.Predicate;
 
+@DebugDump
 public class BmMap {
 
 	private final String id;

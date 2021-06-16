@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.core.config;
 
+import de.bluecolored.bluemap.core.debug.DebugDump;
 import org.spongepowered.configurate.ConfigurationNode;
 
 import java.io.File;
@@ -31,6 +32,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+@DebugDump
 public class RenderConfig {
 
 	private File webRoot = new File("web");

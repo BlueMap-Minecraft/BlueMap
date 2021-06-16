@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.common.rendermanager;
 
+import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
 
 import java.util.*;
@@ -34,17 +35,17 @@ import java.util.function.Predicate;
 public class RenderManager {
 	private static final AtomicInteger nextRenderManagerIndex = new AtomicInteger(0);
 
-	private final int id;
-	private volatile boolean running;
+	@DebugDump private final int id;
+	@DebugDump private volatile boolean running;
 
 	private final AtomicInteger nextWorkerThreadIndex;
-	private final Collection<WorkerThread> workerThreads;
+	@DebugDump private final Collection<WorkerThread> workerThreads;
 	private final AtomicInteger busyCount;
 
 	private ProgressTracker progressTracker;
 	private volatile boolean newTask;
 
-	private final LinkedList<RenderTask> renderTasks;
+	@DebugDump private final LinkedList<RenderTask> renderTasks;
 
 	public RenderManager() {
 		this.id = nextRenderManagerIndex.getAndIncrement();

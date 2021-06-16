@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.common.plugin;
 
+import de.bluecolored.bluemap.core.debug.DebugDump;
 import org.spongepowered.configurate.ConfigurationNode;
 
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
+@DebugDump
 public class PluginConfig {
 
 	private boolean liveUpdatesEnabled = false;

@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.common.plugin.skins;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
+import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
 
 import javax.imageio.ImageIO;
@@ -41,6 +42,7 @@ import java.util.Base64;
 import java.util.UUID;
 import java.util.concurrent.*;
 
+@DebugDump
 public class PlayerSkin {
 	
 	private final UUID uuid;

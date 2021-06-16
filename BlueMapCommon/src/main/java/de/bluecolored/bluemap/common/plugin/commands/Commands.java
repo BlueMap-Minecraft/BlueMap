@@ -49,9 +49,13 @@ import de.bluecolored.bluemap.common.plugin.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.plugin.text.TextColor;
 import de.bluecolored.bluemap.common.plugin.text.TextFormat;
-import de.bluecolored.bluemap.common.rendermanager.*;
+import de.bluecolored.bluemap.common.rendermanager.MapPurgeTask;
+import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
+import de.bluecolored.bluemap.common.rendermanager.RenderTask;
+import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
+import de.bluecolored.bluemap.core.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.map.MapRenderState;
@@ -136,6 +140,10 @@ public class Commands<S> {
 				
 				.then(literal("cache")
 						.executes(this::debugClearCacheCommand))
+
+
+				.then(literal("dump")
+						.executes(this::debugDumpCommand))
 						
 				.build();
 		
@@ -357,6 +365,7 @@ public class Commands<S> {
 		}
 
 		source.sendMessage(Text.of(TextFormat.BOLD, TextColor.BLUE, "Version: ", TextColor.WHITE, BlueMap.VERSION));
+		source.sendMessage(Text.of(TextColor.GRAY, "Commit: ", TextColor.WHITE, BlueMap.GIT_HASH + " (" + BlueMap.GIT_CLEAN + ")"));
 		source.sendMessage(Text.of(TextColor.GRAY, "Implementation: ", TextColor.WHITE, plugin.getImplementationType()));
 		source.sendMessage(Text.of(
 				TextColor.GRAY, "Minecraft compatibility: ", TextColor.WHITE, plugin.getMinecraftVersion().getVersionString(),
@@ -369,6 +378,7 @@ public class Commands<S> {
 		if (plugin.getMinecraftVersion().isAtLeast(new MinecraftVersion(1, 15))) {
 			String clipboardValue =
 					"Version: " + BlueMap.VERSION + "\n" +
+					"Commit: " + BlueMap.GIT_HASH + " (" + BlueMap.GIT_CLEAN + ")\n" +
 					"Implementation: " + plugin.getImplementationType() + "\n" +
 					"Minecraft compatibility: " + plugin.getMinecraftVersion().getVersionString() + " (" + plugin.getMinecraftVersion().getResource().getVersion().getVersionString() + ")\n" +
 					"Render-threads: " + renderThreadCount + "\n" +
@@ -540,6 +550,22 @@ public class Commands<S> {
 		}).start();
 		
 		return 1;
+	}
+
+	public int debugDumpCommand(CommandContext<S> context) {
+		final CommandSource source = commandSourceInterface.apply(context.getSource());
+
+		try {
+			Path file = plugin.getCoreConfig().getDataFolder().toPath().resolve("dump.json");
+			StateDumper.global().dump(file);
+
+			source.sendMessage(Text.of(TextColor.GREEN, "Dump created at: " + file));
+			return 1;
+		} catch (IOException ex) {
+			Logger.global.logError("Failed to create dump!", ex);
+			source.sendMessage(Text.of(TextColor.RED, "Exception trying to create dump! See console for details."));
+			return 0;
+		}
 	}
 	
 	public int stopCommand(CommandContext<S> context) {

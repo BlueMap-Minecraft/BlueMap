@@ -24,6 +24,11 @@
  */
 package de.bluecolored.bluemap.core.metrics;
 
+import com.google.gson.JsonObject;
+import de.bluecolored.bluemap.core.BlueMap;
+import de.bluecolored.bluemap.core.logger.Logger;
+
+import javax.net.ssl.HttpsURLConnection;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -31,13 +36,6 @@ import java.io.OutputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-
-import javax.net.ssl.HttpsURLConnection;
-
-import com.google.gson.JsonObject;
-
-import de.bluecolored.bluemap.core.BlueMap;
-import de.bluecolored.bluemap.core.logger.Logger;
 
 public class Metrics {
 
@@ -81,7 +79,7 @@ public class Metrics {
         	StringBuilder builder = new StringBuilder();
         	
         	while ((line = in.readLine()) != null) {
-        		builder.append(line + "\n");
+        		builder.append(line).append("\n");
         	}
         	
         	return builder.toString(); 

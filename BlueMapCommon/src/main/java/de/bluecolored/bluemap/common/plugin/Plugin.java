@@ -39,6 +39,8 @@ import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.config.CoreConfig;
 import de.bluecolored.bluemap.core.config.RenderConfig;
 import de.bluecolored.bluemap.core.config.WebServerConfig;
+import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.core.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.metrics.Metrics;
@@ -55,6 +57,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+@DebugDump
 public class Plugin {
 
 	public static final String PLUGIN_ID = "bluemap";
@@ -94,6 +97,8 @@ public class Plugin {
 		this.minecraftVersion = minecraftVersion;
 		this.implementationType = implementationType.toLowerCase();
 		this.serverInterface = serverInterface;
+
+		StateDumper.global().register(this);
 	}
 	
 	public void load() throws IOException, ParseResourceException {

@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.common.rendermanager;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector2l;
+import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.world.Grid;
 import de.bluecolored.bluemap.core.world.Region;
@@ -35,16 +36,16 @@ import java.util.stream.Collectors;
 
 public class WorldRegionRenderTask implements RenderTask {
 
-	private final BmMap map;
-	private final Vector2i worldRegion;
-	private final boolean force;
+	@DebugDump private final BmMap map;
+	@DebugDump private final Vector2i worldRegion;
+	@DebugDump private final boolean force;
 
 	private Deque<Vector2i> tiles;
-	private int tileCount;
-	private long startTime;
+	@DebugDump private int tileCount;
+	@DebugDump private long startTime;
 
-	private volatile int atWork;
-	private volatile boolean cancelled;
+	@DebugDump private volatile int atWork;
+	@DebugDump private volatile boolean cancelled;
 
 	public WorldRegionRenderTask(BmMap map, Vector2i worldRegion) {
 		this(map, worldRegion, false);

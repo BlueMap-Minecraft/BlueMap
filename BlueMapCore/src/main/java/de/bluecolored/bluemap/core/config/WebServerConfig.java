@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.core.config;
 
+import de.bluecolored.bluemap.core.debug.DebugDump;
 import org.spongepowered.configurate.ConfigurationNode;
 
 import java.io.File;
@@ -31,6 +32,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
+@DebugDump
 public class WebServerConfig {
 
 	private boolean enabled = true;

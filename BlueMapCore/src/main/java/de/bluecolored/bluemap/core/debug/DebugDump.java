@@ -22,42 +22,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core;
+package de.bluecolored.bluemap.core.debug;
 
-import de.bluecolored.bluemap.core.logger.Logger;
-import org.spongepowered.configurate.ConfigurationNode;
-import org.spongepowered.configurate.gson.GsonConfigurationLoader;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import java.io.IOException;
-import java.util.concurrent.ForkJoinPool;
+@Retention(RetentionPolicy.RUNTIME)
+@Target({
+        ElementType.METHOD,
+        ElementType.FIELD,
+        ElementType.TYPE
+})
+public @interface DebugDump {
 
-public class BlueMap {
+    String value() default "";
 
-	public static final String VERSION, GIT_HASH, GIT_CLEAN;
-	static {
-		String version = "DEV", gitHash = "DEV", gitClean = "DEV";
-		try {
-			ConfigurationNode node = GsonConfigurationLoader.builder()
-					.url(BlueMap.class.getResource("/de/bluecolored/bluemap/version.json"))
-					.build()
-					.load();
-
-			version = node.node("version").getString("DEV");
-			gitHash = node.node("git-hash").getString("DEV");
-			gitClean = node.node("git-clean").getString("DEV");
-		} catch (IOException ex) {
-			Logger.global.logError("Failed to load version.json from resources!", ex);
-		}
-		
-		if (version.equals("${version}")) version = "DEV";
-		if (gitHash.equals("${gitHash}")) version = "DEV";
-		if (gitClean.equals("${gitClean}")) version = "DEV";
-		
-		VERSION = version;
-		GIT_HASH = gitHash;
-		GIT_CLEAN = gitClean;
-	}
-
-	public static final ForkJoinPool THREAD_POOL = new ForkJoinPool();
-	
 }

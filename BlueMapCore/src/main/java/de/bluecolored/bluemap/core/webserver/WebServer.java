@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.core.webserver;
 
+import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
 
 import java.io.IOException;
@@ -33,6 +34,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.concurrent.*;
 
+@DebugDump
 public class WebServer extends Thread {
 
 	private final int port;

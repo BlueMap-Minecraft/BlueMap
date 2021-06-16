@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.core.resourcepack;
 
 import de.bluecolored.bluemap.core.MinecraftVersion;
+import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.BlockStateResource.Builder;
 import de.bluecolored.bluemap.core.resourcepack.fileaccess.BluemapAssetOverrideFileAccess;
@@ -42,6 +43,7 @@ import java.util.*;
 /**
  * Represents all resources (BlockStates / BlockModels and Textures) that are loaded and used to generate map-models. 
  */
+@DebugDump
 public class ResourcePack {
 	
 	private static final String[] CONFIG_FILES = {

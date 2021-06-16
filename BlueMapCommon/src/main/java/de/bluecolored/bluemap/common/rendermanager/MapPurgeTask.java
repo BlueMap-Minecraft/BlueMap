@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.common.rendermanager;
 
+import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.util.FileUtils;
 
@@ -35,13 +36,13 @@ import java.util.stream.Collectors;
 
 public class MapPurgeTask implements RenderTask {
 
-	private final BmMap map;
-	private final Path directory;
-	private final int subFilesCount;
+	@DebugDump private final BmMap map;
+	@DebugDump private final Path directory;
+	@DebugDump private final int subFilesCount;
 	private final LinkedList<Path> subFiles;
 
-	private volatile boolean hasMoreWork;
-	private volatile boolean cancelled;
+	@DebugDump private volatile boolean hasMoreWork;
+	@DebugDump private volatile boolean cancelled;
 
 	public MapPurgeTask(Path mapDirectory) throws IOException {
 		this(null, mapDirectory);

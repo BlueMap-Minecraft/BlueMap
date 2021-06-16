@@ -30,6 +30,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
+import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.extensions.*;
 import de.bluecolored.bluemap.core.mca.mapping.BiomeMapper;
@@ -53,11 +54,11 @@ public class MCAWorld implements World {
 	private static final Grid CHUNK_GRID = new Grid(16);
 	private static final Grid REGION_GRID = new Grid(32).multiply(CHUNK_GRID);
 
-	private final UUID uuid;
-	private final Path worldFolder;
+	@DebugDump private final UUID uuid;
+	@DebugDump private final Path worldFolder;
 	private final MinecraftVersion minecraftVersion;
-	private String name;
-	private Vector3i spawnPoint;
+	@DebugDump private String name;
+	@DebugDump private Vector3i spawnPoint;
 
 	private final LoadingCache<Vector2i, MCARegion> regionCache;
 	private final LoadingCache<Vector2i, MCAChunk> chunkCache;
@@ -67,8 +68,8 @@ public class MCAWorld implements World {
 	private BiomeMapper biomeMapper;
 
 	private final Map<String, List<BlockStateExtension>> blockStateExtensions;
-	
-	private boolean ignoreMissingLightData;
+
+	@DebugDump private boolean ignoreMissingLightData;
 	
 	private final Map<Integer, String> forgeBlockMappings;
 	

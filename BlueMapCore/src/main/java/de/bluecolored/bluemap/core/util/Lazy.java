@@ -24,12 +24,16 @@
  */
 package de.bluecolored.bluemap.core.util;
 
+import de.bluecolored.bluemap.core.debug.DebugDump;
+
 import java.util.Objects;
 import java.util.function.Supplier;
 
 public class Lazy<T> {
 
 	private Supplier<T> loader;
+
+	@DebugDump
 	private T value;
 	
 	public Lazy(Supplier<T> loader) {

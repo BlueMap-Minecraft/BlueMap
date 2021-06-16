@@ -29,6 +29,7 @@ import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.common.web.WebSettings;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.config.*;
+import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
@@ -47,6 +48,7 @@ import java.util.*;
 /**
  * This is the attempt to generalize as many actions as possible to have CLI and Plugins run on the same general setup-code.
  */
+@DebugDump
 public class BlueMapService {
 	private final MinecraftVersion minecraftVersion;
 	private final File configFolder;

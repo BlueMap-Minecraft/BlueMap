@@ -16,13 +16,16 @@ test {
 }
 
 processResources {
+    def git = versionDetails()
 	from(sourceSets.main.resources.srcDirs) {
 		include 'de/bluecolored/bluemap/version.json'
         duplicatesStrategy = DuplicatesStrategy.WARN
-		
+
 		expand (
-			version: project.version
-		)
+            version: project.version,
+            gitHash: git.gitHashFull,
+            gitClean: git.isCleanTag
+        )
 	}
 }
 
