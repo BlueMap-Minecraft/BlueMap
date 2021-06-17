@@ -92,63 +92,67 @@ public class MarkerAPIImpl implements MarkerAPI {
 	}
 	
 	private synchronized void load(boolean overwriteChanges) throws IOException {
-		Set<String> externallyRemovedSets = new HashSet<>(markerSets.keySet());
+		synchronized (MarkerAPIImpl.class) {
+			Set<String> externallyRemovedSets = new HashSet<>(markerSets.keySet());
 
-		if (markerFile.exists() && markerFile.isFile()) {
-			GsonConfigurationLoader loader = GsonConfigurationLoader.builder().file(markerFile).build();
-			ConfigurationNode node = loader.load();
+			if (markerFile.exists() && markerFile.isFile()) {
+				GsonConfigurationLoader loader = GsonConfigurationLoader.builder().file(markerFile).build();
+				ConfigurationNode node = loader.load();
 
-			for (ConfigurationNode markerSetNode : node.node("markerSets").childrenList()) {
-				String setId = markerSetNode.node("id").getString();
-				if (setId == null) {
-					Logger.global.logDebug("Marker-API: Failed to load a markerset: No id defined!");
-					continue;
-				}
-
-				externallyRemovedSets.remove(setId);
-				if (!overwriteChanges && removedMarkerSets.contains(setId)) continue;
-
-				MarkerSetImpl set = markerSets.get(setId);
-
-				try {
-					if (set == null) {
-						set = new MarkerSetImpl(setId);
-						set.load(api, markerSetNode, true);
-					} else {
-						set.load(api, markerSetNode, overwriteChanges);
+				for (ConfigurationNode markerSetNode : node.node("markerSets").childrenList()) {
+					String setId = markerSetNode.node("id").getString();
+					if (setId == null) {
+						Logger.global.logDebug("Marker-API: Failed to load a markerset: No id defined!");
+						continue;
 					}
-					markerSets.put(setId, set);
-				} catch (MarkerFileFormatException ex) {
-					Logger.global.logDebug("Marker-API: Failed to load marker-set '" + setId + ": " + ex);
+
+					externallyRemovedSets.remove(setId);
+					if (!overwriteChanges && removedMarkerSets.contains(setId)) continue;
+
+					MarkerSetImpl set = markerSets.get(setId);
+
+					try {
+						if (set == null) {
+							set = new MarkerSetImpl(setId);
+							set.load(api, markerSetNode, true);
+						} else {
+							set.load(api, markerSetNode, overwriteChanges);
+						}
+						markerSets.put(setId, set);
+					} catch (MarkerFileFormatException ex) {
+						Logger.global.logDebug("Marker-API: Failed to load marker-set '" + setId + ": " + ex);
+					}
 				}
 			}
-		}
-		
-		if (overwriteChanges) {
-			for (String setId : externallyRemovedSets) {
-				markerSets.remove(setId);
+
+			if (overwriteChanges) {
+				for (String setId : externallyRemovedSets) {
+					markerSets.remove(setId);
+				}
+
+				removedMarkerSets.clear();
 			}
-			
-			removedMarkerSets.clear();
 		}
 	}
 
 	@Override
 	public synchronized void save() throws IOException {
-		load(false);
+		synchronized (MarkerAPIImpl.class) {
+			load(false);
 
-		FileUtils.createFile(markerFile);
+			FileUtils.createFile(markerFile);
 
-		GsonConfigurationLoader loader = GsonConfigurationLoader.builder().file(markerFile).build();
-		ConfigurationNode node = loader.createNode();
-		
-		for (MarkerSetImpl set : markerSets.values()) {
-			set.save(node.node("markerSets").appendListNode());
+			GsonConfigurationLoader loader = GsonConfigurationLoader.builder().file(markerFile).build();
+			ConfigurationNode node = loader.createNode();
+
+			for (MarkerSetImpl set : markerSets.values()) {
+				set.save(node.node("markerSets").appendListNode());
+			}
+
+			loader.save(node);
+
+			removedMarkerSets.clear();
 		}
-		
-		loader.save(node);
-		
-		removedMarkerSets.clear();
 	}
 	
 }
