@@ -785,6 +785,7 @@ public class Commands<S> {
 		if (!ref.isPresent()) {
 			plugin.getRenderManager().removeAllRenderTasks();
 			source.sendMessage(Text.of(TextColor.GREEN, "All tasks cancelled!"));
+			source.sendMessage(Text.of(TextColor.GRAY, "(Note, that an already started task might not be removed immediately. Some tasks needs to do some tidying-work first)"));
 			return 1;
 		}
 
@@ -797,6 +798,7 @@ public class Commands<S> {
 
 		if (plugin.getRenderManager().removeRenderTask(task.get())) {
 			source.sendMessage(Text.of(TextColor.GREEN, "Task cancelled!"));
+			source.sendMessage(Text.of(TextColor.GRAY, "(Note, that an already started task might not be removed immediately. Some tasks needs to do some tidying-work first)"));
 			return 1;
 		} else {
 			source.sendMessage(Text.of(TextColor.RED, "This task is either completed or got cancelled already!"));
