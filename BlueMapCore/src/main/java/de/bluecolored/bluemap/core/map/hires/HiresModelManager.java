@@ -37,9 +37,6 @@ import de.bluecolored.bluemap.core.world.World;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.zip.GZIPOutputStream;
 
 public class HiresModelManager {
@@ -99,30 +96,6 @@ public class HiresModelManager {
 		} catch (IOException e){
 			Logger.global.logError("Failed to save hires model: " + file, e);
 		}
-	}
-	
-	/**
-	 * Returns all tiles that the provided chunks are intersecting
-	 */
-	@Deprecated
-	public Collection<Vector2i> getTilesForChunks(Iterable<Vector2i> chunks){
-		Set<Vector2i> tiles = new HashSet<>();
-		for (Vector2i chunk : chunks) {
-			Vector3i minBlockPos = new Vector3i(chunk.getX() * 16, 0, chunk.getY() * 16);
-			
-			//loop to cover the case that a tile is smaller then a chunk, should normally only add one tile (at 0, 0)
-			for (int x = 0; x < 15; x += tileGrid.getGridSize().getX()) {
-				for (int z = 0; z < 15; z += tileGrid.getGridSize().getY()) {
-					tiles.add(posToTile(minBlockPos.add(x, 0, z)));
-				}
-			}
-			
-			tiles.add(posToTile(minBlockPos.add(0, 0, 15)));
-			tiles.add(posToTile(minBlockPos.add(15, 0, 0)));
-			tiles.add(posToTile(minBlockPos.add(15, 0, 15)));
-		}
-		
-		return tiles;
 	}
 	
 	/**
