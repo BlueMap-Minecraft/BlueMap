@@ -74,7 +74,7 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 		//try to get best matching minecraft-version
 		try {
 			String versionString = getServer().getBukkitVersion();
-			Matcher versionMatcher = Pattern.compile("(\\d+\\.\\d+\\.\\d+)[-_].*").matcher(versionString);
+			Matcher versionMatcher = Pattern.compile("(\\d+(?:\\.\\d+){1,2})[-_].*").matcher(versionString);
 			if (!versionMatcher.matches()) throw new IllegalArgumentException();
 			version = MinecraftVersion.of(versionMatcher.group(1));
 		} catch (IllegalArgumentException e) {
