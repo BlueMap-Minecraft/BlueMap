@@ -27,7 +27,7 @@ package de.bluecolored.bluemap.common.plugin.commands;
 import java.util.Collection;
 import java.util.HashSet;
 
-import de.bluecolored.bluemap.common.MapType;
+import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.core.world.World;
 
@@ -47,7 +47,7 @@ public class WorldOrMapSuggestionProvider<S> extends AbstractSuggestionProvider<
 			values.add(world.getName());
 		}
 		
-		for (MapType map : plugin.getMapTypes()) {
+		for (BmMap map : plugin.getMapTypes()) {
 			values.add(map.getId());
 		}
 		

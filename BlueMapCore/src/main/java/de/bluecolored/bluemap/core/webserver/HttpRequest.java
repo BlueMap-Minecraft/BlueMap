@@ -24,33 +24,22 @@
  */
 package de.bluecolored.bluemap.core.webserver;
 
-import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import de.bluecolored.bluemap.core.webserver.HttpConnection.ConnectionClosedException;
 import de.bluecolored.bluemap.core.webserver.HttpConnection.InvalidRequestException;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.Map.Entry;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class HttpRequest {
 
 	private static final Pattern REQUEST_PATTERN = Pattern.compile("^(\\w+) (\\S+) (.+)$");
 	
 	private String method;
-	private String adress;
+	private String address;
 	private String version;
 	private Map<String, Set<String>> header;
 	private Map<String, Set<String>> headerLC;
@@ -60,9 +49,9 @@ public class HttpRequest {
 	private Map<String, String> getParams = null;
 	private String getParamString = null;
 	
-	public HttpRequest(String method, String adress, String version, Map<String, Set<String>> header) {
+	public HttpRequest(String method, String address, String version, Map<String, Set<String>> header) {
 		this.method = method;
-		this.adress = adress;
+		this.address = address;
 		this.version = version;
 		this.header = header;
 		this.headerLC = new HashMap<>();
@@ -83,8 +72,8 @@ public class HttpRequest {
 		return method;
 	}
 	
-	public String getAdress(){
-		return adress;
+	public String getAddress(){
+		return address;
 	}
 
 	public String getVersion() {
@@ -127,7 +116,7 @@ public class HttpRequest {
 	}
 	
 	private void parseAdress() {
-		String adress = this.adress;
+		String adress = this.address;
 		if (adress.isEmpty()) adress = "/";
 		String[] adressParts = adress.split("\\?", 2);
 		String path = adressParts[0];
@@ -167,8 +156,8 @@ public class HttpRequest {
 		String method = m.group(1);
 		if (method == null) throw new InvalidRequestException();
 		
-		String adress = m.group(2);
-		if (adress == null) throw new InvalidRequestException();
+		String address = m.group(2);
+		if (address == null) throw new InvalidRequestException();
 		
 		String version = m.group(3);
 		if (version == null) throw new InvalidRequestException();
@@ -192,7 +181,7 @@ public class HttpRequest {
 			headerMap.put(kv[0].trim(), values);
 		}
 		
-		HttpRequest request = new HttpRequest(method, adress, version, headerMap);
+		HttpRequest request = new HttpRequest(method, address, version, headerMap);
 
 		if (request.getLowercaseHeader("Transfer-Encoding").contains("chunked")){
 			try {

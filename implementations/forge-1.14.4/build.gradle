@@ -5,7 +5,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '3.+', changing: true
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.0.9', changing: true
     }
 }
 
@@ -16,7 +16,7 @@ minecraft {
 }
 
 configurations {
-	compile.extendsFrom include
+	implementation.extendsFrom include
 }
 
 dependencies {
@@ -33,15 +33,15 @@ dependencies {
 }
 
 build.dependsOn shadowJar {
-	destinationDir = file '../../build/release'
-	archiveFileName = "BlueMap-${version}-forge-1.14.4.jar"
+	destinationDirectory = file '../../build/release'
+	archiveFileName.set("BlueMap-${archiveVersion.get()}-forge-1.14.4.jar")
 	
 	configurations = [project.configurations.include]
 	
 	//relocate 'com.flowpowered.math', 'de.bluecolored.shadow.flowpowered.math' //DON'T relocate this, because the API depends on it
 	relocate 'com.typesafe.config', 'de.bluecolored.shadow.typesafe.config'
 	relocate 'net.querz.nbt', 'de.bluecolored.shadow.querz.nbt'
-	relocate 'ninja.leaping.configurate', 'de.bluecolored.shadow.ninja.leaping.configurate'
+	relocate 'org.spongepowered.configurate', 'de.bluecolored.shadow.configurate'
 	relocate 'com.github.benmanes.caffeine', 'de.bluecolored.shadow.benmanes.caffeine'
 	relocate 'com.google.errorprone', 'de.bluecolored.shadow.google.errorprone'
 	relocate 'org.aopalliance', 'de.bluecolored.shadow.aopalliance'
@@ -49,11 +49,13 @@ build.dependsOn shadowJar {
 	relocate 'com.google.inject', 'de.bluecolored.shadow.google.inject'
 	relocate 'org.checkerframework', 'de.bluecolored.shadow.checkerframework'
 	relocate 'org.codehaus', 'de.bluecolored.shadow.codehaus'
+	relocate 'io.leangen.geantyref', 'de.bluecolored.shadow.geantyref'
 }
 
 processResources {
 	from(sourceSets.main.resources.srcDirs) {
 		include 'mcmod.info','META-INF/mods.toml'
+		duplicatesStrategy = DuplicatesStrategy.WARN
 		
 		expand (
 			version: project.version

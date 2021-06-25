@@ -30,8 +30,8 @@ import de.bluecolored.bluemap.core.resourcepack.BlockModelResource.Element.Face;
 import de.bluecolored.bluemap.core.resourcepack.fileaccess.FileAccess;
 import de.bluecolored.bluemap.core.util.Axis;
 import de.bluecolored.bluemap.core.util.Direction;
-import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.gson.GsonConfigurationLoader;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -250,22 +250,22 @@ public class BlockModelResource {
 			
 			InputStream fileIn = sourcesAccess.readFile(modelPath);
 			ConfigurationNode config = GsonConfigurationLoader.builder()
-					.setSource(() -> new BufferedReader(new InputStreamReader(fileIn, StandardCharsets.UTF_8)))
+					.source(() -> new BufferedReader(new InputStreamReader(fileIn, StandardCharsets.UTF_8)))
 					.build()
 					.load();
 			
-			for (Entry<Object, ? extends ConfigurationNode> entry : config.getNode("textures").getChildrenMap().entrySet()) {
+			for (Entry<Object, ? extends ConfigurationNode> entry : config.node("textures").childrenMap().entrySet()) {
 				if (entry.getKey().equals(JSON_COMMENT)) continue;
 
 				String key = entry.getKey().toString();
-				String value = entry.getValue().getString(null);
+				String value = entry.getValue().getString();
 
 				if (("#" + key).equals(value)) continue; // skip direct loop
 
 				textures.putIfAbsent(key, value);
 			}
 			
-			String parentPath = config.getNode("parent").getString();
+			String parentPath = config.node("parent").getString();
 			if (parentPath != null) {
 				if (parentPath.startsWith("builtin")) {
 					switch (parentPath) {
@@ -276,7 +276,7 @@ public class BlockModelResource {
 				} else {
 					try {
 						parentPath = ResourcePack.namespacedToAbsoluteResourcePath(parentPath, "models") + ".json";
-						blockModel = this.buildNoReset(parentPath, renderElements && config.getNode("elements").isVirtual(), topModelPath);
+						blockModel = this.buildNoReset(parentPath, renderElements && config.node("elements").virtual(), topModelPath);
 					} catch (IOException ex) {
 						throw new ParseResourceException("Failed to load parent model " + parentPath + " of model " + topModelPath, ex);
 					}
@@ -284,7 +284,7 @@ public class BlockModelResource {
 			}
 			
 			if (renderElements) {
-				for (ConfigurationNode elementNode : config.getNode("elements").getChildrenList()) {
+				for (ConfigurationNode elementNode : config.node("elements").childrenList()) {
 					blockModel.elements.add(buildElement(blockModel, elementNode, topModelPath));
 				}
 			}
@@ -334,24 +334,24 @@ public class BlockModelResource {
 		private Element buildElement(BlockModelResource model, ConfigurationNode node, String topModelPath) throws ParseResourceException {
 			Element element = model.new Element();
 			
-			element.from = readVector3f(node.getNode("from"));
-			element.to = readVector3f(node.getNode("to"));
+			element.from = readVector3f(node.node("from"));
+			element.to = readVector3f(node.node("to"));
 			
-			element.shade = node.getNode("shade").getBoolean(true);
+			element.shade = node.node("shade").getBoolean(true);
 			
 			boolean fullElement = element.from.equals(FULL_CUBE_FROM) && element.to.equals(FULL_CUBE_TO);
 			
-			if (!node.getNode("rotation").isVirtual()) {
-				element.rotation.angle = node.getNode("rotation", "angle").getFloat(0);
-				element.rotation.axis = Axis.fromString(node.getNode("rotation", "axis").getString("x"));
-				if (!node.getNode("rotation", "origin").isVirtual()) element.rotation.origin = readVector3f(node.getNode("rotation", "origin"));
-				element.rotation.rescale = node.getNode("rotation", "rescale").getBoolean(false);
+			if (!node.node("rotation").virtual()) {
+				element.rotation.angle = node.node("rotation", "angle").getFloat(0);
+				element.rotation.axis = Axis.fromString(node.node("rotation", "axis").getString("x"));
+				if (!node.node("rotation", "origin").virtual()) element.rotation.origin = readVector3f(node.node("rotation", "origin"));
+				element.rotation.rescale = node.node("rotation", "rescale").getBoolean(false);
 			}
 			
 			boolean allDirs = true;
 			for (Direction direction : Direction.values()) {
-				ConfigurationNode faceNode = node.getNode("faces", direction.name().toLowerCase());
-				if (!faceNode.isVirtual()) {
+				ConfigurationNode faceNode = node.node("faces", direction.name().toLowerCase());
+				if (!faceNode.virtual()) {
 					try {
 						Face face = buildFace(element, direction, faceNode);
 						element.faces.put(direction, face);
@@ -372,13 +372,13 @@ public class BlockModelResource {
 			try {
 				Face face = element.new Face(direction);
 				
-				if (!node.getNode("uv").isVirtual()) face.uv = readVector4f(node.getNode("uv")); 
-				face.texture = getTexture(node.getNode("texture").getString(""));
-				face.tinted = node.getNode("tintindex").getInt(-1) >= 0;
-				face.rotation = node.getNode("rotation").getInt(0);
+				if (!node.node("uv").virtual()) face.uv = readVector4f(node.node("uv"));
+				face.texture = getTexture(node.node("texture").getString(""));
+				face.tinted = node.node("tintindex").getInt(-1) >= 0;
+				face.rotation = node.node("rotation").getInt(0);
 				
-				if (!node.getNode("cullface").isVirtual()) {
-					String dirString = node.getNode("cullface").getString("");
+				if (!node.node("cullface").virtual()) {
+					String dirString = node.node("cullface").getString("");
 					if (dirString.equals("bottom")) dirString = "down";
 					if (dirString.equals("top")) dirString = "up";
 					
@@ -389,14 +389,14 @@ public class BlockModelResource {
 				
 				return face;
 			} catch (FileNotFoundException ex) {
-				throw new ParseResourceException("There is no texture with the path: " + node.getNode("texture").getString(), ex);
+				throw new ParseResourceException("There is no texture with the path: " + node.node("texture").getString(), ex);
 			} catch (NoSuchElementException ex) {
-				throw new ParseResourceException("Texture key '" + node.getNode("texture").getString() + "' has no texture assigned!", ex);
+				throw new ParseResourceException("Texture key '" + node.node("texture").getString() + "' has no texture assigned!", ex);
 			}
 		}
 		
 		private Vector3f readVector3f(ConfigurationNode node) throws ParseResourceException {
-			List<? extends ConfigurationNode> nodeList = node.getChildrenList();
+			List<? extends ConfigurationNode> nodeList = node.childrenList();
 			if (nodeList.size() < 3) throw new ParseResourceException("Failed to load Vector3: Not enough values in list-node!");
 			
 			return new Vector3f(
@@ -407,7 +407,7 @@ public class BlockModelResource {
 		}
 		
 		private Vector4f readVector4f(ConfigurationNode node) throws ParseResourceException {
-			List<? extends ConfigurationNode> nodeList = node.getChildrenList();
+			List<? extends ConfigurationNode> nodeList = node.childrenList();
 			if (nodeList.size() < 4) throw new ParseResourceException("Failed to load Vector4: Not enough values in list-node!");
 			
 			return new Vector4f(

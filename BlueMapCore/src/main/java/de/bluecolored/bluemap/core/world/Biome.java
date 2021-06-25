@@ -26,11 +26,10 @@ package de.bluecolored.bluemap.core.world;
 
 import com.flowpowered.math.vector.Vector3f;
 import com.flowpowered.math.vector.Vector4f;
-import com.google.common.base.MoreObjects;
 
 import de.bluecolored.bluemap.core.util.ConfigUtils;
 import de.bluecolored.bluemap.core.util.MathUtils;
-import ninja.leaping.configurate.ConfigurationNode;
+import org.spongepowered.configurate.ConfigurationNode;
 
 public class Biome {
 
@@ -94,27 +93,27 @@ public class Biome {
 		Biome biome = new Biome();
 		
 		biome.id = id;
-		biome.numeralId = node.getNode("id").getInt(biome.numeralId);
-		biome.humidity = node.getNode("humidity").getFloat(biome.humidity);
-		biome.temp = node.getNode("temp").getFloat(biome.temp);
-		try { biome.waterColor = MathUtils.color3FromInt(ConfigUtils.readColorInt(node.getNode("watercolor"))); 				} catch (NumberFormatException ignored) {}
-		try { biome.overlayFoliageColor = MathUtils.color4FromInt(ConfigUtils.readColorInt(node.getNode("foliagecolor"))); 	} catch (NumberFormatException ignored) {}
-		try { biome.overlayGrassColor = MathUtils.color4FromInt(ConfigUtils.readColorInt(node.getNode("grasscolor"))); 		} catch (NumberFormatException ignored) {}
+		biome.numeralId = node.node("id").getInt(biome.numeralId);
+		biome.humidity = node.node("humidity").getFloat(biome.humidity);
+		biome.temp = node.node("temp").getFloat(biome.temp);
+		try { biome.waterColor = MathUtils.color3FromInt(ConfigUtils.readColorInt(node.node("watercolor"))); 				} catch (NumberFormatException ignored) {}
+		try { biome.overlayFoliageColor = MathUtils.color4FromInt(ConfigUtils.readColorInt(node.node("foliagecolor"))); 	} catch (NumberFormatException ignored) {}
+		try { biome.overlayGrassColor = MathUtils.color4FromInt(ConfigUtils.readColorInt(node.node("grasscolor"))); 		} catch (NumberFormatException ignored) {}
 		
 		return biome;
 	}
 	
 	@Override
 	public String toString() {
-		return MoreObjects.toStringHelper(this)
-			.add("id", getId())
-			.add("numeralId", getNumeralId())
-			.add("humidity", getHumidity())
-			.add("temp", getTemp())
-			.add("waterColor", getWaterColor())
-			.add("overlayFoliageColor", getOverlayFoliageColor())
-			.add("overlayGrassColor", getOverlayGrassColor())
-			.toString();
+		return "Biome{" +
+			   "id='" + id + '\'' +
+			   ", numeralId=" + numeralId +
+			   ", humidity=" + humidity +
+			   ", temp=" + temp +
+			   ", waterColor=" + waterColor +
+			   ", overlayFoliageColor=" + overlayFoliageColor +
+			   ", overlayGrassColor=" + overlayGrassColor +
+			   '}';
 	}
 	
 }

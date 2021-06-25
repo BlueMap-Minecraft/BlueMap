@@ -24,20 +24,20 @@
  */
 package de.bluecolored.bluemap.core.mca.extensions;
 
-import java.util.Set;
-
 import com.flowpowered.math.vector.Vector3i;
-import com.google.common.collect.Sets;
-
 import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.world.BlockState;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+
 public class FireExtension implements BlockStateExtension {
 
-	private static final Set<String> AFFECTED_BLOCK_IDS = Sets.newHashSet(
+	private static final Set<String> AFFECTED_BLOCK_IDS = new HashSet<>(Collections.singletonList(
 			"minecraft:fire"
-		);
+	));
 	
 	@Override
 	public BlockState extend(MCAWorld world, Vector3i pos, BlockState state) {

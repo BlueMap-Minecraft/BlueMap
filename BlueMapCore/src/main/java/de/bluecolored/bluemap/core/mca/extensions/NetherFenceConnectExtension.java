@@ -24,16 +24,16 @@
  */
 package de.bluecolored.bluemap.core.mca.extensions;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
-
 public class NetherFenceConnectExtension extends ConnectSameOrFullBlockExtension {
 
-	private static final HashSet<String> AFFECTED_BLOCK_IDS = Sets.newHashSet(
+	private static final HashSet<String> AFFECTED_BLOCK_IDS = new HashSet<>(Collections.singletonList(
 			"minecraft:nether_brick_fence"
-		);
+	));
 	
 	@Override
 	public Set<String> getAffectedBlockIds() {

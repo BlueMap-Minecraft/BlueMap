@@ -24,16 +24,16 @@
  */
 package de.bluecolored.bluemap.core.config;
 
-import com.google.common.base.Preconditions;
+
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack.Resource;
 import de.bluecolored.bluemap.core.util.FileUtils;
-import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.gson.GsonConfigurationLoader;
-import ninja.leaping.configurate.hocon.HoconConfigurationLoader;
-import ninja.leaping.configurate.loader.ConfigurationLoader;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.gson.GsonConfigurationLoader;
+import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
+import org.spongepowered.configurate.loader.ConfigurationLoader;
 
 import java.io.*;
 import java.net.URL;
@@ -41,6 +41,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -96,7 +97,7 @@ public class ConfigManager {
 			} else {
 				//create empty config
 				ConfigurationLoader<? extends ConfigurationNode> loader = getLoader(configFile);
-				configNode = loader.createEmptyNode();
+				configNode = loader.createNode();
 				
 				//save to create file
 				if (generateEmptyConfig) loader.save(configNode);
@@ -109,7 +110,7 @@ public class ConfigManager {
 		//populate missing values with default values
 		if (defaultValues != null) {
 			ConfigurationNode defaultValuesNode = getLoader(defaultValues).load();
-			configNode.mergeValuesFrom(defaultValuesNode);
+			configNode.mergeFrom(defaultValuesNode);
 		}
 		
 		return configNode;
@@ -118,7 +119,7 @@ public class ConfigManager {
 	public void loadResourceConfigs(File configFolder, ResourcePack resourcePack) throws IOException {
 		
 		//load blockColors.json from resources, config-folder and resourcepack
-		URL blockColorsConfigUrl = BlueMap.class.getResource("/de/bluecolored/bluemap/" + resourcePack.getMinecraftVersion().getResourcePrefix() + "/blockColors.json");
+		URL blockColorsConfigUrl = BlueMap.class.getResource("/de/bluecolored/bluemap/" + resourcePack.getMinecraftVersion().getResource().getResourcePrefix() + "/blockColors.json");
 		File blockColorsConfigFile = new File(configFolder, "blockColors.json");
 		ConfigurationNode blockColorsConfigNode = loadOrCreate(
 				blockColorsConfigFile, 
@@ -131,7 +132,7 @@ public class ConfigManager {
 		resourcePack.getBlockColorCalculator().loadColorConfig(blockColorsConfigNode);
 
 		//load blockIds.json from resources, config-folder and resourcepack
-		URL blockIdsConfigUrl = BlueMap.class.getResource("/de/bluecolored/bluemap/" + resourcePack.getMinecraftVersion().getResourcePrefix() + "/blockIds.json");
+		URL blockIdsConfigUrl = BlueMap.class.getResource("/de/bluecolored/bluemap/" + resourcePack.getMinecraftVersion().getResource().getResourcePrefix() + "/blockIds.json");
 		File blockIdsConfigFile = new File(configFolder, "blockIds.json");
 		ConfigurationNode blockIdsConfigNode = loadOrCreate(
 						blockIdsConfigFile, 
@@ -146,7 +147,7 @@ public class ConfigManager {
 				);
 
 		//load blockProperties.json from resources, config-folder and resourcepack
-		URL blockPropertiesConfigUrl = BlueMap.class.getResource("/de/bluecolored/bluemap/" + resourcePack.getMinecraftVersion().getResourcePrefix() + "/blockProperties.json");
+		URL blockPropertiesConfigUrl = BlueMap.class.getResource("/de/bluecolored/bluemap/" + resourcePack.getMinecraftVersion().getResource().getResourcePrefix() + "/blockProperties.json");
 		File blockPropertiesConfigFile = new File(configFolder, "blockProperties.json");
 		ConfigurationNode blockPropertiesConfigNode = loadOrCreate(
 						blockPropertiesConfigFile, 
@@ -162,7 +163,7 @@ public class ConfigManager {
 				);
 
 		//load biomes.json from resources, config-folder and resourcepack
-		URL biomeConfigUrl = BlueMap.class.getResource("/de/bluecolored/bluemap/" + resourcePack.getMinecraftVersion().getResourcePrefix() + "/biomes.json");
+		URL biomeConfigUrl = BlueMap.class.getResource("/de/bluecolored/bluemap/" + resourcePack.getMinecraftVersion().getResource().getResourcePrefix() + "/biomes.json");
 		File biomeConfigFile = new File(configFolder, "biomes.json");
 		ConfigurationNode biomeConfigNode = loadOrCreate(
 						biomeConfigFile,
@@ -196,7 +197,7 @@ public class ConfigManager {
 			try {
 				ConfigurationNode node = getLoader(configFileName, resource.read()).load();
 				if (joinedNode == null) joinedNode = node;
-				else joinedNode.mergeValuesFrom(node);
+				else joinedNode.mergeFrom(node);
 			} catch (IOException ex) {
 				Logger.global.logWarning("Failed to load an additional " + configFileName + " from the resource-pack! " + ex);
 			}
@@ -204,7 +205,7 @@ public class ConfigManager {
 		
 		if (joinedNode == null) return defaultConfig;
 		
-		joinedNode.mergeValuesFrom(defaultConfig);
+		joinedNode.mergeFrom(defaultConfig);
 		
 		return joinedNode;
 	}
@@ -212,22 +213,22 @@ public class ConfigManager {
 	private ConfigurationLoader<? extends ConfigurationNode> getLoader(String filename, InputStream is){
 		BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8));
 		
-		if (filename.endsWith(".json")) return GsonConfigurationLoader.builder().setSource(() -> reader).build();
-		else return HoconConfigurationLoader.builder().setSource(() -> reader).build();
+		if (filename.endsWith(".json")) return GsonConfigurationLoader.builder().source(() -> reader).build();
+		else return HoconConfigurationLoader.builder().source(() -> reader).build();
 	}
 	
 	private ConfigurationLoader<? extends ConfigurationNode> getLoader(URL url){
-		if (url.getFile().endsWith(".json")) return GsonConfigurationLoader.builder().setURL(url).build();
-		else return HoconConfigurationLoader.builder().setURL(url).build();
+		if (url.getFile().endsWith(".json")) return GsonConfigurationLoader.builder().url(url).build();
+		else return HoconConfigurationLoader.builder().url(url).build();
 	}
 	
 	private ConfigurationLoader<? extends ConfigurationNode> getLoader(File file){
-		if (file.getName().endsWith(".json")) return GsonConfigurationLoader.builder().setFile(file).build();
-		else return HoconConfigurationLoader.builder().setFile(file).build();
+		if (file.getName().endsWith(".json")) return GsonConfigurationLoader.builder().file(file).build();
+		else return HoconConfigurationLoader.builder().file(file).build();
 	}
 
 	public static File toFolder(String pathString) throws IOException {
-		Preconditions.checkNotNull(pathString);
+		Objects.requireNonNull(pathString);
 		
 		File file = new File(pathString);
 		if (file.exists() && !file.isDirectory()) throw new IOException("Invalid configuration: Path '" + file.getAbsolutePath() + "' is a file (should be a directory)");

@@ -24,24 +24,14 @@
  */
 package de.bluecolored.bluemap.bukkit;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.bstats.bukkit.MetricsLite;
+import de.bluecolored.bluemap.common.plugin.Plugin;
+import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
+import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
+import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.core.MinecraftVersion;
+import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 import org.bukkit.command.CommandMap;
@@ -53,37 +43,40 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
-import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
-import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
-import de.bluecolored.bluemap.core.MinecraftVersion;
-import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listener {
 	
 	private static BukkitPlugin instance;
 	
-	private Plugin pluginInstance;
-	private EventForwarder eventForwarder;
-	private BukkitCommands commands;
+	private final Plugin pluginInstance;
+	private final EventForwarder eventForwarder;
+	private final BukkitCommands commands;
 	
 	private int playerUpdateIndex = 0;
-	private Map<UUID, Player> onlinePlayerMap;
-	private List<BukkitPlayer> onlinePlayerList;
+	private final Map<UUID, Player> onlinePlayerMap;
+	private final List<BukkitPlayer> onlinePlayerList;
 	
 	public BukkitPlugin() {
 		Logger.global = new JavaLogger(getLogger());
 
-		MinecraftVersion version = MinecraftVersion.getLatest();
+		MinecraftVersion version = MinecraftVersion.LATEST_SUPPORTED;
 		
 		//try to get best matching minecraft-version
 		try {
 			String versionString = getServer().getBukkitVersion();
-			Matcher versionMatcher = Pattern.compile("(\\d+\\.\\d+\\.\\d+)[-_].*").matcher(versionString);
+			Matcher versionMatcher = Pattern.compile("(\\d+(?:\\.\\d+){1,2})[-_].*").matcher(versionString);
 			if (!versionMatcher.matches()) throw new IllegalArgumentException();
-			version = MinecraftVersion.fromVersionString(versionMatcher.group(1));
+			version = MinecraftVersion.of(versionMatcher.group(1));
 		} catch (IllegalArgumentException e) {
 			Logger.global.logWarning("Failed to detect the minecraft version of this server! Using latest version: " + version.getVersionString());
 		}
@@ -152,8 +145,8 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 			}
 		});
 		
-		//init bstats
-		new MetricsLite(this);
+		//bstats
+		new Metrics(this, 5912);
 	}
 	
 	@Override

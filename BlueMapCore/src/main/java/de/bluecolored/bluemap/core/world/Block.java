@@ -25,8 +25,6 @@
 package de.bluecolored.bluemap.core.world;
 
 import com.flowpowered.math.vector.Vector3i;
-import com.google.common.base.MoreObjects;
-
 import de.bluecolored.bluemap.core.util.Direction;
 
 public class Block {
@@ -163,13 +161,13 @@ public class Block {
 
 	@Override
 	public String toString() {
-		return MoreObjects.toStringHelper(this)
-			.add("pos", getPosition())
-			.add("biome", getBiome())
-			.add("blocklight", getBlockLightLevel())
-			.add("sunlight", getSunLightLevel())
-			.add("state", getBlockState())
-			.toString();
+		return "Block{" +
+			   "blockState=" + blockState +
+			   ", biome=" + biome +
+			   ", pos=" + pos +
+			   ", sunLight=" + sunLight +
+			   ", blockLight=" + blockLight +
+			   '}';
 	}
 
 }

@@ -26,16 +26,13 @@ package de.bluecolored.bluemap.core.mca;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
-
 import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.LightData;
 
-public class EmptyChunk extends Chunk {
+public class EmptyChunk extends MCAChunk {
 
-	protected EmptyChunk(MCAWorld world, Vector2i chunkPos) {
-		super(world, chunkPos);
-	}
+	public static final MCAChunk INSTANCE = new EmptyChunk();
 
 	@Override
 	public boolean isGenerated() {
@@ -53,7 +50,7 @@ public class EmptyChunk extends Chunk {
 	}
 
 	@Override
-	public Biome getBiome(Vector3i pos) {
+	public Biome getBiome(int x, int y, int z) {
 		return Biome.DEFAULT;
 	}
 	

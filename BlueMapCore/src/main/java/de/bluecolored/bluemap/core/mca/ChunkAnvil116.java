@@ -24,72 +24,76 @@
  */
 package de.bluecolored.bluemap.core.mca;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import com.flowpowered.math.vector.Vector3i;
-
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.mapping.BiomeMapper;
 import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.LightData;
 import net.querz.nbt.*;
-import net.querz.nbt.mca.MCAUtil;
 
-public class ChunkAnvil116 extends Chunk {
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
+public class ChunkAnvil116 extends MCAChunk {
 	private BiomeMapper biomeIdMapper;
 
 	private boolean isGenerated;
 	private boolean hasLight;
-	private Section[] sections;
+	private Map<Integer, Section> sections;
+	private int sectionMin, sectionMax;
 	private int[] biomes;
 	
 	@SuppressWarnings("unchecked")
-	public ChunkAnvil116(MCAWorld world, CompoundTag chunkTag, boolean ignoreMissingLightData) {
-		super(world, chunkTag);
+	public ChunkAnvil116(CompoundTag chunkTag, boolean ignoreMissingLightData, BiomeMapper biomeIdMapper) {
+		super(chunkTag);
 		
-		biomeIdMapper = getWorld().getBiomeIdMapper();
+		this.biomeIdMapper = biomeIdMapper;
 		
 		CompoundTag levelData = chunkTag.getCompoundTag("Level");
 		
 		String status = levelData.getString("Status");
-		isGenerated = status.equals("full") || status.equals("spawn"); // full is normal fully generated and spawn seems to be converted from old format but not yet loaded if you optimized your world
-		hasLight = isGenerated;
+		this.isGenerated = status.equals("full");
+		this.hasLight = isGenerated;
 		
 		if (!isGenerated && ignoreMissingLightData) {
 			isGenerated = !status.equals("empty");
 		}
-		
-		sections = new Section[32]; //32 supports a max world-height of 512 which is the max that the hightmaps of Minecraft V1.13+ can store with 9 bits, i believe?
+
+		this.sections = new HashMap<>(); // Is using a has-map the fastest/best way for an int->Object mapping?
+		this.sectionMin = Integer.MAX_VALUE;
+		this.sectionMax = Integer.MIN_VALUE;
 		if (levelData.containsKey("Sections")) {
 			for (CompoundTag sectionTag : ((ListTag<CompoundTag>) levelData.getListTag("Sections"))) {
+				if (sectionTag.getListTag("Palette") == null) continue; // ignore empty sections
+
 				Section section = new Section(sectionTag);
-				if (section.getSectionY() >= 0 && section.getSectionY() < sections.length) sections[section.getSectionY()] = section;
+				int y = section.getSectionY();
+
+				if (sectionMin > y) sectionMin = y;
+				if (sectionMax < y) sectionMax = y;
+
+				sections.put(y, section);
 			}
 		}
 		
 		Tag<?> tag = levelData.get("Biomes"); //tag can be byte-array or int-array
 		if (tag instanceof ByteArrayTag) {
 			byte[] bs = ((ByteArrayTag) tag).getValue();
-			biomes = new int[bs.length];
+			this.biomes = new int[bs.length];
 			
 			for (int i = 0; i < bs.length; i++) {
 				biomes[i] = bs[i] & 0xFF;
 			}
 		}
 		else if (tag instanceof IntArrayTag) {
-			biomes = ((IntArrayTag) tag).getValue(); 
+			this.biomes = ((IntArrayTag) tag).getValue();
 		}
 		
-		if (biomes == null || biomes.length == 0) {
-			biomes = new int[1024];
-		}
-		
-		if (biomes.length < 1024) {
-			biomes = Arrays.copyOf(biomes, 1024);
+		if (biomes == null) {
+			this.biomes = new int[0];
 		}
 	}
 
@@ -100,9 +104,9 @@ public class ChunkAnvil116 extends Chunk {
 
 	@Override
 	public BlockState getBlockState(Vector3i pos) {
-		int sectionY = MCAUtil.blockToChunk(pos.getY());
+		int sectionY = pos.getY() >> 4;
 		
-		Section section = this.sections[sectionY];
+		Section section = this.sections.get(sectionY);
 		if (section == null) return BlockState.AIR;
 		
 		return section.getBlockState(pos);
@@ -112,25 +116,41 @@ public class ChunkAnvil116 extends Chunk {
 	public LightData getLightData(Vector3i pos) {
 		if (!hasLight) return LightData.SKY;
 		
-		int sectionY = MCAUtil.blockToChunk(pos.getY());
-		
-		Section section = this.sections[sectionY];
-		if (section == null) return LightData.SKY;
+		int sectionY = pos.getY() >> 4;
+
+		Section section = this.sections.get(sectionY);
+		if (section == null) return (sectionY < sectionMin) ? LightData.ZERO : LightData.SKY;
 		
 		return section.getLightData(pos);
 	}
 
 	@Override
-	public Biome getBiome(Vector3i pos) {
-		int x = (pos.getX() & 0xF) / 4; // Math.floorMod(pos.getX(), 16)
-		int z = (pos.getZ() & 0xF) / 4;
-		int y = pos.getY() / 4;
-		int biomeIntIndex = y * 16 + z * 4 + x;
+	public Biome getBiome(int x, int y, int z) {
+		if (biomes.length < 16) return Biome.DEFAULT;
+
+		x = (x & 0xF) / 4; // Math.floorMod(pos.getX(), 16)
+		z = (z & 0xF) / 4;
+		y = y / 4;
+		int biomeIntIndex = y * 16 + z * 4 + x; // TODO: fix this for 1.17+ worlds with negative y?
+
+		// shift y up/down if not in range
+		if (biomeIntIndex >= biomes.length) biomeIntIndex -= (((biomeIntIndex - biomes.length) >> 4) + 1) * 16;
+		if (biomeIntIndex < 0) biomeIntIndex -= (biomeIntIndex >> 4) * 16;
 		
 		return biomeIdMapper.get(biomes[biomeIntIndex]);
 	}
-	
-	private class Section {
+
+	@Override
+	public int getMinY(int x, int z) {
+		return sectionMin * 16;
+	}
+
+	@Override
+	public int getMaxY(int x, int z) {
+		return sectionMax * 16 + 15;
+	}
+
+	private static class Section {
 		private static final String AIR_ID = "minecraft:air";
 		
 		private int sectionY;

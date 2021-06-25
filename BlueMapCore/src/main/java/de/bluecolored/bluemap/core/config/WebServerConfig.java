@@ -24,13 +24,15 @@
  */
 package de.bluecolored.bluemap.core.config;
 
-import ninja.leaping.configurate.ConfigurationNode;
+import de.bluecolored.bluemap.core.debug.DebugDump;
+import org.spongepowered.configurate.ConfigurationNode;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 
+@DebugDump
 public class WebServerConfig {
 
 	private boolean enabled = true;
@@ -43,16 +45,16 @@ public class WebServerConfig {
 	public WebServerConfig(ConfigurationNode node) throws IOException {
 		
 		//enabled
-		enabled = node.getNode("enabled").getBoolean(false);
+		enabled = node.node("enabled").getBoolean(false);
 
 		if (enabled) {
 			//webroot
-			String webRootString = node.getNode("webroot").getString();
+			String webRootString = node.node("webroot").getString();
 			if (webRootString == null) throw new IOException("Invalid configuration: Node webroot is not defined");
 			webRoot = ConfigManager.toFolder(webRootString);
 			
 			//ip
-			String bindAddressString = node.getNode("ip").getString("");
+			String bindAddressString = node.node("ip").getString("");
 			if (bindAddressString.isEmpty() || bindAddressString.equals("0.0.0.0") || bindAddressString.equals("::0")) {
 				bindAddress = new InetSocketAddress(0).getAddress(); // 0.0.0.0
 			} else if (bindAddressString.equals("#getLocalHost")) {
@@ -62,10 +64,10 @@ public class WebServerConfig {
 			}
 			
 			//port
-			port = node.getNode("port").getInt(8100);
+			port = node.node("port").getInt(8100);
 			
 			//maxConnectionCount
-			maxConnections = node.getNode("maxConnectionCount").getInt(100);
+			maxConnections = node.node("maxConnectionCount").getInt(100);
 		}
 		
 	}

@@ -28,7 +28,8 @@ import com.flowpowered.math.vector.Vector3d;
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.marker.ObjectMarker;
-import ninja.leaping.configurate.ConfigurationNode;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.serialize.SerializationException;
 
 public abstract class ObjectMarkerImpl extends MarkerImpl implements ObjectMarker {
 
@@ -63,14 +64,14 @@ public abstract class ObjectMarkerImpl extends MarkerImpl implements ObjectMarke
 		if (!overwriteChanges && hasUnsavedChanges) return;
 		this.hasUnsavedChanges = false;
 
-		this.detail = markerNode.getNode("detail").getString();
+		this.detail = markerNode.node("detail").getString();
 	}
 
 	@Override
-	public void save(ConfigurationNode markerNode) {
+	public void save(ConfigurationNode markerNode) throws SerializationException {
 		super.save(markerNode);
 
-		if (this.detail != null) markerNode.getNode("detail").setValue(this.detail);
+		if (this.detail != null) markerNode.node("detail").set(this.detail);
 
 		hasUnsavedChanges = false;
 	}

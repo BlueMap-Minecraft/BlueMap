@@ -1,7 +1,9 @@
 plugins {
 	id 'java'
-	id 'com.github.johnrengelman.shadow' version '5.1.0'
-	id 'com.github.hierynomus.license' version '0.15.0'
+	id 'java-library'
+	id 'com.github.johnrengelman.shadow' version '6.1.0'
+	id 'com.github.hierynomus.license' version '0.16.1'
+	id 'com.palantir.git-version' version '0.12.3'
 }
 
 allprojects {
@@ -36,6 +38,7 @@ allprojects {
 	}
 
 	apply plugin: 'java'
+	apply plugin: 'java-library'
 	
 	group = 'de.bluecolored.bluemap'
   	version = coreVersion

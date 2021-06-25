@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.common.plugin.skins;
 
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
+import de.bluecolored.bluemap.core.debug.DebugDump;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -33,6 +34,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+@DebugDump
 public class PlayerSkinUpdater implements ServerEventListener {
 
 	private File storageFolder;

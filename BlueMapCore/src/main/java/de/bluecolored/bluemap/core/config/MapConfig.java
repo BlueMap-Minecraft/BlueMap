@@ -24,17 +24,18 @@
  */
 package de.bluecolored.bluemap.core.config;
 
+import com.flowpowered.math.vector.Vector2i;
+import com.flowpowered.math.vector.Vector3i;
+import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.core.map.MapSettings;
+import de.bluecolored.bluemap.core.util.ConfigUtils;
+import org.spongepowered.configurate.ConfigurationNode;
+
 import java.io.IOException;
 import java.util.regex.Pattern;
 
-import com.flowpowered.math.vector.Vector2i;
-import com.flowpowered.math.vector.Vector3i;
-
-import de.bluecolored.bluemap.core.render.RenderSettings;
-import de.bluecolored.bluemap.core.util.ConfigUtils;
-import ninja.leaping.configurate.ConfigurationNode;
-
-public class MapConfig implements RenderSettings {
+@DebugDump
+public class MapConfig implements MapSettings {
 	private static final Pattern VALID_ID_PATTERN = Pattern.compile("[a-zA-Z0-9_]+");
 	
 	private String id;
@@ -61,53 +62,53 @@ public class MapConfig implements RenderSettings {
 	public MapConfig(ConfigurationNode node) throws IOException {
 		
 		//id
-		this.id = node.getNode("id").getString("");
+		this.id = node.node("id").getString("");
 		if (id.isEmpty()) throw new IOException("Invalid configuration: Node maps[?].id is not defined");
 		if (!VALID_ID_PATTERN.matcher(id).matches()) throw new IOException("Invalid configuration: Node maps[?].id '" + id + "' has invalid characters in it");
 		
 		//name
-		this.name = node.getNode("name").getString(id);
+		this.name = node.node("name").getString(id);
 		
 		//world
-		this.world = node.getNode("world").getString("");
+		this.world = node.node("world").getString("");
 		if (world.isEmpty()) throw new IOException("Invalid configuration: Node maps[?].world is not defined");
 		
 		//startPos
-		if (!node.getNode("startPos").isVirtual()) this.startPos = ConfigUtils.readVector2i(node.getNode("startPos"));
+		if (!node.node("startPos").virtual()) this.startPos = ConfigUtils.readVector2i(node.node("startPos"));
 		
 		//skyColor
-		if (!node.getNode("skyColor").isVirtual()) this.skyColor = ConfigUtils.readColorInt(node.getNode("skyColor"));
+		if (!node.node("skyColor").virtual()) this.skyColor = ConfigUtils.readColorInt(node.node("skyColor"));
 		else this.skyColor = 0x7dabff;
 		
 		//ambientLight
-		this.ambientLight = node.getNode("ambientLight").getFloat(0f);
+		this.ambientLight = node.node("ambientLight").getFloat(0f);
 		
 		//renderCaves
-		this.renderCaves = node.getNode("renderCaves").getBoolean(false);
+		this.renderCaves = node.node("renderCaves").getBoolean(false);
 
 		//bounds
-		int minX = node.getNode("minX").getInt(RenderSettings.super.getMin().getX());
-		int maxX = node.getNode("maxX").getInt(RenderSettings.super.getMax().getX());
-		int minZ = node.getNode("minZ").getInt(RenderSettings.super.getMin().getZ());
-		int maxZ = node.getNode("maxZ").getInt(RenderSettings.super.getMax().getZ());
-		int minY = node.getNode("minY").getInt(RenderSettings.super.getMin().getY());
-		int maxY = node.getNode("maxY").getInt(RenderSettings.super.getMax().getY());
+		int minX = node.node("minX").getInt(MapSettings.super.getMin().getX());
+		int maxX = node.node("maxX").getInt(MapSettings.super.getMax().getX());
+		int minZ = node.node("minZ").getInt(MapSettings.super.getMin().getZ());
+		int maxZ = node.node("maxZ").getInt(MapSettings.super.getMax().getZ());
+		int minY = node.node("minY").getInt(MapSettings.super.getMin().getY());
+		int maxY = node.node("maxY").getInt(MapSettings.super.getMax().getY());
 		this.min = new Vector3i(minX, minY, minZ);
 		this.max = new Vector3i(maxX, maxY, maxZ);
 		
 		//renderEdges
-		this.renderEdges = node.getNode("renderEdges").getBoolean(true);
+		this.renderEdges = node.node("renderEdges").getBoolean(true);
 
 		//useCompression
-		this.useGzip = node.getNode("useCompression").getBoolean(true);
+		this.useGzip = node.node("useCompression").getBoolean(true);
 		
 		//ignoreMissingLightData
-		this.ignoreMissingLightData = node.getNode("ignoreMissingLightData").getBoolean(false);
+		this.ignoreMissingLightData = node.node("ignoreMissingLightData").getBoolean(false);
 		
 		//tile-settings
-		this.hiresTileSize = node.getNode("hires", "tileSize").getInt(32);
-		this.lowresPointsPerHiresTile = node.getNode("lowres", "pointsPerHiresTile").getInt(4);
-		this.lowresPointsPerLowresTile = node.getNode("lowres", "pointsPerLowresTile").getInt(50);
+		this.hiresTileSize = node.node("hires", "tileSize").getInt(32);
+		this.lowresPointsPerHiresTile = node.node("lowres", "pointsPerHiresTile").getInt(4);
+		this.lowresPointsPerLowresTile = node.node("lowres", "pointsPerLowresTile").getInt(50);
 		
 		//check valid tile configuration values
 		double blocksPerPoint = (double) this.hiresTileSize / (double) this.lowresPointsPerHiresTile;
@@ -146,15 +147,18 @@ public class MapConfig implements RenderSettings {
 	public boolean isIgnoreMissingLightData() {
 		return ignoreMissingLightData;
 	}
-	
+
+	@Override
 	public int getHiresTileSize() {
 		return hiresTileSize;
 	}
 
+	@Override
 	public int getLowresPointsPerHiresTile() {
 		return lowresPointsPerHiresTile;
 	}
 
+	@Override
 	public int getLowresPointsPerLowresTile() {
 		return lowresPointsPerLowresTile;
 	}

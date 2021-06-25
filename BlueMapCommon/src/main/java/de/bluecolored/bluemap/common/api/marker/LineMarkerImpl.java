@@ -25,15 +25,16 @@
 package de.bluecolored.bluemap.common.api.marker;
 
 import com.flowpowered.math.vector.Vector3d;
-import com.google.common.base.Preconditions;
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.marker.Line;
 import de.bluecolored.bluemap.api.marker.LineMarker;
-import ninja.leaping.configurate.ConfigurationNode;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.serialize.SerializationException;
 
 import java.awt.*;
 import java.util.List;
+import java.util.Objects;
 
 public class LineMarkerImpl extends ObjectMarkerImpl implements LineMarker {
 	public static final String MARKER_TYPE = "line";
@@ -48,7 +49,7 @@ public class LineMarkerImpl extends ObjectMarkerImpl implements LineMarker {
 	public LineMarkerImpl(String id, BlueMapMap map, Vector3d position, Line line) {
 		super(id, map, position);
 
-		Preconditions.checkNotNull(line);
+		Objects.requireNonNull(line);
 		
 		this.line = line;
 		this.lineWidth = 2;
@@ -69,7 +70,7 @@ public class LineMarkerImpl extends ObjectMarkerImpl implements LineMarker {
 
 	@Override
 	public synchronized void setLine(Line line) {
-		Preconditions.checkNotNull(line);
+		Objects.requireNonNull(line);
 		
 		this.line = line;
 		this.hasUnsavedChanges = true;
@@ -104,7 +105,7 @@ public class LineMarkerImpl extends ObjectMarkerImpl implements LineMarker {
 
 	@Override
 	public synchronized void setLineColor(Color color) {
-		Preconditions.checkNotNull(color);
+		Objects.requireNonNull(color);
 		
 		this.lineColor = color;
 		this.hasUnsavedChanges = true;
@@ -117,27 +118,26 @@ public class LineMarkerImpl extends ObjectMarkerImpl implements LineMarker {
 		if (!overwriteChanges && hasUnsavedChanges) return;
 		this.hasUnsavedChanges = false;
 		
-		this.line = readLine(markerNode.getNode("line"));
-		this.depthTest = markerNode.getNode("depthTest").getBoolean(true);
-		this.lineWidth = markerNode.getNode("lineWidth").getInt(2);
-		this.lineColor = readColor(markerNode.getNode("lineColor"));
+		this.line = readLine(markerNode.node("line"));
+		this.depthTest = markerNode.node("depthTest").getBoolean(true);
+		this.lineWidth = markerNode.node("lineWidth").getInt(2);
+		this.lineColor = readColor(markerNode.node("lineColor"));
 	}
 	
 	@Override
-	public void save(ConfigurationNode markerNode) {
+	public void save(ConfigurationNode markerNode) throws SerializationException {
 		super.save(markerNode);
 
-		writeLine(markerNode.getNode("line"), this.line);
-		markerNode.getNode("depthTest").setValue(this.depthTest);
-		markerNode.getNode("lineWidth").setValue(this.lineWidth);
-		writeColor(markerNode.getNode("lineColor"), this.lineColor);
+		writeLine(markerNode.node("line"), this.line);
+		markerNode.node("depthTest").set(this.depthTest);
+		markerNode.node("lineWidth").set(this.lineWidth);
+		writeColor(markerNode.node("lineColor"), this.lineColor);
 
-		
 		hasUnsavedChanges = false;
 	}
 	
 	private Line readLine(ConfigurationNode node) throws MarkerFileFormatException {
-		List<? extends ConfigurationNode> posNodes = node.getChildrenList();
+		List<? extends ConfigurationNode> posNodes = node.childrenList();
 		
 		if (posNodes.size() < 3) throw new MarkerFileFormatException("Failed to read line: point-list has fewer than 2 entries!");
 		
@@ -151,11 +151,11 @@ public class LineMarkerImpl extends ObjectMarkerImpl implements LineMarker {
 	
 	private static Vector3d readLinePos(ConfigurationNode node) throws MarkerFileFormatException {
 		ConfigurationNode nx, ny, nz;
-		nx = node.getNode("x");
-		ny = node.getNode("y");
-		nz = node.getNode("z");
+		nx = node.node("x");
+		ny = node.node("y");
+		nz = node.node("z");
 		
-		if (nx.isVirtual() || ny.isVirtual() || nz.isVirtual()) throw new MarkerFileFormatException("Failed to read line position: Node x, y or z is not set!");
+		if (nx.virtual() || ny.virtual() || nz.virtual()) throw new MarkerFileFormatException("Failed to read line position: Node x, y or z is not set!");
 		
 		return new Vector3d(
 				nx.getDouble(),
@@ -166,14 +166,14 @@ public class LineMarkerImpl extends ObjectMarkerImpl implements LineMarker {
 	
 	private static Color readColor(ConfigurationNode node) throws MarkerFileFormatException {
 		ConfigurationNode nr, ng, nb, na;
-		nr = node.getNode("r");
-		ng = node.getNode("g");
-		nb = node.getNode("b");
-		na = node.getNode("a");
+		nr = node.node("r");
+		ng = node.node("g");
+		nb = node.node("b");
+		na = node.node("a");
 		
-		if (nr.isVirtual() || ng.isVirtual() || nb.isVirtual()) throw new MarkerFileFormatException("Failed to read color: Node r,g or b is not set!");
+		if (nr.virtual() || ng.virtual() || nb.virtual()) throw new MarkerFileFormatException("Failed to read color: Node r,g or b is not set!");
 		
-		float alpha = na.getFloat(1);
+		float alpha = (float) na.getDouble(1);
 		if (alpha < 0 || alpha > 1) throw new MarkerFileFormatException("Failed to read color: alpha value out of range (0-1)!");
 		
 		try {
@@ -183,26 +183,26 @@ public class LineMarkerImpl extends ObjectMarkerImpl implements LineMarker {
 		}
 	}
 	
-	private static void writeLine(ConfigurationNode node, Line line) {
+	private static void writeLine(ConfigurationNode node, Line line) throws SerializationException {
 		for (int i = 0; i < line.getPointCount(); i++) {
 			ConfigurationNode pointNode = node.appendListNode();
 			Vector3d point = line.getPoint(i);
-			pointNode.getNode("x").setValue(Math.round(point.getX() * 1000d) / 1000d);
-			pointNode.getNode("y").setValue(Math.round(point.getY() * 1000d) / 1000d);
-			pointNode.getNode("z").setValue(Math.round(point.getZ() * 1000d) / 1000d);
+			pointNode.node("x").set(Math.round(point.getX() * 1000d) / 1000d);
+			pointNode.node("y").set(Math.round(point.getY() * 1000d) / 1000d);
+			pointNode.node("z").set(Math.round(point.getZ() * 1000d) / 1000d);
 		}
 	}
 	
-	private static void writeColor(ConfigurationNode node, Color color) {
+	private static void writeColor(ConfigurationNode node, Color color) throws SerializationException {
 		int r = color.getRed();
 		int g = color.getGreen();
 		int b = color.getBlue();
 		float a = color.getAlpha() / 255f;
 		
-		node.getNode("r").setValue(r);
-		node.getNode("g").setValue(g);
-		node.getNode("b").setValue(b);
-		node.getNode("a").setValue(a);
+		node.node("r").set(r);
+		node.node("g").set(g);
+		node.node("b").set(b);
+		node.node("a").set(a);
 	}
 
 }

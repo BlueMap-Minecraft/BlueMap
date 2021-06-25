@@ -25,7 +25,8 @@
 package de.bluecolored.bluemap.core.util;
 
 import com.flowpowered.math.vector.Vector3i;
-import com.google.common.base.Preconditions;
+
+import java.util.Objects;
 
 public enum Axis {
 	
@@ -44,7 +45,7 @@ public enum Axis {
 	}
 	
 	public static Axis fromString(String name){
-		Preconditions.checkNotNull(name);
+		Objects.requireNonNull(name);
 		
 		return valueOf(name.toUpperCase());
 	}

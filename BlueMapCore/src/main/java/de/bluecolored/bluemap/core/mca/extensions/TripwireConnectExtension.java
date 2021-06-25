@@ -24,16 +24,15 @@
  */
 package de.bluecolored.bluemap.core.mca.extensions;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.google.common.collect.Sets;
-
 public class TripwireConnectExtension extends ConnectExtension {
 
-	private static final HashSet<String> AFFECTED_BLOCK_IDS = Sets.newHashSet(
+	private static final HashSet<String> AFFECTED_BLOCK_IDS = new HashSet<>(Collections.singletonList(
 			"minecraft:tripwire"
-		);
+	));
 	
 	@Override
 	public Set<String> getAffectedBlockIds() {

@@ -222,8 +222,9 @@ public class TextureGallery {
 			try {
 				loadTexture(fileAccess, texture.getPath());
 			} catch (IOException e) {
-				Logger.global.logWarning("Failed to reload texture: " + texture.getPath());
-				Logger.global.noFloodWarning("This happens if the resource-packs have changed, but you have not deleted your generated maps. This might result in broken map-models!");
+				Logger.global.noFloodWarning("TextureGallery-uiz78tef5", "Failed to reload texture: " + texture.getPath());
+				Logger.global.noFloodWarning("TextureGallery-89763455h", "This happens if the resource-packs have changed, but you have not deleted your already generated maps. This might result in broken map-models!");
+				Logger.global.noFloodWarning("TextureGallery-re56ugb56", "(Future warnings of this will be suppressed, so more textures might have failed to load after this)");
 			}
 		}
 	}

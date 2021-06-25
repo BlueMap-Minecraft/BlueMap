@@ -25,7 +25,9 @@
 package de.bluecolored.bluemap.core.util;
 
 import com.flowpowered.math.vector.Vector3i;
-import com.google.common.base.Preconditions;
+
+import java.util.Objects;
+
 
 public enum Direction {
 	
@@ -90,7 +92,7 @@ public enum Direction {
 	}
 	
 	public static Direction fromString(String name){
-		Preconditions.checkNotNull(name);
+		Objects.requireNonNull(name);
 		
 		return valueOf(name.toUpperCase());
 	}

@@ -25,12 +25,13 @@
 package de.bluecolored.bluemap.common.api.marker;
 
 import com.flowpowered.math.vector.Vector3d;
-import com.google.common.base.Preconditions;
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.marker.Marker;
-import ninja.leaping.configurate.ConfigurationNode;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.serialize.SerializationException;
 
+import java.util.Objects;
 import java.util.Optional;
 
 public abstract class MarkerImpl implements Marker {
@@ -45,9 +46,9 @@ public abstract class MarkerImpl implements Marker {
 	private boolean hasUnsavedChanges;
 	
 	public MarkerImpl(String id, BlueMapMap map, Vector3d position) {
-		Preconditions.checkNotNull(id);
-		Preconditions.checkNotNull(map);
-		Preconditions.checkNotNull(position);
+		Objects.requireNonNull(id);
+		Objects.requireNonNull(map);
+		Objects.requireNonNull(position);
 		
 		this.id = id;
 		this.map = map;
@@ -151,46 +152,46 @@ public abstract class MarkerImpl implements Marker {
 		hasUnsavedChanges = false;
 		
 		//map
-		String mapId = markerNode.getNode("map").getString();
+		String mapId = markerNode.node("map").getString();
 		if (mapId == null) throw new MarkerFileFormatException("There is no map defined!");
 		this.map = api.getMap(mapId).orElseThrow(() -> new MarkerFileFormatException("Could not resolve map with id: " + mapId));
 		
 		//position
-		this.postition = readPos(markerNode.getNode("position"));
+		this.postition = readPos(markerNode.node("position"));
 		
 		//minmaxDistance
-		this.minDistance = markerNode.getNode("minDistance").getDouble(0);
-		this.maxDistance = markerNode.getNode("maxDistance").getDouble(100000);
+		this.minDistance = markerNode.node("minDistance").getDouble(0);
+		this.maxDistance = markerNode.node("maxDistance").getDouble(100000);
 		
 		//label
-		this.label = markerNode.getNode("label").getString(this.id);
+		this.label = markerNode.node("label").getString(this.id);
 		
 		//link
-		this.link = markerNode.getNode("link").getString();
-		this.newTab = markerNode.getNode("newTab").getBoolean(true);
+		this.link = markerNode.node("link").getString();
+		this.newTab = markerNode.node("newTab").getBoolean(true);
 	}
 	
-	public synchronized void save(ConfigurationNode markerNode) {		
-		markerNode.getNode("id").setValue(this.id);
-		markerNode.getNode("type").setValue(this.getType());
-		markerNode.getNode("map").setValue(this.map.getId());
-		writePos(markerNode.getNode("position"), this.postition);
-		markerNode.getNode("minDistance").setValue(Math.round(this.minDistance * 1000d) / 1000d);
-		markerNode.getNode("maxDistance").setValue(Math.round(this.maxDistance * 1000d) / 1000d);
-		markerNode.getNode("label").setValue(this.label);
-		markerNode.getNode("link").setValue(this.link);
-		markerNode.getNode("newTab").setValue(this.newTab);
+	public synchronized void save(ConfigurationNode markerNode) throws SerializationException {
+		markerNode.node("id").set(this.id);
+		markerNode.node("type").set(this.getType());
+		markerNode.node("map").set(this.map.getId());
+		writePos(markerNode.node("position"), this.postition);
+		markerNode.node("minDistance").set(Math.round(this.minDistance * 1000d) / 1000d);
+		markerNode.node("maxDistance").set(Math.round(this.maxDistance * 1000d) / 1000d);
+		markerNode.node("label").set(this.label);
+		markerNode.node("link").set(this.link);
+		markerNode.node("newTab").set(this.newTab);
 
 		hasUnsavedChanges = false;
 	}
 
 	private static Vector3d readPos(ConfigurationNode node) throws MarkerFileFormatException {
 		ConfigurationNode nx, ny, nz;
-		nx = node.getNode("x");
-		ny = node.getNode("y");
-		nz = node.getNode("z");
+		nx = node.node("x");
+		ny = node.node("y");
+		nz = node.node("z");
 		
-		if (nx.isVirtual() || ny.isVirtual() || nz.isVirtual()) throw new MarkerFileFormatException("Failed to read position: One of the nodes x,y or z is missing!");
+		if (nx.virtual() || ny.virtual() || nz.virtual()) throw new MarkerFileFormatException("Failed to read position: One of the nodes x,y or z is missing!");
 		
 		return new Vector3d(
 				nx.getDouble(),
@@ -199,10 +200,10 @@ public abstract class MarkerImpl implements Marker {
 			);
 	}
 	
-	private static void writePos(ConfigurationNode node, Vector3d pos) {
-		node.getNode("x").setValue(Math.round(pos.getX() * 1000d) / 1000d);
-		node.getNode("y").setValue(Math.round(pos.getY() * 1000d) / 1000d);
-		node.getNode("z").setValue(Math.round(pos.getZ() * 1000d) / 1000d);
+	private static void writePos(ConfigurationNode node, Vector3d pos) throws SerializationException {
+		node.node("x").set(Math.round(pos.getX() * 1000d) / 1000d);
+		node.node("y").set(Math.round(pos.getY() * 1000d) / 1000d);
+		node.node("z").set(Math.round(pos.getZ() * 1000d) / 1000d);
 	}
 
 	@Override

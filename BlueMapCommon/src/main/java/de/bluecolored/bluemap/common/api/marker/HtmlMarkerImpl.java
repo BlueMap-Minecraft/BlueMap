@@ -29,7 +29,8 @@ import com.flowpowered.math.vector.Vector3d;
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.marker.HtmlMarker;
-import ninja.leaping.configurate.ConfigurationNode;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.serialize.SerializationException;
 
 public class HtmlMarkerImpl extends MarkerImpl implements HtmlMarker {
 	public static final String MARKER_TYPE = "html";
@@ -82,30 +83,30 @@ public class HtmlMarkerImpl extends MarkerImpl implements HtmlMarker {
 		if (!overwriteChanges && hasUnsavedChanges) return;
 		this.hasUnsavedChanges = false;
 
-		this.html = markerNode.getNode("html").getString("");
-		this.anchor = readAnchor(markerNode.getNode("anchor"));
+		this.html = markerNode.node("html").getString("");
+		this.anchor = readAnchor(markerNode.node("anchor"));
 	}
 	
 	@Override
-	public synchronized void save(ConfigurationNode markerNode) {
+	public synchronized void save(ConfigurationNode markerNode) throws SerializationException {
 		super.save(markerNode);
 		
-		markerNode.getNode("html").setValue(this.html);
-		writeAnchor(markerNode.getNode("anchor"), this.anchor);
+		markerNode.node("html").set(this.html);
+		writeAnchor(markerNode.node("anchor"), this.anchor);
 		
 		hasUnsavedChanges = false;
 	}
 	
 	private static Vector2i readAnchor(ConfigurationNode node) {
 		return new Vector2i(
-				node.getNode("x").getInt(0),
-				node.getNode("y").getInt(0)
+				node.node("x").getInt(0),
+				node.node("y").getInt(0)
 			);
 	}
 	
-	private static void writeAnchor(ConfigurationNode node, Vector2i anchor) {
-		node.getNode("x").setValue(anchor.getX());
-		node.getNode("y").setValue(anchor.getY());
+	private static void writeAnchor(ConfigurationNode node, Vector2i anchor) throws SerializationException {
+		node.node("x").set(anchor.getX());
+		node.node("y").set(anchor.getY());
 	}
 
 }

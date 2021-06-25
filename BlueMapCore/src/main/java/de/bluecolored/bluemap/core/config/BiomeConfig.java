@@ -24,21 +24,21 @@
  */
 package de.bluecolored.bluemap.core.config;
 
+import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.mca.mapping.BiomeMapper;
+import de.bluecolored.bluemap.core.world.Biome;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.loader.ConfigurationLoader;
+
 import java.io.IOException;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 
-import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.mca.mapping.BiomeMapper;
-import de.bluecolored.bluemap.core.world.Biome;
-import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.loader.ConfigurationLoader;
-
 public class BiomeConfig implements BiomeMapper {
 
-	private ConfigurationLoader<? extends ConfigurationNode> autopoulationConfigLoader;
-	private Map<Integer, Biome> biomes;
+	private final ConfigurationLoader<? extends ConfigurationNode> autopoulationConfigLoader;
+	private final Map<Integer, Biome> biomes;
 	
 	public BiomeConfig(ConfigurationNode node) {
 		this(node, null);
@@ -49,7 +49,7 @@ public class BiomeConfig implements BiomeMapper {
 		
 		biomes = new ConcurrentHashMap<>(200, 0.5f, 8);
 
-		for (Entry<Object, ? extends ConfigurationNode> e : node.getChildrenMap().entrySet()){
+		for (Entry<Object, ? extends ConfigurationNode> e : node.childrenMap().entrySet()){
 			String id = e.getKey().toString();
 			Biome biome = Biome.create(id, e.getValue());
 			biomes.put(biome.getNumeralId(), biome);
@@ -68,7 +68,7 @@ public class BiomeConfig implements BiomeMapper {
 				synchronized (autopoulationConfigLoader) {
 					try {
 						ConfigurationNode node = autopoulationConfigLoader.load();
-						node.getNode("unknown:" + id).getNode("id").setValue(id);
+						node.node("unknown:" + id).node("id").set(id);
 						autopoulationConfigLoader.save(node);
 					} catch (IOException ex) {
 						Logger.global.noFloodError("biomeconf-autopopulate-ioex", "Failed to auto-populate BiomeConfig!", ex);

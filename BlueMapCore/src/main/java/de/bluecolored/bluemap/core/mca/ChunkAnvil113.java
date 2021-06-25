@@ -24,22 +24,20 @@
  */
 package de.bluecolored.bluemap.core.mca;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
 import com.flowpowered.math.vector.Vector3i;
-
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.mapping.BiomeMapper;
 import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.LightData;
 import net.querz.nbt.*;
-import net.querz.nbt.mca.MCAUtil;
 
-public class ChunkAnvil113 extends Chunk {
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
+public class ChunkAnvil113 extends MCAChunk {
 	private BiomeMapper biomeIdMapper;
 
 	private boolean isGenerated;
@@ -48,16 +46,16 @@ public class ChunkAnvil113 extends Chunk {
 	private int[] biomes;
 	
 	@SuppressWarnings("unchecked")
-	public ChunkAnvil113(MCAWorld world, CompoundTag chunkTag, boolean ignoreMissingLightData) {
-		super(world, chunkTag);
+	public ChunkAnvil113(CompoundTag chunkTag, boolean ignoreMissingLightData, BiomeMapper biomeIdMapper) {
+		super(chunkTag);
 		
-		biomeIdMapper = getWorld().getBiomeIdMapper();
+		this.biomeIdMapper = biomeIdMapper;
 		
 		CompoundTag levelData = chunkTag.getCompoundTag("Level");
 		
 		String status = levelData.getString("Status");
-		isGenerated = status.equals("full") || status.equals("spawn"); // full is normal fully generated and spawn seems to be converted from old format but not yet loaded if you optimized your world
-		hasLight = isGenerated;
+		this.isGenerated = status.equals("full");
+		this.hasLight = isGenerated;
 		
 		if (!isGenerated && ignoreMissingLightData) {
 			isGenerated = !status.equals("empty");
@@ -100,7 +98,8 @@ public class ChunkAnvil113 extends Chunk {
 
 	@Override
 	public BlockState getBlockState(Vector3i pos) {
-		int sectionY = MCAUtil.blockToChunk(pos.getY());
+		int sectionY = pos.getY() >> 4;
+		if (sectionY < 0 || sectionY >= this.sections.length) return BlockState.AIR;
 		
 		Section section = this.sections[sectionY];
 		if (section == null) return BlockState.AIR;
@@ -111,8 +110,10 @@ public class ChunkAnvil113 extends Chunk {
 	@Override
 	public LightData getLightData(Vector3i pos) {
 		if (!hasLight) return LightData.SKY;
-		
-		int sectionY = MCAUtil.blockToChunk(pos.getY());
+
+		int sectionY = pos.getY() >> 4;
+		if (sectionY < 0 || sectionY >= this.sections.length)
+			return (pos.getY() < 0) ? LightData.ZERO : LightData.SKY;
 		
 		Section section = this.sections[sectionY];
 		if (section == null) return LightData.SKY;
@@ -121,11 +122,12 @@ public class ChunkAnvil113 extends Chunk {
 	}
 
 	@Override
-	public Biome getBiome(Vector3i pos) {
-		int x = pos.getX() & 0xF; // Math.floorMod(pos.getX(), 16)
-		int z = pos.getZ() & 0xF;
+	public Biome getBiome(int x, int y, int z) {
+		x = x & 0xF; // Math.floorMod(pos.getX(), 16)
+		z = z & 0xF;
 		int biomeIntIndex = z * 16 + x;
-		
+
+		if (biomeIntIndex >= this.biomes.length) return Biome.DEFAULT;
 		return biomeIdMapper.get(biomes[biomeIntIndex]);
 	}
 	

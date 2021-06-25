@@ -24,19 +24,28 @@
  */
 package de.bluecolored.bluemap.core.util;
 
+import de.bluecolored.bluemap.core.debug.DebugDump;
+
+import java.util.Objects;
 import java.util.function.Supplier;
 
 public class Lazy<T> {
 
 	private Supplier<T> loader;
+
+	@DebugDump
 	private T value;
 	
 	public Lazy(Supplier<T> loader) {
+		Objects.requireNonNull(loader);
+
 		this.loader = loader;
 		this.value = null;
 	}
 	
 	public Lazy(T value) {
+		Objects.requireNonNull(value);
+
 		this.loader = null;
 		this.value = value;
 	}
@@ -44,6 +53,7 @@ public class Lazy<T> {
 	public T getValue() {
 		if (!isLoaded()) {
 			this.value = loader.get();
+			this.loader = null;
 		}
 		
 		return this.value;

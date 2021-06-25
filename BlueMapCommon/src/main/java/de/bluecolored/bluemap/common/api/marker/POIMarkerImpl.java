@@ -30,7 +30,8 @@ import com.flowpowered.math.vector.Vector3d;
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.marker.POIMarker;
-import ninja.leaping.configurate.ConfigurationNode;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.serialize.SerializationException;
 
 public class POIMarkerImpl extends MarkerImpl implements POIMarker {
 	public static final String MARKER_TYPE = "poi";  
@@ -78,33 +79,33 @@ public class POIMarkerImpl extends MarkerImpl implements POIMarker {
 		if (!overwriteChanges && hasUnsavedChanges) return;
 		this.hasUnsavedChanges = false;
 
-		this.iconAddress = markerNode.getNode("icon").getString("assets/poi.svg");
+		this.iconAddress = markerNode.node("icon").getString("assets/poi.svg");
 
-		ConfigurationNode anchorNode = markerNode.getNode("anchor");
-		if (anchorNode.isVirtual()) anchorNode = markerNode.getNode("iconAnchor"); //fallback to deprecated "iconAnchor"
+		ConfigurationNode anchorNode = markerNode.node("anchor");
+		if (anchorNode.virtual()) anchorNode = markerNode.node("iconAnchor"); //fallback to deprecated "iconAnchor"
 		this.anchor = readAnchor(anchorNode);
 	}
 	
 	@Override
-	public synchronized void save(ConfigurationNode markerNode) {
+	public synchronized void save(ConfigurationNode markerNode) throws SerializationException {
 		super.save(markerNode);
 		
-		markerNode.getNode("icon").setValue(this.iconAddress);
-		writeAnchor(markerNode.getNode("anchor"), this.anchor);
+		markerNode.node("icon").set(this.iconAddress);
+		writeAnchor(markerNode.node("anchor"), this.anchor);
 		
 		hasUnsavedChanges = false;
 	}
 	
 	private static Vector2i readAnchor(ConfigurationNode node) {
 		return new Vector2i(
-				node.getNode("x").getInt(0),
-				node.getNode("y").getInt(0)
+				node.node("x").getInt(0),
+				node.node("y").getInt(0)
 			);
 	}
 	
-	private static void writeAnchor(ConfigurationNode node, Vector2i anchor) {
-		node.getNode("x").setValue(anchor.getX());
-		node.getNode("y").setValue(anchor.getY());
+	private static void writeAnchor(ConfigurationNode node, Vector2i anchor) throws SerializationException {
+		node.node("x").set(anchor.getX());
+		node.node("y").set(anchor.getY());
 	}
 
 }

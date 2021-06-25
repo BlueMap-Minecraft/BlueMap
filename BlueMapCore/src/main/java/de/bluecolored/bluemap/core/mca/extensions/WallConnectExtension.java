@@ -24,23 +24,22 @@
  */
 package de.bluecolored.bluemap.core.mca.extensions;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-
 import com.flowpowered.math.vector.Vector3i;
-import com.google.common.collect.Sets;
-
 import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.world.BlockState;
 
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+
 public class WallConnectExtension extends ConnectSameOrFullBlockExtension {
 
-	private static final HashSet<String> AFFECTED_BLOCK_IDS = Sets.newHashSet(
+	private static final HashSet<String> AFFECTED_BLOCK_IDS = new HashSet<>(Arrays.asList(
 			"minecraft:cobblestone_wall",
 			"minecraft:mossy_cobblestone_wall"
-		);
+		));
 	
 	@Override
 	public BlockState extend(MCAWorld world, Vector3i pos, BlockState state) {

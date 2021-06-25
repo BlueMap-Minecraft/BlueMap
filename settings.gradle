@@ -17,16 +17,20 @@ include ':BlueMapCore'
 include ':BlueMapCommon'
 
 include ':cli'
+
 include ':sponge-7.2.0'
+include ':sponge-8.0.0'
+
 include ':spigot'
 
-include ':forge-1.16.2'
-include ':forge-1.15.2'
 include ':forge-1.14.4'
+include ':forge-1.15.2'
+include ':forge-1.16.2'
 
-include ':fabric-1.16.2'
-include ':fabric-1.16.1'
 include ':fabric-1.15.2'
+include ':fabric-1.16.1'
+include ':fabric-1.16.2'
+include ':fabric-1.17'
 
 
 project(':BlueMapAPI').projectDir = "$rootDir/BlueMapAPI" as File
@@ -34,13 +38,17 @@ project(':BlueMapCore').projectDir = "$rootDir/BlueMapCore" as File
 project(':BlueMapCommon').projectDir = "$rootDir/BlueMapCommon" as File
 
 project(':cli').projectDir = "$rootDir/implementations/cli" as File
+
 project(':sponge-7.2.0').projectDir = "$rootDir/implementations/sponge-7.2.0" as File
+project(':sponge-8.0.0').projectDir = "$rootDir/implementations/sponge-8.0.0" as File
+
 project(':spigot').projectDir = "$rootDir/implementations/spigot" as File
 
-project(':forge-1.16.2').projectDir = "$rootDir/implementations/forge-1.16.2" as File
-project(':forge-1.15.2').projectDir = "$rootDir/implementations/forge-1.15.2" as File
 project(':forge-1.14.4').projectDir = "$rootDir/implementations/forge-1.14.4" as File
+project(':forge-1.15.2').projectDir = "$rootDir/implementations/forge-1.15.2" as File
+project(':forge-1.16.2').projectDir = "$rootDir/implementations/forge-1.16.2" as File
 
-project(':fabric-1.16.2').projectDir = "$rootDir/implementations/fabric-1.16.2" as File
-project(':fabric-1.16.1').projectDir = "$rootDir/implementations/fabric-1.16.1" as File
 project(':fabric-1.15.2').projectDir = "$rootDir/implementations/fabric-1.15.2" as File
+project(':fabric-1.16.1').projectDir = "$rootDir/implementations/fabric-1.16.1" as File
+project(':fabric-1.16.2').projectDir = "$rootDir/implementations/fabric-1.16.2" as File
+project(':fabric-1.17').projectDir = "$rootDir/implementations/fabric-1.17" as File

@@ -27,7 +27,7 @@ package de.bluecolored.bluemap.common.plugin.commands;
 import java.util.Collection;
 import java.util.HashSet;
 
-import de.bluecolored.bluemap.common.MapType;
+import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 
 public class MapSuggestionProvider<S> extends AbstractSuggestionProvider<S> {
@@ -42,7 +42,7 @@ public class MapSuggestionProvider<S> extends AbstractSuggestionProvider<S> {
 	public Collection<String> getPossibleValues() {
 		Collection<String> values = new HashSet<>();
 		
-		for (MapType map : plugin.getMapTypes()) {
+		for (BmMap map : plugin.getMapTypes()) {
 			values.add(map.getId());
 		}
 		

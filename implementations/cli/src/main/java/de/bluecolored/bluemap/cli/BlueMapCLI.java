@@ -24,196 +24,145 @@
  */
 package de.bluecolored.bluemap.cli;
 
-import com.flowpowered.math.GenericMath;
-import com.flowpowered.math.vector.Vector2i;
-import de.bluecolored.bluemap.common.*;
+import de.bluecolored.bluemap.common.BlueMapService;
+import de.bluecolored.bluemap.common.MissingResourcesException;
+import de.bluecolored.bluemap.common.plugin.RegionFileWatchService;
+import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
+import de.bluecolored.bluemap.common.rendermanager.RenderManager;
+import de.bluecolored.bluemap.common.rendermanager.RenderTask;
+import de.bluecolored.bluemap.common.web.FileRequestHandler;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.config.WebServerConfig;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.logger.LoggerLogger;
+import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.metrics.Metrics;
-import de.bluecolored.bluemap.core.render.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.util.FileUtils;
-import de.bluecolored.bluemap.core.web.FileRequestHandler;
-import de.bluecolored.bluemap.core.web.WebSettings;
 import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
 import de.bluecolored.bluemap.core.webserver.WebServer;
-import de.bluecolored.bluemap.core.world.World;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
-import java.io.*;
-import java.util.Collection;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
 
 public class BlueMapCLI {
 	
-	public void renderMaps(BlueMapService blueMap, boolean forceRender, boolean forceGenerateWebapp) throws IOException, InterruptedException {
+	public void renderMaps(BlueMapService blueMap, boolean watch, boolean forceRender, boolean forceGenerateWebapp) throws IOException, InterruptedException {
 		
 		//metrics report
 		if (blueMap.getCoreConfig().isMetricsEnabled()) Metrics.sendReportAsync("cli");
 		
 		blueMap.createOrUpdateWebApp(forceGenerateWebapp);
-		WebSettings webSettings = blueMap.updateWebAppSettings();
-		
-		RenderManager renderManager = new RenderManager(blueMap.getCoreConfig().getRenderThreadCount());
-		File rmstate = new File(blueMap.getCoreConfig().getDataFolder(), "rmstate");
-		
-		if (!forceRender && rmstate.exists()) {
-			try (
-				InputStream in = new GZIPInputStream(new FileInputStream(rmstate));
-				DataInputStream din = new DataInputStream(in);
-			){
-				renderManager.readState(din, blueMap.getMaps().values());
-				Logger.global.logInfo("Found unfinished render, continuing ... (If you want to start a new render, delete the this file: " + rmstate.getCanonicalPath() + " or force a full render using -f)");
-			} catch (IOException ex) {
-				Logger.global.logError("Failed to read saved render-state! Remove the file " + rmstate.getCanonicalPath() + " to start a new render.", ex);
-				return;
-			}
-		} else {
-			for (MapType map : blueMap.getMaps().values()) {
-				Logger.global.logInfo("Creating render-task for map '" + map.getId() + "' ...");
-				Logger.global.logInfo("Collecting tiles ...");
-		
-				Collection<Vector2i> chunks;
-				if (!forceRender) {
-					long lastRender = webSettings.getLong("maps", map.getId(), "last-render");
-					chunks = map.getWorld().getChunkList(lastRender);
-				} else {
-					chunks = map.getWorld().getChunkList();
-				}
-				
-				HiresModelManager hiresModelManager = map.getTileRenderer().getHiresModelManager();
-				Collection<Vector2i> tiles = hiresModelManager.getTilesForChunks(chunks);
-				Logger.global.logInfo("Found " + tiles.size() + " tiles to render! (" + chunks.size() + " chunks)");
-				if (!forceRender && chunks.size() == 0) {
-					Logger.global.logInfo("(This is normal if nothing has changed in the world since the last render. Use -f on the command-line to force a render of all chunks)");
-				}
-				
-				if (tiles.isEmpty()) {
-					continue;
-				}
+		blueMap.updateWebAppSettings();
 
-				Vector2i renderCenter = map.getWorld().getSpawnPoint().toVector2(true);
-				
-				RenderTask task = new RenderTask(map.getId(), map);
-				task.addTiles(tiles);
-				task.optimizeQueue(renderCenter);
-				
-				renderManager.addRenderTask(task);
-			}
-		}
+		//try load resources
+		blueMap.getResourcePack();
 
-		Logger.global.logInfo("Starting render ...");
-		renderManager.start();
-		
-		Thread shutdownHook = new Thread(() -> {
-			Logger.global.logInfo("Stopping render ...");
-			renderManager.stop();
-			
-			Logger.global.logInfo("Saving tiles ...");
-			RenderTask currentTask = renderManager.getCurrentRenderTask();
-			if (currentTask != null){
-				currentTask.getMapType().getTileRenderer().save();
-			}
+		//create renderManager
+		RenderManager renderManager = new RenderManager();
 
-			try {
-				Logger.global.logInfo("Saving render-state ...");
-				FileUtils.createFile(rmstate);
+		//load maps
+		Map<String, BmMap> maps = blueMap.getMaps();
 
-				try (
-					OutputStream os = new GZIPOutputStream(new FileOutputStream(rmstate));
-					DataOutputStream dos = new DataOutputStream(os);
-				) {
-					renderManager.writeState(dos);
-
-					Logger.global.logInfo("Render saved and stopped! Restart the render (without using -f) to resume.");
-				}
-			} catch (IOException ex) {
-				Logger.global.logError("Failed to save render-state!", ex);
-			}
-		});
-		Runtime.getRuntime().addShutdownHook(shutdownHook);
-		
-		long startTime = System.currentTimeMillis();
-		
-		long lastLogUpdate = startTime;
-		long lastSave = startTime;
-		
-		while(renderManager.getRenderTaskCount() != 0) {
-			try {
-				Thread.sleep(200);
-			} catch (InterruptedException e) { Thread.currentThread().interrupt(); return; }
-			
-
-			long now = System.currentTimeMillis();
-			
-			if (lastLogUpdate < now - 10000) { // print update all 10 seconds
-				RenderTask currentTask = renderManager.getCurrentRenderTask();
-				if (currentTask == null) continue;
-				
-				lastLogUpdate = now;
-				long time = currentTask.getActiveTime();
-				
-				String durationString = DurationFormatUtils.formatDurationWords(time, true, true);
-				int tileCount = currentTask.getRemainingTileCount() + currentTask.getRenderedTileCount();
-				double pct = (double)currentTask.getRenderedTileCount() / (double) tileCount;
-				
-				long ert = (long)((time / pct) * (1d - pct));
-				String ertDurationString = DurationFormatUtils.formatDurationWords(ert, true, true);
-				
-				double tps = currentTask.getRenderedTileCount() / (time / 1000.0);
-				
-				Logger.global.logInfo("Rendering map '" + currentTask.getName() + "':");
-				Logger.global.logInfo("Rendered " + currentTask.getRenderedTileCount() + " of " + tileCount + " tiles in " + durationString + " | " + GenericMath.round(tps, 3) + " tiles/s");
-				Logger.global.logInfo(GenericMath.round(pct * 100, 3) + "% | Estimated remaining time: " + ertDurationString);
-			}
-			
-			if (lastSave < now - 1 * 60000) { // save every minute
-				RenderTask currentTask = renderManager.getCurrentRenderTask();
-				if (currentTask == null) continue;
-				
-				lastSave = now;
-				currentTask.getMapType().getTileRenderer().save();
-
-				try (
-					OutputStream os = new GZIPOutputStream(new FileOutputStream(rmstate));
-					DataOutputStream dos = new DataOutputStream(os);
-				){
-					renderManager.writeState(dos);
+		//watcher
+		List<RegionFileWatchService> regionFileWatchServices = new ArrayList<>();
+		if (watch) {
+			for (BmMap map : maps.values()) {
+				try {
+					RegionFileWatchService watcher = new RegionFileWatchService(renderManager, map, true);
+					watcher.start();
+					regionFileWatchServices.add(watcher);
 				} catch (IOException ex) {
-					Logger.global.logError("Failed to save render-state!", ex);
-				}
-				
-				//clean up caches
-				for (World world : blueMap.getWorlds().values()) {
-					world.cleanUpChunkCache();
+					Logger.global.logError("Failed to create file-watcher for map: " + map.getId() +
+										   " (This map might not automatically update)", ex);
 				}
 			}
 		}
 
-		//render finished and saved, so this is no longer needed
-		Runtime.getRuntime().removeShutdownHook(shutdownHook);
-		
-		//stop render-threads
-		renderManager.stop();
-
-		//render finished, so remove render state file
-		FileUtils.delete(rmstate);
-
-		for (MapType map : blueMap.getMaps().values()) {
-			webSettings.set(startTime, "maps", map.getId(), "last-render");
-		}
-		
-		try {
-			webSettings.save();
-		} catch (IOException e) {
-			Logger.global.logError("Failed to update web-settings!", e);
+		//update all maps
+		int totalRegions = 0;
+		for (BmMap map : maps.values()) {
+			MapUpdateTask updateTask = new MapUpdateTask(map, forceRender);
+			renderManager.scheduleRenderTask(updateTask);
+			totalRegions += updateTask.getRegions().size();
 		}
 
-		Logger.global.logInfo("Render finished!");
+		Logger.global.logInfo("Start updating " + maps.size() + " maps (" + totalRegions + " regions, ~" + totalRegions * 1024L + " chunks)...");
+
+		// start rendering
+		renderManager.start(blueMap.getCoreConfig().getRenderThreadCount());
+
+		Timer timer = new Timer("BlueMap-CLI-Timer", true);
+		TimerTask updateInfoTask = new TimerTask() {
+			@Override
+			public void run() {
+				RenderTask task = renderManager.getCurrentRenderTask();
+				if (task == null) return;
+
+				double progress = task.estimateProgress();
+				long etaMs = renderManager.estimateCurrentRenderTaskTimeRemaining();
+
+				String eta = "";
+				if (etaMs > 0) {
+					String etrDurationString = DurationFormatUtils.formatDuration(etaMs, "HH:mm:ss");
+					eta = " (ETA: " + etrDurationString + ")";
+				}
+				Logger.global.logInfo(task.getDescription() + ": " + (Math.round(progress * 100000) / 1000.0) + "%" + eta);
+			}
+		};
+		timer.scheduleAtFixedRate(updateInfoTask, TimeUnit.SECONDS.toMillis(10), TimeUnit.SECONDS.toMillis(10));
+
+		TimerTask saveTask = new TimerTask() {
+			@Override
+			public void run() {
+				for (BmMap map : maps.values()) {
+					map.save();
+				}
+			}
+		};
+		timer.scheduleAtFixedRate(saveTask, TimeUnit.MINUTES.toMillis(2), TimeUnit.MINUTES.toMillis(2));
+
+		Runnable shutdown = () -> {
+			Logger.global.logInfo("Stopping...");
+			updateInfoTask.cancel();
+			saveTask.cancel();
+			renderManager.stop();
+
+			for (RegionFileWatchService watcher : regionFileWatchServices) {
+				watcher.close();
+			}
+			regionFileWatchServices.clear();
+
+			try {
+				renderManager.awaitShutdown();
+			} catch (InterruptedException e) {
+				Logger.global.logError("Unexpected interruption: ", e);
+			}
+
+			Logger.global.logInfo("Saving...");
+			saveTask.run();
+
+			Logger.global.logInfo("Stopped.");
+		};
+
+		Thread shutdownHook = new Thread(shutdown);
+		Runtime.getRuntime().addShutdownHook(shutdownHook);
+
+		// wait until done, then shutdown if not watching
+		renderManager.awaitIdle();
+		Logger.global.logInfo("Your maps are now all up-to-date!");
+
+		if (watch) {
+			updateInfoTask.cancel();
+			Logger.global.logInfo("Waiting for changes on the world-files...");
+		} else {
+			Runtime.getRuntime().removeShutdownHook(shutdownHook);
+			shutdown.run();
+		}
 	}
 	
 	public void startWebserver(BlueMapService blueMap, boolean verbose) throws IOException {
@@ -261,11 +210,11 @@ public class BlueMapCLI {
 			}
 			
 			//minecraft version
-			MinecraftVersion version = MinecraftVersion.getLatest();
+			MinecraftVersion version = MinecraftVersion.LATEST_SUPPORTED;
 			if (cmd.hasOption("v")) {
 				String versionString = cmd.getOptionValue("v");
 				try {
-					version = MinecraftVersion.fromVersionString(versionString);
+					version = MinecraftVersion.of(versionString);
 				} catch (IllegalArgumentException e) {
 					Logger.global.logWarning("Could not determine a version from the provided version-string: '" + versionString + "'");
 					System.exit(1);
@@ -285,9 +234,11 @@ public class BlueMapCLI {
 			
 			if (cmd.hasOption("r")) {
 				noActions = false;
-				
+
+				boolean watch = cmd.hasOption("u");
 				boolean force = cmd.hasOption("f");
-				cli.renderMaps(blueMap, force, cmd.hasOption("g"));
+				boolean generateWebappFiles = cmd.hasOption("g");
+				cli.renderMaps(blueMap, watch, force, generateWebappFiles);
 			} else {
 				if (cmd.hasOption("g")) {
 					noActions = false;
@@ -307,7 +258,7 @@ public class BlueMapCLI {
 						!blueMap.getRenderConfigFile().exists() ||
 						!blueMap.getWebServerConfigFile().exists()
 				) {
-					Logger.global.logInfo("Generating default config files for you, here: " + configFolder.getCanonicalPath().toString() + "\n");
+					Logger.global.logInfo("Generating default config files for you, here: " + configFolder.getCanonicalPath() + "\n");
 				}
 				
 				//generate all configs
@@ -321,31 +272,25 @@ public class BlueMapCLI {
 				//print help
 				BlueMapCLI.printHelp();
 				System.exit(1);
-				return;
 			}
 			
 		} catch (MissingResourcesException e) {
 			Logger.global.logWarning("BlueMap is missing important resources!");
 			Logger.global.logWarning("You must accept the required file download in order for BlueMap to work!");
-			try { Logger.global.logWarning("Please check: " + blueMap.getCoreConfigFile().getCanonicalPath()); } catch (NullPointerException | IOException ignored) {}
+			try { if (blueMap != null) Logger.global.logWarning("Please check: " + blueMap.getCoreConfigFile().getCanonicalPath()); } catch (IOException ignored) {}
 			System.exit(2);
-			return;
 		} catch (ParseException e) {
 			Logger.global.logError("Failed to parse provided arguments!", e);
 			BlueMapCLI.printHelp();
 			System.exit(1);
-			return;
 		} catch (IOException e) {
 			Logger.global.logError("An IO-error occurred!", e);
 			System.exit(1);
-			return;
 		} catch (InterruptedException ex) {
 			System.exit(1);
-			return;
 		} catch (RuntimeException e) {
 			Logger.global.logError("An unexpected error occurred!", e);
 			System.exit(1);
-			return;
 		}
 	}
 	
@@ -390,6 +335,8 @@ public class BlueMapCLI {
 
 		options.addOption("r", "render", false, "Renders the maps configured in the 'render.conf' file");
 		options.addOption("f", "force-render", false, "Forces rendering everything, instead of only rendering chunks that have been modified since the last render");
+
+		options.addOption("u", "watch", false, "Watches for file-changes after rendering and updates the map");
 		
 		return options;
 	}
@@ -414,18 +361,19 @@ public class BlueMapCLI {
 		} catch (IOException ignore) {}
 		
 		String command = "java -jar " + filename;
-		
+
+		@SuppressWarnings("StringBufferReplaceableByString")
 		StringBuilder footer = new StringBuilder();
 		footer.append("Examples:\n\n");
-		footer.append(command + " -c './config/'\n");
+		footer.append(command).append(" -c './config/'\n");
 		footer.append("Generates the default/example configurations in a folder named 'config' if they are not already present\n\n");
-		footer.append(command + " -r\n");
+		footer.append(command).append(" -r\n");
 		footer.append("Render the configured maps\n\n");
-		footer.append(command + " -w\n");
+		footer.append(command).append(" -w\n");
 		footer.append("Start only the webserver without doing anything else\n\n");
-		footer.append(command + " -gs\n");
+		footer.append(command).append(" -gs\n");
 		footer.append("Generate the web-app and settings without starting a render\n\n");
-		
+
 		formatter.printHelp(command + " [options]", "\nOptions:", createOptions(), "\n" + footer.toString());
 	}
 	

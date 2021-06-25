@@ -1,23 +1,31 @@
 dependencies {
-   compile 'com.github.ben-manes.caffeine:caffeine:2.8.5'
-   compile 'com.google.code.gson:gson:2.8.0'
-   compile 'org.apache.commons:commons-lang3:3.6'
-   compile group: 'commons-io', name: 'commons-io', version: '2.5'
-   compile 'com.flowpowered:flow-math:1.0.3'
-   compile 'org.spongepowered:configurate-hocon:3.7.1'
-   compile 'org.spongepowered:configurate-gson:3.7.1'
-   compile 'com.github.Querz:NBT:4.0'
+    api 'com.github.ben-manes.caffeine:caffeine:2.8.5'
+    api 'com.google.code.gson:gson:2.8.0'
+    api 'org.apache.commons:commons-lang3:3.6'
+    api group: 'commons-io', name: 'commons-io', version: '2.5'
+    api 'com.flowpowered:flow-math:1.0.3'
+    api 'org.spongepowered:configurate-hocon:4.1.1'
+    api 'org.spongepowered:configurate-gson:4.1.1'
+    api 'com.github.Querz:NBT:4.0'
 
-   testCompile 'junit:junit:4.12'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.4.2'
+}
+
+test {
+   useJUnitPlatform()
 }
 
 processResources {
+    def git = versionDetails()
 	from(sourceSets.main.resources.srcDirs) {
 		include 'de/bluecolored/bluemap/version.json'
-		
+        duplicatesStrategy = DuplicatesStrategy.WARN
+
 		expand (
-			version: project.version
-		)
+            version: project.version,
+            gitHash: git.gitHashFull,
+            gitClean: git.isCleanTag
+        )
 	}
 }
 

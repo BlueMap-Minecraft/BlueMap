@@ -27,13 +27,13 @@
  */
 package de.bluecolored.bluemap.core.threejs;
 
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonWriter;
+import de.bluecolored.bluemap.core.util.Preconditions;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.google.common.base.Preconditions;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
 
 /**
  * Represents a ThreeJS BufferAttribute
@@ -118,7 +118,7 @@ public class BufferAttribute {
 			if(name.equals("array")){
 				json.beginArray(); //array
 				while (json.hasNext()){
-					list.add(new Float(json.nextDouble()));
+					list.add((float) json.nextDouble());
 				}
 				json.endArray(); //array
 			}

@@ -24,12 +24,15 @@
  */
 package de.bluecolored.bluemap.common.plugin;
 
+import de.bluecolored.bluemap.core.debug.DebugDump;
+import org.spongepowered.configurate.ConfigurationNode;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 
-import ninja.leaping.configurate.ConfigurationNode;
-
+@DebugDump
 public class PluginConfig {
 
 	private boolean liveUpdatesEnabled = false;
@@ -37,27 +40,31 @@ public class PluginConfig {
 	private Collection<String> hiddenGameModes = Collections.emptyList();
 	private boolean hideInvisible = false;
 	private boolean hideSneaking = false;
+	private long fullUpdateIntervalMinutes = TimeUnit.HOURS.toMinutes(24);
 	
 	public PluginConfig(ConfigurationNode node) {
 
 		//liveUpdates
-		liveUpdatesEnabled = node.getNode("liveUpdates").getBoolean(true);
+		liveUpdatesEnabled = node.node("liveUpdates").getBoolean(true);
 
 		//skinDownloadEnabled
-		skinDownloadEnabled = node.getNode("skinDownload").getBoolean(true);
+		skinDownloadEnabled = node.node("skinDownload").getBoolean(true);
 		
 		//hiddenGameModes
 		hiddenGameModes = new ArrayList<>();
-		for (ConfigurationNode gameModeNode : node.getNode("hiddenGameModes").getChildrenList()) {
+		for (ConfigurationNode gameModeNode : node.node("hiddenGameModes").childrenList()) {
 			hiddenGameModes.add(gameModeNode.getString());
 		}
 		hiddenGameModes = Collections.unmodifiableCollection(hiddenGameModes);
 		
 		//hideInvisible
-		hideInvisible = node.getNode("hideInvisible").getBoolean(true);
+		hideInvisible = node.node("hideInvisible").getBoolean(true);
 		
 		//hideSneaking
-		hideSneaking = node.getNode("hideSneaking").getBoolean(false);
+		hideSneaking = node.node("hideSneaking").getBoolean(false);
+
+		//periodic map updates
+		fullUpdateIntervalMinutes = node.node("fullUpdateInterval").getLong(TimeUnit.HOURS.toMinutes(24));
 		
 	}
 
@@ -80,5 +87,9 @@ public class PluginConfig {
 	public boolean isHideSneaking() {
 		return this.hideSneaking;
 	}
-	
+
+	public long getFullUpdateIntervalMinutes() {
+		return fullUpdateIntervalMinutes;
+	}
+
 }

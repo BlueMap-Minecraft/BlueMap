@@ -25,16 +25,19 @@
 package de.bluecolored.bluemap.common.api;
 
 import com.flowpowered.math.vector.Vector2i;
-
 import de.bluecolored.bluemap.api.BlueMapMap;
-import de.bluecolored.bluemap.common.MapType;
+import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
+import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
+import de.bluecolored.bluemap.core.map.BmMap;
+
+import java.util.function.Predicate;
 
 public class BlueMapMapImpl implements BlueMapMap {
 	
 	private BlueMapAPIImpl api;
-	private MapType delegate;
+	private BmMap delegate;
 
-	protected BlueMapMapImpl(BlueMapAPIImpl api, MapType delegate) {
+	protected BlueMapMapImpl(BlueMapAPIImpl api, BmMap delegate) {
 		this.api = api;
 		this.delegate = delegate;
 	}
@@ -56,15 +59,56 @@ public class BlueMapMapImpl implements BlueMapMap {
 
 	@Override
 	public Vector2i getTileSize() {
-		return delegate.getTileRenderer().getHiresModelManager().getTileSize();
+		return delegate.getHiresModelManager().getTileGrid().getGridSize();
 	}
 
 	@Override
 	public Vector2i getTileOffset() {
-		return delegate.getTileRenderer().getHiresModelManager().getGridOrigin();
+		return delegate.getHiresModelManager().getTileGrid().getOffset();
 	}
 
-	public MapType getMapType() {
+	@Override
+	public void setTileFilter(Predicate<Vector2i> filter) {
+		delegate.setTileFilter(filter);
+	}
+
+	@Override
+	public Predicate<Vector2i> getTileFilter() {
+		return delegate.getTileFilter();
+	}
+
+	@Override
+	public boolean isFrozen() {
+		return !api.plugin.getPluginState().getMapState(delegate).isUpdateEnabled();
+	}
+
+	@Override
+	public synchronized void setFrozen(boolean frozen) {
+		if (isFrozen()) unfreeze();
+		else freeze();
+	}
+
+	private synchronized void unfreeze() {
+		api.plugin.startWatchingMap(delegate);
+		api.plugin.getPluginState().getMapState(delegate).setUpdateEnabled(true);
+		api.plugin.getRenderManager().scheduleRenderTask(new MapUpdateTask(delegate));
+	}
+
+	private synchronized void freeze() {
+		api.plugin.stopWatchingMap(delegate);
+		api.plugin.getPluginState().getMapState(delegate).setUpdateEnabled(false);
+		api.plugin.getRenderManager().removeRenderTasksIf(task -> {
+			if (task instanceof MapUpdateTask)
+				return ((MapUpdateTask) task).getMap().equals(delegate);
+
+			if (task instanceof WorldRegionRenderTask)
+				return ((WorldRegionRenderTask) task).getMap().equals(delegate);
+
+			return false;
+		});
+	}
+
+	public BmMap getMapType() {
 		return delegate;
 	}
 	

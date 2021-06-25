@@ -24,32 +24,38 @@
  */
 package de.bluecolored.bluemap.core.config;
 
-import ninja.leaping.configurate.ConfigurationNode;
+import de.bluecolored.bluemap.core.debug.DebugDump;
+import org.spongepowered.configurate.ConfigurationNode;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+@DebugDump
 public class RenderConfig {
 
 	private File webRoot = new File("web");
 	private boolean useCookies;
+	private boolean enableFreeFlight;
 	private List<MapConfig> mapConfigs = new ArrayList<>();
 
 	public RenderConfig(ConfigurationNode node) throws IOException {
 
 		//webroot
-		String webRootString = node.getNode("webroot").getString();
+		String webRootString = node.node("webroot").getString();
 		if (webRootString == null) throw new IOException("Invalid configuration: Node webroot is not defined");
 		webRoot = ConfigManager.toFolder(webRootString);
 		
 		//cookies
-		useCookies = node.getNode("useCookies").getBoolean(true);
+		useCookies = node.node("useCookies").getBoolean(true);
+
+		// free-flight mode
+		enableFreeFlight = node.node("enableFreeFlight").getBoolean(true);
 		
 		//maps
 		mapConfigs = new ArrayList<>();
-		for (ConfigurationNode mapConfigNode : node.getNode("maps").getChildrenList()) {
+		for (ConfigurationNode mapConfigNode : node.node("maps").childrenList()) {
 			mapConfigs.add(new MapConfig(mapConfigNode));
 		}
 		
@@ -62,7 +68,11 @@ public class RenderConfig {
 	public boolean isUseCookies() {
 		return useCookies;
 	}
-	
+
+	public boolean isEnableFreeFlight() {
+		return enableFreeFlight;
+	}
+
 	public List<MapConfig> getMapConfigs(){
 		return mapConfigs;
 	}

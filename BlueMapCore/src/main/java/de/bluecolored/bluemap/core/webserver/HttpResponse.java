@@ -24,21 +24,12 @@
  */
 package de.bluecolored.bluemap.core.webserver;
 
-import java.io.ByteArrayInputStream;
-import java.io.Closeable;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Set;
-
 import org.apache.commons.lang3.StringUtils;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+import java.util.Map.Entry;
 
 public class HttpResponse implements Closeable {
 
@@ -57,22 +48,12 @@ public class HttpResponse implements Closeable {
 	}
 	
 	public void addHeader(String key, String value){
-		Set<String> valueSet = header.get(key);
-		if (valueSet == null){
-			valueSet = new HashSet<>();
-			header.put(key, valueSet);
-		}
-		
+		Set<String> valueSet = header.computeIfAbsent(key, k -> new HashSet<>());
 		valueSet.add(value);
 	}
 
 	public void removeHeader(String key, String value){
-		Set<String> valueSet = header.get(key);
-		if (valueSet == null){
-			valueSet = new HashSet<>();
-			header.put(key, valueSet);
-		}
-		
+		Set<String> valueSet = header.computeIfAbsent(key, k -> new HashSet<>());
 		valueSet.remove(value);
 	}
 	

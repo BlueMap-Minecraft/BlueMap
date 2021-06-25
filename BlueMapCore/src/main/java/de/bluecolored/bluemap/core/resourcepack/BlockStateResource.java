@@ -26,13 +26,14 @@ package de.bluecolored.bluemap.core.resourcepack;
 
 import com.flowpowered.math.vector.Vector2f;
 import com.flowpowered.math.vector.Vector3i;
+import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.PropertyCondition.All;
 import de.bluecolored.bluemap.core.resourcepack.fileaccess.FileAccess;
 import de.bluecolored.bluemap.core.util.MathUtils;
 import de.bluecolored.bluemap.core.world.BlockState;
-import ninja.leaping.configurate.ConfigurationNode;
-import ninja.leaping.configurate.gson.GsonConfigurationLoader;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.BufferedReader;
@@ -44,9 +45,11 @@ import java.util.*;
 import java.util.Map.Entry;
 
 public class BlockStateResource {
-	
-	private List<Variant> variants = new ArrayList<>(0);
-	private Collection<Variant> multipart = new ArrayList<>(0);
+
+	private static final MinecraftVersion NEW_MODEL_PATH_VERSION = new MinecraftVersion(1, 13);
+
+	private final List<Variant> variants = new ArrayList<>(0);
+	private final Collection<Variant> multipart = new ArrayList<>(0);
 
 	private BlockStateResource() {
 	}
@@ -90,7 +93,7 @@ public class BlockStateResource {
 		return models;
 	}
 
-	private class Variant {
+	private static class Variant {
 
 		private PropertyCondition condition = PropertyCondition.all();
 		private Collection<Weighted<TransformedBlockModelResource>> models = new ArrayList<>();
@@ -127,8 +130,8 @@ public class BlockStateResource {
 
 	private static class Weighted<T> {
 
-		private T value;
-		private double weight;
+		private final T value;
+		private final double weight;
 
 		public Weighted(T value, double weight) {
 			this.value = value;
@@ -157,18 +160,18 @@ public class BlockStateResource {
 			
 			InputStream fileIn = sourcesAccess.readFile(blockstateFile);
 			ConfigurationNode config = GsonConfigurationLoader.builder()
-					.setSource(() -> new BufferedReader(new InputStreamReader(fileIn, StandardCharsets.UTF_8)))
+					.source(() -> new BufferedReader(new InputStreamReader(fileIn, StandardCharsets.UTF_8)))
 					.build()
 					.load();
 
-			if (!config.getNode("forge_marker").isVirtual()) {
+			if (!config.node("forge_marker").virtual()) {
 				return buildForge(config, blockstateFile);
 			}
 
 			BlockStateResource blockState = new BlockStateResource();
 
 			// create variants
-			for (Entry<Object, ? extends ConfigurationNode> entry : config.getNode("variants").getChildrenMap().entrySet()) {
+			for (Entry<Object, ? extends ConfigurationNode> entry : config.node("variants").childrenMap().entrySet()) {
 				if (entry.getKey().equals(JSON_COMMENT)) continue;
 				
 				try {
@@ -178,7 +181,7 @@ public class BlockStateResource {
 					//some exceptions in 1.12 resource packs that we ignore
 					if (conditionString.equals("all") || conditionString.equals("map")) continue;
 					
-					Variant variant = blockState.new Variant();
+					Variant variant = new Variant();
 					variant.condition = parseConditionString(conditionString);
 					variant.models = loadModels(transformedModelNode, blockstateFile, null);
 
@@ -192,14 +195,14 @@ public class BlockStateResource {
 			}
 
 			// create multipart
-			for (ConfigurationNode partNode : config.getNode("multipart").getChildrenList()) {
+			for (ConfigurationNode partNode : config.node("multipart").childrenList()) {
 				try {
-					Variant variant = blockState.new Variant();
-					ConfigurationNode whenNode = partNode.getNode("when");
-					if (!whenNode.isVirtual()) {
+					Variant variant = new Variant();
+					ConfigurationNode whenNode = partNode.node("when");
+					if (!whenNode.virtual()) {
 						variant.condition = parseCondition(whenNode);
 					}
-					variant.models = loadModels(partNode.getNode("apply"), blockstateFile, null);
+					variant.models = loadModels(partNode.node("apply"), blockstateFile, null);
 
 					variant.updateTotalWeight();
 					variant.checkValid();
@@ -217,7 +220,7 @@ public class BlockStateResource {
 			Collection<Weighted<TransformedBlockModelResource>> models = new ArrayList<>();
 
 			if (node.isList()) {
-				for (ConfigurationNode modelNode : node.getChildrenList()) {
+				for (ConfigurationNode modelNode : node.childrenList()) {
 					try {
 						models.add(loadModel(modelNode, overrideTextures));
 					} catch (ParseResourceException ex) {
@@ -236,19 +239,16 @@ public class BlockStateResource {
 		}
 
 		private Weighted<TransformedBlockModelResource> loadModel(ConfigurationNode node, Map<String, String> overrideTextures) throws ParseResourceException {
-			String namespacedModelPath = node.getNode("model").getString();
+			String namespacedModelPath = node.node("model").getString();
 			if (namespacedModelPath == null)
 				throw new ParseResourceException("No model defined!");
 			
 			
 			String modelPath;
-			switch (resourcePack.getMinecraftVersion()) {
-				case MC_1_12: 
-					modelPath = ResourcePack.namespacedToAbsoluteResourcePath(namespacedModelPath, "models/block") + ".json";
-					break;
-				default:
-					modelPath = ResourcePack.namespacedToAbsoluteResourcePath(namespacedModelPath, "models") + ".json";
-					break;
+			if (resourcePack.getMinecraftVersion().isBefore(NEW_MODEL_PATH_VERSION)) {
+				modelPath =	ResourcePack.namespacedToAbsoluteResourcePath(namespacedModelPath, "models/block") + ".json";
+			}else {
+				modelPath = ResourcePack.namespacedToAbsoluteResourcePath(namespacedModelPath, "models") + ".json";
 			}
 
 			BlockModelResource model = resourcePack.blockModelResources.get(modelPath);
@@ -264,33 +264,33 @@ public class BlockStateResource {
 				resourcePack.blockModelResources.put(modelPath, model);
 			}
 
-			Vector2f rotation = new Vector2f(node.getNode("x").getFloat(0), node.getNode("y").getFloat(0));
-			boolean uvLock = node.getNode("uvlock").getBoolean(false);
+			Vector2f rotation = new Vector2f(node.node("x").getFloat(0), node.node("y").getFloat(0));
+			boolean uvLock = node.node("uvlock").getBoolean(false);
 
 			TransformedBlockModelResource transformedModel = new TransformedBlockModelResource(rotation, uvLock, model);
-			return new Weighted<TransformedBlockModelResource>(transformedModel, node.getNode("weight").getDouble(1d));
+			return new Weighted<>(transformedModel, node.node("weight").getDouble(1d));
 		}
 
 		private PropertyCondition parseCondition(ConfigurationNode conditionNode) {
 			List<PropertyCondition> andConditions = new ArrayList<>();
-			for (Entry<Object, ? extends ConfigurationNode> entry : conditionNode.getChildrenMap().entrySet()) {
+			for (Entry<Object, ? extends ConfigurationNode> entry : conditionNode.childrenMap().entrySet()) {
 				String key = entry.getKey().toString();
 				if (key.equals(JSON_COMMENT)) continue;
 				
 				if (key.equals("OR")) {
 					List<PropertyCondition> orConditions = new ArrayList<>();
-					for (ConfigurationNode orConditionNode : entry.getValue().getChildrenList()) {
+					for (ConfigurationNode orConditionNode : entry.getValue().childrenList()) {
 						orConditions.add(parseCondition(orConditionNode));
 					}
 					andConditions.add(
-							PropertyCondition.or(orConditions.toArray(new PropertyCondition[orConditions.size()])));
+							PropertyCondition.or(orConditions.toArray(new PropertyCondition[0])));
 				} else {
 					String[] values = StringUtils.split(entry.getValue().getString(""), '|');
 					andConditions.add(PropertyCondition.property(key, values));
 				}
 			}
 
-			return PropertyCondition.and(andConditions.toArray(new PropertyCondition[andConditions.size()]));
+			return PropertyCondition.and(andConditions.toArray(new PropertyCondition[0]));
 		}
 
 		private PropertyCondition parseConditionString(String conditionString) throws IllegalArgumentException {
@@ -311,24 +311,24 @@ public class BlockStateResource {
 			} else if (conditions.size() == 1) {
 				condition = conditions.get(0);
 			} else {
-				condition = PropertyCondition.and(conditions.toArray(new PropertyCondition[conditions.size()]));
+				condition = PropertyCondition.and(conditions.toArray(new PropertyCondition[0]));
 			}
 
 			return condition;
 		}
 
 		private BlockStateResource buildForge(ConfigurationNode config, String blockstateFile) {
-			ConfigurationNode modelDefaults = config.getNode("defaults");
+			ConfigurationNode modelDefaults = config.node("defaults");
 
 			List<ForgeVariant> variants = new ArrayList<>();
-			for (Entry<Object, ? extends ConfigurationNode> entry : config.getNode("variants").getChildrenMap().entrySet()) {
+			for (Entry<Object, ? extends ConfigurationNode> entry : config.node("variants").childrenMap().entrySet()) {
 				if (entry.getKey().equals(JSON_COMMENT)) continue;
 				if (isForgeStraightVariant(entry.getValue())) continue;
 
 				// create variants for single property
 				List<ForgeVariant> propertyVariants = new ArrayList<>();
 				String key = entry.getKey().toString();
-				for (Entry<Object, ? extends ConfigurationNode> value : entry.getValue().getChildrenMap().entrySet()) {
+				for (Entry<Object, ? extends ConfigurationNode> value : entry.getValue().childrenMap().entrySet()) {
 					if (value.getKey().equals(JSON_COMMENT)) continue;
 					
 					ForgeVariant variant = new ForgeVariant();
@@ -355,26 +355,26 @@ public class BlockStateResource {
 			//create all possible property-variants
 			BlockStateResource blockState = new BlockStateResource();
 			for (ForgeVariant forgeVariant : variants) {
-				Variant variant = blockState.new Variant();
+				Variant variant = new Variant();
 
-				ConfigurationNode modelNode = forgeVariant.node.mergeValuesFrom(modelDefaults);
+				ConfigurationNode modelNode = forgeVariant.node.mergeFrom(modelDefaults);
 
 				Map<String, String> textures = new HashMap<>();
-				for (Entry<Object, ? extends ConfigurationNode> entry : modelNode.getNode("textures").getChildrenMap().entrySet()) {
+				for (Entry<Object, ? extends ConfigurationNode> entry : modelNode.node("textures").childrenMap().entrySet()) {
 					if (entry.getKey().equals(JSON_COMMENT)) continue;
 					
-					textures.putIfAbsent(entry.getKey().toString(), entry.getValue().getString(null));
+					textures.putIfAbsent(entry.getKey().toString(), entry.getValue().getString());
 				}
 
 				List<PropertyCondition> conditions = new ArrayList<>(forgeVariant.properties.size());
 				for (Entry<String, String> property : forgeVariant.properties.entrySet()) {
 					conditions.add(PropertyCondition.property(property.getKey(), property.getValue()));
 				}
-				variant.condition = PropertyCondition.and(conditions.toArray(new PropertyCondition[conditions.size()]));
+				variant.condition = PropertyCondition.and(conditions.toArray(new PropertyCondition[0]));
 
 				variant.models.addAll(loadModels(modelNode, blockstateFile, textures));
 				
-				for (Entry<Object, ? extends ConfigurationNode> entry : modelNode.getNode("submodel").getChildrenMap().entrySet()) {
+				for (Entry<Object, ? extends ConfigurationNode> entry : modelNode.node("submodel").childrenMap().entrySet()) {
 					if (entry.getKey().equals(JSON_COMMENT)) continue;
 					
 					variant.models.addAll(loadModels(entry.getValue(), blockstateFile, textures));
@@ -392,22 +392,22 @@ public class BlockStateResource {
 			}
 			
 			//create default straight variant
-			ConfigurationNode normalNode = config.getNode("variants", "normal");
-			if (normalNode.isVirtual() || isForgeStraightVariant(normalNode)) {
-				normalNode.mergeValuesFrom(modelDefaults);
+			ConfigurationNode normalNode = config.node("variants", "normal");
+			if (normalNode.virtual() || isForgeStraightVariant(normalNode)) {
+				normalNode.mergeFrom(modelDefaults);
 				
 				Map<String, String> textures = new HashMap<>();
-				for (Entry<Object, ? extends ConfigurationNode> entry : normalNode.getNode("textures").getChildrenMap().entrySet()) {
+				for (Entry<Object, ? extends ConfigurationNode> entry : normalNode.node("textures").childrenMap().entrySet()) {
 					if (entry.getKey().equals(JSON_COMMENT)) continue;
 					
-					textures.putIfAbsent(entry.getKey().toString(), entry.getValue().getString(null));
+					textures.putIfAbsent(entry.getKey().toString(), entry.getValue().getString());
 				}
 				
-				Variant variant = blockState.new Variant();
+				Variant variant = new Variant();
 				variant.condition = PropertyCondition.all();
 				variant.models.addAll(loadModels(normalNode, blockstateFile, textures));
 				
-				for (Entry<Object, ? extends ConfigurationNode> entry : normalNode.getNode("submodel").getChildrenMap().entrySet()) {
+				for (Entry<Object, ? extends ConfigurationNode> entry : normalNode.node("submodel").childrenMap().entrySet()) {
 					if (entry.getKey().equals(JSON_COMMENT)) continue;
 					
 					variant.models.addAll(loadModels(entry.getValue(), blockstateFile, textures));
@@ -431,7 +431,7 @@ public class BlockStateResource {
 			if (node.isList())
 				return true;
 
-			for (Entry<Object, ? extends ConfigurationNode> entry : node.getChildrenMap().entrySet()) {
+			for (Entry<Object, ? extends ConfigurationNode> entry : node.childrenMap().entrySet()) {
 				if (entry.getKey().equals(JSON_COMMENT)) continue;
 				if (!entry.getValue().isMap()) return true;
 			}
@@ -441,7 +441,7 @@ public class BlockStateResource {
 
 		private static class ForgeVariant {
 			public Map<String, String> properties = new HashMap<>();
-			public ConfigurationNode node = GsonConfigurationLoader.builder().build().createEmptyNode();
+			public ConfigurationNode node = GsonConfigurationLoader.builder().build().createNode();
 
 			public ForgeVariant createMerge(ForgeVariant other) {
 				ForgeVariant merge = new ForgeVariant();
@@ -449,8 +449,8 @@ public class BlockStateResource {
 				merge.properties.putAll(this.properties);
 				merge.properties.putAll(other.properties);
 
-				merge.node.mergeValuesFrom(this.node);
-				merge.node.mergeValuesFrom(other.node);
+				merge.node.mergeFrom(this.node);
+				merge.node.mergeFrom(other.node);
 
 				return merge;
 			}
@@ -462,6 +462,8 @@ public class BlockStateResource {
 				String errorMessage = throwable.getMessage();
 				if (errorMessage == null) errorMessage = throwable.toString();
 				Logger.global.logDebug(" > " + errorMessage);
+
+				//Logger.global.logError("DETAIL: ", throwable);
 
 				throwable = throwable.getCause();
 			}
