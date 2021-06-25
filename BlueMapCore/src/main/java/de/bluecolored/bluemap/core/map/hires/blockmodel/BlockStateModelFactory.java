@@ -35,8 +35,8 @@ import de.bluecolored.bluemap.core.world.BlockState;
 
 public class BlockStateModelFactory {
 
-	private RenderSettings renderSettings;
-	private ResourcePack resourcePack;
+	private final RenderSettings renderSettings;
+	private final ResourcePack resourcePack;
 	
 	public BlockStateModelFactory(ResourcePack resourcePack, RenderSettings renderSettings) {
 		this.renderSettings = renderSettings;
@@ -91,6 +91,6 @@ public class BlockStateModelFactory {
 		
 	}
 	
-	private BlockState WATERLOGGED_BLOCKSTATE = new BlockState("minecraft:water");
+	private final static BlockState WATERLOGGED_BLOCKSTATE = new BlockState("minecraft:water");
 	
 }

@@ -41,8 +41,8 @@ public class HiresModelRenderer {
 
 	private final String grassId; 
 	
-	private RenderSettings renderSettings;
-	private BlockStateModelFactory modelFactory;
+	private final RenderSettings renderSettings;
+	private final BlockStateModelFactory modelFactory;
 	
 	public HiresModelRenderer(ResourcePack resourcePack, RenderSettings renderSettings) {
 		this.renderSettings = renderSettings;
