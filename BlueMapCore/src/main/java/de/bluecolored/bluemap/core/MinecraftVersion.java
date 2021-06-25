@@ -33,6 +33,7 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@DebugDump
 public class MinecraftVersion implements Comparable<MinecraftVersion> {
 
 	private static final Pattern VERSION_REGEX = Pattern.compile("(?:(?<major>\\d+)\\.(?<minor>\\d+))(?:\\.(?<patch>\\d+))?(?:\\-(?:pre|rc)\\d+)?");
@@ -41,10 +42,8 @@ public class MinecraftVersion implements Comparable<MinecraftVersion> {
 	public static final MinecraftVersion EARLIEST_SUPPORTED = new MinecraftVersion(1, 12, 2);
 	public static final MinecraftVersion THE_FLATTENING = new MinecraftVersion(1, 13);
 
-	@DebugDump
 	private final int major, minor, patch;
 
-	@DebugDump
 	private final Lazy<MinecraftResource> resource;
 
 	public MinecraftVersion(int major, int minor) {
@@ -142,6 +141,7 @@ public class MinecraftVersion implements Comparable<MinecraftVersion> {
 		return new MinecraftVersion(major, minor, patch);
 	}
 
+	@DebugDump
 	public enum MinecraftResource {
 
 		MC_1_12 (new MinecraftVersion(1, 12), "mc1_12", "https://launcher.mojang.com/v1/objects/0f275bc1547d01fa5f56ba34bdc87d981ee12daf/client.jar"),
@@ -152,9 +152,9 @@ public class MinecraftVersion implements Comparable<MinecraftVersion> {
 		MC_1_16_2 (new MinecraftVersion(1, 16, 2), "mc1_16", "https://launcher.mojang.com/v1/objects/653e97a2d1d76f87653f02242d243cdee48a5144/client.jar"),
 		MC_1_17 (new MinecraftVersion(1, 17), "mc1_16", "https://launcher.mojang.com/v1/objects/1cf89c77ed5e72401b869f66410934804f3d6f52/client.jar");
 
-		@DebugDump private final MinecraftVersion version;
-		@DebugDump private final String resourcePrefix;
-		@DebugDump private final String clientUrl;
+		private final MinecraftVersion version;
+		private final String resourcePrefix;
+		private final String clientUrl;
 
 		MinecraftResource(MinecraftVersion version, String resourcePrefix, String clientUrl) {
 			this.version = version;

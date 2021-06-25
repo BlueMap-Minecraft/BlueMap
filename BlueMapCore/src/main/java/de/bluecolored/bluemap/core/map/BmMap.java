@@ -182,5 +182,15 @@ public class BmMap {
 		
 		return false;
 	}
-	
+
+	@Override
+	public String toString() {
+		return "BmMap{" +
+			   "id='" + id + '\'' +
+			   ", name='" + name + '\'' +
+			   ", world=" + world +
+			   ", fileRoot=" + fileRoot +
+			   '}';
+	}
+
 }

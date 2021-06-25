@@ -422,5 +422,14 @@ public class MCAWorld implements World {
 				pos.getZ() >> 4
 			);
 	}
-	
+
+	@Override
+	public String toString() {
+		return "MCAWorld{" +
+			   "uuid=" + uuid +
+			   ", worldFolder=" + worldFolder +
+			   ", name='" + name + '\'' +
+			   '}';
+	}
+
 }
