@@ -24,17 +24,17 @@
  */
 package de.bluecolored.bluemap.core.model;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.flowpowered.math.imaginary.Quaternionf;
 import com.flowpowered.math.matrix.Matrix3f;
 import com.flowpowered.math.vector.Vector2f;
 import com.flowpowered.math.vector.Vector3f;
-
 import de.bluecolored.bluemap.core.threejs.BufferGeometry;
 import de.bluecolored.bluemap.core.threejs.MaterialGroup;
 
+import java.util.ArrayList;
+import java.util.List;
+
+@Deprecated
 public class Model<T extends Face> {
 	
 	private List<T> faces;

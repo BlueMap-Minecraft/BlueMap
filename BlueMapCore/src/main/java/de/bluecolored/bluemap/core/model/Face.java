@@ -30,6 +30,7 @@ import com.flowpowered.math.vector.Vector2f;
 import com.flowpowered.math.vector.Vector3f;
 import de.bluecolored.bluemap.core.util.MathUtils;
 
+@Deprecated
 public class Face {
 
 	private final VectorM3f p1, p2, p3; // points

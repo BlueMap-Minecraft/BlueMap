@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.core.model;
 import com.flowpowered.math.vector.Vector2f;
 import com.flowpowered.math.vector.Vector3f;
 
+@Deprecated
 public class ExtendedFace extends Face {
 
 	private float ao1 = 1f, ao2 = 1f, ao3 = 1f; // ao

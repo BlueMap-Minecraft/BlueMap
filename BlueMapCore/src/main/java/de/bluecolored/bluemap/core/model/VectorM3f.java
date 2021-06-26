@@ -28,6 +28,7 @@ import com.flowpowered.math.GenericMath;
 import com.flowpowered.math.imaginary.Quaternionf;
 import com.flowpowered.math.vector.Vector3f;
 
+@Deprecated
 public class VectorM3f {
 
     public float x, y, z;

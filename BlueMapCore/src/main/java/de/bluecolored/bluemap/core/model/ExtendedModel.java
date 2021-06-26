@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.core.model;
 import de.bluecolored.bluemap.core.threejs.BufferAttribute;
 import de.bluecolored.bluemap.core.threejs.BufferGeometry;
 
+@Deprecated
 public class ExtendedModel extends Model<ExtendedFace> {
 
 	@Override

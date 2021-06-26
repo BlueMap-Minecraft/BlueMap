@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.core.model;
 
 import com.flowpowered.math.matrix.Matrix3f;
 
+@Deprecated
 public class MatrixM3f {
 
     public float m00, m01, m02;
