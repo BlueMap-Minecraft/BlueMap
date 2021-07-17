@@ -25,24 +25,43 @@
 package de.bluecolored.bluemap.core.resourcepack;
 
 import com.flowpowered.math.vector.Vector2f;
+import de.bluecolored.bluemap.core.util.math.MatrixM3f;
 
 public class TransformedBlockModelResource {
 
-	private Vector2f rotation = Vector2f.ZERO;
-	private boolean uvLock = false;
-	
-	private BlockModelResource model;
+	private final Vector2f rotation;
+	private final boolean uvLock;
+	private final BlockModelResource model;
+
+	private final boolean hasRotation;
+	private final MatrixM3f rotationMatrix;
 
 	public TransformedBlockModelResource(Vector2f rotation, boolean uvLock, BlockModelResource model) {
 		this.model = model;
 		this.rotation = rotation;
 		this.uvLock = uvLock;
+
+		this.hasRotation = !rotation.equals(Vector2f.ZERO);
+		this.rotationMatrix = new MatrixM3f()
+				.rotate(
+						-rotation.getX(),
+						-rotation.getY(),
+						0
+				);
 	}
-	
+
 	public Vector2f getRotation() {
 		return rotation;
 	}
-	
+
+	public boolean hasRotation() {
+		return hasRotation;
+	}
+
+	public MatrixM3f getRotationMatrix() {
+		return rotationMatrix;
+	}
+
 	public boolean isUVLock() {
 		return uvLock;
 	}

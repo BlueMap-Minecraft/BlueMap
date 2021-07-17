@@ -31,6 +31,7 @@ import com.flowpowered.math.vector.Vector3f;
 import de.bluecolored.bluemap.core.model.Face;
 import de.bluecolored.bluemap.core.model.Model;
 
+@Deprecated //TODO
 public class ModelUtils {
 
 	private ModelUtils() {}

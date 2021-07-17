@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.core.util;
 
 import com.flowpowered.math.vector.Vector3i;
+import de.bluecolored.bluemap.core.util.math.Axis;
 
 import java.util.Objects;
 
@@ -61,11 +62,11 @@ public enum Direction {
 		EAST.right = SOUTH;
 	}
 	
-	private Vector3i dir;
-	private Axis axis;
+	private final Vector3i dir;
+	private final Axis axis;
 	private Direction opposite, left, right;
 	
-	private Direction(int x, int y, int z, Axis axis) {
+	Direction(int x, int y, int z, Axis axis) {
 		this.dir = new Vector3i(x, y, z);
 		this.axis = axis;
 		this.opposite = null;

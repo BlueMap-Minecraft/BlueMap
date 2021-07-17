@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.core.config;
 
+import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.mapping.BlockIdMapper;
 import de.bluecolored.bluemap.core.world.BlockState;
@@ -76,7 +77,7 @@ public class BlockIdConfig implements BlockIdMapper {
 					blockNumeralId = -1;
 				}
 				int blockMeta = Integer.parseInt(key.substring(splitIndex + 1));
-				BlockState state = BlockState.fromString(value);
+				BlockState state = BlockState.fromString(MinecraftVersion.EARLIEST_SUPPORTED, value);
 				
 				if (blockNumeralId >= 0) {
 					BlockNumeralIDMeta idmeta = new BlockNumeralIDMeta(blockNumeralId, blockMeta);
@@ -160,7 +161,7 @@ public class BlockIdConfig implements BlockIdMapper {
 				state = idMappings.get(new BlockIDMeta(id, 0));
 				if (state == null) {
 					state = numeralMappings.get(new BlockNumeralIDMeta(numeralId, 0));
-					if (state == null) state = new BlockState(id);
+					if (state == null) state = new BlockState(MinecraftVersion.EARLIEST_SUPPORTED, id);
 				}
 
 				idMappings.put(idmeta, state);

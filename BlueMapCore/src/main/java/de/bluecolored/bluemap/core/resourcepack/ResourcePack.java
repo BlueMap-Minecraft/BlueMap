@@ -55,16 +55,16 @@ public class ResourcePack {
 	
 	private final MinecraftVersion minecraftVersion;
 	
-	protected Map<String, BlockStateResource> blockStateResources;
-	protected Map<String, BlockModelResource> blockModelResources;
-	protected TextureGallery textures;
+	protected final Map<String, BlockStateResource> blockStateResources;
+	protected final Map<String, BlockModelResource> blockModelResources;
+	protected final TextureGallery textures;
 	
-	private final BlockColorCalculator blockColorCalculator;
+	private final BlockColorCalculatorFactory blockColorCalculatorFactory;
 	
+	private final Map<String, List<Resource>> configs;
+
 	private BufferedImage foliageMap;
 	private BufferedImage grassMap;
-	
-	private Map<String, List<Resource>> configs;
 	
 	public ResourcePack(MinecraftVersion minecraftVersion) {
 		this.minecraftVersion = minecraftVersion;
@@ -76,7 +76,7 @@ public class ResourcePack {
 		foliageMap.setRGB(0, 0, 0xFF00FF00);
 		grassMap = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
 		grassMap.setRGB(0, 0, 0xFF00FF00);
-		blockColorCalculator = new BlockColorCalculator(foliageMap, grassMap);
+		blockColorCalculatorFactory = new BlockColorCalculatorFactory(foliageMap, grassMap);
 		configs = new HashMap<>();
 	}
 	
@@ -181,14 +181,14 @@ public class ResourcePack {
 			
 			try {
 				foliageMap = ImageIO.read(sourcesAccess.readFile("assets/minecraft/textures/colormap/foliage.png"));
-				blockColorCalculator.setFoliageMap(foliageMap);				
+				blockColorCalculatorFactory.setFoliageMap(foliageMap);
 			} catch (IOException ex) {
 				Logger.global.logError("Failed to load foliagemap!", ex);
 			}
 
 			try {
 				grassMap = ImageIO.read(sourcesAccess.readFile("assets/minecraft/textures/colormap/grass.png"));
-				blockColorCalculator.setGrassMap(grassMap);	
+				blockColorCalculatorFactory.setGrassMap(grassMap);
 			} catch (IOException ex) {
 				Logger.global.logError("Failed to load grassmap!", ex);
 			}
@@ -210,8 +210,8 @@ public class ResourcePack {
 		return resource;
 	}
 	
-	public BlockColorCalculator getBlockColorCalculator() {
-		return blockColorCalculator;
+	public BlockColorCalculatorFactory getBlockColorCalculatorFactory() {
+		return blockColorCalculatorFactory;
 	}
 	
 	public MinecraftVersion getMinecraftVersion() {

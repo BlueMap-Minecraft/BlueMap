@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.core.world;
 
+import de.bluecolored.bluemap.core.MinecraftVersion;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -33,12 +34,12 @@ public class BlockStateTest {
 
 	@Test
 	public void testIdNamespace() {
-		BlockState blockState = new BlockState("someblock");
+		BlockState blockState = new BlockState(MinecraftVersion.LATEST_SUPPORTED, "someblock");
 		assertEquals("minecraft:someblock", blockState.getFullId());
 		assertEquals("minecraft", blockState.getNamespace());
 		assertEquals("someblock", blockState.getId());
 
-		blockState = new BlockState("somemod:someblock");
+		blockState = new BlockState(MinecraftVersion.LATEST_SUPPORTED, "somemod:someblock");
 		assertEquals("somemod:someblock", blockState.getFullId());
 		assertEquals("somemod", blockState.getNamespace());
 		assertEquals("someblock", blockState.getId());
@@ -46,7 +47,7 @@ public class BlockStateTest {
 
 	@Test
 	public void testToString() {
-		BlockState blockState = new BlockState("someblock");
+		BlockState blockState = new BlockState(MinecraftVersion.LATEST_SUPPORTED, "someblock");
 		assertEquals("minecraft:someblock[]", blockState.toString());
 		
 		blockState = blockState.with("testProp", "testVal");
@@ -63,19 +64,19 @@ public class BlockStateTest {
 
 	@Test
 	public void testFromString() {
-		BlockState blockState = BlockState.fromString("somemod:someblock");
+		BlockState blockState = BlockState.fromString(MinecraftVersion.LATEST_SUPPORTED, "somemod:someblock");
 		assertEquals("somemod:someblock", blockState.getFullId());
 		assertEquals("somemod", blockState.getNamespace());
 		assertEquals("someblock", blockState.getId());
 		assertTrue(blockState.getProperties().isEmpty());
 		
-		blockState = BlockState.fromString("somemod:someblock[]");
+		blockState = BlockState.fromString(MinecraftVersion.LATEST_SUPPORTED, "somemod:someblock[]");
 		assertEquals("somemod:someblock", blockState.getFullId());
 		assertEquals("somemod", blockState.getNamespace());
 		assertEquals("someblock", blockState.getId());
 		assertTrue(blockState.getProperties().isEmpty());
 		
-		blockState = BlockState.fromString("somemod:someblock[testProp=testVal,testProp2=testVal2]");
+		blockState = BlockState.fromString(MinecraftVersion.LATEST_SUPPORTED, "somemod:someblock[testProp=testVal,testProp2=testVal2]");
 		assertEquals("somemod:someblock", blockState.getFullId());
 		assertEquals("somemod", blockState.getNamespace());
 		assertEquals("someblock", blockState.getId());

@@ -24,11 +24,8 @@
  */
 package de.bluecolored.bluemap.core.world;
 
-import com.flowpowered.math.vector.Vector3f;
-import com.flowpowered.math.vector.Vector4f;
-
 import de.bluecolored.bluemap.core.util.ConfigUtils;
-import de.bluecolored.bluemap.core.util.MathUtils;
+import de.bluecolored.bluemap.core.util.math.Color;
 import org.spongepowered.configurate.ConfigurationNode;
 
 public class Biome {
@@ -39,14 +36,14 @@ public class Biome {
 	private int numeralId = 0;
 	private float humidity = 0.5f;
 	private float temp = 0.5f;
-	private Vector3f waterColor = MathUtils.color3FromInt(4159204);
+	private Color waterColor = new Color().set(4159204).premultiplied();
 
-	private Vector4f overlayFoliageColor = Vector4f.ZERO;
-	private Vector4f overlayGrassColor = Vector4f.ZERO;
+	private Color overlayFoliageColor = new Color().premultiplied();
+	private Color overlayGrassColor = new Color().premultiplied();
 	
 	private Biome() {}
 	
-	public Biome(String id, int numeralId, float humidity, float temp, Vector3f waterColor) {
+	public Biome(String id, int numeralId, float humidity, float temp, Color waterColor) {
 		this.id = id;
 		this.numeralId = numeralId;
 		this.humidity = humidity;
@@ -54,7 +51,7 @@ public class Biome {
 		this.waterColor = waterColor;
 	}
 	
-	public Biome(String id, int numeralId, float humidity, float temp, Vector3f waterColor, Vector4f overlayFoliageColor, Vector4f overlayGrassColor) {
+	public Biome(String id, int numeralId, float humidity, float temp, Color waterColor, Color overlayFoliageColor, Color overlayGrassColor) {
 		this (id, numeralId, humidity, temp, waterColor);
 		
 		this.overlayFoliageColor = overlayFoliageColor;
@@ -77,15 +74,15 @@ public class Biome {
 		return temp;
 	}
 
-	public Vector3f getWaterColor() {
+	public Color getWaterColor() {
 		return waterColor;
 	}
 
-	public Vector4f getOverlayFoliageColor() {
+	public Color getOverlayFoliageColor() {
 		return overlayFoliageColor;
 	}
 
-	public Vector4f getOverlayGrassColor() {
+	public Color getOverlayGrassColor() {
 		return overlayGrassColor;
 	}
 	
@@ -96,9 +93,9 @@ public class Biome {
 		biome.numeralId = node.node("id").getInt(biome.numeralId);
 		biome.humidity = node.node("humidity").getFloat(biome.humidity);
 		biome.temp = node.node("temp").getFloat(biome.temp);
-		try { biome.waterColor = MathUtils.color3FromInt(ConfigUtils.readColorInt(node.node("watercolor"))); 				} catch (NumberFormatException ignored) {}
-		try { biome.overlayFoliageColor = MathUtils.color4FromInt(ConfigUtils.readColorInt(node.node("foliagecolor"))); 	} catch (NumberFormatException ignored) {}
-		try { biome.overlayGrassColor = MathUtils.color4FromInt(ConfigUtils.readColorInt(node.node("grasscolor"))); 		} catch (NumberFormatException ignored) {}
+		try { biome.waterColor = new Color().set(ConfigUtils.readColorInt(node.node("watercolor"))).premultiplied(); 				} catch (NumberFormatException ignored) {}
+		try { biome.overlayFoliageColor = new Color().set(ConfigUtils.readColorInt(node.node("foliagecolor"))).premultiplied(); 	} catch (NumberFormatException ignored) {}
+		try { biome.overlayGrassColor = new Color().set(ConfigUtils.readColorInt(node.node("grasscolor"))).premultiplied(); 		} catch (NumberFormatException ignored) {}
 		
 		return biome;
 	}

@@ -26,11 +26,11 @@ package de.bluecolored.bluemap.core.world;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
+import de.bluecolored.bluemap.core.mca.mapping.BlockPropertiesMapper;
 
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.UUID;
-import java.util.function.Predicate;
 
 /**
  * Represents a World on the Server<br>
@@ -61,18 +61,21 @@ public interface World {
 	 * Returns the {@link Biome} on the specified position or the default biome if the block is not generated yet.
 	 */
 	Biome getBiome(int x, int y, int z);
-	
+
 	/**
-	 * Returns the {@link Block} on the specified position or an air-block if the block is not generated yet.
+	 * Returns the {@link BlockState} on the specified position or an air-block if the block is not generated yet.
 	 */
-	Block getBlock(Vector3i pos);
-	
+	BlockState getBlockState(int x, int y, int z);
+
 	/**
-	 * Returns the {@link Block} on the specified position or an air-block if the block is not generated yet.
+	 * Returns the BlockProperties for a block-state
 	 */
-	default Block getBlock(int x, int y, int z) {
-		return getBlock(new Vector3i(x, y, z));
-	}
+	BlockProperties getBlockProperties(BlockState blockState);
+
+	/**
+	 * Returns the {@link Chunk} on the specified block-position
+	 */
+	Chunk getChunkAtBlock(int x, int y, int z);
 
 	/**
 	 * Returns the {@link Chunk} on the specified chunk-position
@@ -104,5 +107,10 @@ public interface World {
 	 * Cleans up invalid cache-entries to free up memory
 	 */
 	void cleanUpChunkCache();
+
+	/**
+	 * Returns the block-properties manager used for this world
+	 */
+	BlockPropertiesMapper getBlockPropertiesMapper();
 	
 }

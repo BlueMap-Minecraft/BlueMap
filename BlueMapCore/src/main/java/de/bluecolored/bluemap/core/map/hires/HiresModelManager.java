@@ -25,7 +25,6 @@
 package de.bluecolored.bluemap.core.map.hires;
 
 import com.flowpowered.math.vector.Vector2i;
-import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
@@ -62,39 +61,43 @@ public class HiresModelManager {
 	/**
 	 * Renders the given world tile with the provided render-settings
 	 */
-	public HiresModel render(World world, Vector2i tile) {
+	public HiresTileMeta render(World world, Vector2i tile) {
 		Vector2i tileMin = tileGrid.getCellMin(tile);
 		Vector2i tileMax = tileGrid.getCellMax(tile);
 
 		Vector3i modelMin = new Vector3i(tileMin.getX(), Integer.MIN_VALUE, tileMin.getY());
 		Vector3i modelMax = new Vector3i(tileMax.getX(), Integer.MAX_VALUE, tileMax.getY());
 
-		HiresModel model = renderer.render(world, modelMin, modelMax);
+		HiresTileModel model = HiresTileModel.claimInstance();
+
+		HiresTileMeta tileMeta = renderer.render(world, modelMin, modelMax, model);
 		save(model, tile);
-		return model;
+
+		HiresTileModel.recycleInstance(model);
+
+		return tileMeta;
 	}
 	
-	private void save(final HiresModel model, Vector2i tile) {
-		final String modelJson = model.toBufferGeometry().toJson();
-		save(modelJson, tile);
-	}
-	
-	private void save(String modelJson, Vector2i tile){
+	private void save(final HiresTileModel model, Vector2i tile) {
 		File file = getFile(tile, useGzip);
-		
+
+		OutputStream os = null;
 		try {
-			OutputStream os = new BufferedOutputStream(AtomicFileHelper.createFilepartOutputStream(file));
+			os = AtomicFileHelper.createFilepartOutputStream(file);
+			os = new BufferedOutputStream(os);
 			if (useGzip) os = new GZIPOutputStream(os);
-			OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
-			try (
-				PrintWriter pw = new PrintWriter(osw);
-			){
-				pw.print(modelJson);
-			}
-			
-			//logger.logDebug("Saved hires model: " + model.getTile()); 
+
+			model.writeBufferGeometryJson(os);
 		} catch (IOException e){
 			Logger.global.logError("Failed to save hires model: " + file, e);
+		} finally {
+			try {
+				if (os != null) {
+					os.close();
+				}
+			} catch (IOException e) {
+				Logger.global.logError("Failed to close file: " + file, e);
+			}
 		}
 	}
 	
@@ -103,20 +106,6 @@ public class HiresModelManager {
 	 */
 	public Grid getTileGrid() {
 		return tileGrid;
-	}
-	
-	/**
-	 * Converts a block-position to a map-tile-coordinate
-	 */
-	public Vector2i posToTile(Vector3i pos){
-		return tileGrid.getCell(pos.toVector2(true));
-	}
-
-	/**
-	 * Converts a block-position to a map-tile-coordinate
-	 */
-	public Vector2i posToTile(Vector3d pos){
-		return tileGrid.getCell(new Vector2i(pos.getFloorX(), pos.getFloorZ()));
 	}
 	
 	/**

@@ -30,68 +30,137 @@ import de.bluecolored.bluemap.core.util.Direction;
 public class Block {
 
 	private World world;
+	private int x, y, z;
+
+	private Chunk chunk;
+
 	private BlockState blockState;
+	private BlockProperties properties;
 	private LightData lightData;
 	private Biome biome;
-	private BlockProperties properties;
-	private Vector3i pos;
 	
-	private float sunLight;
-	private float blockLight;
+	private int sunLight;
+	private int blockLight;
+
+	private final transient LightData tempLight;
 	
-	public Block(World world, BlockState blockState, LightData lightData, Biome biome, BlockProperties properties, Vector3i pos) {
+	public Block(World world, int x, int y, int z) {
+		tempLight = new LightData(0, 0);
+
+		set(world, x, y, z);
+	}
+
+	public Block set(World world, int x, int y, int z) {
+		if (this.x == x && this.y == y && this.z == z && this.world == world) return this;
+
 		this.world = world;
-		this.blockState = blockState;
-		this.lightData = lightData;
-		this.biome = biome;
-		this.properties = properties;
-		this.pos = pos;
-		
-		this.sunLight = -1;
+		this.x = x;
+		this.y = y;
+		this.z = z;
+
+		reset();
+
+		return this;
+	}
+
+	public Block set(int x, int y, int z) {
+		if (this.x == x && this.y == y && this.z == z) return this;
+
+		this.x = x;
+		this.y = y;
+		this.z = z;
+
+		reset();
+
+		return this;
+	}
+
+	private void reset() {
+		this.chunk = null;
+
+		this.blockState = null;
+		this.properties = null;
+		this.lightData = new LightData(-1, -1);
+		this.biome = null;
+
 		this.blockLight = -1;
+		this.sunLight = -1;
 	}
-	
-	public BlockState getBlockState() {
-		return blockState;
+
+	public Block add(int dx, int dy, int dz) {
+		return set(x + dx, y + dy, z + dz);
 	}
-	
+
+	public Block copy(Block source) {
+		return set(source.world, source.x, source.y, source.z);
+	}
+
 	public World getWorld() {
 		return world;
 	}
-	
-	public Vector3i getPosition() {
-		return pos;
+
+	public int getX() {
+		return x;
+	}
+
+	public int getY() {
+		return y;
+	}
+
+	public int getZ() {
+		return z;
+	}
+
+	public Chunk getChunk() {
+		if (chunk == null) chunk = world.getChunkAtBlock(x, y, z);
+		return chunk;
+	}
+
+	public BlockState getBlockState() {
+		if (blockState == null) blockState = getChunk().getBlockState(x, y, z);
+		return blockState;
+	}
+
+	public BlockProperties getProperties() {
+		if (properties == null) properties = world.getBlockProperties(getBlockState());
+		return properties;
+	}
+
+	public LightData getLightData() {
+		if (lightData.getSkyLight() < 0) getChunk().getLightData(x, y, z, lightData);
+		return lightData;
+	}
+
+	public Biome getBiome() {
+		if (biome == null) biome = getChunk().getBiome(x, y, z);
+		return biome;
+	}
+
+	public int getSunLightLevel() {
+		return getLightData().getSkyLight();
 	}
 	
-	public float getSunLightLevel() {
-		return lightData.getSkyLight();
-	}
-	
-	public float getBlockLightLevel() {
-		return lightData.getBlockLight();
+	public int getBlockLightLevel() {
+		return getLightData().getBlockLight();
 	}
 
 	public boolean isCullingNeighborFaces() {
-		return properties.isCulling();
+		return getProperties().isCulling();
 	}
 
 	public boolean isFlammable() {
-		return properties.isFlammable();
+		return getProperties().isFlammable();
 	}
 	
 	public boolean isOccludingNeighborFaces(){
-		return properties.isOccluding();
-	}
-	
-	public Biome getBiome() {
-		return biome;
+		return getProperties().isOccluding();
 	}
 
 	/**
 	 * This is internally used for light rendering
 	 * It is basically the sun light that is projected onto adjacent faces
 	 */
-	public float getPassedSunLight() {
+	public int getPassedSunLight() {
 		if (sunLight < 0) calculateLight();
 		return sunLight;
 	}
@@ -100,7 +169,7 @@ public class Block {
 	 * This is internally used for light rendering
 	 * It is basically the block light that is projected onto adjacent faces
 	 */
-	public float getPassedBlockLight() {
+	public int getPassedBlockLight() {
 		if (blockLight < 0) calculateLight();
 		return blockLight;
 	}
@@ -110,61 +179,29 @@ public class Block {
 		blockLight = getBlockLightLevel();
 		
 		if (blockLight > 0 || sunLight > 0) return;
-		
+
+		Vector3i dirV;
+		int nx, ny, nz;
 		for (Direction direction : Direction.values()) {
-			Block neighbor = getRelativeBlock(direction);
-			sunLight = Math.max(neighbor.getSunLightLevel(), sunLight);
-			blockLight = Math.max(neighbor.getBlockLightLevel(), blockLight);
+			dirV = direction.toVector();
+			nx = dirV.getX() + x;
+			ny = dirV.getY() + y;
+			nz = dirV.getZ() + z;
+
+			world.getLightData(nx, ny, nz, tempLight);
+
+			sunLight = Math.max(tempLight.getSkyLight(), sunLight);
+			blockLight = Math.max(tempLight.getBlockLight(), blockLight);
 		}
-	}
-	
-	public Block getRelativeBlock(int x, int y, int z) {
-		Vector3i pos = getPosition().add(x, y, z);
-		return getWorld().getBlock(pos);
-	}
-	
-	public Block getRelativeBlock(Vector3i direction) {
-		Vector3i pos = getPosition().add(direction);
-		return getWorld().getBlock(pos);
-	}
-	
-	public Block getRelativeBlock(Direction direction){
-		return getRelativeBlock(direction.toVector());
-	}
-	
-	public void setWorld(World world) {
-		this.world = world;
-	}
-
-	public void setBlockState(BlockState blockState) {
-		this.blockState = blockState;
-	}
-
-	public void setLightData(LightData lightData) {
-		this.lightData = lightData;
-		
-		this.blockLight = -1f;
-		this.sunLight = -1f;
-	}
-
-	public void setBiome(Biome biome) {
-		this.biome = biome;
-	}
-
-	public void setProperties(BlockProperties properties) {
-		this.properties = properties;
-	}
-
-	public void setPos(Vector3i pos) {
-		this.pos = pos;
 	}
 
 	@Override
 	public String toString() {
 		return "Block{" +
-			   "blockState=" + blockState +
-			   ", biome=" + biome +
-			   ", pos=" + pos +
+			   "world=" + world +
+			   ", x=" + x +
+			   ", y=" + y +
+			   ", z=" + z +
 			   ", sunLight=" + sunLight +
 			   ", blockLight=" + blockLight +
 			   '}';

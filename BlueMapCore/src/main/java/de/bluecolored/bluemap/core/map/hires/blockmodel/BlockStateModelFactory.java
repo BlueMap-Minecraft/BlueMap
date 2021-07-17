@@ -24,73 +24,80 @@
  */
 package de.bluecolored.bluemap.core.map.hires.blockmodel;
 
+import de.bluecolored.bluemap.core.MinecraftVersion;
+import de.bluecolored.bluemap.core.map.hires.BlockModelView;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
-import de.bluecolored.bluemap.core.resourcepack.BlockColorCalculator;
-import de.bluecolored.bluemap.core.resourcepack.BlockStateResource;
-import de.bluecolored.bluemap.core.resourcepack.NoSuchResourceException;
-import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.resourcepack.TransformedBlockModelResource;
+import de.bluecolored.bluemap.core.resourcepack.*;
+import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.BlockState;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 public class BlockStateModelFactory {
 
-	private final RenderSettings renderSettings;
 	private final ResourcePack resourcePack;
+	private final ResourceModelBuilder resourceModelBuilder;
+	private final LiquidModelBuilder liquidModelBuilder;
+
+	private final Collection<TransformedBlockModelResource> bmrs;
 	
 	public BlockStateModelFactory(ResourcePack resourcePack, RenderSettings renderSettings) {
-		this.renderSettings = renderSettings;
 		this.resourcePack = resourcePack;
+
+		Block[] neighborCache = new Block[3 * 3 * 3];
+		for (int i = 0; i < neighborCache.length; i++) {
+			neighborCache[i] = new Block(null, 0, 0, 0);
+		}
+
+		this.resourceModelBuilder = new ResourceModelBuilder(resourcePack, renderSettings, neighborCache);
+		this.liquidModelBuilder = new LiquidModelBuilder(resourcePack, renderSettings, neighborCache);
+
+		this.bmrs = new ArrayList<>();
 	}
 
-	public BlockStateModel createFrom(Block block) throws NoSuchResourceException {
-		return createFrom(block, block.getBlockState());
+	public void render(Block block, BlockModelView blockModel, Color blockColor) throws NoSuchResourceException {
+		render(block, block.getBlockState(), blockModel, blockColor);
 	}
 	
-	public BlockStateModel createFrom(Block block, BlockState blockState) throws NoSuchResourceException {
+	public void render(Block block, BlockState blockState, BlockModelView blockModel, Color blockColor) throws NoSuchResourceException {
 		
 		//shortcut for air
-		if (
-				blockState.getFullId().equals("minecraft:air") ||
-				blockState.getFullId().equals("minecraft:cave_air") ||
-				blockState.getFullId().equals("minecraft:void_air")
-		) {
-			return new BlockStateModel();
+		if (blockState.isAir) return;
+
+		int modelStart = blockModel.getStart();
+
+		// render block
+		renderModel(block, blockState, blockModel.initialize(), blockColor);
+		
+		// add water if block is waterlogged
+		if (blockState.isWaterlogged) {
+			renderModel(block, WATERLOGGED_BLOCKSTATE, blockModel.initialize(), blockColor);
 		}
-		
-		BlockStateModel model = createModel(block, blockState);
-		
-		// if block is waterlogged
-		if (LiquidModelBuilder.isWaterlogged(blockState)) {
-			model.merge(createModel(block, WATERLOGGED_BLOCKSTATE));
-		}
-		
-		return model;
+
+		blockModel.initialize(modelStart);
+
 	}
 
-	private BlockStateModel createModel(Block block, BlockState blockState) throws NoSuchResourceException {
-		
+	private void renderModel(Block block, BlockState blockState, BlockModelView blockModel, Color blockColor) throws NoSuchResourceException {
+		int modelStart = blockModel.getStart();
+
 		BlockStateResource resource = resourcePack.getBlockStateResource(blockState);
-		BlockStateModel model = new BlockStateModel();
-		BlockColorCalculator colorCalculator = resourcePack.getBlockColorCalculator();
-		ResourceModelBuilder modelBuilder = new ResourceModelBuilder(block, renderSettings, colorCalculator);
-		LiquidModelBuilder liquidBuilder = new LiquidModelBuilder(block, blockState, resourcePack.getMinecraftVersion(), renderSettings, colorCalculator);
-		
-		for (TransformedBlockModelResource bmr : resource.getModels(blockState, block.getPosition())){
+		for (TransformedBlockModelResource bmr : resource.getModels(blockState, block.getX(), block.getY(), block.getZ(), bmrs)){
 			switch (bmr.getModel().getType()){
 			case LIQUID:
-				model.merge(liquidBuilder.build(bmr));
+				liquidModelBuilder.build(block, blockState, bmr, blockModel.initialize(), blockColor);
 				break;
 			default:
-				model.merge(modelBuilder.build(bmr));
+				resourceModelBuilder.build(block, bmr, blockModel.initialize(), blockColor);
 				break;
 			}
 		}
-		
-		return model;
-		
+
+		blockModel.initialize(modelStart);
 	}
 	
-	private final static BlockState WATERLOGGED_BLOCKSTATE = new BlockState("minecraft:water");
+	private final static BlockState WATERLOGGED_BLOCKSTATE = new BlockState(MinecraftVersion.LATEST_SUPPORTED, "minecraft:water");
 	
 }

@@ -24,100 +24,109 @@
  */
 package de.bluecolored.bluemap.core.map.hires;
 
-import com.flowpowered.math.vector.Vector3f;
 import com.flowpowered.math.vector.Vector3i;
-import com.flowpowered.math.vector.Vector4f;
-import de.bluecolored.bluemap.core.MinecraftVersion;
-import de.bluecolored.bluemap.core.map.hires.blockmodel.BlockStateModel;
 import de.bluecolored.bluemap.core.map.hires.blockmodel.BlockStateModelFactory;
 import de.bluecolored.bluemap.core.resourcepack.NoSuchResourceException;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.util.MathUtils;
+import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.World;
 
 public class HiresModelRenderer {
 
-	private final String grassId; 
-	
+	private final ResourcePack resourcePack;
 	private final RenderSettings renderSettings;
-	private final BlockStateModelFactory modelFactory;
 	
 	public HiresModelRenderer(ResourcePack resourcePack, RenderSettings renderSettings) {
 		this.renderSettings = renderSettings;
-		this.modelFactory = new BlockStateModelFactory(resourcePack, renderSettings);
-
-		if (resourcePack.getMinecraftVersion().isBefore(MinecraftVersion.THE_FLATTENING)) {
-			grassId = "minecraft:tall_grass";
-		} else {
-			grassId = "minecraft:grass";
-		}
+		this.resourcePack = resourcePack;
 	}
 	
-	public HiresModel render(World world, Vector3i modelMin, Vector3i modelMax) {
+	public HiresTileMeta render(World world, Vector3i modelMin, Vector3i modelMax, HiresTileModel model) {
 		Vector3i min = modelMin.max(renderSettings.getMin());
 		Vector3i max = modelMax.min(renderSettings.getMax());
-		Vector3f modelAnchor = new Vector3f(modelMin.getX(), 0, modelMin.getZ());
-		
-		HiresModel model = new HiresModel(world.getUUID(), modelMin, modelMax);
-		
-		for (int x = min.getX(); x <= max.getX(); x++){
-			for (int z = min.getZ(); z <= max.getZ(); z++){
+		Vector3i modelAnchor = new Vector3i(modelMin.getX(), 0, modelMin.getZ());
 
-				int maxHeight = 0;
-				Vector4f color = Vector4f.ZERO;
+		HiresTileMeta tileMeta = new HiresTileMeta(modelMin.getX(), modelMin.getZ(), modelMax.getX(), modelMax.getZ()); //TODO: recycle tilemeta instances?
 
-				int minY = Math.max(min.getY(), world.getMinY(x, z));
-				int maxY = Math.min(max.getY(), world.getMaxY(x, z));
+		// create new for each tile-render since the factory is not threadsafe
+		BlockStateModelFactory modelFactory = new BlockStateModelFactory(resourcePack, renderSettings);
 
-				for (int y = minY; y <= maxY; y++){
-					Block block = world.getBlock(x, y, z);
-					if (block.getBlockState().equals(BlockState.AIR)) continue;
+		int maxHeight, minY, maxY;
+		float dx, dz;
+		Color columnColor = new Color(), blockColor = new Color();
+		Block block = new Block(world, 0, 0, 0);
+		BlockModelView blockModel = new BlockModelView(model);
 
-					BlockStateModel blockModel;
+		int x, y, z;
+		for (x = min.getX(); x <= max.getX(); x++){
+			for (z = min.getZ(); z <= max.getZ(); z++){
+
+				maxHeight = 0;
+				columnColor.set(0, 0, 0, 1, true);
+
+				minY = Math.max(min.getY(), world.getMinY(x, z));
+				maxY = Math.min(max.getY(), world.getMaxY(x, z));
+
+				for (y = minY; y <= maxY; y++){
+					block.set(x, y, z);
+					blockColor.set(0, 0, 0, 0, true);
+					blockModel.initialize();
+
 					try {
-						blockModel = modelFactory.createFrom(block);
+						modelFactory.render(block, blockModel, blockColor);
 					} catch (NoSuchResourceException e) {
 						try {
-							blockModel = modelFactory.createFrom(block, BlockState.MISSING);
+							modelFactory.render(block, BlockState.MISSING, blockModel.reset(), blockColor);
 						} catch (NoSuchResourceException e2) {
 							e.addSuppressed(e2);
-							blockModel = new BlockStateModel();
 						}
 						//Logger.global.noFloodDebug(block.getBlockState().getFullId() + "-hiresModelRenderer-blockmodelerr", "Failed to create BlockModel for BlockState: " + block.getBlockState() + " (" + e.toString() + ")");
 					}
 
 					// skip empty blocks
-					if (blockModel.getFaces().isEmpty()) continue;
+					if (blockModel.getSize() <= 0) continue;
 
 					// move block-model to correct position
-					blockModel.translate(new Vector3f(x - modelAnchor.getX(), y - modelAnchor.getY(), z - modelAnchor.getZ()));
+					blockModel.translate(x - modelAnchor.getX(), y - modelAnchor.getY(), z - modelAnchor.getZ());
 					
 					//update color and height (only if not 100% translucent)
-					Vector4f blockColor = blockModel.getMapColor();
-					if (blockColor.getW() > 0) {
+					if (blockColor.a > 0) {
 						maxHeight = y;
-						color = MathUtils.overlayColors(blockModel.getMapColor(), color);
+						columnColor.overlay(blockColor);
 					}
 					
-					//quick hack to random offset grass
-					if (block.getBlockState().getFullId().equals(grassId)){
-						float dx = (MathUtils.hashToFloat(x, y, z, 123984) - 0.5f) * 0.75f;
-						float dz = (MathUtils.hashToFloat(x, y, z, 345542) - 0.5f) * 0.75f;
-						blockModel.translate(new Vector3f(dx, 0, dz));
+					//random offset
+					if (block.getBlockState().isRandomOffset){
+						dx = (hashToFloat(x, z, 123984) - 0.5f) * 0.75f;
+						dz = (hashToFloat(x, z, 345542) - 0.5f) * 0.75f;
+						blockModel.translate(dx, 0, dz);
 					}
-					
-					model.merge(blockModel);
 				}
 
-				model.setHeight(x, z, maxHeight);
-				model.setColor(x, z, color);
+				tileMeta.setHeight(x, z, maxHeight);
+				tileMeta.setColor(x, z, columnColor);
 				
 			}
 		}
-		
-		return model;
+
+		return tileMeta;
+	}
+
+	/**
+	 * Hashes the provided position to a random float between 0 and 1.<br>
+	 * <br>
+	 * <i>(Implementation adapted from https://github.com/SpongePowered/SpongeAPI/blob/ecd761a70219e467dea47a09fc310e8238e9911f/src/main/java/org/spongepowered/api/extra/skylands/SkylandsUtil.java)</i>
+	 *
+	 * @param x The x component of the position
+	 * @param z The z component of the position
+	 * @param seed A seed for the hashing
+	 * @return The hashed value between 0 and 1
+	 */
+	public static float hashToFloat(int x, int z, long seed) {
+		final long hash = x * 73428767 ^ z * 4382893 ^ seed * 457;
+		return (hash * (hash + 456149) & 0x00ffffff) / (float) 0x01000000;
 	}
 	
 }

@@ -28,7 +28,6 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3f;
 import de.bluecolored.bluemap.core.threejs.BufferGeometry;
 import de.bluecolored.bluemap.core.util.AtomicFileHelper;
-import de.bluecolored.bluemap.core.util.FileUtils;
 import de.bluecolored.bluemap.core.util.MathUtils;
 import de.bluecolored.bluemap.core.util.ModelUtils;
 
@@ -96,7 +95,7 @@ public class LowresModel {
 			if (useGzip) os = new GZIPOutputStream(os);
 			OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
 			try (
-				PrintWriter pw = new PrintWriter(osw);
+				PrintWriter pw = new PrintWriter(osw)
 			){
 				pw.print(json);
 			}
@@ -120,7 +119,7 @@ public class LowresModel {
 			
 			for (int i = 0; i < vertexCount; i++){
 				int j = i * 3;
-				int px = Math.round(position[j + 0]);
+				int px = Math.round(position[j    ]);
 				int pz = Math.round(position[j + 2]);
 				
 				Vector2i p = new Vector2i(px, pz);
@@ -130,19 +129,19 @@ public class LowresModel {
 	
 				position[j + 1] = lrp.height;
 				
-				color[j + 0] = lrp.color.getX();
+				color[j    ] = lrp.color.getX();
 				color[j + 1] = lrp.color.getY();
 				color[j + 2] = lrp.color.getZ();
 				
 				//recalculate normals
 				int f = Math.floorDiv(i, 3) * 3 * 3;
-				Vector3f p1 = new Vector3f(position[f + 0], position[f + 1], position[f + 2]);
+				Vector3f p1 = new Vector3f(position[f    ], position[f + 1], position[f + 2]);
 				Vector3f p2 = new Vector3f(position[f + 3], position[f + 4], position[f + 5]);
 				Vector3f p3 = new Vector3f(position[f + 6], position[f + 7], position[f + 8]);
 				
 				Vector3f n = MathUtils.getSurfaceNormal(p1, p2, p3);
 				
-				normal[f + 0] = n.getX();  normal[f + 1] = n.getY();  normal[f + 2] = n.getZ();
+				normal[f    ] = n.getX();  normal[f + 1] = n.getY();  normal[f + 2] = n.getZ();
 				normal[f + 3] = n.getX();  normal[f + 4] = n.getY();  normal[f + 5] = n.getZ();
 				normal[f + 6] = n.getX();  normal[f + 7] = n.getY();  normal[f + 8] = n.getZ();
 			}
@@ -164,18 +163,6 @@ public class LowresModel {
 		public LowresPoint(float height, Vector3f color) {
 			this.height = height;
 			this.color = color;
-		}
-		
-		public LowresPoint add(LowresPoint other){
-			float newHeight = height + other.height;
-			Vector3f newColor = color.add(other.color);
-			return new LowresPoint(newHeight, newColor);
-		}
-		
-		public LowresPoint div(float divisor){
-			float newHeight = height / divisor;
-			Vector3f newColor = color.div(divisor);
-			return new LowresPoint(newHeight, newColor);
 		}
 	}
 	

@@ -24,15 +24,12 @@
  */
 package de.bluecolored.bluemap.core.world;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import de.bluecolored.bluemap.core.MinecraftVersion;
+
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import java.util.Objects;
-import java.util.StringJoiner;
 
 /**
  * Represents a BlockState<br>
@@ -43,9 +40,45 @@ import java.util.StringJoiner;
 public class BlockState {
 	
 	private static final Pattern BLOCKSTATE_SERIALIZATION_PATTERN = Pattern.compile("^(.+?)(?:\\[(.*)\\])?$");
+
+	private static final HashSet<String> DEFAULT_WATERLOGGED_BLOCK_IDS = new HashSet<>(Arrays.asList(
+			"minecraft:seagrass",
+			"minecraft:tall_seagrass",
+			"minecraft:kelp",
+			"minecraft:kelp_plant",
+			"minecraft:bubble_column"
+	));
+
+	private static final HashSet<String> OFFSET_BLOCK_IDS = new HashSet<>(Arrays.asList(
+			"minecraft:grass",
+			"minecraft:tall_grass",
+			"minecraft:fern",
+			"minecraft:dandelion",
+			"minecraft:cornflower",
+			"minecraft:poppy",
+			"minecraft:blue_orchid",
+			"minecraft:allium",
+			"minecraft:azure_bluet",
+			"minecraft:red_tulip",
+			"minecraft:orange_tulip",
+			"minecraft:white_tulip",
+			"minecraft:pink_tulip",
+			"minecraft:oxeye_daisy",
+			"minecraft:lily_of_the_valley",
+			"minecraft:wither_rose",
+			"minecraft:crimson_roots",
+			"minecraft:warped_roots",
+			"minecraft:nether_sprouts",
+			"minecraft:rose_bush",
+			"minecraft:peony",
+			"minecraft:lilac",
+			"minecraft:sunflower",
+			"minecraft:hanging_roots",
+			"minecraft:small_dripleaf"
+	));
 	
-	public static final BlockState AIR = new BlockState("minecraft:air", Collections.emptyMap());
-	public static final BlockState MISSING = new BlockState("bluemap:missing", Collections.emptyMap());
+	public static final BlockState AIR = new BlockState(MinecraftVersion.LATEST_SUPPORTED, "minecraft:air", Collections.emptyMap());
+	public static final BlockState MISSING = new BlockState(MinecraftVersion.LATEST_SUPPORTED, "bluemap:missing", Collections.emptyMap());
 
 	private boolean hashed;
 	private int hash;
@@ -55,16 +88,20 @@ public class BlockState {
 	private final String fullId;
 	private final Map<String, String> properties;
 
-	public BlockState(String id) {
-		this(id, Collections.emptyMap());
+	// special fast-access properties
+	public final boolean isAir, isWater, isWaterlogged, isRandomOffset;
+
+	public BlockState(MinecraftVersion version, String id) {
+		this(version, id, Collections.emptyMap());
 	}
 	
-	public BlockState(String id, Map<String, String> properties) {
+	public BlockState(MinecraftVersion version, String id, Map<String, String> properties) {
 		this.hashed = false;
 		this.hash = 0;
 		
-		this.properties = Collections.unmodifiableMap(new HashMap<>(properties));
-		
+		//this.properties = Collections.unmodifiableMap(new HashMap<>(properties)); // <- not doing this to reduce object-creation
+		this.properties = properties;
+
 		//resolve namespace
 		String namespace = "minecraft";
 		int namespaceSeperator = id.indexOf(':');
@@ -76,6 +113,25 @@ public class BlockState {
 		this.id = id;
 		this.namespace = namespace;
 		this.fullId = namespace + ":" + id;
+
+		// special fast-access properties
+		this.isAir =
+				"minecraft:air".equals(this.fullId) ||
+				"minecraft:cave_air".equals(this.fullId) ||
+				"minecraft:void_air".equals(this.fullId);
+
+		this.isWater = "minecraft:water".equals(this.fullId);
+
+		this.isWaterlogged =
+				DEFAULT_WATERLOGGED_BLOCK_IDS.contains(this.fullId) ||
+				"true".equals(this.properties.get("waterlogged"));
+
+		if (version.isAtLeast(MinecraftVersion.THE_FLATTENING)) {
+			this.isRandomOffset = OFFSET_BLOCK_IDS.contains(this.fullId);
+		} else {
+			this.isRandomOffset =
+					"minecraft:tall_grass".equals(this.fullId);
+		}
 	}
 	
 	private BlockState(BlockState blockState, String withKey, String withValue) {
@@ -88,7 +144,15 @@ public class BlockState {
 		this.id = blockState.getId();
 		this.namespace = blockState.getNamespace();
 		this.fullId = namespace + ":" + id;
-		this.properties = Collections.unmodifiableMap(props);
+		this.properties = props;
+
+		// special fast-access properties
+		this.isAir = blockState.isAir;
+		this.isWater = blockState.isWater;
+		this.isWaterlogged =
+				DEFAULT_WATERLOGGED_BLOCK_IDS.contains(this.fullId) ||
+				"true".equals(this.properties.get("waterlogged"));
+		this.isRandomOffset = blockState.isRandomOffset;
 	}
 
 	/**
@@ -165,7 +229,7 @@ public class BlockState {
 		return getFullId() + "[" + sj.toString() + "]";
 	}
 	
-	public static BlockState fromString(String serializedBlockState) throws IllegalArgumentException {
+	public static BlockState fromString(MinecraftVersion version, String serializedBlockState) throws IllegalArgumentException {
 		try {
 			Matcher m = BLOCKSTATE_SERIALIZATION_PATTERN.matcher(serializedBlockState);
 			m.find();
@@ -182,7 +246,7 @@ public class BlockState {
 	
 			String blockId = m.group(1).trim();
 			
-			return new BlockState(blockId, pt);
+			return new BlockState(version, blockId, pt);
 		} catch (RuntimeException ex) {
 			throw new IllegalArgumentException("'" + serializedBlockState + "' could not be parsed to a BlockState!");
 		}

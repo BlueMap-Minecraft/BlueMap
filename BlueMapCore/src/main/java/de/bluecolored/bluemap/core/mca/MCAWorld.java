@@ -36,6 +36,8 @@ import de.bluecolored.bluemap.core.mca.extensions.*;
 import de.bluecolored.bluemap.core.mca.mapping.BiomeMapper;
 import de.bluecolored.bluemap.core.mca.mapping.BlockIdMapper;
 import de.bluecolored.bluemap.core.mca.mapping.BlockPropertiesMapper;
+import de.bluecolored.bluemap.core.util.ArrayPool;
+import de.bluecolored.bluemap.core.util.math.VectorM2i;
 import de.bluecolored.bluemap.core.world.*;
 import net.querz.nbt.CompoundTag;
 import net.querz.nbt.ListTag;
@@ -57,8 +59,8 @@ public class MCAWorld implements World {
 	@DebugDump private final UUID uuid;
 	@DebugDump private final Path worldFolder;
 	private final MinecraftVersion minecraftVersion;
-	@DebugDump private String name;
-	@DebugDump private Vector3i spawnPoint;
+	@DebugDump private final String name;
+	@DebugDump private final Vector3i spawnPoint;
 
 	private final LoadingCache<Vector2i, MCARegion> regionCache;
 	private final LoadingCache<Vector2i, MCAChunk> chunkCache;
@@ -69,7 +71,7 @@ public class MCAWorld implements World {
 
 	private final Map<String, List<BlockStateExtension>> blockStateExtensions;
 
-	@DebugDump private boolean ignoreMissingLightData;
+	@DebugDump private final boolean ignoreMissingLightData;
 	
 	private final Map<Integer, String> forgeBlockMappings;
 	
@@ -126,34 +128,40 @@ public class MCAWorld implements World {
 	}
 
 	public BlockState getBlockState(Vector3i pos) {
-		return getChunk(blockToChunk(pos)).getBlockState(pos);
+		return getChunk(pos.getX() >> 4, pos.getZ() >> 4).getBlockState(pos.getX(), pos.getY(), pos.getZ());
 	}
 	
 	@Override
 	public Biome getBiome(int x, int y, int z) {
 		return getChunk(x >> 4, z >> 4).getBiome(x, y, z);
 	}
-	
-	@Override
-	public Block getBlock(Vector3i pos) {
-		MCAChunk chunk = getChunk(blockToChunk(pos));
-		BlockState blockState = getExtendedBlockState(chunk, pos);
-		LightData lightData = chunk.getLightData(pos);
-		Biome biome = chunk.getBiome(pos.getX(), pos.getY(), pos.getZ());
-		BlockProperties properties = blockPropertiesMapper.get(blockState);
-		return new Block(this, blockState, lightData, biome, properties, pos);
-	}
 
-	private BlockState getExtendedBlockState(MCAChunk chunk, Vector3i pos) {
-		BlockState blockState = chunk.getBlockState(pos);
-		
+	@Override
+	public BlockState getBlockState(int x, int y, int z) {
+		MCAChunk chunk = getChunk(x >> 4, z >> 4);
+		BlockState blockState = chunk.getBlockState(x, y, z);
+
 		if (chunk instanceof ChunkAnvil112) { // only use extensions if old format chunk (1.12) in the new format block-states are saved with extensions
-			for (BlockStateExtension ext : blockStateExtensions.getOrDefault(blockState.getFullId(), Collections.emptyList())) {
-				blockState = ext.extend(this, pos, blockState);
+			List<BlockStateExtension> applicableExtensions = blockStateExtensions.getOrDefault(blockState.getFullId(), Collections.emptyList());
+			if (!applicableExtensions.isEmpty()) {
+				Vector3i pos = new Vector3i(x, y, z);
+				for (BlockStateExtension ext : applicableExtensions) {
+					blockState = ext.extend(this, pos, blockState);
+				}
 			}
 		}
-		
+
 		return blockState;
+	}
+
+	@Override
+	public BlockProperties getBlockProperties(BlockState blockState) {
+		return blockPropertiesMapper.get(blockState);
+	}
+
+	@Override
+	public MCAChunk getChunkAtBlock(int x, int y, int z) {
+		return getChunk(new Vector2i(x >> 4, z >> 4));
 	}
 
 	@Override
@@ -167,7 +175,11 @@ public class MCAWorld implements World {
 
 	@Override
 	public MCARegion getRegion(int x, int z) {
-		return regionCache.get(new Vector2i(x, z));
+		return getRegion(new Vector2i(x, z));
+	}
+
+	public MCARegion getRegion(Vector2i pos) {
+		return regionCache.get(pos);
 	}
 
 	@Override
@@ -256,7 +268,7 @@ public class MCAWorld implements World {
 	public BlockIdMapper getBlockIdMapper() {
 		return blockIdMapper;
 	}
-	
+
 	public BlockPropertiesMapper getBlockPropertiesMapper() {
 		return blockPropertiesMapper;
 	}
@@ -414,13 +426,6 @@ public class MCAWorld implements World {
 		} catch (ClassCastException | NullPointerException ex) {
 			throw new IOException("Invaid level.dat format!", ex);
 		}
-	}
-	
-	public static Vector2i blockToChunk(Vector3i pos) {
-		return new Vector2i(
-				pos.getX() >> 4,
-				pos.getZ() >> 4
-			);
 	}
 
 	@Override

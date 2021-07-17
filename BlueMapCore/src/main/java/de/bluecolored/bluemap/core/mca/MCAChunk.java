@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.core.mca;
 
-import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.Chunk;
@@ -47,21 +46,27 @@ public abstract class MCAChunk implements Chunk {
 
 	@Override
 	public abstract boolean isGenerated();
-	
+
+	@Override
 	public int getDataVersion() {
 		return dataVersion;
 	}
-	
-	public abstract BlockState getBlockState(Vector3i pos);
-	
-	public abstract LightData getLightData(Vector3i pos);
-	
+
+	@Override
+	public abstract BlockState getBlockState(int x, int y, int z);
+
+	@Override
+	public abstract LightData getLightData(int x, int y, int z, LightData target);
+
+	@Override
 	public abstract Biome getBiome(int x, int y, int z);
 
+	@Override
 	public int getMaxY(int x, int z) {
 		return 255;
 	}
 
+	@Override
 	public int getMinY(int x, int z) {
 		return 0;
 	}

@@ -25,356 +25,367 @@
 package de.bluecolored.bluemap.core.map.hires.blockmodel;
 
 import com.flowpowered.math.TrigMath;
-import com.flowpowered.math.imaginary.Complexf;
-import com.flowpowered.math.imaginary.Quaternionf;
-import com.flowpowered.math.matrix.Matrix3f;
 import com.flowpowered.math.vector.Vector2f;
 import com.flowpowered.math.vector.Vector3f;
 import com.flowpowered.math.vector.Vector3i;
 import com.flowpowered.math.vector.Vector4f;
-
-import de.bluecolored.bluemap.core.model.ExtendedFace;
+import de.bluecolored.bluemap.core.map.hires.BlockModelView;
+import de.bluecolored.bluemap.core.map.hires.HiresTileModel;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
-import de.bluecolored.bluemap.core.resourcepack.BlockColorCalculator;
-import de.bluecolored.bluemap.core.resourcepack.BlockModelResource;
-import de.bluecolored.bluemap.core.resourcepack.BlockModelResource.Element.Rotation;
-import de.bluecolored.bluemap.core.resourcepack.Texture;
-import de.bluecolored.bluemap.core.resourcepack.TransformedBlockModelResource;
+import de.bluecolored.bluemap.core.resourcepack.*;
 import de.bluecolored.bluemap.core.util.Direction;
-import de.bluecolored.bluemap.core.util.Lazy;
+import de.bluecolored.bluemap.core.util.math.Color;
+import de.bluecolored.bluemap.core.util.math.MatrixM4f;
+import de.bluecolored.bluemap.core.util.math.VectorM2f;
+import de.bluecolored.bluemap.core.util.math.VectorM3f;
 import de.bluecolored.bluemap.core.world.Block;
 
 /**
  * This model builder creates a BlockStateModel using the information from parsed resource-pack json files.
  */
 public class ResourceModelBuilder {
-	
-	private static final Vector3f HALF_3F = Vector3f.ONE.mul(0.5);
-	private static final Vector3f NEG_HALF_3F = HALF_3F.negate();
-	private static final Vector2f HALF_2F = Vector2f.ONE.mul(0.5);
-	
+	private static final float BLOCK_SCALE = 1f / 16f;
+
+	private final BlockColorCalculatorFactory.BlockColorCalculator blockColorCalculator;
+	private final RenderSettings renderSettings;
+
+	private final VectorM3f[] corners = new VectorM3f[8];
+	private final VectorM2f[] rawUvs = new VectorM2f[4];
+	private final VectorM2f[] uvs = new VectorM2f[4];
+	private final Color tintColor = new Color();
+	private final Color mapColor = new Color();
+	private final Block[] blocksAround;
+
 	private Block block;
-	private RenderSettings renderSettings;
-	private Lazy<Vector3f> tintColor;
+	private TransformedBlockModelResource blockModelResource;
+	private BlockModelView blockModel;
+	private Color blockColor;
 	
-	public ResourceModelBuilder(Block block, RenderSettings renderSettings, BlockColorCalculator colorCalculator) {
-		this.block = block;
+	public ResourceModelBuilder(ResourcePack resourcePack, RenderSettings renderSettings, Block[] neighborCache) {
+		this.blockColorCalculator = resourcePack.getBlockColorCalculatorFactory().createCalculator();
 		this.renderSettings = renderSettings;
-		this.tintColor = new Lazy<>(() -> colorCalculator.getBlockColor(block));
+		this.blocksAround = neighborCache;
+
+		for (int i = 0; i < corners.length; i++) corners[i] = new VectorM3f(0, 0, 0);
+		for (int i = 0; i < uvs.length; i++) rawUvs[i] = new VectorM2f(0, 0);
 	}
-	
-	public BlockStateModel build(TransformedBlockModelResource bmr) {
-		BlockStateModel model = new BlockStateModel();
-		
-		for (BlockModelResource.Element element : bmr.getModel().getElements()){
-			model.merge(fromModelElementResource(element, bmr));
+
+	private final MatrixM4f modelTransform = new MatrixM4f();
+	public void build(Block block, TransformedBlockModelResource bmr, BlockModelView blockModel, Color color) {
+		this.block = block;
+		this.blockModel = blockModel;
+		this.blockColor = color;
+		this.blockModelResource = bmr;
+
+		this.tintColor.set(0, 0, 0, -1, true);
+
+		// render model
+		int modelStart = blockModel.getStart();
+
+		for (BlockModelResource.Element element : blockModelResource.getModel().getElements()){
+			buildModelElementResource(element, blockModel.initialize());
 		}
-		
-		if (!bmr.getRotation().equals(Vector2f.ZERO)) {
-			model.translate(NEG_HALF_3F);
-			model.rotate(Quaternionf.fromAxesAnglesDeg(
-					-bmr.getRotation().getX(),
-					-bmr.getRotation().getY(),
-					0
-				));
-			model.translate(HALF_3F);
+
+		blockModel.initialize(modelStart);
+
+		// apply model-rotation
+		if (blockModelResource.hasRotation()) {
+			blockModel.transform(modelTransform.identity()
+					.translate(-0.5f, -0.5f, -0.5f)
+					.multiplyTo(blockModelResource.getRotationMatrix())
+					.translate(0.5f, 0.5f, 0.5f)
+			);
 		}
-		
-		return model;
+
 	}
-	
-	private BlockStateModel fromModelElementResource(BlockModelResource.Element bmer, TransformedBlockModelResource bmr) {
-		BlockStateModel model = new BlockStateModel();
-		
+
+	private final MatrixM4f modelElementTransform = new MatrixM4f();
+	private void buildModelElementResource(BlockModelResource.Element bmer, BlockModelView blockModel) {
+
 		//create faces
-		Vector3f min = bmer.getFrom().min(bmer.getTo());
-		Vector3f max = bmer.getFrom().max(bmer.getTo());
-		
-		Vector3f[] c = new Vector3f[]{
-			new Vector3f( min .getX(), min .getY(), min .getZ()),
-			new Vector3f( min .getX(), min .getY(), max .getZ()),
-			new Vector3f( max .getX(), min .getY(), min .getZ()),
-			new Vector3f( max .getX(), min .getY(), max .getZ()),
-			new Vector3f( min .getX(), max .getY(), min .getZ()),
-			new Vector3f( min .getX(), max .getY(), max .getZ()),
-			new Vector3f( max .getX(), max .getY(), min .getZ()),
-			new Vector3f( max .getX(), max .getY(), max .getZ()),
-		};
-		
-		createElementFace(model, bmr, bmer, Direction.DOWN, c[0], c[2], c[3], c[1]);
-		createElementFace(model, bmr, bmer, Direction.UP, c[5], c[7], c[6], c[4]);
-		createElementFace(model, bmr, bmer, Direction.NORTH, c[2], c[0], c[4], c[6]);
-		createElementFace(model, bmr, bmer, Direction.SOUTH, c[1], c[3], c[7], c[5]);
-		createElementFace(model, bmr, bmer, Direction.WEST, c[0], c[1], c[5], c[4]);
-		createElementFace(model, bmr, bmer, Direction.EAST, c[3], c[2], c[6], c[7]);
+		Vector3f from = bmer.getFrom();
+		Vector3f to = bmer.getTo();
 
-		//rotate
-		Rotation rotation = bmer.getRotation();
-		if (rotation.getAngle() != 0f){
-			Vector3f translation = rotation.getOrigin();
-			model.translate(translation.negate());
-			
-			Vector3f rotAxis = rotation.getAxis().toVector().toFloat();
-			
-			model.rotate(Quaternionf.fromAngleDegAxis(
-					rotation.getAngle(),
-					rotAxis
-				));
+		float
+				minX = Math.min(from.getX(), to.getX()),
+				minY = Math.min(from.getY(), to.getY()),
+				minZ = Math.min(from.getZ(), to.getZ()),
+				maxX = Math.max(from.getX(), to.getX()),
+				maxY = Math.max(from.getY(), to.getY()),
+				maxZ = Math.max(from.getZ(), to.getZ());
 
-			if (rotation.isRescale()){
-				Vector3f scale = 
-						Vector3f.ONE
-						.sub(rotAxis)
-						.mul(Math.abs(TrigMath.sin(rotation.getAngle() * TrigMath.DEG_TO_RAD)))
-						.mul(1 - (TrigMath.SQRT_OF_TWO - 1))
-						.add(Vector3f.ONE);
-				model.transform(Matrix3f.createScaling(scale));
-			}
-			
-			model.translate(translation);
-			
-		}
-		
-		//scale down
-		model.transform(Matrix3f.createScaling(1f / 16f));
-		
-		return model;
+		VectorM3f[] c = corners;
+		c[0].x = minX; c[0].y = minY; c[0].z = minZ;
+		c[1].x = minX; c[1].y = minY; c[1].z = maxZ;
+		c[2].x = maxX; c[2].y = minY; c[2].z = minZ;
+		c[3].x = maxX; c[3].y = minY; c[3].z = maxZ;
+		c[4].x = minX; c[4].y = maxY; c[4].z = minZ;
+		c[5].x = minX; c[5].y = maxY; c[5].z = maxZ;
+		c[6].x = maxX; c[6].y = maxY; c[6].z = minZ;
+		c[7].x = maxX; c[7].y = maxY; c[7].z = maxZ;
+
+		int modelStart = blockModel.getStart();
+		createElementFace(bmer, Direction.DOWN, c[0], c[2], c[3], c[1]);
+		createElementFace(bmer, Direction.UP, c[5], c[7], c[6], c[4]);
+		createElementFace(bmer, Direction.NORTH, c[2], c[0], c[4], c[6]);
+		createElementFace(bmer, Direction.SOUTH, c[1], c[3], c[7], c[5]);
+		createElementFace(bmer, Direction.WEST, c[0], c[1], c[5], c[4]);
+		createElementFace(bmer, Direction.EAST, c[3], c[2], c[6], c[7]);
+		blockModel.initialize(modelStart);
+
+		//rotate and scale down
+		blockModel.transform(modelElementTransform
+				.copy(bmer.getRotationMatrix())
+				.scale(BLOCK_SCALE, BLOCK_SCALE, BLOCK_SCALE)
+		);
 	}
-	
-	private void createElementFace(BlockStateModel model, TransformedBlockModelResource modelResource, BlockModelResource.Element element, Direction faceDir, Vector3f c0, Vector3f c1, Vector3f c2, Vector3f c3) {
+
+	private final VectorM3f faceRotationVector = new VectorM3f(0, 0, 0);
+	private void createElementFace(BlockModelResource.Element element, Direction faceDir, VectorM3f c0, VectorM3f c1, VectorM3f c2, VectorM3f c3) {
 		BlockModelResource.Element.Face face = element.getFaces().get(faceDir);
-		
 		if (face == null) return;
-		
-		//face culling
-		if (face.getCullface() != null){
-			Block b = getRotationRelativeBlock(modelResource.getRotation(), face.getCullface());
+
+		Vector3i faceDirVector = faceDir.toVector();
+
+		// face culling
+		if (face.getCullface() != null) {
+			Block b = getRotationRelativeBlock(face.getCullface());
 			if (b.isCullingNeighborFaces()) return;
 		}
 
-		//light calculation
-		Block facedBlockNeighbor = getRotationRelativeBlock(modelResource.getRotation(), faceDir);
-		float sunLight = facedBlockNeighbor.getPassedSunLight();
-		
-		//filter out faces that are not sunlighted
+		// light calculation
+		Block facedBlockNeighbor = getRotationRelativeBlock(faceDir);
+		int sunLight = facedBlockNeighbor.getPassedSunLight();
+		int blockLight = facedBlockNeighbor.getPassedBlockLight();
+
+		// filter out faces that are not sun-lighted
 		if (sunLight == 0f && renderSettings.isExcludeFacesWithoutSunlight()) return;
 
-		float blockLight = facedBlockNeighbor.getPassedBlockLight();
+		// initialize the faces
+		blockModel.initialize();
+		blockModel.add(2);
 
-		//UV
-		Vector4f uv = face.getUv().toFloat().div(16);
-		
-		//UV-Lock counter-rotation
-		int uvLockAngle = 0;
-		Vector2f rotation = modelResource.getRotation();
-		if (modelResource.isUVLock()){
-			Quaternionf rot = Quaternionf.fromAxesAnglesDeg(rotation.getX(), rotation.getY(), 0);
-			uvLockAngle = (int) rot.getAxesAnglesDeg().dot(faceDir.toVector().toFloat());
-			
-			//my math has stopped working, there has to be a more consistent solution for this...
-			if (rotation.getX() >= 180 && rotation.getY() != 90 && rotation.getY() != 270) uvLockAngle += 180;
-		}
+		HiresTileModel tileModel = blockModel.getHiresTile();
+		int face1 = blockModel.getStart();
+		int face2 = face1 + 1;
 
-		//create both triangles
-		Vector2f[] uvs = new Vector2f[4];
-		uvs[0] = new Vector2f(uv.getX(), uv.getW());
-		uvs[1] = new Vector2f(uv.getZ(), uv.getW());
-		uvs[2] = new Vector2f(uv.getZ(), uv.getY());
-		uvs[3] = new Vector2f(uv.getX(), uv.getY());
-		
-		//face texture rotation
-		uvs = rotateUVOuter(uvs, uvLockAngle);
-		uvs = rotateUVInner(uvs, face.getRotation());
-		
+		// ####### positions
+		tileModel.setPositions(face1,
+				c0.x, c0.y, c0.z,
+				c1.x, c1.y, c1.z,
+				c2.x, c2.y, c2.z
+		);
+		tileModel.setPositions(face2,
+				c0.x, c0.y, c0.z,
+				c2.x, c2.y, c2.z,
+				c3.x, c3.y, c3.z
+		);
+
+		// ####### texture
 		Texture texture = face.getTexture();
 		int textureId = texture.getId();
-		
-		ExtendedFace f1;
-		ExtendedFace f2;
-		
-		try {
-			f1 = new ExtendedFace(c0, c1, c2, uvs[0], uvs[1], uvs[2], textureId);
-			f2 = new ExtendedFace(c0, c2, c3, uvs[0], uvs[2], uvs[3], textureId);
-		} catch (ArithmeticException ex) {
-			// This error is thrown when a model defined a face that has no surface (all 3 points are on one line)
-			// we catch it here and simply ignore the face
-			return;
-		}
-		
-		//tint the face
-		Vector3f color = Vector3f.ONE;
-		if (face.isTinted()){
-			color = tintColor.getValue();
-		}
-		
-		f1.setC1(color);
-		f1.setC2(color);
-		f1.setC3(color);
-		f2.setC1(color);
-		f2.setC2(color);
-		f2.setC3(color);
-		
-		f1.setBl1(blockLight);
-		f1.setBl2(blockLight);
-		f1.setBl3(blockLight);
-		f2.setBl1(blockLight);
-		f2.setBl2(blockLight);
-		f2.setBl3(blockLight);
-		
-		f1.setSl1(sunLight);
-		f1.setSl2(sunLight);
-		f1.setSl3(sunLight);
-		f2.setSl1(sunLight);
-		f2.setSl2(sunLight);
-		f2.setSl3(sunLight);
-		
-		//calculate ao
-		float ao0 = 1f, ao1 = 1f, ao2 = 1f, ao3 = 1f;
-		if (modelResource.getModel().isAmbientOcclusion()){
-			ao0 = testAo(modelResource.getRotation(), c0, faceDir);
-			ao1 = testAo(modelResource.getRotation(), c1, faceDir);
-			ao2 = testAo(modelResource.getRotation(), c2, faceDir);
-			ao3 = testAo(modelResource.getRotation(), c3, faceDir);
-		}
-		
-		f1.setAo1(ao0);
-		f1.setAo2(ao1);
-		f1.setAo3(ao2);
-		f2.setAo1(ao0);
-		f2.setAo2(ao2);
-		f2.setAo3(ao3);
-				
-		//add the face
-		model.addFace(f1);
-		model.addFace(f2);
-		
-		//if is top face set model-color
-		Vector3f dir = getRotationRelativeDirectionVector(modelResource.getRotation(), faceDir.toVector().toFloat());
+		tileModel.setMaterialIndex(face1, textureId);
+		tileModel.setMaterialIndex(face2, textureId);
 
-		if (element.getRotation().getAngle() > 0){
-			Quaternionf rot = Quaternionf.fromAngleDegAxis(
-					element.getRotation().getAngle(),
-					element.getRotation().getAxis().toVector().toFloat()
-				);
-			dir = rot.rotate(dir);
+		// ####### UV
+		Vector4f uvRaw = face.getUv();
+		float
+				uvx = uvRaw.getX() / 16f,
+				uvy = uvRaw.getY() / 16f,
+				uvz = uvRaw.getZ() / 16f,
+				uvw = uvRaw.getW() / 16f;
+
+		rawUvs[0].set(uvx, uvw);
+		rawUvs[1].set(uvz, uvw);
+		rawUvs[2].set(uvz, uvy);
+		rawUvs[3].set(uvx, uvy);
+
+		// face-rotation
+		int rotationSteps = Math.floorDiv(face.getRotation(), 90) % 4;
+		if (rotationSteps < 0) rotationSteps += 4;
+		for (int i = 0; i < 4; i++)
+			uvs[i] = rawUvs[(rotationSteps + i) % 4];
+
+		// UV-Lock counter-rotation
+		float uvRotation = 0f;
+		if (blockModelResource.isUVLock() && blockModelResource.hasRotation()) {
+			Vector2f rotation = blockModelResource.getRotation();
+
+			float xRotSin = TrigMath.sin(rotation.getX() * TrigMath.DEG_TO_RAD);
+			float xRotCos = TrigMath.cos(rotation.getX() * TrigMath.DEG_TO_RAD);
+
+			uvRotation =
+					rotation.getY() * (faceDirVector.getY() * xRotCos + faceDirVector.getZ() * xRotSin) +
+					rotation.getX() * (1 - faceDirVector.getY());
 		}
-		
-		float a = dir.getY();
+
+		// rotate uv's
+		if (uvRotation != 0){
+			uvRotation *= TrigMath.DEG_TO_RAD;
+			float cx = TrigMath.cos(uvRotation), cy = TrigMath.sin(uvRotation);
+			for (VectorM2f uv : uvs) {
+				uv.translate(-0.5f, -0.5f);
+				uv.rotate(cx, cy);
+				uv.translate(0.5f, 0.5f);
+			}
+		}
+
+		tileModel.setUvs(face1,
+				uvs[0].x, uvs[0].y,
+				uvs[1].x, uvs[1].y,
+				uvs[2].x, uvs[2].y
+		);
+
+		tileModel.setUvs(face2,
+				uvs[0].x, uvs[0].y,
+				uvs[2].x, uvs[2].y,
+				uvs[3].x, uvs[3].y
+		);
+
+
+		// ####### face-tint
+		if (face.isTinted()) {
+			if (tintColor.a < 0) {
+				blockColorCalculator.getBlockColor(block, tintColor);
+			}
+
+			tileModel.setColor(face1, tintColor.r, tintColor.g, tintColor.b);
+			tileModel.setColor(face2, tintColor.r, tintColor.g, tintColor.b);
+		} else {
+			tileModel.setColor(face1, 1, 1, 1);
+			tileModel.setColor(face2, 1, 1, 1);
+		}
+
+		// ####### blocklight
+		tileModel.setBlocklight(face1, blockLight);
+		tileModel.setBlocklight(face2, blockLight);
+
+		// ####### sunlight
+		tileModel.setSunlight(face1, sunLight);
+		tileModel.setSunlight(face2, sunLight);
+
+		// ######## AO
+		float ao0 = 1f, ao1 = 1f, ao2 = 1f, ao3 = 1f;
+		if (blockModelResource.getModel().isAmbientOcclusion()){
+			ao0 = testAo(c0, faceDir);
+			ao1 = testAo(c1, faceDir);
+			ao2 = testAo(c2, faceDir);
+			ao3 = testAo(c3, faceDir);
+		}
+
+		tileModel.setAOs(face1, ao0, ao1, ao2);
+		tileModel.setAOs(face2, ao0, ao2, ao3);
+
+		//if is top face set model-color
+		faceRotationVector.set(
+				faceDirVector.getX(),
+				faceDirVector.getY(),
+				faceDirVector.getZ()
+		);
+		makeRotationRelative(faceRotationVector);
+		faceRotationVector.rotateAndScale(element.getRotationMatrix());
+
+		float a = faceRotationVector.y;
 		if (a > 0){
-			Vector4f c = texture.getColor();
-			c = c.mul(color.toVector4(1f));
-			c = new Vector4f(c.getX(), c.getY(), c.getZ(), c.getW() * a);
-			model.mergeMapColor(c);
+			mapColor.set(texture.getColorPremultiplied());
+			if (tintColor.a >= 0) {
+				mapColor.multiply(tintColor);
+			}
+
+			// apply light
+			float sl = sunLight / 16f;
+			mapColor.r *= sl;
+			mapColor.g *= sl;
+			mapColor.b *= sl;
+
+			blockColor.add(mapColor);
 		}
-		
 	}
-	
-	private Block getRotationRelativeBlock(Vector2f modelRotation, Direction direction){
-		return getRotationRelativeBlock(modelRotation, direction.toVector());
+
+	private Block getNeighborBlock(int dx, int dy, int dz) {
+		int i = (dx + 1) * 9 + (dy + 1) * 3 + (dz + 1);
+		if (i == 13) return block;
+		return blocksAround[i].set(
+				block.getWorld(),
+				block.getX() + dx,
+				block.getY() + dy,
+				block.getZ() + dz
+		);
 	}
-	
-	private Block getRotationRelativeBlock(Vector2f modelRotation, Vector3i direction){
-		Vector3i dir = getRotationRelativeDirectionVector(modelRotation, direction.toFloat()).round().toInt();
-		return block.getRelativeBlock(dir);
+
+	private Block getRotationRelativeBlock(Direction direction){
+		return getRotationRelativeBlock(direction.toVector());
 	}
-	
-	private Vector3f getRotationRelativeDirectionVector(Vector2f modelRotation, Vector3f direction){
-		Quaternionf rot = Quaternionf.fromAxesAnglesDeg(
-				-modelRotation.getX(),
-				-modelRotation.getY(),
-				0
-			);
-		Vector3f dir = rot.rotate(direction);
-		return dir;
+
+
+	private Block getRotationRelativeBlock(Vector3i direction){
+		return getRotationRelativeBlock(
+				direction.getX(),
+				direction.getY(),
+				direction.getZ()
+		);
 	}
-	
-	private float testAo(Vector2f modelRotation, Vector3f vertex, Direction dir){
+
+	private final VectorM3f rotationRelativeBlockDirection = new VectorM3f(0, 0, 0);
+	private Block getRotationRelativeBlock(int dx, int dy, int dz){
+		rotationRelativeBlockDirection.set(dx, dy, dz);
+		makeRotationRelative(rotationRelativeBlockDirection);
+
+		return getNeighborBlock(
+				Math.round(rotationRelativeBlockDirection.x),
+				Math.round(rotationRelativeBlockDirection.y),
+				Math.round(rotationRelativeBlockDirection.z)
+		);
+	}
+
+	private void makeRotationRelative(VectorM3f direction){
+		direction.transform(blockModelResource.getRotationMatrix());
+	}
+
+	private float testAo(VectorM3f vertex, Direction dir){
+		Vector3i dirVec = dir.toVector();
 		int occluding = 0;
 		
 		int x = 0;
-		if (vertex.getX() == 16){
+		if (vertex.x == 16){
 			x = 1;
-		} else if (vertex.getX() == 0){
+		} else if (vertex.x == 0){
 			x = -1;
 		}
 		
 		int y = 0;
-		if (vertex.getY() == 16){
+		if (vertex.y == 16){
 			y = 1;
-		} else if (vertex.getY() == 0){
+		} else if (vertex.y == 0){
 			y = -1;
 		}
 		
 		int z = 0;
-		if (vertex.getZ() == 16){
+		if (vertex.z == 16){
 			z = 1;
-		} else if (vertex.getZ() == 0){
+		} else if (vertex.z == 0){
 			z = -1;
 		}
 
-		Vector3i rel = new Vector3i(x, y, 0);
-		if (rel.dot(dir.toVector()) > 0){
-			if (getRotationRelativeBlock(modelRotation, rel).isOccludingNeighborFaces()) occluding++;
+
+		if (x * dirVec.getX() + y * dirVec.getY() > 0){
+			if (getRotationRelativeBlock(x, y, 0).isOccludingNeighborFaces()) occluding++;
+		}
+
+		if (x * dirVec.getX() + z * dirVec.getZ() > 0){
+			if (getRotationRelativeBlock(x, 0, z).isOccludingNeighborFaces()) occluding++;
+		}
+
+		if (y * dirVec.getY() + z * dirVec.getZ() > 0){
+			if (getRotationRelativeBlock(0, y, z).isOccludingNeighborFaces()) occluding++;
+		}
+
+		if (x * dirVec.getX() + y * dirVec.getY() + z * dirVec.getZ() > 0){
+			if (getRotationRelativeBlock(x, y, z).isOccludingNeighborFaces()) occluding++;
 		}
 		
-		rel = new Vector3i(x, 0, z);
-		if (rel.dot(dir.toVector()) > 0){
-			if (getRotationRelativeBlock(modelRotation, rel).isOccludingNeighborFaces()) occluding++;
-		}
-		
-		rel = new Vector3i(0, y, z);
-		if (rel.dot(dir.toVector()) > 0){
-			if (getRotationRelativeBlock(modelRotation, rel).isOccludingNeighborFaces()) occluding++;
-		}
-		
-		rel = new Vector3i(x, y, z);
-		if (rel.dot(dir.toVector()) > 0){
-			if (getRotationRelativeBlock(modelRotation, rel).isOccludingNeighborFaces()) occluding++;
-		}
-		
-		if (occluding > 3)
-		occluding = 3;
-		
+		if (occluding > 3) occluding = 3;
 		return  Math.max(0f, Math.min(1f - occluding * 0.25f, 1f));
 	}
-	
-	private Vector2f[] rotateUVInner(Vector2f[] uv, int angle){
-		if (uv.length == 0) return uv;
-		
-		int steps = getRotationSteps(angle); 
-		
-		for (int i = 0; i < steps; i++){
-			Vector2f first = uv[uv.length - 1];
-			System.arraycopy(uv, 0, uv, 1, uv.length - 1);
-			uv[0] = first;
-		}
-		
-		return uv;
-	}
-	
-	private Vector2f[] rotateUVOuter(Vector2f[] uv, float angle){
-		angle %= 360;
-		if (angle < 0) angle += 360;
-		
-		if (angle == 0) return uv;
-		
-		Complexf c = Complexf.fromAngleDeg(angle);
-		
-		for (int i = 0; i < uv.length; i++){
-			uv[i] = uv[i].sub(HALF_2F);
-			uv[i] = c.rotate(uv[i]);
-			uv[i] = uv[i].add(HALF_2F);
-		}
-		
-		return uv;
-	}
-	
-	private int getRotationSteps(int angle){
-		angle = -Math.floorDiv(angle, 90);
-		angle %= 4;
-		if (angle < 0) angle += 4;
-		
-		return angle;
-	}
-	
+
 }

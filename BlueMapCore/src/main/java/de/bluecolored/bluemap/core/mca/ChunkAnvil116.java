@@ -24,7 +24,7 @@
  */
 package de.bluecolored.bluemap.core.mca;
 
-import com.flowpowered.math.vector.Vector3i;
+import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.mapping.BiomeMapper;
 import de.bluecolored.bluemap.core.world.Biome;
@@ -32,18 +32,23 @@ import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.LightData;
 import net.querz.nbt.*;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
 public class ChunkAnvil116 extends MCAChunk {
+	private static final MinecraftVersion VERSION = new MinecraftVersion(1, 16);
+
 	private BiomeMapper biomeIdMapper;
 
 	private boolean isGenerated;
 	private boolean hasLight;
-	private Map<Integer, Section> sections;
+
 	private int sectionMin, sectionMax;
+	private Section[] sections;
+
 	private int[] biomes;
 	
 	@SuppressWarnings("unchecked")
@@ -62,11 +67,14 @@ public class ChunkAnvil116 extends MCAChunk {
 			isGenerated = !status.equals("empty");
 		}
 
-		this.sections = new HashMap<>(); // Is using a has-map the fastest/best way for an int->Object mapping?
-		this.sectionMin = Integer.MAX_VALUE;
-		this.sectionMax = Integer.MIN_VALUE;
 		if (levelData.containsKey("Sections")) {
-			for (CompoundTag sectionTag : ((ListTag<CompoundTag>) levelData.getListTag("Sections"))) {
+			this.sectionMin = Integer.MAX_VALUE;
+			this.sectionMax = Integer.MIN_VALUE;
+
+			ListTag<CompoundTag> sectionsTag = (ListTag<CompoundTag>) levelData.getListTag("Sections");
+			ArrayList<Section> sectionList = new ArrayList<>(sectionsTag.size());
+
+			for (CompoundTag sectionTag : sectionsTag) {
 				if (sectionTag.getListTag("Palette") == null) continue; // ignore empty sections
 
 				Section section = new Section(sectionTag);
@@ -75,7 +83,12 @@ public class ChunkAnvil116 extends MCAChunk {
 				if (sectionMin > y) sectionMin = y;
 				if (sectionMax < y) sectionMax = y;
 
-				sections.put(y, section);
+				sectionList.add(section);
+			}
+
+			sections = new Section[1 + sectionMax - sectionMin];
+			for (Section section : sectionList) {
+				sections[section.sectionY - sectionMin] = section;
 			}
 		}
 		
@@ -103,25 +116,25 @@ public class ChunkAnvil116 extends MCAChunk {
 	}
 
 	@Override
-	public BlockState getBlockState(Vector3i pos) {
-		int sectionY = pos.getY() >> 4;
-		
-		Section section = this.sections.get(sectionY);
+	public BlockState getBlockState(int x, int y, int z) {
+		int sectionY = y >> 4;
+
+		Section section = getSection(sectionY);
 		if (section == null) return BlockState.AIR;
 		
-		return section.getBlockState(pos);
+		return section.getBlockState(x, y, z);
 	}
 
 	@Override
-	public LightData getLightData(Vector3i pos) {
-		if (!hasLight) return LightData.SKY;
+	public LightData getLightData(int x, int y, int z, LightData target) {
+		if (!hasLight) return target.set(15, 0);
 		
-		int sectionY = pos.getY() >> 4;
+		int sectionY = y >> 4;
 
-		Section section = this.sections.get(sectionY);
-		if (section == null) return (sectionY < sectionMin) ? LightData.ZERO : LightData.SKY;
+		Section section = getSection(sectionY);
+		if (section == null) return (sectionY < sectionMin) ? target.set(0, 0) : target.set(15, 0);
 		
-		return section.getLightData(pos);
+		return section.getLightData(x, y, z, target);
 	}
 
 	@Override
@@ -148,6 +161,12 @@ public class ChunkAnvil116 extends MCAChunk {
 	@Override
 	public int getMaxY(int x, int z) {
 		return sectionMax * 16 + 15;
+	}
+
+	private Section getSection(int y) {
+		y -= sectionMin;
+		if (y < 0 || y >= this.sections.length) return null;
+		return this.sections[y];
 	}
 
 	private static class Section {
@@ -194,7 +213,7 @@ public class ChunkAnvil116 extends MCAChunk {
 						}
 					}
 					
-					palette[i] = new BlockState(id, properties);
+					palette[i] = new BlockState(VERSION, id, properties);
 				}
 			} else {
 				this.palette = new BlockState[0];
@@ -207,12 +226,11 @@ public class ChunkAnvil116 extends MCAChunk {
 			return sectionY;
 		}
 		
-		public BlockState getBlockState(Vector3i pos) {
+		public BlockState getBlockState(int x, int y, int z) {
 			if (blocks.length == 0) return BlockState.AIR;
-			
-			int x = pos.getX() & 0xF; // Math.floorMod(pos.getX(), 16)
-			int y = pos.getY() & 0xF;
-			int z = pos.getZ() & 0xF;
+
+			x &= 0xF; y &= 0xF; z &= 0xF; // Math.floorMod(pos.getX(), 16)
+
 			int blockIndex = y * 256 + z * 16 + x;
 
 			long value = MCAMath.getValueFromLongArray(blocks, blockIndex, bitsPerBlock);
@@ -223,21 +241,20 @@ public class ChunkAnvil116 extends MCAChunk {
 			
 			return palette[(int) value];
 		}
-		
-		public LightData getLightData(Vector3i pos) {
-			if (blockLight.length == 0 && skyLight.length == 0) return LightData.ZERO;
+
+		public LightData getLightData(int x, int y, int z, LightData target) {
+			if (blockLight.length == 0 && skyLight.length == 0) return target.set(0, 0);
 			
-			int x = pos.getX() & 0xF; // Math.floorMod(pos.getX(), 16)
-			int y = pos.getY() & 0xF;
-			int z = pos.getZ() & 0xF;
+			x &= 0xF; y &= 0xF; z &= 0xF; // Math.floorMod(pos.getX(), 16)
+
 			int blockByteIndex = y * 256 + z * 16 + x;
 			int blockHalfByteIndex = blockByteIndex >> 1; // blockByteIndex / 2 
 			boolean largeHalf = (blockByteIndex & 0x1) != 0; // (blockByteIndex % 2) == 0
 
-			int blockLight = this.blockLight.length > 0 ? MCAMath.getByteHalf(this.blockLight[blockHalfByteIndex], largeHalf) : 0;
-			int skyLight = this.skyLight.length > 0 ? MCAMath.getByteHalf(this.skyLight[blockHalfByteIndex], largeHalf) : 0;
-			
-			return new LightData(skyLight, blockLight);
+			return target.set(
+					this.skyLight.length > 0 ? MCAMath.getByteHalf(this.skyLight[blockHalfByteIndex], largeHalf) : 0,
+					this.blockLight.length > 0 ? MCAMath.getByteHalf(this.blockLight[blockHalfByteIndex], largeHalf) : 0
+			);
 		}
 	}
 	

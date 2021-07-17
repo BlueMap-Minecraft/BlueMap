@@ -22,49 +22,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.map.hires.blockmodel;
+package de.bluecolored.bluemap.core.util.math;
 
-import com.flowpowered.math.vector.Vector4f;
+import com.flowpowered.math.vector.Vector3i;
 
-import de.bluecolored.bluemap.core.model.ExtendedFace;
-import de.bluecolored.bluemap.core.model.ExtendedModel;
-import de.bluecolored.bluemap.core.model.Model;
-import de.bluecolored.bluemap.core.util.MathUtils;
+import java.util.Objects;
 
-/**
- * A model with some extra information about the BlockState it represents
- */
-public class BlockStateModel extends ExtendedModel {
-
-	private Vector4f mapColor;
+public enum Axis {
 	
-	public BlockStateModel(){
-		this(Vector4f.ZERO);
+	X (Vector3i.UNIT_X),
+	Y (Vector3i.UNIT_Y),
+	Z (Vector3i.UNIT_Z);
+	
+	private final Vector3i axisVector; 
+	
+	Axis(Vector3i axisVector){
+		this.axisVector = axisVector;
 	}
 	
-	public BlockStateModel(Vector4f mapColor) {
-		this.mapColor = mapColor;
+	public Vector3i toVector(){
+		return axisVector;
 	}
-
-	@Override
-	public void merge(Model<ExtendedFace> model) {
-		super.merge(model);
+	
+	public static Axis fromString(String name){
+		Objects.requireNonNull(name);
 		
-		if (model instanceof BlockStateModel){
-			mergeMapColor(((BlockStateModel) model).getMapColor());
-		}
+		return valueOf(name.toUpperCase());
 	}
-	
-	public Vector4f getMapColor() {
-		return mapColor;
-	}
-
-	public void setMapColor(Vector4f mapColor) {
-		this.mapColor = mapColor;
-	}
-	
-	public void mergeMapColor(Vector4f mapColor) {		
-		this.mapColor = MathUtils.blendColors(this.mapColor, mapColor);
-	}
-	
 }

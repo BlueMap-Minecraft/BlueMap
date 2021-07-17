@@ -51,15 +51,14 @@ public class BlockStateResource {
 	private final List<Variant> variants = new ArrayList<>(0);
 	private final Collection<Variant> multipart = new ArrayList<>(0);
 
-	private BlockStateResource() {
+	private BlockStateResource() {}
+
+	public Collection<TransformedBlockModelResource> getModels(BlockState blockState, Collection<TransformedBlockModelResource> targetCollection) {
+		return getModels(blockState, 0, 0, 0, targetCollection);
 	}
 
-	public Collection<TransformedBlockModelResource> getModels(BlockState blockState) {
-		return getModels(blockState, Vector3i.ZERO);
-	}
-
-	public Collection<TransformedBlockModelResource> getModels(BlockState blockState, Vector3i pos) {
-		Collection<TransformedBlockModelResource> models = new ArrayList<>(1);
+	public Collection<TransformedBlockModelResource> getModels(BlockState blockState, int x, int y, int z, Collection<TransformedBlockModelResource> targetCollection) {
+		targetCollection.clear();
 		
 		Variant allMatch = null;
 		for (Variant variant : variants) {
@@ -68,29 +67,29 @@ public class BlockStateResource {
 					if (allMatch == null) allMatch = variant;
 					continue;
 				}
-				
-				models.add(variant.getModel(pos));
-				return models;
+
+				targetCollection.add(variant.getModel(x, y, z));
+				return targetCollection;
 			}
 		}
 		
 		if (allMatch != null) {
-			models.add(allMatch.getModel(pos));
-			return models;
+			targetCollection.add(allMatch.getModel(x, y, z));
+			return targetCollection;
 		}
 
 		for (Variant variant : multipart) {
 			if (variant.condition.matches(blockState)) {
-				models.add(variant.getModel(pos));
+				targetCollection.add(variant.getModel(x, y, z));
 			}
 		}
 		
 		//fallback to first variant
-		if (models.isEmpty() && !variants.isEmpty()) {
-			models.add(variants.get(0).getModel(pos));
+		if (targetCollection.isEmpty() && !variants.isEmpty()) {
+			targetCollection.add(variants.get(0).getModel(x, y, z));
 		}
 
-		return models;
+		return targetCollection;
 	}
 
 	private static class Variant {
@@ -103,10 +102,10 @@ public class BlockStateResource {
 		private Variant() {
 		}
 
-		public TransformedBlockModelResource getModel(Vector3i pos) {
+		public TransformedBlockModelResource getModel(int x, int y, int z) {
 			if (models.isEmpty()) throw new IllegalStateException("A variant must have at least one model!");
 			
-			double selection = MathUtils.hashToFloat(pos, 827364) * totalWeight; // random based on position
+			double selection = MathUtils.hashToFloat(x, y, z, 827364) * totalWeight; // random based on position
 			for (Weighted<TransformedBlockModelResource> w : models) {
 				selection -= w.weight;
 				if (selection <= 0) return w.value;

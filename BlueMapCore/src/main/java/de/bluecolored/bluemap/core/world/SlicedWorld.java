@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.core.world;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
+import de.bluecolored.bluemap.core.mca.mapping.BlockPropertiesMapper;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -96,28 +97,26 @@ public class SlicedWorld implements World {
 	public Biome getBiome(int x, int y, int z) {
 		return world.getBiome(x, y, z);
 	}
-	
-	@Override
-	public Block getBlock(Vector3i pos) {
-		if (!isInside(pos)) return createAirBlock(pos);
-		
-		Block block = world.getBlock(pos);
-		block.setWorld(this);
-		return block;
-	}
-	
-	@Override
-	public Block getBlock(int x, int y, int z) {
-		if (!isInside(x, y, z)) return createAirBlock(new Vector3i(x, y, z));
 
-		Block block = world.getBlock(x, y, z);
-		block.setWorld(this);
-		return block;
+	@Override
+	public BlockProperties getBlockProperties(BlockState blockState) {
+		return world.getBlockProperties(blockState);
+	}
+
+	@Override
+	public BlockState getBlockState(int x, int y, int z) {
+		if (!isInside(x, y, z)) return BlockState.AIR;
+		return world.getBlockState(x, y, z);
 	}
 
 	@Override
 	public Chunk getChunk(int x, int z) {
 		return world.getChunk(x, z);
+	}
+
+	@Override
+	public Chunk getChunkAtBlock(int x, int y, int z) {
+		return world.getChunkAtBlock(x, y, z);
 	}
 
 	@Override
@@ -153,9 +152,10 @@ public class SlicedWorld implements World {
 	public void cleanUpChunkCache() {
 		world.cleanUpChunkCache();
 	}
-	
-	private boolean isInside(Vector3i blockPos) {
-		return isInside(blockPos.getX(), blockPos.getY(), blockPos.getZ());
+
+	@Override
+	public BlockPropertiesMapper getBlockPropertiesMapper() {
+		return world.getBlockPropertiesMapper();
 	}
 
 	private boolean isInside(int x, int z) {
@@ -174,17 +174,6 @@ public class SlicedWorld implements World {
 				z <= max.getZ() &&
 				y >= min.getY() &&
 				y <= max.getY();
-	}
-	
-	private Block createAirBlock(Vector3i pos) {
-		return new Block(
-				this, 
-				BlockState.AIR, 
-				pos.getY() < this.min.getY() ? LightData.ZERO : LightData.SKY,
-				Biome.DEFAULT, 
-				BlockProperties.TRANSPARENT, 
-				pos
-				);
 	}
 	
 }

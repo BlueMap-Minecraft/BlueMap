@@ -28,8 +28,8 @@ import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3f;
 import com.flowpowered.math.vector.Vector3i;
 import com.flowpowered.math.vector.Vector4f;
-import de.bluecolored.bluemap.core.model.VectorM3f;
 
+@Deprecated //TODO
 public class MathUtils {
 
 	private MathUtils() {}
@@ -70,27 +70,6 @@ public class MathUtils {
 		Vector3f n = new Vector3f(nX, nY, nZ);
 		n = n.normalize();
 		
-		return n;
-	}
-
-	/**
-	 * Calculates the surface-normal of a plane spanned between three vectors.
-	 * @param p1 The first vector
-	 * @param p2 The second vector
-	 * @param p3 The third vector
-	 * @return The calculated normal
-	 */
-	public static VectorM3f getSurfaceNormal(VectorM3f p1, VectorM3f p2, VectorM3f p3) {
-		float ux = p2.x - p1.x, uy = p2.y - p1.y, uz = p2.z - p1.z;
-		float vx = p3.x - p1.x, vy = p3.y - p1.y, vz = p3.z - p1.z;
-
-		float nX = uy * vz - uz * vy;
-		float nY = uz * vx - ux * vz;
-		float nZ = ux * vy - uy * vx;
-
-		VectorM3f n = new VectorM3f(nX, nY, nZ);
-		n.normalize();
-
 		return n;
 	}
 

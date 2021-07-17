@@ -24,11 +24,13 @@
  */
 package de.bluecolored.bluemap.core.map.lowres;
 
-import com.flowpowered.math.vector.*;
+import com.flowpowered.math.vector.Vector2i;
+import com.flowpowered.math.vector.Vector3f;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.map.hires.HiresModel;
+import de.bluecolored.bluemap.core.map.hires.HiresTileMeta;
 import de.bluecolored.bluemap.core.threejs.BufferGeometry;
 import de.bluecolored.bluemap.core.util.FileUtils;
+import de.bluecolored.bluemap.core.util.math.Color;
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;
@@ -41,7 +43,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.GZIPInputStream;
 
@@ -68,52 +69,45 @@ public class LowresModelManager {
 	/**
 	 * Renders all points from the given hires-model onto the lowres-grid
 	 */
-	public void render(HiresModel hiresModel) {
-		Vector3i min = hiresModel.getBlockMin();
-		Vector3i max = hiresModel.getBlockMax();
-		Vector3i size = max.sub(min).add(Vector3i.ONE);
-		
-		Vector2i blocksPerPoint = 
-				size
-				.toVector2(true)
-				.div(pointsPerHiresTile);
-		
-		Vector2i pointMin = min
-				.toVector2(true)
-				.toDouble()
-				.div(blocksPerPoint.toDouble())
-				.floor()
-				.toInt();
+	public void render(HiresTileMeta tileMeta) {
+		Vector2i blocksPerPoint = new Vector2i(
+				tileMeta.getSizeX() / pointsPerHiresTile.getX(),
+				tileMeta.getSizeZ() / pointsPerHiresTile.getY()
+		);
+
+		Vector2i pointMin = new Vector2i(
+				Math.floorDiv(tileMeta.getMinX(), blocksPerPoint.getX()),
+				Math.floorDiv(tileMeta.getMinZ(), blocksPerPoint.getY())
+		);
+
+		Color
+				pointColor = new Color(),
+				columnColor = new Color();
 		
 		for (int tx = 0; tx < pointsPerHiresTile.getX(); tx++){
 			for (int tz = 0; tz < pointsPerHiresTile.getY(); tz++){
 				
 				double height = 0;
-				
-				Vector3d color = Vector3d.ZERO;
-				double colorCount = 0;
+				pointColor.set(0, 0, 0, 0, true);
 				
 				for (int x = 0; x < blocksPerPoint.getX(); x++){
 					for (int z = 0; z < blocksPerPoint.getY(); z++){
 						
-						int rx = tx * blocksPerPoint.getX() + x + min.getX();
-						int rz = tz * blocksPerPoint.getY() + z + min.getZ();
-						height += hiresModel.getHeight(rx, rz);
-						
-						Vector4f c = hiresModel.getColor(rx, rz);
-						color = color.add(c.toVector3().toDouble().mul(c.getW()));
-						colorCount += c.getW();
+						int rx = tx * blocksPerPoint.getX() + x + tileMeta.getMinX();
+						int rz = tz * blocksPerPoint.getY() + z + tileMeta.getMinZ();
+						height += tileMeta.getHeight(rx, rz);
+
+						tileMeta.getColor(rx, rz, columnColor).premultiplied();
+						pointColor.add(columnColor);
 					}
 				}
-				
-				if (colorCount > 0) color = color.div(colorCount);
-				
+
+				pointColor.flatten().straight();
+
 				int count = blocksPerPoint.getX() * blocksPerPoint.getY();
 				height /= count;
-				
-				Vector2i point = pointMin.add(tx, tz);
-				update(hiresModel.getWorld(), point, (float) height, color.toFloat());
-				
+
+				update(pointMin.getX() + tx, pointMin.getY() + tz, (float) height, pointColor);
 			}
 		}
 	}
@@ -132,31 +126,36 @@ public class LowresModelManager {
 	/**
 	 * Updates a point on the lowres-model-grid
 	 */
-	public void update(UUID world, Vector2i point, float height, Vector3f color) {
+	public void update(int px, int pz, float height, Color color) {
+		if (color.premultiplied) throw new IllegalArgumentException("Color can not be premultiplied!");
+
+		Vector2i point = new Vector2i(px, pz);
+		Vector3f colorV = new Vector3f(color.r, color.g, color.b);
+
 		Vector2i tile = pointToTile(point);
 		Vector2i relPoint = getPointRelativeToTile(tile, point);
-		LowresModel model = getModel(world, tile);
-		model.update(relPoint, height, color);
+		LowresModel model = getModel(tile);
+		model.update(relPoint, height, colorV);
 		
 		if (relPoint.getX() == 0){
 			Vector2i tile2 = tile.add(-1, 0);
 			Vector2i relPoint2 = getPointRelativeToTile(tile2, point);
-			LowresModel model2 = getModel(world, tile2);
-			model2.update(relPoint2, height, color);
+			LowresModel model2 = getModel(tile2);
+			model2.update(relPoint2, height, colorV);
 		}
 		
 		if (relPoint.getY() == 0){
 			Vector2i tile2 = tile.add(0, -1);
 			Vector2i relPoint2 = getPointRelativeToTile(tile2, point);
-			LowresModel model2 = getModel(world, tile2);
-			model2.update(relPoint2, height, color);
+			LowresModel model2 = getModel(tile2);
+			model2.update(relPoint2, height, colorV);
 		}
 		
 		if (relPoint.getX() == 0 && relPoint.getY() == 0){
 			Vector2i tile2 = tile.add(-1, -1);
 			Vector2i relPoint2 = getPointRelativeToTile(tile2, point);
-			LowresModel model2 = getModel(world, tile2);
-			model2.update(relPoint2, height, color);
+			LowresModel model2 = getModel(tile2);
+			model2.update(relPoint2, height, colorV);
 		}
 	}
 
@@ -167,7 +166,7 @@ public class LowresModelManager {
 		return FileUtils.coordsToFile(fileRoot, tile, "json" + (useGzip ? ".gz" : ""));
 	}
 	
-	private LowresModel getModel(UUID world, Vector2i tile) {
+	private LowresModel getModel(Vector2i tile) {
 		
 		File modelFile = getFile(tile, useGzip);
 		CachedModel model = models.get(modelFile);
@@ -257,15 +256,17 @@ public class LowresModelManager {
 	}
 	
 	private Vector2i pointToTile(Vector2i point){
-		return point
-				.toDouble()
-				.div(pointsPerLowresTile.toDouble())
-				.floor()
-				.toInt();
+		return new Vector2i(
+				Math.floorDiv(point.getX(), pointsPerLowresTile.getX()),
+				Math.floorDiv(point.getY(), pointsPerLowresTile.getY())
+		);
 	}
 	
 	private Vector2i getPointRelativeToTile(Vector2i tile, Vector2i point){
-		return point.sub(tile.mul(pointsPerLowresTile));
+		return new Vector2i(
+				point.getX() - tile.getX() * pointsPerLowresTile.getX(),
+				point.getY() - tile.getY() * pointsPerLowresTile.getY()
+		);
 	}
 	
 	public Vector2i getTileSize() {

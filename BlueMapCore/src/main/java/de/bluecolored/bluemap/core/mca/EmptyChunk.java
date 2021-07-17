@@ -24,8 +24,6 @@
  */
 package de.bluecolored.bluemap.core.mca;
 
-import com.flowpowered.math.vector.Vector2i;
-import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.LightData;
@@ -40,13 +38,13 @@ public class EmptyChunk extends MCAChunk {
 	}
 
 	@Override
-	public BlockState getBlockState(Vector3i pos) {
+	public BlockState getBlockState(int x, int y, int z) {
 		return BlockState.AIR;
 	}
 
 	@Override
-	public LightData getLightData(Vector3i pos) {
-		return LightData.ZERO;
+	public LightData getLightData(int x, int y, int z, LightData target) {
+		return target.set(0, 0);
 	}
 
 	@Override

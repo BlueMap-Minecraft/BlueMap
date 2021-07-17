@@ -24,11 +24,11 @@
  */
 package de.bluecolored.bluemap.core.resourcepack;
 
-import com.flowpowered.math.vector.Vector4f;
 import com.google.gson.*;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.fileaccess.FileAccess;
 import de.bluecolored.bluemap.core.util.FileUtils;
+import de.bluecolored.bluemap.core.util.math.Color;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -95,12 +95,12 @@ public class TextureGallery {
 			textureNode.addProperty("texture", texture.getTexture());
 			textureNode.addProperty("transparent", texture.isHalfTransparent());
 			
-			Vector4f color = texture.getColor();
+			Color color = texture.getColorStraight();
 			JsonArray colorNode = new JsonArray();
-			colorNode.add(color.getX());
-			colorNode.add(color.getY());
-			colorNode.add(color.getZ());
-			colorNode.add(color.getW());
+			colorNode.add(color.r);
+			colorNode.add(color.g);
+			colorNode.add(color.b);
+			colorNode.add(color.a);
 			
 			textureNode.add("color", colorNode);
 			
@@ -141,14 +141,14 @@ public class TextureGallery {
 			int size = textures.size();
 			for (int i = 0; i < size; i++) {
 				while (i >= textureList.size()) { //prepopulate with placeholder so we don't get an IndexOutOfBounds below
-					textureList.add(new Texture(textureList.size(), "empty", Vector4f.ZERO, false, EMPTY_BASE64));
+					textureList.add(new Texture(textureList.size(), "empty", new Color(), false, EMPTY_BASE64));
 				}
 				
 				try {
 					JsonObject texture = textures.get(i).getAsJsonObject();
 					String path = texture.get("id").getAsString();
 					boolean transparent = texture.get("transparent").getAsBoolean();
-					Vector4f color = readVector4f(texture.get("color").getAsJsonArray());
+					Color color = readColor(texture.get("color").getAsJsonArray());
 					textureList.set(i, new Texture(i, path, color, transparent, EMPTY_BASE64));
 				} catch (ParseResourceException | RuntimeException ex) {
 					Logger.global.logWarning("Failed to load texture with id " + i + " from texture file " + file + "!");
@@ -188,7 +188,7 @@ public class TextureGallery {
 			boolean halfTransparent = checkHalfTransparent(image);
 			
 			//calculate color
-			Vector4f color = calculateColor(image);
+			Color color = calculateColor(image);
 			
 			//write to Base64
 			ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -237,7 +237,7 @@ public class TextureGallery {
 		}
 	}
 
-	private Vector4f readVector4f(JsonArray jsonArray) throws ParseResourceException {
+	private Color readColor(JsonArray jsonArray) throws ParseResourceException {
 		if (jsonArray.size() < 4) throw new ParseResourceException("Failed to load Vector4: Not enough values in list-node!");
 		
 		float r = jsonArray.get(0).getAsFloat();
@@ -245,7 +245,7 @@ public class TextureGallery {
 		float b = jsonArray.get(2).getAsFloat();
 		float a = jsonArray.get(3).getAsFloat();
 		
-		return new Vector4f(r, g, b, a);
+		return new Color().set(r, g, b, a, false);
 	}
 	
 	private boolean checkHalfTransparent(BufferedImage image){
@@ -262,17 +262,17 @@ public class TextureGallery {
 		return false;
 	}
 	
-	private Vector4f calculateColor(BufferedImage image){
-		double alpha = 0d, red = 0d, green = 0d, blue = 0d;
+	private Color calculateColor(BufferedImage image){
+		float alpha = 0f, red = 0f, green = 0f, blue = 0f;
 		int count = 0;
 		
 		for (int x = 0; x < image.getWidth(); x++){
 			for (int y = 0; y < image.getHeight(); y++){
 				int pixel = image.getRGB(x, y);
-				double pixelAlpha = (double)((pixel >> 24) & 0xff) / (double) 0xff;
-		        double pixelRed = (double)((pixel >> 16) & 0xff) / (double) 0xff;
-		        double pixelGreen = (double)((pixel >> 8) & 0xff) / (double) 0xff;
-		        double pixelBlue = (double)((pixel >> 0) & 0xff) / (double) 0xff;
+				float pixelAlpha = ((pixel >> 24) & 0xff) / 255f;
+				float pixelRed = ((pixel >> 16) & 0xff) / 255f;
+				float pixelGreen = ((pixel >> 8) & 0xff) / 255f;
+				float pixelBlue = (pixel & 0xff) / 255f;
 		        
 		        count++;
 		        alpha += pixelAlpha;
@@ -282,14 +282,14 @@ public class TextureGallery {
 			}
 		}
 		
-		if (count == 0 || alpha == 0) return Vector4f.ZERO;
+		if (count == 0 || alpha == 0) return new Color();
 		
 		red /= alpha;
 		green /= alpha;
 		blue /= alpha;
 		alpha /= count;
 		
-		return new Vector4f(red, green, blue, alpha);
+		return new Color().set(red, green, blue, alpha, false);
 	}
 	
 }

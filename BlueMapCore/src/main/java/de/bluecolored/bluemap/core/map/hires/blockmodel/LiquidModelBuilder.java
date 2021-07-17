@@ -24,118 +24,149 @@
  */
 package de.bluecolored.bluemap.core.map.hires.blockmodel;
 
-import com.flowpowered.math.matrix.Matrix3f;
-import com.flowpowered.math.vector.Vector2f;
-import com.flowpowered.math.vector.Vector3f;
-import com.flowpowered.math.vector.Vector4f;
+import com.flowpowered.math.TrigMath;
+import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.MinecraftVersion;
+import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.map.hires.BlockModelView;
+import de.bluecolored.bluemap.core.map.hires.HiresTileModel;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
-import de.bluecolored.bluemap.core.model.ExtendedFace;
-import de.bluecolored.bluemap.core.model.ExtendedModel;
-import de.bluecolored.bluemap.core.resourcepack.BlockColorCalculator;
-import de.bluecolored.bluemap.core.resourcepack.BlockModelResource;
+import de.bluecolored.bluemap.core.resourcepack.BlockColorCalculatorFactory;
+import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resourcepack.Texture;
 import de.bluecolored.bluemap.core.resourcepack.TransformedBlockModelResource;
 import de.bluecolored.bluemap.core.util.Direction;
+import de.bluecolored.bluemap.core.util.math.Color;
+import de.bluecolored.bluemap.core.util.math.MatrixM3f;
+import de.bluecolored.bluemap.core.util.math.VectorM2f;
+import de.bluecolored.bluemap.core.util.math.VectorM3f;
 import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.BlockState;
-
-import java.util.Arrays;
-import java.util.HashSet;
 
 /**
  * A model builder for all liquid blocks
  */
 public class LiquidModelBuilder {
-	
-	private static final HashSet<String> DEFAULT_WATERLOGGED_BLOCK_IDS = new HashSet<>(Arrays.asList(
-			"minecraft:seagrass",
-			"minecraft:tall_seagrass",
-			"minecraft:kelp",
-			"minecraft:kelp_plant",
-			"minecraft:bubble_column"
-	));
-	
-	private final BlockState liquidBlockState;
-	private final Block block;
+	private static final float BLOCK_SCALE = 1f / 16f;
+	private static final MatrixM3f FLOWING_UV_SCALE = new MatrixM3f()
+			.identity()
+			.translate(-0.5f, -0.5f)
+			.scale(0.5f, 0.5f, 1)
+			.translate(0.5f, 0.5f);
+
+	private final BlockColorCalculatorFactory.BlockColorCalculator blockColorCalculator;
 	private final RenderSettings renderSettings;
-	private final BlockColorCalculator colorCalculator;
 
 	private final boolean useWaterColorMap;
-	
-	public LiquidModelBuilder(Block block, BlockState liquidBlockState, MinecraftVersion minecraftVersion, RenderSettings renderSettings, BlockColorCalculator colorCalculator) {
-		this.block = block;
+
+	private final VectorM3f[] corners;
+	private final Block[] blocksAround;
+	private final VectorM2f[] uvs = new VectorM2f[4];
+
+	private Block block;
+	private BlockState blockState;
+	private TransformedBlockModelResource blockModelResource;
+	private BlockModelView blockModel;
+	private Color blockColor;
+
+	public LiquidModelBuilder(ResourcePack resourcePack, RenderSettings renderSettings, Block[] neighborCache) {
+		this.blockColorCalculator = resourcePack.getBlockColorCalculatorFactory().createCalculator();
 		this.renderSettings = renderSettings;
-		this.liquidBlockState = liquidBlockState;
-		this.colorCalculator = colorCalculator;
 
-		this.useWaterColorMap = minecraftVersion.isAtLeast(new MinecraftVersion(1, 13));
-	}
+		this.useWaterColorMap = resourcePack.getMinecraftVersion().isAtLeast(new MinecraftVersion(1, 13));
 
-	public BlockStateModel build(TransformedBlockModelResource bmr) {
-		return build(bmr.getModel());
-	}
-	
-	public BlockStateModel build(BlockModelResource bmr) {
-		if (this.renderSettings.isExcludeFacesWithoutSunlight() && block.getSunLightLevel() == 0) return new BlockStateModel();
-		
-		int level = getLiquidLevel(block.getBlockState());
-		float[] heights = new float[]{16f, 16f, 16f, 16f};
-		float coloralpha = 0.2f;
-		
-		if (level < 8 && !(level == 0 && isLiquid(block.getRelativeBlock(0, 1, 0)))){
-			heights = new float[]{
-					getLiquidCornerHeight(-1, 0, -1),
-					getLiquidCornerHeight(-1, 0, 0),
-					getLiquidCornerHeight(0, 0, -1),
-					getLiquidCornerHeight(0, 0, 0)
-				};
-
-			coloralpha = 0.8f;
-		}
-		
-		BlockStateModel model = new BlockStateModel();
-		Texture texture = bmr.getTexture("still");
-		
-		Vector3f[] c = new Vector3f[]{
-			new Vector3f( 0, 0, 0 ),
-			new Vector3f( 0, 0, 16 ),
-			new Vector3f( 16, 0, 0 ),
-			new Vector3f( 16, 0, 16 ),
-			new Vector3f( 0, heights[0], 0 ),
-			new Vector3f( 0, heights[1], 16 ),
-			new Vector3f( 16, heights[2], 0 ),
-			new Vector3f( 16, heights[3], 16 ),
+		corners = new VectorM3f[]{
+				new VectorM3f( 0, 0, 0 ),
+				new VectorM3f( 0, 0, 16 ),
+				new VectorM3f( 16, 0, 0 ),
+				new VectorM3f( 16, 0, 16 ),
+				new VectorM3f( 0, 16, 0 ),
+				new VectorM3f( 0, 16, 16 ),
+				new VectorM3f( 16, 16, 0 ),
+				new VectorM3f( 16, 16, 16 ),
 		};
 
-		int textureId = texture.getId();
-		Vector3f tintcolor = Vector3f.ONE;
-		if (useWaterColorMap && liquidBlockState.getFullId().equals("minecraft:water")) {
-			tintcolor = colorCalculator.getWaterAverageColor(block);
-		}
+		this.blocksAround = neighborCache;
+
+		for (int i = 0; i < uvs.length; i++) uvs[i] = new VectorM2f(0, 0);
+	}
+
+	public void build(Block block, BlockState blockState, TransformedBlockModelResource bmr, BlockModelView blockModel, Color color) {
+		this.block = block;
+		this.blockState = blockState;
+		this.blockModelResource = bmr;
+		this.blockModel = blockModel;
+		this.blockColor = color;
+
+		build();
+	}
+
+	private final Color tintcolor = new Color();
+	private void build() {
+		if (this.renderSettings.isExcludeFacesWithoutSunlight() && block.getSunLightLevel() == 0) return;
 		
-		createElementFace(model, Direction.DOWN, c[0], c[2], c[3], c[1], tintcolor, textureId);
-		createElementFace(model, Direction.UP, c[5], c[7], c[6], c[4], tintcolor, textureId);
-		createElementFace(model, Direction.NORTH, c[2], c[0], c[4], c[6], tintcolor, textureId);
-		createElementFace(model, Direction.SOUTH, c[1], c[3], c[7], c[5], tintcolor, textureId);
-		createElementFace(model, Direction.WEST, c[0], c[1], c[5], c[4], tintcolor, textureId);
-		createElementFace(model, Direction.EAST, c[3], c[2], c[6], c[7], tintcolor, textureId);
-	
+		int level = getLiquidLevel(blockState);
+		
+		if (level < 8 && !(level == 0 && isSameLiquid(getNeighborBlock(0, 1, 0).getBlockState()))){
+			corners[4].y = getLiquidCornerHeight(-1,  -1);
+			corners[5].y = getLiquidCornerHeight(-1,  0);
+			corners[6].y = getLiquidCornerHeight(0,  -1);
+			corners[7].y = getLiquidCornerHeight(0,  0);
+		} else {
+			corners[4].y = 16f;
+			corners[5].y = 16f;
+			corners[6].y = 16f;
+			corners[7].y = 16f;
+		}
+
+		Texture stillTexture = blockModelResource.getModel().getTexture("still");
+		Texture flowTexture = blockModelResource.getModel().getTexture("flow");
+
+		int stillTextureId = stillTexture.getId();
+		int flowTextureId = flowTexture.getId();
+
+		tintcolor.set(1f, 1f, 1f, 1f, true);
+		if (useWaterColorMap && blockState.isWater) {
+			blockColorCalculator.getWaterAverageColor(block, tintcolor);
+		}
+
+		int modelStart = blockModel.getStart();
+
+		VectorM3f[] c = corners;
+		createElementFace(Direction.DOWN, c[0], c[2], c[3], c[1], tintcolor, stillTextureId, flowTextureId);
+		boolean upFaceRendered =
+				createElementFace(Direction.UP, c[5], c[7], c[6], c[4], tintcolor, stillTextureId, flowTextureId);
+		createElementFace(Direction.NORTH, c[2], c[0], c[4], c[6], tintcolor, stillTextureId, flowTextureId);
+		createElementFace(Direction.SOUTH, c[1], c[3], c[7], c[5], tintcolor, stillTextureId, flowTextureId);
+		createElementFace(Direction.WEST, c[0], c[1], c[5], c[4], tintcolor, stillTextureId, flowTextureId);
+		createElementFace(Direction.EAST, c[3], c[2], c[6], c[7], tintcolor, stillTextureId, flowTextureId);
+
+		blockModel.initialize(modelStart);
+
 		//scale down
-		model.transform(Matrix3f.createScaling(1f / 16f));
+		blockModel.scale(BLOCK_SCALE, BLOCK_SCALE, BLOCK_SCALE);
 
 		//calculate mapcolor
-		Vector4f mapcolor = texture.getColor();
-		mapcolor = mapcolor.mul(tintcolor.toVector4(coloralpha));
-		model.setMapColor(mapcolor);
-		
-		return model;
+		if (upFaceRendered) {
+			blockColor.set(stillTexture.getColorPremultiplied());
+			blockColor.multiply(tintcolor);
+
+			// apply light
+			float sl = block.getSunLightLevel() / 16f;
+			blockColor.r *= sl;
+			blockColor.g *= sl;
+			blockColor.b *= sl;
+		} else {
+			blockColor.set(0, 0, 0, 0, true);
+		}
 	}
-	
-	private float getLiquidCornerHeight(int x, int y, int z){
-		for (int ix = x; ix <= x+1; ix++){
-			for (int iz = z; iz<= z+1; iz++){
-				if (isLiquid(block.getRelativeBlock(ix, y+1, iz))){
+
+	private float getLiquidCornerHeight(int x, int z){
+		int ix, iz;
+
+		for (ix = x; ix <= x+1; ix++){
+			for (iz = z; iz<= z+1; iz++){
+				if (isSameLiquid(getNeighborBlock(ix, 1, iz).getBlockState())){
 					return 16f;
 				}
 			}
@@ -143,18 +174,19 @@ public class LiquidModelBuilder {
 		
 		float sumHeight = 0f;
 		int count = 0;
+		BlockState neighborBlockState;
 		
-		for (int ix = x; ix <= x+1; ix++){
-			for (int iz = z; iz<= z+1; iz++){
-				Block b = block.getRelativeBlock(ix, y, iz);
-				if (isLiquid(b)){
-					if (getLiquidLevel(b.getBlockState()) == 0) return 14f;
+		for (ix = x; ix <= x+1; ix++){
+			for (iz = z; iz<= z+1; iz++){
+				neighborBlockState = getNeighborBlock(ix, 0, iz).getBlockState();
+				if (isSameLiquid(neighborBlockState)){
+					if (getLiquidLevel(neighborBlockState) == 0) return 14f;
 					
-					sumHeight += getLiquidBaseHeight(b.getBlockState());
+					sumHeight += getLiquidBaseHeight(neighborBlockState);
 					count++;
 				} 
 				
-				else if (!isLiquidBlockingBlock(b)){
+				else if (!isLiquidBlockingBlock(neighborBlockState)){
 					count++;
 				}
 			}
@@ -167,93 +199,171 @@ public class LiquidModelBuilder {
 		return sumHeight / count;
 	}
 	
-	private boolean isLiquidBlockingBlock(Block block){
-		if (block.getBlockState().equals(BlockState.AIR)) return false;
-		return true;
-	}
-
-	private boolean isLiquid(Block block){
-		return isLiquid(block.getBlockState());
+	private boolean isLiquidBlockingBlock(BlockState blockState){
+		return !blockState.equals(BlockState.AIR);
 	}
 	
-	private boolean isLiquid(BlockState blockState){
-		if (blockState.getFullId().equals(liquidBlockState.getFullId())) return true;
-		return LiquidModelBuilder.isWaterlogged(blockState);
+	private boolean isSameLiquid(BlockState blockState){
+		if (blockState.getFullId().equals(this.blockState.getFullId())) return true;
+		return this.blockState.isWater && blockState.isWaterlogged;
 	}
 	
 	private float getLiquidBaseHeight(BlockState block){
 		int level = getLiquidLevel(block);
-		float baseHeight = 14f - level * 1.9f;
-		return baseHeight;
+		return level >= 8 ? 16f : 14f - level * 1.9f;
 	}
 	
 	private int getLiquidLevel(BlockState block){
-		if (block.getProperties().containsKey("level")) {
-			return Integer.parseInt(block.getProperties().get("level"));
-		}
-		return 0;
+		String levelString = block.getProperties().get("level");
+		return levelString != null ? Integer.parseInt(levelString) : 0;
 	}
-	
-	private void createElementFace(ExtendedModel model, Direction faceDir, Vector3f c0, Vector3f c1, Vector3f c2, Vector3f c3, Vector3f color, int textureId) {
-		
-		//face culling
-		Block bl = block.getRelativeBlock(faceDir);
-		if (isLiquid(bl) || (faceDir != Direction.UP && bl.isCullingNeighborFaces())) return;
-		
-		//UV
-		Vector4f uv = new Vector4f(0, 0, 16, 16).div(16);
 
-		//create both triangles
-		Vector2f[] uvs = new Vector2f[4];
-		uvs[0] = new Vector2f(uv.getX(), uv.getW());
-		uvs[1] = new Vector2f(uv.getZ(), uv.getW());
-		uvs[2] = new Vector2f(uv.getZ(), uv.getY());
-		uvs[3] = new Vector2f(uv.getX(), uv.getY());
-		
-		ExtendedFace f1 = new ExtendedFace(c0, c1, c2, uvs[0], uvs[1], uvs[2], textureId);
-		ExtendedFace f2 = new ExtendedFace(c0, c2, c3, uvs[0], uvs[2], uvs[3], textureId);
-		
-		// move face in a tiny bit to avoid z-fighting with waterlogged blocks (doesn't work because it is rounded back when storing the model later)
-		//f1.translate(faceDir.opposite().toVector().toFloat().mul(0.01));
-		//f2.translate(faceDir.opposite().toVector().toFloat().mul(0.01));
-		
-		float blockLight = bl.getBlockLightLevel();
-		float sunLight = bl.getSunLightLevel();
-		
+	private final MatrixM3f uvTransform = new MatrixM3f();
+	private boolean createElementFace(Direction faceDir, VectorM3f c0, VectorM3f c1, VectorM3f c2, VectorM3f c3, Color color, int stillTextureId, int flowTextureId) {
+		Vector3i faceDirVector = faceDir.toVector();
+
+		//face culling
+		Block bl = getNeighborBlock(
+				faceDirVector.getX(),
+				faceDirVector.getY(),
+				faceDirVector.getZ()
+		);
+
+		if (isSameLiquid(bl.getBlockState()) || (faceDir != Direction.UP && bl.isCullingNeighborFaces())) return false;
+
+		// initialize the faces
+		blockModel.initialize();
+		blockModel.add(2);
+
+		HiresTileModel tileModel = blockModel.getHiresTile();
+		int face1 = blockModel.getStart();
+		int face2 = face1 + 1;
+
+		// ####### positions
+		tileModel.setPositions(face1,
+				c0.x, c0.y, c0.z,
+				c1.x, c1.y, c1.z,
+				c2.x, c2.y, c2.z
+		);
+		tileModel.setPositions(face2,
+				c0.x, c0.y, c0.z,
+				c2.x, c2.y, c2.z,
+				c3.x, c3.y, c3.z
+		);
+
+		//UV
+		uvs[0].set(0, 1);
+		uvs[1].set(1, 1);
+		uvs[2].set(1, 0);
+		uvs[3].set(0, 0);
+
+		// still/flow ?
+		boolean flow = false;
+		if (faceDir == Direction.UP) {
+			int flowAngle = getFlowingAngle();
+			if (flowAngle != -1) {
+				flow = true;
+				uvTransform
+						.identity()
+						.translate(-0.5f, -0.5f)
+						.scale(0.5f, 0.5f, 1)
+						.rotate(-flowAngle, 0, 0, 1)
+						.translate(0.5f, 0.5f);
+
+				uvs[0].transform(uvTransform);
+				uvs[1].transform(uvTransform);
+				uvs[2].transform(uvTransform);
+				uvs[3].transform(uvTransform);
+			}
+		} else if (faceDir != Direction.DOWN) {
+			flow = true;
+
+			uvs[0].transform(FLOWING_UV_SCALE);
+			uvs[1].transform(FLOWING_UV_SCALE);
+			uvs[2].transform(FLOWING_UV_SCALE);
+			uvs[3].transform(FLOWING_UV_SCALE);
+		}
+
+		tileModel.setUvs(face1,
+				uvs[0].x, uvs[0].y,
+				uvs[1].x, uvs[1].y,
+				uvs[2].x, uvs[2].y
+		);
+
+		tileModel.setUvs(face2,
+				uvs[0].x, uvs[0].y,
+				uvs[2].x, uvs[2].y,
+				uvs[3].x, uvs[3].y
+		);
+
+		// texture index
+		tileModel.setMaterialIndex(face1, flow ? flowTextureId : stillTextureId);
+		tileModel.setMaterialIndex(face2, flow ? flowTextureId : stillTextureId);
+
+		// color
+		tileModel.setColor(face1, color.r, color.g, color.b);
+		tileModel.setColor(face2, color.r, color.g, color.b);
+
+		//ao
+		tileModel.setAOs(face1, 1, 1, 1);
+		tileModel.setAOs(face2, 1, 1, 1);
+
+		// light
+		int blockLight, sunLight;
 		if (faceDir == Direction.UP) {
 			blockLight = block.getBlockLightLevel();
 			sunLight = block.getSunLightLevel();
+		} else {
+			blockLight = bl.getBlockLightLevel();
+			sunLight = bl.getSunLightLevel();
 		}
-		
-		f1.setC1(color);
-		f1.setC2(color);
-		f1.setC3(color);
-		f2.setC1(color);
-		f2.setC2(color);
-		f2.setC3(color);
-		
-		f1.setBl1(blockLight);
-		f1.setBl2(blockLight);
-		f1.setBl3(blockLight);
-		f2.setBl1(blockLight);
-		f2.setBl2(blockLight);
-		f2.setBl3(blockLight);
-		
-		f1.setSl1(sunLight);
-		f1.setSl2(sunLight);
-		f1.setSl3(sunLight);
-		f2.setSl1(sunLight);
-		f2.setSl2(sunLight);
-		f2.setSl3(sunLight);
-		
-		//add the face
-		model.addFace(f1);
-		model.addFace(f2);
+
+		tileModel.setBlocklight(face1, blockLight);
+		tileModel.setBlocklight(face2, blockLight);
+
+		tileModel.setSunlight(face1, sunLight);
+		tileModel.setSunlight(face2, sunLight);
+
+		return true;
 	}
-	
-	public static boolean isWaterlogged(BlockState blockState) {
-		if (DEFAULT_WATERLOGGED_BLOCK_IDS.contains(blockState.getFullId())) return true;
-		return blockState.getProperties().getOrDefault("waterlogged", "false").equals("true");
+
+	private Block getNeighborBlock(int dx, int dy, int dz) {
+		int i = (dx + 1) * 9 + (dy + 1) * 3 + (dz + 1);
+		if (i == 13) return block;
+		return blocksAround[i].set(
+				block.getWorld(),
+				block.getX() + dx,
+				block.getY() + dy,
+				block.getZ() + dz
+		);
+	}
+
+	private final VectorM2f flowingVector = new VectorM2f(0, 0);
+	private int getFlowingAngle() {
+		float own = getLiquidBaseHeight(blockState) * BLOCK_SCALE;
+		if (own > 0.8) return -1;
+
+		flowingVector.set(0, 0);
+
+		flowingVector.x += compareLiquidHeights(own, -1, 0);
+		flowingVector.x -= compareLiquidHeights(own,  1, 0);
+
+		flowingVector.y -= compareLiquidHeights(own, 0, -1);
+		flowingVector.y += compareLiquidHeights(own, 0,  1);
+
+		if (flowingVector.x == 0 && flowingVector.y == 0) return -1; // not flowing
+
+		int angle = (int) (flowingVector.angleTo(0, -1) * TrigMath.RAD_TO_DEG);
+		return flowingVector.x < 0 ? angle : -angle;
+	}
+
+	private float compareLiquidHeights(float ownHeight, int dx, int dz) {
+		BlockState state = getNeighborBlock(dx, 0,  dz).getBlockState();
+		if (state.isAir) return 0;
+		if (!isSameLiquid(state)) return 0;
+
+		float otherHeight = getLiquidBaseHeight(state) * BLOCK_SCALE;
+		return otherHeight - ownHeight;
 	}
 	
 }

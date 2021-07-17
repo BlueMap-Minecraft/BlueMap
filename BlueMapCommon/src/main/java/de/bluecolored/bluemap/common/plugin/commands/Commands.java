@@ -529,14 +529,14 @@ public class Commands<S> {
 		new Thread(() -> {
 			// collect and output debug info
 			Vector3i blockPos = position.floor().toInt();
-			Block block = world.getBlock(blockPos);
-			Block blockBelow = world.getBlock(blockPos.add(0, -1, 0));
+			Block block = new Block(world, blockPos.getX(), blockPos.getY(), blockPos.getZ());
+			Block blockBelow = new Block(null, 0, 0, 0).copy(block).add(0, -1, 0);
 			
 			String blockIdMeta = "";
 			String blockBelowIdMeta = "";
 			
 			if (world instanceof MCAWorld) {
-				MCAChunk chunk = ((MCAWorld) world).getChunk(MCAWorld.blockToChunk(blockPos));
+				MCAChunk chunk = ((MCAWorld) world).getChunkAtBlock(blockPos.getX(), blockPos.getY(), blockPos.getZ());
 				if (chunk instanceof ChunkAnvil112) {
 					blockIdMeta = " (" + ((ChunkAnvil112) chunk).getBlockIdMeta(blockPos) + ")";
 					blockBelowIdMeta = " (" + ((ChunkAnvil112) chunk).getBlockIdMeta(blockPos.add(0, -1, 0)) + ")";

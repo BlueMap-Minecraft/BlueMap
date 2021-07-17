@@ -30,6 +30,7 @@ import de.bluecolored.bluemap.common.web.WebSettings;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.config.*;
 import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.core.debug.OneBlockWorld;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;

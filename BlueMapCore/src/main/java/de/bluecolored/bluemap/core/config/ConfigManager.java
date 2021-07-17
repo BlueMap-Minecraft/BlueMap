@@ -129,7 +129,7 @@ public class ConfigManager {
 				false
 				);
 		blockColorsConfigNode = joinFromResourcePack(resourcePack, "blockColors.json", blockColorsConfigNode); 
-		resourcePack.getBlockColorCalculator().loadColorConfig(blockColorsConfigNode);
+		resourcePack.getBlockColorCalculatorFactory().loadColorConfig(blockColorsConfigNode);
 
 		//load blockIds.json from resources, config-folder and resourcepack
 		URL blockIdsConfigUrl = BlueMap.class.getResource("/de/bluecolored/bluemap/" + resourcePack.getMinecraftVersion().getResource().getResourcePrefix() + "/blockIds.json");

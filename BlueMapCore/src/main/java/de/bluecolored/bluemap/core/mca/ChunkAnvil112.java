@@ -88,14 +88,14 @@ public class ChunkAnvil112 extends MCAChunk {
 	}
 
 	@Override
-	public BlockState getBlockState(Vector3i pos) {
-		int sectionY = pos.getY() >> 4;
+	public BlockState getBlockState(int x, int y, int z) {
+		int sectionY = y >> 4;
 		if (sectionY < 0 || sectionY >= this.sections.length) return BlockState.AIR;
 		
 		Section section = this.sections[sectionY];
 		if (section == null) return BlockState.AIR;
 		
-		return section.getBlockState(pos);
+		return section.getBlockState(x, y, z);
 	}
 	
 	public String getBlockIdMeta(Vector3i pos) {
@@ -109,17 +109,17 @@ public class ChunkAnvil112 extends MCAChunk {
 	}
 	
 	@Override
-	public LightData getLightData(Vector3i pos) {
-		if (!hasLight) return LightData.SKY;
+	public LightData getLightData(int x, int y, int z, LightData target) {
+		if (!hasLight) return target.set(15, 0);
 
-		int sectionY = pos.getY() >> 4;
+		int sectionY = y >> 4;
 		if (sectionY < 0 || sectionY >= this.sections.length)
-			return (pos.getY() < 0) ? LightData.ZERO : LightData.SKY;
+			return (y < 0) ? target.set(0, 0) : target.set(15, 0);
 		
 		Section section = this.sections[sectionY];
-		if (section == null) return LightData.SKY;
+		if (section == null) return target.set(15, 0);
 		
-		return section.getLightData(pos);
+		return section.getLightData(x, y, z, target);
 	}
 
 	@Override
@@ -129,6 +129,7 @@ public class ChunkAnvil112 extends MCAChunk {
 		int biomeByteIndex = z * 16 + x;
 
 		if (biomeByteIndex >= this.biomes.length) return Biome.DEFAULT;
+
 		return biomeIdMapper.get(biomes[biomeByteIndex] & 0xFF);
 	}
 
@@ -158,10 +159,9 @@ public class ChunkAnvil112 extends MCAChunk {
 			return sectionY;
 		}
 		
-		public BlockState getBlockState(Vector3i pos) {
-			int x = pos.getX() & 0xF; // Math.floorMod(pos.getX(), 16)
-			int y = pos.getY() & 0xF;
-			int z = pos.getZ() & 0xF;
+		public BlockState getBlockState(int x, int y, int z) {
+			x &= 0xF; y &= 0xF; z &= 0xF; // Math.floorMod(pos.getX(), 16)
+
 			int blockByteIndex = y * 256 + z * 16 + x;
 			int blockHalfByteIndex = blockByteIndex >> 1; // blockByteIndex / 2 
 			boolean largeHalf = (blockByteIndex & 0x1) != 0; // (blockByteIndex % 2) == 0
@@ -202,10 +202,9 @@ public class ChunkAnvil112 extends MCAChunk {
 			return blockId + ":" + blockData + " " + forgeIdMapping;
 		}
 		
-		public LightData getLightData(Vector3i pos) {
-			int x = pos.getX() & 0xF; // Math.floorMod(pos.getX(), 16)
-			int y = pos.getY() & 0xF;
-			int z = pos.getZ() & 0xF;
+		public LightData getLightData(int x, int y, int z, LightData target) {
+			x &= 0xF; y &= 0xF; z &= 0xF; // Math.floorMod(pos.getX(), 16)
+
 			int blockByteIndex = y * 256 + z * 16 + x;
 			int blockHalfByteIndex = blockByteIndex >> 1; // blockByteIndex / 2 
 			boolean largeHalf = (blockByteIndex & 0x1) != 0; // (blockByteIndex % 2) == 0
@@ -213,7 +212,7 @@ public class ChunkAnvil112 extends MCAChunk {
 			int blockLight = getByteHalf(this.blockLight[blockHalfByteIndex], largeHalf);
 			int skyLight = getByteHalf(this.skyLight[blockHalfByteIndex], largeHalf);
 			
-			return new LightData(skyLight, blockLight);
+			return target.set(skyLight, blockLight);
 		}
 		
 		/**

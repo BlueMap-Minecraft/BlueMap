@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.core.config;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.core.BlueMap;
+import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.mapping.BlockPropertiesMapper;
 import de.bluecolored.bluemap.core.resourcepack.NoSuchResourceException;
@@ -67,7 +68,7 @@ public class BlockPropertiesConfig implements BlockPropertiesMapper {
 		for (Entry<Object, ? extends ConfigurationNode> e : node.childrenMap().entrySet()){
 			String key = e.getKey().toString();
 			try {
-				BlockState bsKey = BlockState.fromString(key);
+				BlockState bsKey = BlockState.fromString(resourcePack.getMinecraftVersion(), key);
 				BlockProperties bsValue = new BlockProperties(
 						e.getValue().node("culling").getBoolean(true),
 						e.getValue().node("occluding").getBoolean(true),
@@ -99,13 +100,14 @@ public class BlockPropertiesConfig implements BlockPropertiesMapper {
 		}
 		
 		BlockProperties generated = BlockProperties.SOLID;
+		MinecraftVersion version = MinecraftVersion.LATEST_SUPPORTED;
 		
 		if (resourcePack != null) {
 			try {
 				boolean culling = false;
 				boolean occluding = false;
 	
-				for(TransformedBlockModelResource model : resourcePack.getBlockStateResource(bs).getModels(bs)) {
+				for(TransformedBlockModelResource model : resourcePack.getBlockStateResource(bs).getModels(bs, new ArrayList<>(10))) {
 					culling = culling || model.getModel().isCulling();
 					occluding = occluding || model.getModel().isOccluding();
 					if (culling && occluding) break;
@@ -113,9 +115,11 @@ public class BlockPropertiesConfig implements BlockPropertiesMapper {
 				
 				generated = new BlockProperties(culling, occluding, generated.isFlammable());
 			} catch (NoSuchResourceException ignore) {} //ignoring this because it will be logged later again if we try to render that block
+
+			version = resourcePack.getMinecraftVersion();
 		}
 		
-		mappings.computeIfAbsent(bs.getFullId(), k -> new ArrayList<>()).add(new BlockStateMapping<>(new BlockState(bs.getFullId()), generated));
+		mappings.computeIfAbsent(bs.getFullId(), k -> new ArrayList<>()).add(new BlockStateMapping<>(new BlockState(version, bs.getFullId()), generated));
 		if (autopoulationConfigLoader != null) {
 			synchronized (autopoulationConfigLoader) {
 				try {

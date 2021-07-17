@@ -24,20 +24,21 @@
  */
 package de.bluecolored.bluemap.core.resourcepack;
 
-import com.flowpowered.math.vector.Vector4f;
+import de.bluecolored.bluemap.core.util.math.Color;
 
 public class Texture {
 	
 	private final int id;
 	private final String path;
-	private Vector4f color;
-	private boolean isHalfTransparent;
-	private String texture;
+	private final Color color, colorPremultiplied;
+	private final boolean isHalfTransparent;
+	private final String texture;
 	
-	protected Texture(int id, String path, Vector4f color, boolean halfTransparent, String texture) {
+	protected Texture(int id, String path, Color color, boolean halfTransparent, String texture) {
 		this.id = id;
 		this.path = path;
-		this.color = color;
+		this.color = new Color().set(color).straight();
+		this.colorPremultiplied = new Color().set(color).premultiplied();
 		this.isHalfTransparent = halfTransparent;
 		this.texture = texture;
 	}
@@ -54,8 +55,16 @@ public class Texture {
 	 * Returns the calculated median color of the {@link Texture}.
 	 * @return The median color of this {@link Texture}
 	 */
-	public Vector4f getColor() {
+	public Color getColorStraight() {
 		return color;
+	}
+
+	/**
+	 * Returns the calculated median color of the {@link Texture} (premultiplied).
+	 * @return The (premultiplied) median color of this {@link Texture}
+	 */
+	public Color getColorPremultiplied() {
+		return colorPremultiplied;
 	}
 	
 	/**

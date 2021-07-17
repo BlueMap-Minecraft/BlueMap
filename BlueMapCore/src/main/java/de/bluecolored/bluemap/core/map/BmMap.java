@@ -27,9 +27,9 @@ package de.bluecolored.bluemap.core.map;
 import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.map.hires.HiresModel;
 import de.bluecolored.bluemap.core.map.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.map.lowres.LowresModelManager;
+import de.bluecolored.bluemap.core.map.hires.HiresTileMeta;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.world.Grid;
 import de.bluecolored.bluemap.core.world.World;
@@ -103,8 +103,8 @@ public class BmMap {
 
 		long start = System.nanoTime();
 
-		HiresModel hiresModel = hiresModelManager.render(world, tile);
-		lowresModelManager.render(hiresModel);
+		HiresTileMeta tileMeta = hiresModelManager.render(world, tile);
+		lowresModelManager.render(tileMeta);
 
 		long end = System.nanoTime();
 		long delta = end - start;

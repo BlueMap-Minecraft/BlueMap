@@ -24,12 +24,15 @@
  */
 package de.bluecolored.bluemap.core.resourcepack;
 
+import com.flowpowered.math.TrigMath;
 import com.flowpowered.math.vector.Vector3f;
+import com.flowpowered.math.vector.Vector3i;
 import com.flowpowered.math.vector.Vector4f;
 import de.bluecolored.bluemap.core.resourcepack.BlockModelResource.Element.Face;
 import de.bluecolored.bluemap.core.resourcepack.fileaccess.FileAccess;
-import de.bluecolored.bluemap.core.util.Axis;
 import de.bluecolored.bluemap.core.util.Direction;
+import de.bluecolored.bluemap.core.util.math.Axis;
+import de.bluecolored.bluemap.core.util.math.MatrixM4f;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 
@@ -39,6 +42,7 @@ import java.util.*;
 import java.util.Map.Entry;
 
 public class BlockModelResource {
+	private static final double FIT_TO_BLOCK_SCALE_MULTIPLIER = 2 - Math.sqrt(2);
 
 	private ModelType modelType = ModelType.NORMAL;
 	
@@ -79,6 +83,7 @@ public class BlockModelResource {
 		
 		private Vector3f from = Vector3f.ZERO, to = new Vector3f(16f, 16f, 16f);
 		private Rotation rotation = new Rotation();
+		private MatrixM4f rotationMatrix;
 		private boolean shade = true;
 		private EnumMap<Direction, Face> faces = new EnumMap<>(Direction.class);
 		private boolean fullCube = false;
@@ -132,6 +137,10 @@ public class BlockModelResource {
 
 		public Rotation getRotation() {
 			return rotation;
+		}
+
+		public MatrixM4f getRotationMatrix() {
+			return rotationMatrix;
 		}
 
 		public boolean isShade() {
@@ -318,7 +327,7 @@ public class BlockModelResource {
 							break;
 						}
 						
-						if (texture.getColor().getW() < 1) {
+						if (texture.getColorStraight().a < 1) {
 							blockModel.culling = false;
 							break;
 						}
@@ -346,6 +355,37 @@ public class BlockModelResource {
 				element.rotation.axis = Axis.fromString(node.node("rotation", "axis").getString("x"));
 				if (!node.node("rotation", "origin").virtual()) element.rotation.origin = readVector3f(node.node("rotation", "origin"));
 				element.rotation.rescale = node.node("rotation", "rescale").getBoolean(false);
+
+				// rotation matrix
+				float angle = element.rotation.angle;
+				Vector3i axis = element.rotation.axis.toVector();
+				Vector3f origin = element.rotation.origin;
+				boolean rescale = element.rotation.rescale;
+
+				MatrixM4f rot = new MatrixM4f();
+				if (angle != 0f) {
+					rot.translate(-origin.getX(), -origin.getY(), -origin.getZ());
+					rot.rotate(
+							angle,
+							axis.getX(),
+							axis.getY(),
+							axis.getZ()
+					);
+
+					if (rescale) {
+						float scale = (float) (Math.abs(TrigMath.sin(angle * TrigMath.DEG_TO_RAD)) * FIT_TO_BLOCK_SCALE_MULTIPLIER);
+						rot.scale(
+								(1 - axis.getX()) * scale + 1,
+								(1 - axis.getY()) * scale + 1,
+								(1 - axis.getZ()) * scale + 1
+						);
+					}
+
+					rot.translate(origin.getX(), origin.getY(), origin.getZ());
+				}
+				element.rotationMatrix = rot;
+			} else {
+				element.rotationMatrix = new MatrixM4f();
 			}
 			
 			boolean allDirs = true;

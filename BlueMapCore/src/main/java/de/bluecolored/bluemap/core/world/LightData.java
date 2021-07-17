@@ -25,16 +25,17 @@
 package de.bluecolored.bluemap.core.world;
 
 public class LightData {
-	
-	public static final LightData ZERO = new LightData(0, 0);
-	public static final LightData SKY = new LightData(15, 0);
-	public static final LightData FULL = new LightData(15, 15);
-	
-	private final int skyLight, blockLight;
+	private int skyLight, blockLight;
 	
 	public LightData(int skyLight, int blockLight) {		
 		this.skyLight = skyLight;
 		this.blockLight = blockLight;
+	}
+
+	public LightData set(int skyLight, int blockLight) {
+		this.skyLight = skyLight;
+		this.blockLight = blockLight;
+		return this;
 	}
 
 	public int getSkyLight() {
