@@ -79,4 +79,12 @@ public abstract class MCAChunk implements Chunk {
 		return EmptyChunk.INSTANCE;
 	}
 
+	@Override
+	public String toString() {
+		return "MCAChunk{" +
+			   "dataVersion=" + dataVersion +
+			   "isGenerated()=" + isGenerated() +
+			   '}';
+	}
+
 }
