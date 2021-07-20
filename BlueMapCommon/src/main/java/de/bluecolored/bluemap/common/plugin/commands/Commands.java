@@ -749,11 +749,16 @@ public class Commands<S> {
 				if (worldToRender != null) {
 					plugin.getServerInterface().persistWorldChanges(worldToRender.getUUID());
 					for (BmMap map : plugin.getMapTypes()) {
-						if (map.getWorld().equals(worldToRender)) maps.add(map);
+						if (map.getWorld().getUUID().equals(worldToRender.getUUID())) maps.add(map);
 					}
 				} else {
 					plugin.getServerInterface().persistWorldChanges(mapToRender.getWorld().getUUID());
 					maps.add(mapToRender);
+				}
+
+				if (maps.isEmpty()) {
+					source.sendMessage(Text.of(TextColor.RED, "No map has been found for this world that could be updated!"));
+					return;
 				}
 
 				for (BmMap map : maps) {
