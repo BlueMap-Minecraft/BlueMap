@@ -29,7 +29,7 @@ import de.bluecolored.bluemap.core.map.hires.blockmodel.BlockStateModelFactory;
 import de.bluecolored.bluemap.core.resourcepack.NoSuchResourceException;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.math.Color;
-import de.bluecolored.bluemap.core.world.Block;
+import de.bluecolored.bluemap.core.world.BlockNeighborhood;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.World;
 
@@ -54,9 +54,8 @@ public class HiresModelRenderer {
 		BlockStateModelFactory modelFactory = new BlockStateModelFactory(resourcePack, renderSettings);
 
 		int maxHeight, minY, maxY;
-		float dx, dz;
 		Color columnColor = new Color(), blockColor = new Color();
-		Block block = new Block(world, 0, 0, 0);
+		BlockNeighborhood<?> block = new BlockNeighborhood<>(resourcePack, world, 0, 0, 0);
 		BlockModelView blockModel = new BlockModelView(model);
 
 		int x, y, z;
@@ -96,13 +95,6 @@ public class HiresModelRenderer {
 						maxHeight = y;
 						columnColor.overlay(blockColor);
 					}
-					
-					//random offset
-					if (block.getBlockState().isRandomOffset){
-						dx = (hashToFloat(x, z, 123984) - 0.5f) * 0.75f;
-						dz = (hashToFloat(x, z, 345542) - 0.5f) * 0.75f;
-						blockModel.translate(dx, 0, dz);
-					}
 				}
 
 				tileMeta.setHeight(x, z, maxHeight);
@@ -113,20 +105,4 @@ public class HiresModelRenderer {
 
 		return tileMeta;
 	}
-
-	/**
-	 * Hashes the provided position to a random float between 0 and 1.<br>
-	 * <br>
-	 * <i>(Implementation adapted from https://github.com/SpongePowered/SpongeAPI/blob/ecd761a70219e467dea47a09fc310e8238e9911f/src/main/java/org/spongepowered/api/extra/skylands/SkylandsUtil.java)</i>
-	 *
-	 * @param x The x component of the position
-	 * @param z The z component of the position
-	 * @param seed A seed for the hashing
-	 * @return The hashed value between 0 and 1
-	 */
-	public static float hashToFloat(int x, int z, long seed) {
-		final long hash = x * 73428767 ^ z * 4382893 ^ seed * 457;
-		return (hash * (hash + 456149) & 0x00ffffff) / (float) 0x01000000;
-	}
-	
 }

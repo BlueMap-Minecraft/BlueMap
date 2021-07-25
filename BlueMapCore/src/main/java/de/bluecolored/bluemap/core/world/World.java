@@ -26,7 +26,6 @@ package de.bluecolored.bluemap.core.world;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
-import de.bluecolored.bluemap.core.mca.mapping.BlockPropertiesMapper;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -58,21 +57,6 @@ public interface World {
 	Grid getRegionGrid();
 
 	/**
-	 * Returns the {@link Biome} on the specified position or the default biome if the block is not generated yet.
-	 */
-	Biome getBiome(int x, int y, int z);
-
-	/**
-	 * Returns the {@link BlockState} on the specified position or an air-block if the block is not generated yet.
-	 */
-	BlockState getBlockState(int x, int y, int z);
-
-	/**
-	 * Returns the BlockProperties for a block-state
-	 */
-	BlockProperties getBlockProperties(BlockState blockState);
-
-	/**
 	 * Returns the {@link Chunk} on the specified block-position
 	 */
 	Chunk getChunkAtBlock(int x, int y, int z);
@@ -83,7 +67,7 @@ public interface World {
 	Chunk getChunk(int x, int z);
 
 	/**
-	 * Returns the Chunk on the specified chunk-position
+	 * Returns the {@link Region} on the specified region-position
 	 */
 	Region getRegion(int x, int z);
 
@@ -107,10 +91,5 @@ public interface World {
 	 * Cleans up invalid cache-entries to free up memory
 	 */
 	void cleanUpChunkCache();
-
-	/**
-	 * Returns the block-properties manager used for this world
-	 */
-	BlockPropertiesMapper getBlockPropertiesMapper();
 	
 }

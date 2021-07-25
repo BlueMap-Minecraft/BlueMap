@@ -22,34 +22,52 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.mca;
+package de.bluecolored.bluemap.core.resourcepack;
 
 import de.bluecolored.bluemap.core.world.Biome;
-import de.bluecolored.bluemap.core.world.BlockState;
-import de.bluecolored.bluemap.core.world.LightData;
+import org.spongepowered.configurate.ConfigurationNode;
 
-public class EmptyChunk extends MCAChunk {
+import java.util.Map.Entry;
 
-	public static final MCAChunk INSTANCE = new EmptyChunk();
+public class BiomeConfig {
 
-	@Override
-	public boolean isGenerated() {
-		return false;
+	private Biome[] biomes;
+
+	public BiomeConfig() {
+		biomes = new Biome[10];
 	}
 
-	@Override
-	public BlockState getBlockState(int x, int y, int z) {
-		return BlockState.AIR;
+	public void load(ConfigurationNode node) {
+		for (Entry<Object, ? extends ConfigurationNode> e : node.childrenMap().entrySet()){
+			String id = e.getKey().toString();
+			Biome biome = Biome.create(id, e.getValue());
+
+			int numeralId = biome.getNumeralId();
+			ensureAvailability(numeralId);
+			biomes[numeralId] = biome;
+		}
 	}
 
-	@Override
-	public LightData getLightData(int x, int y, int z, LightData target) {
-		return target.set(0, 0);
+	public Biome getBiome(int id) {
+		if (id < biomes.length) {
+			Biome biome = biomes[id];
+			return biome != null ? biome : Biome.DEFAULT;
+		}
+
+		return Biome.DEFAULT;
 	}
 
-	@Override
-	public int getBiome(int x, int y, int z) {
-		return Biome.DEFAULT.getNumeralId();
+	private void ensureAvailability(int id) {
+		if (id >= biomes.length) {
+			int newSize = biomes.length;
+			do {
+				newSize = (int) (newSize * 1.5) + 1;
+			} while (id >= newSize);
+
+			Biome[] newArray = new Biome[newSize];
+			System.arraycopy(biomes, 0, newArray, 0, biomes.length);
+			biomes = newArray;
+		}
 	}
-	
+
 }

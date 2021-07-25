@@ -22,34 +22,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.mca;
+package de.bluecolored.bluemap.core.resourcepack.blockmodel;
 
-import de.bluecolored.bluemap.core.world.Biome;
-import de.bluecolored.bluemap.core.world.BlockState;
-import de.bluecolored.bluemap.core.world.LightData;
+public enum ModelType {
 
-public class EmptyChunk extends MCAChunk {
-
-	public static final MCAChunk INSTANCE = new EmptyChunk();
-
-	@Override
-	public boolean isGenerated() {
-		return false;
-	}
-
-	@Override
-	public BlockState getBlockState(int x, int y, int z) {
-		return BlockState.AIR;
-	}
-
-	@Override
-	public LightData getLightData(int x, int y, int z, LightData target) {
-		return target.set(0, 0);
-	}
-
-	@Override
-	public int getBiome(int x, int y, int z) {
-		return Biome.DEFAULT.getNumeralId();
-	}
+	NORMAL,
+	LIQUID;
 	
 }

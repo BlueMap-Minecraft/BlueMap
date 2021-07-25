@@ -24,9 +24,7 @@
  */
 package de.bluecolored.bluemap.core.mca;
 
-import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.mca.mapping.BiomeMapper;
 import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.LightData;
@@ -39,10 +37,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class ChunkAnvil116 extends MCAChunk {
-	private static final MinecraftVersion VERSION = new MinecraftVersion(1, 16);
-
-	private BiomeMapper biomeIdMapper;
-
 	private boolean isGenerated;
 	private boolean hasLight;
 
@@ -52,10 +46,8 @@ public class ChunkAnvil116 extends MCAChunk {
 	private int[] biomes;
 	
 	@SuppressWarnings("unchecked")
-	public ChunkAnvil116(CompoundTag chunkTag, boolean ignoreMissingLightData, BiomeMapper biomeIdMapper) {
+	public ChunkAnvil116(CompoundTag chunkTag, boolean ignoreMissingLightData) {
 		super(chunkTag);
-		
-		this.biomeIdMapper = biomeIdMapper;
 		
 		CompoundTag levelData = chunkTag.getCompoundTag("Level");
 		
@@ -138,8 +130,8 @@ public class ChunkAnvil116 extends MCAChunk {
 	}
 
 	@Override
-	public Biome getBiome(int x, int y, int z) {
-		if (biomes.length < 16) return Biome.DEFAULT;
+	public int getBiome(int x, int y, int z) {
+		if (biomes.length < 16) return Biome.DEFAULT.getNumeralId();
 
 		x = (x & 0xF) / 4; // Math.floorMod(pos.getX(), 16)
 		z = (z & 0xF) / 4;
@@ -150,7 +142,7 @@ public class ChunkAnvil116 extends MCAChunk {
 		if (biomeIntIndex >= biomes.length) biomeIntIndex -= (((biomeIntIndex - biomes.length) >> 4) + 1) * 16;
 		if (biomeIntIndex < 0) biomeIntIndex -= (biomeIntIndex >> 4) * 16;
 		
-		return biomeIdMapper.get(biomes[biomeIntIndex]);
+		return biomes[biomeIntIndex];
 	}
 
 	@Override
@@ -213,7 +205,7 @@ public class ChunkAnvil116 extends MCAChunk {
 						}
 					}
 					
-					palette[i] = new BlockState(VERSION, id, properties);
+					palette[i] = new BlockState(id, properties);
 				}
 			} else {
 				this.palette = new BlockState[0];

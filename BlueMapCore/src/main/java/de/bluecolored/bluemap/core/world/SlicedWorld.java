@@ -26,7 +26,6 @@ package de.bluecolored.bluemap.core.world;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
-import de.bluecolored.bluemap.core.mca.mapping.BlockPropertiesMapper;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -94,22 +93,6 @@ public class SlicedWorld implements World {
 	}
 
 	@Override
-	public Biome getBiome(int x, int y, int z) {
-		return world.getBiome(x, y, z);
-	}
-
-	@Override
-	public BlockProperties getBlockProperties(BlockState blockState) {
-		return world.getBlockProperties(blockState);
-	}
-
-	@Override
-	public BlockState getBlockState(int x, int y, int z) {
-		if (!isInside(x, y, z)) return BlockState.AIR;
-		return world.getBlockState(x, y, z);
-	}
-
-	@Override
 	public Chunk getChunk(int x, int z) {
 		return world.getChunk(x, z);
 	}
@@ -151,11 +134,6 @@ public class SlicedWorld implements World {
 	@Override
 	public void cleanUpChunkCache() {
 		world.cleanUpChunkCache();
-	}
-
-	@Override
-	public BlockPropertiesMapper getBlockPropertiesMapper() {
-		return world.getBlockPropertiesMapper();
 	}
 
 	private boolean isInside(int x, int z) {

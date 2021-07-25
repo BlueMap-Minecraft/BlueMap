@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.core.mca;
 
-import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.LightData;
@@ -59,7 +58,7 @@ public abstract class MCAChunk implements Chunk {
 	public abstract LightData getLightData(int x, int y, int z, LightData target);
 
 	@Override
-	public abstract Biome getBiome(int x, int y, int z);
+	public abstract int getBiome(int x, int y, int z);
 
 	@Override
 	public int getMaxY(int x, int z) {
@@ -73,11 +72,10 @@ public abstract class MCAChunk implements Chunk {
 	
 	public static MCAChunk create(MCAWorld world, CompoundTag chunkTag, boolean ignoreMissingLightData) throws IOException {
 		int version = chunkTag.getInt("DataVersion");
-		
-		if (version < 1400) return new ChunkAnvil112(chunkTag, ignoreMissingLightData, world.getBiomeIdMapper(), world.getBlockIdMapper(), world::getForgeBlockIdMapping);
-		if (version < 2200) return new ChunkAnvil113(chunkTag, ignoreMissingLightData, world.getBiomeIdMapper());
-		if (version < 2500) return new ChunkAnvil115(chunkTag, ignoreMissingLightData, world.getBiomeIdMapper());
-		return new ChunkAnvil116(chunkTag, ignoreMissingLightData, world.getBiomeIdMapper());
+
+		if (version < 2200) return new ChunkAnvil113(chunkTag, ignoreMissingLightData);
+		if (version < 2500) return new ChunkAnvil115(chunkTag, ignoreMissingLightData);
+		return new ChunkAnvil116(chunkTag, ignoreMissingLightData);
 	}
 
 	public static MCAChunk empty() {

@@ -22,34 +22,43 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.mca;
+package de.bluecolored.bluemap.core.world;
 
-import de.bluecolored.bluemap.core.world.Biome;
-import de.bluecolored.bluemap.core.world.BlockState;
-import de.bluecolored.bluemap.core.world.LightData;
+import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 
-public class EmptyChunk extends MCAChunk {
+import java.util.Objects;
 
-	public static final MCAChunk INSTANCE = new EmptyChunk();
+public class ResourcePackBlock<T extends ResourcePackBlock<T>> extends Block<T> {
 
-	@Override
-	public boolean isGenerated() {
-		return false;
-	}
+    private final ResourcePack resourcePack;
+    private BlockProperties properties;
+    private Biome biome;
 
-	@Override
-	public BlockState getBlockState(int x, int y, int z) {
-		return BlockState.AIR;
-	}
+    public ResourcePackBlock(ResourcePack resourcePack, World world, int x, int y, int z) {
+        super(world, x, y, z);
+        this.resourcePack = Objects.requireNonNull(resourcePack);
+    }
 
-	@Override
-	public LightData getLightData(int x, int y, int z, LightData target) {
-		return target.set(0, 0);
-	}
+    @Override
+    protected void reset() {
+        super.reset();
 
-	@Override
-	public int getBiome(int x, int y, int z) {
-		return Biome.DEFAULT.getNumeralId();
-	}
-	
+        this.properties = null;
+        this.biome = null;
+    }
+
+    public BlockProperties getProperties() {
+        if (properties == null) properties = resourcePack.getBlockProperties(getBlockState());
+        return properties;
+    }
+
+    public Biome getBiome() {
+        if (biome == null) biome = resourcePack.getBiome(getBiomeId());
+        return biome;
+    }
+
+    public ResourcePack getResourcePack() {
+        return resourcePack;
+    }
+
 }

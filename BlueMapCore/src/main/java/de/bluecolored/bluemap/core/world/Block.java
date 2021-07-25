@@ -24,10 +24,7 @@
  */
 package de.bluecolored.bluemap.core.world;
 
-import com.flowpowered.math.vector.Vector3i;
-import de.bluecolored.bluemap.core.util.Direction;
-
-public class Block {
+public class Block<T extends Block<T>> {
 
 	private World world;
 	private int x, y, z;
@@ -35,23 +32,19 @@ public class Block {
 	private Chunk chunk;
 
 	private BlockState blockState;
-	private BlockProperties properties;
 	private LightData lightData;
-	private Biome biome;
-	
-	private int sunLight;
-	private int blockLight;
-
-	private final transient LightData tempLight;
+	private int biomeId;
 	
 	public Block(World world, int x, int y, int z) {
-		tempLight = new LightData(0, 0);
-
 		set(world, x, y, z);
 	}
 
-	public Block set(World world, int x, int y, int z) {
-		if (this.x == x && this.y == y && this.z == z && this.world == world) return this;
+	public T set(World world, int x, int y, int z) {
+		if (this.x == x && this.z == z && this.world == world){
+			if (this.y == y) return self();
+		} else {
+			this.chunk = null; //only reset the chunk if x or z have changed
+		}
 
 		this.world = world;
 		this.x = x;
@@ -60,11 +53,15 @@ public class Block {
 
 		reset();
 
-		return this;
+		return self();
 	}
 
-	public Block set(int x, int y, int z) {
-		if (this.x == x && this.y == y && this.z == z) return this;
+	public T set(int x, int y, int z) {
+		if (this.x == x && this.z == z){
+			if (this.y == y) return self();
+		} else {
+			this.chunk = null; //only reset the chunk if x or z have changed
+		}
 
 		this.x = x;
 		this.y = y;
@@ -72,27 +69,49 @@ public class Block {
 
 		reset();
 
-		return this;
+		return self();
 	}
 
-	private void reset() {
-		this.chunk = null;
-
+	protected void reset() {
 		this.blockState = null;
-		this.properties = null;
 		this.lightData = new LightData(-1, -1);
-		this.biome = null;
-
-		this.blockLight = -1;
-		this.sunLight = -1;
+		this.biomeId = -1;
 	}
 
-	public Block add(int dx, int dy, int dz) {
+	public T add(int dx, int dy, int dz) {
 		return set(x + dx, y + dy, z + dz);
 	}
 
-	public Block copy(Block source) {
-		return set(source.world, source.x, source.y, source.z);
+	public T copy(Block<?> source) {
+		this.world = source.world;
+		this.chunk = source.chunk;
+		this.x = source.x;
+		this.y = source.y;
+		this.z = source.z;
+
+		reset();
+
+		this.blockState = source.blockState;
+		this.lightData = new LightData(source.lightData.getSkyLight(), source.lightData.getBlockLight());
+		this.biomeId = source.biomeId;
+
+		return self();
+	}
+
+	/**
+	 * copy with offset
+	 */
+	public T copy(Block<?> source, int dx, int dy, int dz) {
+		this.world = source.world;
+		this.x = source.x + dx;
+		this.y = source.y + dy;
+		this.z = source.z + dz;
+
+		this.chunk = null;
+
+		reset();
+
+		return self();
 	}
 
 	public World getWorld() {
@@ -121,19 +140,14 @@ public class Block {
 		return blockState;
 	}
 
-	public BlockProperties getProperties() {
-		if (properties == null) properties = world.getBlockProperties(getBlockState());
-		return properties;
-	}
-
 	public LightData getLightData() {
 		if (lightData.getSkyLight() < 0) getChunk().getLightData(x, y, z, lightData);
 		return lightData;
 	}
 
-	public Biome getBiome() {
-		if (biome == null) biome = getChunk().getBiome(x, y, z);
-		return biome;
+	public int getBiomeId() {
+		if (biomeId == -1) biomeId = getChunk().getBiome(x, y, z);
+		return biomeId;
 	}
 
 	public int getSunLightLevel() {
@@ -144,67 +158,32 @@ public class Block {
 		return getLightData().getBlockLight();
 	}
 
-	public boolean isCullingNeighborFaces() {
-		return getProperties().isCulling();
-	}
-
-	public boolean isFlammable() {
-		return getProperties().isFlammable();
-	}
-	
-	public boolean isOccludingNeighborFaces(){
-		return getProperties().isOccluding();
-	}
-
-	/**
-	 * This is internally used for light rendering
-	 * It is basically the sun light that is projected onto adjacent faces
-	 */
-	public int getPassedSunLight() {
-		if (sunLight < 0) calculateLight();
-		return sunLight;
-	}
-	
-	/**
-	 * This is internally used for light rendering
-	 * It is basically the block light that is projected onto adjacent faces
-	 */
-	public int getPassedBlockLight() {
-		if (blockLight < 0) calculateLight();
-		return blockLight;
-	}
-	
-	private void calculateLight() {
-		sunLight = getSunLightLevel();
-		blockLight = getBlockLightLevel();
-		
-		if (blockLight > 0 || sunLight > 0) return;
-
-		Vector3i dirV;
-		int nx, ny, nz;
-		for (Direction direction : Direction.values()) {
-			dirV = direction.toVector();
-			nx = dirV.getX() + x;
-			ny = dirV.getY() + y;
-			nz = dirV.getZ() + z;
-
-			world.getLightData(nx, ny, nz, tempLight);
-
-			sunLight = Math.max(tempLight.getSkyLight(), sunLight);
-			blockLight = Math.max(tempLight.getBlockLight(), blockLight);
+	@Override
+	public String toString() {
+		if (world != null) {
+			return "Block{" +
+				   "world=" + world +
+				   ", x=" + x +
+				   ", y=" + y +
+				   ", z=" + z +
+				   ", chunk=" + getChunk() +
+				   ", blockState=" + getBlockState() +
+				   ", lightData=" + getLightData() +
+				   ", biomeId=" + getBiomeId() +
+				   '}';
+		} else {
+			return "Block{" +
+				   "world=" + world +
+				   ", x=" + x +
+				   ", y=" + y +
+				   ", z=" + z +
+				   '}';
 		}
 	}
 
-	@Override
-	public String toString() {
-		return "Block{" +
-			   "world=" + world +
-			   ", x=" + x +
-			   ", y=" + y +
-			   ", z=" + z +
-			   ", sunLight=" + sunLight +
-			   ", blockLight=" + blockLight +
-			   '}';
+	@SuppressWarnings("unchecked")
+	protected T self() {
+		return (T) this;
 	}
 
 }

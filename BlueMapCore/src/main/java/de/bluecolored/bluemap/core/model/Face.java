@@ -28,7 +28,6 @@ import com.flowpowered.math.imaginary.Quaternionf;
 import com.flowpowered.math.matrix.Matrix3f;
 import com.flowpowered.math.vector.Vector2f;
 import com.flowpowered.math.vector.Vector3f;
-import de.bluecolored.bluemap.core.util.MathUtils;
 
 @Deprecated
 public class Face {
@@ -51,7 +50,7 @@ public class Face {
 
 		this.materialIndex = materialIndex;
 
-		this.n1 = getFaceNormal();
+		this.n1 = calculateSurfaceNormal(new VectorM3f(0, 0, 0));
 		this.n2 = new VectorM3f(n1);
 		this.n3 = new VectorM3f(n1);
 		this.normalizedNormals = true;
@@ -202,10 +201,6 @@ public class Face {
 		this.materialIndex = materialIndex;
 	}
 
-	private VectorM3f getFaceNormal() {
-		return MathUtils.getSurfaceNormal(p1, p2, p3);
-	}
-
 	private void normalizeNormals() {
 		if (normalizedNormals) return;
 
@@ -214,6 +209,33 @@ public class Face {
 		n3.normalize();
 
 		normalizedNormals = true;
+	}
+
+	private VectorM3f calculateSurfaceNormal(
+			VectorM3f target
+	){
+		double
+				p1x = p1.x, p1y = p1.y, p1z = p1.z,
+				p2x = p2.x, p2y = p2.y, p2z = p2.z,
+				p3x = p3.x, p3y = p3.y, p3z = p3.z;
+
+		p2x -= p1x; p2y -= p1y; p2z -= p1z;
+		p3x -= p1x; p3y -= p1y; p3z -= p1z;
+
+		p1x = p2y * p3z - p2z * p3y;
+		p1y = p2z * p3x - p2x * p3z;
+		p1z = p2x * p3y - p2y * p3x;
+
+		double length = Math.sqrt(p1x * p1x + p1y * p1y + p1z * p1z);
+		p1x /= length;
+		p1y /= length;
+		p1z /= length;
+
+		target.x = (float) p1x;
+		target.y = (float) p1y;
+		target.z = (float) p1z;
+
+		return target;
 	}
 
 }

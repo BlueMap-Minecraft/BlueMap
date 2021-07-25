@@ -24,9 +24,7 @@
  */
 package de.bluecolored.bluemap.core.mca;
 
-import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.mca.mapping.BiomeMapper;
 import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.LightData;
@@ -38,20 +36,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 public class ChunkAnvil115 extends MCAChunk {
-	private static final MinecraftVersion VERSION = new MinecraftVersion(1, 15);
-
-	private BiomeMapper biomeIdMapper;
-
 	private boolean isGenerated;
 	private boolean hasLight;
 	private Section[] sections;
 	private int[] biomes;
 	
 	@SuppressWarnings("unchecked")
-	public ChunkAnvil115(CompoundTag chunkTag, boolean ignoreMissingLightData, BiomeMapper biomeIdMapper) {
+	public ChunkAnvil115(CompoundTag chunkTag, boolean ignoreMissingLightData) {
 		super(chunkTag);
-		
-		this.biomeIdMapper = biomeIdMapper;
 		
 		CompoundTag levelData = chunkTag.getCompoundTag("Level");
 		
@@ -124,16 +116,16 @@ public class ChunkAnvil115 extends MCAChunk {
 	}
 
 	@Override
-	public Biome getBiome(int x, int y, int z) {
+	public int getBiome(int x, int y, int z) {
 		x = (x & 0xF) / 4; // Math.floorMod(pos.getX(), 16)
 		z = (z & 0xF) / 4;
 		y = y / 4;
 		int biomeIntIndex = y * 16 + z * 4 + x;
 
-		if (biomeIntIndex < 0) return Biome.DEFAULT;
-		if (biomeIntIndex >= this.biomes.length) return Biome.DEFAULT;
+		if (biomeIntIndex < 0) return Biome.DEFAULT.getNumeralId();
+		if (biomeIntIndex >= this.biomes.length) return Biome.DEFAULT.getNumeralId();
 
-		return biomeIdMapper.get(biomes[biomeIntIndex]);
+		return biomes[biomeIntIndex];
 	}
 	
 	private static class Section {
@@ -180,7 +172,7 @@ public class ChunkAnvil115 extends MCAChunk {
 						}
 					}
 					
-					palette[i] = new BlockState(VERSION, id, properties);
+					palette[i] = new BlockState(id, properties);
 				}
 			} else {
 				this.palette = new BlockState[0];

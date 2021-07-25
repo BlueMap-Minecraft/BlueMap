@@ -28,6 +28,7 @@ import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3f;
 import com.flowpowered.math.vector.Vector3i;
 import com.flowpowered.math.vector.Vector4f;
+import de.bluecolored.bluemap.core.util.math.VectorM3f;
 
 @Deprecated //TODO
 public class MathUtils {

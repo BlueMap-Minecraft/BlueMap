@@ -1,8 +1,0 @@
-{
-	"parent": "builtin/liquid",
-    "textures": {
-        "particle": "blocks/lava_still",
-		"still": "blocks/lava_still",
-		"flow": "blocks/lava_flow"
-    }
-}

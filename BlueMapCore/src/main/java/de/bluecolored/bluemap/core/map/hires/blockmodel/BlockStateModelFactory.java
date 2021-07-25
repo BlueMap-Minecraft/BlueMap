@@ -24,12 +24,14 @@
  */
 package de.bluecolored.bluemap.core.map.hires.blockmodel;
 
-import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.map.hires.BlockModelView;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
-import de.bluecolored.bluemap.core.resourcepack.*;
+import de.bluecolored.bluemap.core.resourcepack.blockstate.BlockStateResource;
+import de.bluecolored.bluemap.core.resourcepack.NoSuchResourceException;
+import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resourcepack.blockmodel.TransformedBlockModelResource;
 import de.bluecolored.bluemap.core.util.math.Color;
-import de.bluecolored.bluemap.core.world.Block;
+import de.bluecolored.bluemap.core.world.BlockNeighborhood;
 import de.bluecolored.bluemap.core.world.BlockState;
 
 import java.util.ArrayList;
@@ -46,25 +48,20 @@ public class BlockStateModelFactory {
 	public BlockStateModelFactory(ResourcePack resourcePack, RenderSettings renderSettings) {
 		this.resourcePack = resourcePack;
 
-		Block[] neighborCache = new Block[3 * 3 * 3];
-		for (int i = 0; i < neighborCache.length; i++) {
-			neighborCache[i] = new Block(null, 0, 0, 0);
-		}
-
-		this.resourceModelBuilder = new ResourceModelBuilder(resourcePack, renderSettings, neighborCache);
-		this.liquidModelBuilder = new LiquidModelBuilder(resourcePack, renderSettings, neighborCache);
+		this.resourceModelBuilder = new ResourceModelBuilder(resourcePack, renderSettings);
+		this.liquidModelBuilder = new LiquidModelBuilder(resourcePack, renderSettings);
 
 		this.bmrs = new ArrayList<>();
 	}
 
-	public void render(Block block, BlockModelView blockModel, Color blockColor) throws NoSuchResourceException {
+	public void render(BlockNeighborhood<?> block, BlockModelView blockModel, Color blockColor) throws NoSuchResourceException {
 		render(block, block.getBlockState(), blockModel, blockColor);
 	}
 	
-	public void render(Block block, BlockState blockState, BlockModelView blockModel, Color blockColor) throws NoSuchResourceException {
+	public void render(BlockNeighborhood<?> block, BlockState blockState, BlockModelView blockModel, Color blockColor) throws NoSuchResourceException {
 		
 		//shortcut for air
-		if (blockState.isAir) return;
+		if (blockState.isAir()) return;
 
 		int modelStart = blockModel.getStart();
 
@@ -72,15 +69,14 @@ public class BlockStateModelFactory {
 		renderModel(block, blockState, blockModel.initialize(), blockColor);
 		
 		// add water if block is waterlogged
-		if (blockState.isWaterlogged) {
+		if (blockState.isWaterlogged() || block.getProperties().isAlwaysWaterlogged()) {
 			renderModel(block, WATERLOGGED_BLOCKSTATE, blockModel.initialize(), blockColor);
 		}
 
 		blockModel.initialize(modelStart);
-
 	}
 
-	private void renderModel(Block block, BlockState blockState, BlockModelView blockModel, Color blockColor) throws NoSuchResourceException {
+	private void renderModel(BlockNeighborhood<?> block, BlockState blockState, BlockModelView blockModel, Color blockColor) throws NoSuchResourceException {
 		int modelStart = blockModel.getStart();
 
 		BlockStateResource resource = resourcePack.getBlockStateResource(blockState);
@@ -97,7 +93,7 @@ public class BlockStateModelFactory {
 
 		blockModel.initialize(modelStart);
 	}
-	
-	private final static BlockState WATERLOGGED_BLOCKSTATE = new BlockState(MinecraftVersion.LATEST_SUPPORTED, "minecraft:water");
+
+	private final static BlockState WATERLOGGED_BLOCKSTATE = new BlockState("minecraft:water");
 	
 }

@@ -18,7 +18,6 @@ include ':BlueMapCommon'
 
 include ':cli'
 
-include ':sponge-7.2.0'
 include ':sponge-8.0.0'
 
 include ':spigot'
@@ -39,7 +38,6 @@ project(':BlueMapCommon').projectDir = "$rootDir/BlueMapCommon" as File
 
 project(':cli').projectDir = "$rootDir/implementations/cli" as File
 
-project(':sponge-7.2.0').projectDir = "$rootDir/implementations/sponge-7.2.0" as File
 project(':sponge-8.0.0').projectDir = "$rootDir/implementations/sponge-8.0.0" as File
 
 project(':spigot').projectDir = "$rootDir/implementations/spigot" as File

@@ -30,7 +30,6 @@ import de.bluecolored.bluemap.common.web.WebSettings;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.config.*;
 import de.bluecolored.bluemap.core.debug.DebugDump;
-import de.bluecolored.bluemap.core.debug.OneBlockWorld;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
@@ -136,9 +135,6 @@ public class BlueMapService {
 		maps = new HashMap<>();
 		worlds = new HashMap<>();
 
-		ConfigManager configManager = getConfigManager();
-		configManager.loadResourceConfigs(configFolder, getResourcePack());
-		
 		for (MapConfig mapConfig : getRenderConfig().getMapConfigs()) {
 			String id = mapConfig.getId();
 			String name = mapConfig.getName();
@@ -160,7 +156,7 @@ public class BlueMapService {
 			World world = worlds.get(worldUUID);
 			if (world == null) {
 				try {
-					world = MCAWorld.load(worldFolder.toPath(), worldUUID, minecraftVersion, configManager.getBlockIdConfig(), configManager.getBlockPropertiesConfig(), configManager.getBiomeConfig(), worldNameProvider.apply(worldUUID), mapConfig.isIgnoreMissingLightData());
+					world = MCAWorld.load(worldFolder.toPath(), worldUUID, worldNameProvider.apply(worldUUID), mapConfig.isIgnoreMissingLightData());
 					worlds.put(worldUUID, world);
 				} catch (MissingResourcesException e) {
 					throw e; // rethrow this to stop loading and display resource-missing message
@@ -230,7 +226,10 @@ public class BlueMapService {
 			
 			if (resourceExtensionsFile.exists()) FileUtils.forceDelete(resourceExtensionsFile);
 			FileUtils.forceMkdirParent(resourceExtensionsFile);
-			FileUtils.copyURLToFile(Plugin.class.getResource("/de/bluecolored/bluemap/" + minecraftVersion.getResource().getResourcePrefix() + "/resourceExtensions.zip"), resourceExtensionsFile, 10000, 10000);
+			URL resourceExtensionsUrl = Objects.requireNonNull(
+					Plugin.class.getResource("/de/bluecolored/bluemap/" + minecraftVersion.getResource().getResourcePrefix() + "/resourceExtensions.zip")
+			);
+			FileUtils.copyURLToFile(resourceExtensionsUrl, resourceExtensionsFile, 10000, 10000);
 			
 			//find more resource packs
 			File[] resourcePacks = resourcePackFolder.listFiles();
@@ -243,7 +242,7 @@ public class BlueMapService {
 			resources.add(resourceExtensionsFile);
 			
 			try {
-				resourcePack = new ResourcePack(minecraftVersion);
+				resourcePack = new ResourcePack();
 				if (textureExportFile.exists()) resourcePack.loadTextureFile(textureExportFile);
 				resourcePack.load(resources);
 				resourcePack.saveTextureFile(textureExportFile);

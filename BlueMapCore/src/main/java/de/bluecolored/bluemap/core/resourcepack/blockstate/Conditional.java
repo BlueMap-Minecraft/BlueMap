@@ -22,34 +22,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.mca;
+package de.bluecolored.bluemap.core.resourcepack.blockstate;
 
-import de.bluecolored.bluemap.core.world.Biome;
-import de.bluecolored.bluemap.core.world.BlockState;
-import de.bluecolored.bluemap.core.world.LightData;
+public class Conditional<T> {
 
-public class EmptyChunk extends MCAChunk {
+    private final PropertyCondition condition;
+    private final T value;
 
-	public static final MCAChunk INSTANCE = new EmptyChunk();
+    public Conditional(PropertyCondition condition, T value) {
+        this.condition = condition;
+        this.value = value;
+    }
 
-	@Override
-	public boolean isGenerated() {
-		return false;
-	}
+    public PropertyCondition getCondition() {
+        return condition;
+    }
 
-	@Override
-	public BlockState getBlockState(int x, int y, int z) {
-		return BlockState.AIR;
-	}
+    public T getValue() {
+        return value;
+    }
 
-	@Override
-	public LightData getLightData(int x, int y, int z, LightData target) {
-		return target.set(0, 0);
-	}
-
-	@Override
-	public int getBiome(int x, int y, int z) {
-		return Biome.DEFAULT.getNumeralId();
-	}
-	
 }

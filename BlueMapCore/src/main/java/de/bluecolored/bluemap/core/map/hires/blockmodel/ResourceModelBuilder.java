@@ -32,13 +32,19 @@ import com.flowpowered.math.vector.Vector4f;
 import de.bluecolored.bluemap.core.map.hires.BlockModelView;
 import de.bluecolored.bluemap.core.map.hires.HiresTileModel;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
-import de.bluecolored.bluemap.core.resourcepack.*;
+import de.bluecolored.bluemap.core.resourcepack.BlockColorCalculatorFactory;
+import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resourcepack.blockmodel.BlockModelResource;
+import de.bluecolored.bluemap.core.resourcepack.blockmodel.TransformedBlockModelResource;
+import de.bluecolored.bluemap.core.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.util.math.MatrixM4f;
 import de.bluecolored.bluemap.core.util.math.VectorM2f;
 import de.bluecolored.bluemap.core.util.math.VectorM3f;
-import de.bluecolored.bluemap.core.world.Block;
+import de.bluecolored.bluemap.core.world.BlockNeighborhood;
+import de.bluecolored.bluemap.core.world.LightData;
+import de.bluecolored.bluemap.core.world.ResourcePackBlock;
 
 /**
  * This model builder creates a BlockStateModel using the information from parsed resource-pack json files.
@@ -54,24 +60,22 @@ public class ResourceModelBuilder {
 	private final VectorM2f[] uvs = new VectorM2f[4];
 	private final Color tintColor = new Color();
 	private final Color mapColor = new Color();
-	private final Block[] blocksAround;
 
-	private Block block;
+	private BlockNeighborhood<?> block;
 	private TransformedBlockModelResource blockModelResource;
 	private BlockModelView blockModel;
 	private Color blockColor;
 	
-	public ResourceModelBuilder(ResourcePack resourcePack, RenderSettings renderSettings, Block[] neighborCache) {
+	public ResourceModelBuilder(ResourcePack resourcePack, RenderSettings renderSettings) {
 		this.blockColorCalculator = resourcePack.getBlockColorCalculatorFactory().createCalculator();
 		this.renderSettings = renderSettings;
-		this.blocksAround = neighborCache;
 
 		for (int i = 0; i < corners.length; i++) corners[i] = new VectorM3f(0, 0, 0);
 		for (int i = 0; i < uvs.length; i++) rawUvs[i] = new VectorM2f(0, 0);
 	}
 
 	private final MatrixM4f modelTransform = new MatrixM4f();
-	public void build(Block block, TransformedBlockModelResource bmr, BlockModelView blockModel, Color color) {
+	public void build(BlockNeighborhood<?> block, TransformedBlockModelResource bmr, BlockModelView blockModel, Color color) {
 		this.block = block;
 		this.blockModel = blockModel;
 		this.blockColor = color;
@@ -95,6 +99,13 @@ public class ResourceModelBuilder {
 					.multiplyTo(blockModelResource.getRotationMatrix())
 					.translate(0.5f, 0.5f, 0.5f)
 			);
+		}
+
+		//random offset
+		if (block.getProperties().isRandomOffset()){
+			float dx = (hashToFloat(block.getX(), block.getZ(), 123984) - 0.5f) * 0.75f;
+			float dz = (hashToFloat(block.getX(), block.getZ(), 345542) - 0.5f) * 0.75f;
+			blockModel.translate(dx, 0, dz);
 		}
 
 	}
@@ -149,14 +160,17 @@ public class ResourceModelBuilder {
 
 		// face culling
 		if (face.getCullface() != null) {
-			Block b = getRotationRelativeBlock(face.getCullface());
-			if (b.isCullingNeighborFaces()) return;
+			ResourcePackBlock<?> b = getRotationRelativeBlock(face.getCullface());
+			if (b.getProperties().isCulling()) return;
 		}
 
 		// light calculation
-		Block facedBlockNeighbor = getRotationRelativeBlock(faceDir);
-		int sunLight = facedBlockNeighbor.getPassedSunLight();
-		int blockLight = facedBlockNeighbor.getPassedBlockLight();
+		ResourcePackBlock<?> facedBlockNeighbor = getRotationRelativeBlock(faceDir);
+		LightData blockLightData = block.getLightData();
+		LightData facedLightData = facedBlockNeighbor.getLightData();
+
+		int sunLight = Math.max(blockLightData.getSkyLight(), facedLightData.getSkyLight());
+		int blockLight = Math.max(blockLightData.getBlockLight(), facedLightData.getBlockLight());
 
 		// filter out faces that are not sun-lighted
 		if (sunLight == 0f && renderSettings.isExcludeFacesWithoutSunlight()) return;
@@ -302,23 +316,11 @@ public class ResourceModelBuilder {
 		}
 	}
 
-	private Block getNeighborBlock(int dx, int dy, int dz) {
-		int i = (dx + 1) * 9 + (dy + 1) * 3 + (dz + 1);
-		if (i == 13) return block;
-		return blocksAround[i].set(
-				block.getWorld(),
-				block.getX() + dx,
-				block.getY() + dy,
-				block.getZ() + dz
-		);
-	}
-
-	private Block getRotationRelativeBlock(Direction direction){
+	private ResourcePackBlock<?> getRotationRelativeBlock(Direction direction){
 		return getRotationRelativeBlock(direction.toVector());
 	}
 
-
-	private Block getRotationRelativeBlock(Vector3i direction){
+	private ResourcePackBlock<?> getRotationRelativeBlock(Vector3i direction){
 		return getRotationRelativeBlock(
 				direction.getX(),
 				direction.getY(),
@@ -327,11 +329,11 @@ public class ResourceModelBuilder {
 	}
 
 	private final VectorM3f rotationRelativeBlockDirection = new VectorM3f(0, 0, 0);
-	private Block getRotationRelativeBlock(int dx, int dy, int dz){
+	private ResourcePackBlock<?> getRotationRelativeBlock(int dx, int dy, int dz){
 		rotationRelativeBlockDirection.set(dx, dy, dz);
 		makeRotationRelative(rotationRelativeBlockDirection);
 
-		return getNeighborBlock(
+		return block.getNeighborBlock(
 				Math.round(rotationRelativeBlockDirection.x),
 				Math.round(rotationRelativeBlockDirection.y),
 				Math.round(rotationRelativeBlockDirection.z)
@@ -369,23 +371,28 @@ public class ResourceModelBuilder {
 
 
 		if (x * dirVec.getX() + y * dirVec.getY() > 0){
-			if (getRotationRelativeBlock(x, y, 0).isOccludingNeighborFaces()) occluding++;
+			if (getRotationRelativeBlock(x, y, 0).getProperties().isOccluding()) occluding++;
 		}
 
 		if (x * dirVec.getX() + z * dirVec.getZ() > 0){
-			if (getRotationRelativeBlock(x, 0, z).isOccludingNeighborFaces()) occluding++;
+			if (getRotationRelativeBlock(x, 0, z).getProperties().isOccluding()) occluding++;
 		}
 
 		if (y * dirVec.getY() + z * dirVec.getZ() > 0){
-			if (getRotationRelativeBlock(0, y, z).isOccludingNeighborFaces()) occluding++;
+			if (getRotationRelativeBlock(0, y, z).getProperties().isOccluding()) occluding++;
 		}
 
 		if (x * dirVec.getX() + y * dirVec.getY() + z * dirVec.getZ() > 0){
-			if (getRotationRelativeBlock(x, y, z).isOccludingNeighborFaces()) occluding++;
+			if (getRotationRelativeBlock(x, y, z).getProperties().isOccluding()) occluding++;
 		}
 		
 		if (occluding > 3) occluding = 3;
 		return  Math.max(0f, Math.min(1f - occluding * 0.25f, 1f));
+	}
+
+	private static float hashToFloat(int x, int z, long seed) {
+		final long hash = x * 73428767 ^ z * 4382893 ^ seed * 457;
+		return (hash * (hash + 456149) & 0x00ffffff) / (float) 0x01000000;
 	}
 
 }

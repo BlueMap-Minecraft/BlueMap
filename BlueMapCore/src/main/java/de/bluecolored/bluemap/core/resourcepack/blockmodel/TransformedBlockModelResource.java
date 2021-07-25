@@ -22,34 +22,52 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.mca;
+package de.bluecolored.bluemap.core.resourcepack.blockmodel;
 
-import de.bluecolored.bluemap.core.world.Biome;
-import de.bluecolored.bluemap.core.world.BlockState;
-import de.bluecolored.bluemap.core.world.LightData;
+import com.flowpowered.math.vector.Vector2f;
+import de.bluecolored.bluemap.core.util.math.MatrixM3f;
 
-public class EmptyChunk extends MCAChunk {
+public class TransformedBlockModelResource {
 
-	public static final MCAChunk INSTANCE = new EmptyChunk();
+	private final Vector2f rotation;
+	private final boolean uvLock;
+	private final BlockModelResource model;
 
-	@Override
-	public boolean isGenerated() {
-		return false;
+	private final boolean hasRotation;
+	private final MatrixM3f rotationMatrix;
+
+	public TransformedBlockModelResource(Vector2f rotation, boolean uvLock, BlockModelResource model) {
+		this.model = model;
+		this.rotation = rotation;
+		this.uvLock = uvLock;
+
+		this.hasRotation = !rotation.equals(Vector2f.ZERO);
+		this.rotationMatrix = new MatrixM3f()
+				.rotate(
+						-rotation.getX(),
+						-rotation.getY(),
+						0
+				);
 	}
 
-	@Override
-	public BlockState getBlockState(int x, int y, int z) {
-		return BlockState.AIR;
+	public Vector2f getRotation() {
+		return rotation;
 	}
 
-	@Override
-	public LightData getLightData(int x, int y, int z, LightData target) {
-		return target.set(0, 0);
+	public boolean hasRotation() {
+		return hasRotation;
 	}
 
-	@Override
-	public int getBiome(int x, int y, int z) {
-		return Biome.DEFAULT.getNumeralId();
+	public MatrixM3f getRotationMatrix() {
+		return rotationMatrix;
+	}
+
+	public boolean isUVLock() {
+		return uvLock;
+	}
+	
+	public BlockModelResource getModel() {
+		return model;
 	}
 	
 }

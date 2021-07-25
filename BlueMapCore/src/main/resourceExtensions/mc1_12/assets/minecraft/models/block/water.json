@@ -1,8 +1,0 @@
-{
-	"parent": "builtin/liquid",
-    "textures": {
-        "particle": "blocks/water_still",
-		"still": "blocks/water_still",
-		"flow": "blocks/water_flow"
-    }
-}

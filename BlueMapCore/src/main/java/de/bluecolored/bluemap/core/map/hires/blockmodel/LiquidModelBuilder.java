@@ -26,22 +26,21 @@ package de.bluecolored.bluemap.core.map.hires.blockmodel;
 
 import com.flowpowered.math.TrigMath;
 import com.flowpowered.math.vector.Vector3i;
-import de.bluecolored.bluemap.core.MinecraftVersion;
-import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.hires.BlockModelView;
 import de.bluecolored.bluemap.core.map.hires.HiresTileModel;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.resourcepack.BlockColorCalculatorFactory;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.resourcepack.Texture;
-import de.bluecolored.bluemap.core.resourcepack.TransformedBlockModelResource;
+import de.bluecolored.bluemap.core.resourcepack.blockmodel.TransformedBlockModelResource;
+import de.bluecolored.bluemap.core.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.util.math.MatrixM3f;
 import de.bluecolored.bluemap.core.util.math.VectorM2f;
 import de.bluecolored.bluemap.core.util.math.VectorM3f;
-import de.bluecolored.bluemap.core.world.Block;
+import de.bluecolored.bluemap.core.world.BlockNeighborhood;
 import de.bluecolored.bluemap.core.world.BlockState;
+import de.bluecolored.bluemap.core.world.ResourcePackBlock;
 
 /**
  * A model builder for all liquid blocks
@@ -57,23 +56,18 @@ public class LiquidModelBuilder {
 	private final BlockColorCalculatorFactory.BlockColorCalculator blockColorCalculator;
 	private final RenderSettings renderSettings;
 
-	private final boolean useWaterColorMap;
-
 	private final VectorM3f[] corners;
-	private final Block[] blocksAround;
 	private final VectorM2f[] uvs = new VectorM2f[4];
 
-	private Block block;
+	private BlockNeighborhood<?> block;
 	private BlockState blockState;
 	private TransformedBlockModelResource blockModelResource;
 	private BlockModelView blockModel;
 	private Color blockColor;
 
-	public LiquidModelBuilder(ResourcePack resourcePack, RenderSettings renderSettings, Block[] neighborCache) {
+	public LiquidModelBuilder(ResourcePack resourcePack, RenderSettings renderSettings) {
 		this.blockColorCalculator = resourcePack.getBlockColorCalculatorFactory().createCalculator();
 		this.renderSettings = renderSettings;
-
-		this.useWaterColorMap = resourcePack.getMinecraftVersion().isAtLeast(new MinecraftVersion(1, 13));
 
 		corners = new VectorM3f[]{
 				new VectorM3f( 0, 0, 0 ),
@@ -86,12 +80,10 @@ public class LiquidModelBuilder {
 				new VectorM3f( 16, 16, 16 ),
 		};
 
-		this.blocksAround = neighborCache;
-
 		for (int i = 0; i < uvs.length; i++) uvs[i] = new VectorM2f(0, 0);
 	}
 
-	public void build(Block block, BlockState blockState, TransformedBlockModelResource bmr, BlockModelView blockModel, Color color) {
+	public void build(BlockNeighborhood<?> block, BlockState blockState, TransformedBlockModelResource bmr, BlockModelView blockModel, Color color) {
 		this.block = block;
 		this.blockState = blockState;
 		this.blockModelResource = bmr;
@@ -107,7 +99,7 @@ public class LiquidModelBuilder {
 		
 		int level = getLiquidLevel(blockState);
 		
-		if (level < 8 && !(level == 0 && isSameLiquid(getNeighborBlock(0, 1, 0).getBlockState()))){
+		if (level < 8 && !(level == 0 && isSameLiquid(block.getNeighborBlock(0, 1, 0)))){
 			corners[4].y = getLiquidCornerHeight(-1,  -1);
 			corners[5].y = getLiquidCornerHeight(-1,  0);
 			corners[6].y = getLiquidCornerHeight(0,  -1);
@@ -126,7 +118,7 @@ public class LiquidModelBuilder {
 		int flowTextureId = flowTexture.getId();
 
 		tintcolor.set(1f, 1f, 1f, 1f, true);
-		if (useWaterColorMap && blockState.isWater) {
+		if (blockState.isWater()) {
 			blockColorCalculator.getWaterAverageColor(block, tintcolor);
 		}
 
@@ -166,7 +158,7 @@ public class LiquidModelBuilder {
 
 		for (ix = x; ix <= x+1; ix++){
 			for (iz = z; iz<= z+1; iz++){
-				if (isSameLiquid(getNeighborBlock(ix, 1, iz).getBlockState())){
+				if (isSameLiquid(block.getNeighborBlock(ix, 1, iz))){
 					return 16f;
 				}
 			}
@@ -174,12 +166,14 @@ public class LiquidModelBuilder {
 		
 		float sumHeight = 0f;
 		int count = 0;
+		ResourcePackBlock<?> neighbor;
 		BlockState neighborBlockState;
 		
 		for (ix = x; ix <= x+1; ix++){
 			for (iz = z; iz<= z+1; iz++){
-				neighborBlockState = getNeighborBlock(ix, 0, iz).getBlockState();
-				if (isSameLiquid(neighborBlockState)){
+				neighbor = block.getNeighborBlock(ix, 0, iz);
+				neighborBlockState = neighbor.getBlockState();
+				if (isSameLiquid(neighbor)){
 					if (getLiquidLevel(neighborBlockState) == 0) return 14f;
 					
 					sumHeight += getLiquidBaseHeight(neighborBlockState);
@@ -203,9 +197,9 @@ public class LiquidModelBuilder {
 		return !blockState.equals(BlockState.AIR);
 	}
 	
-	private boolean isSameLiquid(BlockState blockState){
-		if (blockState.getFullId().equals(this.blockState.getFullId())) return true;
-		return this.blockState.isWater && blockState.isWaterlogged;
+	private boolean isSameLiquid(ResourcePackBlock<?> block){
+		if (block.getBlockState().getFullId().equals(this.blockState.getFullId())) return true;
+		return this.blockState.isWater() && (block.getBlockState().isWaterlogged() || block.getProperties().isAlwaysWaterlogged());
 	}
 	
 	private float getLiquidBaseHeight(BlockState block){
@@ -223,13 +217,13 @@ public class LiquidModelBuilder {
 		Vector3i faceDirVector = faceDir.toVector();
 
 		//face culling
-		Block bl = getNeighborBlock(
+		ResourcePackBlock<?> bl = block.getNeighborBlock(
 				faceDirVector.getX(),
 				faceDirVector.getY(),
 				faceDirVector.getZ()
 		);
 
-		if (isSameLiquid(bl.getBlockState()) || (faceDir != Direction.UP && bl.isCullingNeighborFaces())) return false;
+		if (isSameLiquid(bl) || (faceDir != Direction.UP && bl.getProperties().isCulling())) return false;
 
 		// initialize the faces
 		blockModel.initialize();
@@ -327,17 +321,6 @@ public class LiquidModelBuilder {
 		return true;
 	}
 
-	private Block getNeighborBlock(int dx, int dy, int dz) {
-		int i = (dx + 1) * 9 + (dy + 1) * 3 + (dz + 1);
-		if (i == 13) return block;
-		return blocksAround[i].set(
-				block.getWorld(),
-				block.getX() + dx,
-				block.getY() + dy,
-				block.getZ() + dz
-		);
-	}
-
 	private final VectorM2f flowingVector = new VectorM2f(0, 0);
 	private int getFlowingAngle() {
 		float own = getLiquidBaseHeight(blockState) * BLOCK_SCALE;
@@ -358,11 +341,11 @@ public class LiquidModelBuilder {
 	}
 
 	private float compareLiquidHeights(float ownHeight, int dx, int dz) {
-		BlockState state = getNeighborBlock(dx, 0,  dz).getBlockState();
-		if (state.isAir) return 0;
-		if (!isSameLiquid(state)) return 0;
+		ResourcePackBlock<?> neighbor = block.getNeighborBlock(dx, 0,  dz);
+		if (neighbor.getBlockState().isAir()) return 0;
+		if (!isSameLiquid(neighbor)) return 0;
 
-		float otherHeight = getLiquidBaseHeight(state) * BLOCK_SCALE;
+		float otherHeight = getLiquidBaseHeight(neighbor.getBlockState()) * BLOCK_SCALE;
 		return otherHeight - ownHeight;
 	}
 	

@@ -22,34 +22,42 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.mca;
+package de.bluecolored.bluemap.core.resourcepack;
 
-import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.BlockState;
-import de.bluecolored.bluemap.core.world.LightData;
 
-public class EmptyChunk extends MCAChunk {
+import java.util.Map.Entry;
 
-	public static final MCAChunk INSTANCE = new EmptyChunk();
-
-	@Override
-	public boolean isGenerated() {
-		return false;
-	}
-
-	@Override
-	public BlockState getBlockState(int x, int y, int z) {
-		return BlockState.AIR;
-	}
-
-	@Override
-	public LightData getLightData(int x, int y, int z, LightData target) {
-		return target.set(0, 0);
-	}
-
-	@Override
-	public int getBiome(int x, int y, int z) {
-		return Biome.DEFAULT.getNumeralId();
+class BlockStateMapping<T> {
+	private BlockState blockState;
+	private T mapping;
+	
+	public BlockStateMapping(BlockState blockState, T mapping) {
+		this.blockState = blockState;
+		this.mapping = mapping;
 	}
 	
+	/**
+	 * Returns true if the all the properties on this BlockMapping-key are the same in the provided BlockState.<br>
+	 * Properties that are not defined in this Mapping are ignored on the provided BlockState.<br>
+	 */
+	public boolean fitsTo(BlockState blockState){
+		if (!this.blockState.getId().equals(blockState.getId())) return false;
+		for (Entry<String, String> e : this.blockState.getProperties().entrySet()){
+			if (!e.getValue().equals(blockState.getProperties().get(e.getKey()))){
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
+	public BlockState getBlockState(){
+		return blockState;
+	}
+	
+	public T getMapping(){
+		return mapping;
+	}
+
 }

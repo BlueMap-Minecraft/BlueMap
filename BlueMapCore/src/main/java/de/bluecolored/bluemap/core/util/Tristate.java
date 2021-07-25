@@ -22,34 +22,51 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.mca;
+package de.bluecolored.bluemap.core.util;
 
-import de.bluecolored.bluemap.core.world.Biome;
-import de.bluecolored.bluemap.core.world.BlockState;
-import de.bluecolored.bluemap.core.world.LightData;
+import java.util.function.BooleanSupplier;
 
-public class EmptyChunk extends MCAChunk {
+public enum Tristate {
 
-	public static final MCAChunk INSTANCE = new EmptyChunk();
+    TRUE (true),
+    UNDEFINED (false) {
+        @Override
+        public Tristate getOr(Tristate other) {
+            return other;
+        }
 
-	@Override
-	public boolean isGenerated() {
-		return false;
-	}
+        @Override
+        public boolean getOr(BooleanSupplier other) {
+            return other.getAsBoolean();
+        }
 
-	@Override
-	public BlockState getBlockState(int x, int y, int z) {
-		return BlockState.AIR;
-	}
+        @Override
+        public boolean getOr(boolean defaultValue) {
+            return defaultValue;
+        }
+    },
+    FALSE (false);
 
-	@Override
-	public LightData getLightData(int x, int y, int z, LightData target) {
-		return target.set(0, 0);
-	}
+    private final boolean value;
 
-	@Override
-	public int getBiome(int x, int y, int z) {
-		return Biome.DEFAULT.getNumeralId();
-	}
-	
+    Tristate(boolean value ) {
+        this.value = value;
+    }
+
+    public Tristate getOr(Tristate other) {
+        return this;
+    }
+
+    public boolean getOr(BooleanSupplier other) {
+        return value;
+    }
+
+    public boolean getOr(boolean defaultValue) {
+        return value;
+    }
+
+    @Override
+    public String toString() {
+        return "Tristate." + name();
+    }
 }

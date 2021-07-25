@@ -24,83 +24,64 @@
  */
 package de.bluecolored.bluemap.core.resourcepack;
 
-import de.bluecolored.bluemap.core.MinecraftVersion;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.resourcepack.BlockStateResource.Builder;
+import de.bluecolored.bluemap.core.resourcepack.blockmodel.BlockModelResource;
+import de.bluecolored.bluemap.core.resourcepack.blockmodel.TransformedBlockModelResource;
+import de.bluecolored.bluemap.core.resourcepack.blockstate.BlockStateResource;
+import de.bluecolored.bluemap.core.resourcepack.blockstate.BlockStateResource.Builder;
 import de.bluecolored.bluemap.core.resourcepack.fileaccess.BluemapAssetOverrideFileAccess;
 import de.bluecolored.bluemap.core.resourcepack.fileaccess.CaseInsensitiveFileAccess;
 import de.bluecolored.bluemap.core.resourcepack.fileaccess.CombinedFileAccess;
 import de.bluecolored.bluemap.core.resourcepack.fileaccess.FileAccess;
+import de.bluecolored.bluemap.core.resourcepack.texture.Texture;
+import de.bluecolored.bluemap.core.resourcepack.texture.TextureGallery;
+import de.bluecolored.bluemap.core.util.Tristate;
+import de.bluecolored.bluemap.core.world.Biome;
+import de.bluecolored.bluemap.core.world.BlockProperties;
 import de.bluecolored.bluemap.core.world.BlockState;
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 
 import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Represents all resources (BlockStates / BlockModels and Textures) that are loaded and used to generate map-models. 
  */
 @DebugDump
 public class ResourcePack {
-	
-	private static final String[] CONFIG_FILES = {
-		"blockColors.json",
-		"blockIds.json",
-		"blockProperties.json",
-		"biomes.json"
-	};
-	
-	private final MinecraftVersion minecraftVersion;
-	
-	protected final Map<String, BlockStateResource> blockStateResources;
-	protected final Map<String, BlockModelResource> blockModelResources;
-	protected final TextureGallery textures;
-	
-	private final BlockColorCalculatorFactory blockColorCalculatorFactory;
-	
-	private final Map<String, List<Resource>> configs;
 
-	private BufferedImage foliageMap;
-	private BufferedImage grassMap;
-	
-	public ResourcePack(MinecraftVersion minecraftVersion) {
-		this.minecraftVersion = minecraftVersion;
-		
+	private final Map<String, BlockStateResource> blockStateResources;
+	private final Map<String, BlockModelResource> blockModelResources;
+	private final TextureGallery textures;
+
+	private final BlockPropertiesConfig blockPropertiesConfig;
+	private final BiomeConfig biomeConfig;
+	private final BlockColorCalculatorFactory blockColorCalculatorFactory;
+
+	private final LoadingCache<BlockState, BlockProperties> blockPropertiesCache;
+
+	public ResourcePack() {
 		blockStateResources = new HashMap<>();
 		blockModelResources = new HashMap<>();
 		textures = new TextureGallery();
-		foliageMap = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
-		foliageMap.setRGB(0, 0, 0xFF00FF00);
-		grassMap = new BufferedImage(1, 1, BufferedImage.TYPE_INT_ARGB);
-		grassMap.setRGB(0, 0, 0xFF00FF00);
-		blockColorCalculatorFactory = new BlockColorCalculatorFactory(foliageMap, grassMap);
-		configs = new HashMap<>();
-	}
-	
-	/**
-	 * Returns all config-files found in the namespaces of the ResourcePack with that filename
-	 */
-	public Collection<Resource> getConfigAdditions(String configFileName){
-		return configs.getOrDefault(configFileName, Collections.emptyList());
-	}
-	
-	/**
-	 * See {@link TextureGallery#loadTextureFile(File)}
-	 * @see TextureGallery#loadTextureFile(File)
-	 */
-	public void loadTextureFile(File file) throws IOException, ParseResourceException {
-		textures.loadTextureFile(file);
-	}
-	
-	/**
-	 * See {@link TextureGallery#saveTextureFile(File)}
-	 * @see TextureGallery#saveTextureFile(File)
-	 */
-	public void saveTextureFile(File file) throws IOException {
-		textures.saveTextureFile(file);
+
+		blockPropertiesConfig = new BlockPropertiesConfig();
+		biomeConfig = new BiomeConfig();
+		blockColorCalculatorFactory = new BlockColorCalculatorFactory();
+
+		blockPropertiesCache = Caffeine.newBuilder()
+				.executor(BlueMap.THREAD_POOL)
+				.maximumSize(10000)
+				.build(this::getBlockPropertiesNoCache);
 	}
 	
 	/**
@@ -159,43 +140,83 @@ public class ResourcePack {
 					String filename = FileAccess.getFileName(blockstateFile);
 					if (!filename.endsWith(".json")) continue;
 
+					String jsonFileName = filename.substring(0, filename.length() - 5);
 					try {
-						blockStateResources.put(namespace + ":" + filename.substring(0, filename.length() - 5), builder.build(blockstateFile));
+						blockStateResources.put(namespace + ":" + jsonFileName, builder.build(blockstateFile));
 					} catch (IOException ex) {
-						Logger.global.logError("Failed to load blockstate: " + namespace + ":" + filename.substring(0, filename.length() - 5), ex);
+						Logger.global.logError("Failed to load blockstate: " + namespace + ":" + jsonFileName, ex);
 					}
 				}
-				
-				//load configs
-				for (String configName : CONFIG_FILES) {
-					try {
-						Resource config = new Resource(sourcesAccess.readFile(
-								"assets/" + namespace + "/" + configName));
-						configs.computeIfAbsent(configName, t -> new ArrayList<>()).add(config);
-					} catch (FileNotFoundException ignore) {
-					} catch (IOException ex) {
-						Logger.global.logError("Failed to load config for " + namespace + ": " + configName, ex);
-					}
+
+				//load biomes
+				try {
+					GsonConfigurationLoader loader = GsonConfigurationLoader.builder()
+							.source(() -> new BufferedReader(new InputStreamReader(sourcesAccess.readFile(
+									"assets/" + namespace + "/biomes.json"))))
+							.build();
+					biomeConfig.load(loader.load());
+				} catch (IOException ex) {
+					Logger.global.logError("Failed to load biomes.conf from: " + namespace, ex);
+				}
+
+				//load block properties
+				try {
+					GsonConfigurationLoader loader = GsonConfigurationLoader.builder()
+							.source(() -> new BufferedReader(new InputStreamReader(sourcesAccess.readFile(
+									"assets/" + namespace + "/blockProperties.json"))))
+							.build();
+					blockPropertiesConfig.load(loader.load());
+				} catch (IOException ex) {
+					Logger.global.logError("Failed to load biomes.conf from: " + namespace, ex);
+				}
+
+				//load block colors
+				try {
+					GsonConfigurationLoader loader = GsonConfigurationLoader.builder()
+							.source(() -> new BufferedReader(new InputStreamReader(sourcesAccess.readFile(
+									"assets/" + namespace + "/blockColors.json"))))
+							.build();
+					blockColorCalculatorFactory.load(loader.load());
+				} catch (IOException ex) {
+					Logger.global.logError("Failed to load biomes.conf from: " + namespace, ex);
 				}
 			}
 			
 			try {
-				foliageMap = ImageIO.read(sourcesAccess.readFile("assets/minecraft/textures/colormap/foliage.png"));
-				blockColorCalculatorFactory.setFoliageMap(foliageMap);
-			} catch (IOException ex) {
+				blockColorCalculatorFactory.setFoliageMap(
+						ImageIO.read(sourcesAccess.readFile("assets/minecraft/textures/colormap/foliage.png"))
+				);
+			} catch (IOException | ArrayIndexOutOfBoundsException ex) {
 				Logger.global.logError("Failed to load foliagemap!", ex);
 			}
 
 			try {
-				grassMap = ImageIO.read(sourcesAccess.readFile("assets/minecraft/textures/colormap/grass.png"));
-				blockColorCalculatorFactory.setGrassMap(grassMap);
-			} catch (IOException ex) {
+				blockColorCalculatorFactory.setGrassMap(
+						ImageIO.read(sourcesAccess.readFile("assets/minecraft/textures/colormap/grass.png"))
+				);
+			} catch (IOException | ArrayIndexOutOfBoundsException ex) {
 				Logger.global.logError("Failed to load grassmap!", ex);
 			}
 			
 		} catch (IOException ex) {
 			Logger.global.logError("Failed to close FileAccess!", ex);
 		}
+	}
+
+	/**
+	 * See {@link TextureGallery#loadTextureFile(File)}
+	 * @see TextureGallery#loadTextureFile(File)
+	 */
+	public void loadTextureFile(File file) throws IOException, ParseResourceException {
+		textures.loadTextureFile(file);
+	}
+
+	/**
+	 * See {@link TextureGallery#saveTextureFile(File)}
+	 * @see TextureGallery#saveTextureFile(File)
+	 */
+	public void saveTextureFile(File file) throws IOException {
+		textures.saveTextureFile(file);
 	}
 	
 	/**
@@ -209,16 +230,48 @@ public class ResourcePack {
 		if (resource == null) throw new NoSuchResourceException("No resource for blockstate: " + state.getFullId());
 		return resource;
 	}
-	
+
+	public BlockProperties getBlockProperties(BlockState state) {
+		return blockPropertiesCache.get(state);
+	}
+
+	private BlockProperties getBlockPropertiesNoCache(BlockState state) {
+		BlockProperties.Builder props = blockPropertiesConfig.getBlockProperties(state).toBuilder();
+
+		if (props.isOccluding() == Tristate.UNDEFINED || props.isCulling() == Tristate.UNDEFINED) {
+			 try {
+			 	BlockStateResource resource = getBlockStateResource(state);
+			 	for (TransformedBlockModelResource bmr : resource.getModels(state, new ArrayList<>())) {
+			 		if (props.isOccluding() == Tristate.UNDEFINED) props.occluding(bmr.getModel().isOccluding());
+					if (props.isCulling() == Tristate.UNDEFINED) props.culling(bmr.getModel().isCulling());
+				}
+			 } catch (NoSuchResourceException ignore) {}
+		}
+
+		return props.build();
+	}
+
+	public Biome getBiome(int id) {
+		return biomeConfig.getBiome(id);
+	}
+
+	public Map<String, BlockStateResource> getBlockStateResources() {
+		return blockStateResources;
+	}
+
+	public Map<String, BlockModelResource> getBlockModelResources() {
+		return blockModelResources;
+	}
+
+	public TextureGallery getTextures() {
+		return textures;
+	}
+
 	public BlockColorCalculatorFactory getBlockColorCalculatorFactory() {
 		return blockColorCalculatorFactory;
 	}
-	
-	public MinecraftVersion getMinecraftVersion() {
-		return minecraftVersion;
-	}
-	
-	protected static String namespacedToAbsoluteResourcePath(String namespacedPath, String resourceTypeFolder) {
+
+	public static String namespacedToAbsoluteResourcePath(String namespacedPath, String resourceTypeFolder) {
 		String path = namespacedPath;
 		
 		resourceTypeFolder = FileAccess.normalize(resourceTypeFolder);
@@ -246,7 +299,7 @@ public class ResourcePack {
 		
 		private final byte[] data;
 		
-		public Resource(InputStream data) throws FileNotFoundException, IOException {
+		public Resource(InputStream data) throws IOException {
 			try (ByteArrayOutputStream bout = new ByteArrayOutputStream()) {
 				bout.write(data);
 				this.data = bout.toByteArray();
