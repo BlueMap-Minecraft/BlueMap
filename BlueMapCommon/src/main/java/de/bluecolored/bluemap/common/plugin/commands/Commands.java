@@ -60,10 +60,9 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.map.MapRenderState;
 import de.bluecolored.bluemap.core.mca.ChunkAnvil112;
-import de.bluecolored.bluemap.core.mca.MCAChunk;
-import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.core.world.Block;
+import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.World;
 
 import java.io.IOException;
@@ -529,23 +528,24 @@ public class Commands<S> {
 		new Thread(() -> {
 			// collect and output debug info
 			Vector3i blockPos = position.floor().toInt();
-			Block block = new Block(world, blockPos.getX(), blockPos.getY(), blockPos.getZ());
-			Block blockBelow = new Block(null, 0, 0, 0).copy(block).add(0, -1, 0);
-			
+			Block block = world.getBlock(blockPos);
+			Block blockBelow = world.getBlock(blockPos.add(0, -1, 0));
+
 			String blockIdMeta = "";
 			String blockBelowIdMeta = "";
-			
-			if (world instanceof MCAWorld) {
-				MCAChunk chunk = ((MCAWorld) world).getChunkAtBlock(blockPos.getX(), blockPos.getY(), blockPos.getZ());
-				if (chunk instanceof ChunkAnvil112) {
-					blockIdMeta = " (" + ((ChunkAnvil112) chunk).getBlockIdMeta(blockPos) + ")";
-					blockBelowIdMeta = " (" + ((ChunkAnvil112) chunk).getBlockIdMeta(blockPos.add(0, -1, 0)) + ")";
-				}
+
+			Vector2i chunkPos = world.getChunkGrid().getCell(blockPos.toVector2(true));
+			Chunk chunk = world.getChunk(chunkPos.getX(), chunkPos.getY());
+
+			if (chunk instanceof ChunkAnvil112) {
+				blockIdMeta = " (" + ((ChunkAnvil112) chunk).getBlockIdMeta(blockPos) + ")";
+				blockBelowIdMeta = " (" + ((ChunkAnvil112) chunk).getBlockIdMeta(blockPos.add(0, -1, 0)) + ")";
 			}
 			
 			source.sendMessages(Arrays.asList(
 					Text.of(TextColor.GOLD, "Block at you: ", TextColor.WHITE, block, TextColor.GRAY, blockIdMeta),
-					Text.of(TextColor.GOLD, "Block below you: ", TextColor.WHITE, blockBelow, TextColor.GRAY, blockBelowIdMeta)
+					Text.of(TextColor.GOLD, "Block below you: ", TextColor.WHITE, blockBelow, TextColor.GRAY, blockBelowIdMeta),
+					Text.of(TextColor.GOLD, "Chunk: ", TextColor.WHITE, chunk)
 				));
 		}).start();
 		
@@ -749,11 +749,16 @@ public class Commands<S> {
 				if (worldToRender != null) {
 					plugin.getServerInterface().persistWorldChanges(worldToRender.getUUID());
 					for (BmMap map : plugin.getMapTypes()) {
-						if (map.getWorld().equals(worldToRender)) maps.add(map);
+						if (map.getWorld().getUUID().equals(worldToRender.getUUID())) maps.add(map);
 					}
 				} else {
 					plugin.getServerInterface().persistWorldChanges(mapToRender.getWorld().getUUID());
 					maps.add(mapToRender);
+				}
+
+				if (maps.isEmpty()) {
+					source.sendMessage(Text.of(TextColor.RED, "No map has been found for this world that could be updated!"));
+					return;
 				}
 
 				for (BmMap map : maps) {

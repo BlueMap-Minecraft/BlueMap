@@ -96,7 +96,7 @@ public class BlueMapAPIImpl extends BlueMapAPI {
 
 	@Override
 	public String createImage(BufferedImage image, String path) throws IOException {
-		path = path.replaceAll("[^a-zA-Z_\\.\\-\\/]", "_");
+		path = path.replaceAll("[^a-zA-Z0-9_.\\-/]", "_");
 		String separator = FileSystems.getDefault().getSeparator();
 		
 		Path webRoot = plugin.getRenderConfig().getWebRoot().toPath().toAbsolutePath();
