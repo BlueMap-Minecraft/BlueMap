@@ -1,0 +1,67 @@
+name: Bug Report
+description: Report an issue with BlueMap.
+title: "[Bug]: "
+body:
+- type: markdown
+  attributes:
+    value: |
+      Thanks for taking the time to report an BlueMap bug!
+      Fill out the form below to provide us with info to help fix the bug.
+- type: checkboxes
+  id: contribution-guidelines
+  attributes:
+    label: Contribution Guidelines
+    description: |
+      By submitting this report, you agree you have read the [Contribution Guidelines](https://github.com/BlueMap-Minecraft/BlueMap/blob/master/.github/CONTRIBUTING.md)
+    options:
+      - label: "I have read this project's Contribution Guidelines"
+        required: true
+- type: textarea
+  id: expected-behaviour
+  attributes:
+    label: "Expected behaviour"
+    description: Explain what you expect to happen.
+    placeholder: |
+      Example: "Cobblestone does not render in the webapp."
+  validations:
+    required: true
+- type: textarea
+  id: actual-behaviour
+  attributes:
+    label: "Actual behaviour"
+    description: Explain what actually happens.
+    placeholder: |
+      Example: "Cobblestone should appear in the webapp."
+  validations:
+    required: true
+- type: textarea
+  id: steps-to-reproduce
+  attributes:
+    label: "Steps to reproduce"
+    description: How do you trigger this bug? Please walk us through it step by step.
+    value: |
+      1.
+      2.
+      3.
+      ...
+    render: bash
+  validations:
+    required: true
+- type: textarea
+  id: version
+  attributes:
+    label: "`/bluemap version` output"
+    description: |
+      Run `/bluemap version` in the console, then copy and paste the full output of the command into this box.
+      Also: List any changes from a default MC vanilla changes, such as, was the world generated using any minecraft-mods.
+  validations:
+    required: true
+- type: textarea
+  id: extra-info
+  attributes:
+    label: "Additional Info"
+    value: |
+      In this text box or below, you may attach any relevant screenshots, files, logs, and links showing the reported bug.
+      The more info, or illustrations the better!
+  validations:
+    required: false
