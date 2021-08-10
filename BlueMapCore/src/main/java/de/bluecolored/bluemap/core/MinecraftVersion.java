@@ -39,8 +39,7 @@ public class MinecraftVersion implements Comparable<MinecraftVersion> {
 	private static final Pattern VERSION_REGEX = Pattern.compile("(?:(?<major>\\d+)\\.(?<minor>\\d+))(?:\\.(?<patch>\\d+))?(?:\\-(?:pre|rc)\\d+)?");
 
 	public static final MinecraftVersion LATEST_SUPPORTED = new MinecraftVersion(1, 17, 0);
-	public static final MinecraftVersion EARLIEST_SUPPORTED = new MinecraftVersion(1, 12, 2);
-	public static final MinecraftVersion THE_FLATTENING = new MinecraftVersion(1, 13);
+	public static final MinecraftVersion EARLIEST_SUPPORTED = new MinecraftVersion(1, 13);
 
 	private final int major, minor, patch;
 
@@ -144,7 +143,6 @@ public class MinecraftVersion implements Comparable<MinecraftVersion> {
 	@DebugDump
 	public enum MinecraftResource {
 
-		MC_1_12 (new MinecraftVersion(1, 12), "mc1_12", "https://launcher.mojang.com/v1/objects/0f275bc1547d01fa5f56ba34bdc87d981ee12daf/client.jar"),
 		MC_1_13 (new MinecraftVersion(1, 13), "mc1_13", "https://launcher.mojang.com/v1/objects/30bfe37a8db404db11c7edf02cb5165817afb4d9/client.jar"),
 		MC_1_14 (new MinecraftVersion(1, 14), "mc1_13", "https://launcher.mojang.com/v1/objects/8c325a0c5bd674dd747d6ebaa4c791fd363ad8a9/client.jar"),
 		MC_1_15 (new MinecraftVersion(1, 15), "mc1_15", "https://launcher.mojang.com/v1/objects/e3f78cd16f9eb9a52307ed96ebec64241cc5b32d/client.jar"),
