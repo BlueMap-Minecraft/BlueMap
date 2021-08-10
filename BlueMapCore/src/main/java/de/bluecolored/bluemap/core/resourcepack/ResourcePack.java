@@ -151,12 +151,13 @@ public class ResourcePack {
 				//load blockstates
 				String namespace = namespaceRoot.substring("assets/".length());
 				Logger.global.logInfo("Loading " + namespace + " assets (" + i + "/" + namespaces.size() + ")...");
-				
-				Collection<String> blockstateFiles = sourcesAccess.listFiles(namespaceRoot + "/blockstates", true);
+
+				String blockstatesRootPath = namespaceRoot + "/blockstates";
+				Collection<String> blockstateFiles = sourcesAccess.listFiles(blockstatesRootPath, true);
 				for (String blockstateFile : blockstateFiles) {
 					if (Thread.interrupted()) throw new InterruptedException();
 					
-					String filename = FileAccess.getFileName(blockstateFile);
+					String filename = blockstateFile.substring(blockstatesRootPath.length() + 1);
 					if (!filename.endsWith(".json")) continue;
 
 					try {
