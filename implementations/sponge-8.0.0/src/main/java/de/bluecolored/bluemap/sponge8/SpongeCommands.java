@@ -93,7 +93,7 @@ public class SpongeCommands {
 				String context = ex.getContext();
 				if (context != null) cause.audience().sendMessage(Component.text(context, NamedTextColor.GRAY));
 
-				return CommandResult.empty();
+				return CommandResult.builder().result(0).build();
 			}
 		}
 
