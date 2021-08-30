@@ -37,16 +37,13 @@ import org.spongepowered.configurate.serialize.SerializationException;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
-public class WebSettings {
+public class MapSettings {
 
 	private final ConfigurationLoader<? extends ConfigurationNode> configLoader;
 	private ConfigurationNode rootNode;
 	
-	public WebSettings(File settingsFile) throws IOException {
+	public MapSettings(File settingsFile) throws IOException {
 		FileUtils.createFile(settingsFile);
 		
 		configLoader = GsonConfigurationLoader.builder()
@@ -79,97 +76,82 @@ public class WebSettings {
 	public int getInt(Object... path) {
 		return rootNode.node(path).getInt();
 	}
-	
+
 	public long getLong(Object... path) {
 		return rootNode.node(path).getLong();
 	}
-	
+
 	public float getFloat(Object... path) {
 		return rootNode.node(path).getFloat();
 	}
-	
+
 	public double getDouble(Object... path) {
 		return rootNode.node(path).getDouble();
 	}
 	
-	public Collection<String> getMapIds() {
-		return rootNode.node("maps").childrenMap().keySet().stream().map(Object::toString).collect(Collectors.toSet());
+	public String getMapId() {
+		return getString("world");
 	}
 	
-	public void setAllMapsEnabled(boolean enabled) throws SerializationException {
-		for (ConfigurationNode mapNode : rootNode.node("maps").childrenMap().values()) {
-			mapNode.node("enabled").set(enabled);
-		}
-	}
-	
-	public void setMapEnabled(boolean enabled, String mapId) throws SerializationException {
-		set(enabled, "maps", mapId, "enabled");
-	}
-
-	public void setMap(String mapId, UUID worldUUID) throws SerializationException {
-		set(worldUUID.toString(), "maps", mapId, "world");
-	}
-
-	@Deprecated
 	public void setFrom(BmMap map) throws SerializationException {
 		Vector2i hiresTileSize = map.getHiresModelManager().getTileGrid().getGridSize();
 		Vector2i gridOrigin = map.getHiresModelManager().getTileGrid().getOffset();
 		Vector2i lowresTileSize = map.getLowresModelManager().getTileSize();
 		Vector2i lowresPointsPerHiresTile = map.getLowresModelManager().getPointsPerHiresTile();
 		
-		set(hiresTileSize.getX(), "maps", map.getId(), "hires", "tileSize", "x");
-		set(hiresTileSize.getY(), "maps", map.getId(), "hires", "tileSize", "z");
-		set(1, "maps", map.getId(), "hires", "scale", "x");
-		set(1, "maps", map.getId(), "hires", "scale", "z");
-		set(gridOrigin.getX(), "maps", map.getId(), "hires", "translate", "x");
-		set(gridOrigin.getY(), "maps", map.getId(), "hires", "translate", "z");
+		set(hiresTileSize.getX(), "hires", "tileSize", "x");
+		set(hiresTileSize.getY(), "hires", "tileSize", "z");
+		set(1, "hires", "scale", "x");
+		set(1, "hires", "scale", "z");
+		set(gridOrigin.getX(), "hires", "translate", "x");
+		set(gridOrigin.getY(), "hires", "translate", "z");
 		
 		Vector2i pointSize = hiresTileSize.div(lowresPointsPerHiresTile);
 		Vector2i tileSize = pointSize.mul(lowresTileSize);
 		
-		set(tileSize.getX(), "maps", map.getId(), "lowres", "tileSize", "x");
-		set(tileSize.getY(), "maps", map.getId(), "lowres", "tileSize", "z");
-		set(pointSize.getX(), "maps", map.getId(), "lowres", "scale", "x");
-		set(pointSize.getY(), "maps", map.getId(), "lowres", "scale", "z");
-		set(pointSize.getX() / 2, "maps", map.getId(), "lowres", "translate", "x");
-		set(pointSize.getY() / 2, "maps", map.getId(), "lowres", "translate", "z");
+		set(tileSize.getX(), "lowres", "tileSize", "x");
+		set(tileSize.getY(), "lowres", "tileSize", "z");
+		set(pointSize.getX(),"lowres", "scale", "x");
+		set(pointSize.getY(),"lowres", "scale", "z");
+		set(pointSize.getX() / 2, "lowres", "translate", "x");
+		set(pointSize.getY() / 2, "lowres", "translate", "z");
 
-		set(map.getWorld().getSpawnPoint().getX(), "maps", map.getId(), "startPos", "x");
-		set(map.getWorld().getSpawnPoint().getZ(), "maps", map.getId(), "startPos", "z");
-		set(map.getWorld().getUUID().toString(), "maps", map.getId(), "world");
+		set(map.getWorld().getSpawnPoint().getX(), "startPos", "x");
+		set(map.getWorld().getSpawnPoint().getZ(), "startPos", "z");
+		set(map.getWorld().getUUID().toString(), "world");
 	}
-
-	@Deprecated
+	
 	public void setFrom(MapConfig mapConfig) throws SerializationException {
 		Vector2i startPos = mapConfig.getStartPos();
 		if (startPos != null) {
-			set(startPos.getX(), "maps", mapConfig.getId(), "startPos", "x");
-			set(startPos.getY(), "maps", mapConfig.getId(), "startPos", "z");
+			set(startPos.getX(), "startPos", "x");
+			set(startPos.getY(), "startPos", "z");
 		}
 
 		Vector3f skyColor = MathUtils.color3FromInt(mapConfig.getSkyColor());
-		set(skyColor.getX(), "maps", mapConfig.getId(), "skyColor", "r");
-		set(skyColor.getY(), "maps", mapConfig.getId(), "skyColor", "g");
-		set(skyColor.getZ(), "maps", mapConfig.getId(), "skyColor", "b");
+		set(skyColor.getX(), "skyColor", "r");
+		set(skyColor.getY(), "skyColor", "g");
+		set(skyColor.getZ(), "skyColor", "b");
 		
-		set(mapConfig.getAmbientLight(), "maps", mapConfig.getId(), "ambientLight");
+		set(mapConfig.getAmbientLight(), "ambientLight");
 		
 		setName(mapConfig.getName(), mapConfig.getId());
 	}
 	
-	public void setOrdinal(int ordinal, String mapId) throws SerializationException {
-		set(ordinal, "maps", mapId, "ordinal");
+	public void setOrdinal(int ordinal) throws SerializationException {
+		set(ordinal, "ordinal");
 	}
 	
 	public int getOrdinal(String mapId) {
-		return getInt("maps", mapId, "ordinal");
+		return getInt("ordinal");
 	}
 	
 	public void setName(String name, String mapId) throws SerializationException {
-		set(name, "maps", mapId, "name");
+		set(name, "name");
 	}
 	
 	public String getName(String mapId) {
-		return getString("maps", mapId, "name");
+		return getString("name");
 	}
+	
 }
