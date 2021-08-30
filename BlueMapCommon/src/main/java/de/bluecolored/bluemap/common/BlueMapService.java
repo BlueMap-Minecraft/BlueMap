@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.common;
 
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.common.web.MapSettings;
 import de.bluecolored.bluemap.common.web.WebSettings;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.config.*;
@@ -107,14 +108,19 @@ public class BlueMapService {
 		webSettings.set(getRenderConfig().isEnableFreeFlight(), "freeFlightEnabled");
 		webSettings.setAllMapsEnabled(false);
 		for (BmMap map : getMaps().values()) {
+			webSettings.setMap(map.getId(), map.getWorld().getUUID());
 			webSettings.setMapEnabled(true, map.getId());
-			webSettings.setFrom(map);
+			MapSettings mapSettings = new MapSettings(new File(getRenderConfig().getWebRoot(), "data" + File.separator + map.getId() + File.separator + "settings.json"));
+			mapSettings.setFrom(map);
+			mapSettings.save();
 		}
 		int ordinal = 0;
 		for (MapConfig map : getRenderConfig().getMapConfigs()) {
 			if (!getMaps().containsKey(map.getId())) continue; //don't add not loaded maps
-			webSettings.setOrdinal(ordinal++, map.getId());
-			webSettings.setFrom(map);
+			MapSettings mapSettings = new MapSettings(new File(getRenderConfig().getWebRoot(), "data" + File.separator + map.getId() + File.separator + "settings.json"));
+			mapSettings.setOrdinal(ordinal++);
+			mapSettings.setFrom(map);
+			mapSettings.save();
 		}
 		webSettings.save();
 		
