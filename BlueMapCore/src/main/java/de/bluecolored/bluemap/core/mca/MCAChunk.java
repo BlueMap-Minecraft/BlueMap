@@ -33,13 +33,21 @@ import java.io.IOException;
 
 public abstract class MCAChunk implements Chunk {
 
+	private final MCAWorld world;
 	private final int dataVersion;
-	
+
 	protected MCAChunk() {
+		this.world = null;
+		this.dataVersion = -1;
+	}
+
+	protected MCAChunk(MCAWorld world) {
+		this.world = world;
 		this.dataVersion = -1;
 	}
 	
-	protected MCAChunk(CompoundTag chunkTag) {
+	protected MCAChunk(MCAWorld world, CompoundTag chunkTag) {
+		this.world = world;
 		dataVersion = chunkTag.getInt("DataVersion");
 	}
 
@@ -69,13 +77,17 @@ public abstract class MCAChunk implements Chunk {
 	public int getMinY(int x, int z) {
 		return 0;
 	}
-	
-	public static MCAChunk create(MCAWorld world, CompoundTag chunkTag, boolean ignoreMissingLightData) throws IOException {
+
+	protected MCAWorld getWorld() {
+		return world;
+	}
+
+	public static MCAChunk create(MCAWorld world, CompoundTag chunkTag) throws IOException {
 		int version = chunkTag.getInt("DataVersion");
 
-		if (version < 2200) return new ChunkAnvil113(chunkTag, ignoreMissingLightData);
-		if (version < 2500) return new ChunkAnvil115(chunkTag, ignoreMissingLightData);
-		return new ChunkAnvil116(chunkTag, ignoreMissingLightData);
+		if (version < 2200) return new ChunkAnvil113(world, chunkTag);
+		if (version < 2500) return new ChunkAnvil115(world, chunkTag);
+		return new ChunkAnvil116(world, chunkTag);
 	}
 
 	public static MCAChunk empty() {
@@ -85,6 +97,7 @@ public abstract class MCAChunk implements Chunk {
 	@Override
 	public String toString() {
 		return "MCAChunk{" +
+			   "world=" + world +
 			   "dataVersion=" + dataVersion +
 			   "isGenerated()=" + isGenerated() +
 			   '}';

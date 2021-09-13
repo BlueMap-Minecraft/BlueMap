@@ -36,9 +36,10 @@ import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.sponge8.SpongeCommands.SpongeCommandProxy;
-import net.kyori.adventure.text.serializer.plain.PlainComponentSerializer;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import net.querz.nbt.CompoundTag;
 import net.querz.nbt.NBTUtil;
+import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.spongepowered.api.Platform;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
@@ -65,7 +66,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 
-@org.spongepowered.plugin.jvm.Plugin(Plugin.PLUGIN_ID)
+@org.spongepowered.plugin.builtin.jvm.Plugin(Plugin.PLUGIN_ID)
 public class SpongePlugin implements ServerInterface {
 
 	private final PluginContainer pluginContainer;
@@ -92,13 +93,12 @@ public class SpongePlugin implements ServerInterface {
 		this.onlinePlayerMap = new ConcurrentHashMap<>();
 		this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 
-		final String versionFromSponge = Sponge.platform().container(Platform.Component.GAME).metadata().version();
-		MinecraftVersion version = new MinecraftVersion(1, 16);
-		try {
-			version = MinecraftVersion.of(versionFromSponge);
-		} catch (IllegalArgumentException e) {
-			Logger.global.logWarning("Failed to find a matching version for version-name '" + versionFromSponge + "'! Using latest known sponge-version: " + version.getVersionString());
-		}
+		final ArtifactVersion versionFromSponge = Sponge.platform().container(Platform.Component.GAME).metadata().version();
+		MinecraftVersion version = new MinecraftVersion(
+				versionFromSponge.getMajorVersion(),
+				versionFromSponge.getMinorVersion(),
+				versionFromSponge.getIncrementalVersion()
+		);
 		
 		this.pluginInstance = new Plugin(version, "sponge-8.0.0", this);
 		this.commands = new SpongeCommands(pluginInstance);
@@ -210,7 +210,7 @@ public class SpongePlugin implements ServerInterface {
 						serverWorld -> serverWorld
 								.properties()
 								.displayName()
-								.map(PlainComponentSerializer.plain()::serialize)
+								.map(PlainTextComponentSerializer.plainText()::serialize)
 				)
 				.orElse(null);
 	}

@@ -68,7 +68,7 @@ public class SpongeCommands {
 
 	public class SpongeCommandProxy implements Command.Raw {
 
-		private String label;
+		private final String label;
 
 		protected SpongeCommandProxy(String label) {
 			this.label = label;
@@ -88,12 +88,13 @@ public class SpongeCommands {
 			try {
 				return CommandResult.builder().result(dispatcher.execute(command, cause)).build();
 			} catch (CommandSyntaxException ex) {
-				cause.audience().sendMessage(Component.text(ex.getRawMessage().getString(), NamedTextColor.RED));
+				Component errText = Component.text(ex.getRawMessage().getString(), NamedTextColor.RED);
 
 				String context = ex.getContext();
-				if (context != null) cause.audience().sendMessage(Component.text(context, NamedTextColor.GRAY));
+				if (context != null)
+					errText = errText.append(Component.newline()).append(Component.text(context, NamedTextColor.GRAY));
 
-				return CommandResult.empty();
+				return CommandResult.error(errText);
 			}
 		}
 

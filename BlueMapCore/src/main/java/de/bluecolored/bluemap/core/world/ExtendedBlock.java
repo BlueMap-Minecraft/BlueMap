@@ -24,19 +24,22 @@
  */
 package de.bluecolored.bluemap.core.world;
 
+import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 
 import java.util.Objects;
 
-public class ResourcePackBlock<T extends ResourcePackBlock<T>> extends Block<T> {
-
+public class ExtendedBlock<T extends ExtendedBlock<T>> extends Block<T> {
     private final ResourcePack resourcePack;
+    private final RenderSettings renderSettings;
     private BlockProperties properties;
     private Biome biome;
+    private Boolean insideRenderBounds;
 
-    public ResourcePackBlock(ResourcePack resourcePack, World world, int x, int y, int z) {
+    public ExtendedBlock(ResourcePack resourcePack, RenderSettings renderSettings, World world, int x, int y, int z) {
         super(world, x, y, z);
         this.resourcePack = Objects.requireNonNull(resourcePack);
+        this.renderSettings = renderSettings;
     }
 
     @Override
@@ -45,6 +48,20 @@ public class ResourcePackBlock<T extends ResourcePackBlock<T>> extends Block<T> 
 
         this.properties = null;
         this.biome = null;
+        this.insideRenderBounds = null;
+    }
+
+    @Override
+    public BlockState getBlockState() {
+        if (!isInsideRenderBounds() && renderSettings.isRenderEdges()) return BlockState.AIR;
+        return super.getBlockState();
+    }
+
+    @Override
+    public LightData getLightData() {
+        LightData ld = super.getLightData();
+        if (!isInsideRenderBounds() && renderSettings.isRenderEdges()) ld.set(getWorld().getSkyLight(), ld.getBlockLight());
+        return ld;
     }
 
     public BlockProperties getProperties() {
@@ -55,6 +72,15 @@ public class ResourcePackBlock<T extends ResourcePackBlock<T>> extends Block<T> 
     public Biome getBiome() {
         if (biome == null) biome = resourcePack.getBiome(getBiomeId());
         return biome;
+    }
+
+    public RenderSettings getRenderSettings() {
+        return renderSettings;
+    }
+
+    public boolean isInsideRenderBounds() {
+        if (insideRenderBounds == null) insideRenderBounds = renderSettings.isInsideRenderBoundaries(getX(), getY(), getZ());
+        return insideRenderBounds;
     }
 
     public ResourcePack getResourcePack() {

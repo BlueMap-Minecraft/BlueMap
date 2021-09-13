@@ -55,7 +55,7 @@ public class HiresModelRenderer {
 
 		int maxHeight, minY, maxY;
 		Color columnColor = new Color(), blockColor = new Color();
-		BlockNeighborhood<?> block = new BlockNeighborhood<>(resourcePack, world, 0, 0, 0);
+		BlockNeighborhood<?> block = new BlockNeighborhood<>(resourcePack, renderSettings, world, 0, 0, 0);
 		BlockModelView blockModel = new BlockModelView(model);
 
 		int x, y, z;
@@ -65,35 +65,39 @@ public class HiresModelRenderer {
 				maxHeight = 0;
 				columnColor.set(0, 0, 0, 1, true);
 
-				minY = Math.max(min.getY(), world.getMinY(x, z));
-				maxY = Math.min(max.getY(), world.getMaxY(x, z));
+				if (renderSettings.isInsideRenderBoundaries(x, z)) {
+					minY = Math.max(min.getY(), world.getMinY(x, z));
+					maxY = Math.min(max.getY(), world.getMaxY(x, z));
 
-				for (y = minY; y <= maxY; y++){
-					block.set(x, y, z);
-					blockColor.set(0, 0, 0, 0, true);
-					blockModel.initialize();
+					for (y = minY; y <= maxY; y++) {
+						block.set(x, y, z);
+						if (!block.isInsideRenderBounds()) continue;
 
-					try {
-						modelFactory.render(block, blockModel, blockColor);
-					} catch (NoSuchResourceException e) {
+						blockColor.set(0, 0, 0, 0, true);
+						blockModel.initialize();
+
 						try {
-							modelFactory.render(block, BlockState.MISSING, blockModel.reset(), blockColor);
-						} catch (NoSuchResourceException e2) {
-							e.addSuppressed(e2);
+							modelFactory.render(block, blockModel, blockColor);
+						} catch (NoSuchResourceException e) {
+							try {
+								modelFactory.render(block, BlockState.MISSING, blockModel.reset(), blockColor);
+							} catch (NoSuchResourceException e2) {
+								e.addSuppressed(e2);
+							}
+							//Logger.global.noFloodDebug(block.getBlockState().getFullId() + "-hiresModelRenderer-blockmodelerr", "Failed to create BlockModel for BlockState: " + block.getBlockState() + " (" + e.toString() + ")");
 						}
-						//Logger.global.noFloodDebug(block.getBlockState().getFullId() + "-hiresModelRenderer-blockmodelerr", "Failed to create BlockModel for BlockState: " + block.getBlockState() + " (" + e.toString() + ")");
-					}
 
-					// skip empty blocks
-					if (blockModel.getSize() <= 0) continue;
+						// skip empty blocks
+						if (blockModel.getSize() <= 0) continue;
 
-					// move block-model to correct position
-					blockModel.translate(x - modelAnchor.getX(), y - modelAnchor.getY(), z - modelAnchor.getZ());
-					
-					//update color and height (only if not 100% translucent)
-					if (blockColor.a > 0) {
-						maxHeight = y;
-						columnColor.overlay(blockColor);
+						// move block-model to correct position
+						blockModel.translate(x - modelAnchor.getX(), y - modelAnchor.getY(), z - modelAnchor.getZ());
+
+						//update color and height (only if not 100% translucent)
+						if (blockColor.a > 0) {
+							maxHeight = y;
+							columnColor.overlay(blockColor);
+						}
 					}
 				}
 

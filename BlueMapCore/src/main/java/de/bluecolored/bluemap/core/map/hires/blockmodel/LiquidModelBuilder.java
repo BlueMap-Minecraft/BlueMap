@@ -40,7 +40,7 @@ import de.bluecolored.bluemap.core.util.math.VectorM2f;
 import de.bluecolored.bluemap.core.util.math.VectorM3f;
 import de.bluecolored.bluemap.core.world.BlockNeighborhood;
 import de.bluecolored.bluemap.core.world.BlockState;
-import de.bluecolored.bluemap.core.world.ResourcePackBlock;
+import de.bluecolored.bluemap.core.world.ExtendedBlock;
 
 /**
  * A model builder for all liquid blocks
@@ -144,10 +144,11 @@ public class LiquidModelBuilder {
 			blockColor.multiply(tintcolor);
 
 			// apply light
-			float sl = block.getSunLightLevel() / 16f;
-			blockColor.r *= sl;
-			blockColor.g *= sl;
-			blockColor.b *= sl;
+			float combinedLight = Math.max(block.getSunLightLevel() / 15f, block.getBlockLightLevel() / 15f);
+			combinedLight = (renderSettings.getAmbientLight() + combinedLight) / (renderSettings.getAmbientLight() + 1f);
+			blockColor.r *= combinedLight;
+			blockColor.g *= combinedLight;
+			blockColor.b *= combinedLight;
 		} else {
 			blockColor.set(0, 0, 0, 0, true);
 		}
@@ -166,7 +167,7 @@ public class LiquidModelBuilder {
 		
 		float sumHeight = 0f;
 		int count = 0;
-		ResourcePackBlock<?> neighbor;
+		ExtendedBlock<?> neighbor;
 		BlockState neighborBlockState;
 		
 		for (ix = x; ix <= x+1; ix++){
@@ -197,7 +198,7 @@ public class LiquidModelBuilder {
 		return !blockState.equals(BlockState.AIR);
 	}
 	
-	private boolean isSameLiquid(ResourcePackBlock<?> block){
+	private boolean isSameLiquid(ExtendedBlock<?> block){
 		if (block.getBlockState().getFullId().equals(this.blockState.getFullId())) return true;
 		return this.blockState.isWater() && (block.getBlockState().isWaterlogged() || block.getProperties().isAlwaysWaterlogged());
 	}
@@ -217,7 +218,7 @@ public class LiquidModelBuilder {
 		Vector3i faceDirVector = faceDir.toVector();
 
 		//face culling
-		ResourcePackBlock<?> bl = block.getNeighborBlock(
+		ExtendedBlock<?> bl = block.getNeighborBlock(
 				faceDirVector.getX(),
 				faceDirVector.getY(),
 				faceDirVector.getZ()
@@ -341,7 +342,7 @@ public class LiquidModelBuilder {
 	}
 
 	private float compareLiquidHeights(float ownHeight, int dx, int dz) {
-		ResourcePackBlock<?> neighbor = block.getNeighborBlock(dx, 0,  dz);
+		ExtendedBlock<?> neighbor = block.getNeighborBlock(dx, 0,  dz);
 		if (neighbor.getBlockState().isAir()) return 0;
 		if (!isSameLiquid(neighbor)) return 0;
 

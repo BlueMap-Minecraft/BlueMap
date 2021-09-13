@@ -52,6 +52,9 @@ public interface RenderSettings {
 		return DEFAULT_MAX;
 	}
 
+	float getAmbientLight();
+
+	int getWorldSkyLight();
 	
 	/**
 	 * The same as the maximum height, but blocks that are above this value are treated as AIR.<br>
@@ -67,5 +70,29 @@ public interface RenderSettings {
 	default boolean useGzipCompression() {
 		return true;
 	}
-	
+
+	default boolean isInsideRenderBoundaries(int x, int z) {
+		Vector3i min = getMin();
+		Vector3i max = getMax();
+
+		return
+				x >= min.getX() &&
+				x <= max.getX() &&
+				z >= min.getZ() &&
+				z <= max.getZ();
+	}
+
+	default boolean isInsideRenderBoundaries(int x, int y, int z) {
+		Vector3i min = getMin();
+		Vector3i max = getMax();
+
+		return
+				x >= min.getX() &&
+				x <= max.getX() &&
+				z >= min.getZ() &&
+				z <= max.getZ() &&
+				y >= min.getY() &&
+				y <= max.getY();
+	}
+
 }

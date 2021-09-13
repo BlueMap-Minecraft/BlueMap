@@ -24,30 +24,31 @@
  */
 package de.bluecolored.bluemap.core.world;
 
+import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 
-public class BlockNeighborhood<T extends BlockNeighborhood<T>> extends ResourcePackBlock<T> {
+public class BlockNeighborhood<T extends BlockNeighborhood<T>> extends ExtendedBlock<T> {
 
 	private static final int DIAMETER = 8;
 	private static final int DIAMETER_MASK = DIAMETER - 1;
 	private static final int DIAMETER_SQUARED = DIAMETER * DIAMETER;
 
-	private final ResourcePackBlock<?>[] neighborhood;
+	private final ExtendedBlock<?>[] neighborhood;
 
 	private int thisIndex;
 
-	public BlockNeighborhood(ResourcePackBlock<?> center) {
-		super(center.getResourcePack(), null, 0, 0, 0);
+	public BlockNeighborhood(ExtendedBlock<?> center) {
+		super(center.getResourcePack(), center.getRenderSettings(), null, 0, 0, 0);
 		copy(center);
 
-		neighborhood = new ResourcePackBlock[DIAMETER * DIAMETER * DIAMETER];
+		neighborhood = new ExtendedBlock[DIAMETER * DIAMETER * DIAMETER];
 		init();
 	}
 
-	public BlockNeighborhood(ResourcePack resourcePack, World world, int x, int y, int z) {
-		super(resourcePack, world, x, y, z);
+	public BlockNeighborhood(ResourcePack resourcePack, RenderSettings renderSettings, World world, int x, int y, int z) {
+		super(resourcePack, renderSettings, world, x, y, z);
 
-		neighborhood = new ResourcePackBlock[DIAMETER * DIAMETER * DIAMETER];
+		neighborhood = new ExtendedBlock[DIAMETER * DIAMETER * DIAMETER];
 		init();
 	}
 
@@ -61,11 +62,11 @@ public class BlockNeighborhood<T extends BlockNeighborhood<T>> extends ResourceP
 	private void init() {
 		this.thisIndex = -1;
 		for (int i = 0; i < neighborhood.length; i++) {
-			neighborhood[i] = new ResourcePackBlock<>(this.getResourcePack(), null, 0, 0, 0);
+			neighborhood[i] = new ExtendedBlock<>(this.getResourcePack(), this.getRenderSettings(), null, 0, 0, 0);
 		}
 	}
 
-	public ResourcePackBlock<?> getNeighborBlock(int dx, int dy, int dz) {
+	public ExtendedBlock<?> getNeighborBlock(int dx, int dy, int dz) {
 		int i = neighborIndex(dx, dy, dz);
 		if (i == thisIndex()) return this;
 		return neighborhood[i].set(

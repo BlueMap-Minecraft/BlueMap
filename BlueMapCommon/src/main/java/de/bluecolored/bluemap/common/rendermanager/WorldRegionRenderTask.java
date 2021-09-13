@@ -115,7 +115,9 @@ public class WorldRegionRenderTask implements RenderTask {
 		}
 
 		//Logger.global.logInfo("Working on " + worldRegion + " - Tile " + tile);
-		map.renderTile(tile); // <- actual work
+		if (isAllChunksInTileGenerated(tile)) {
+			map.renderTile(tile); // <- actual work
+		}
 
 		synchronized (this) {
 			this.atWork--;
@@ -124,6 +126,22 @@ public class WorldRegionRenderTask implements RenderTask {
 				complete();
 			}
 		}
+	}
+
+	private boolean isAllChunksInTileGenerated(Vector2i tile) {
+		Grid tileGrid = map.getHiresModelManager().getTileGrid();
+		Grid chunkGrid = map.getWorld().getChunkGrid();
+
+		Vector2i minChunk = tileGrid.getCellMin(tile, chunkGrid);
+		Vector2i maxChunk = tileGrid.getCellMax(tile, chunkGrid);
+
+		for (int x = minChunk.getX(); x <= maxChunk.getX(); x++) {
+			for (int z = minChunk.getY(); z <= maxChunk.getY(); z++) {
+				if (!map.getWorld().getChunk(x, z).isGenerated()) return false;
+			}
+		}
+
+		return true;
 	}
 
 	private void complete() {

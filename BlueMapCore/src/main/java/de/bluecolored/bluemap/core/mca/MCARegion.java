@@ -84,7 +84,7 @@ public class MCARegion implements Region {
 			DataInputStream dis = new DataInputStream(new BufferedInputStream(compressionType.decompress(new FileInputStream(raf.getFD()))));
 			Tag<?> tag = Tag.deserialize(dis, Tag.DEFAULT_MAX_DEPTH);
 			if (tag instanceof CompoundTag) {
-				MCAChunk chunk = MCAChunk.create(world, (CompoundTag) tag, ignoreMissingLightData);
+				MCAChunk chunk = MCAChunk.create(world, (CompoundTag) tag);
 				if (!chunk.isGenerated()) return MCAChunk.empty();
 				return chunk;
 			} else {

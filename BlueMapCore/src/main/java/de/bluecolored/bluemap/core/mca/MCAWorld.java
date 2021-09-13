@@ -54,6 +54,7 @@ public class MCAWorld implements World {
 	@DebugDump private final String name;
 	@DebugDump private final Vector3i spawnPoint;
 
+	@DebugDump private final int skyLight;
 	@DebugDump private final boolean ignoreMissingLightData;
 
 	private final LoadingCache<Vector2i, MCARegion> regionCache;
@@ -64,13 +65,15 @@ public class MCAWorld implements World {
 			UUID uuid,
 			String name,
 			Vector3i spawnPoint,
+			int skyLight,
 			boolean ignoreMissingLightData
 			) {
 		this.uuid = uuid;
 		this.worldFolder = worldFolder;
 		this.name = name;
 		this.spawnPoint = spawnPoint;
-		
+
+		this.skyLight = skyLight;
 		this.ignoreMissingLightData = ignoreMissingLightData;
 
 		this.regionCache = Caffeine.newBuilder()
@@ -152,8 +155,8 @@ public class MCAWorld implements World {
 	}
 
 	@Override
-	public int getSeaLevel() {
-		return 63;
+	public int getSkyLight() {
+		return skyLight;
 	}
 
 	@Override
@@ -203,7 +206,11 @@ public class MCAWorld implements World {
 	private Path getRegionFolder() {
 		return worldFolder.resolve("region");
 	}
-	
+
+	public boolean isIgnoreMissingLightData() {
+		return ignoreMissingLightData;
+	}
+
 	private File getMCAFile(int regionX, int regionZ) {
 		return getRegionFolder().resolve("r." + regionX + "." + regionZ + ".mca").toFile();
 	}
@@ -248,12 +255,8 @@ public class MCAWorld implements World {
 		Logger.global.logDebug("Unexpected exception trying to load chunk (x:" + x + ", z:" + z + "):" + loadException);
 		return MCAChunk.empty();
 	}
-
-	public static MCAWorld load(Path worldFolder, UUID uuid) throws IOException {
-		return load(worldFolder, uuid, null, false);
-	}
 	
-	public static MCAWorld load(Path worldFolder, UUID uuid, String name, boolean ignoreMissingLightData) throws IOException {
+	public static MCAWorld load(Path worldFolder, UUID uuid, String name, int skyLight, boolean ignoreMissingLightData) throws IOException {
 		try {
 			StringBuilder subDimensionName = new StringBuilder();
 
@@ -292,6 +295,7 @@ public class MCAWorld implements World {
 					uuid,
 					name,
 					spawnPoint,
+					skyLight,
 					ignoreMissingLightData
 			);
 		} catch (ClassCastException | NullPointerException ex) {

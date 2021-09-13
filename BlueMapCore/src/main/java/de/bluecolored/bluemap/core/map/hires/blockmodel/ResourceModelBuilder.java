@@ -44,7 +44,7 @@ import de.bluecolored.bluemap.core.util.math.VectorM2f;
 import de.bluecolored.bluemap.core.util.math.VectorM3f;
 import de.bluecolored.bluemap.core.world.BlockNeighborhood;
 import de.bluecolored.bluemap.core.world.LightData;
-import de.bluecolored.bluemap.core.world.ResourcePackBlock;
+import de.bluecolored.bluemap.core.world.ExtendedBlock;
 
 /**
  * This model builder creates a BlockStateModel using the information from parsed resource-pack json files.
@@ -160,12 +160,12 @@ public class ResourceModelBuilder {
 
 		// face culling
 		if (face.getCullface() != null) {
-			ResourcePackBlock<?> b = getRotationRelativeBlock(face.getCullface());
+			ExtendedBlock<?> b = getRotationRelativeBlock(face.getCullface());
 			if (b.getProperties().isCulling()) return;
 		}
 
 		// light calculation
-		ResourcePackBlock<?> facedBlockNeighbor = getRotationRelativeBlock(faceDir);
+		ExtendedBlock<?> facedBlockNeighbor = getRotationRelativeBlock(faceDir);
 		LightData blockLightData = block.getLightData();
 		LightData facedLightData = facedBlockNeighbor.getLightData();
 
@@ -307,20 +307,21 @@ public class ResourceModelBuilder {
 			}
 
 			// apply light
-			float sl = sunLight / 16f;
-			mapColor.r *= sl;
-			mapColor.g *= sl;
-			mapColor.b *= sl;
+			float combinedLight = Math.max(sunLight / 15f, blockLight / 15f);
+			combinedLight = (renderSettings.getAmbientLight() + combinedLight) / (renderSettings.getAmbientLight() + 1f);
+			mapColor.r *= combinedLight;
+			mapColor.g *= combinedLight;
+			mapColor.b *= combinedLight;
 
 			blockColor.add(mapColor);
 		}
 	}
 
-	private ResourcePackBlock<?> getRotationRelativeBlock(Direction direction){
+	private ExtendedBlock<?> getRotationRelativeBlock(Direction direction){
 		return getRotationRelativeBlock(direction.toVector());
 	}
 
-	private ResourcePackBlock<?> getRotationRelativeBlock(Vector3i direction){
+	private ExtendedBlock<?> getRotationRelativeBlock(Vector3i direction){
 		return getRotationRelativeBlock(
 				direction.getX(),
 				direction.getY(),
@@ -329,7 +330,7 @@ public class ResourceModelBuilder {
 	}
 
 	private final VectorM3f rotationRelativeBlockDirection = new VectorM3f(0, 0, 0);
-	private ResourcePackBlock<?> getRotationRelativeBlock(int dx, int dy, int dz){
+	private ExtendedBlock<?> getRotationRelativeBlock(int dx, int dy, int dz){
 		rotationRelativeBlockDirection.set(dx, dy, dz);
 		makeRotationRelative(rotationRelativeBlockDirection);
 

@@ -45,6 +45,7 @@ public class MapConfig implements MapSettings {
 	private Vector2i startPos;
 	private int skyColor;
 	private float ambientLight;
+	private int worldSkyLight;
 	
 	private boolean renderCaves;
 	
@@ -82,6 +83,9 @@ public class MapConfig implements MapSettings {
 		
 		//ambientLight
 		this.ambientLight = node.node("ambientLight").getFloat(0f);
+
+		//worldSkyLight
+		this.worldSkyLight = node.node("worldSkyLight").getInt(15);
 		
 		//renderCaves
 		this.renderCaves = node.node("renderCaves").getBoolean(false);
@@ -101,7 +105,7 @@ public class MapConfig implements MapSettings {
 
 		//useCompression
 		this.useGzip = node.node("useCompression").getBoolean(true);
-		
+
 		//ignoreMissingLightData
 		this.ignoreMissingLightData = node.node("ignoreMissingLightData").getBoolean(false);
 		
@@ -135,9 +139,15 @@ public class MapConfig implements MapSettings {
 	public int getSkyColor() {
 		return skyColor;
 	}
-	
+
+	@Override
 	public float getAmbientLight() {
 		return ambientLight;
+	}
+
+	@Override
+	public int getWorldSkyLight() {
+		return worldSkyLight;
 	}
 
 	public boolean isRenderCaves() {

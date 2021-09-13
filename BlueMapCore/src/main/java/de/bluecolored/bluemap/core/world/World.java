@@ -43,8 +43,8 @@ public interface World {
 	UUID getUUID();
 	
 	Path getSaveFolder();
-	
-	int getSeaLevel();
+
+	int getSkyLight();
 	
 	Vector3i getSpawnPoint();
 	

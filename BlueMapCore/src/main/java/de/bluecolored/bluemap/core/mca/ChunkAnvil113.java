@@ -42,8 +42,8 @@ public class ChunkAnvil113 extends MCAChunk {
 	private int[] biomes;
 	
 	@SuppressWarnings("unchecked")
-	public ChunkAnvil113(CompoundTag chunkTag, boolean ignoreMissingLightData) {
-		super(chunkTag);
+	public ChunkAnvil113(MCAWorld world, CompoundTag chunkTag) {
+		super(world, chunkTag);
 		
 		CompoundTag levelData = chunkTag.getCompoundTag("Level");
 		
@@ -51,7 +51,7 @@ public class ChunkAnvil113 extends MCAChunk {
 		this.isGenerated = status.equals("full");
 		this.hasLight = isGenerated;
 		
-		if (!isGenerated && ignoreMissingLightData) {
+		if (!isGenerated && getWorld().isIgnoreMissingLightData()) {
 			isGenerated = !status.equals("empty");
 		}
 		
@@ -103,14 +103,14 @@ public class ChunkAnvil113 extends MCAChunk {
 
 	@Override
 	public LightData getLightData(int x, int y, int z, LightData target) {
-		if (!hasLight) return target.set(15, 0);
+		if (!hasLight) return target.set(getWorld().getSkyLight(), 0);
 
 		int sectionY = y >> 4;
 		if (sectionY < 0 || sectionY >= this.sections.length)
-			return (y < 0) ? target.set(0, 0) : target.set(15, 0);
+			return (y < 0) ? target.set(0, 0) : target.set(getWorld().getSkyLight(), 0);
 		
 		Section section = this.sections[sectionY];
-		if (section == null) return target.set(15, 0);
+		if (section == null) return target.set(getWorld().getSkyLight(), 0);
 		
 		return section.getLightData(x, y, z, target);
 	}

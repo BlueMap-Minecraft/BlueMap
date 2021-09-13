@@ -44,7 +44,7 @@ public class AtomicFileHelper {
 
 			try {
 				Files.move(partFile, file, StandardCopyOption.ATOMIC_MOVE);
-			} catch (AtomicMoveNotSupportedException ex) {
+			} catch (IOException ex) {
 				Files.move(partFile, file);
 			}
 		});

@@ -32,11 +32,9 @@ import de.bluecolored.bluemap.core.config.*;
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
-import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.world.SlicedWorld;
 import de.bluecolored.bluemap.core.world.World;
 import org.apache.commons.io.FileUtils;
 
@@ -156,26 +154,13 @@ public class BlueMapService {
 			World world = worlds.get(worldUUID);
 			if (world == null) {
 				try {
-					world = MCAWorld.load(worldFolder.toPath(), worldUUID, worldNameProvider.apply(worldUUID), mapConfig.isIgnoreMissingLightData());
+					world = MCAWorld.load(worldFolder.toPath(), worldUUID, worldNameProvider.apply(worldUUID), 15, mapConfig.isIgnoreMissingLightData());
 					worlds.put(worldUUID, world);
 				} catch (MissingResourcesException e) {
 					throw e; // rethrow this to stop loading and display resource-missing message
 				} catch (IOException e) {
 					Logger.global.logError("Failed to load map '" + id + "'!", e);
 					continue;
-				}
-			}
-			
-			//slice world if configured
-			if (!mapConfig.getMin().equals(RenderSettings.DEFAULT_MIN) || !mapConfig.getMax().equals(RenderSettings.DEFAULT_MAX)) {
-				if (mapConfig.isRenderEdges()) { 
-					world = new SlicedWorld(world, mapConfig.getMin(), mapConfig.getMax());
-				} else {
-					world = new SlicedWorld(
-							world, 
-							mapConfig.getMin().min(mapConfig.getMin().sub(2, 2, 2)), // protect from int-overflow
-							mapConfig.getMax().max(mapConfig.getMax().add(2, 2, 2))  // protect from int-overflow
-					);
 				}
 			}
 

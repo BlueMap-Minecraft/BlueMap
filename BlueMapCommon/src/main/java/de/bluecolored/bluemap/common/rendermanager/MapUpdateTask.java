@@ -94,7 +94,7 @@ public class MapUpdateTask extends CombinedRenderTask<WorldRegionRenderTask> {
 	}
 
 	private static List<Vector2i> getRegions(World world, Vector2i center, int radius) {
-		if (center == null || radius < 0) return new ArrayList<>(world.listRegions());
+		if (center == null || radius < 0) return new ArrayList<>(world.listRegions()); //TODO: remove regions outside render-boundaries
 
 		List<Vector2i> regions = new ArrayList<>();
 
