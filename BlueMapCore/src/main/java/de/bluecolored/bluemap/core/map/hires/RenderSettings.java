@@ -32,11 +32,14 @@ public interface RenderSettings {
 	Vector3i DEFAULT_MAX = Vector3i.from(Integer.MAX_VALUE);
 
 	/**
-	 * Whether faces that have a sky-light-value of 0 will be rendered or not.
+	 * The y-level below which "caves" will not be rendered
 	 */
-	default boolean isExcludeFacesWithoutSunlight() {
-		return true;
-	}
+	int getRemoveCavesBelowY();
+
+	/**
+	 * If blocklight should be used instead of sky light to detect "caves"
+	 */
+	boolean isCaveDetectionUsesBlockLight();
 
 	/**
 	 * The minimum position of blocks to render
@@ -52,8 +55,14 @@ public interface RenderSettings {
 		return DEFAULT_MAX;
 	}
 
+	/**
+	 * The (default) ambient light of this world (0-1)
+	 */
 	float getAmbientLight();
 
+	/**
+	 * The sky-light level of this world (0-15)
+	 */
 	int getWorldSkyLight();
 	
 	/**

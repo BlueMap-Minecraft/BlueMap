@@ -95,7 +95,11 @@ public class LiquidModelBuilder {
 
 	private final Color tintcolor = new Color();
 	private void build() {
-		if (this.renderSettings.isExcludeFacesWithoutSunlight() && block.getSunLightLevel() == 0) return;
+		// filter out blocks that are in a "cave" that should not be rendered
+		if (
+				this.block.getY() < renderSettings.getRemoveCavesBelowY() &&
+				(renderSettings.isCaveDetectionUsesBlockLight() ? block.getBlockLightLevel() : block.getSunLightLevel()) == 0f
+		) return;
 		
 		int level = getLiquidLevel(blockState);
 		

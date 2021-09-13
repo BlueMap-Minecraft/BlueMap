@@ -172,8 +172,11 @@ public class ResourceModelBuilder {
 		int sunLight = Math.max(blockLightData.getSkyLight(), facedLightData.getSkyLight());
 		int blockLight = Math.max(blockLightData.getBlockLight(), facedLightData.getBlockLight());
 
-		// filter out faces that are not sun-lighted
-		if (sunLight == 0f && renderSettings.isExcludeFacesWithoutSunlight()) return;
+		// filter out faces that are in a "cave" that should not be rendered
+		if (
+				this.block.getY() < renderSettings.getRemoveCavesBelowY() &&
+				(renderSettings.isCaveDetectionUsesBlockLight() ? blockLight : sunLight) == 0f
+		) return;
 
 		// initialize the faces
 		blockModel.initialize();

@@ -47,7 +47,8 @@ public class MapConfig implements MapSettings {
 	private float ambientLight;
 	private int worldSkyLight;
 	
-	private boolean renderCaves;
+	private int removeCavesBelowY;
+	private boolean caveDetectionUsesBlockLight;
 	
 	private Vector3i min, max;
 	private boolean renderEdges;
@@ -88,7 +89,8 @@ public class MapConfig implements MapSettings {
 		this.worldSkyLight = node.node("worldSkyLight").getInt(15);
 		
 		//renderCaves
-		this.renderCaves = node.node("renderCaves").getBoolean(false);
+		this.removeCavesBelowY = node.node("removeCavesBelowY").getInt(55);
+		this.caveDetectionUsesBlockLight = node.node("caveDetectionUsesBlockLight").getBoolean(false);
 
 		//bounds
 		int minX = node.node("minX").getInt(MapSettings.super.getMin().getX());
@@ -150,10 +152,16 @@ public class MapConfig implements MapSettings {
 		return worldSkyLight;
 	}
 
-	public boolean isRenderCaves() {
-		return renderCaves;
+	@Override
+	public int getRemoveCavesBelowY() {
+		return removeCavesBelowY;
 	}
-	
+
+	@Override
+	public boolean isCaveDetectionUsesBlockLight() {
+		return caveDetectionUsesBlockLight;
+	}
+
 	public boolean isIgnoreMissingLightData() {
 		return ignoreMissingLightData;
 	}
@@ -171,11 +179,6 @@ public class MapConfig implements MapSettings {
 	@Override
 	public int getLowresPointsPerLowresTile() {
 		return lowresPointsPerLowresTile;
-	}
-
-	@Override
-	public boolean isExcludeFacesWithoutSunlight() {
-		return !isRenderCaves();
 	}
 	
 	@Override
