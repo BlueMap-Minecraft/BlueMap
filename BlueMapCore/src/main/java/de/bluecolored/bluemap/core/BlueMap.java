@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.core;
 
+import com.github.benmanes.caffeine.cache.RemovalCause;
 import de.bluecolored.bluemap.core.logger.Logger;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.gson.GsonConfigurationLoader;
@@ -32,6 +33,9 @@ import java.io.IOException;
 import java.util.concurrent.ForkJoinPool;
 
 public class BlueMap {
+
+	// early-loading this class, to fix a classloading issue
+	private static final RemovalCause RC = null;
 
 	public static final String VERSION, GIT_HASH, GIT_CLEAN;
 	static {
