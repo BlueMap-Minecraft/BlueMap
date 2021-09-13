@@ -24,10 +24,13 @@
  */
 package de.bluecolored.bluemap.core.util;
 
-import de.bluecolored.bluemap.core.logger.Logger;
-
-import java.io.*;
-import java.nio.file.*;
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.nio.file.StandardOpenOption;
 
 public class AtomicFileHelper {
 
