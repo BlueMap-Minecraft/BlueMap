@@ -253,6 +253,7 @@ public class RenderManager {
 		synchronized (this.renderTasks) {
 			if (renderTasks.size() < 2) return;
 			RenderTask first = renderTasks.removeFirst();
+			if (containingTask.contains(first)) first.cancel();
 			renderTasks.removeIf(containingTask::contains);
 			renderTasks.addFirst(first);
 		}
