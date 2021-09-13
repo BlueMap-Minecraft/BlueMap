@@ -74,15 +74,17 @@ public class HttpConnection implements Runnable {
 			try {
 				HttpRequest request = acceptRequest();
 
+				boolean hasPermit = false;
 				try {
-					processingSemaphore.acquire();
+					//just slow down processing if limit is reached
+					hasPermit = processingSemaphore.tryAcquire(1, TimeUnit.SECONDS);
 
 					HttpResponse response = handler.handle(request);
 					sendResponse(response);
 
 					if (verbose) log(request, response);
 				} finally {
-					processingSemaphore.release();
+					if (hasPermit) processingSemaphore.release();
 				}
 
 			} catch (InvalidRequestException e){

@@ -60,7 +60,7 @@ public class WebServer extends Thread {
 		this.verbose = verbose;
 		
 		this.handler = handler;
-		this.processingSemaphore = new Semaphore(18);
+		this.processingSemaphore = new Semaphore(24);
 		
 		connectionThreads = null;
 	}
