@@ -24,6 +24,8 @@
  */
 package de.bluecolored.bluemap.core.util;
 
+import de.bluecolored.bluemap.core.logger.Logger;
+
 import java.io.*;
 import java.nio.file.*;
 
@@ -39,6 +41,8 @@ public class AtomicFileHelper {
 
 		OutputStream os = Files.newOutputStream(partFile, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
 		return new WrappedOutputStream(os, () -> {
+			if (!Files.exists(partFile)) return;
+
 			Files.deleteIfExists(file);
 			Files.createDirectories(file.getParent());
 
