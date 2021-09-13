@@ -1,0 +1,8 @@
+{
+    "variants": {
+        "facing=south": { "model": "block/sign/wall_crimson" },
+        "facing=west": { "model": "block/sign/wall_crimson", "y": 90 },
+        "facing=north": { "model": "block/sign/wall_crimson", "y": 180 },
+        "facing=east": { "model": "block/sign/wall_crimson", "y": 270 }
+    }
+}
