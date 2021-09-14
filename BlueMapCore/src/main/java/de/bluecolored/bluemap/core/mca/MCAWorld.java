@@ -95,7 +95,7 @@ public class MCAWorld implements World {
 
 	@Override
 	public MCAChunk getChunkAtBlock(int x, int y, int z) {
-		return getChunk(new Vector2i(x >> 4, z >> 4));
+		return getChunk(x >> 4, z >> 4);
 	}
 
 	@Override
@@ -191,7 +191,7 @@ public class MCAWorld implements World {
 	
 	@Override
 	public void invalidateChunkCache(int x, int z) {
-		chunkCache.invalidate(new Vector2i(x, z));
+		chunkCache.invalidate(vec2i(x, z));
 	}
 	
 	@Override
