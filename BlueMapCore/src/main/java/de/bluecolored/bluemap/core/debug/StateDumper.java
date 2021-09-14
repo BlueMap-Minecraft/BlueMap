@@ -54,6 +54,15 @@ public class StateDumper {
 
         Set<Object> alreadyDumped = Collections.newSetFromMap(new WeakHashMap<>());
 
+        try {
+            ConfigurationNode threadDump = node.node("threads");
+            for (Thread thread : Thread.getAllStackTraces().keySet()) {
+                dumpInstance(thread, loader.defaultOptions(), threadDump.appendListNode(), alreadyDumped);
+            }
+        } catch (SecurityException ex){
+            node.node("threads").set(ex.toString());
+        }
+
         ConfigurationNode dump = node.node("dump");
         for (Object instance : instances) {
             Class<?> type = instance.getClass();
@@ -135,6 +144,20 @@ public class StateDumper {
 
                     dumpInstance(entry, options, node.appendListNode(), alreadyDumped);
                 }
+                return;
+            }
+
+            if (instance instanceof Thread) {
+                Thread t = (Thread) instance;
+                node.node("name").set(t.getName());
+                node.node("state").set(t.getState().toString());
+                node.node("priority").set(t.getPriority());
+                node.node("alive").set(t.isAlive());
+                node.node("id").set(t.getId());
+                node.node("deamon").set(t.isDaemon());
+                node.node("interrupted").set(t.isInterrupted());
+
+                dumpInstance(t.getStackTrace(), options, node.node("stackTrace"), alreadyDumped);
                 return;
             }
 

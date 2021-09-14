@@ -34,18 +34,19 @@ import de.bluecolored.bluemap.core.world.Region;
 import java.util.*;
 import java.util.stream.Collectors;
 
+@DebugDump
 public class WorldRegionRenderTask implements RenderTask {
 
-	@DebugDump private final BmMap map;
-	@DebugDump private final Vector2i worldRegion;
-	@DebugDump private final boolean force;
+	private final BmMap map;
+	private final Vector2i worldRegion;
+	private final boolean force;
 
 	private Deque<Vector2i> tiles;
-	@DebugDump private int tileCount;
-	@DebugDump private long startTime;
+	private int tileCount;
+	private long startTime;
 
-	@DebugDump private volatile int atWork;
-	@DebugDump private volatile boolean cancelled;
+	private volatile int atWork;
+	private volatile boolean cancelled;
 
 	public WorldRegionRenderTask(BmMap map, Vector2i worldRegion) {
 		this(map, worldRegion, false);
@@ -151,11 +152,13 @@ public class WorldRegionRenderTask implements RenderTask {
 	}
 
 	@Override
+	@DebugDump
 	public synchronized boolean hasMoreWork() {
 		return !cancelled && (tiles == null || !tiles.isEmpty());
 	}
 
 	@Override
+	@DebugDump
 	public double estimateProgress() {
 		if (tiles == null) return 0;
 		if (tileCount == 0) return 1;
