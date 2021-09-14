@@ -4,11 +4,12 @@ plugins {
 	id 'com.github.johnrengelman.shadow' version '6.1.0'
 	id 'com.github.hierynomus.license' version '0.16.1'
 	id 'com.palantir.git-version' version '0.12.3'
+//	id 'com.diffplug.spotless' version '5.14.2'
 }
 
 allprojects {
 	repositories {
-        jcenter()
+		jcenter()
 		mavenCentral()
 		maven {
 			url 'https://jitpack.io'
@@ -22,35 +23,35 @@ allprojects {
 			url 'https://repo.codemc.org/repository/maven-public/'
 		}
 		maven {
-		    url "https://libraries.minecraft.net"
+			url "https://libraries.minecraft.net"
 		}
-        maven {
-            name 'Fabric'
-            url 'https://maven.fabricmc.net/'
-        }
+		maven {
+			name 'Fabric'
+			url 'https://maven.fabricmc.net/'
+		}
 	}
 
 	compileJava.options.compilerArgs.add '-parameters'
 	compileTestJava.options.compilerArgs.add '-parameters'
-	
+
 	tasks.withType(JavaCompile) {
 		options.encoding = "UTF-8"
 	}
 
 	apply plugin: 'java'
 	apply plugin: 'java-library'
-	
+
 	group = 'de.bluecolored.bluemap'
-  	version = coreVersion
-  	
-  	apply plugin: 'license'
-  	license {
+	version = coreVersion
+
+	apply plugin: 'license'
+	license {
 		header rootProject.file('HEADER')
 		excludes([
-			'**/*.conf',
-			'**/*.yml',
-			'**/*.zip',
-			'**/*.json'
+				'**/*.conf',
+				'**/*.yml',
+				'**/*.zip',
+				'**/*.json'
 		])
 	}
 }
@@ -58,7 +59,20 @@ allprojects {
 subprojects {
 	apply plugin: 'com.github.johnrengelman.shadow'
 	apply plugin: 'java'
-	
+
 	sourceCompatibility = 1.8
 	targetCompatibility = 1.8
 }
+
+
+//spotless {
+//	java {
+//		indentWithSpaces()
+//		trimTrailingWhitespace()
+//
+//		target fileTree(project.rootDir) {
+//			include '**/*.java'
+//			exclude '**/build/**'
+//		}
+//	}
+//}
