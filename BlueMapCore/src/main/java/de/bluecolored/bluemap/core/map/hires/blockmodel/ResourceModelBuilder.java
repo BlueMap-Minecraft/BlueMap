@@ -43,8 +43,8 @@ import de.bluecolored.bluemap.core.util.math.MatrixM4f;
 import de.bluecolored.bluemap.core.util.math.VectorM2f;
 import de.bluecolored.bluemap.core.util.math.VectorM3f;
 import de.bluecolored.bluemap.core.world.BlockNeighborhood;
-import de.bluecolored.bluemap.core.world.LightData;
 import de.bluecolored.bluemap.core.world.ExtendedBlock;
+import de.bluecolored.bluemap.core.world.LightData;
 
 /**
  * This model builder creates a BlockStateModel using the information from parsed resource-pack json files.
@@ -65,6 +65,7 @@ public class ResourceModelBuilder {
 	private TransformedBlockModelResource blockModelResource;
 	private BlockModelView blockModel;
 	private Color blockColor;
+	private float blockColorOpacity;
 	
 	public ResourceModelBuilder(ResourcePack resourcePack, RenderSettings renderSettings) {
 		this.blockColorCalculator = resourcePack.getBlockColorCalculatorFactory().createCalculator();
@@ -79,6 +80,7 @@ public class ResourceModelBuilder {
 		this.block = block;
 		this.blockModel = blockModel;
 		this.blockColor = color;
+		this.blockColorOpacity = 0f;
 		this.blockModelResource = bmr;
 
 		this.tintColor.set(0, 0, 0, -1, true);
@@ -86,8 +88,13 @@ public class ResourceModelBuilder {
 		// render model
 		int modelStart = blockModel.getStart();
 
-		for (BlockModelResource.Element element : blockModelResource.getModel().getElements()){
+		for (BlockModelResource.Element element : blockModelResource.getModel().getElements()) {
 			buildModelElementResource(element, blockModel.initialize());
+		}
+
+		if (color.a > 0) {
+			color.flatten();
+			color.a = blockColorOpacity;
 		}
 
 		blockModel.initialize(modelStart);
@@ -311,10 +318,13 @@ public class ResourceModelBuilder {
 
 			// apply light
 			float combinedLight = Math.max(sunLight / 15f, blockLight / 15f);
-			combinedLight = (renderSettings.getAmbientLight() + combinedLight) / (renderSettings.getAmbientLight() + 1f);
+			combinedLight = (1 - renderSettings.getAmbientLight()) * combinedLight + renderSettings.getAmbientLight();
 			mapColor.r *= combinedLight;
 			mapColor.g *= combinedLight;
 			mapColor.b *= combinedLight;
+
+			if (mapColor.a > blockColorOpacity)
+				blockColorOpacity = mapColor.a;
 
 			blockColor.add(mapColor);
 		}
