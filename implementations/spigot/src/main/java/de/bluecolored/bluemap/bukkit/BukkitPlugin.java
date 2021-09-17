@@ -168,10 +168,15 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 	}
 
 	@Override
-	public UUID getUUIDForWorld(File worldFolder) throws IOException {
+	public UUID getUUIDForWorld(final File worldPath) throws IOException {
 		//if it is a dimension folder
-		if (!new File(worldFolder, "level.dat").exists()) {
-			worldFolder = worldFolder.getParentFile();
+		File worldFolder = worldPath;
+		while (!new File(worldFolder, "level.dat").exists()) {
+			File parent = worldFolder.getParentFile();
+			if (parent != null)
+				worldFolder = parent;
+			else
+				throw new IOException("Unable to find a level.dat for world: '" + worldPath + "'");
 		}
 		
 		final File normalizedWorldFolder = worldFolder.getCanonicalFile();
