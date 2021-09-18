@@ -29,6 +29,7 @@ import de.bluecolored.bluemap.common.InterruptableReentrantLock;
 import de.bluecolored.bluemap.common.MissingResourcesException;
 import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.live.LiveAPIRequestHandler;
+import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.common.plugin.skins.PlayerSkinUpdater;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
@@ -58,7 +59,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @DebugDump
-public class Plugin {
+public class Plugin implements ServerEventListener {
 
 	public static final String PLUGIN_ID = "bluemap";
 	public static final String PLUGIN_NAME = "BlueMap";
@@ -110,7 +111,7 @@ public class Plugin {
 				unload(); //ensure nothing is left running (from a failed load or something)
 				
 				blueMap = new BlueMapService(minecraftVersion, serverInterface);
-			
+
 				//load configs
 				coreConfig = blueMap.getCoreConfig();
 				renderConfig = blueMap.getRenderConfig();
@@ -193,7 +194,7 @@ public class Plugin {
 
 				//start render-manager
 				if (pluginState.isRenderThreadsEnabled()) {
-					renderManager.start(coreConfig.getRenderThreadCount());
+					checkPausedByPlayerCount(); // <- this also starts the render-manager if it should start
 				} else {
 					Logger.global.logInfo("Render-Threads are STOPPED! Use the command 'bluemap start' to start them.");
 				}
@@ -263,6 +264,9 @@ public class Plugin {
 				//watch map-changes
 				this.regionFileWatchServices = new HashMap<>();
 				initFileWatcherTasks();
+
+				//register listener
+				serverInterface.registerListener(this);
 
 				//enable api
 				this.api = new BlueMapAPIImpl(this);
@@ -378,7 +382,31 @@ public class Plugin {
 	public boolean flushWorldUpdates(UUID worldUUID) throws IOException {
 		return serverInterface.persistWorldChanges(worldUUID);
 	}
-	
+
+	@Override
+	public void onPlayerJoin(UUID playerUuid) {
+		checkPausedByPlayerCount();
+	}
+
+	@Override
+	public void onPlayerLeave(UUID playerUuid) {
+		checkPausedByPlayerCount();
+	}
+
+	public boolean checkPausedByPlayerCount() {
+		if (
+				getPluginConfig().getPlayerRenderLimit() > 0 &&
+				getServerInterface().getOnlinePlayers().size() >= getPluginConfig().getPlayerRenderLimit()
+		) {
+			if (renderManager.isRunning()) renderManager.stop();
+			return true;
+		} else {
+			if (!renderManager.isRunning() && getPluginState().isRenderThreadsEnabled())
+				renderManager.start(getCoreConfig().getRenderThreadCount());
+			return false;
+		}
+	}
+
 	public ServerInterface getServerInterface() {
 		return serverInterface;
 	}

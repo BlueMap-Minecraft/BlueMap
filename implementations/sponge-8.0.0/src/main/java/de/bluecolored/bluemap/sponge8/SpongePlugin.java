@@ -45,6 +45,7 @@ import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.Command;
 import org.spongepowered.api.config.ConfigDir;
+import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.lifecycle.RefreshGameEvent;
 import org.spongepowered.api.event.lifecycle.RegisterCommandEvent;
@@ -161,6 +162,17 @@ public class SpongePlugin implements ServerInterface {
 				pluginInstance.unload();
 			}
 		});
+
+		// update player list
+		onlinePlayerMap.clear();
+		synchronized (onlinePlayerList) {
+			onlinePlayerList.clear();
+			for (ServerPlayer spongePlayer : Sponge.server().onlinePlayers()) {
+				SpongePlayer player = new SpongePlayer(spongePlayer.uniqueId());
+				onlinePlayerMap.put(spongePlayer.uniqueId(), player);
+				onlinePlayerList.add(player);
+			}
+		}
 	}
 
 	@Listener
@@ -276,18 +288,20 @@ public class SpongePlugin implements ServerInterface {
 	 * Only call this method on the server-thread.
 	 */
 	private void updateSomePlayers() {
-		int onlinePlayerCount = onlinePlayerList.size();
-		if (onlinePlayerCount == 0) return;
-		
-		int playersToBeUpdated = onlinePlayerCount / 20; //with 20 tps, each player is updated once a second
-		if (playersToBeUpdated == 0) playersToBeUpdated = 1;
-		
-		for (int i = 0; i < playersToBeUpdated; i++) {
-			playerUpdateIndex++;
-			if (playerUpdateIndex >= 20 && playerUpdateIndex >= onlinePlayerCount) playerUpdateIndex = 0;
-			
-			if (playerUpdateIndex < onlinePlayerCount) {
-				onlinePlayerList.get(playerUpdateIndex).update();
+		synchronized (onlinePlayerList) {
+			int onlinePlayerCount = onlinePlayerList.size();
+			if (onlinePlayerCount == 0) return;
+
+			int playersToBeUpdated = onlinePlayerCount / 20; //with 20 tps, each player is updated once a second
+			if (playersToBeUpdated == 0) playersToBeUpdated = 1;
+
+			for (int i = 0; i < playersToBeUpdated; i++) {
+				playerUpdateIndex++;
+				if (playerUpdateIndex >= 20 && playerUpdateIndex >= onlinePlayerCount) playerUpdateIndex = 0;
+
+				if (playerUpdateIndex < onlinePlayerCount) {
+					onlinePlayerList.get(playerUpdateIndex).update();
+				}
 			}
 		}
 	}

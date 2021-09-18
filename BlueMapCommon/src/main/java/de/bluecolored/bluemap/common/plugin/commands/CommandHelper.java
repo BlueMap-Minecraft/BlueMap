@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.common.plugin.commands;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.plugin.text.TextColor;
+import de.bluecolored.bluemap.common.plugin.text.TextFormat;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.rendermanager.RenderTask;
 import de.bluecolored.bluemap.core.map.BmMap;
@@ -90,11 +91,17 @@ public class CommandHelper {
 				}
 			}
 		} else {
-			lines.add(Text.of(TextColor.WHITE, " Render-Threads are ",
-					Text.of(TextColor.RED, "stopped")
-							.setHoverText(Text.of("click to start rendering"))
-							.setClickAction(Text.ClickAction.RUN_COMMAND, "/bluemap start"),
-					TextColor.GRAY, "!"));
+			if (plugin.checkPausedByPlayerCount()) {
+				lines.add(Text.of(TextColor.WHITE, " Render-Threads are ",
+						Text.of(TextColor.GOLD, "paused")));
+				lines.add(Text.of(TextColor.GRAY, TextFormat.ITALIC, "   (there are " + plugin.getPluginConfig().getPlayerRenderLimit() + " or more players online)"));
+			} else {
+				lines.add(Text.of(TextColor.WHITE, " Render-Threads are ",
+						Text.of(TextColor.RED, "stopped")
+								.setHoverText(Text.of("click to start rendering"))
+								.setClickAction(Text.ClickAction.RUN_COMMAND, "/bluemap start"),
+						TextColor.GRAY, "!"));
+			}
 
 			if (!tasks.isEmpty()) {
 				lines.add(Text.of(TextColor.WHITE, " Queued Tasks (" + tasks.size() + "):"));

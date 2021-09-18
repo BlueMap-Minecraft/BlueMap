@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.core.util;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.Files;
@@ -51,8 +52,11 @@ public class AtomicFileHelper {
 
 			try {
 				Files.move(partFile, file, StandardCopyOption.ATOMIC_MOVE);
+			} catch (FileNotFoundException ignore) {
 			} catch (IOException ex) {
-				Files.move(partFile, file);
+				try {
+					Files.move(partFile, file);
+				} catch (FileNotFoundException ignore) {}
 			}
 		});
 	}

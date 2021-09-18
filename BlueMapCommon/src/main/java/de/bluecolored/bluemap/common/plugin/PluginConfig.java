@@ -35,12 +35,13 @@ import java.util.concurrent.TimeUnit;
 @DebugDump
 public class PluginConfig {
 
-	private boolean liveUpdatesEnabled = false;
-	private boolean skinDownloadEnabled = false;
-	private Collection<String> hiddenGameModes = Collections.emptyList();
-	private boolean hideInvisible = false;
-	private boolean hideSneaking = false;
-	private long fullUpdateIntervalMinutes = TimeUnit.HOURS.toMinutes(24);
+	private boolean liveUpdatesEnabled;
+	private boolean skinDownloadEnabled;
+	private Collection<String> hiddenGameModes;
+	private boolean hideInvisible;
+	private boolean hideSneaking;
+	private int playerRenderLimit;
+	private long fullUpdateIntervalMinutes;
 	
 	public PluginConfig(ConfigurationNode node) {
 
@@ -62,6 +63,9 @@ public class PluginConfig {
 		
 		//hideSneaking
 		hideSneaking = node.node("hideSneaking").getBoolean(false);
+
+		//playerRenderLimit
+		playerRenderLimit = node.node("playerRenderLimit").getInt(-1);
 
 		//periodic map updates
 		fullUpdateIntervalMinutes = node.node("fullUpdateInterval").getLong(TimeUnit.HOURS.toMinutes(24));
@@ -86,6 +90,10 @@ public class PluginConfig {
 
 	public boolean isHideSneaking() {
 		return this.hideSneaking;
+	}
+
+	public int getPlayerRenderLimit() {
+		return playerRenderLimit;
 	}
 
 	public long getFullUpdateIntervalMinutes() {
