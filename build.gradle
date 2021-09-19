@@ -73,6 +73,7 @@ spotless {
 		target fileTree(project.rootDir) {
 			include '**/*.java'
 			exclude '**/build/**'
+			exclude 'BlueMapAPI/**'
 		}
 	}
 }
