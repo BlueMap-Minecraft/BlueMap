@@ -27,12 +27,12 @@ package de.bluecolored.bluemap.common.api;
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.BlueMapWorld;
-import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.common.api.marker.MarkerAPIImpl;
 import de.bluecolored.bluemap.common.api.render.RenderAPIImpl;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.world.World;
 import org.apache.commons.io.FileUtils;
 
@@ -40,11 +40,12 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileSystems;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Stream;
 
 public class BlueMapAPIImpl extends BlueMapAPI {
 
@@ -97,9 +98,10 @@ public class BlueMapAPIImpl extends BlueMapAPI {
 	@Override
 	public String createImage(BufferedImage image, String path) throws IOException {
 		path = path.replaceAll("[^a-zA-Z0-9_.\\-/]", "_");
-		String separator = FileSystems.getDefault().getSeparator();
 		
 		Path webRoot = plugin.getRenderConfig().getWebRoot().toPath().toAbsolutePath();
+		String separator = webRoot.getFileSystem().getSeparator();
+
 		Path webDataRoot = webRoot.resolve("data");
 		Path imagePath = webDataRoot.resolve(Paths.get(IMAGE_ROOT_PATH, path.replace("/", separator) + ".png")).toAbsolutePath();
 
@@ -111,6 +113,43 @@ public class BlueMapAPIImpl extends BlueMapAPI {
 			throw new IOException("The format 'png' is not supported!");
 		
 		return webRoot.relativize(imagePath).toString().replace(separator, "/");
+	}
+
+	@Override
+	public Map<String, String> availableImages() throws IOException {
+		Path webRoot = plugin.getRenderConfig().getWebRoot().toPath().toAbsolutePath();
+		String separator = webRoot.getFileSystem().getSeparator();
+
+		Path imageRootPath = webRoot.resolve("data").resolve(IMAGE_ROOT_PATH).toAbsolutePath();
+
+		Map<String, String> availableImagesMap = new HashMap<>();
+
+		try (Stream<Path> fileStream = Files.walk(imageRootPath)){
+			fileStream
+					.filter(p -> !Files.isDirectory(p))
+					.filter(p -> p.getFileName().toString().endsWith(".png"))
+					.map(Path::toAbsolutePath)
+					.forEach(p -> {
+						try {
+							String key = imageRootPath.relativize(p).toString();
+							key = key
+									.substring(0, key.length() - 4) //remove .png
+									.replace(separator, "/");
+
+							String value = webRoot.relativize(p).toString()
+									.replace(separator, "/");
+
+							availableImagesMap.put(key, value);
+						} catch (IllegalArgumentException ignore) {}
+					});
+		}
+
+		return availableImagesMap;
+	}
+
+	@Override
+	public Path getWebRoot() {
+		return plugin.getRenderConfig().getWebRoot().toPath();
 	}
 
 	@Override
