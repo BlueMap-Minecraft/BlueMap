@@ -32,7 +32,7 @@ public class Block<T extends Block<T>> {
 	private Chunk chunk;
 
 	private BlockState blockState;
-	private LightData lightData;
+	private final LightData lightData = new LightData(-1, -1);
 	private int biomeId;
 	
 	public Block(World world, int x, int y, int z) {
@@ -74,7 +74,7 @@ public class Block<T extends Block<T>> {
 
 	protected void reset() {
 		this.blockState = null;
-		this.lightData = new LightData(-1, -1);
+		this.lightData.set(-1, -1);
 		this.biomeId = -1;
 	}
 
@@ -92,7 +92,7 @@ public class Block<T extends Block<T>> {
 		reset();
 
 		this.blockState = source.blockState;
-		this.lightData = new LightData(source.lightData.getSkyLight(), source.lightData.getBlockLight());
+		this.lightData.set(source.lightData.getSkyLight(), source.lightData.getBlockLight());
 		this.biomeId = source.biomeId;
 
 		return self();

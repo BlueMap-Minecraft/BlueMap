@@ -32,6 +32,7 @@ import de.bluecolored.bluemap.core.util.math.MatrixM3f;
 import de.bluecolored.bluemap.core.util.math.MatrixM4f;
 import de.bluecolored.bluemap.core.util.math.VectorM3f;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
@@ -390,7 +391,7 @@ public class HiresTileModel {
         sort();
 
         Gson gson = new GsonBuilder().create();
-        JsonWriter json = gson.newJsonWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8));
+        JsonWriter json = gson.newJsonWriter(new BufferedWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8), 81920));
 
         json.beginObject(); // main-object
 
