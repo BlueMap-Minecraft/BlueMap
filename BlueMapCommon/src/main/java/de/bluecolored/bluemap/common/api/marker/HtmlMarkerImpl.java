@@ -33,80 +33,80 @@ import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.serialize.SerializationException;
 
 public class HtmlMarkerImpl extends MarkerImpl implements HtmlMarker {
-	public static final String MARKER_TYPE = "html";
+    public static final String MARKER_TYPE = "html";
 
-	private String html;
-	private Vector2i anchor;
+    private String html;
+    private Vector2i anchor;
 
-	private boolean hasUnsavedChanges;
+    private boolean hasUnsavedChanges;
 
-	public HtmlMarkerImpl(String id, BlueMapMap map, Vector3d position, String html) {
-		super(id, map, position);
-		
-		this.html = html;
-		this.anchor = new Vector2i(25, 45);
-		
-		this.hasUnsavedChanges = true;
-	}
-	
-	@Override
-	public String getType() {
-		return MARKER_TYPE;
-	}
+    public HtmlMarkerImpl(String id, BlueMapMap map, Vector3d position, String html) {
+        super(id, map, position);
 
-	@Override
-	public Vector2i getAnchor() {
-		return anchor;
-	}
+        this.html = html;
+        this.anchor = new Vector2i(25, 45);
 
-	@Override
-	public void setAnchor(Vector2i anchor) {
-		this.anchor = anchor;
-		this.hasUnsavedChanges = true;
-	}
+        this.hasUnsavedChanges = true;
+    }
 
-	@Override
-	public String getHtml() {
-		return html;
-	}
+    @Override
+    public String getType() {
+        return MARKER_TYPE;
+    }
 
-	@Override
-	public synchronized void setHtml(String html) {
-		this.html = html;
-		this.hasUnsavedChanges = true;
-	}
-	
-	@Override
-	public synchronized void load(BlueMapAPI api, ConfigurationNode markerNode, boolean overwriteChanges) throws MarkerFileFormatException {
-		super.load(api, markerNode, overwriteChanges);
+    @Override
+    public Vector2i getAnchor() {
+        return anchor;
+    }
 
-		if (!overwriteChanges && hasUnsavedChanges) return;
-		this.hasUnsavedChanges = false;
+    @Override
+    public void setAnchor(Vector2i anchor) {
+        this.anchor = anchor;
+        this.hasUnsavedChanges = true;
+    }
 
-		this.html = markerNode.node("html").getString("");
-		this.anchor = readAnchor(markerNode.node("anchor"));
-	}
-	
-	@Override
-	public synchronized void save(ConfigurationNode markerNode) throws SerializationException {
-		super.save(markerNode);
-		
-		markerNode.node("html").set(this.html);
-		writeAnchor(markerNode.node("anchor"), this.anchor);
-		
-		hasUnsavedChanges = false;
-	}
-	
-	private static Vector2i readAnchor(ConfigurationNode node) {
-		return new Vector2i(
-				node.node("x").getInt(0),
-				node.node("y").getInt(0)
-			);
-	}
-	
-	private static void writeAnchor(ConfigurationNode node, Vector2i anchor) throws SerializationException {
-		node.node("x").set(anchor.getX());
-		node.node("y").set(anchor.getY());
-	}
+    @Override
+    public String getHtml() {
+        return html;
+    }
+
+    @Override
+    public synchronized void setHtml(String html) {
+        this.html = html;
+        this.hasUnsavedChanges = true;
+    }
+
+    @Override
+    public synchronized void load(BlueMapAPI api, ConfigurationNode markerNode, boolean overwriteChanges) throws MarkerFileFormatException {
+        super.load(api, markerNode, overwriteChanges);
+
+        if (!overwriteChanges && hasUnsavedChanges) return;
+        this.hasUnsavedChanges = false;
+
+        this.html = markerNode.node("html").getString("");
+        this.anchor = readAnchor(markerNode.node("anchor"));
+    }
+
+    @Override
+    public synchronized void save(ConfigurationNode markerNode) throws SerializationException {
+        super.save(markerNode);
+
+        markerNode.node("html").set(this.html);
+        writeAnchor(markerNode.node("anchor"), this.anchor);
+
+        hasUnsavedChanges = false;
+    }
+
+    private static Vector2i readAnchor(ConfigurationNode node) {
+        return new Vector2i(
+                node.node("x").getInt(0),
+                node.node("y").getInt(0)
+            );
+    }
+
+    private static void writeAnchor(ConfigurationNode node, Vector2i anchor) throws SerializationException {
+        node.node("x").set(anchor.getX());
+        node.node("y").set(anchor.getY());
+    }
 
 }

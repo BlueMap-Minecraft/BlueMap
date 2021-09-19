@@ -39,101 +39,101 @@ import java.util.List;
 
 public class MCARegion implements Region {
 
-	private final MCAWorld world;
-	private final File regionFile;
-	private final Vector2i regionPos;
+    private final MCAWorld world;
+    private final File regionFile;
+    private final Vector2i regionPos;
 
-	public MCARegion(MCAWorld world, File regionFile) throws IllegalArgumentException {
-		this.world = world;
-		this.regionFile = regionFile;
+    public MCARegion(MCAWorld world, File regionFile) throws IllegalArgumentException {
+        this.world = world;
+        this.regionFile = regionFile;
 
-		String[] filenameParts = regionFile.getName().split("\\.");
-		int rX = Integer.parseInt(filenameParts[1]);
-		int rZ = Integer.parseInt(filenameParts[2]);
+        String[] filenameParts = regionFile.getName().split("\\.");
+        int rX = Integer.parseInt(filenameParts[1]);
+        int rZ = Integer.parseInt(filenameParts[2]);
 
-		this.regionPos = new Vector2i(rX, rZ);
-	}
+        this.regionPos = new Vector2i(rX, rZ);
+    }
 
-	@Override
-	public MCAChunk loadChunk(int chunkX, int chunkZ, boolean ignoreMissingLightData) throws IOException {
-		if (!regionFile.exists() || regionFile.length() == 0) return MCAChunk.empty();
+    @Override
+    public MCAChunk loadChunk(int chunkX, int chunkZ, boolean ignoreMissingLightData) throws IOException {
+        if (!regionFile.exists() || regionFile.length() == 0) return MCAChunk.empty();
 
-		try (RandomAccessFile raf = new RandomAccessFile(regionFile, "r")) {
+        try (RandomAccessFile raf = new RandomAccessFile(regionFile, "r")) {
 
-			int xzChunk = Math.floorMod(chunkZ, 32) * 32 + Math.floorMod(chunkX, 32);
+            int xzChunk = Math.floorMod(chunkZ, 32) * 32 + Math.floorMod(chunkX, 32);
 
-			raf.seek(xzChunk * 4);
-			int offset = raf.read() << 16;
-			offset |= (raf.read() & 0xFF) << 8;
-			offset |= raf.read() & 0xFF;
-			offset *= 4096;
+            raf.seek(xzChunk * 4);
+            int offset = raf.read() << 16;
+            offset |= (raf.read() & 0xFF) << 8;
+            offset |= raf.read() & 0xFF;
+            offset *= 4096;
 
-			int size = raf.readByte() * 4096;
-			if (size == 0) {
-				return MCAChunk.empty();
-			}
+            int size = raf.readByte() * 4096;
+            if (size == 0) {
+                return MCAChunk.empty();
+            }
 
-			raf.seek(offset + 4); // +4 skip chunk size
+            raf.seek(offset + 4); // +4 skip chunk size
 
-			byte compressionTypeByte = raf.readByte();
-			CompressionType compressionType = CompressionType.getFromID(compressionTypeByte);
-			if (compressionType == null) {
-				throw new IOException("Invalid compression type " + compressionTypeByte);
-			}
+            byte compressionTypeByte = raf.readByte();
+            CompressionType compressionType = CompressionType.getFromID(compressionTypeByte);
+            if (compressionType == null) {
+                throw new IOException("Invalid compression type " + compressionTypeByte);
+            }
 
-			DataInputStream dis = new DataInputStream(new BufferedInputStream(compressionType.decompress(new FileInputStream(raf.getFD()))));
-			Tag<?> tag = Tag.deserialize(dis, Tag.DEFAULT_MAX_DEPTH);
-			if (tag instanceof CompoundTag) {
-				MCAChunk chunk = MCAChunk.create(world, (CompoundTag) tag);
-				if (!chunk.isGenerated()) return MCAChunk.empty();
-				return chunk;
-			} else {
-				throw new IOException("Invalid data tag: " + (tag == null ? "null" : tag.getClass().getName()));
-			}
+            DataInputStream dis = new DataInputStream(new BufferedInputStream(compressionType.decompress(new FileInputStream(raf.getFD()))));
+            Tag<?> tag = Tag.deserialize(dis, Tag.DEFAULT_MAX_DEPTH);
+            if (tag instanceof CompoundTag) {
+                MCAChunk chunk = MCAChunk.create(world, (CompoundTag) tag);
+                if (!chunk.isGenerated()) return MCAChunk.empty();
+                return chunk;
+            } else {
+                throw new IOException("Invalid data tag: " + (tag == null ? "null" : tag.getClass().getName()));
+            }
 
-		} catch (RuntimeException e) {
-			throw new IOException(e);
-		}
-	}
+        } catch (RuntimeException e) {
+            throw new IOException(e);
+        }
+    }
 
-	@Override
-	public Collection<Vector2i> listChunks(long modifiedSince) {
-		if (!regionFile.exists() || regionFile.length() == 0) return Collections.emptyList();
+    @Override
+    public Collection<Vector2i> listChunks(long modifiedSince) {
+        if (!regionFile.exists() || regionFile.length() == 0) return Collections.emptyList();
 
-		List<Vector2i> chunks = new ArrayList<>(1024); //1024 = 32 x 32 chunks per region-file
+        List<Vector2i> chunks = new ArrayList<>(1024); //1024 = 32 x 32 chunks per region-file
 
-		try (RandomAccessFile raf = new RandomAccessFile(regionFile, "r")) {
-			for (int x = 0; x < 32; x++) {
-				for (int z = 0; z < 32; z++) {
-					Vector2i chunk = new Vector2i(regionPos.getX() * 32 + x, regionPos.getY() * 32 + z);
-					int xzChunk = z * 32 + x;
+        try (RandomAccessFile raf = new RandomAccessFile(regionFile, "r")) {
+            for (int x = 0; x < 32; x++) {
+                for (int z = 0; z < 32; z++) {
+                    Vector2i chunk = new Vector2i(regionPos.getX() * 32 + x, regionPos.getY() * 32 + z);
+                    int xzChunk = z * 32 + x;
 
-					raf.seek(xzChunk * 4 + 3);
-					int size = raf.readByte() * 4096;
+                    raf.seek(xzChunk * 4 + 3);
+                    int size = raf.readByte() * 4096;
 
-					if (size == 0) continue;
+                    if (size == 0) continue;
 
-					raf.seek(xzChunk * 4 + 4096);
-					int timestamp = raf.read() << 24;
-					timestamp |= (raf.read() & 0xFF) << 16;
-					timestamp |= (raf.read() & 0xFF) << 8;
-					timestamp |= raf.read() & 0xFF;
+                    raf.seek(xzChunk * 4 + 4096);
+                    int timestamp = raf.read() << 24;
+                    timestamp |= (raf.read() & 0xFF) << 16;
+                    timestamp |= (raf.read() & 0xFF) << 8;
+                    timestamp |= raf.read() & 0xFF;
 
-					if (timestamp >= (modifiedSince / 1000)) {
-						chunks.add(chunk);
-					}
-				}
-			}
-		} catch (RuntimeException | IOException ex) {
-			Logger.global.logWarning("Failed to read .mca file: " + regionFile.getAbsolutePath() + " (" + ex.toString() + ")");
-		}
+                    if (timestamp >= (modifiedSince / 1000)) {
+                        chunks.add(chunk);
+                    }
+                }
+            }
+        } catch (RuntimeException | IOException ex) {
+            Logger.global.logWarning("Failed to read .mca file: " + regionFile.getAbsolutePath() + " (" + ex.toString() + ")");
+        }
 
-		return chunks;
-	}
+        return chunks;
+    }
 
-	@Override
-	public File getRegionFile() {
-		return regionFile;
-	}
+    @Override
+    public File getRegionFile() {
+        return regionFile;
+    }
 
 }

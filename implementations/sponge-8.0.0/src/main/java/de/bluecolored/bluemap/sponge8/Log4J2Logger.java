@@ -29,40 +29,40 @@ import org.apache.logging.log4j.Logger;
 
 public class Log4J2Logger extends AbstractLogger {
 
-	private Logger out;
-	
-	public Log4J2Logger(Logger out) {
-		this.out = out;
-	}
+    private Logger out;
 
-	@Override
-	public void logError(String message, Throwable throwable) {
-		out.error(message, throwable);
-	}
+    public Log4J2Logger(Logger out) {
+        this.out = out;
+    }
 
-	@Override
-	public void logWarning(String message) {
-		out.warn(message);
-	}
+    @Override
+    public void logError(String message, Throwable throwable) {
+        out.error(message, throwable);
+    }
 
-	@Override
-	public void logInfo(String message) {
-		out.info(message);
-	}
+    @Override
+    public void logWarning(String message) {
+        out.warn(message);
+    }
 
-	@Override
-	public void logDebug(String message) {
-		if (out.isDebugEnabled()) out.debug(message);
-	}
-	
-	@Override
-	public void noFloodDebug(String message) {
-		if (out.isDebugEnabled()) super.noFloodDebug(message);
-	}
-	
-	@Override
-	public void noFloodDebug(String key, String message) {
-		if (out.isDebugEnabled()) super.noFloodDebug(key, message);
-	}
-	
+    @Override
+    public void logInfo(String message) {
+        out.info(message);
+    }
+
+    @Override
+    public void logDebug(String message) {
+        if (out.isDebugEnabled()) out.debug(message);
+    }
+
+    @Override
+    public void noFloodDebug(String message) {
+        if (out.isDebugEnabled()) super.noFloodDebug(message);
+    }
+
+    @Override
+    public void noFloodDebug(String key, String message) {
+        if (out.isDebugEnabled()) super.noFloodDebug(key, message);
+    }
+
 }

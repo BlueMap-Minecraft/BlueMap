@@ -36,156 +36,156 @@ import java.util.regex.Pattern;
  * <i>The implementation of this class has to be thread-save!</i><br>
  */
 public class BlockState {
-	
-	private static final Pattern BLOCKSTATE_SERIALIZATION_PATTERN = Pattern.compile("^(.+?)(?:\\[(.*)])?$");
 
-	public static final BlockState AIR = new BlockState("minecraft:air");
-	public static final BlockState MISSING = new BlockState("bluemap:missing");
+    private static final Pattern BLOCKSTATE_SERIALIZATION_PATTERN = Pattern.compile("^(.+?)(?:\\[(.*)])?$");
 
-	private boolean hashed;
-	private int hash;
+    public static final BlockState AIR = new BlockState("minecraft:air");
+    public static final BlockState MISSING = new BlockState("bluemap:missing");
 
-	private final String namespace;
-	private final String id;
-	private final String fullId;
-	private final Map<String, String> properties;
+    private boolean hashed;
+    private int hash;
 
-	private final boolean isAir, isWater, isWaterlogged;
+    private final String namespace;
+    private final String id;
+    private final String fullId;
+    private final Map<String, String> properties;
 
-	public BlockState(String id) {
-		this(id, Collections.emptyMap());
-	}
-	
-	public BlockState(String id, Map<String, String> properties) {
-		this.hashed = false;
-		this.hash = 0;
-		
-		//this.properties = Collections.unmodifiableMap(new HashMap<>(properties)); // <- not doing this to reduce object-creation
-		this.properties = properties;
+    private final boolean isAir, isWater, isWaterlogged;
 
-		//resolve namespace
-		String namespace = "minecraft";
-		int namespaceSeperator = id.indexOf(':');
-		if (namespaceSeperator > 0) {
-			namespace = id.substring(0, namespaceSeperator); 
-			id = id.substring(namespaceSeperator + 1);
-		}
-		
-		this.id = id;
-		this.namespace = namespace;
-		this.fullId = namespace + ":" + id;
+    public BlockState(String id) {
+        this(id, Collections.emptyMap());
+    }
 
-		// special fast-access properties
-		this.isAir =
-				"minecraft:air".equals(this.fullId) ||
-				"minecraft:cave_air".equals(this.fullId) ||
-				"minecraft:void_air".equals(this.fullId);
+    public BlockState(String id, Map<String, String> properties) {
+        this.hashed = false;
+        this.hash = 0;
 
-		this.isWater = "minecraft:water".equals(this.fullId);
-		this.isWaterlogged = "true".equals(properties.get("waterlogged"));
-	}
+        //this.properties = Collections.unmodifiableMap(new HashMap<>(properties)); // <- not doing this to reduce object-creation
+        this.properties = properties;
 
-	/**
-	 * The namespace of this blockstate,<br>
-	 * this is always "minecraft" in vanilla.<br>
-	 */
-	public String getNamespace() {
-		return namespace;
-	}
-	
-	/**
-	 * The id of this blockstate,<br>
-	 * also the name of the resource-file without the filetype that represents this block-state <i>(found in mineceraft in assets/minecraft/blockstates)</i>.<br>
-	 */
-	public String getId() {
-		return id;
-	}
-	
-	/**
-	 * Returns the namespaced id of this blockstate
-	 */
-	public String getFullId() {
-		return fullId;
-	}
-	
-	/**
-	 * An immutable map of all properties of this block.<br>
-	 * <br>
-	 * For Example:<br>
-	 * <code>
-	 * facing = east<br>
-	 * half = bottom<br>
-	 * </code>
-	 */
-	public Map<String, String> getProperties() {
-		return properties;
-	}
+        //resolve namespace
+        String namespace = "minecraft";
+        int namespaceSeperator = id.indexOf(':');
+        if (namespaceSeperator > 0) {
+            namespace = id.substring(0, namespaceSeperator);
+            id = id.substring(namespaceSeperator + 1);
+        }
 
-	public boolean isAir() {
-		return isAir;
-	}
+        this.id = id;
+        this.namespace = namespace;
+        this.fullId = namespace + ":" + id;
 
-	public boolean isWater() {
-		return isWater;
-	}
+        // special fast-access properties
+        this.isAir =
+                "minecraft:air".equals(this.fullId) ||
+                "minecraft:cave_air".equals(this.fullId) ||
+                "minecraft:void_air".equals(this.fullId);
 
-	public boolean isWaterlogged() {
-		return isWaterlogged;
-	}
+        this.isWater = "minecraft:water".equals(this.fullId);
+        this.isWaterlogged = "true".equals(properties.get("waterlogged"));
+    }
 
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj) return true;
-		
-		if (!(obj instanceof BlockState)) return false;
-		BlockState b = (BlockState) obj;
-		if (!Objects.equals(getFullId(), b.getFullId())) return false;
-		return Objects.equals(getProperties(), b.getProperties());
-	}
-	
-	@Override
-	public int hashCode() {
-		if (!hashed){
-			hash = Objects.hash( getFullId(), getProperties() );
-			hashed = true;
-		}
-		
-		return hash;
-	}
-	
-	@Override
-	public String toString() {
-		StringJoiner sj = new StringJoiner(",");
-		for (Entry<String, String> e : getProperties().entrySet()){
-			sj.add(e.getKey() + "=" + e.getValue());
-		}
-		
-		return getFullId() + "[" + sj.toString() + "]";
-	}
-	
-	public static BlockState fromString(String serializedBlockState) throws IllegalArgumentException {
-		try {
-			Matcher m = BLOCKSTATE_SERIALIZATION_PATTERN.matcher(serializedBlockState);
+    /**
+     * The namespace of this blockstate,<br>
+     * this is always "minecraft" in vanilla.<br>
+     */
+    public String getNamespace() {
+        return namespace;
+    }
 
-			if (!m.find())
-				throw new IllegalArgumentException("'" + serializedBlockState + "' could not be parsed to a BlockState!");
-	
-			Map<String, String> pt = new HashMap<>();
-			String g2 = m.group(2);
-			if (g2 != null && !g2.isEmpty()){
-				String[] propertyStrings = g2.trim().split(",");
-				for (String s : propertyStrings){
-					String[] kv = s.split("=", 2);
-					pt.put(kv[0], kv[1]);
-				}
-			}
-	
-			String blockId = m.group(1).trim();
-			
-			return new BlockState(blockId, pt);
-		} catch (RuntimeException ex) {
-			throw new IllegalArgumentException("'" + serializedBlockState + "' could not be parsed to a BlockState!");
-		}
-	}
-	
+    /**
+     * The id of this blockstate,<br>
+     * also the name of the resource-file without the filetype that represents this block-state <i>(found in mineceraft in assets/minecraft/blockstates)</i>.<br>
+     */
+    public String getId() {
+        return id;
+    }
+
+    /**
+     * Returns the namespaced id of this blockstate
+     */
+    public String getFullId() {
+        return fullId;
+    }
+
+    /**
+     * An immutable map of all properties of this block.<br>
+     * <br>
+     * For Example:<br>
+     * <code>
+     * facing = east<br>
+     * half = bottom<br>
+     * </code>
+     */
+    public Map<String, String> getProperties() {
+        return properties;
+    }
+
+    public boolean isAir() {
+        return isAir;
+    }
+
+    public boolean isWater() {
+        return isWater;
+    }
+
+    public boolean isWaterlogged() {
+        return isWaterlogged;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+
+        if (!(obj instanceof BlockState)) return false;
+        BlockState b = (BlockState) obj;
+        if (!Objects.equals(getFullId(), b.getFullId())) return false;
+        return Objects.equals(getProperties(), b.getProperties());
+    }
+
+    @Override
+    public int hashCode() {
+        if (!hashed){
+            hash = Objects.hash( getFullId(), getProperties() );
+            hashed = true;
+        }
+
+        return hash;
+    }
+
+    @Override
+    public String toString() {
+        StringJoiner sj = new StringJoiner(",");
+        for (Entry<String, String> e : getProperties().entrySet()){
+            sj.add(e.getKey() + "=" + e.getValue());
+        }
+
+        return getFullId() + "[" + sj.toString() + "]";
+    }
+
+    public static BlockState fromString(String serializedBlockState) throws IllegalArgumentException {
+        try {
+            Matcher m = BLOCKSTATE_SERIALIZATION_PATTERN.matcher(serializedBlockState);
+
+            if (!m.find())
+                throw new IllegalArgumentException("'" + serializedBlockState + "' could not be parsed to a BlockState!");
+
+            Map<String, String> pt = new HashMap<>();
+            String g2 = m.group(2);
+            if (g2 != null && !g2.isEmpty()){
+                String[] propertyStrings = g2.trim().split(",");
+                for (String s : propertyStrings){
+                    String[] kv = s.split("=", 2);
+                    pt.put(kv[0], kv[1]);
+                }
+            }
+
+            String blockId = m.group(1).trim();
+
+            return new BlockState(blockId, pt);
+        } catch (RuntimeException ex) {
+            throw new IllegalArgumentException("'" + serializedBlockState + "' could not be parsed to a BlockState!");
+        }
+    }
+
 }

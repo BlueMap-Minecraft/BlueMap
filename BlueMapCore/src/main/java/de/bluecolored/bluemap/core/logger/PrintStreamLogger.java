@@ -27,60 +27,60 @@ package de.bluecolored.bluemap.core.logger;
 import java.io.PrintStream;
 
 public class PrintStreamLogger extends AbstractLogger {
-	
-	private PrintStream out, err;
-	
-	boolean isDebug;
-	
-	public PrintStreamLogger(PrintStream out, PrintStream err) {
-		this.out = out;
-		this.err = err;
-		this.isDebug = true;
-	}
-	
-	public PrintStreamLogger(PrintStream out, PrintStream err, boolean debug) {
-		this.out = out;
-		this.err = err;
-		this.isDebug = debug;
-	}
-	
-	public boolean isDebug() {
-		return isDebug;
-	}
-	
-	public void setDebug(boolean debug) {
-		this.isDebug = debug;
-	}
-	
-	@Override
-	public void logError(String message, Throwable throwable) {
-		err.println("[ERROR] " + message);
-		throwable.printStackTrace(err);
-	}
 
-	@Override
-	public void logWarning(String message) {
-		out.println("[WARNING] " + message);
-	}
+    private PrintStream out, err;
 
-	@Override
-	public void logInfo(String message) {
-		out.println("[INFO] " + message);
-	}
+    boolean isDebug;
 
-	@Override
-	public void logDebug(String message) {
-		if (isDebug) out.println("[DEBUG] " + message);
-	}
-	
-	@Override
-	public void noFloodDebug(String key, String message) {
-		if (isDebug) super.noFloodDebug(key, message);
-	}
-	
-	@Override
-	public void noFloodDebug(String message) {
-		if (isDebug) super.noFloodDebug(message);
-	}
-	
+    public PrintStreamLogger(PrintStream out, PrintStream err) {
+        this.out = out;
+        this.err = err;
+        this.isDebug = true;
+    }
+
+    public PrintStreamLogger(PrintStream out, PrintStream err, boolean debug) {
+        this.out = out;
+        this.err = err;
+        this.isDebug = debug;
+    }
+
+    public boolean isDebug() {
+        return isDebug;
+    }
+
+    public void setDebug(boolean debug) {
+        this.isDebug = debug;
+    }
+
+    @Override
+    public void logError(String message, Throwable throwable) {
+        err.println("[ERROR] " + message);
+        throwable.printStackTrace(err);
+    }
+
+    @Override
+    public void logWarning(String message) {
+        out.println("[WARNING] " + message);
+    }
+
+    @Override
+    public void logInfo(String message) {
+        out.println("[INFO] " + message);
+    }
+
+    @Override
+    public void logDebug(String message) {
+        if (isDebug) out.println("[DEBUG] " + message);
+    }
+
+    @Override
+    public void noFloodDebug(String key, String message) {
+        if (isDebug) super.noFloodDebug(key, message);
+    }
+
+    @Override
+    public void noFloodDebug(String message) {
+        if (isDebug) super.noFloodDebug(message);
+    }
+
 }

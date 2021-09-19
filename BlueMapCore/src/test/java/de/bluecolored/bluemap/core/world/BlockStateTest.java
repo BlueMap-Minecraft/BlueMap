@@ -35,69 +35,69 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class BlockStateTest {
 
-	@Test
-	public void testIdNamespace() {
-		BlockState blockState = new BlockState("someblock");
-		assertEquals("minecraft:someblock", blockState.getFullId());
-		assertEquals("minecraft", blockState.getNamespace());
-		assertEquals("someblock", blockState.getId());
+    @Test
+    public void testIdNamespace() {
+        BlockState blockState = new BlockState("someblock");
+        assertEquals("minecraft:someblock", blockState.getFullId());
+        assertEquals("minecraft", blockState.getNamespace());
+        assertEquals("someblock", blockState.getId());
 
-		blockState = new BlockState("somemod:someblock");
-		assertEquals("somemod:someblock", blockState.getFullId());
-		assertEquals("somemod", blockState.getNamespace());
-		assertEquals("someblock", blockState.getId());
-	}
+        blockState = new BlockState("somemod:someblock");
+        assertEquals("somemod:someblock", blockState.getFullId());
+        assertEquals("somemod", blockState.getNamespace());
+        assertEquals("someblock", blockState.getId());
+    }
 
-	@Test
-	public void testToString() {
-		BlockState blockState = new BlockState("someblock");
-		assertEquals("minecraft:someblock[]", blockState.toString());
+    @Test
+    public void testToString() {
+        BlockState blockState = new BlockState("someblock");
+        assertEquals("minecraft:someblock[]", blockState.toString());
 
-		blockState = new BlockState("someblock", mapOf("testProp", "testVal"));
-		assertEquals("minecraft:someblock[testProp=testVal]", blockState.toString());
+        blockState = new BlockState("someblock", mapOf("testProp", "testVal"));
+        assertEquals("minecraft:someblock[testProp=testVal]", blockState.toString());
 
-		blockState = new BlockState("someblock", mapOf("testProp", "testVal", "testProp2", "testVal2"));
-		String toString = blockState.toString();
-		assertTrue(
-				toString.equals("minecraft:someblock[testProp=testVal,testProp2=testVal2]") ||
-				toString.equals("minecraft:someblock[testProp2=testVal2,testProp=testVal]")
-			);
-	}
-	
+        blockState = new BlockState("someblock", mapOf("testProp", "testVal", "testProp2", "testVal2"));
+        String toString = blockState.toString();
+        assertTrue(
+                toString.equals("minecraft:someblock[testProp=testVal,testProp2=testVal2]") ||
+                toString.equals("minecraft:someblock[testProp2=testVal2,testProp=testVal]")
+            );
+    }
 
-	@Test
-	public void testFromString() {
-		BlockState blockState = BlockState.fromString("somemod:someblock");
-		assertEquals("somemod:someblock", blockState.getFullId());
-		assertEquals("somemod", blockState.getNamespace());
-		assertEquals("someblock", blockState.getId());
-		assertTrue(blockState.getProperties().isEmpty());
-		
-		blockState = BlockState.fromString("somemod:someblock[]");
-		assertEquals("somemod:someblock", blockState.getFullId());
-		assertEquals("somemod", blockState.getNamespace());
-		assertEquals("someblock", blockState.getId());
-		assertTrue(blockState.getProperties().isEmpty());
-		
-		blockState = BlockState.fromString("somemod:someblock[testProp=testVal,testProp2=testVal2]");
-		assertEquals("somemod:someblock", blockState.getFullId());
-		assertEquals("somemod", blockState.getNamespace());
-		assertEquals("someblock", blockState.getId());
-		assertEquals("testVal", blockState.getProperties().get("testProp"));
-		assertEquals("testVal2", blockState.getProperties().get("testProp2"));
-	}
 
-	private <L, V> Map<L, V> mapOf(L key, V value) {
-		Map<L, V> map = new HashMap<>();
-		map.put(key, value);
-		return Collections.unmodifiableMap(map);
-	}
+    @Test
+    public void testFromString() {
+        BlockState blockState = BlockState.fromString("somemod:someblock");
+        assertEquals("somemod:someblock", blockState.getFullId());
+        assertEquals("somemod", blockState.getNamespace());
+        assertEquals("someblock", blockState.getId());
+        assertTrue(blockState.getProperties().isEmpty());
 
-	private <L, V> Map<L, V> mapOf(L key, V value, L key2, V value2) {
-		Map<L, V> map = new HashMap<>();
-		map.put(key, value);
-		map.put(key2, value2);
-		return Collections.unmodifiableMap(map);
-	}
+        blockState = BlockState.fromString("somemod:someblock[]");
+        assertEquals("somemod:someblock", blockState.getFullId());
+        assertEquals("somemod", blockState.getNamespace());
+        assertEquals("someblock", blockState.getId());
+        assertTrue(blockState.getProperties().isEmpty());
+
+        blockState = BlockState.fromString("somemod:someblock[testProp=testVal,testProp2=testVal2]");
+        assertEquals("somemod:someblock", blockState.getFullId());
+        assertEquals("somemod", blockState.getNamespace());
+        assertEquals("someblock", blockState.getId());
+        assertEquals("testVal", blockState.getProperties().get("testProp"));
+        assertEquals("testVal2", blockState.getProperties().get("testProp2"));
+    }
+
+    private <L, V> Map<L, V> mapOf(L key, V value) {
+        Map<L, V> map = new HashMap<>();
+        map.put(key, value);
+        return Collections.unmodifiableMap(map);
+    }
+
+    private <L, V> Map<L, V> mapOf(L key, V value, L key2, V value2) {
+        Map<L, V> map = new HashMap<>();
+        map.put(key, value);
+        map.put(key2, value2);
+        return Collections.unmodifiableMap(map);
+    }
 
 }

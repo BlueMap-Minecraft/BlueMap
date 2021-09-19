@@ -38,109 +38,109 @@ import java.util.zip.ZipFile;
 
 public class ZipFileAccess implements FileAccess {
 
-	private ZipFile file;
-	
-	public ZipFileAccess(File file) throws ZipException, IOException {
-		this.file = new ZipFile(file);
-	}
-	
-	@Override
-	public String getName() {
-		return file.getName();
-	}
+    private ZipFile file;
 
-	@Override
-	public InputStream readFile(String path) throws FileNotFoundException, IOException {
-		ZipEntry entry = file.getEntry(path);
-		if (entry == null) throw new FileNotFoundException("File " + path + " does not exist in this zip-file!");
-		
-		return file.getInputStream(entry);
-	}
+    public ZipFileAccess(File file) throws ZipException, IOException {
+        this.file = new ZipFile(file);
+    }
 
-	@Override
-	public Collection<String> listFiles(String path, boolean recursive) {
-		path = normalizeFolderPath(path);
-		
-		Collection<String> files = new ArrayList<String>();
-		for (Enumeration<? extends ZipEntry> entries = file.entries(); entries.hasMoreElements();) {
-			ZipEntry entry = entries.nextElement();
-			
-			if (entry.isDirectory()) continue;
-			
-			String file = entry.getName();
-			int nameSplit = file.lastIndexOf('/');
-			String filePath = "";
-			if (nameSplit != -1) {
-				filePath = file.substring(0, nameSplit);
-			}
-			filePath = normalizeFolderPath(filePath);
-			
-			if (recursive) {
-				if (!filePath.startsWith(path) && !path.equals(filePath)) continue;
-			} else {
-				if (!path.equals(filePath)) continue;
-			}
-			
-			files.add(file);
-		}
-		
-		return files;
-	}
+    @Override
+    public String getName() {
+        return file.getName();
+    }
 
-	@Override
-	public Collection<String> listFolders(String path) {
-		path = normalizeFolderPath(path);
-		
-		Collection<String> folders = new HashSet<String>();
-		for (Enumeration<? extends ZipEntry> entries = file.entries(); entries.hasMoreElements();) {
-			ZipEntry entry = entries.nextElement();
-			
-			String file = entry.getName();
-			if (!entry.isDirectory()) {
-				int nameSplit = file.lastIndexOf('/');
-				if (nameSplit == -1) continue;
-				file = file.substring(0, nameSplit);
-			}
-			file = normalizeFolderPath(file);
-			
-			//strip last /
-			file = file.substring(0, file.length() - 1);
-			
-			int nameSplit = file.lastIndexOf('/');
-			String filePath = "/";
-			if (nameSplit != -1) {
-				filePath = file.substring(0, nameSplit);
-			}
-			filePath = normalizeFolderPath(filePath);
-			
-			if (!filePath.startsWith(path)) continue;
-			
-			int subFolderMark = file.indexOf('/', path.length());
-			if (subFolderMark != -1) {
-				file = file.substring(0, subFolderMark);
-			}
-			
-			file = normalizeFolderPath(file);
-			
-			//strip last /
-			file = file.substring(0, file.length() - 1);
-			
-			folders.add(file);
-		}
-		
-		return folders;
-	}
-	
-	private String normalizeFolderPath(String path) {
-		if (path.isEmpty()) return path;
-		if (path.charAt(path.length() - 1) != '/') path = path + "/";
-		if (path.charAt(0) == '/') path = path.substring(1);
-		return path;
-	}
+    @Override
+    public InputStream readFile(String path) throws FileNotFoundException, IOException {
+        ZipEntry entry = file.getEntry(path);
+        if (entry == null) throw new FileNotFoundException("File " + path + " does not exist in this zip-file!");
 
-	@Override
-	public void close() throws IOException {
-		file.close();
-	}
-	
+        return file.getInputStream(entry);
+    }
+
+    @Override
+    public Collection<String> listFiles(String path, boolean recursive) {
+        path = normalizeFolderPath(path);
+
+        Collection<String> files = new ArrayList<String>();
+        for (Enumeration<? extends ZipEntry> entries = file.entries(); entries.hasMoreElements();) {
+            ZipEntry entry = entries.nextElement();
+
+            if (entry.isDirectory()) continue;
+
+            String file = entry.getName();
+            int nameSplit = file.lastIndexOf('/');
+            String filePath = "";
+            if (nameSplit != -1) {
+                filePath = file.substring(0, nameSplit);
+            }
+            filePath = normalizeFolderPath(filePath);
+
+            if (recursive) {
+                if (!filePath.startsWith(path) && !path.equals(filePath)) continue;
+            } else {
+                if (!path.equals(filePath)) continue;
+            }
+
+            files.add(file);
+        }
+
+        return files;
+    }
+
+    @Override
+    public Collection<String> listFolders(String path) {
+        path = normalizeFolderPath(path);
+
+        Collection<String> folders = new HashSet<String>();
+        for (Enumeration<? extends ZipEntry> entries = file.entries(); entries.hasMoreElements();) {
+            ZipEntry entry = entries.nextElement();
+
+            String file = entry.getName();
+            if (!entry.isDirectory()) {
+                int nameSplit = file.lastIndexOf('/');
+                if (nameSplit == -1) continue;
+                file = file.substring(0, nameSplit);
+            }
+            file = normalizeFolderPath(file);
+
+            //strip last /
+            file = file.substring(0, file.length() - 1);
+
+            int nameSplit = file.lastIndexOf('/');
+            String filePath = "/";
+            if (nameSplit != -1) {
+                filePath = file.substring(0, nameSplit);
+            }
+            filePath = normalizeFolderPath(filePath);
+
+            if (!filePath.startsWith(path)) continue;
+
+            int subFolderMark = file.indexOf('/', path.length());
+            if (subFolderMark != -1) {
+                file = file.substring(0, subFolderMark);
+            }
+
+            file = normalizeFolderPath(file);
+
+            //strip last /
+            file = file.substring(0, file.length() - 1);
+
+            folders.add(file);
+        }
+
+        return folders;
+    }
+
+    private String normalizeFolderPath(String path) {
+        if (path.isEmpty()) return path;
+        if (path.charAt(path.length() - 1) != '/') path = path + "/";
+        if (path.charAt(0) == '/') path = path.substring(1);
+        return path;
+    }
+
+    @Override
+    public void close() throws IOException {
+        file.close();
+    }
+
 }

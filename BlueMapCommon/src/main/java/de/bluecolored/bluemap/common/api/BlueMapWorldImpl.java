@@ -36,39 +36,39 @@ import de.bluecolored.bluemap.core.world.World;
 
 public class BlueMapWorldImpl implements BlueMapWorld {
 
-	private BlueMapAPIImpl api;
-	private World delegate;
-	
-	private Collection<BlueMapMap> maps;
-	
-	protected BlueMapWorldImpl(BlueMapAPIImpl api, World delegate) {
-		this.api = api;
-		this.delegate = delegate;
-	}
+    private BlueMapAPIImpl api;
+    private World delegate;
 
-	@Override
-	public Path getSaveFolder() {
-		return delegate.getSaveFolder();
-	}
+    private Collection<BlueMapMap> maps;
 
-	@Override
-	public UUID getUuid() {
-		return delegate.getUUID();
-	}
+    protected BlueMapWorldImpl(BlueMapAPIImpl api, World delegate) {
+        this.api = api;
+        this.delegate = delegate;
+    }
 
-	@Override
-	public Collection<BlueMapMap> getMaps() {
-		if (maps == null) {
-			maps = Collections.unmodifiableCollection(
-					api.getMaps().stream()
-					.filter(map -> map.getWorld().equals(this))
-					.collect(Collectors.toList()));
-		}
-		
-		return maps;
-	}
-	
-	public World getWorld() {
-		return delegate;
-	}
+    @Override
+    public Path getSaveFolder() {
+        return delegate.getSaveFolder();
+    }
+
+    @Override
+    public UUID getUuid() {
+        return delegate.getUUID();
+    }
+
+    @Override
+    public Collection<BlueMapMap> getMaps() {
+        if (maps == null) {
+            maps = Collections.unmodifiableCollection(
+                    api.getMaps().stream()
+                    .filter(map -> map.getWorld().equals(this))
+                    .collect(Collectors.toList()));
+        }
+
+        return maps;
+    }
+
+    public World getWorld() {
+        return delegate;
+    }
 }

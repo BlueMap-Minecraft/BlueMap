@@ -30,35 +30,35 @@ import de.bluecolored.bluemap.core.threejs.BufferGeometry;
 @Deprecated
 public class ExtendedModel extends Model<ExtendedFace> {
 
-	@Override
-	public BufferGeometry toBufferGeometry() {
-		BufferGeometry geo = super.toBufferGeometry();
+    @Override
+    public BufferGeometry toBufferGeometry() {
+        BufferGeometry geo = super.toBufferGeometry();
 
-		int count = getFaces().size();
-		float[] ao = new float[count * 3];
-		float[] blockLight = new float[count * 3];
-		float[] sunLight = new float[count * 3];
-		
-		for (int itemIndex = 0; itemIndex < count; itemIndex++){
-			ExtendedFace f = getFaces().get(itemIndex);
-			ao[itemIndex * 3 + 0] = f.getAo1();
-			ao[itemIndex * 3 + 1] = f.getAo2();
-			ao[itemIndex * 3 + 2] = f.getAo3();
+        int count = getFaces().size();
+        float[] ao = new float[count * 3];
+        float[] blockLight = new float[count * 3];
+        float[] sunLight = new float[count * 3];
 
-			blockLight[itemIndex * 3 + 0] = f.getBl1();
-			blockLight[itemIndex * 3 + 1] = f.getBl2();
-			blockLight[itemIndex * 3 + 2] = f.getBl3();
+        for (int itemIndex = 0; itemIndex < count; itemIndex++){
+            ExtendedFace f = getFaces().get(itemIndex);
+            ao[itemIndex * 3 + 0] = f.getAo1();
+            ao[itemIndex * 3 + 1] = f.getAo2();
+            ao[itemIndex * 3 + 2] = f.getAo3();
 
-			sunLight[itemIndex * 3 + 0] = f.getSl1();
-			sunLight[itemIndex * 3 + 1] = f.getSl2();
-			sunLight[itemIndex * 3 + 2] = f.getSl3();
-		}
+            blockLight[itemIndex * 3 + 0] = f.getBl1();
+            blockLight[itemIndex * 3 + 1] = f.getBl2();
+            blockLight[itemIndex * 3 + 2] = f.getBl3();
 
-		geo.addAttribute("ao", new BufferAttribute(ao, 1));
-		geo.addAttribute("blocklight", new BufferAttribute(blockLight, 1));
-		geo.addAttribute("sunlight", new BufferAttribute(sunLight, 1));
-		
-		return geo;
-	}
+            sunLight[itemIndex * 3 + 0] = f.getSl1();
+            sunLight[itemIndex * 3 + 1] = f.getSl2();
+            sunLight[itemIndex * 3 + 2] = f.getSl3();
+        }
+
+        geo.addAttribute("ao", new BufferAttribute(ao, 1));
+        geo.addAttribute("blocklight", new BufferAttribute(blockLight, 1));
+        geo.addAttribute("sunlight", new BufferAttribute(sunLight, 1));
+
+        return geo;
+    }
 
 }

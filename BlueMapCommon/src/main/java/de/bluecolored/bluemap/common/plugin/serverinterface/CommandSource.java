@@ -33,22 +33,22 @@ import de.bluecolored.bluemap.core.world.World;
 
 public interface CommandSource {
 
-	void sendMessage(Text text);
-	
-	default void sendMessages(Iterable<Text> textLines) {
-		for (Text text : textLines) {
-			sendMessage(text);
-		}
-	}
-	
-	boolean hasPermission(String permission);
-	
-	default Optional<World> getWorld() {
-		return Optional.empty();
-	}
-	
-	default Optional<Vector3d> getPosition() {
-		return Optional.empty();
-	}
-	
+    void sendMessage(Text text);
+
+    default void sendMessages(Iterable<Text> textLines) {
+        for (Text text : textLines) {
+            sendMessage(text);
+        }
+    }
+
+    boolean hasPermission(String permission);
+
+    default Optional<World> getWorld() {
+        return Optional.empty();
+    }
+
+    default Optional<Vector3d> getPosition() {
+        return Optional.empty();
+    }
+
 }

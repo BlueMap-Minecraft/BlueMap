@@ -38,42 +38,42 @@ import java.util.Optional;
 
 public class SpongeCommandSource implements CommandSource {
 
-	private final Plugin plugin;
-	private final Audience audience;
-	private final Subject subject;
+    private final Plugin plugin;
+    private final Audience audience;
+    private final Subject subject;
 
-	public SpongeCommandSource(Plugin plugin, Audience audience, Subject subject) {
-		this.plugin = plugin;
-		this.subject = subject;
-		this.audience = audience;
-	}
-	
-	@Override
-	public void sendMessage(Text text) {
-		audience.sendMessage(GsonComponentSerializer.gson().deserialize(text.toJSONString()));
-	}
+    public SpongeCommandSource(Plugin plugin, Audience audience, Subject subject) {
+        this.plugin = plugin;
+        this.subject = subject;
+        this.audience = audience;
+    }
 
-	@Override
-	public boolean hasPermission(String permission) {
-		return subject.hasPermission(permission);
-	}
-	
-	@Override
-	public Optional<Vector3d> getPosition() {
-		if (audience instanceof Locatable) {
-			return Optional.of(SpongePlugin.fromSpongePoweredVector(((Locatable) audience).location().position()));
-		}
-		
-		return Optional.empty();
-	}
-	
-	@Override
-	public Optional<World> getWorld() {
-		if (audience instanceof Locatable) {
-			return Optional.ofNullable(plugin.getWorld(((Locatable) audience).serverLocation().world().uniqueId()));
-		}
-		
-		return Optional.empty();
-	}
+    @Override
+    public void sendMessage(Text text) {
+        audience.sendMessage(GsonComponentSerializer.gson().deserialize(text.toJSONString()));
+    }
+
+    @Override
+    public boolean hasPermission(String permission) {
+        return subject.hasPermission(permission);
+    }
+
+    @Override
+    public Optional<Vector3d> getPosition() {
+        if (audience instanceof Locatable) {
+            return Optional.of(SpongePlugin.fromSpongePoweredVector(((Locatable) audience).location().position()));
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<World> getWorld() {
+        if (audience instanceof Locatable) {
+            return Optional.ofNullable(plugin.getWorld(((Locatable) audience).serverLocation().world().uniqueId()));
+        }
+
+        return Optional.empty();
+    }
 
 }

@@ -27,70 +27,70 @@ package de.bluecolored.bluemap.core.resourcepack.texture;
 import de.bluecolored.bluemap.core.util.math.Color;
 
 public class Texture {
-	
-	private final int id;
-	private final String path;
-	private final Color color, colorPremultiplied;
-	private final boolean isHalfTransparent;
-	private final String texture;
-	
-	protected Texture(int id, String path, Color color, boolean halfTransparent, String texture) {
-		this.id = id;
-		this.path = path;
-		this.color = new Color().set(color).straight();
-		this.colorPremultiplied = new Color().set(color).premultiplied();
-		this.isHalfTransparent = halfTransparent;
-		this.texture = texture;
-	}
-	
-	public int getId() {
-		return id;
-	}
-	
-	public String getPath() {
-		return path;
-	}
-	
-	/**
-	 * Returns the calculated median color of the {@link Texture}.
-	 * @return The median color of this {@link Texture}
-	 */
-	public Color getColorStraight() {
-		return color;
-	}
 
-	/**
-	 * Returns the calculated median color of the {@link Texture} (premultiplied).
-	 * @return The (premultiplied) median color of this {@link Texture}
-	 */
-	public Color getColorPremultiplied() {
-		return colorPremultiplied;
-	}
-	
-	/**
-	 * Returns whether the {@link Texture} has half-transparent pixels or not.
-	 * @return <code>true</code> if the {@link Texture} has half-transparent pixels, <code>false</code> if not
-	 */
-	public boolean isHalfTransparent() {
-		return isHalfTransparent;
-	}
-	
-	public String getTexture() {
-		return texture;
-	}
-	
-	@Override
-	public int hashCode() {
-		return id;
-	}
-	
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof Texture) {
-			return ((Texture) obj).getId() == id;
-		}
-		
-		return false;
-	}
-	
+    private final int id;
+    private final String path;
+    private final Color color, colorPremultiplied;
+    private final boolean isHalfTransparent;
+    private final String texture;
+
+    protected Texture(int id, String path, Color color, boolean halfTransparent, String texture) {
+        this.id = id;
+        this.path = path;
+        this.color = new Color().set(color).straight();
+        this.colorPremultiplied = new Color().set(color).premultiplied();
+        this.isHalfTransparent = halfTransparent;
+        this.texture = texture;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getPath() {
+        return path;
+    }
+
+    /**
+     * Returns the calculated median color of the {@link Texture}.
+     * @return The median color of this {@link Texture}
+     */
+    public Color getColorStraight() {
+        return color;
+    }
+
+    /**
+     * Returns the calculated median color of the {@link Texture} (premultiplied).
+     * @return The (premultiplied) median color of this {@link Texture}
+     */
+    public Color getColorPremultiplied() {
+        return colorPremultiplied;
+    }
+
+    /**
+     * Returns whether the {@link Texture} has half-transparent pixels or not.
+     * @return <code>true</code> if the {@link Texture} has half-transparent pixels, <code>false</code> if not
+     */
+    public boolean isHalfTransparent() {
+        return isHalfTransparent;
+    }
+
+    public String getTexture() {
+        return texture;
+    }
+
+    @Override
+    public int hashCode() {
+        return id;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof Texture) {
+            return ((Texture) obj).getId() == id;
+        }
+
+        return false;
+    }
+
 }

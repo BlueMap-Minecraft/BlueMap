@@ -31,73 +31,73 @@ import java.util.Optional;
 import java.util.UUID;
 
 public interface ServerInterface {
-	
-	/**
-	 * Registers a ServerEventListener, every method of this interface should be called on the specified events
-	 */
-	void registerListener(ServerEventListener listener);
-	
-	/**
-	 * Removes all registered listeners
-	 */
-	void unregisterAllListeners();
-	
-	/**
-	 * Returns an {@link UUID} for the given world.
-	 * The UUID does not need to persist over multiple runtime, but has to be always the same for this runtime.
-	 * 
-	 * @param worldFolder The folder of the world
-	 * @return The worlds {@link UUID}
-	 * @throws IOException If the uuid is read from some file and there was an exception reading this file
-	 */
-	UUID getUUIDForWorld(File worldFolder) throws IOException;
 
-	/**
-	 * Returns the name of the world with that UUID, the name is used in commands and should therefore be unique.<br>
-	 * A return-value of <code>null</code> makes bluemap load the world-name from the level.dat and dimension-folder. 
-	 * 
-	 * @param worldUUID the uuid of the world
-	 * @return the worlds name
-	 */
-	default String getWorldName(UUID worldUUID) {
-		return null;
-	}
-	
-	/**
-	 * Attempts to persist all changes that have been made in a world to disk.
-	 * 
-	 * @param worldUUID The {@link UUID} of the world to be persisted.
-	 * @return <code>true</code> if the changes have been successfully persisted, <code>false</code> if this operation is not supported by the implementation
-	 * 
-	 * @throws IOException if something went wrong trying to persist the changes
-	 * @throws IllegalArgumentException if there is no world with this UUID
-	 */
-	default boolean persistWorldChanges(UUID worldUUID) throws IOException, IllegalArgumentException {
-		return false;
-	}
-	
-	/**
-	 * Returns the Folder containing the configurations for the plugin
-	 */
-	File getConfigFolder();
-	
-	/**
-	 * Gives the possibility to override the metrics-setting in the config
-	 */
-	default boolean isMetricsEnabled(boolean configValue) {
-		return configValue;
-	}
-	
-	/**
-	 * Returns a collection of the states of players that are currently online
-	 */
-	Collection<Player> getOnlinePlayers();
-	
-	/**
-	 * Returns the state of the player with that UUID if present<br>
-	 * this method is only guaranteed to return a {@link Player} if the player is currently online.
-	 */
-	Optional<Player> getPlayer(UUID uuid);
-	
-	
+    /**
+     * Registers a ServerEventListener, every method of this interface should be called on the specified events
+     */
+    void registerListener(ServerEventListener listener);
+
+    /**
+     * Removes all registered listeners
+     */
+    void unregisterAllListeners();
+
+    /**
+     * Returns an {@link UUID} for the given world.
+     * The UUID does not need to persist over multiple runtime, but has to be always the same for this runtime.
+     *
+     * @param worldFolder The folder of the world
+     * @return The worlds {@link UUID}
+     * @throws IOException If the uuid is read from some file and there was an exception reading this file
+     */
+    UUID getUUIDForWorld(File worldFolder) throws IOException;
+
+    /**
+     * Returns the name of the world with that UUID, the name is used in commands and should therefore be unique.<br>
+     * A return-value of <code>null</code> makes bluemap load the world-name from the level.dat and dimension-folder.
+     *
+     * @param worldUUID the uuid of the world
+     * @return the worlds name
+     */
+    default String getWorldName(UUID worldUUID) {
+        return null;
+    }
+
+    /**
+     * Attempts to persist all changes that have been made in a world to disk.
+     *
+     * @param worldUUID The {@link UUID} of the world to be persisted.
+     * @return <code>true</code> if the changes have been successfully persisted, <code>false</code> if this operation is not supported by the implementation
+     *
+     * @throws IOException if something went wrong trying to persist the changes
+     * @throws IllegalArgumentException if there is no world with this UUID
+     */
+    default boolean persistWorldChanges(UUID worldUUID) throws IOException, IllegalArgumentException {
+        return false;
+    }
+
+    /**
+     * Returns the Folder containing the configurations for the plugin
+     */
+    File getConfigFolder();
+
+    /**
+     * Gives the possibility to override the metrics-setting in the config
+     */
+    default boolean isMetricsEnabled(boolean configValue) {
+        return configValue;
+    }
+
+    /**
+     * Returns a collection of the states of players that are currently online
+     */
+    Collection<Player> getOnlinePlayers();
+
+    /**
+     * Returns the state of the player with that UUID if present<br>
+     * this method is only guaranteed to return a {@link Player} if the player is currently online.
+     */
+    Optional<Player> getPlayer(UUID uuid);
+
+
 }

@@ -38,205 +38,205 @@ import java.util.List;
 import java.util.Objects;
 
 public class ExtrudeMarkerImpl extends ObjectMarkerImpl implements ExtrudeMarker {
-	public static final String MARKER_TYPE = "extrude";
+    public static final String MARKER_TYPE = "extrude";
 
-	private Shape shape;
-	private float shapeMinY;
-	private float shapeMaxY;
-	private boolean depthTest;
-	private int lineWidth;
-	private Color lineColor, fillColor;
+    private Shape shape;
+    private float shapeMinY;
+    private float shapeMaxY;
+    private boolean depthTest;
+    private int lineWidth;
+    private Color lineColor, fillColor;
 
-	private boolean hasUnsavedChanges;
+    private boolean hasUnsavedChanges;
 
-	public ExtrudeMarkerImpl(String id, BlueMapMap map, Vector3d position, Shape shape, float shapeMinY, float shapeMaxY) {
-		super(id, map, position);
+    public ExtrudeMarkerImpl(String id, BlueMapMap map, Vector3d position, Shape shape, float shapeMinY, float shapeMaxY) {
+        super(id, map, position);
 
-		Objects.requireNonNull(shape);
-		
-		this.shape = shape;
-		this.shapeMinY = shapeMinY;
-		this.shapeMaxY = shapeMaxY;
-		this.lineWidth = 2;
-		this.lineColor = new Color(255, 0, 0, 200);
-		this.fillColor = new Color(200, 0, 0, 100);
+        Objects.requireNonNull(shape);
 
-		this.hasUnsavedChanges = true;
-	}
-	
-	@Override
-	public String getType() {
-		return MARKER_TYPE;
-	}
+        this.shape = shape;
+        this.shapeMinY = shapeMinY;
+        this.shapeMaxY = shapeMaxY;
+        this.lineWidth = 2;
+        this.lineColor = new Color(255, 0, 0, 200);
+        this.fillColor = new Color(200, 0, 0, 100);
 
-	@Override
-	public Shape getShape() {
-		return this.shape;
-	}
+        this.hasUnsavedChanges = true;
+    }
 
-	@Override
-	public float getShapeMinY() {
-		return shapeMinY;
-	}
+    @Override
+    public String getType() {
+        return MARKER_TYPE;
+    }
 
-	@Override
-	public float getShapeMaxY() {
-		return shapeMaxY;
-	}
+    @Override
+    public Shape getShape() {
+        return this.shape;
+    }
 
-	@Override
-	public synchronized void setShape(Shape shape, float shapeMinY, float shapeMaxY) {
-		Objects.requireNonNull(shape);
-		
-		this.shape = shape;
-		this.shapeMinY = shapeMinY;
-		this.shapeMaxY = shapeMaxY;
-		this.hasUnsavedChanges = true;
-	}
-	
-	@Override
-	public boolean isDepthTestEnabled() {
-		return this.depthTest;
-	}
+    @Override
+    public float getShapeMinY() {
+        return shapeMinY;
+    }
 
-	@Override
-	public void setDepthTestEnabled(boolean enabled) {
-		this.depthTest = enabled;
-		this.hasUnsavedChanges = true;
-	}
+    @Override
+    public float getShapeMaxY() {
+        return shapeMaxY;
+    }
 
-	@Override
-	public int getLineWidth() {
-		return lineWidth;
-	}
+    @Override
+    public synchronized void setShape(Shape shape, float shapeMinY, float shapeMaxY) {
+        Objects.requireNonNull(shape);
 
-	@Override
-	public void setLineWidth(int lineWidth) {
-		this.lineWidth = lineWidth;
-		this.hasUnsavedChanges = true;
-	}
+        this.shape = shape;
+        this.shapeMinY = shapeMinY;
+        this.shapeMaxY = shapeMaxY;
+        this.hasUnsavedChanges = true;
+    }
 
-	@Override
-	public Color getLineColor() {
-		return this.lineColor;
-	}
+    @Override
+    public boolean isDepthTestEnabled() {
+        return this.depthTest;
+    }
 
-	@Override
-	public synchronized void setLineColor(Color color) {
-		Objects.requireNonNull(color);
-		
-		this.lineColor = color;
-		this.hasUnsavedChanges = true;
-	}
+    @Override
+    public void setDepthTestEnabled(boolean enabled) {
+        this.depthTest = enabled;
+        this.hasUnsavedChanges = true;
+    }
 
-	@Override
-	public Color getFillColor() {
-		return this.fillColor;
-	}
+    @Override
+    public int getLineWidth() {
+        return lineWidth;
+    }
 
-	@Override
-	public synchronized void setFillColor(Color color) {
-		Objects.requireNonNull(color);
-		
-		this.fillColor = color;
-		this.hasUnsavedChanges = true;
-	}
-	
-	@Override
-	public void load(BlueMapAPI api, ConfigurationNode markerNode, boolean overwriteChanges) throws MarkerFileFormatException {
-		super.load(api, markerNode, overwriteChanges);
+    @Override
+    public void setLineWidth(int lineWidth) {
+        this.lineWidth = lineWidth;
+        this.hasUnsavedChanges = true;
+    }
 
-		if (!overwriteChanges && hasUnsavedChanges) return;
-		this.hasUnsavedChanges = false;
-		
-		this.shape = readShape(markerNode.node("shape"));
-		this.shapeMinY = markerNode.node("shapeMinY").getFloat(0);
-		this.shapeMaxY = (float) markerNode.node("shapeMaxY").getDouble(255);
-		this.depthTest = markerNode.node("depthTest").getBoolean(true);
-		this.lineWidth = markerNode.node("lineWidth").getInt(2);
-		this.lineColor = readColor(markerNode.node("lineColor"));
-		this.fillColor = readColor(markerNode.node("fillColor"));
-	}
-	
-	@Override
-	public void save(ConfigurationNode markerNode) throws SerializationException {
-		super.save(markerNode);
+    @Override
+    public Color getLineColor() {
+        return this.lineColor;
+    }
 
-		writeShape(markerNode.node("shape"), this.shape);
-		markerNode.node("shapeMinY").set(Math.round(shapeMinY * 1000f) / 1000f);
-		markerNode.node("shapeMaxY").set(Math.round(shapeMaxY * 1000f) / 1000f);
-		markerNode.node("depthTest").set(this.depthTest);
-		markerNode.node("lineWidth").set(this.lineWidth);
-		writeColor(markerNode.node("lineColor"), this.lineColor);
-		writeColor(markerNode.node("fillColor"), this.fillColor);
-		
-		hasUnsavedChanges = false;
-	}
-	
-	private Shape readShape(ConfigurationNode node) throws MarkerFileFormatException {
-		List<? extends ConfigurationNode> posNodes = node.childrenList();
-		
-		if (posNodes.size() < 3) throw new MarkerFileFormatException("Failed to read shape: point-list has fewer than 3 entries!");
-		
-		Vector2d[] positions = new Vector2d[posNodes.size()];
-		for (int i = 0; i < positions.length; i++) {
-			positions[i] = readShapePos(posNodes.get(i));
-		}
-		
-		return new Shape(positions);
-	}
-	
-	private static Vector2d readShapePos(ConfigurationNode node) throws MarkerFileFormatException {
-		ConfigurationNode nx, nz;
-		nx = node.node("x");
-		nz = node.node("z");
-		
-		if (nx.virtual() || nz.virtual()) throw new MarkerFileFormatException("Failed to read shape position: Node x or z is not set!");
-		
-		return new Vector2d(
-				nx.getDouble(),
-				nz.getDouble()
-			);
-	}
-	
-	private static Color readColor(ConfigurationNode node) throws MarkerFileFormatException {
-		ConfigurationNode nr, ng, nb, na;
-		nr = node.node("r");
-		ng = node.node("g");
-		nb = node.node("b");
-		na = node.node("a");
-		
-		if (nr.virtual() || ng.virtual() || nb.virtual()) throw new MarkerFileFormatException("Failed to read color: Node r,g or b is not set!");
-		
-		float alpha = (float) na.getDouble(1);
-		if (alpha < 0 || alpha > 1) throw new MarkerFileFormatException("Failed to read color: alpha value out of range (0-1)!");
-		
-		try {
-			return new Color(nr.getInt(), ng.getInt(), nb.getInt(), (int)(alpha * 255));
-		} catch (IllegalArgumentException ex) {
-			throw new MarkerFileFormatException("Failed to read color: " + ex.getMessage(), ex);
-		}
-	}
-	
-	private static void writeShape(ConfigurationNode node, Shape shape) throws SerializationException {
-		for (int i = 0; i < shape.getPointCount(); i++) {
-			ConfigurationNode pointNode = node.appendListNode();
-			Vector2d point = shape.getPoint(i);
-			pointNode.node("x").set(Math.round(point.getX() * 1000d) / 1000d);
-			pointNode.node("z").set(Math.round(point.getY() * 1000d) / 1000d);
-		}
-	}
-	
-	private static void writeColor(ConfigurationNode node, Color color) throws SerializationException {
-		int r = color.getRed();
-		int g = color.getGreen();
-		int b = color.getBlue();
-		float a = color.getAlpha() / 255f;
-		
-		node.node("r").set(r);
-		node.node("g").set(g);
-		node.node("b").set(b);
-		node.node("a").set(a);
-	}
+    @Override
+    public synchronized void setLineColor(Color color) {
+        Objects.requireNonNull(color);
+
+        this.lineColor = color;
+        this.hasUnsavedChanges = true;
+    }
+
+    @Override
+    public Color getFillColor() {
+        return this.fillColor;
+    }
+
+    @Override
+    public synchronized void setFillColor(Color color) {
+        Objects.requireNonNull(color);
+
+        this.fillColor = color;
+        this.hasUnsavedChanges = true;
+    }
+
+    @Override
+    public void load(BlueMapAPI api, ConfigurationNode markerNode, boolean overwriteChanges) throws MarkerFileFormatException {
+        super.load(api, markerNode, overwriteChanges);
+
+        if (!overwriteChanges && hasUnsavedChanges) return;
+        this.hasUnsavedChanges = false;
+
+        this.shape = readShape(markerNode.node("shape"));
+        this.shapeMinY = markerNode.node("shapeMinY").getFloat(0);
+        this.shapeMaxY = (float) markerNode.node("shapeMaxY").getDouble(255);
+        this.depthTest = markerNode.node("depthTest").getBoolean(true);
+        this.lineWidth = markerNode.node("lineWidth").getInt(2);
+        this.lineColor = readColor(markerNode.node("lineColor"));
+        this.fillColor = readColor(markerNode.node("fillColor"));
+    }
+
+    @Override
+    public void save(ConfigurationNode markerNode) throws SerializationException {
+        super.save(markerNode);
+
+        writeShape(markerNode.node("shape"), this.shape);
+        markerNode.node("shapeMinY").set(Math.round(shapeMinY * 1000f) / 1000f);
+        markerNode.node("shapeMaxY").set(Math.round(shapeMaxY * 1000f) / 1000f);
+        markerNode.node("depthTest").set(this.depthTest);
+        markerNode.node("lineWidth").set(this.lineWidth);
+        writeColor(markerNode.node("lineColor"), this.lineColor);
+        writeColor(markerNode.node("fillColor"), this.fillColor);
+
+        hasUnsavedChanges = false;
+    }
+
+    private Shape readShape(ConfigurationNode node) throws MarkerFileFormatException {
+        List<? extends ConfigurationNode> posNodes = node.childrenList();
+
+        if (posNodes.size() < 3) throw new MarkerFileFormatException("Failed to read shape: point-list has fewer than 3 entries!");
+
+        Vector2d[] positions = new Vector2d[posNodes.size()];
+        for (int i = 0; i < positions.length; i++) {
+            positions[i] = readShapePos(posNodes.get(i));
+        }
+
+        return new Shape(positions);
+    }
+
+    private static Vector2d readShapePos(ConfigurationNode node) throws MarkerFileFormatException {
+        ConfigurationNode nx, nz;
+        nx = node.node("x");
+        nz = node.node("z");
+
+        if (nx.virtual() || nz.virtual()) throw new MarkerFileFormatException("Failed to read shape position: Node x or z is not set!");
+
+        return new Vector2d(
+                nx.getDouble(),
+                nz.getDouble()
+            );
+    }
+
+    private static Color readColor(ConfigurationNode node) throws MarkerFileFormatException {
+        ConfigurationNode nr, ng, nb, na;
+        nr = node.node("r");
+        ng = node.node("g");
+        nb = node.node("b");
+        na = node.node("a");
+
+        if (nr.virtual() || ng.virtual() || nb.virtual()) throw new MarkerFileFormatException("Failed to read color: Node r,g or b is not set!");
+
+        float alpha = (float) na.getDouble(1);
+        if (alpha < 0 || alpha > 1) throw new MarkerFileFormatException("Failed to read color: alpha value out of range (0-1)!");
+
+        try {
+            return new Color(nr.getInt(), ng.getInt(), nb.getInt(), (int)(alpha * 255));
+        } catch (IllegalArgumentException ex) {
+            throw new MarkerFileFormatException("Failed to read color: " + ex.getMessage(), ex);
+        }
+    }
+
+    private static void writeShape(ConfigurationNode node, Shape shape) throws SerializationException {
+        for (int i = 0; i < shape.getPointCount(); i++) {
+            ConfigurationNode pointNode = node.appendListNode();
+            Vector2d point = shape.getPoint(i);
+            pointNode.node("x").set(Math.round(point.getX() * 1000d) / 1000d);
+            pointNode.node("z").set(Math.round(point.getY() * 1000d) / 1000d);
+        }
+    }
+
+    private static void writeColor(ConfigurationNode node, Color color) throws SerializationException {
+        int r = color.getRed();
+        int g = color.getGreen();
+        int b = color.getBlue();
+        float a = color.getAlpha() / 255f;
+
+        node.node("r").set(r);
+        node.node("g").set(g);
+        node.node("b").set(b);
+        node.node("a").set(a);
+    }
 
 }

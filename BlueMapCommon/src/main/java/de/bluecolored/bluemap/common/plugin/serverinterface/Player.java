@@ -32,33 +32,33 @@ import de.bluecolored.bluemap.common.plugin.text.Text;
 
 public interface Player {
 
-	public UUID getUuid();
-	
-	public Text getName();
-	
-	public UUID getWorld();
-	
-	public Vector3d getPosition();
+    public UUID getUuid();
 
-	public boolean isOnline();
-	
-	/**
-	 * Return <code>true</code> if the player is sneaking.
-	 * <p><i>If the player is offline the value of this method is undetermined.</i></p>
-	 * @return
-	 */
-	public boolean isSneaking();
-	
-	/**
-	 * Returns <code>true</code> if the player has an invisibillity effect
-	 * <p><i>If the player is offline the value of this method is undetermined.</i></p>
-	 */
-	public boolean isInvisible();
-	
-	/**
-	 * Returns the {@link Gamemode} this player is in
-	 * <p><i>If the player is offline the value of this method is undetermined.</i></p>
-	 */
-	public Gamemode getGamemode();
-	
+    public Text getName();
+
+    public UUID getWorld();
+
+    public Vector3d getPosition();
+
+    public boolean isOnline();
+
+    /**
+     * Return <code>true</code> if the player is sneaking.
+     * <p><i>If the player is offline the value of this method is undetermined.</i></p>
+     * @return
+     */
+    public boolean isSneaking();
+
+    /**
+     * Returns <code>true</code> if the player has an invisibillity effect
+     * <p><i>If the player is offline the value of this method is undetermined.</i></p>
+     */
+    public boolean isInvisible();
+
+    /**
+     * Returns the {@link Gamemode} this player is in
+     * <p><i>If the player is offline the value of this method is undetermined.</i></p>
+     */
+    public Gamemode getGamemode();
+
 }

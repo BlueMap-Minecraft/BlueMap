@@ -26,29 +26,29 @@ package de.bluecolored.bluemap.common.plugin.serverinterface;
 
 public enum Gamemode {
 
-	SURVIVAL ("survival"),
-	CREATIVE ("creative"),
-	ADVENTURE ("adventure"),
-	SPECTATOR ("spectator");
-	
-	private final String id;
-	
-	Gamemode(String id){
-		this.id = id;
-	}
-	
-	public String getId() {
-		return id;
-	}
-	
-	public static Gamemode getById(String id) {
-		if (id == null) throw new NullPointerException("id cannot be null");
-		
-		for (Gamemode gamemode : values()) {
-			if (gamemode.id.equals(id)) return gamemode;
-		}
-		
-		throw new IllegalArgumentException("There is no Gamemode with id: '" + id + "'");
-	}
-	
+    SURVIVAL ("survival"),
+    CREATIVE ("creative"),
+    ADVENTURE ("adventure"),
+    SPECTATOR ("spectator");
+
+    private final String id;
+
+    Gamemode(String id){
+        this.id = id;
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public static Gamemode getById(String id) {
+        if (id == null) throw new NullPointerException("id cannot be null");
+
+        for (Gamemode gamemode : values()) {
+            if (gamemode.id.equals(id)) return gamemode;
+        }
+
+        throw new IllegalArgumentException("There is no Gamemode with id: '" + id + "'");
+    }
+
 }

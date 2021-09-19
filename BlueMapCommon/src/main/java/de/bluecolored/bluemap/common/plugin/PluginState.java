@@ -34,34 +34,34 @@ import java.util.Map;
 @ConfigSerializable
 public class PluginState {
 
-	private boolean renderThreadsEnabled = true;
-	private Map<String, MapState> maps = new HashMap<>();
+    private boolean renderThreadsEnabled = true;
+    private Map<String, MapState> maps = new HashMap<>();
 
-	public boolean isRenderThreadsEnabled() {
-		return renderThreadsEnabled;
-	}
+    public boolean isRenderThreadsEnabled() {
+        return renderThreadsEnabled;
+    }
 
-	public void setRenderThreadsEnabled(boolean renderThreadsEnabled) {
-		this.renderThreadsEnabled = renderThreadsEnabled;
-	}
+    public void setRenderThreadsEnabled(boolean renderThreadsEnabled) {
+        this.renderThreadsEnabled = renderThreadsEnabled;
+    }
 
-	public MapState getMapState(BmMap map) {
-		return maps.computeIfAbsent(map.getId(), k -> new MapState());
-	}
+    public MapState getMapState(BmMap map) {
+        return maps.computeIfAbsent(map.getId(), k -> new MapState());
+    }
 
-	@ConfigSerializable
-	public static class MapState {
+    @ConfigSerializable
+    public static class MapState {
 
-		private boolean updateEnabled = true;
+        private boolean updateEnabled = true;
 
-		public boolean isUpdateEnabled() {
-			return updateEnabled;
-		}
+        public boolean isUpdateEnabled() {
+            return updateEnabled;
+        }
 
-		public void setUpdateEnabled(boolean update) {
-			this.updateEnabled = update;
-		}
+        public void setUpdateEnabled(boolean update) {
+            this.updateEnabled = update;
+        }
 
-	}
+    }
 
 }

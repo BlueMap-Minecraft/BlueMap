@@ -34,79 +34,79 @@ import java.util.List;
 @DebugDump
 public class CombinedRenderTask<T extends RenderTask> implements RenderTask {
 
-	private final String description;
-	private final List<T> tasks;
-	private int currentTaskIndex;
+    private final String description;
+    private final List<T> tasks;
+    private int currentTaskIndex;
 
-	public CombinedRenderTask(String description, Collection<T> tasks) {
-		this.description = description;
-		this.tasks = Collections.unmodifiableList(new ArrayList<>(tasks));
+    public CombinedRenderTask(String description, Collection<T> tasks) {
+        this.description = description;
+        this.tasks = Collections.unmodifiableList(new ArrayList<>(tasks));
 
-		this.currentTaskIndex = 0;
-	}
+        this.currentTaskIndex = 0;
+    }
 
-	@Override
-	public void doWork() throws Exception {
-		T task;
+    @Override
+    public void doWork() throws Exception {
+        T task;
 
-		synchronized (this) {
-			if (!hasMoreWork()) return;
-			task = this.tasks.get(this.currentTaskIndex);
+        synchronized (this) {
+            if (!hasMoreWork()) return;
+            task = this.tasks.get(this.currentTaskIndex);
 
-			if (!task.hasMoreWork()){
-				this.currentTaskIndex++;
-				return;
-			}
-		}
+            if (!task.hasMoreWork()){
+                this.currentTaskIndex++;
+                return;
+            }
+        }
 
-		task.doWork();
-	}
+        task.doWork();
+    }
 
-	@Override
-	public synchronized boolean hasMoreWork() {
-		return this.currentTaskIndex < this.tasks.size();
-	}
+    @Override
+    public synchronized boolean hasMoreWork() {
+        return this.currentTaskIndex < this.tasks.size();
+    }
 
-	@Override
-	public synchronized double estimateProgress() {
-		if (!hasMoreWork()) return 1;
+    @Override
+    public synchronized double estimateProgress() {
+        if (!hasMoreWork()) return 1;
 
-		double total = currentTaskIndex;
-		total += this.tasks.get(this.currentTaskIndex).estimateProgress();
+        double total = currentTaskIndex;
+        total += this.tasks.get(this.currentTaskIndex).estimateProgress();
 
-		return total / tasks.size();
-	}
+        return total / tasks.size();
+    }
 
-	@Override
-	public void cancel() {
-		for (T task : tasks) task.cancel();
-	}
+    @Override
+    public void cancel() {
+        for (T task : tasks) task.cancel();
+    }
 
-	@Override
-	public boolean contains(RenderTask task) {
-		if (this.equals(task)) return true;
+    @Override
+    public boolean contains(RenderTask task) {
+        if (this.equals(task)) return true;
 
-		if (task instanceof CombinedRenderTask) {
-			CombinedRenderTask<?> combinedTask = (CombinedRenderTask<?>) task;
+        if (task instanceof CombinedRenderTask) {
+            CombinedRenderTask<?> combinedTask = (CombinedRenderTask<?>) task;
 
-			for (RenderTask subTask : combinedTask.tasks) {
-				if (!this.contains(subTask)) return false;
-			}
+            for (RenderTask subTask : combinedTask.tasks) {
+                if (!this.contains(subTask)) return false;
+            }
 
-			return true;
-		}
+            return true;
+        }
 
-		for (RenderTask subTask : this.tasks) {
-			if (subTask.contains(task)) return true;
-		}
+        for (RenderTask subTask : this.tasks) {
+            if (subTask.contains(task)) return true;
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	@Override
-	public String getDescription() {
-		//return description + " (" + (this.currentTaskIndex + 1) + "/" + tasks.size() + ")";
-		return description;
-	}
+    @Override
+    public String getDescription() {
+        //return description + " (" + (this.currentTaskIndex + 1) + "/" + tasks.size() + ")";
+        return description;
+    }
 
 }

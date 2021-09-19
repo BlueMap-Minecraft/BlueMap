@@ -29,45 +29,45 @@ import de.bluecolored.bluemap.core.util.math.MatrixM3f;
 
 public class TransformedBlockModelResource {
 
-	private final Vector2f rotation;
-	private final boolean uvLock;
-	private final BlockModelResource model;
+    private final Vector2f rotation;
+    private final boolean uvLock;
+    private final BlockModelResource model;
 
-	private final boolean hasRotation;
-	private final MatrixM3f rotationMatrix;
+    private final boolean hasRotation;
+    private final MatrixM3f rotationMatrix;
 
-	public TransformedBlockModelResource(Vector2f rotation, boolean uvLock, BlockModelResource model) {
-		this.model = model;
-		this.rotation = rotation;
-		this.uvLock = uvLock;
+    public TransformedBlockModelResource(Vector2f rotation, boolean uvLock, BlockModelResource model) {
+        this.model = model;
+        this.rotation = rotation;
+        this.uvLock = uvLock;
 
-		this.hasRotation = !rotation.equals(Vector2f.ZERO);
-		this.rotationMatrix = new MatrixM3f()
-				.rotate(
-						-rotation.getX(),
-						-rotation.getY(),
-						0
-				);
-	}
+        this.hasRotation = !rotation.equals(Vector2f.ZERO);
+        this.rotationMatrix = new MatrixM3f()
+                .rotate(
+                        -rotation.getX(),
+                        -rotation.getY(),
+                        0
+                );
+    }
 
-	public Vector2f getRotation() {
-		return rotation;
-	}
+    public Vector2f getRotation() {
+        return rotation;
+    }
 
-	public boolean hasRotation() {
-		return hasRotation;
-	}
+    public boolean hasRotation() {
+        return hasRotation;
+    }
 
-	public MatrixM3f getRotationMatrix() {
-		return rotationMatrix;
-	}
+    public MatrixM3f getRotationMatrix() {
+        return rotationMatrix;
+    }
 
-	public boolean isUVLock() {
-		return uvLock;
-	}
-	
-	public BlockModelResource getModel() {
-		return model;
-	}
-	
+    public boolean isUVLock() {
+        return uvLock;
+    }
+
+    public BlockModelResource getModel() {
+        return model;
+    }
+
 }

@@ -33,83 +33,83 @@ import de.bluecolored.bluemap.core.map.BmMap;
 import java.util.function.Predicate;
 
 public class BlueMapMapImpl implements BlueMapMap {
-	
-	private BlueMapAPIImpl api;
-	private BmMap delegate;
 
-	protected BlueMapMapImpl(BlueMapAPIImpl api, BmMap delegate) {
-		this.api = api;
-		this.delegate = delegate;
-	}
-	
-	@Override
-	public String getId() {
-		return delegate.getId();
-	}
+    private BlueMapAPIImpl api;
+    private BmMap delegate;
 
-	@Override
-	public String getName() {
-		return delegate.getName();
-	}
+    protected BlueMapMapImpl(BlueMapAPIImpl api, BmMap delegate) {
+        this.api = api;
+        this.delegate = delegate;
+    }
 
-	@Override
-	public BlueMapWorldImpl getWorld() {
-		return api.getWorldForUuid(delegate.getWorld().getUUID());
-	}
+    @Override
+    public String getId() {
+        return delegate.getId();
+    }
 
-	@Override
-	public Vector2i getTileSize() {
-		return delegate.getHiresModelManager().getTileGrid().getGridSize();
-	}
+    @Override
+    public String getName() {
+        return delegate.getName();
+    }
 
-	@Override
-	public Vector2i getTileOffset() {
-		return delegate.getHiresModelManager().getTileGrid().getOffset();
-	}
+    @Override
+    public BlueMapWorldImpl getWorld() {
+        return api.getWorldForUuid(delegate.getWorld().getUUID());
+    }
 
-	@Override
-	public void setTileFilter(Predicate<Vector2i> filter) {
-		delegate.setTileFilter(filter);
-	}
+    @Override
+    public Vector2i getTileSize() {
+        return delegate.getHiresModelManager().getTileGrid().getGridSize();
+    }
 
-	@Override
-	public Predicate<Vector2i> getTileFilter() {
-		return delegate.getTileFilter();
-	}
+    @Override
+    public Vector2i getTileOffset() {
+        return delegate.getHiresModelManager().getTileGrid().getOffset();
+    }
 
-	@Override
-	public boolean isFrozen() {
-		return !api.plugin.getPluginState().getMapState(delegate).isUpdateEnabled();
-	}
+    @Override
+    public void setTileFilter(Predicate<Vector2i> filter) {
+        delegate.setTileFilter(filter);
+    }
 
-	@Override
-	public synchronized void setFrozen(boolean frozen) {
-		if (isFrozen()) unfreeze();
-		else freeze();
-	}
+    @Override
+    public Predicate<Vector2i> getTileFilter() {
+        return delegate.getTileFilter();
+    }
 
-	private synchronized void unfreeze() {
-		api.plugin.startWatchingMap(delegate);
-		api.plugin.getPluginState().getMapState(delegate).setUpdateEnabled(true);
-		api.plugin.getRenderManager().scheduleRenderTask(new MapUpdateTask(delegate));
-	}
+    @Override
+    public boolean isFrozen() {
+        return !api.plugin.getPluginState().getMapState(delegate).isUpdateEnabled();
+    }
 
-	private synchronized void freeze() {
-		api.plugin.stopWatchingMap(delegate);
-		api.plugin.getPluginState().getMapState(delegate).setUpdateEnabled(false);
-		api.plugin.getRenderManager().removeRenderTasksIf(task -> {
-			if (task instanceof MapUpdateTask)
-				return ((MapUpdateTask) task).getMap().equals(delegate);
+    @Override
+    public synchronized void setFrozen(boolean frozen) {
+        if (isFrozen()) unfreeze();
+        else freeze();
+    }
 
-			if (task instanceof WorldRegionRenderTask)
-				return ((WorldRegionRenderTask) task).getMap().equals(delegate);
+    private synchronized void unfreeze() {
+        api.plugin.startWatchingMap(delegate);
+        api.plugin.getPluginState().getMapState(delegate).setUpdateEnabled(true);
+        api.plugin.getRenderManager().scheduleRenderTask(new MapUpdateTask(delegate));
+    }
 
-			return false;
-		});
-	}
+    private synchronized void freeze() {
+        api.plugin.stopWatchingMap(delegate);
+        api.plugin.getPluginState().getMapState(delegate).setUpdateEnabled(false);
+        api.plugin.getRenderManager().removeRenderTasksIf(task -> {
+            if (task instanceof MapUpdateTask)
+                return ((MapUpdateTask) task).getMap().equals(delegate);
 
-	public BmMap getMapType() {
-		return delegate;
-	}
-	
+            if (task instanceof WorldRegionRenderTask)
+                return ((WorldRegionRenderTask) task).getMap().equals(delegate);
+
+            return false;
+        });
+    }
+
+    public BmMap getMapType() {
+        return delegate;
+    }
+
 }

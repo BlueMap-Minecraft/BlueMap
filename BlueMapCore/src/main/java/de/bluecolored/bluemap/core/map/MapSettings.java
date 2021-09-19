@@ -28,10 +28,10 @@ import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 
 public interface MapSettings extends RenderSettings {
 
-	int getHiresTileSize();
+    int getHiresTileSize();
 
-	int getLowresPointsPerLowresTile();
+    int getLowresPointsPerLowresTile();
 
-	int getLowresPointsPerHiresTile();
+    int getLowresPointsPerHiresTile();
 
 }

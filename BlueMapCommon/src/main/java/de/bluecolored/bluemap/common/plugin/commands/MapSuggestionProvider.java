@@ -32,21 +32,21 @@ import de.bluecolored.bluemap.common.plugin.Plugin;
 
 public class MapSuggestionProvider<S> extends AbstractSuggestionProvider<S> {
 
-	private Plugin plugin;
-	
-	public MapSuggestionProvider(Plugin plugin) {
-		this.plugin = plugin;
-	}
-	
-	@Override
-	public Collection<String> getPossibleValues() {
-		Collection<String> values = new HashSet<>();
-		
-		for (BmMap map : plugin.getMapTypes()) {
-			values.add(map.getId());
-		}
-		
-		return values;
-	}
-	
+    private Plugin plugin;
+
+    public MapSuggestionProvider(Plugin plugin) {
+        this.plugin = plugin;
+    }
+
+    @Override
+    public Collection<String> getPossibleValues() {
+        Collection<String> values = new HashSet<>();
+
+        for (BmMap map : plugin.getMapTypes()) {
+            values.add(map.getId());
+        }
+
+        return values;
+    }
+
 }

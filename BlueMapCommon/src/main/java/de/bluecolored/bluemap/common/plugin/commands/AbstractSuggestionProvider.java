@@ -35,22 +35,22 @@ import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
 public abstract class AbstractSuggestionProvider<S> implements SuggestionProvider<S> {
-	
-	@Override
-	public CompletableFuture<Suggestions> getSuggestions(CommandContext<S> context, SuggestionsBuilder builder) throws CommandSyntaxException {
-		Collection<String> possibleValues = getPossibleValues();
-		if(possibleValues.isEmpty()) return Suggestions.empty();
 
-		String remaining = builder.getRemaining().toLowerCase();
-		for (String str : possibleValues) {
-			if (str.toLowerCase().startsWith(remaining)) {
-				builder.suggest(str = StringArgumentType.escapeIfRequired(str));
-			}
-		}
-		
-		return builder.buildFuture();
-	}
+    @Override
+    public CompletableFuture<Suggestions> getSuggestions(CommandContext<S> context, SuggestionsBuilder builder) throws CommandSyntaxException {
+        Collection<String> possibleValues = getPossibleValues();
+        if(possibleValues.isEmpty()) return Suggestions.empty();
 
-	public abstract Collection<String> getPossibleValues();
-	
+        String remaining = builder.getRemaining().toLowerCase();
+        for (String str : possibleValues) {
+            if (str.toLowerCase().startsWith(remaining)) {
+                builder.suggest(str = StringArgumentType.escapeIfRequired(str));
+            }
+        }
+
+        return builder.buildFuture();
+    }
+
+    public abstract Collection<String> getPossibleValues();
+
 }

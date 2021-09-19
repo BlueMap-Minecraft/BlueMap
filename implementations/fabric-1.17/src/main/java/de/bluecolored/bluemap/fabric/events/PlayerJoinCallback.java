@@ -30,13 +30,13 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 public interface PlayerJoinCallback {
-	Event<PlayerJoinCallback> EVENT = EventFactory.createArrayBacked(PlayerJoinCallback.class,
-			(listeners) -> (server, player) -> {
-				for (PlayerJoinCallback event : listeners) {
-					event.onPlayerJoin(server, player);
-				}
-			}
-	);
+    Event<PlayerJoinCallback> EVENT = EventFactory.createArrayBacked(PlayerJoinCallback.class,
+            (listeners) -> (server, player) -> {
+                for (PlayerJoinCallback event : listeners) {
+                    event.onPlayerJoin(server, player);
+                }
+            }
+    );
 
-	void onPlayerJoin(MinecraftServer server, ServerPlayerEntity player);
+    void onPlayerJoin(MinecraftServer server, ServerPlayerEntity player);
 }

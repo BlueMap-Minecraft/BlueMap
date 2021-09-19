@@ -27,6 +27,6 @@ package de.bluecolored.bluemap.core.util;
 @FunctionalInterface
 public interface ThrowingRunnable<E extends Throwable>  {
 
-	void run() throws E;
+    void run() throws E;
 
 }

@@ -36,37 +36,37 @@ import java.util.UUID;
 
 public class FabricEventForwarder {
 
-	private FabricMod mod;
-	private Collection<ServerEventListener> eventListeners;
-	
-	public FabricEventForwarder(FabricMod mod) {
-		this.mod = mod;
-		this.eventListeners = new ArrayList<>(1);
-		
-		PlayerJoinCallback.EVENT.register(this::onPlayerJoin);
-		PlayerLeaveCallback.EVENT.register(this::onPlayerLeave);
-	}
-	
-	public synchronized void addEventListener(ServerEventListener listener) {
-		this.eventListeners.add(listener);
-	}
-	
-	public synchronized void removeAllListeners() {
-		this.eventListeners.clear();
-	}
-	
-	public synchronized void onPlayerJoin(MinecraftServer server, ServerPlayerEntity player) {
-		if (this.mod.getServer() != server) return;
-		
-		UUID uuid = player.getUuid();
-		for (ServerEventListener listener : eventListeners) listener.onPlayerJoin(uuid);
-	}
-	
-	public synchronized void onPlayerLeave(MinecraftServer server, ServerPlayerEntity player) {
-		if (this.mod.getServer() != server) return;
+    private FabricMod mod;
+    private Collection<ServerEventListener> eventListeners;
 
-		UUID uuid = player.getUuid();
-		for (ServerEventListener listener : eventListeners) listener.onPlayerLeave(uuid);
-	}
-	
+    public FabricEventForwarder(FabricMod mod) {
+        this.mod = mod;
+        this.eventListeners = new ArrayList<>(1);
+
+        PlayerJoinCallback.EVENT.register(this::onPlayerJoin);
+        PlayerLeaveCallback.EVENT.register(this::onPlayerLeave);
+    }
+
+    public synchronized void addEventListener(ServerEventListener listener) {
+        this.eventListeners.add(listener);
+    }
+
+    public synchronized void removeAllListeners() {
+        this.eventListeners.clear();
+    }
+
+    public synchronized void onPlayerJoin(MinecraftServer server, ServerPlayerEntity player) {
+        if (this.mod.getServer() != server) return;
+
+        UUID uuid = player.getUuid();
+        for (ServerEventListener listener : eventListeners) listener.onPlayerJoin(uuid);
+    }
+
+    public synchronized void onPlayerLeave(MinecraftServer server, ServerPlayerEntity player) {
+        if (this.mod.getServer() != server) return;
+
+        UUID uuid = player.getUuid();
+        for (ServerEventListener listener : eventListeners) listener.onPlayerLeave(uuid);
+    }
+
 }

@@ -55,248 +55,248 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listener {
-	
-	private static BukkitPlugin instance;
-	
-	private final Plugin pluginInstance;
-	private final EventForwarder eventForwarder;
-	private final BukkitCommands commands;
-	
-	private int playerUpdateIndex = 0;
-	private final Map<UUID, Player> onlinePlayerMap;
-	private final List<BukkitPlayer> onlinePlayerList;
-	
-	public BukkitPlugin() {
-		Logger.global = new JavaLogger(getLogger());
 
-		MinecraftVersion version = MinecraftVersion.LATEST_SUPPORTED;
-		
-		//try to get best matching minecraft-version
-		try {
-			String versionString = getServer().getBukkitVersion();
-			Matcher versionMatcher = Pattern.compile("(\\d+(?:\\.\\d+){1,2})[-_].*").matcher(versionString);
-			if (!versionMatcher.matches()) throw new IllegalArgumentException();
-			version = MinecraftVersion.of(versionMatcher.group(1));
-		} catch (IllegalArgumentException e) {
-			Logger.global.logWarning("Failed to detect the minecraft version of this server! Using latest version: " + version.getVersionString());
-		}
-		
-		this.onlinePlayerMap = new ConcurrentHashMap<>();
-		this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
+    private static BukkitPlugin instance;
 
-		this.eventForwarder = new EventForwarder();
-		this.pluginInstance = new Plugin(version, "bukkit", this);
-		this.commands = new BukkitCommands(this.pluginInstance);
-		
-		BukkitPlugin.instance = this;
-	}
-	
-	@Override
-	public void onEnable() {
-		
-		//save world so the level.dat is present on new worlds
-		Logger.global.logInfo("Saving all worlds once, to make sure the level.dat is present...");
-		for (World world : getServer().getWorlds()) {
-			world.save();
-		}
-		
-		//register events
-		getServer().getPluginManager().registerEvents(this, this);
-		getServer().getPluginManager().registerEvents(eventForwarder, this);
-		
-		//register commands
-		try {
-			final Field bukkitCommandMap = Bukkit.getServer().getClass().getDeclaredField("commandMap");
+    private final Plugin pluginInstance;
+    private final EventForwarder eventForwarder;
+    private final BukkitCommands commands;
 
-			bukkitCommandMap.setAccessible(true);
-			CommandMap commandMap = (CommandMap) bukkitCommandMap.get(Bukkit.getServer());
+    private int playerUpdateIndex = 0;
+    private final Map<UUID, Player> onlinePlayerMap;
+    private final List<BukkitPlayer> onlinePlayerList;
 
-			for (BukkitCommand command : commands.getRootCommands()) {
-				commandMap.register(command.getLabel(), command);
-			}
-		} catch(NoSuchFieldException | SecurityException | IllegalAccessException e) {
-			Logger.global.logError("Failed to register commands!", e);
-		}
-		
-		//tab completions
-		getServer().getPluginManager().registerEvents(commands, this);
-		
-		//update online-player collections
-		this.onlinePlayerList.clear();
-		this.onlinePlayerMap.clear();
-		for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) {
-			BukkitPlayer bukkitPlayer = new BukkitPlayer(player.getUniqueId());
-			onlinePlayerMap.put(player.getUniqueId(), bukkitPlayer);
-			onlinePlayerList.add(bukkitPlayer);
-		}
-		
-		//start updating players
-		getServer().getScheduler().runTaskTimer(this, this::updateSomePlayers, 1, 1);
-		
-		//load bluemap
-		getServer().getScheduler().runTaskAsynchronously(this, () -> {
-			try {
-				Logger.global.logInfo("Loading...");
-				this.pluginInstance.load();
-				if (pluginInstance.isLoaded()) Logger.global.logInfo("Loaded!");
-			} catch (IOException | ParseResourceException | RuntimeException e) {
-				Logger.global.logError("Failed to load!", e);
-				this.pluginInstance.unload();
-			}
-		});
-		
-		//bstats
-		new Metrics(this, 5912);
-	}
-	
-	@Override
-	public void onDisable() {
-		Logger.global.logInfo("Stopping...");
-		getServer().getScheduler().cancelTasks(this);
-		pluginInstance.unload();
-		Logger.global.logInfo("Saved and stopped!");
-	}
+    public BukkitPlugin() {
+        Logger.global = new JavaLogger(getLogger());
 
-	@Override
-	public void registerListener(ServerEventListener listener) {
-		eventForwarder.addListener(listener);
-	}
+        MinecraftVersion version = MinecraftVersion.LATEST_SUPPORTED;
 
-	@Override
-	public void unregisterAllListeners() {
-		eventForwarder.removeAllListeners();
-	}
+        //try to get best matching minecraft-version
+        try {
+            String versionString = getServer().getBukkitVersion();
+            Matcher versionMatcher = Pattern.compile("(\\d+(?:\\.\\d+){1,2})[-_].*").matcher(versionString);
+            if (!versionMatcher.matches()) throw new IllegalArgumentException();
+            version = MinecraftVersion.of(versionMatcher.group(1));
+        } catch (IllegalArgumentException e) {
+            Logger.global.logWarning("Failed to detect the minecraft version of this server! Using latest version: " + version.getVersionString());
+        }
 
-	@Override
-	public UUID getUUIDForWorld(final File worldPath) throws IOException {
-		//if it is a dimension folder
-		File worldFolder = worldPath;
-		while (!new File(worldFolder, "level.dat").exists()) {
-			File parent = worldFolder.getParentFile();
-			if (parent != null)
-				worldFolder = parent;
-			else
-				throw new IOException("Unable to find a level.dat for world: '" + worldPath + "'");
-		}
-		
-		final File normalizedWorldFolder = worldFolder.getCanonicalFile();
+        this.onlinePlayerMap = new ConcurrentHashMap<>();
+        this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 
-		Future<UUID> futureUUID;
-		if (!Bukkit.isPrimaryThread()) {
-			futureUUID = Bukkit.getScheduler().callSyncMethod(BukkitPlugin.getInstance(), () -> getUUIDForWorldSync(normalizedWorldFolder));
-		} else {
-			futureUUID = CompletableFuture.completedFuture(getUUIDForWorldSync(normalizedWorldFolder));
-		}
-		
-		try {
-			return futureUUID.get();
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-			throw new IOException(e);
-		} catch (ExecutionException e) {
-			if (e.getCause() instanceof IOException) {
-				throw (IOException) e.getCause();
-			} else {
-				throw new IOException(e);
-			}
-		}
-	}
-	
-	@Override
-	public String getWorldName(UUID worldUUID) {
-		World world = getServer().getWorld(worldUUID);
-		if (world != null) return world.getName();
-		
-		return null;
-	}
-	
-	private UUID getUUIDForWorldSync (File worldFolder) throws IOException {
-		for (World world : getServer().getWorlds()) {
-			if (worldFolder.equals(world.getWorldFolder().getCanonicalFile())) return world.getUID();
-		}
-		
-		throw new IOException("There is no world with this folder loaded: " + worldFolder.getPath());
-	}
+        this.eventForwarder = new EventForwarder();
+        this.pluginInstance = new Plugin(version, "bukkit", this);
+        this.commands = new BukkitCommands(this.pluginInstance);
 
-	@Override
-	public File getConfigFolder() {
-		return getDataFolder();
-	}
-	
-	public Plugin getBlueMap() {
-		return pluginInstance;
-	}
+        BukkitPlugin.instance = this;
+    }
 
-	public static BukkitPlugin getInstance() {
-		return instance;
-	}
-	
-	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-	public void onPlayerJoin(PlayerJoinEvent evt) {
-		BukkitPlayer player = new BukkitPlayer(evt.getPlayer().getUniqueId());
-		onlinePlayerMap.put(evt.getPlayer().getUniqueId(), player);
-		onlinePlayerList.add(player);
-	}
-	
-	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-	public void onPlayerLeave(PlayerQuitEvent evt) {
-		UUID playerUUID = evt.getPlayer().getUniqueId();
-		onlinePlayerMap.remove(playerUUID);
-		synchronized (onlinePlayerList) {
-			onlinePlayerList.removeIf(p -> p.getUuid().equals(playerUUID));
-		}
-	}
+    @Override
+    public void onEnable() {
 
-	@Override
-	public Collection<Player> getOnlinePlayers() {
-		return onlinePlayerMap.values();
-	}
+        //save world so the level.dat is present on new worlds
+        Logger.global.logInfo("Saving all worlds once, to make sure the level.dat is present...");
+        for (World world : getServer().getWorlds()) {
+            world.save();
+        }
 
-	@Override
-	public Optional<Player> getPlayer(UUID uuid) {
-		return Optional.ofNullable(onlinePlayerMap.get(uuid));
-	}
-	
-	@Override
-	public boolean persistWorldChanges(UUID worldUUID) throws IOException, IllegalArgumentException {
-		try {
-			return Bukkit.getScheduler().callSyncMethod(this, () -> {
-				World world = Bukkit.getWorld(worldUUID);
-				if (world == null) throw new IllegalArgumentException("There is no world with this uuid: " + worldUUID);
-				world.save();
-				
-				return true;
-			}).get();
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-			throw new IOException(e);
-		} catch (ExecutionException e) {
-			Throwable t = e.getCause();
-			if (t instanceof IOException) throw (IOException) t;
-			if (t instanceof IllegalArgumentException) throw (IllegalArgumentException) t;
-			throw new IOException(t);
-		}
-	}
-	
-	/**
-	 * Only update some of the online players each tick to minimize performance impact on the server-thread.
-	 * Only call this method on the server-thread.
-	 */
-	private void updateSomePlayers() {
-		int onlinePlayerCount = onlinePlayerList.size();
-		if (onlinePlayerCount == 0) return;
-		
-		int playersToBeUpdated = onlinePlayerCount / 20; //with 20 tps, each player is updated once a second
-		if (playersToBeUpdated == 0) playersToBeUpdated = 1;
-		
-		for (int i = 0; i < playersToBeUpdated; i++) {
-			playerUpdateIndex++;
-			if (playerUpdateIndex >= 20 && playerUpdateIndex >= onlinePlayerCount) playerUpdateIndex = 0;
-			
-			if (playerUpdateIndex < onlinePlayerCount) {
-				onlinePlayerList.get(playerUpdateIndex).update();
-			}
-		}
-	}
-	
+        //register events
+        getServer().getPluginManager().registerEvents(this, this);
+        getServer().getPluginManager().registerEvents(eventForwarder, this);
+
+        //register commands
+        try {
+            final Field bukkitCommandMap = Bukkit.getServer().getClass().getDeclaredField("commandMap");
+
+            bukkitCommandMap.setAccessible(true);
+            CommandMap commandMap = (CommandMap) bukkitCommandMap.get(Bukkit.getServer());
+
+            for (BukkitCommand command : commands.getRootCommands()) {
+                commandMap.register(command.getLabel(), command);
+            }
+        } catch(NoSuchFieldException | SecurityException | IllegalAccessException e) {
+            Logger.global.logError("Failed to register commands!", e);
+        }
+
+        //tab completions
+        getServer().getPluginManager().registerEvents(commands, this);
+
+        //update online-player collections
+        this.onlinePlayerList.clear();
+        this.onlinePlayerMap.clear();
+        for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) {
+            BukkitPlayer bukkitPlayer = new BukkitPlayer(player.getUniqueId());
+            onlinePlayerMap.put(player.getUniqueId(), bukkitPlayer);
+            onlinePlayerList.add(bukkitPlayer);
+        }
+
+        //start updating players
+        getServer().getScheduler().runTaskTimer(this, this::updateSomePlayers, 1, 1);
+
+        //load bluemap
+        getServer().getScheduler().runTaskAsynchronously(this, () -> {
+            try {
+                Logger.global.logInfo("Loading...");
+                this.pluginInstance.load();
+                if (pluginInstance.isLoaded()) Logger.global.logInfo("Loaded!");
+            } catch (IOException | ParseResourceException | RuntimeException e) {
+                Logger.global.logError("Failed to load!", e);
+                this.pluginInstance.unload();
+            }
+        });
+
+        //bstats
+        new Metrics(this, 5912);
+    }
+
+    @Override
+    public void onDisable() {
+        Logger.global.logInfo("Stopping...");
+        getServer().getScheduler().cancelTasks(this);
+        pluginInstance.unload();
+        Logger.global.logInfo("Saved and stopped!");
+    }
+
+    @Override
+    public void registerListener(ServerEventListener listener) {
+        eventForwarder.addListener(listener);
+    }
+
+    @Override
+    public void unregisterAllListeners() {
+        eventForwarder.removeAllListeners();
+    }
+
+    @Override
+    public UUID getUUIDForWorld(final File worldPath) throws IOException {
+        //if it is a dimension folder
+        File worldFolder = worldPath;
+        while (!new File(worldFolder, "level.dat").exists()) {
+            File parent = worldFolder.getParentFile();
+            if (parent != null)
+                worldFolder = parent;
+            else
+                throw new IOException("Unable to find a level.dat for world: '" + worldPath + "'");
+        }
+
+        final File normalizedWorldFolder = worldFolder.getCanonicalFile();
+
+        Future<UUID> futureUUID;
+        if (!Bukkit.isPrimaryThread()) {
+            futureUUID = Bukkit.getScheduler().callSyncMethod(BukkitPlugin.getInstance(), () -> getUUIDForWorldSync(normalizedWorldFolder));
+        } else {
+            futureUUID = CompletableFuture.completedFuture(getUUIDForWorldSync(normalizedWorldFolder));
+        }
+
+        try {
+            return futureUUID.get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException(e);
+        } catch (ExecutionException e) {
+            if (e.getCause() instanceof IOException) {
+                throw (IOException) e.getCause();
+            } else {
+                throw new IOException(e);
+            }
+        }
+    }
+
+    @Override
+    public String getWorldName(UUID worldUUID) {
+        World world = getServer().getWorld(worldUUID);
+        if (world != null) return world.getName();
+
+        return null;
+    }
+
+    private UUID getUUIDForWorldSync (File worldFolder) throws IOException {
+        for (World world : getServer().getWorlds()) {
+            if (worldFolder.equals(world.getWorldFolder().getCanonicalFile())) return world.getUID();
+        }
+
+        throw new IOException("There is no world with this folder loaded: " + worldFolder.getPath());
+    }
+
+    @Override
+    public File getConfigFolder() {
+        return getDataFolder();
+    }
+
+    public Plugin getBlueMap() {
+        return pluginInstance;
+    }
+
+    public static BukkitPlugin getInstance() {
+        return instance;
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlayerJoin(PlayerJoinEvent evt) {
+        BukkitPlayer player = new BukkitPlayer(evt.getPlayer().getUniqueId());
+        onlinePlayerMap.put(evt.getPlayer().getUniqueId(), player);
+        onlinePlayerList.add(player);
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlayerLeave(PlayerQuitEvent evt) {
+        UUID playerUUID = evt.getPlayer().getUniqueId();
+        onlinePlayerMap.remove(playerUUID);
+        synchronized (onlinePlayerList) {
+            onlinePlayerList.removeIf(p -> p.getUuid().equals(playerUUID));
+        }
+    }
+
+    @Override
+    public Collection<Player> getOnlinePlayers() {
+        return onlinePlayerMap.values();
+    }
+
+    @Override
+    public Optional<Player> getPlayer(UUID uuid) {
+        return Optional.ofNullable(onlinePlayerMap.get(uuid));
+    }
+
+    @Override
+    public boolean persistWorldChanges(UUID worldUUID) throws IOException, IllegalArgumentException {
+        try {
+            return Bukkit.getScheduler().callSyncMethod(this, () -> {
+                World world = Bukkit.getWorld(worldUUID);
+                if (world == null) throw new IllegalArgumentException("There is no world with this uuid: " + worldUUID);
+                world.save();
+
+                return true;
+            }).get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException(e);
+        } catch (ExecutionException e) {
+            Throwable t = e.getCause();
+            if (t instanceof IOException) throw (IOException) t;
+            if (t instanceof IllegalArgumentException) throw (IllegalArgumentException) t;
+            throw new IOException(t);
+        }
+    }
+
+    /**
+     * Only update some of the online players each tick to minimize performance impact on the server-thread.
+     * Only call this method on the server-thread.
+     */
+    private void updateSomePlayers() {
+        int onlinePlayerCount = onlinePlayerList.size();
+        if (onlinePlayerCount == 0) return;
+
+        int playersToBeUpdated = onlinePlayerCount / 20; //with 20 tps, each player is updated once a second
+        if (playersToBeUpdated == 0) playersToBeUpdated = 1;
+
+        for (int i = 0; i < playersToBeUpdated; i++) {
+            playerUpdateIndex++;
+            if (playerUpdateIndex >= 20 && playerUpdateIndex >= onlinePlayerCount) playerUpdateIndex = 0;
+
+            if (playerUpdateIndex < onlinePlayerCount) {
+                onlinePlayerList.get(playerUpdateIndex).update();
+            }
+        }
+    }
+
 }

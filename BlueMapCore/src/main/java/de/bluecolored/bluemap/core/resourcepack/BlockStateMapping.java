@@ -29,35 +29,35 @@ import de.bluecolored.bluemap.core.world.BlockState;
 import java.util.Map.Entry;
 
 class BlockStateMapping<T> {
-	private BlockState blockState;
-	private T mapping;
-	
-	public BlockStateMapping(BlockState blockState, T mapping) {
-		this.blockState = blockState;
-		this.mapping = mapping;
-	}
-	
-	/**
-	 * Returns true if the all the properties on this BlockMapping-key are the same in the provided BlockState.<br>
-	 * Properties that are not defined in this Mapping are ignored on the provided BlockState.<br>
-	 */
-	public boolean fitsTo(BlockState blockState){
-		if (!this.blockState.getId().equals(blockState.getId())) return false;
-		for (Entry<String, String> e : this.blockState.getProperties().entrySet()){
-			if (!e.getValue().equals(blockState.getProperties().get(e.getKey()))){
-				return false;
-			}
-		}
-		
-		return true;
-	}
-	
-	public BlockState getBlockState(){
-		return blockState;
-	}
-	
-	public T getMapping(){
-		return mapping;
-	}
+    private BlockState blockState;
+    private T mapping;
+
+    public BlockStateMapping(BlockState blockState, T mapping) {
+        this.blockState = blockState;
+        this.mapping = mapping;
+    }
+
+    /**
+     * Returns true if the all the properties on this BlockMapping-key are the same in the provided BlockState.<br>
+     * Properties that are not defined in this Mapping are ignored on the provided BlockState.<br>
+     */
+    public boolean fitsTo(BlockState blockState){
+        if (!this.blockState.getId().equals(blockState.getId())) return false;
+        for (Entry<String, String> e : this.blockState.getProperties().entrySet()){
+            if (!e.getValue().equals(blockState.getProperties().get(e.getKey()))){
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public BlockState getBlockState(){
+        return blockState;
+    }
+
+    public T getMapping(){
+        return mapping;
+    }
 
 }

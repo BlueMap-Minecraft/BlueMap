@@ -28,15 +28,15 @@ import java.util.Collection;
 
 public class TaskRefSuggestionProvider<S> extends AbstractSuggestionProvider<S> {
 
-	private CommandHelper helper;
+    private CommandHelper helper;
 
-	public TaskRefSuggestionProvider(CommandHelper helper) {
-		this.helper = helper;
-	}
-	
-	@Override
-	public Collection<String> getPossibleValues() {
-		return helper.getTaskRefs();
-	}
-	
+    public TaskRefSuggestionProvider(CommandHelper helper) {
+        this.helper = helper;
+    }
+
+    @Override
+    public Collection<String> getPossibleValues() {
+        return helper.getTaskRefs();
+    }
+
 }

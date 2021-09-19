@@ -34,78 +34,78 @@ import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.serialize.SerializationException;
 
 public class POIMarkerImpl extends MarkerImpl implements POIMarker {
-	public static final String MARKER_TYPE = "poi";  
-	
-	private String iconAddress;
-	private Vector2i anchor;
-	
-	private boolean hasUnsavedChanges;
-	
-	public POIMarkerImpl(String id, BlueMapMap map, Vector3d position) {
-		super(id, map, position);
-		
-		this.iconAddress = "assets/poi.svg";
-		this.anchor = new Vector2i(25, 45);
-		
-		this.hasUnsavedChanges = true;
-	}
-	
-	@Override
-	public String getType() {
-		return MARKER_TYPE;
-	}
+    public static final String MARKER_TYPE = "poi";
 
-	@Override
-	public String getIconAddress() {
-		return iconAddress;
-	}
+    private String iconAddress;
+    private Vector2i anchor;
 
-	@Override
-	public Vector2i getAnchor() {
-		return anchor;
-	}
+    private boolean hasUnsavedChanges;
 
-	@Override
-	public synchronized void setIcon(String iconAddress, Vector2i anchor) {
-		this.iconAddress = iconAddress;
-		this.anchor = anchor;
-		this.hasUnsavedChanges = true;
-	}
-	
-	@Override
-	public synchronized void load(BlueMapAPI api, ConfigurationNode markerNode, boolean overwriteChanges) throws MarkerFileFormatException {
-		super.load(api, markerNode, overwriteChanges);
+    public POIMarkerImpl(String id, BlueMapMap map, Vector3d position) {
+        super(id, map, position);
 
-		if (!overwriteChanges && hasUnsavedChanges) return;
-		this.hasUnsavedChanges = false;
+        this.iconAddress = "assets/poi.svg";
+        this.anchor = new Vector2i(25, 45);
 
-		this.iconAddress = markerNode.node("icon").getString("assets/poi.svg");
+        this.hasUnsavedChanges = true;
+    }
 
-		ConfigurationNode anchorNode = markerNode.node("anchor");
-		if (anchorNode.virtual()) anchorNode = markerNode.node("iconAnchor"); //fallback to deprecated "iconAnchor"
-		this.anchor = readAnchor(anchorNode);
-	}
-	
-	@Override
-	public synchronized void save(ConfigurationNode markerNode) throws SerializationException {
-		super.save(markerNode);
-		
-		markerNode.node("icon").set(this.iconAddress);
-		writeAnchor(markerNode.node("anchor"), this.anchor);
-		
-		hasUnsavedChanges = false;
-	}
-	
-	private static Vector2i readAnchor(ConfigurationNode node) {
-		return new Vector2i(
-				node.node("x").getInt(0),
-				node.node("y").getInt(0)
-			);
-	}
-	
-	private static void writeAnchor(ConfigurationNode node, Vector2i anchor) throws SerializationException {
-		node.node("x").set(anchor.getX());
-		node.node("y").set(anchor.getY());
-	}
+    @Override
+    public String getType() {
+        return MARKER_TYPE;
+    }
+
+    @Override
+    public String getIconAddress() {
+        return iconAddress;
+    }
+
+    @Override
+    public Vector2i getAnchor() {
+        return anchor;
+    }
+
+    @Override
+    public synchronized void setIcon(String iconAddress, Vector2i anchor) {
+        this.iconAddress = iconAddress;
+        this.anchor = anchor;
+        this.hasUnsavedChanges = true;
+    }
+
+    @Override
+    public synchronized void load(BlueMapAPI api, ConfigurationNode markerNode, boolean overwriteChanges) throws MarkerFileFormatException {
+        super.load(api, markerNode, overwriteChanges);
+
+        if (!overwriteChanges && hasUnsavedChanges) return;
+        this.hasUnsavedChanges = false;
+
+        this.iconAddress = markerNode.node("icon").getString("assets/poi.svg");
+
+        ConfigurationNode anchorNode = markerNode.node("anchor");
+        if (anchorNode.virtual()) anchorNode = markerNode.node("iconAnchor"); //fallback to deprecated "iconAnchor"
+        this.anchor = readAnchor(anchorNode);
+    }
+
+    @Override
+    public synchronized void save(ConfigurationNode markerNode) throws SerializationException {
+        super.save(markerNode);
+
+        markerNode.node("icon").set(this.iconAddress);
+        writeAnchor(markerNode.node("anchor"), this.anchor);
+
+        hasUnsavedChanges = false;
+    }
+
+    private static Vector2i readAnchor(ConfigurationNode node) {
+        return new Vector2i(
+                node.node("x").getInt(0),
+                node.node("y").getInt(0)
+            );
+    }
+
+    private static void writeAnchor(ConfigurationNode node, Vector2i anchor) throws SerializationException {
+        node.node("x").set(anchor.getX());
+        node.node("y").set(anchor.getY());
+    }
 
 }

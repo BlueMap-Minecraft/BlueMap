@@ -38,79 +38,79 @@ import java.util.List;
 @DebugDump
 public class MapUpdateTask extends CombinedRenderTask<WorldRegionRenderTask> {
 
-	private final BmMap map;
-	private final Collection<Vector2i> regions;
+    private final BmMap map;
+    private final Collection<Vector2i> regions;
 
-	public MapUpdateTask(BmMap map) {
-		this(map, getRegions(map.getWorld()));
-	}
+    public MapUpdateTask(BmMap map) {
+        this(map, getRegions(map.getWorld()));
+    }
 
-	public MapUpdateTask(BmMap map, boolean force) {
-		this(map, getRegions(map.getWorld()), force);
-	}
+    public MapUpdateTask(BmMap map, boolean force) {
+        this(map, getRegions(map.getWorld()), force);
+    }
 
-	public MapUpdateTask(BmMap map, Vector2i center, int radius) {
-		this(map, getRegions(map.getWorld(), center, radius));
-	}
+    public MapUpdateTask(BmMap map, Vector2i center, int radius) {
+        this(map, getRegions(map.getWorld(), center, radius));
+    }
 
-	public MapUpdateTask(BmMap map, Vector2i center, int radius, boolean force) {
-		this(map, getRegions(map.getWorld(), center, radius), force);
-	}
+    public MapUpdateTask(BmMap map, Vector2i center, int radius, boolean force) {
+        this(map, getRegions(map.getWorld(), center, radius), force);
+    }
 
-	public MapUpdateTask(BmMap map, Collection<Vector2i> regions) {
-		this(map, regions, false);
-	}
+    public MapUpdateTask(BmMap map, Collection<Vector2i> regions) {
+        this(map, regions, false);
+    }
 
-	public MapUpdateTask(BmMap map, Collection<Vector2i> regions, boolean force) {
-		super("Update map '" + map.getId() + "'", createTasks(map, regions, force));
-		this.map = map;
-		this.regions = Collections.unmodifiableCollection(new ArrayList<>(regions));
-	}
+    public MapUpdateTask(BmMap map, Collection<Vector2i> regions, boolean force) {
+        super("Update map '" + map.getId() + "'", createTasks(map, regions, force));
+        this.map = map;
+        this.regions = Collections.unmodifiableCollection(new ArrayList<>(regions));
+    }
 
-	public BmMap getMap() {
-		return map;
-	}
+    public BmMap getMap() {
+        return map;
+    }
 
-	public Collection<Vector2i> getRegions() {
-		return regions;
-	}
+    public Collection<Vector2i> getRegions() {
+        return regions;
+    }
 
-	private static Collection<WorldRegionRenderTask> createTasks(BmMap map, Collection<Vector2i> regions, boolean force) {
-		List<WorldRegionRenderTask> tasks = new ArrayList<>(regions.size());
-		regions.forEach(region -> tasks.add(new WorldRegionRenderTask(map, region, force)));
+    private static Collection<WorldRegionRenderTask> createTasks(BmMap map, Collection<Vector2i> regions, boolean force) {
+        List<WorldRegionRenderTask> tasks = new ArrayList<>(regions.size());
+        regions.forEach(region -> tasks.add(new WorldRegionRenderTask(map, region, force)));
 
-		// get spawn region
-		World world = map.getWorld();
-		Vector2i spawnPoint = world.getSpawnPoint().toVector2(true);
-		Grid regionGrid = world.getRegionGrid();
-		Vector2i spawnRegion = regionGrid.getCell(spawnPoint);
+        // get spawn region
+        World world = map.getWorld();
+        Vector2i spawnPoint = world.getSpawnPoint().toVector2(true);
+        Grid regionGrid = world.getRegionGrid();
+        Vector2i spawnRegion = regionGrid.getCell(spawnPoint);
 
-		tasks.sort(WorldRegionRenderTask.defaultComparator(spawnRegion));
-		return tasks;
-	}
+        tasks.sort(WorldRegionRenderTask.defaultComparator(spawnRegion));
+        return tasks;
+    }
 
-	private static List<Vector2i> getRegions(World world) {
-		return getRegions(world, null, -1);
-	}
+    private static List<Vector2i> getRegions(World world) {
+        return getRegions(world, null, -1);
+    }
 
-	private static List<Vector2i> getRegions(World world, Vector2i center, int radius) {
-		if (center == null || radius < 0) return new ArrayList<>(world.listRegions()); //TODO: remove regions outside render-boundaries
+    private static List<Vector2i> getRegions(World world, Vector2i center, int radius) {
+        if (center == null || radius < 0) return new ArrayList<>(world.listRegions()); //TODO: remove regions outside render-boundaries
 
-		List<Vector2i> regions = new ArrayList<>();
+        List<Vector2i> regions = new ArrayList<>();
 
-		Grid regionGrid = world.getRegionGrid();
-		Vector2i halfCell = regionGrid.getGridSize().div(2);
-		int increasedRadiusSquared = (int) Math.pow(radius + Math.ceil(halfCell.length()), 2);
+        Grid regionGrid = world.getRegionGrid();
+        Vector2i halfCell = regionGrid.getGridSize().div(2);
+        int increasedRadiusSquared = (int) Math.pow(radius + Math.ceil(halfCell.length()), 2);
 
-		for (Vector2i region : world.listRegions()) {
-			Vector2i min = regionGrid.getCellMin(region);
-			Vector2i regionCenter = min.add(halfCell);
+        for (Vector2i region : world.listRegions()) {
+            Vector2i min = regionGrid.getCellMin(region);
+            Vector2i regionCenter = min.add(halfCell);
 
-			if (regionCenter.distanceSquared(center) <= increasedRadiusSquared)
-				regions.add(region);
-		}
+            if (regionCenter.distanceSquared(center) <= increasedRadiusSquared)
+                regions.add(region);
+        }
 
-		return regions;
-	}
+        return regions;
+    }
 
 }

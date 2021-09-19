@@ -38,54 +38,54 @@ import de.bluecolored.bluemap.core.logger.Logger;
 
 public class MarkerIdSuggestionProvider<S> extends AbstractSuggestionProvider<S> {
 
-	private static MarkerIdSuggestionProvider<?> instance;
-	
-	private MarkerAPI markerApi;
-	private long lastUpdate = -1;
-	
-	private MarkerIdSuggestionProvider() {}
-	
-	@Override
-	public Collection<String> getPossibleValues() {
-		Collection<String> values = new HashSet<>();
-		
-		if (markerApi == null || lastUpdate + 1000 * 60 < System.currentTimeMillis()) { // only (re)load marker-values max every minute
-			lastUpdate = System.currentTimeMillis();
-			
-			Optional<BlueMapAPI> api = BlueMapAPI.getInstance();
-			if (!api.isPresent()) return values;
-			
-			try {
-				markerApi = api.get().getMarkerAPI();
-			} catch (IOException e) {
-				Logger.global.noFloodError("0FEz5tm345rf", "Failed to load MarkerAPI!", e);
-				return values;
-			}
-		}
-		
-		MarkerSet set = markerApi.getMarkerSet(Commands.DEFAULT_MARKER_SET_ID).orElse(null);
-		if (set != null) {
-			for (Marker marker : set.getMarkers()) {
-				if (marker instanceof POIMarker) {
-					values.add(marker.getId());
-				}
-			}
-		}
-		
-		return values;
-	}
-	
-	public void forceUpdate() {
-		lastUpdate = -1;
-	}
-	
-	@SuppressWarnings("unchecked")
-	public static <S> MarkerIdSuggestionProvider<S> getInstance(){
-		if (instance == null) {
-			instance = new MarkerIdSuggestionProvider<>();
-		}
-		
-		return (MarkerIdSuggestionProvider<S>) instance;
-	}
-	
+    private static MarkerIdSuggestionProvider<?> instance;
+
+    private MarkerAPI markerApi;
+    private long lastUpdate = -1;
+
+    private MarkerIdSuggestionProvider() {}
+
+    @Override
+    public Collection<String> getPossibleValues() {
+        Collection<String> values = new HashSet<>();
+
+        if (markerApi == null || lastUpdate + 1000 * 60 < System.currentTimeMillis()) { // only (re)load marker-values max every minute
+            lastUpdate = System.currentTimeMillis();
+
+            Optional<BlueMapAPI> api = BlueMapAPI.getInstance();
+            if (!api.isPresent()) return values;
+
+            try {
+                markerApi = api.get().getMarkerAPI();
+            } catch (IOException e) {
+                Logger.global.noFloodError("0FEz5tm345rf", "Failed to load MarkerAPI!", e);
+                return values;
+            }
+        }
+
+        MarkerSet set = markerApi.getMarkerSet(Commands.DEFAULT_MARKER_SET_ID).orElse(null);
+        if (set != null) {
+            for (Marker marker : set.getMarkers()) {
+                if (marker instanceof POIMarker) {
+                    values.add(marker.getId());
+                }
+            }
+        }
+
+        return values;
+    }
+
+    public void forceUpdate() {
+        lastUpdate = -1;
+    }
+
+    @SuppressWarnings("unchecked")
+    public static <S> MarkerIdSuggestionProvider<S> getInstance(){
+        if (instance == null) {
+            instance = new MarkerIdSuggestionProvider<>();
+        }
+
+        return (MarkerIdSuggestionProvider<S>) instance;
+    }
+
 }

@@ -26,7 +26,7 @@ package de.bluecolored.bluemap.core.resourcepack.blockmodel;
 
 public enum ModelType {
 
-	NORMAL,
-	LIQUID;
-	
+    NORMAL,
+    LIQUID;
+
 }

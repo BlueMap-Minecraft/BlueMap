@@ -33,138 +33,138 @@ import java.util.Map;
 @FunctionalInterface
 public interface PropertyCondition {
 
-	PropertyCondition MATCH_ALL = new All();
-	PropertyCondition MATCH_NONE = new None();
-	
-	boolean matches(BlockState state);
+    PropertyCondition MATCH_ALL = new All();
+    PropertyCondition MATCH_NONE = new None();
 
-	class Property implements PropertyCondition {
-		
-		private final String key;
-		private final String value;
-		
-		private Property (String key, String value) {
-			this.key = key.toLowerCase();
-			this.value = value.toLowerCase();
-		}
-		
-		@Override
-		public boolean matches(BlockState state) {
-			String value = state.getProperties().get(this.key);
-			if (value == null) return false;
-			return value.equals(this.value);
-		}
-		
-	}
+    boolean matches(BlockState state);
 
-	class And implements PropertyCondition {
-		
-		private final PropertyCondition[] conditions;
-		
-		private And (PropertyCondition... conditions) {
-			Preconditions.checkArgument(conditions.length > 0, "Must be at least one condition!");
-			
-			this.conditions = conditions;
-		}
-		
-		@Override
-		public boolean matches(BlockState state) {
-			for (PropertyCondition condition : conditions) {
-				if (!condition.matches(state)) return false;
-			}
-			return true;
-		}
-		
-	}
-	
-	class Or implements PropertyCondition {
-		
-		private final PropertyCondition[] conditions;
-		
-		private Or (PropertyCondition... conditions) {
-			Preconditions.checkArgument(conditions.length > 0, "Must be at least one condition!");
-			
-			this.conditions = conditions;
-		}
-		
-		@Override
-		public boolean matches(BlockState state) {
-			for (PropertyCondition condition : conditions) {
-				if (condition.matches(state)) return true;
-			}
-			return false;
-		}
-		
-	}
+    class Property implements PropertyCondition {
 
-	class All implements PropertyCondition {
+        private final String key;
+        private final String value;
 
-		@Override
-		public boolean matches(BlockState state) {
-			return true;
-		}
-		
-	}
-	
-	class None implements PropertyCondition {
+        private Property (String key, String value) {
+            this.key = key.toLowerCase();
+            this.value = value.toLowerCase();
+        }
 
-		@Override
-		public boolean matches(BlockState state) {
-			return false;
-		}
-		
-	}
+        @Override
+        public boolean matches(BlockState state) {
+            String value = state.getProperties().get(this.key);
+            if (value == null) return false;
+            return value.equals(this.value);
+        }
 
-	static PropertyCondition all() {
-		return MATCH_ALL;
-	}
-	
-	static PropertyCondition none() {
-		return MATCH_NONE;
-	}
-	
-	static PropertyCondition and(PropertyCondition... conditions) {
-		Preconditions.checkArgument(conditions.length > 0, "Must be at least one condition!");
-		
-		return new And(conditions);
-	}
-	
-	static PropertyCondition or(PropertyCondition... conditions) {
-		Preconditions.checkArgument(conditions.length > 0, "Must be at least one condition!");
-		
-		return new Or(conditions);
-	}
-	
-	static PropertyCondition property(String key, String value) {
-		return new Property(key, value);
-	}
-	
-	static PropertyCondition property(String key, String... possibleValues) {
-		Preconditions.checkArgument(possibleValues.length > 0, "Must be at least one value!");
-		
-		if (possibleValues.length == 1) {
-			return property(key, possibleValues[0]);
-		}
-		
-		PropertyCondition[] conditions = new PropertyCondition[possibleValues.length];
-		for (int i = 0; i < possibleValues.length; i++) {
-			conditions[i] = property(key, possibleValues[i]);
-		}
-		
-		return or(conditions);
-	}
+    }
 
-	static PropertyCondition blockState(BlockState state) {
-		Map<String, String> props = state.getProperties();
-		if (props.isEmpty()) return all();
+    class And implements PropertyCondition {
 
-		PropertyCondition[] conditions = new Property[props.size()];
-		int i = 0;
-		for (Map.Entry<String, String> prop : props.entrySet()) {
-			conditions[i++] = property(prop.getKey(), prop.getValue());
-		}
+        private final PropertyCondition[] conditions;
 
-		return and(conditions);
-	}
+        private And (PropertyCondition... conditions) {
+            Preconditions.checkArgument(conditions.length > 0, "Must be at least one condition!");
+
+            this.conditions = conditions;
+        }
+
+        @Override
+        public boolean matches(BlockState state) {
+            for (PropertyCondition condition : conditions) {
+                if (!condition.matches(state)) return false;
+            }
+            return true;
+        }
+
+    }
+
+    class Or implements PropertyCondition {
+
+        private final PropertyCondition[] conditions;
+
+        private Or (PropertyCondition... conditions) {
+            Preconditions.checkArgument(conditions.length > 0, "Must be at least one condition!");
+
+            this.conditions = conditions;
+        }
+
+        @Override
+        public boolean matches(BlockState state) {
+            for (PropertyCondition condition : conditions) {
+                if (condition.matches(state)) return true;
+            }
+            return false;
+        }
+
+    }
+
+    class All implements PropertyCondition {
+
+        @Override
+        public boolean matches(BlockState state) {
+            return true;
+        }
+
+    }
+
+    class None implements PropertyCondition {
+
+        @Override
+        public boolean matches(BlockState state) {
+            return false;
+        }
+
+    }
+
+    static PropertyCondition all() {
+        return MATCH_ALL;
+    }
+
+    static PropertyCondition none() {
+        return MATCH_NONE;
+    }
+
+    static PropertyCondition and(PropertyCondition... conditions) {
+        Preconditions.checkArgument(conditions.length > 0, "Must be at least one condition!");
+
+        return new And(conditions);
+    }
+
+    static PropertyCondition or(PropertyCondition... conditions) {
+        Preconditions.checkArgument(conditions.length > 0, "Must be at least one condition!");
+
+        return new Or(conditions);
+    }
+
+    static PropertyCondition property(String key, String value) {
+        return new Property(key, value);
+    }
+
+    static PropertyCondition property(String key, String... possibleValues) {
+        Preconditions.checkArgument(possibleValues.length > 0, "Must be at least one value!");
+
+        if (possibleValues.length == 1) {
+            return property(key, possibleValues[0]);
+        }
+
+        PropertyCondition[] conditions = new PropertyCondition[possibleValues.length];
+        for (int i = 0; i < possibleValues.length; i++) {
+            conditions[i] = property(key, possibleValues[i]);
+        }
+
+        return or(conditions);
+    }
+
+    static PropertyCondition blockState(BlockState state) {
+        Map<String, String> props = state.getProperties();
+        if (props.isEmpty()) return all();
+
+        PropertyCondition[] conditions = new Property[props.size()];
+        int i = 0;
+        for (Map.Entry<String, String> prop : props.entrySet()) {
+            conditions[i++] = property(prop.getKey(), prop.getValue());
+        }
+
+        return and(conditions);
+    }
 
 }

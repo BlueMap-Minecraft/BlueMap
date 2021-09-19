@@ -31,36 +31,36 @@ import java.util.function.Supplier;
 
 public class Lazy<T> {
 
-	private Supplier<T> loader;
+    private Supplier<T> loader;
 
-	@DebugDump
-	private T value;
-	
-	public Lazy(Supplier<T> loader) {
-		Objects.requireNonNull(loader);
+    @DebugDump
+    private T value;
 
-		this.loader = loader;
-		this.value = null;
-	}
-	
-	public Lazy(T value) {
-		Objects.requireNonNull(value);
+    public Lazy(Supplier<T> loader) {
+        Objects.requireNonNull(loader);
 
-		this.loader = null;
-		this.value = value;
-	}
-	
-	public T getValue() {
-		if (!isLoaded()) {
-			this.value = loader.get();
-			this.loader = null;
-		}
-		
-		return this.value;
-	}
-	
-	public boolean isLoaded() {
-		return this.value != null;
-	}
-	
+        this.loader = loader;
+        this.value = null;
+    }
+
+    public Lazy(T value) {
+        Objects.requireNonNull(value);
+
+        this.loader = null;
+        this.value = value;
+    }
+
+    public T getValue() {
+        if (!isLoaded()) {
+            this.value = loader.get();
+            this.loader = null;
+        }
+
+        return this.value;
+    }
+
+    public boolean isLoaded() {
+        return this.value != null;
+    }
+
 }

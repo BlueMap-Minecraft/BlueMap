@@ -38,46 +38,46 @@ import net.minecraft.world.server.ServerWorld;
 
 public class ForgeCommandSource implements CommandSource {
 
-	private ForgeMod mod;
-	private Plugin plugin;
-	private net.minecraft.command.CommandSource delegate;
-	
-	public ForgeCommandSource(ForgeMod mod, Plugin plugin, net.minecraft.command.CommandSource delegate) {
-		this.mod = mod;
-		this.plugin = plugin;
-		this.delegate = delegate;
-	}
+    private ForgeMod mod;
+    private Plugin plugin;
+    private net.minecraft.command.CommandSource delegate;
 
-	@Override
-	public void sendMessage(Text text) {
-		delegate.sendFeedback(ITextComponent.Serializer.func_240643_a_(text.toJSONString()), false);
-	}
+    public ForgeCommandSource(ForgeMod mod, Plugin plugin, net.minecraft.command.CommandSource delegate) {
+        this.mod = mod;
+        this.plugin = plugin;
+        this.delegate = delegate;
+    }
 
-	@Override
-	public boolean hasPermission(String permission) {
-		return delegate.hasPermissionLevel(1);
-	}
-	
-	@Override
-	public Optional<Vector3d> getPosition() {
-		net.minecraft.util.math.vector.Vector3d pos = delegate.getPos(); 
-		if (pos != null) {
-			return Optional.of(new Vector3d(pos.x, pos.y, pos.z));
-		}
-		
-		return Optional.empty();
-	}
-	
-	@Override
-	public Optional<World> getWorld() {
-		try {
-			ServerWorld world = delegate.getWorld();
-			if (world != null) {
-				return Optional.ofNullable(plugin.getWorld(mod.getUUIDForWorld(world)));
-			}
-		} catch (IOException ignore) {}
-		
-		return Optional.empty();
-	}
-	
+    @Override
+    public void sendMessage(Text text) {
+        delegate.sendFeedback(ITextComponent.Serializer.func_240643_a_(text.toJSONString()), false);
+    }
+
+    @Override
+    public boolean hasPermission(String permission) {
+        return delegate.hasPermissionLevel(1);
+    }
+
+    @Override
+    public Optional<Vector3d> getPosition() {
+        net.minecraft.util.math.vector.Vector3d pos = delegate.getPos();
+        if (pos != null) {
+            return Optional.of(new Vector3d(pos.x, pos.y, pos.z));
+        }
+
+        return Optional.empty();
+    }
+
+    @Override
+    public Optional<World> getWorld() {
+        try {
+            ServerWorld world = delegate.getWorld();
+            if (world != null) {
+                return Optional.ofNullable(plugin.getWorld(mod.getUUIDForWorld(world)));
+            }
+        } catch (IOException ignore) {}
+
+        return Optional.empty();
+    }
+
 }

@@ -37,90 +37,90 @@ import java.util.concurrent.*;
 @DebugDump
 public class WebServer extends Thread {
 
-	private final int port;
-	private final int maxConnections;
-	private final InetAddress bindAddress;
-	private final boolean verbose;
+    private final int port;
+    private final int maxConnections;
+    private final InetAddress bindAddress;
+    private final boolean verbose;
 
-	private final HttpRequestHandler handler;
-	private final Semaphore processingSemaphore;
-	
-	private ThreadPoolExecutor connectionThreads;
-	
-	private ServerSocket server;
+    private final HttpRequestHandler handler;
+    private final Semaphore processingSemaphore;
 
-	public WebServer(InetAddress bindAddress, int port, int maxConnections, HttpRequestHandler handler) {
-		this(bindAddress, port, maxConnections, handler, false);
-	}
+    private ThreadPoolExecutor connectionThreads;
 
-	public WebServer(InetAddress bindAddress, int port, int maxConnections, HttpRequestHandler handler, boolean verbose) {
-		this.port = port;
-		this.maxConnections = maxConnections;
-		this.bindAddress = bindAddress;
-		this.verbose = verbose;
-		
-		this.handler = handler;
-		this.processingSemaphore = new Semaphore(24);
-		
-		connectionThreads = null;
-	}
-	
-	@Override
-	public synchronized void start() {
-		close();
+    private ServerSocket server;
 
-		connectionThreads = new ThreadPoolExecutor(Math.min(maxConnections, 8), maxConnections, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
-		
-		try {
-			server = new ServerSocket(port, maxConnections, bindAddress);
-			server.setSoTimeout(0);
-		} catch (IOException e){
-			Logger.global.logError("Error while starting the WebServer!", e);
-			return;
-		}
-		
-		super.start();
-	}
-	
-	@Override
-	public void run(){
-		if (server == null) return;
-		
-		Logger.global.logInfo("WebServer started.");
-		
-		while (!server.isClosed() && server.isBound()){
+    public WebServer(InetAddress bindAddress, int port, int maxConnections, HttpRequestHandler handler) {
+        this(bindAddress, port, maxConnections, handler, false);
+    }
 
-			try {
-				Socket connection = server.accept();
-				
-				try {
-					connectionThreads.execute(new HttpConnection(server, connection, handler, processingSemaphore, 10, TimeUnit.SECONDS, verbose));
-				} catch (RejectedExecutionException e){
-					connection.close();
-					Logger.global.logWarning("Dropped an incoming HttpConnection! (Too many connections?)");
-				}
-				
-			} catch (SocketException e){
-				// this mainly occurs if the socket got closed, so we ignore this error
-			} catch (IOException e){
-				Logger.global.logError("Error while creating a new HttpConnection!", e);
-			}
-			
-		}
+    public WebServer(InetAddress bindAddress, int port, int maxConnections, HttpRequestHandler handler, boolean verbose) {
+        this.port = port;
+        this.maxConnections = maxConnections;
+        this.bindAddress = bindAddress;
+        this.verbose = verbose;
 
-		Logger.global.logInfo("WebServer closed.");
-	}
-	
-	public synchronized void close(){
-		if (connectionThreads != null) connectionThreads.shutdown();
-		
-		try {
-			if (server != null && !server.isClosed()){
-				server.close();
-			}
-		} catch (IOException e) {
-			Logger.global.logError("Error while closing WebServer!", e);
-		}
-	}
-	
+        this.handler = handler;
+        this.processingSemaphore = new Semaphore(24);
+
+        connectionThreads = null;
+    }
+
+    @Override
+    public synchronized void start() {
+        close();
+
+        connectionThreads = new ThreadPoolExecutor(Math.min(maxConnections, 8), maxConnections, 10, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+
+        try {
+            server = new ServerSocket(port, maxConnections, bindAddress);
+            server.setSoTimeout(0);
+        } catch (IOException e){
+            Logger.global.logError("Error while starting the WebServer!", e);
+            return;
+        }
+
+        super.start();
+    }
+
+    @Override
+    public void run(){
+        if (server == null) return;
+
+        Logger.global.logInfo("WebServer started.");
+
+        while (!server.isClosed() && server.isBound()){
+
+            try {
+                Socket connection = server.accept();
+
+                try {
+                    connectionThreads.execute(new HttpConnection(server, connection, handler, processingSemaphore, 10, TimeUnit.SECONDS, verbose));
+                } catch (RejectedExecutionException e){
+                    connection.close();
+                    Logger.global.logWarning("Dropped an incoming HttpConnection! (Too many connections?)");
+                }
+
+            } catch (SocketException e){
+                // this mainly occurs if the socket got closed, so we ignore this error
+            } catch (IOException e){
+                Logger.global.logError("Error while creating a new HttpConnection!", e);
+            }
+
+        }
+
+        Logger.global.logInfo("WebServer closed.");
+    }
+
+    public synchronized void close(){
+        if (connectionThreads != null) connectionThreads.shutdown();
+
+        try {
+            if (server != null && !server.isClosed()){
+                server.close();
+            }
+        } catch (IOException e) {
+            Logger.global.logError("Error while closing WebServer!", e);
+        }
+    }
+
 }

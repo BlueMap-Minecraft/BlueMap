@@ -40,17 +40,17 @@ import net.minecraft.server.network.ServerPlayerEntity;
 @Mixin(PlayerManager.class)
 public abstract class MixinPlayerManager {
 
-	@Shadow
-	public abstract MinecraftServer getServer();
-	
-	@Inject(at = @At("RETURN"), method = "onPlayerConnect")
-	public void onPlayerConnect(ClientConnection connection, ServerPlayerEntity player, CallbackInfo ci) {
-		PlayerJoinCallback.EVENT.invoker().onPlayerJoin(this.getServer(), player);
-	}
-	
-	@Inject(at = @At("HEAD"), method = "remove")
-	public void remove(ServerPlayerEntity player, CallbackInfo ci) {
-		PlayerLeaveCallback.EVENT.invoker().onPlayerLeave(this.getServer(), player);
-	}
-	
+    @Shadow
+    public abstract MinecraftServer getServer();
+
+    @Inject(at = @At("RETURN"), method = "onPlayerConnect")
+    public void onPlayerConnect(ClientConnection connection, ServerPlayerEntity player, CallbackInfo ci) {
+        PlayerJoinCallback.EVENT.invoker().onPlayerJoin(this.getServer(), player);
+    }
+
+    @Inject(at = @At("HEAD"), method = "remove")
+    public void remove(ServerPlayerEntity player, CallbackInfo ci) {
+        PlayerLeaveCallback.EVENT.invoker().onPlayerLeave(this.getServer(), player);
+    }
+
 }

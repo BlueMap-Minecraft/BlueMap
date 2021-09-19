@@ -36,41 +36,41 @@ import java.util.zip.ZipFile;
 
 public class WebFilesManager {
 
-	private final File webRoot;
-	
-	public WebFilesManager(File webRoot) {
-		this.webRoot = webRoot;
-	}
-	
-	public boolean needsUpdate() {
-		return !new File(webRoot, "index.html").exists();
-	}
-	
-	public void updateFiles() throws IOException {
-		URL fileResource = getClass().getResource("/de/bluecolored/bluemap/webapp.zip");
-		File tempFile = File.createTempFile("bluemap_webroot_extraction", null);
-		
-		try {
-			FileUtils.copyURLToFile(fileResource, tempFile, 10000, 10000);
-			try (ZipFile zipFile = new ZipFile(tempFile)){
-				Enumeration<? extends ZipEntry> entries = zipFile.entries();
-				while(entries.hasMoreElements()) {
-					ZipEntry zipEntry = entries.nextElement();
-					if (zipEntry.isDirectory()) {
-						File dir = new File(webRoot, zipEntry.getName());
-						FileUtils.forceMkdir(dir);
-					} else {
-						File target = new File(webRoot, zipEntry.getName());
-						FileUtils.forceMkdirParent(target);
-						FileUtils.copyInputStreamToFile(zipFile.getInputStream(zipEntry), target);
-					}
-				}
-			}
-		} finally {
-			if (!tempFile.delete()) {
-				Logger.global.logWarning("Failed to delete file: " + tempFile);
-			}
-		}
-	}
-	
+    private final File webRoot;
+
+    public WebFilesManager(File webRoot) {
+        this.webRoot = webRoot;
+    }
+
+    public boolean needsUpdate() {
+        return !new File(webRoot, "index.html").exists();
+    }
+
+    public void updateFiles() throws IOException {
+        URL fileResource = getClass().getResource("/de/bluecolored/bluemap/webapp.zip");
+        File tempFile = File.createTempFile("bluemap_webroot_extraction", null);
+
+        try {
+            FileUtils.copyURLToFile(fileResource, tempFile, 10000, 10000);
+            try (ZipFile zipFile = new ZipFile(tempFile)){
+                Enumeration<? extends ZipEntry> entries = zipFile.entries();
+                while(entries.hasMoreElements()) {
+                    ZipEntry zipEntry = entries.nextElement();
+                    if (zipEntry.isDirectory()) {
+                        File dir = new File(webRoot, zipEntry.getName());
+                        FileUtils.forceMkdir(dir);
+                    } else {
+                        File target = new File(webRoot, zipEntry.getName());
+                        FileUtils.forceMkdirParent(target);
+                        FileUtils.copyInputStreamToFile(zipFile.getInputStream(zipEntry), target);
+                    }
+                }
+            }
+        } finally {
+            if (!tempFile.delete()) {
+                Logger.global.logWarning("Failed to delete file: " + tempFile);
+            }
+        }
+    }
+
 }

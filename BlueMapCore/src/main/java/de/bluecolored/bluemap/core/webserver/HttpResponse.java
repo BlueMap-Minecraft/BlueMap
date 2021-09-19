@@ -33,104 +33,104 @@ import java.util.Map.Entry;
 
 public class HttpResponse implements Closeable {
 
-	private String version;
-	private HttpStatusCode statusCode;
-	private Map<String, Set<String>> header;
-	private InputStream data;
-	
-	public HttpResponse(HttpStatusCode statusCode) {
-		this.version = "HTTP/1.1";
-		this.statusCode = statusCode;
-		
-		this.header = new HashMap<>();
+    private String version;
+    private HttpStatusCode statusCode;
+    private Map<String, Set<String>> header;
+    private InputStream data;
 
-		addHeader("Connection", "keep-alive");
-	}
-	
-	public void addHeader(String key, String value){
-		Set<String> valueSet = header.computeIfAbsent(key, k -> new HashSet<>());
-		valueSet.add(value);
-	}
+    public HttpResponse(HttpStatusCode statusCode) {
+        this.version = "HTTP/1.1";
+        this.statusCode = statusCode;
 
-	public void removeHeader(String key, String value){
-		Set<String> valueSet = header.computeIfAbsent(key, k -> new HashSet<>());
-		valueSet.remove(value);
-	}
-	
-	public void setData(InputStream dataStream){
-		this.data = dataStream;
-	}
-	
-	public void setData(String data){
-		setData(new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)));
-	}
-	
-	/**
-	 * Writes this Response to an Output-Stream.<br>
-	 * <br>
-	 * This method closes the data-Stream of this response so it can't be used again!
-	 */
-	public void write(OutputStream out) throws IOException {
-		OutputStreamWriter writer = new OutputStreamWriter(out, StandardCharsets.UTF_8);
+        this.header = new HashMap<>();
 
-		if (data != null){
-			addHeader("Transfer-Encoding", "chunked");
-		} else {
-			addHeader("Content-Length", "0");
-		}
-		
-		writeLine(writer, version + " " + statusCode.getCode() + " " + statusCode.getMessage());
-		for (Entry<String, Set<String>> e : header.entrySet()){
-			if (e.getValue().isEmpty()) continue;
-			writeLine(writer, e.getKey() + ": " + StringUtils.join(e.getValue(), ", "));
-		}
-		
-		writeLine(writer, "");
-		writer.flush();
+        addHeader("Connection", "keep-alive");
+    }
 
-		if(data != null){
-			chunkedPipe(data, out);
-			out.flush();
-			data.close();
-		}
-	}
+    public void addHeader(String key, String value){
+        Set<String> valueSet = header.computeIfAbsent(key, k -> new HashSet<>());
+        valueSet.add(value);
+    }
 
-	@Override
-	public void close() throws IOException {
-		data.close();
-	}
-	
-	private void writeLine(OutputStreamWriter writer, String line) throws IOException {
-		writer.write(line + "\r\n");
-	}
-	
-	private void chunkedPipe(InputStream input, OutputStream output) throws IOException {
-	    byte[] buffer = new byte[1024];
-	    int byteCount;
-	    while ((byteCount = input.read(buffer)) != -1) {
-	    	output.write((Integer.toHexString(byteCount) + "\r\n").getBytes());
-	        output.write(buffer, 0, byteCount);
-	    	output.write("\r\n".getBytes());
-	    }
-    	output.write("0\r\n\r\n".getBytes());
-	}
-	
-	public HttpStatusCode getStatusCode(){
-		return statusCode;
-	}
-	
-	public String getVersion(){
-		return version;
-	}
-	
-	public Map<String, Set<String>> getHeader() {
-		return header;
-	}
-	
-	public Set<String> getHeader(String key){
-		Set<String> headerValues = header.get(key);
-		if (headerValues == null) return Collections.emptySet();
-		return headerValues;
-	}
-	
+    public void removeHeader(String key, String value){
+        Set<String> valueSet = header.computeIfAbsent(key, k -> new HashSet<>());
+        valueSet.remove(value);
+    }
+
+    public void setData(InputStream dataStream){
+        this.data = dataStream;
+    }
+
+    public void setData(String data){
+        setData(new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)));
+    }
+
+    /**
+     * Writes this Response to an Output-Stream.<br>
+     * <br>
+     * This method closes the data-Stream of this response so it can't be used again!
+     */
+    public void write(OutputStream out) throws IOException {
+        OutputStreamWriter writer = new OutputStreamWriter(out, StandardCharsets.UTF_8);
+
+        if (data != null){
+            addHeader("Transfer-Encoding", "chunked");
+        } else {
+            addHeader("Content-Length", "0");
+        }
+
+        writeLine(writer, version + " " + statusCode.getCode() + " " + statusCode.getMessage());
+        for (Entry<String, Set<String>> e : header.entrySet()){
+            if (e.getValue().isEmpty()) continue;
+            writeLine(writer, e.getKey() + ": " + StringUtils.join(e.getValue(), ", "));
+        }
+
+        writeLine(writer, "");
+        writer.flush();
+
+        if(data != null){
+            chunkedPipe(data, out);
+            out.flush();
+            data.close();
+        }
+    }
+
+    @Override
+    public void close() throws IOException {
+        data.close();
+    }
+
+    private void writeLine(OutputStreamWriter writer, String line) throws IOException {
+        writer.write(line + "\r\n");
+    }
+
+    private void chunkedPipe(InputStream input, OutputStream output) throws IOException {
+        byte[] buffer = new byte[1024];
+        int byteCount;
+        while ((byteCount = input.read(buffer)) != -1) {
+            output.write((Integer.toHexString(byteCount) + "\r\n").getBytes());
+            output.write(buffer, 0, byteCount);
+            output.write("\r\n".getBytes());
+        }
+        output.write("0\r\n\r\n".getBytes());
+    }
+
+    public HttpStatusCode getStatusCode(){
+        return statusCode;
+    }
+
+    public String getVersion(){
+        return version;
+    }
+
+    public Map<String, Set<String>> getHeader() {
+        return header;
+    }
+
+    public Set<String> getHeader(String key){
+        Set<String> headerValues = header.get(key);
+        if (headerValues == null) return Collections.emptySet();
+        return headerValues;
+    }
+
 }

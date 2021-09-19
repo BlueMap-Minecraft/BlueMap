@@ -34,25 +34,25 @@ import org.spongepowered.api.event.network.ServerSideConnectionEvent;
 
 public class EventForwarder {
 
-	private ServerEventListener listener;
-	
-	public EventForwarder(ServerEventListener listener) {
-		this.listener = listener;
-	}
+    private ServerEventListener listener;
 
-	@Listener(order = Order.POST)
-	public void onPlayerJoin(ServerSideConnectionEvent.Join evt) {
-		listener.onPlayerJoin(evt.player().uniqueId());
-	}
-	
-	@Listener(order = Order.POST)
-	public void onPlayerLeave(ServerSideConnectionEvent.Disconnect evt) {
-		listener.onPlayerJoin(evt.player().uniqueId());
-	}
-	
-	@Listener(order = Order.POST)
-	public void onPlayerChat(PlayerChatEvent evt) {
-		listener.onChatMessage(Text.of(PlainComponentSerializer.plain().serialize(evt.message())));
-	}
-	
+    public EventForwarder(ServerEventListener listener) {
+        this.listener = listener;
+    }
+
+    @Listener(order = Order.POST)
+    public void onPlayerJoin(ServerSideConnectionEvent.Join evt) {
+        listener.onPlayerJoin(evt.player().uniqueId());
+    }
+
+    @Listener(order = Order.POST)
+    public void onPlayerLeave(ServerSideConnectionEvent.Disconnect evt) {
+        listener.onPlayerJoin(evt.player().uniqueId());
+    }
+
+    @Listener(order = Order.POST)
+    public void onPlayerChat(PlayerChatEvent evt) {
+        listener.onChatMessage(Text.of(PlainComponentSerializer.plain().serialize(evt.message())));
+    }
+
 }

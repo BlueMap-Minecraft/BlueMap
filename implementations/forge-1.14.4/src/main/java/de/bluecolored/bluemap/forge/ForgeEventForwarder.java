@@ -36,32 +36,32 @@ import java.util.UUID;
 
 public class ForgeEventForwarder  {
 
-	private final Collection<ServerEventListener> eventListeners;
-	
-	public ForgeEventForwarder() {
-		this.eventListeners = new ArrayList<>(1);
+    private final Collection<ServerEventListener> eventListeners;
 
-		MinecraftForge.EVENT_BUS.register(this);
-	}
+    public ForgeEventForwarder() {
+        this.eventListeners = new ArrayList<>(1);
 
-	public synchronized void addEventListener(ServerEventListener listener) {
-		this.eventListeners.add(listener);
-	}
-	
-	public synchronized void removeAllListeners() {
-		this.eventListeners.clear();
-	}
+        MinecraftForge.EVENT_BUS.register(this);
+    }
 
-	@SubscribeEvent
-	public synchronized void onPlayerJoin(PlayerLoggedInEvent evt) {
-		UUID uuid = evt.getPlayer().getUniqueID();
-		for (ServerEventListener listener : eventListeners) listener.onPlayerJoin(uuid);
-	}
+    public synchronized void addEventListener(ServerEventListener listener) {
+        this.eventListeners.add(listener);
+    }
 
-	@SubscribeEvent
-	public synchronized void onPlayerLeave(PlayerLoggedOutEvent evt) {
-		UUID uuid = evt.getPlayer().getUniqueID();
-		for (ServerEventListener listener : eventListeners) listener.onPlayerLeave(uuid);
-	}
+    public synchronized void removeAllListeners() {
+        this.eventListeners.clear();
+    }
+
+    @SubscribeEvent
+    public synchronized void onPlayerJoin(PlayerLoggedInEvent evt) {
+        UUID uuid = evt.getPlayer().getUniqueID();
+        for (ServerEventListener listener : eventListeners) listener.onPlayerJoin(uuid);
+    }
+
+    @SubscribeEvent
+    public synchronized void onPlayerLeave(PlayerLoggedOutEvent evt) {
+        UUID uuid = evt.getPlayer().getUniqueID();
+        for (ServerEventListener listener : eventListeners) listener.onPlayerLeave(uuid);
+    }
 
 }

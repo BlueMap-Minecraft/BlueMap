@@ -33,37 +33,37 @@ import java.util.Collection;
 
 public interface FileAccess extends Closeable, AutoCloseable {
 
-	String getName();
-	
-	InputStream readFile(String path) throws FileNotFoundException, IOException;
-	
-	Collection<String> listFiles(String path, boolean recursive);
+    String getName();
 
-	Collection<String> listFolders(String path);
-	
-	static FileAccess of(File file) throws IOException {
-		if (file.isDirectory()) return new FolderFileAccess(file);
-		if (file.isFile()) return new ZipFileAccess(file);
-		throw new IOException("Unsupported file!");
-	}
-	
-	static String getFileName(String path) {
-		String filename = path;
-		
-		int nameSplit = path.lastIndexOf('/');
-		if (nameSplit > -1) {
-			filename = path.substring(nameSplit + 1);
-		}
-		
-		return filename;
-	}
+    InputStream readFile(String path) throws FileNotFoundException, IOException;
 
-	static String normalize(String path) {
-		if (path.isEmpty()) return path;
-		if (path.charAt(path.length() - 1) == '/') path = path.substring(0, path.length() - 1);
-		if (path.isEmpty()) return path;
-		if (path.charAt(0) == '/') path = path.substring(1);
-		return path;
-	}
-	
+    Collection<String> listFiles(String path, boolean recursive);
+
+    Collection<String> listFolders(String path);
+
+    static FileAccess of(File file) throws IOException {
+        if (file.isDirectory()) return new FolderFileAccess(file);
+        if (file.isFile()) return new ZipFileAccess(file);
+        throw new IOException("Unsupported file!");
+    }
+
+    static String getFileName(String path) {
+        String filename = path;
+
+        int nameSplit = path.lastIndexOf('/');
+        if (nameSplit > -1) {
+            filename = path.substring(nameSplit + 1);
+        }
+
+        return filename;
+    }
+
+    static String normalize(String path) {
+        if (path.isEmpty()) return path;
+        if (path.charAt(path.length() - 1) == '/') path = path.substring(0, path.length() - 1);
+        if (path.isEmpty()) return path;
+        if (path.charAt(0) == '/') path = path.substring(1);
+        return path;
+    }
+
 }

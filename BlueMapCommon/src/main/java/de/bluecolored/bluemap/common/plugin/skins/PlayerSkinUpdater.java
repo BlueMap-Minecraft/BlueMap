@@ -37,49 +37,49 @@ import java.util.concurrent.ConcurrentHashMap;
 @DebugDump
 public class PlayerSkinUpdater implements ServerEventListener {
 
-	private File storageFolder;
-	private File defaultSkin;
-	
-	private final Map<UUID, PlayerSkin> skins;
-	
-	public PlayerSkinUpdater(File storageFolder, File defaultSkin) throws IOException {
-		this.storageFolder = storageFolder;
-		this.defaultSkin = defaultSkin;
-		this.skins = new ConcurrentHashMap<>();
+    private File storageFolder;
+    private File defaultSkin;
 
-		FileUtils.forceMkdir(this.storageFolder);
-	}
-	
-	public void updateSkin(UUID playerUuid) {
-		PlayerSkin skin = skins.get(playerUuid);
-		
-		if (skin == null) {
-			skin = new PlayerSkin(playerUuid);
-			skins.put(playerUuid, skin);
-		}
-		
-		skin.update(storageFolder, defaultSkin);
-	}
-	
-	@Override
-	public void onPlayerJoin(UUID playerUuid) {
-		updateSkin(playerUuid);
-	}
+    private final Map<UUID, PlayerSkin> skins;
 
-	public File getStorageFolder() {
-		return storageFolder;
-	}
+    public PlayerSkinUpdater(File storageFolder, File defaultSkin) throws IOException {
+        this.storageFolder = storageFolder;
+        this.defaultSkin = defaultSkin;
+        this.skins = new ConcurrentHashMap<>();
 
-	public void setStorageFolder(File storageFolder) {
-		this.storageFolder = storageFolder;
-	}
+        FileUtils.forceMkdir(this.storageFolder);
+    }
 
-	public File getDefaultSkin() {
-		return defaultSkin;
-	}
+    public void updateSkin(UUID playerUuid) {
+        PlayerSkin skin = skins.get(playerUuid);
 
-	public void setDefaultSkin(File defaultSkin) {
-		this.defaultSkin = defaultSkin;
-	}
+        if (skin == null) {
+            skin = new PlayerSkin(playerUuid);
+            skins.put(playerUuid, skin);
+        }
+
+        skin.update(storageFolder, defaultSkin);
+    }
+
+    @Override
+    public void onPlayerJoin(UUID playerUuid) {
+        updateSkin(playerUuid);
+    }
+
+    public File getStorageFolder() {
+        return storageFolder;
+    }
+
+    public void setStorageFolder(File storageFolder) {
+        this.storageFolder = storageFolder;
+    }
+
+    public File getDefaultSkin() {
+        return defaultSkin;
+    }
+
+    public void setDefaultSkin(File defaultSkin) {
+        this.defaultSkin = defaultSkin;
+    }
 
 }

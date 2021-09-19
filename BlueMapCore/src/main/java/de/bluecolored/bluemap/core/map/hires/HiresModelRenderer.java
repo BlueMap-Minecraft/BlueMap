@@ -35,78 +35,78 @@ import de.bluecolored.bluemap.core.world.World;
 
 public class HiresModelRenderer {
 
-	private final ResourcePack resourcePack;
-	private final RenderSettings renderSettings;
-	
-	public HiresModelRenderer(ResourcePack resourcePack, RenderSettings renderSettings) {
-		this.renderSettings = renderSettings;
-		this.resourcePack = resourcePack;
-	}
-	
-	public HiresTileMeta render(World world, Vector3i modelMin, Vector3i modelMax, HiresTileModel model) {
-		Vector3i min = modelMin.max(renderSettings.getMin());
-		Vector3i max = modelMax.min(renderSettings.getMax());
-		Vector3i modelAnchor = new Vector3i(modelMin.getX(), 0, modelMin.getZ());
+    private final ResourcePack resourcePack;
+    private final RenderSettings renderSettings;
 
-		HiresTileMeta tileMeta = new HiresTileMeta(modelMin.getX(), modelMin.getZ(), modelMax.getX(), modelMax.getZ()); //TODO: recycle tilemeta instances?
+    public HiresModelRenderer(ResourcePack resourcePack, RenderSettings renderSettings) {
+        this.renderSettings = renderSettings;
+        this.resourcePack = resourcePack;
+    }
 
-		// create new for each tile-render since the factory is not threadsafe
-		BlockStateModelFactory modelFactory = new BlockStateModelFactory(resourcePack, renderSettings);
+    public HiresTileMeta render(World world, Vector3i modelMin, Vector3i modelMax, HiresTileModel model) {
+        Vector3i min = modelMin.max(renderSettings.getMin());
+        Vector3i max = modelMax.min(renderSettings.getMax());
+        Vector3i modelAnchor = new Vector3i(modelMin.getX(), 0, modelMin.getZ());
 
-		int maxHeight, minY, maxY;
-		Color columnColor = new Color(), blockColor = new Color();
-		BlockNeighborhood<?> block = new BlockNeighborhood<>(resourcePack, renderSettings, world, 0, 0, 0);
-		BlockModelView blockModel = new BlockModelView(model);
+        HiresTileMeta tileMeta = new HiresTileMeta(modelMin.getX(), modelMin.getZ(), modelMax.getX(), modelMax.getZ()); //TODO: recycle tilemeta instances?
 
-		int x, y, z;
-		for (x = min.getX(); x <= max.getX(); x++){
-			for (z = min.getZ(); z <= max.getZ(); z++){
+        // create new for each tile-render since the factory is not threadsafe
+        BlockStateModelFactory modelFactory = new BlockStateModelFactory(resourcePack, renderSettings);
 
-				maxHeight = 0;
-				columnColor.set(0, 0, 0, 1, true);
+        int maxHeight, minY, maxY;
+        Color columnColor = new Color(), blockColor = new Color();
+        BlockNeighborhood<?> block = new BlockNeighborhood<>(resourcePack, renderSettings, world, 0, 0, 0);
+        BlockModelView blockModel = new BlockModelView(model);
 
-				if (renderSettings.isInsideRenderBoundaries(x, z)) {
-					minY = Math.max(min.getY(), world.getMinY(x, z));
-					maxY = Math.min(max.getY(), world.getMaxY(x, z));
+        int x, y, z;
+        for (x = min.getX(); x <= max.getX(); x++){
+            for (z = min.getZ(); z <= max.getZ(); z++){
 
-					for (y = minY; y <= maxY; y++) {
-						block.set(x, y, z);
-						if (!block.isInsideRenderBounds()) continue;
+                maxHeight = 0;
+                columnColor.set(0, 0, 0, 1, true);
 
-						blockColor.set(0, 0, 0, 0, true);
-						blockModel.initialize();
+                if (renderSettings.isInsideRenderBoundaries(x, z)) {
+                    minY = Math.max(min.getY(), world.getMinY(x, z));
+                    maxY = Math.min(max.getY(), world.getMaxY(x, z));
 
-						try {
-							modelFactory.render(block, blockModel, blockColor);
-						} catch (NoSuchResourceException e) {
-							try {
-								modelFactory.render(block, BlockState.MISSING, blockModel.reset(), blockColor);
-							} catch (NoSuchResourceException e2) {
-								e.addSuppressed(e2);
-							}
-							//Logger.global.noFloodDebug(block.getBlockState().getFullId() + "-hiresModelRenderer-blockmodelerr", "Failed to create BlockModel for BlockState: " + block.getBlockState() + " (" + e.toString() + ")");
-						}
+                    for (y = minY; y <= maxY; y++) {
+                        block.set(x, y, z);
+                        if (!block.isInsideRenderBounds()) continue;
 
-						// skip empty blocks
-						if (blockModel.getSize() <= 0) continue;
+                        blockColor.set(0, 0, 0, 0, true);
+                        blockModel.initialize();
 
-						// move block-model to correct position
-						blockModel.translate(x - modelAnchor.getX(), y - modelAnchor.getY(), z - modelAnchor.getZ());
+                        try {
+                            modelFactory.render(block, blockModel, blockColor);
+                        } catch (NoSuchResourceException e) {
+                            try {
+                                modelFactory.render(block, BlockState.MISSING, blockModel.reset(), blockColor);
+                            } catch (NoSuchResourceException e2) {
+                                e.addSuppressed(e2);
+                            }
+                            //Logger.global.noFloodDebug(block.getBlockState().getFullId() + "-hiresModelRenderer-blockmodelerr", "Failed to create BlockModel for BlockState: " + block.getBlockState() + " (" + e.toString() + ")");
+                        }
 
-						//update color and height (only if not 100% translucent)
-						if (blockColor.a > 0) {
-							maxHeight = y;
-							columnColor.overlay(blockColor);
-						}
-					}
-				}
+                        // skip empty blocks
+                        if (blockModel.getSize() <= 0) continue;
 
-				tileMeta.setHeight(x, z, maxHeight);
-				tileMeta.setColor(x, z, columnColor);
-				
-			}
-		}
+                        // move block-model to correct position
+                        blockModel.translate(x - modelAnchor.getX(), y - modelAnchor.getY(), z - modelAnchor.getZ());
 
-		return tileMeta;
-	}
+                        //update color and height (only if not 100% translucent)
+                        if (blockColor.a > 0) {
+                            maxHeight = y;
+                            columnColor.overlay(blockColor);
+                        }
+                    }
+                }
+
+                tileMeta.setHeight(x, z, maxHeight);
+                tileMeta.setColor(x, z, columnColor);
+
+            }
+        }
+
+        return tileMeta;
+    }
 }

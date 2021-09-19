@@ -27,18 +27,18 @@ package de.bluecolored.bluemap.common.api.marker;
 import java.io.IOException;
 
 public class MarkerFileFormatException extends IOException {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	public MarkerFileFormatException() {
-		super();
-	}
-	
-	public MarkerFileFormatException(String message) {
-		super(message);
-	}
-	
-	public MarkerFileFormatException(String message, Throwable cause) {
-		super(message, cause);
-	}
-	
+    public MarkerFileFormatException() {
+        super();
+    }
+
+    public MarkerFileFormatException(String message) {
+        super(message);
+    }
+
+    public MarkerFileFormatException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
 }

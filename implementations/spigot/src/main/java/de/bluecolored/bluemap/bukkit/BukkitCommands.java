@@ -50,85 +50,85 @@ import de.bluecolored.bluemap.common.plugin.commands.Commands;
 
 public class BukkitCommands implements Listener {
 
-	private CommandDispatcher<CommandSender> dispatcher;
-	
-	public BukkitCommands(final Plugin plugin) {
-		this.dispatcher = new CommandDispatcher<>();
-		
-		// register commands
-		new Commands<>(plugin, dispatcher, bukkitSender -> new BukkitCommandSource(plugin, bukkitSender));
-	}
-	
-	public Collection<BukkitCommand> getRootCommands(){
-		Collection<BukkitCommand> rootCommands = new ArrayList<>();
-		
-		for (CommandNode<CommandSender> node : this.dispatcher.getRoot().getChildren()) {
-			rootCommands.add(new CommandProxy(node.getName()));
-		}
-		
-		return rootCommands;
-	}
-	
-	@EventHandler
-	public void onTabComplete(TabCompleteEvent evt) {
-		try {
-			String input = evt.getBuffer();
-			if (input.length() > 0 && input.charAt(0) == '/') {
-				input = input.substring(1);
-			}
-			
-			Suggestions suggestions = dispatcher.getCompletionSuggestions(dispatcher.parse(input, evt.getSender())).get(100, TimeUnit.MILLISECONDS);
-			List<String> completions = new ArrayList<>();
-			for (Suggestion suggestion : suggestions.getList()) {
-				String text = suggestion.getText();
+    private CommandDispatcher<CommandSender> dispatcher;
 
-				if (text.indexOf(' ') == -1) {
-					completions.add(text);
-				}
-			}
-			
-			if (!completions.isEmpty()) {
-				completions.sort(String::compareToIgnoreCase);
+    public BukkitCommands(final Plugin plugin) {
+        this.dispatcher = new CommandDispatcher<>();
 
-				try {
-					evt.getCompletions().addAll(completions);
-				} catch (UnsupportedOperationException ex){
-					// fix for a bug with paper where the completion-Collection is not mutable for some reason
-					List<String> mutableCompletions = new ArrayList<>(evt.getCompletions());
-					mutableCompletions.addAll(completions);
-					evt.setCompletions(mutableCompletions);
-				}
-			}
-		} catch (InterruptedException ignore) {
-			Thread.currentThread().interrupt();
-		} catch (ExecutionException | TimeoutException ignore) {}
-	}
-	
-	private class CommandProxy extends BukkitCommand {
+        // register commands
+        new Commands<>(plugin, dispatcher, bukkitSender -> new BukkitCommandSource(plugin, bukkitSender));
+    }
 
-		protected CommandProxy(String name) {
-			super(name);
-		}
+    public Collection<BukkitCommand> getRootCommands(){
+        Collection<BukkitCommand> rootCommands = new ArrayList<>();
 
-		@Override
-		public boolean execute(CommandSender sender, String commandLabel, String[] args) {
-			String command = commandLabel;
-			if (args.length > 0) {
-				command += " " + StringUtils.join(args, ' ');
-			}
-			
-			try {
-				return dispatcher.execute(command, sender) > 0;
-			} catch (CommandSyntaxException ex) {
-				sender.sendMessage(ChatColor.RED + ex.getRawMessage().getString());
-				
-				String context = ex.getContext();
-				if (context != null) sender.sendMessage(ChatColor.GRAY + context);
-				
-				return false;
-			}
-		}
-		
-	}
-	
+        for (CommandNode<CommandSender> node : this.dispatcher.getRoot().getChildren()) {
+            rootCommands.add(new CommandProxy(node.getName()));
+        }
+
+        return rootCommands;
+    }
+
+    @EventHandler
+    public void onTabComplete(TabCompleteEvent evt) {
+        try {
+            String input = evt.getBuffer();
+            if (input.length() > 0 && input.charAt(0) == '/') {
+                input = input.substring(1);
+            }
+
+            Suggestions suggestions = dispatcher.getCompletionSuggestions(dispatcher.parse(input, evt.getSender())).get(100, TimeUnit.MILLISECONDS);
+            List<String> completions = new ArrayList<>();
+            for (Suggestion suggestion : suggestions.getList()) {
+                String text = suggestion.getText();
+
+                if (text.indexOf(' ') == -1) {
+                    completions.add(text);
+                }
+            }
+
+            if (!completions.isEmpty()) {
+                completions.sort(String::compareToIgnoreCase);
+
+                try {
+                    evt.getCompletions().addAll(completions);
+                } catch (UnsupportedOperationException ex){
+                    // fix for a bug with paper where the completion-Collection is not mutable for some reason
+                    List<String> mutableCompletions = new ArrayList<>(evt.getCompletions());
+                    mutableCompletions.addAll(completions);
+                    evt.setCompletions(mutableCompletions);
+                }
+            }
+        } catch (InterruptedException ignore) {
+            Thread.currentThread().interrupt();
+        } catch (ExecutionException | TimeoutException ignore) {}
+    }
+
+    private class CommandProxy extends BukkitCommand {
+
+        protected CommandProxy(String name) {
+            super(name);
+        }
+
+        @Override
+        public boolean execute(CommandSender sender, String commandLabel, String[] args) {
+            String command = commandLabel;
+            if (args.length > 0) {
+                command += " " + StringUtils.join(args, ' ');
+            }
+
+            try {
+                return dispatcher.execute(command, sender) > 0;
+            } catch (CommandSyntaxException ex) {
+                sender.sendMessage(ChatColor.RED + ex.getRawMessage().getString());
+
+                String context = ex.getContext();
+                if (context != null) sender.sendMessage(ChatColor.GRAY + context);
+
+                return false;
+            }
+        }
+
+    }
+
 }

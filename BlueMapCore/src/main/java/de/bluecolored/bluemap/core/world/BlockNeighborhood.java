@@ -29,63 +29,63 @@ import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 
 public class BlockNeighborhood<T extends BlockNeighborhood<T>> extends ExtendedBlock<T> {
 
-	private static final int DIAMETER = 8;
-	private static final int DIAMETER_MASK = DIAMETER - 1;
-	private static final int DIAMETER_SQUARED = DIAMETER * DIAMETER;
+    private static final int DIAMETER = 8;
+    private static final int DIAMETER_MASK = DIAMETER - 1;
+    private static final int DIAMETER_SQUARED = DIAMETER * DIAMETER;
 
-	private final ExtendedBlock<?>[] neighborhood;
+    private final ExtendedBlock<?>[] neighborhood;
 
-	private int thisIndex;
+    private int thisIndex;
 
-	public BlockNeighborhood(ExtendedBlock<?> center) {
-		super(center.getResourcePack(), center.getRenderSettings(), null, 0, 0, 0);
-		copy(center);
+    public BlockNeighborhood(ExtendedBlock<?> center) {
+        super(center.getResourcePack(), center.getRenderSettings(), null, 0, 0, 0);
+        copy(center);
 
-		neighborhood = new ExtendedBlock[DIAMETER * DIAMETER * DIAMETER];
-		init();
-	}
+        neighborhood = new ExtendedBlock[DIAMETER * DIAMETER * DIAMETER];
+        init();
+    }
 
-	public BlockNeighborhood(ResourcePack resourcePack, RenderSettings renderSettings, World world, int x, int y, int z) {
-		super(resourcePack, renderSettings, world, x, y, z);
+    public BlockNeighborhood(ResourcePack resourcePack, RenderSettings renderSettings, World world, int x, int y, int z) {
+        super(resourcePack, renderSettings, world, x, y, z);
 
-		neighborhood = new ExtendedBlock[DIAMETER * DIAMETER * DIAMETER];
-		init();
-	}
+        neighborhood = new ExtendedBlock[DIAMETER * DIAMETER * DIAMETER];
+        init();
+    }
 
-	@Override
-	protected void reset() {
-		super.reset();
+    @Override
+    protected void reset() {
+        super.reset();
 
-		this.thisIndex = -1;
-	}
+        this.thisIndex = -1;
+    }
 
-	private void init() {
-		this.thisIndex = -1;
-		for (int i = 0; i < neighborhood.length; i++) {
-			neighborhood[i] = new ExtendedBlock<>(this.getResourcePack(), this.getRenderSettings(), null, 0, 0, 0);
-		}
-	}
+    private void init() {
+        this.thisIndex = -1;
+        for (int i = 0; i < neighborhood.length; i++) {
+            neighborhood[i] = new ExtendedBlock<>(this.getResourcePack(), this.getRenderSettings(), null, 0, 0, 0);
+        }
+    }
 
-	public ExtendedBlock<?> getNeighborBlock(int dx, int dy, int dz) {
-		int i = neighborIndex(dx, dy, dz);
-		if (i == thisIndex()) return this;
-		return neighborhood[i].set(
-				getWorld(),
-				getX() + dx,
-				getY() + dy,
-				getZ() + dz
-		);
-	}
+    public ExtendedBlock<?> getNeighborBlock(int dx, int dy, int dz) {
+        int i = neighborIndex(dx, dy, dz);
+        if (i == thisIndex()) return this;
+        return neighborhood[i].set(
+                getWorld(),
+                getX() + dx,
+                getY() + dy,
+                getZ() + dz
+        );
+    }
 
-	private int thisIndex() {
-		if (thisIndex == -1) thisIndex = neighborIndex(0, 0, 0);
-		return thisIndex;
-	}
+    private int thisIndex() {
+        if (thisIndex == -1) thisIndex = neighborIndex(0, 0, 0);
+        return thisIndex;
+    }
 
-	private int neighborIndex(int dx, int dy, int dz) {
-		return ((getX() + dx) & DIAMETER_MASK) * DIAMETER_SQUARED +
-			   ((getY() + dy) & DIAMETER_MASK) * DIAMETER +
-			   ((getZ() + dz) & DIAMETER_MASK);
-	}
+    private int neighborIndex(int dx, int dy, int dz) {
+        return ((getX() + dx) & DIAMETER_MASK) * DIAMETER_SQUARED +
+               ((getY() + dy) & DIAMETER_MASK) * DIAMETER +
+               ((getZ() + dz) & DIAMETER_MASK);
+    }
 
 }

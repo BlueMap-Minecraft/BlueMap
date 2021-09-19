@@ -33,25 +33,25 @@ import de.bluecolored.bluemap.core.world.World;
 
 public class WorldOrMapSuggestionProvider<S> extends AbstractSuggestionProvider<S> {
 
-	private Plugin plugin;
-	
-	public WorldOrMapSuggestionProvider(Plugin plugin) {
-		this.plugin = plugin;
-	}
-	
-	@Override
-	public Collection<String> getPossibleValues() {
-		Collection<String> values = new HashSet<>();
-		
-		for (World world : plugin.getWorlds()) {
-			values.add(world.getName());
-		}
-		
-		for (BmMap map : plugin.getMapTypes()) {
-			values.add(map.getId());
-		}
-		
-		return values;
-	}
-	
+    private Plugin plugin;
+
+    public WorldOrMapSuggestionProvider(Plugin plugin) {
+        this.plugin = plugin;
+    }
+
+    @Override
+    public Collection<String> getPossibleValues() {
+        Collection<String> values = new HashSet<>();
+
+        for (World world : plugin.getWorlds()) {
+            values.add(world.getName());
+        }
+
+        for (BmMap map : plugin.getMapTypes()) {
+            values.add(map.getId());
+        }
+
+        return values;
+    }
+
 }

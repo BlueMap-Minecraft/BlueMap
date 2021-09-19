@@ -31,70 +31,70 @@ import java.util.Objects;
 
 
 public enum Direction {
-	
-	UP    ( 0, 1, 0, Axis.Y),
-	DOWN  ( 0,-1, 0, Axis.Y),
-	NORTH ( 0, 0,-1, Axis.Z),
-	SOUTH ( 0, 0, 1, Axis.Z),
-	WEST  (-1, 0, 0, Axis.X),
-	EAST  ( 1, 0, 0, Axis.X);
-	
-	static {
-		UP.opposite = DOWN;
-		DOWN.opposite = UP;
-		NORTH.opposite = SOUTH;
-		SOUTH.opposite = NORTH;
-		WEST.opposite = EAST;
-		EAST.opposite = WEST;
 
-		UP.left = UP;
-		DOWN.left = DOWN;
-		NORTH.left = WEST;
-		SOUTH.left = EAST;
-		WEST.left = SOUTH;
-		EAST.left = NORTH;
+    UP    ( 0, 1, 0, Axis.Y),
+    DOWN  ( 0,-1, 0, Axis.Y),
+    NORTH ( 0, 0,-1, Axis.Z),
+    SOUTH ( 0, 0, 1, Axis.Z),
+    WEST  (-1, 0, 0, Axis.X),
+    EAST  ( 1, 0, 0, Axis.X);
 
-		UP.right = UP;
-		DOWN.right = DOWN;
-		NORTH.right = EAST;
-		SOUTH.right = WEST;
-		WEST.right = NORTH;
-		EAST.right = SOUTH;
-	}
-	
-	private final Vector3i dir;
-	private final Axis axis;
-	private Direction opposite, left, right;
-	
-	Direction(int x, int y, int z, Axis axis) {
-		this.dir = new Vector3i(x, y, z);
-		this.axis = axis;
-		this.opposite = null;
-	}
-	
-	public Vector3i toVector(){
-		return dir;
-	}
-	
-	public Direction opposite() {
-		return opposite;
-	}
-	
-	public Direction left() {
-		return left;
-	}
-	
-	public Direction right() {
-		return right;
-	}
-	
-	public Axis getAxis() {
-		return axis;
-	}
-	
-	public static Direction fromString(String name){
-		Objects.requireNonNull(name);
-		
-		return valueOf(name.toUpperCase());
-	}
+    static {
+        UP.opposite = DOWN;
+        DOWN.opposite = UP;
+        NORTH.opposite = SOUTH;
+        SOUTH.opposite = NORTH;
+        WEST.opposite = EAST;
+        EAST.opposite = WEST;
+
+        UP.left = UP;
+        DOWN.left = DOWN;
+        NORTH.left = WEST;
+        SOUTH.left = EAST;
+        WEST.left = SOUTH;
+        EAST.left = NORTH;
+
+        UP.right = UP;
+        DOWN.right = DOWN;
+        NORTH.right = EAST;
+        SOUTH.right = WEST;
+        WEST.right = NORTH;
+        EAST.right = SOUTH;
+    }
+
+    private final Vector3i dir;
+    private final Axis axis;
+    private Direction opposite, left, right;
+
+    Direction(int x, int y, int z, Axis axis) {
+        this.dir = new Vector3i(x, y, z);
+        this.axis = axis;
+        this.opposite = null;
+    }
+
+    public Vector3i toVector(){
+        return dir;
+    }
+
+    public Direction opposite() {
+        return opposite;
+    }
+
+    public Direction left() {
+        return left;
+    }
+
+    public Direction right() {
+        return right;
+    }
+
+    public Axis getAxis() {
+        return axis;
+    }
+
+    public static Direction fromString(String name){
+        Objects.requireNonNull(name);
+
+        return valueOf(name.toUpperCase());
+    }
 }

@@ -29,11 +29,11 @@ import de.bluecolored.bluemap.common.plugin.text.Text;
 import java.util.UUID;
 
 public interface ServerEventListener {
-	
-	default void onPlayerJoin(UUID playerUuid) {};
-	
-	default void onPlayerLeave(UUID playerUuid) {};
-	
-	default void onChatMessage(Text message) {};
-	
+
+    default void onPlayerJoin(UUID playerUuid) {};
+
+    default void onPlayerLeave(UUID playerUuid) {};
+
+    default void onChatMessage(Text message) {};
+
 }

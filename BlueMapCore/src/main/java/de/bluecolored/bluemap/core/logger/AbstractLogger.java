@@ -33,56 +33,56 @@ import de.bluecolored.bluemap.core.BlueMap;
 
 public abstract class AbstractLogger extends Logger {
 
-	private static final Object DUMMY = new Object();
-	
-	private Cache<String, Object> noFloodCache;
-	
-	public AbstractLogger() {
-		noFloodCache = Caffeine.newBuilder()
-			.executor(BlueMap.THREAD_POOL)
-			.expireAfterWrite(1, TimeUnit.HOURS)
-			.maximumSize(10000)
-			.build();
-	}
-	
-	@Override
-	public void noFloodError(String key, String message, Throwable throwable){
-		if (check(key)) logError(message, throwable);
-	}
+    private static final Object DUMMY = new Object();
 
-	@Override
-	public void noFloodWarning(String key, String message){
-		if (check(key)) logWarning(message);
-	}
+    private Cache<String, Object> noFloodCache;
 
-	@Override
-	public void noFloodInfo(String key, String message){
-		if (check(key)) logInfo(message);
-	}
+    public AbstractLogger() {
+        noFloodCache = Caffeine.newBuilder()
+            .executor(BlueMap.THREAD_POOL)
+            .expireAfterWrite(1, TimeUnit.HOURS)
+            .maximumSize(10000)
+            .build();
+    }
 
-	@Override
-	public void noFloodDebug(String key, String message){
-		if (check(key)) logDebug(message);
-	}
-	
-	@Override
-	public void clearNoFloodLog() {
-		noFloodCache.invalidateAll();
-		noFloodCache.cleanUp();
-	}
-	
-	@Override
-	public void removeNoFloodKey(String key) {
-		noFloodCache.invalidate(key);
-	}
-	
-	private boolean check(String key) {
-		if (noFloodCache.getIfPresent(key) == null) {
-			noFloodCache.put(key, DUMMY);
-			return true;
-		}
-		
-		return false;
-	}
-	
+    @Override
+    public void noFloodError(String key, String message, Throwable throwable){
+        if (check(key)) logError(message, throwable);
+    }
+
+    @Override
+    public void noFloodWarning(String key, String message){
+        if (check(key)) logWarning(message);
+    }
+
+    @Override
+    public void noFloodInfo(String key, String message){
+        if (check(key)) logInfo(message);
+    }
+
+    @Override
+    public void noFloodDebug(String key, String message){
+        if (check(key)) logDebug(message);
+    }
+
+    @Override
+    public void clearNoFloodLog() {
+        noFloodCache.invalidateAll();
+        noFloodCache.cleanUp();
+    }
+
+    @Override
+    public void removeNoFloodKey(String key) {
+        noFloodCache.invalidate(key);
+    }
+
+    private boolean check(String key) {
+        if (noFloodCache.getIfPresent(key) == null) {
+            noFloodCache.put(key, DUMMY);
+            return true;
+        }
+
+        return false;
+    }
+
 }

@@ -38,34 +38,34 @@ import java.util.Collection;
 
 public class EventForwarder implements Listener {
 
-	private final Collection<ServerEventListener> listeners;
-	
-	public EventForwarder() {
-		listeners = new ArrayList<>();
-	}
-	
-	public synchronized void addListener(ServerEventListener listener) {
-		listeners.add(listener);
-	}
-	
-	public synchronized void removeAllListeners() {
-		listeners.clear();
-	}
-	
-	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-	public synchronized void onPlayerJoin(PlayerJoinEvent evt) {
-		for (ServerEventListener listener : listeners) listener.onPlayerJoin(evt.getPlayer().getUniqueId());
-	}
-	
-	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-	public synchronized void onPlayerLeave(PlayerQuitEvent evt) {
-		for (ServerEventListener listener : listeners) listener.onPlayerJoin(evt.getPlayer().getUniqueId());
-	}
-	
-	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-	public synchronized void onPlayerChat(AsyncPlayerChatEvent evt) {
-		String message = String.format(evt.getFormat(), evt.getPlayer().getDisplayName(), evt.getMessage());
-		for (ServerEventListener listener : listeners) listener.onChatMessage(Text.of(message));
-	}
+    private final Collection<ServerEventListener> listeners;
+
+    public EventForwarder() {
+        listeners = new ArrayList<>();
+    }
+
+    public synchronized void addListener(ServerEventListener listener) {
+        listeners.add(listener);
+    }
+
+    public synchronized void removeAllListeners() {
+        listeners.clear();
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public synchronized void onPlayerJoin(PlayerJoinEvent evt) {
+        for (ServerEventListener listener : listeners) listener.onPlayerJoin(evt.getPlayer().getUniqueId());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public synchronized void onPlayerLeave(PlayerQuitEvent evt) {
+        for (ServerEventListener listener : listeners) listener.onPlayerJoin(evt.getPlayer().getUniqueId());
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public synchronized void onPlayerChat(AsyncPlayerChatEvent evt) {
+        String message = String.format(evt.getFormat(), evt.getPlayer().getDisplayName(), evt.getMessage());
+        for (ServerEventListener listener : listeners) listener.onChatMessage(Text.of(message));
+    }
 
 }

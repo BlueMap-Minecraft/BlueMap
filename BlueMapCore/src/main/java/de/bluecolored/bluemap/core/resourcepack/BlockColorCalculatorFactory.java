@@ -40,185 +40,185 @@ import java.util.Map.Entry;
 @DebugDump
 public class BlockColorCalculatorFactory {
 
-	private final int[] foliageMap = new int[65536];
-	private final int[] grassMap = new int[65536];
+    private final int[] foliageMap = new int[65536];
+    private final int[] grassMap = new int[65536];
 
-	private final Map<String, ColorFunction> blockColorMap;
-	
-	public BlockColorCalculatorFactory() {
-		this.blockColorMap = new HashMap<>();
-	}
-	
-	public void load(ConfigurationNode colorConfig) {
-		for (Entry<Object, ? extends ConfigurationNode> entry : colorConfig.childrenMap().entrySet()){
-			String key = entry.getKey().toString();
-			String value = entry.getValue().getString("");
+    private final Map<String, ColorFunction> blockColorMap;
 
-			ColorFunction colorFunction;
-			switch (value) {
-			case "@foliage":
-				colorFunction = BlockColorCalculator::getFoliageAverageColor;
-				break;
-			case "@grass":
-				colorFunction = BlockColorCalculator::getGrassAverageColor;
-				break;
-			case "@water":
-				colorFunction = BlockColorCalculator::getWaterAverageColor;
-				break;
-			case "@redstone":
-				colorFunction = BlockColorCalculator::getRedstoneColor;
-				break;
-			default:
-				final Color color = new Color();
-				color.set(ConfigUtils.readColorInt(entry.getValue())).premultiplied();
-				colorFunction = (calculator, block, target) -> target.set(color);
-				break;
-			}
-			
-			blockColorMap.put(key, colorFunction);
-		}
-	}
+    public BlockColorCalculatorFactory() {
+        this.blockColorMap = new HashMap<>();
+    }
 
-	public void setFoliageMap(BufferedImage foliageMap) {
-		foliageMap.getRGB(0, 0, 256, 256, this.foliageMap, 0, 256);
-	}
+    public void load(ConfigurationNode colorConfig) {
+        for (Entry<Object, ? extends ConfigurationNode> entry : colorConfig.childrenMap().entrySet()){
+            String key = entry.getKey().toString();
+            String value = entry.getValue().getString("");
 
-	public void setGrassMap(BufferedImage grassMap) {
-		grassMap.getRGB(0, 0, 256, 256, this.grassMap, 0, 256);
-	}
+            ColorFunction colorFunction;
+            switch (value) {
+            case "@foliage":
+                colorFunction = BlockColorCalculator::getFoliageAverageColor;
+                break;
+            case "@grass":
+                colorFunction = BlockColorCalculator::getGrassAverageColor;
+                break;
+            case "@water":
+                colorFunction = BlockColorCalculator::getWaterAverageColor;
+                break;
+            case "@redstone":
+                colorFunction = BlockColorCalculator::getRedstoneColor;
+                break;
+            default:
+                final Color color = new Color();
+                color.set(ConfigUtils.readColorInt(entry.getValue())).premultiplied();
+                colorFunction = (calculator, block, target) -> target.set(color);
+                break;
+            }
 
-	public BlockColorCalculator createCalculator() {
-		return new BlockColorCalculator();
-	}
+            blockColorMap.put(key, colorFunction);
+        }
+    }
 
-	@FunctionalInterface
-	private interface ColorFunction {
-		Color invoke(BlockColorCalculator calculator, BlockNeighborhood block, Color target);
-	}
+    public void setFoliageMap(BufferedImage foliageMap) {
+        foliageMap.getRGB(0, 0, 256, 256, this.foliageMap, 0, 256);
+    }
 
-	public class BlockColorCalculator {
+    public void setGrassMap(BufferedImage grassMap) {
+        grassMap.getRGB(0, 0, 256, 256, this.grassMap, 0, 256);
+    }
 
-		private final Color tempColor = new Color();
+    public BlockColorCalculator createCalculator() {
+        return new BlockColorCalculator();
+    }
 
-		public Color getBlockColor(BlockNeighborhood block, Color target) {
-			String blockId = block.getBlockState().getFullId();
+    @FunctionalInterface
+    private interface ColorFunction {
+        Color invoke(BlockColorCalculator calculator, BlockNeighborhood block, Color target);
+    }
 
-			ColorFunction colorFunction = blockColorMap.get(blockId);
-			if (colorFunction == null) colorFunction = blockColorMap.get("default");
-			if (colorFunction == null) colorFunction = BlockColorCalculator::getFoliageAverageColor;
+    public class BlockColorCalculator {
 
-			return colorFunction.invoke(this, block, target);
-		}
+        private final Color tempColor = new Color();
 
-		public Color getRedstoneColor(BlockNeighborhood block, Color target) {
-			String powerString = block.getBlockState().getProperties().get("power");
+        public Color getBlockColor(BlockNeighborhood block, Color target) {
+            String blockId = block.getBlockState().getFullId();
 
-			int power = 15;
-			if (powerString != null) {
-				power = Integer.parseInt(powerString);
-			}
+            ColorFunction colorFunction = blockColorMap.get(blockId);
+            if (colorFunction == null) colorFunction = blockColorMap.get("default");
+            if (colorFunction == null) colorFunction = BlockColorCalculator::getFoliageAverageColor;
 
-			return target.set(
-					(power + 5f) / 20f, 0f, 0f,
-					1f, true
-			);
-		}
+            return colorFunction.invoke(this, block, target);
+        }
 
-		public Color getWaterAverageColor(BlockNeighborhood block, Color target) {
-			target.set(0, 0, 0, 0, true);
+        public Color getRedstoneColor(BlockNeighborhood block, Color target) {
+            String powerString = block.getBlockState().getProperties().get("power");
 
-			int x, y, z,
-					minX = - 2,
-					maxX = + 2,
-					minY = - 1,
-					maxY = + 1,
-					minZ = - 2,
-					maxZ = + 2;
+            int power = 15;
+            if (powerString != null) {
+                power = Integer.parseInt(powerString);
+            }
 
-			Biome biome;
-			for (x = minX; x <= maxX; x++) {
-				for (y = minY; y <= maxY; y++) {
-					for (z = minZ; z <= maxZ; z++) {
-						biome = block.getNeighborBlock(x, y, z).getBiome();
-						target.add(biome.getWaterColor());
-					}
-				}
-			}
+            return target.set(
+                    (power + 5f) / 20f, 0f, 0f,
+                    1f, true
+            );
+        }
 
-			return target.flatten();
-		}
+        public Color getWaterAverageColor(BlockNeighborhood block, Color target) {
+            target.set(0, 0, 0, 0, true);
 
-		public Color getFoliageAverageColor(BlockNeighborhood block, Color target) {
-			target.set(0, 0, 0, 0, true);
+            int x, y, z,
+                    minX = - 2,
+                    maxX = + 2,
+                    minY = - 1,
+                    maxY = + 1,
+                    minZ = - 2,
+                    maxZ = + 2;
 
-			int x, y, z,
-					minX = - 2,
-					maxX = + 2,
-					minY = - 1,
-					maxY = + 1,
-					minZ = - 2,
-					maxZ = + 2;
+            Biome biome;
+            for (x = minX; x <= maxX; x++) {
+                for (y = minY; y <= maxY; y++) {
+                    for (z = minZ; z <= maxZ; z++) {
+                        biome = block.getNeighborBlock(x, y, z).getBiome();
+                        target.add(biome.getWaterColor());
+                    }
+                }
+            }
 
-			Biome biome;
-			for (y = minY; y <= maxY; y++) {
-				for (x = minX; x <= maxX; x++) {
-					for (z = minZ; z <= maxZ; z++) {
-						biome = block.getNeighborBlock(x, y, z).getBiome();
-						target.add(getFoliageColor(biome, tempColor));
-					}
-				}
-			}
+            return target.flatten();
+        }
 
-			return target.flatten();
-		}
+        public Color getFoliageAverageColor(BlockNeighborhood block, Color target) {
+            target.set(0, 0, 0, 0, true);
 
-		public Color getFoliageColor(Biome biome, Color target) {
-			getColorFromMap(biome, foliageMap, 4764952, target);
-			return target.overlay(biome.getOverlayFoliageColor());
-		}
+            int x, y, z,
+                    minX = - 2,
+                    maxX = + 2,
+                    minY = - 1,
+                    maxY = + 1,
+                    minZ = - 2,
+                    maxZ = + 2;
 
-		public Color getGrassAverageColor(BlockNeighborhood block, Color target) {
-			target.set(0, 0, 0, 0, true);
+            Biome biome;
+            for (y = minY; y <= maxY; y++) {
+                for (x = minX; x <= maxX; x++) {
+                    for (z = minZ; z <= maxZ; z++) {
+                        biome = block.getNeighborBlock(x, y, z).getBiome();
+                        target.add(getFoliageColor(biome, tempColor));
+                    }
+                }
+            }
 
-			int x, y, z,
-					minX = - 2,
-					maxX = + 2,
-					minY = - 1,
-					maxY = + 1,
-					minZ = - 2,
-					maxZ = + 2;
+            return target.flatten();
+        }
 
-			Biome biome;
-			for (y = minY; y <= maxY; y++) {
-				for (x = minX; x <= maxX; x++) {
-					for (z = minZ; z <= maxZ; z++) {
-						biome = block.getNeighborBlock(x, y, z).getBiome();
-						target.add(getGrassColor(biome, tempColor));
-					}
-				}
-			}
+        public Color getFoliageColor(Biome biome, Color target) {
+            getColorFromMap(biome, foliageMap, 4764952, target);
+            return target.overlay(biome.getOverlayFoliageColor());
+        }
 
-			return target.flatten();
-		}
+        public Color getGrassAverageColor(BlockNeighborhood block, Color target) {
+            target.set(0, 0, 0, 0, true);
 
-		public Color getGrassColor(Biome biome, Color target) {
-			getColorFromMap(biome, grassMap, 0xff52952f, target);
-			return target.overlay(biome.getOverlayGrassColor());
-		}
+            int x, y, z,
+                    minX = - 2,
+                    maxX = + 2,
+                    minY = - 1,
+                    maxY = + 1,
+                    minZ = - 2,
+                    maxZ = + 2;
 
-		private void getColorFromMap(Biome biome, int[] colorMap, int defaultColor, Color target) {
-			double temperature = GenericMath.clamp(biome.getTemp(), 0, 1);
-			double humidity = GenericMath.clamp(biome.getHumidity(), 0, 1) * temperature;
+            Biome biome;
+            for (y = minY; y <= maxY; y++) {
+                for (x = minX; x <= maxX; x++) {
+                    for (z = minZ; z <= maxZ; z++) {
+                        biome = block.getNeighborBlock(x, y, z).getBiome();
+                        target.add(getGrassColor(biome, tempColor));
+                    }
+                }
+            }
 
-			int x = (int) ((1.0 - temperature) * 255.0);
-			int y = (int) ((1.0 - humidity) * 255.0);
+            return target.flatten();
+        }
 
-			int index = y << 8 | x;
-			int color = index >= colorMap.length ? defaultColor : colorMap[index];
+        public Color getGrassColor(Biome biome, Color target) {
+            getColorFromMap(biome, grassMap, 0xff52952f, target);
+            return target.overlay(biome.getOverlayGrassColor());
+        }
 
-			target.set(color);
-		}
+        private void getColorFromMap(Biome biome, int[] colorMap, int defaultColor, Color target) {
+            double temperature = GenericMath.clamp(biome.getTemp(), 0, 1);
+            double humidity = GenericMath.clamp(biome.getHumidity(), 0, 1) * temperature;
 
-	}
-	
+            int x = (int) ((1.0 - temperature) * 255.0);
+            int y = (int) ((1.0 - humidity) * 255.0);
+
+            int index = y << 8 | x;
+            int color = index >= colorMap.length ? defaultColor : colorMap[index];
+
+            target.set(color);
+        }
+
+    }
+
 }

@@ -38,144 +38,144 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class CombinedFileAccess implements FileAccess {
 
-	private final ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
-	
-	public List<FileAccess> sources;
-	private Map<String, FileAccess> sourceMap;
-	
-	private Set<String> allFiles;
-	
-	public CombinedFileAccess() {
-		sources = new ArrayList<>();
-		sourceMap = new HashMap<>();
-		allFiles = new HashSet<>();
-	}
-	
-	public void addFileAccess(FileAccess source) {
-		rwLock.writeLock().lock();
-		
-		try {
-			sources.add(source);
-			
-			Collection<String> sourceFiles = source.listFiles("", true);
-			for (String path : sourceFiles) {
-				sourceMap.put(FileAccess.normalize(path), source);
-			}
+    private final ReentrantReadWriteLock rwLock = new ReentrantReadWriteLock();
 
-			allFiles.addAll(sourceFiles);
-		} finally {
-			rwLock.writeLock().unlock();
-		}
-	}
+    public List<FileAccess> sources;
+    private Map<String, FileAccess> sourceMap;
 
-	@Override
-	public String getName() {
-		return "CombinedFileAccess(" + sources.size() + ")";
-	}
-	
-	@Override
-	public InputStream readFile(String path) throws FileNotFoundException, IOException {
-		rwLock.readLock().lock();
-		try {
-			FileAccess source = sourceMap.get(FileAccess.normalize(path));
-			if (source != null) return source.readFile(path);
-		} finally {
-			rwLock.readLock().unlock();
-		}
-		
-		throw new FileNotFoundException("File " + path + " does not exist in any of the sources!");
-	}
+    private Set<String> allFiles;
 
-	@Override
-	public Collection<String> listFiles(String path, boolean recursive) {
-		path = normalizeFolderPath(path);
-		Collection<String> files = new ArrayList<String>();
-		
-		rwLock.readLock().lock();
-		try {
-			for (String file : allFiles) {
-				int nameSplit = file.lastIndexOf('/');
-				String filePath = "";
-				if (nameSplit != -1) {
-					filePath = file.substring(0, nameSplit);
-				}
-				filePath = normalizeFolderPath(filePath);
-				
-				if (recursive) {
-					if (!filePath.startsWith(path) && !path.equals(filePath)) continue;
-				} else {
-					if (!path.equals(filePath)) continue;
-				}
-				
-				files.add(file);
-			}
-		} finally {
-			rwLock.readLock().unlock();
-		}
-		
-		return files;
-	}
+    public CombinedFileAccess() {
+        sources = new ArrayList<>();
+        sourceMap = new HashMap<>();
+        allFiles = new HashSet<>();
+    }
 
-	private String normalizeFolderPath(String path) {
-		if (path.isEmpty()) return path;
-		if (path.charAt(path.length() - 1) != '/') path = path + "/";
-		if (path.charAt(0) == '/') path = path.substring(1);
-		return path;
-	}
-	
-	/*
-	@Override
-	public Collection<String> listFiles(String path, boolean recursive) {
-		Set<String> files = new HashSet<>();
+    public void addFileAccess(FileAccess source) {
+        rwLock.writeLock().lock();
 
-		rwLock.readLock().lock();
-		try {
-			for (int i = 0; i < sources.size(); i++) {
-				files.addAll(sources.get(i).listFiles(path, recursive));
-			}
-		} finally {
-			rwLock.readLock().unlock();
-		}
-		
-		return files;
-	}
-	*/
+        try {
+            sources.add(source);
 
-	@Override
-	public Collection<String> listFolders(String path) {
-		Set<String> folders = new HashSet<>();
-		
-		rwLock.readLock().lock();
-		try {
-			for (int i = 0; i < sources.size(); i++) {
-				folders.addAll(sources.get(i).listFolders(path));
-			}
-		} finally {
-			rwLock.readLock().unlock();
-		}
-		
-		return folders;
-	}
-	
-	@Override
-	public void close() throws IOException {
-		IOException exception = null;
+            Collection<String> sourceFiles = source.listFiles("", true);
+            for (String path : sourceFiles) {
+                sourceMap.put(FileAccess.normalize(path), source);
+            }
 
-		rwLock.writeLock().lock();
-		try {
-			for (FileAccess source : sources) {
-				try {
-					source.close();
-				} catch (IOException ex) {
-					if (exception == null) exception = ex;
-					else exception.addSuppressed(ex);
-				}
-			}
-		} finally {
-			rwLock.writeLock().unlock();
-		}
-		
-		if (exception != null) throw exception;
-	}
+            allFiles.addAll(sourceFiles);
+        } finally {
+            rwLock.writeLock().unlock();
+        }
+    }
+
+    @Override
+    public String getName() {
+        return "CombinedFileAccess(" + sources.size() + ")";
+    }
+
+    @Override
+    public InputStream readFile(String path) throws FileNotFoundException, IOException {
+        rwLock.readLock().lock();
+        try {
+            FileAccess source = sourceMap.get(FileAccess.normalize(path));
+            if (source != null) return source.readFile(path);
+        } finally {
+            rwLock.readLock().unlock();
+        }
+
+        throw new FileNotFoundException("File " + path + " does not exist in any of the sources!");
+    }
+
+    @Override
+    public Collection<String> listFiles(String path, boolean recursive) {
+        path = normalizeFolderPath(path);
+        Collection<String> files = new ArrayList<String>();
+
+        rwLock.readLock().lock();
+        try {
+            for (String file : allFiles) {
+                int nameSplit = file.lastIndexOf('/');
+                String filePath = "";
+                if (nameSplit != -1) {
+                    filePath = file.substring(0, nameSplit);
+                }
+                filePath = normalizeFolderPath(filePath);
+
+                if (recursive) {
+                    if (!filePath.startsWith(path) && !path.equals(filePath)) continue;
+                } else {
+                    if (!path.equals(filePath)) continue;
+                }
+
+                files.add(file);
+            }
+        } finally {
+            rwLock.readLock().unlock();
+        }
+
+        return files;
+    }
+
+    private String normalizeFolderPath(String path) {
+        if (path.isEmpty()) return path;
+        if (path.charAt(path.length() - 1) != '/') path = path + "/";
+        if (path.charAt(0) == '/') path = path.substring(1);
+        return path;
+    }
+
+    /*
+    @Override
+    public Collection<String> listFiles(String path, boolean recursive) {
+        Set<String> files = new HashSet<>();
+
+        rwLock.readLock().lock();
+        try {
+            for (int i = 0; i < sources.size(); i++) {
+                files.addAll(sources.get(i).listFiles(path, recursive));
+            }
+        } finally {
+            rwLock.readLock().unlock();
+        }
+
+        return files;
+    }
+    */
+
+    @Override
+    public Collection<String> listFolders(String path) {
+        Set<String> folders = new HashSet<>();
+
+        rwLock.readLock().lock();
+        try {
+            for (int i = 0; i < sources.size(); i++) {
+                folders.addAll(sources.get(i).listFolders(path));
+            }
+        } finally {
+            rwLock.readLock().unlock();
+        }
+
+        return folders;
+    }
+
+    @Override
+    public void close() throws IOException {
+        IOException exception = null;
+
+        rwLock.writeLock().lock();
+        try {
+            for (FileAccess source : sources) {
+                try {
+                    source.close();
+                } catch (IOException ex) {
+                    if (exception == null) exception = ex;
+                    else exception.addSuppressed(ex);
+                }
+            }
+        } finally {
+            rwLock.writeLock().unlock();
+        }
+
+        if (exception != null) throw exception;
+    }
 
 }

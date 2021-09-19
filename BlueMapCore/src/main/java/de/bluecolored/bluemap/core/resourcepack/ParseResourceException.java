@@ -25,18 +25,18 @@
 package de.bluecolored.bluemap.core.resourcepack;
 
 public class ParseResourceException extends Exception {
-	private static final long serialVersionUID = -2857915193389089307L;
+    private static final long serialVersionUID = -2857915193389089307L;
 
-	public ParseResourceException() {
-		super();
-	}
-	
-	public ParseResourceException(String message) {
-		super(message);
-	}
-	
-	public ParseResourceException(String message, Throwable cause) {
-		super(message, cause);
-	}
-	
+    public ParseResourceException() {
+        super();
+    }
+
+    public ParseResourceException(String message) {
+        super(message);
+    }
+
+    public ParseResourceException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
 }

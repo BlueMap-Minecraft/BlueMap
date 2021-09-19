@@ -26,12 +26,12 @@ package de.bluecolored.bluemap.core.util;
 
 public class Preconditions {
 
-	public static void checkArgument(boolean argument) throws IllegalArgumentException {
-		if (!argument) throw new IllegalArgumentException();
-	}
+    public static void checkArgument(boolean argument) throws IllegalArgumentException {
+        if (!argument) throw new IllegalArgumentException();
+    }
 
-	public static void checkArgument(boolean argument, String message) throws IllegalArgumentException {
-		if (!argument) throw new IllegalArgumentException(message);
-	}
+    public static void checkArgument(boolean argument, String message) throws IllegalArgumentException {
+        if (!argument) throw new IllegalArgumentException(message);
+    }
 
 }

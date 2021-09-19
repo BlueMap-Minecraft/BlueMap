@@ -30,26 +30,26 @@ import de.bluecolored.bluemap.core.world.LightData;
 
 public class EmptyChunk extends MCAChunk {
 
-	public static final MCAChunk INSTANCE = new EmptyChunk();
+    public static final MCAChunk INSTANCE = new EmptyChunk();
 
-	@Override
-	public boolean isGenerated() {
-		return false;
-	}
+    @Override
+    public boolean isGenerated() {
+        return false;
+    }
 
-	@Override
-	public BlockState getBlockState(int x, int y, int z) {
-		return BlockState.AIR;
-	}
+    @Override
+    public BlockState getBlockState(int x, int y, int z) {
+        return BlockState.AIR;
+    }
 
-	@Override
-	public LightData getLightData(int x, int y, int z, LightData target) {
-		return target.set(0, 0);
-	}
+    @Override
+    public LightData getLightData(int x, int y, int z, LightData target) {
+        return target.set(0, 0);
+    }
 
-	@Override
-	public int getBiome(int x, int y, int z) {
-		return Biome.DEFAULT.getNumeralId();
-	}
-	
+    @Override
+    public int getBiome(int x, int y, int z) {
+        return Biome.DEFAULT.getNumeralId();
+    }
+
 }

@@ -39,114 +39,114 @@ import java.util.concurrent.TimeUnit;
 
 public class HttpConnection implements Runnable {
 
-	private final HttpRequestHandler handler;
+    private final HttpRequestHandler handler;
 
-	private final ServerSocket server;
-	private final Socket connection;
-	private final InputStream in;
-	private final OutputStream out;
+    private final ServerSocket server;
+    private final Socket connection;
+    private final InputStream in;
+    private final OutputStream out;
 
-	private final Semaphore processingSemaphore;
+    private final Semaphore processingSemaphore;
 
     private final boolean verbose;
 
-	public HttpConnection(ServerSocket server, Socket connection, HttpRequestHandler handler, Semaphore processingSemaphore, int timeout, TimeUnit timeoutUnit, boolean verbose) throws IOException {
-		this.server = server;
-		this.connection = connection;
-		this.handler = handler;
+    public HttpConnection(ServerSocket server, Socket connection, HttpRequestHandler handler, Semaphore processingSemaphore, int timeout, TimeUnit timeoutUnit, boolean verbose) throws IOException {
+        this.server = server;
+        this.connection = connection;
+        this.handler = handler;
         this.verbose = verbose;
 
         this.processingSemaphore = processingSemaphore;
 
-		if (isClosed()){
-			throw new IOException("Socket already closed!");
-		}
+        if (isClosed()){
+            throw new IOException("Socket already closed!");
+        }
 
-		connection.setSoTimeout((int) timeoutUnit.toMillis(timeout));
+        connection.setSoTimeout((int) timeoutUnit.toMillis(timeout));
 
-		in = new BufferedInputStream(this.connection.getInputStream());
-		out = new BufferedOutputStream(this.connection.getOutputStream());
-	}
+        in = new BufferedInputStream(this.connection.getInputStream());
+        out = new BufferedOutputStream(this.connection.getOutputStream());
+    }
 
-	@Override
-	public void run() {
-		while (!isClosed() && !server.isClosed()){
-			try {
-				HttpRequest request = acceptRequest();
+    @Override
+    public void run() {
+        while (!isClosed() && !server.isClosed()){
+            try {
+                HttpRequest request = acceptRequest();
 
-				boolean hasPermit = false;
-				try {
-					//just slow down processing if limit is reached
-					hasPermit = processingSemaphore.tryAcquire(1, TimeUnit.SECONDS);
+                boolean hasPermit = false;
+                try {
+                    //just slow down processing if limit is reached
+                    hasPermit = processingSemaphore.tryAcquire(1, TimeUnit.SECONDS);
 
-					HttpResponse response = handler.handle(request);
-					sendResponse(response);
+                    HttpResponse response = handler.handle(request);
+                    sendResponse(response);
 
-					if (verbose) log(request, response);
-				} finally {
-					if (hasPermit) processingSemaphore.release();
-				}
+                    if (verbose) log(request, response);
+                } finally {
+                    if (hasPermit) processingSemaphore.release();
+                }
 
-			} catch (InvalidRequestException e){
-				try {
-					sendResponse(new HttpResponse(HttpStatusCode.BAD_REQUEST));
-				} catch (IOException ignored) {}
-				break;
-			} catch (SocketTimeoutException | ConnectionClosedException | SocketException e) {
-				break;
-			} catch (IOException e) {
-				Logger.global.logError("Unexpected error while processing a HttpRequest!", e);
-				break;
-			} catch (InterruptedException ex) {
-				Thread.currentThread().interrupt();
-			}
-		}
+            } catch (InvalidRequestException e){
+                try {
+                    sendResponse(new HttpResponse(HttpStatusCode.BAD_REQUEST));
+                } catch (IOException ignored) {}
+                break;
+            } catch (SocketTimeoutException | ConnectionClosedException | SocketException e) {
+                break;
+            } catch (IOException e) {
+                Logger.global.logError("Unexpected error while processing a HttpRequest!", e);
+                break;
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+        }
 
-		try {
-			close();
-		} catch (IOException e){
-			Logger.global.logError("Error while closing HttpConnection!", e);
-		}
-	}
+        try {
+            close();
+        } catch (IOException e){
+            Logger.global.logError("Error while closing HttpConnection!", e);
+        }
+    }
 
-	private void log(HttpRequest request, HttpResponse response) {
-		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
-		Date date = new Date();
-		Logger.global.logInfo(
-				connection.getInetAddress().toString()
-				+ " [ "
-				+ dateFormat.format(date)
-				+ " ] \""
-				+ request.getMethod()
-				+ " " + request.getPath()
-				+ " " + request.getVersion()
-				+ "\" "
-				+ response.getStatusCode().toString());
-	}
+    private void log(HttpRequest request, HttpResponse response) {
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        Date date = new Date();
+        Logger.global.logInfo(
+                connection.getInetAddress().toString()
+                + " [ "
+                + dateFormat.format(date)
+                + " ] \""
+                + request.getMethod()
+                + " " + request.getPath()
+                + " " + request.getVersion()
+                + "\" "
+                + response.getStatusCode().toString());
+    }
 
-	private void sendResponse(HttpResponse response) throws IOException {
-		response.write(out);
-		out.flush();
-	}
+    private void sendResponse(HttpResponse response) throws IOException {
+        response.write(out);
+        out.flush();
+    }
 
-	private HttpRequest acceptRequest() throws ConnectionClosedException, InvalidRequestException, IOException {
-		return HttpRequest.read(in);
-	}
+    private HttpRequest acceptRequest() throws ConnectionClosedException, InvalidRequestException, IOException {
+        return HttpRequest.read(in);
+    }
 
-	public boolean isClosed(){
-		return !connection.isBound() || connection.isClosed() || !connection.isConnected() || connection.isOutputShutdown() || connection.isInputShutdown();
-	}
+    public boolean isClosed(){
+        return !connection.isBound() || connection.isClosed() || !connection.isConnected() || connection.isOutputShutdown() || connection.isInputShutdown();
+    }
 
-	public void close() throws IOException {
-		connection.close();
-	}
+    public void close() throws IOException {
+        connection.close();
+    }
 
-	public static class ConnectionClosedException extends IOException {
-		private static final long serialVersionUID = 1L;
-	}
+    public static class ConnectionClosedException extends IOException {
+        private static final long serialVersionUID = 1L;
+    }
 
-	public static class InvalidRequestException extends IOException {
-		private static final long serialVersionUID = 1L;
-	}
+    public static class InvalidRequestException extends IOException {
+        private static final long serialVersionUID = 1L;
+    }
 
 }

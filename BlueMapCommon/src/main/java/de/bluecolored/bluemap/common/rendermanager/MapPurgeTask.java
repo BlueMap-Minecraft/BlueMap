@@ -36,86 +36,86 @@ import java.util.stream.Collectors;
 
 public class MapPurgeTask implements RenderTask {
 
-	@DebugDump private final BmMap map;
-	@DebugDump private final Path directory;
-	@DebugDump private final int subFilesCount;
-	private final LinkedList<Path> subFiles;
+    @DebugDump private final BmMap map;
+    @DebugDump private final Path directory;
+    @DebugDump private final int subFilesCount;
+    private final LinkedList<Path> subFiles;
 
-	@DebugDump private volatile boolean hasMoreWork;
-	@DebugDump private volatile boolean cancelled;
+    @DebugDump private volatile boolean hasMoreWork;
+    @DebugDump private volatile boolean cancelled;
 
-	public MapPurgeTask(Path mapDirectory) throws IOException {
-		this(null, mapDirectory);
-	}
+    public MapPurgeTask(Path mapDirectory) throws IOException {
+        this(null, mapDirectory);
+    }
 
-	public MapPurgeTask(BmMap map) throws IOException {
-		this(map, map.getFileRoot());
-	}
+    public MapPurgeTask(BmMap map) throws IOException {
+        this(map, map.getFileRoot());
+    }
 
-	private MapPurgeTask(BmMap map, Path directory) throws IOException {
-		this.map = map;
-		this.directory = directory;
-		this.subFiles = Files.walk(directory, 3)
-				.collect(Collectors.toCollection(LinkedList::new));
-		this.subFilesCount = subFiles.size();
-		this.hasMoreWork = true;
-		this.cancelled = false;
-	}
+    private MapPurgeTask(BmMap map, Path directory) throws IOException {
+        this.map = map;
+        this.directory = directory;
+        this.subFiles = Files.walk(directory, 3)
+                .collect(Collectors.toCollection(LinkedList::new));
+        this.subFilesCount = subFiles.size();
+        this.hasMoreWork = true;
+        this.cancelled = false;
+    }
 
-	@Override
-	public void doWork() throws Exception {
-		synchronized (this) {
-			if (!this.hasMoreWork) return;
-			this.hasMoreWork = false;
-		}
+    @Override
+    public void doWork() throws Exception {
+        synchronized (this) {
+            if (!this.hasMoreWork) return;
+            this.hasMoreWork = false;
+        }
 
-		try {
-			// delete subFiles first to be able to track the progress and cancel
-			while (!subFiles.isEmpty()) {
-				Path subFile = subFiles.getLast();
-				FileUtils.delete(subFile.toFile());
-				subFiles.removeLast();
-				if (this.cancelled) return;
-			}
+        try {
+            // delete subFiles first to be able to track the progress and cancel
+            while (!subFiles.isEmpty()) {
+                Path subFile = subFiles.getLast();
+                FileUtils.delete(subFile.toFile());
+                subFiles.removeLast();
+                if (this.cancelled) return;
+            }
 
-			// make sure everything is deleted
-			FileUtils.delete(directory.toFile());
-		} finally {
-			// reset map render state
-			if (this.map != null) {
-				this.map.getRenderState().reset();
-			}
-		}
-	}
+            // make sure everything is deleted
+            FileUtils.delete(directory.toFile());
+        } finally {
+            // reset map render state
+            if (this.map != null) {
+                this.map.getRenderState().reset();
+            }
+        }
+    }
 
-	@Override
-	public boolean hasMoreWork() {
-		return this.hasMoreWork;
-	}
+    @Override
+    public boolean hasMoreWork() {
+        return this.hasMoreWork;
+    }
 
-	@Override
-	public double estimateProgress() {
-		return 1d - (subFiles.size() / (double) subFilesCount);
-	}
+    @Override
+    public double estimateProgress() {
+        return 1d - (subFiles.size() / (double) subFilesCount);
+    }
 
-	@Override
-	public void cancel() {
-		this.cancelled = true;
-	}
+    @Override
+    public void cancel() {
+        this.cancelled = true;
+    }
 
-	@Override
-	public boolean contains(RenderTask task) {
-		if (task == this) return true;
-		if (task instanceof MapPurgeTask) {
-			return ((MapPurgeTask) task).directory.toAbsolutePath().normalize().startsWith(this.directory.toAbsolutePath().normalize());
-		}
+    @Override
+    public boolean contains(RenderTask task) {
+        if (task == this) return true;
+        if (task instanceof MapPurgeTask) {
+            return ((MapPurgeTask) task).directory.toAbsolutePath().normalize().startsWith(this.directory.toAbsolutePath().normalize());
+        }
 
-		return false;
-	}
+        return false;
+    }
 
-	@Override
-	public String getDescription() {
-		return "Purge Map " + directory.getFileName();
-	}
+    @Override
+    public String getDescription() {
+        return "Purge Map " + directory.getFileName();
+    }
 
 }

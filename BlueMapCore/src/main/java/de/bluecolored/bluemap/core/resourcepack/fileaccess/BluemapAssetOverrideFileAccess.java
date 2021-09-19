@@ -36,49 +36,49 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class BluemapAssetOverrideFileAccess implements FileAccess {
 
-	public FileAccess parent;
-	
-	public BluemapAssetOverrideFileAccess(FileAccess parent) {
-		this.parent = parent;
-	}
-	
-	@Override
-	public String getName() {
-		return parent.getName() + "*";
-	}
-	
-	@Override
-	public InputStream readFile(String path) throws FileNotFoundException, IOException {
-		String[] pathParts = StringUtils.split(path, "/");
-		if (pathParts.length < 3 || !pathParts[0].equals("assets")) return parent.readFile(path);
-		
-		String[] newParts = new String[pathParts.length + 1];
-		System.arraycopy(pathParts, 0, newParts, 0, 2);
-		System.arraycopy(pathParts, 2, newParts, 3, pathParts.length - 2);
-		
-		newParts[2] = "bluemap";
-		String newPath = String.join("/", newParts);
-		
-		try {
-			return parent.readFile(newPath);
-		} catch (FileNotFoundException ex) {
-			return parent.readFile(path);
-		}
-	}
+    public FileAccess parent;
 
-	@Override
-	public Collection<String> listFiles(String path, boolean recursive) {
-		return parent.listFiles(path, recursive);
-	}
+    public BluemapAssetOverrideFileAccess(FileAccess parent) {
+        this.parent = parent;
+    }
 
-	@Override
-	public Collection<String> listFolders(String path) {
-		return parent.listFolders(path);
-	}
-	
-	@Override
-	public void close() throws IOException {
-		parent.close();
-	}
+    @Override
+    public String getName() {
+        return parent.getName() + "*";
+    }
+
+    @Override
+    public InputStream readFile(String path) throws FileNotFoundException, IOException {
+        String[] pathParts = StringUtils.split(path, "/");
+        if (pathParts.length < 3 || !pathParts[0].equals("assets")) return parent.readFile(path);
+
+        String[] newParts = new String[pathParts.length + 1];
+        System.arraycopy(pathParts, 0, newParts, 0, 2);
+        System.arraycopy(pathParts, 2, newParts, 3, pathParts.length - 2);
+
+        newParts[2] = "bluemap";
+        String newPath = String.join("/", newParts);
+
+        try {
+            return parent.readFile(newPath);
+        } catch (FileNotFoundException ex) {
+            return parent.readFile(path);
+        }
+    }
+
+    @Override
+    public Collection<String> listFiles(String path, boolean recursive) {
+        return parent.listFiles(path, recursive);
+    }
+
+    @Override
+    public Collection<String> listFolders(String path) {
+        return parent.listFolders(path);
+    }
+
+    @Override
+    public void close() throws IOException {
+        parent.close();
+    }
 
 }

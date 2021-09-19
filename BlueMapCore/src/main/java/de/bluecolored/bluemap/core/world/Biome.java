@@ -30,87 +30,87 @@ import org.spongepowered.configurate.ConfigurationNode;
 
 public class Biome {
 
-	public static final Biome DEFAULT = new Biome();
-	
-	private String id = "ocean";
-	private int numeralId = 0;
-	private float humidity = 0.5f;
-	private float temp = 0.5f;
-	private Color waterColor = new Color().set(4159204).premultiplied();
+    public static final Biome DEFAULT = new Biome();
 
-	private Color overlayFoliageColor = new Color().premultiplied();
-	private Color overlayGrassColor = new Color().premultiplied();
-	
-	private Biome() {}
-	
-	public Biome(String id, int numeralId, float humidity, float temp, Color waterColor) {
-		this.id = id;
-		this.numeralId = numeralId;
-		this.humidity = humidity;
-		this.temp = temp;
-		this.waterColor = waterColor;
-	}
-	
-	public Biome(String id, int numeralId, float humidity, float temp, Color waterColor, Color overlayFoliageColor, Color overlayGrassColor) {
-		this (id, numeralId, humidity, temp, waterColor);
-		
-		this.overlayFoliageColor = overlayFoliageColor;
-		this.overlayGrassColor = overlayGrassColor;
-	}
+    private String id = "ocean";
+    private int numeralId = 0;
+    private float humidity = 0.5f;
+    private float temp = 0.5f;
+    private Color waterColor = new Color().set(4159204).premultiplied();
 
-	public String getId() {
-		return id;
-	}
+    private Color overlayFoliageColor = new Color().premultiplied();
+    private Color overlayGrassColor = new Color().premultiplied();
 
-	public int getNumeralId() {
-		return numeralId;
-	}
+    private Biome() {}
 
-	public float getHumidity() {
-		return humidity;
-	}
+    public Biome(String id, int numeralId, float humidity, float temp, Color waterColor) {
+        this.id = id;
+        this.numeralId = numeralId;
+        this.humidity = humidity;
+        this.temp = temp;
+        this.waterColor = waterColor;
+    }
 
-	public float getTemp() {
-		return temp;
-	}
+    public Biome(String id, int numeralId, float humidity, float temp, Color waterColor, Color overlayFoliageColor, Color overlayGrassColor) {
+        this (id, numeralId, humidity, temp, waterColor);
 
-	public Color getWaterColor() {
-		return waterColor;
-	}
+        this.overlayFoliageColor = overlayFoliageColor;
+        this.overlayGrassColor = overlayGrassColor;
+    }
 
-	public Color getOverlayFoliageColor() {
-		return overlayFoliageColor;
-	}
+    public String getId() {
+        return id;
+    }
 
-	public Color getOverlayGrassColor() {
-		return overlayGrassColor;
-	}
-	
-	public static Biome create(String id, ConfigurationNode node) {
-		Biome biome = new Biome();
-		
-		biome.id = id;
-		biome.numeralId = node.node("id").getInt(biome.numeralId);
-		biome.humidity = node.node("humidity").getFloat(biome.humidity);
-		biome.temp = node.node("temp").getFloat(biome.temp);
-		try { biome.waterColor = new Color().set(ConfigUtils.readColorInt(node.node("watercolor"))).premultiplied(); 				} catch (NumberFormatException ignored) {}
-		try { biome.overlayFoliageColor = new Color().set(ConfigUtils.readColorInt(node.node("foliagecolor"))).premultiplied(); 	} catch (NumberFormatException ignored) {}
-		try { biome.overlayGrassColor = new Color().set(ConfigUtils.readColorInt(node.node("grasscolor"))).premultiplied(); 		} catch (NumberFormatException ignored) {}
-		
-		return biome;
-	}
-	
-	@Override
-	public String toString() {
-		return "Biome{" +
-			   "id='" + id + '\'' +
-			   ", numeralId=" + numeralId +
-			   ", humidity=" + humidity +
-			   ", temp=" + temp +
-			   ", waterColor=" + waterColor +
-			   ", overlayFoliageColor=" + overlayFoliageColor +
-			   ", overlayGrassColor=" + overlayGrassColor +
-			   '}';
-	}
-	
+    public int getNumeralId() {
+        return numeralId;
+    }
+
+    public float getHumidity() {
+        return humidity;
+    }
+
+    public float getTemp() {
+        return temp;
+    }
+
+    public Color getWaterColor() {
+        return waterColor;
+    }
+
+    public Color getOverlayFoliageColor() {
+        return overlayFoliageColor;
+    }
+
+    public Color getOverlayGrassColor() {
+        return overlayGrassColor;
+    }
+
+    public static Biome create(String id, ConfigurationNode node) {
+        Biome biome = new Biome();
+
+        biome.id = id;
+        biome.numeralId = node.node("id").getInt(biome.numeralId);
+        biome.humidity = node.node("humidity").getFloat(biome.humidity);
+        biome.temp = node.node("temp").getFloat(biome.temp);
+        try { biome.waterColor = new Color().set(ConfigUtils.readColorInt(node.node("watercolor"))).premultiplied(); 				} catch (NumberFormatException ignored) {}
+        try { biome.overlayFoliageColor = new Color().set(ConfigUtils.readColorInt(node.node("foliagecolor"))).premultiplied(); 	} catch (NumberFormatException ignored) {}
+        try { biome.overlayGrassColor = new Color().set(ConfigUtils.readColorInt(node.node("grasscolor"))).premultiplied(); 		} catch (NumberFormatException ignored) {}
+
+        return biome;
+    }
+
+    @Override
+    public String toString() {
+        return "Biome{" +
+               "id='" + id + '\'' +
+               ", numeralId=" + numeralId +
+               ", humidity=" + humidity +
+               ", temp=" + temp +
+               ", waterColor=" + waterColor +
+               ", overlayFoliageColor=" + overlayFoliageColor +
+               ", overlayGrassColor=" + overlayGrassColor +
+               '}';
+    }
+
 }

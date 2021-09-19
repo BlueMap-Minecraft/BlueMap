@@ -31,43 +31,43 @@ import java.util.Map.Entry;
 
 public class BiomeConfig {
 
-	private Biome[] biomes;
+    private Biome[] biomes;
 
-	public BiomeConfig() {
-		biomes = new Biome[10];
-	}
+    public BiomeConfig() {
+        biomes = new Biome[10];
+    }
 
-	public void load(ConfigurationNode node) {
-		for (Entry<Object, ? extends ConfigurationNode> e : node.childrenMap().entrySet()){
-			String id = e.getKey().toString();
-			Biome biome = Biome.create(id, e.getValue());
+    public void load(ConfigurationNode node) {
+        for (Entry<Object, ? extends ConfigurationNode> e : node.childrenMap().entrySet()){
+            String id = e.getKey().toString();
+            Biome biome = Biome.create(id, e.getValue());
 
-			int numeralId = biome.getNumeralId();
-			ensureAvailability(numeralId);
-			biomes[numeralId] = biome;
-		}
-	}
+            int numeralId = biome.getNumeralId();
+            ensureAvailability(numeralId);
+            biomes[numeralId] = biome;
+        }
+    }
 
-	public Biome getBiome(int id) {
-		if (id < biomes.length) {
-			Biome biome = biomes[id];
-			return biome != null ? biome : Biome.DEFAULT;
-		}
+    public Biome getBiome(int id) {
+        if (id < biomes.length) {
+            Biome biome = biomes[id];
+            return biome != null ? biome : Biome.DEFAULT;
+        }
 
-		return Biome.DEFAULT;
-	}
+        return Biome.DEFAULT;
+    }
 
-	private void ensureAvailability(int id) {
-		if (id >= biomes.length) {
-			int newSize = biomes.length;
-			do {
-				newSize = (int) (newSize * 1.5) + 1;
-			} while (id >= newSize);
+    private void ensureAvailability(int id) {
+        if (id >= biomes.length) {
+            int newSize = biomes.length;
+            do {
+                newSize = (int) (newSize * 1.5) + 1;
+            } while (id >= newSize);
 
-			Biome[] newArray = new Biome[newSize];
-			System.arraycopy(biomes, 0, newArray, 0, biomes.length);
-			biomes = newArray;
-		}
-	}
+            Biome[] newArray = new Biome[newSize];
+            System.arraycopy(biomes, 0, newArray, 0, biomes.length);
+            biomes = newArray;
+        }
+    }
 
 }

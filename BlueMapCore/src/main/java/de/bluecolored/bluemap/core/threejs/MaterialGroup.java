@@ -23,42 +23,42 @@
  * THE SOFTWARE.
  */
 /**
- * 
+ *
  */
 package de.bluecolored.bluemap.core.threejs;
 
 public class MaterialGroup {
-	private int materialIndex;
-	private int start;
-	private int count;
-	
-	public MaterialGroup(int materialIndex, int start, int count) {
-		this.materialIndex = materialIndex;
-		this.start = start;
-		this.count = count;
-	}
+    private int materialIndex;
+    private int start;
+    private int count;
 
-	public int getMaterialIndex() {
-		return materialIndex;
-	}
+    public MaterialGroup(int materialIndex, int start, int count) {
+        this.materialIndex = materialIndex;
+        this.start = start;
+        this.count = count;
+    }
 
-	public int getStart() {
-		return start;
-	}
+    public int getMaterialIndex() {
+        return materialIndex;
+    }
 
-	public int getCount() {
-		return count;
-	}
+    public int getStart() {
+        return start;
+    }
 
-	public void setMaterialIndex(int materialIndex) {
-		this.materialIndex = materialIndex;
-	}
+    public int getCount() {
+        return count;
+    }
 
-	public void setStart(int start) {
-		this.start = start;
-	}
+    public void setMaterialIndex(int materialIndex) {
+        this.materialIndex = materialIndex;
+    }
 
-	public void setCount(int count) {
-		this.count = count;
-	}
+    public void setStart(int start) {
+        this.start = start;
+    }
+
+    public void setCount(int count) {
+        this.count = count;
+    }
 }

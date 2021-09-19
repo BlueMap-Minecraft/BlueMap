@@ -23,7 +23,7 @@
  * THE SOFTWARE.
  */
 /**
- * 
+ *
  */
 package de.bluecolored.bluemap.core.threejs;
 
@@ -40,108 +40,108 @@ import java.util.List;
  */
 public class BufferAttribute {
 
-	private int itemSize;
-	private boolean normalized;
-	private float[] values;
+    private int itemSize;
+    private boolean normalized;
+    private float[] values;
 
-	/**
-	 * Creates a new {@link BufferAttribute} with the defined item-size
-	 */
-	public BufferAttribute(float[] values, int itemSize) {
-		Preconditions.checkArgument(values.length % itemSize == 0, "The length of the values-array is not a multiple of the item-size!");
+    /**
+     * Creates a new {@link BufferAttribute} with the defined item-size
+     */
+    public BufferAttribute(float[] values, int itemSize) {
+        Preconditions.checkArgument(values.length % itemSize == 0, "The length of the values-array is not a multiple of the item-size!");
 
-		this.values = values;
-		this.itemSize = itemSize;
-		this.normalized = false;
-	}
+        this.values = values;
+        this.itemSize = itemSize;
+        this.normalized = false;
+    }
 
-	/**
-	 * Creates a new {@link BufferAttribute} with the defined item-size and the
-	 * defined threejs "normalized" attribute
-	 */
-	public BufferAttribute(float[] values, int itemSize, boolean normalized) {
-		Preconditions.checkArgument(values.length % itemSize == 0, "The length of the values-array is not a multiple of the item-size!");
+    /**
+     * Creates a new {@link BufferAttribute} with the defined item-size and the
+     * defined threejs "normalized" attribute
+     */
+    public BufferAttribute(float[] values, int itemSize, boolean normalized) {
+        Preconditions.checkArgument(values.length % itemSize == 0, "The length of the values-array is not a multiple of the item-size!");
 
-		this.values = values;
-		this.itemSize = itemSize;
-		this.normalized = normalized;
-	}
+        this.values = values;
+        this.itemSize = itemSize;
+        this.normalized = normalized;
+    }
 
-	public void writeJson(JsonWriter json) throws IOException {
-		json.beginObject();
+    public void writeJson(JsonWriter json) throws IOException {
+        json.beginObject();
 
-		json.name("type").value("Float32Array");
-		json.name("itemSize").value(itemSize);
-		json.name("normalized").value(normalized);
+        json.name("type").value("Float32Array");
+        json.name("itemSize").value(itemSize);
+        json.name("normalized").value(normalized);
 
-		json.name("array").beginArray();
-		for (int i = 0; i < values.length; i++) {
-			// rounding and remove ".0" to save string space
-			double d = Math.round(values[i] * 10000d) / 10000d;
-			if (d == (long) d) json.value((long) d);
-			else json.value(d);
-		}
-		json.endArray();
+        json.name("array").beginArray();
+        for (int i = 0; i < values.length; i++) {
+            // rounding and remove ".0" to save string space
+            double d = Math.round(values[i] * 10000d) / 10000d;
+            if (d == (long) d) json.value((long) d);
+            else json.value(d);
+        }
+        json.endArray();
 
-		json.endObject();
-	}
+        json.endObject();
+    }
 
-	public int getItemSize() {
-		return this.itemSize;
-	}
+    public int getItemSize() {
+        return this.itemSize;
+    }
 
-	public boolean isNormalized() {
-		return this.normalized;
-	}
-	
-	public int getValueCount() {
-		return this.values.length;
-	}
-	
-	public int getItemCount() {
-		return Math.floorDiv(getValueCount(), getItemSize());
-	}
-	
-	public float[] values() {
-		return values;
-	}
-	
-	public static BufferAttribute readJson(JsonReader json) throws IOException {
-		List<Float> list = new ArrayList<>(1000);
-		int itemSize = 1;
-		boolean normalized = false;
-		
-		json.beginObject(); //root
-		while (json.hasNext()){
-			String name = json.nextName();
-			
-			if(name.equals("array")){
-				json.beginArray(); //array
-				while (json.hasNext()){
-					list.add((float) json.nextDouble());
-				}
-				json.endArray(); //array
-			}
-			
-			else if (name.equals("itemSize")) {
-				itemSize = json.nextInt();
-			}
-			
-			else if (name.equals("normalized")) {
-				normalized = json.nextBoolean();
-			}
-			
-			else json.skipValue();
-		}
-		json.endObject(); //root
-		
-		//collect values in array
-		float[] values = new float[list.size()];
-		for (int i = 0; i < values.length; i++) {
-			values[i] = list.get(i);
-		}
-		
-		return new BufferAttribute(values, itemSize, normalized);
-	}
+    public boolean isNormalized() {
+        return this.normalized;
+    }
+
+    public int getValueCount() {
+        return this.values.length;
+    }
+
+    public int getItemCount() {
+        return Math.floorDiv(getValueCount(), getItemSize());
+    }
+
+    public float[] values() {
+        return values;
+    }
+
+    public static BufferAttribute readJson(JsonReader json) throws IOException {
+        List<Float> list = new ArrayList<>(1000);
+        int itemSize = 1;
+        boolean normalized = false;
+
+        json.beginObject(); //root
+        while (json.hasNext()){
+            String name = json.nextName();
+
+            if(name.equals("array")){
+                json.beginArray(); //array
+                while (json.hasNext()){
+                    list.add((float) json.nextDouble());
+                }
+                json.endArray(); //array
+            }
+
+            else if (name.equals("itemSize")) {
+                itemSize = json.nextInt();
+            }
+
+            else if (name.equals("normalized")) {
+                normalized = json.nextBoolean();
+            }
+
+            else json.skipValue();
+        }
+        json.endObject(); //root
+
+        //collect values in array
+        float[] values = new float[list.size()];
+        for (int i = 0; i < values.length; i++) {
+            values[i] = list.get(i);
+        }
+
+        return new BufferAttribute(values, itemSize, normalized);
+    }
 
 }

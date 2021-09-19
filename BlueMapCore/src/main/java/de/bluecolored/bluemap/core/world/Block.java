@@ -26,164 +26,164 @@ package de.bluecolored.bluemap.core.world;
 
 public class Block<T extends Block<T>> {
 
-	private World world;
-	private int x, y, z;
+    private World world;
+    private int x, y, z;
 
-	private Chunk chunk;
+    private Chunk chunk;
 
-	private BlockState blockState;
-	private final LightData lightData = new LightData(-1, -1);
-	private int biomeId;
-	
-	public Block(World world, int x, int y, int z) {
-		set(world, x, y, z);
-	}
+    private BlockState blockState;
+    private final LightData lightData = new LightData(-1, -1);
+    private int biomeId;
 
-	public T set(World world, int x, int y, int z) {
-		if (this.x == x && this.z == z && this.world == world){
-			if (this.y == y) return self();
-		} else {
-			this.chunk = null; //only reset the chunk if x or z have changed
-		}
+    public Block(World world, int x, int y, int z) {
+        set(world, x, y, z);
+    }
 
-		this.world = world;
-		this.x = x;
-		this.y = y;
-		this.z = z;
+    public T set(World world, int x, int y, int z) {
+        if (this.x == x && this.z == z && this.world == world){
+            if (this.y == y) return self();
+        } else {
+            this.chunk = null; //only reset the chunk if x or z have changed
+        }
 
-		reset();
+        this.world = world;
+        this.x = x;
+        this.y = y;
+        this.z = z;
 
-		return self();
-	}
+        reset();
 
-	public T set(int x, int y, int z) {
-		if (this.x == x && this.z == z){
-			if (this.y == y) return self();
-		} else {
-			this.chunk = null; //only reset the chunk if x or z have changed
-		}
+        return self();
+    }
 
-		this.x = x;
-		this.y = y;
-		this.z = z;
+    public T set(int x, int y, int z) {
+        if (this.x == x && this.z == z){
+            if (this.y == y) return self();
+        } else {
+            this.chunk = null; //only reset the chunk if x or z have changed
+        }
 
-		reset();
+        this.x = x;
+        this.y = y;
+        this.z = z;
 
-		return self();
-	}
+        reset();
 
-	protected void reset() {
-		this.blockState = null;
-		this.lightData.set(-1, -1);
-		this.biomeId = -1;
-	}
+        return self();
+    }
 
-	public T add(int dx, int dy, int dz) {
-		return set(x + dx, y + dy, z + dz);
-	}
+    protected void reset() {
+        this.blockState = null;
+        this.lightData.set(-1, -1);
+        this.biomeId = -1;
+    }
 
-	public T copy(Block<?> source) {
-		this.world = source.world;
-		this.chunk = source.chunk;
-		this.x = source.x;
-		this.y = source.y;
-		this.z = source.z;
+    public T add(int dx, int dy, int dz) {
+        return set(x + dx, y + dy, z + dz);
+    }
 
-		reset();
+    public T copy(Block<?> source) {
+        this.world = source.world;
+        this.chunk = source.chunk;
+        this.x = source.x;
+        this.y = source.y;
+        this.z = source.z;
 
-		this.blockState = source.blockState;
-		this.lightData.set(source.lightData.getSkyLight(), source.lightData.getBlockLight());
-		this.biomeId = source.biomeId;
+        reset();
 
-		return self();
-	}
+        this.blockState = source.blockState;
+        this.lightData.set(source.lightData.getSkyLight(), source.lightData.getBlockLight());
+        this.biomeId = source.biomeId;
 
-	/**
-	 * copy with offset
-	 */
-	public T copy(Block<?> source, int dx, int dy, int dz) {
-		this.world = source.world;
-		this.x = source.x + dx;
-		this.y = source.y + dy;
-		this.z = source.z + dz;
+        return self();
+    }
 
-		this.chunk = null;
+    /**
+     * copy with offset
+     */
+    public T copy(Block<?> source, int dx, int dy, int dz) {
+        this.world = source.world;
+        this.x = source.x + dx;
+        this.y = source.y + dy;
+        this.z = source.z + dz;
 
-		reset();
+        this.chunk = null;
 
-		return self();
-	}
+        reset();
 
-	public World getWorld() {
-		return world;
-	}
+        return self();
+    }
 
-	public int getX() {
-		return x;
-	}
+    public World getWorld() {
+        return world;
+    }
 
-	public int getY() {
-		return y;
-	}
+    public int getX() {
+        return x;
+    }
 
-	public int getZ() {
-		return z;
-	}
+    public int getY() {
+        return y;
+    }
 
-	public Chunk getChunk() {
-		if (chunk == null) chunk = world.getChunkAtBlock(x, y, z);
-		return chunk;
-	}
+    public int getZ() {
+        return z;
+    }
 
-	public BlockState getBlockState() {
-		if (blockState == null) blockState = getChunk().getBlockState(x, y, z);
-		return blockState;
-	}
+    public Chunk getChunk() {
+        if (chunk == null) chunk = world.getChunkAtBlock(x, y, z);
+        return chunk;
+    }
 
-	public LightData getLightData() {
-		if (lightData.getSkyLight() < 0) getChunk().getLightData(x, y, z, lightData);
-		return lightData;
-	}
+    public BlockState getBlockState() {
+        if (blockState == null) blockState = getChunk().getBlockState(x, y, z);
+        return blockState;
+    }
 
-	public int getBiomeId() {
-		if (biomeId == -1) biomeId = getChunk().getBiome(x, y, z);
-		return biomeId;
-	}
+    public LightData getLightData() {
+        if (lightData.getSkyLight() < 0) getChunk().getLightData(x, y, z, lightData);
+        return lightData;
+    }
 
-	public int getSunLightLevel() {
-		return getLightData().getSkyLight();
-	}
-	
-	public int getBlockLightLevel() {
-		return getLightData().getBlockLight();
-	}
+    public int getBiomeId() {
+        if (biomeId == -1) biomeId = getChunk().getBiome(x, y, z);
+        return biomeId;
+    }
 
-	@Override
-	public String toString() {
-		if (world != null) {
-			return "Block{" +
-				   "world=" + world +
-				   ", x=" + x +
-				   ", y=" + y +
-				   ", z=" + z +
-				   ", chunk=" + getChunk() +
-				   ", blockState=" + getBlockState() +
-				   ", lightData=" + getLightData() +
-				   ", biomeId=" + getBiomeId() +
-				   '}';
-		} else {
-			return "Block{" +
-				   "world=" + world +
-				   ", x=" + x +
-				   ", y=" + y +
-				   ", z=" + z +
-				   '}';
-		}
-	}
+    public int getSunLightLevel() {
+        return getLightData().getSkyLight();
+    }
 
-	@SuppressWarnings("unchecked")
-	protected T self() {
-		return (T) this;
-	}
+    public int getBlockLightLevel() {
+        return getLightData().getBlockLight();
+    }
+
+    @Override
+    public String toString() {
+        if (world != null) {
+            return "Block{" +
+                   "world=" + world +
+                   ", x=" + x +
+                   ", y=" + y +
+                   ", z=" + z +
+                   ", chunk=" + getChunk() +
+                   ", blockState=" + getBlockState() +
+                   ", lightData=" + getLightData() +
+                   ", biomeId=" + getBiomeId() +
+                   '}';
+        } else {
+            return "Block{" +
+                   "world=" + world +
+                   ", x=" + x +
+                   ", y=" + y +
+                   ", z=" + z +
+                   '}';
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    protected T self() {
+        return (T) this;
+    }
 
 }

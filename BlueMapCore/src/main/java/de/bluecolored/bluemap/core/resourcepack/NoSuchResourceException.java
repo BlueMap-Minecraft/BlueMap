@@ -25,18 +25,18 @@
 package de.bluecolored.bluemap.core.resourcepack;
 
 public class NoSuchResourceException extends Exception {
-	private static final long serialVersionUID = -8545428385061010089L;
+    private static final long serialVersionUID = -8545428385061010089L;
 
-	public NoSuchResourceException() {
-		super();
-	}
-	
-	public NoSuchResourceException(String message) {
-		super(message);
-	}
-	
-	public NoSuchResourceException(String message, Throwable cause) {
-		super(message, cause);
-	}
-	
+    public NoSuchResourceException() {
+        super();
+    }
+
+    public NoSuchResourceException(String message) {
+        super(message);
+    }
+
+    public NoSuchResourceException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
 }

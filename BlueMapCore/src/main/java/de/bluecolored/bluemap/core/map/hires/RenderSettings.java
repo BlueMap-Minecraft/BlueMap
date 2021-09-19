@@ -27,81 +27,81 @@ package de.bluecolored.bluemap.core.map.hires;
 import com.flowpowered.math.vector.Vector3i;
 
 public interface RenderSettings {
-	
-	Vector3i DEFAULT_MIN = Vector3i.from(Integer.MIN_VALUE);
-	Vector3i DEFAULT_MAX = Vector3i.from(Integer.MAX_VALUE);
 
-	/**
-	 * The y-level below which "caves" will not be rendered
-	 */
-	int getRemoveCavesBelowY();
+    Vector3i DEFAULT_MIN = Vector3i.from(Integer.MIN_VALUE);
+    Vector3i DEFAULT_MAX = Vector3i.from(Integer.MAX_VALUE);
 
-	/**
-	 * If blocklight should be used instead of sky light to detect "caves"
-	 */
-	boolean isCaveDetectionUsesBlockLight();
+    /**
+     * The y-level below which "caves" will not be rendered
+     */
+    int getRemoveCavesBelowY();
 
-	/**
-	 * The minimum position of blocks to render
-	 */
-	default Vector3i getMin() {
-		return DEFAULT_MIN;
-	}
-	
-	/**
-	 * The maximum position of blocks to render
-	 */
-	default Vector3i getMax() {
-		return DEFAULT_MAX;
-	}
+    /**
+     * If blocklight should be used instead of sky light to detect "caves"
+     */
+    boolean isCaveDetectionUsesBlockLight();
 
-	/**
-	 * The (default) ambient light of this world (0-1)
-	 */
-	float getAmbientLight();
+    /**
+     * The minimum position of blocks to render
+     */
+    default Vector3i getMin() {
+        return DEFAULT_MIN;
+    }
 
-	/**
-	 * The sky-light level of this world (0-15)
-	 */
-	int getWorldSkyLight();
-	
-	/**
-	 * The same as the maximum height, but blocks that are above this value are treated as AIR.<br>
-	 * This leads to the top-faces being rendered instead of them being culled.
-	 */
-	default boolean isRenderEdges() {
-		return true;
-	}
-	
-	/**
-	 * If gzip compression will be used to compress the generated files
-	 */
-	default boolean useGzipCompression() {
-		return true;
-	}
+    /**
+     * The maximum position of blocks to render
+     */
+    default Vector3i getMax() {
+        return DEFAULT_MAX;
+    }
 
-	default boolean isInsideRenderBoundaries(int x, int z) {
-		Vector3i min = getMin();
-		Vector3i max = getMax();
+    /**
+     * The (default) ambient light of this world (0-1)
+     */
+    float getAmbientLight();
 
-		return
-				x >= min.getX() &&
-				x <= max.getX() &&
-				z >= min.getZ() &&
-				z <= max.getZ();
-	}
+    /**
+     * The sky-light level of this world (0-15)
+     */
+    int getWorldSkyLight();
 
-	default boolean isInsideRenderBoundaries(int x, int y, int z) {
-		Vector3i min = getMin();
-		Vector3i max = getMax();
+    /**
+     * The same as the maximum height, but blocks that are above this value are treated as AIR.<br>
+     * This leads to the top-faces being rendered instead of them being culled.
+     */
+    default boolean isRenderEdges() {
+        return true;
+    }
 
-		return
-				x >= min.getX() &&
-				x <= max.getX() &&
-				z >= min.getZ() &&
-				z <= max.getZ() &&
-				y >= min.getY() &&
-				y <= max.getY();
-	}
+    /**
+     * If gzip compression will be used to compress the generated files
+     */
+    default boolean useGzipCompression() {
+        return true;
+    }
+
+    default boolean isInsideRenderBoundaries(int x, int z) {
+        Vector3i min = getMin();
+        Vector3i max = getMax();
+
+        return
+                x >= min.getX() &&
+                x <= max.getX() &&
+                z >= min.getZ() &&
+                z <= max.getZ();
+    }
+
+    default boolean isInsideRenderBoundaries(int x, int y, int z) {
+        Vector3i min = getMin();
+        Vector3i max = getMax();
+
+        return
+                x >= min.getX() &&
+                x <= max.getX() &&
+                z >= min.getZ() &&
+                z <= max.getZ() &&
+                y >= min.getY() &&
+                y <= max.getY();
+    }
 
 }

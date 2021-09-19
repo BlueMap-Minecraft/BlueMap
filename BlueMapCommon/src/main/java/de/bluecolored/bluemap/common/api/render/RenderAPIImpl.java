@@ -44,99 +44,99 @@ import java.util.UUID;
 
 public class RenderAPIImpl implements RenderAPI {
 
-	private final BlueMapAPIImpl api;
-	private final Plugin plugin;
-	private final RenderManager renderManager;
-	
-	public RenderAPIImpl(BlueMapAPIImpl api, Plugin plugin) {
-		this.api = api;
-		this.plugin = plugin;
-		this.renderManager = plugin.getRenderManager();
-	}
+    private final BlueMapAPIImpl api;
+    private final Plugin plugin;
+    private final RenderManager renderManager;
 
-	@Override
-	public void render(UUID world, Vector3i blockPosition) {
-		render(api.getWorldForUuid(world), blockPosition);
-	}
+    public RenderAPIImpl(BlueMapAPIImpl api, Plugin plugin) {
+        this.api = api;
+        this.plugin = plugin;
+        this.renderManager = plugin.getRenderManager();
+    }
 
-	@Override
-	public void render(String mapId, Vector3i blockPosition) {
-		render(api.getMapForId(mapId), blockPosition);
-	}
+    @Override
+    public void render(UUID world, Vector3i blockPosition) {
+        render(api.getWorldForUuid(world), blockPosition);
+    }
 
-	@Override
-	public void render(String mapId, Vector2i tile) {
-		render(api.getMapForId(mapId), tile);
-	}
+    @Override
+    public void render(String mapId, Vector3i blockPosition) {
+        render(api.getMapForId(mapId), blockPosition);
+    }
 
-	@Override
-	public void render(BlueMapMap map, Vector2i tile) {
-		BlueMapMapImpl cmap = castMap(map);
+    @Override
+    public void render(String mapId, Vector2i tile) {
+        render(api.getMapForId(mapId), tile);
+    }
 
-		Grid regionGrid = cmap.getWorld().getWorld().getRegionGrid();
-		Grid tileGrid = cmap.getMapType().getHiresModelManager().getTileGrid();
+    @Override
+    public void render(BlueMapMap map, Vector2i tile) {
+        BlueMapMapImpl cmap = castMap(map);
 
-		for (Vector2i region : tileGrid.getIntersecting(tile, regionGrid)) {
-			renderManager.scheduleRenderTask(new WorldRegionRenderTask(cmap.getMapType(), region));
-		}
-	}
+        Grid regionGrid = cmap.getWorld().getWorld().getRegionGrid();
+        Grid tileGrid = cmap.getMapType().getHiresModelManager().getTileGrid();
 
-	@Override
-	public boolean scheduleMapUpdateTask(BlueMapMap map, boolean force) {
-		BlueMapMapImpl cmap = castMap(map);
-		return renderManager.scheduleRenderTask(new MapUpdateTask(cmap.getMapType(), force));
-	}
+        for (Vector2i region : tileGrid.getIntersecting(tile, regionGrid)) {
+            renderManager.scheduleRenderTask(new WorldRegionRenderTask(cmap.getMapType(), region));
+        }
+    }
 
-	@Override
-	public boolean scheduleMapUpdateTask(BlueMapMap map, Collection<Vector2i> regions, boolean force) {
-		BlueMapMapImpl cmap = castMap(map);
-		return renderManager.scheduleRenderTask(new MapUpdateTask(cmap.getMapType(), regions, force));
-	}
+    @Override
+    public boolean scheduleMapUpdateTask(BlueMapMap map, boolean force) {
+        BlueMapMapImpl cmap = castMap(map);
+        return renderManager.scheduleRenderTask(new MapUpdateTask(cmap.getMapType(), force));
+    }
 
-	@Override
-	public boolean scheduleMapPurgeTask(BlueMapMap map) throws IOException {
-		BlueMapMapImpl cmap = castMap(map);
-		return renderManager.scheduleRenderTask(new MapPurgeTask(cmap.getMapType()));
-	}
+    @Override
+    public boolean scheduleMapUpdateTask(BlueMapMap map, Collection<Vector2i> regions, boolean force) {
+        BlueMapMapImpl cmap = castMap(map);
+        return renderManager.scheduleRenderTask(new MapUpdateTask(cmap.getMapType(), regions, force));
+    }
 
-	@Override
-	public int renderQueueSize() {
-		return renderManager.getScheduledRenderTasks().size();
-	}
+    @Override
+    public boolean scheduleMapPurgeTask(BlueMapMap map) throws IOException {
+        BlueMapMapImpl cmap = castMap(map);
+        return renderManager.scheduleRenderTask(new MapPurgeTask(cmap.getMapType()));
+    }
 
-	@Override
-	public int renderThreadCount() {
-		return renderManager.getWorkerThreadCount();
-	}
+    @Override
+    public int renderQueueSize() {
+        return renderManager.getScheduledRenderTasks().size();
+    }
 
-	@Override
-	public boolean isRunning() {
-		return renderManager.isRunning();
-	}
+    @Override
+    public int renderThreadCount() {
+        return renderManager.getWorkerThreadCount();
+    }
 
-	@Override
-	public void start() {
-		if (!isRunning()){
-			renderManager.start(api.plugin.getCoreConfig().getRenderThreadCount());
-		}
-		plugin.getPluginState().setRenderThreadsEnabled(true);
-	}
+    @Override
+    public boolean isRunning() {
+        return renderManager.isRunning();
+    }
 
-	@Override
-	public void pause() {
-		renderManager.stop();
-		plugin.getPluginState().setRenderThreadsEnabled(false);
-	}
+    @Override
+    public void start() {
+        if (!isRunning()){
+            renderManager.start(api.plugin.getCoreConfig().getRenderThreadCount());
+        }
+        plugin.getPluginState().setRenderThreadsEnabled(true);
+    }
 
-	private BlueMapMapImpl castMap(BlueMapMap map) {
-		BlueMapMapImpl cmap;
-		if (map instanceof BlueMapMapImpl) {
-			cmap = (BlueMapMapImpl) map;
-		} else {
-			cmap = api.getMapForId(map.getId());
-		}
+    @Override
+    public void pause() {
+        renderManager.stop();
+        plugin.getPluginState().setRenderThreadsEnabled(false);
+    }
 
-		return cmap;
-	}
-	
+    private BlueMapMapImpl castMap(BlueMapMap map) {
+        BlueMapMapImpl cmap;
+        if (map instanceof BlueMapMapImpl) {
+            cmap = (BlueMapMapImpl) map;
+        } else {
+            cmap = api.getMapForId(map.getId());
+        }
+
+        return cmap;
+    }
+
 }

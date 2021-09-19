@@ -43,154 +43,154 @@ import java.util.function.Predicate;
 @DebugDump
 public class BmMap {
 
-	private final String id;
-	private final String name;
-	private final World world;
-	private final Path fileRoot;
+    private final String id;
+    private final String name;
+    private final World world;
+    private final Path fileRoot;
 
-	private final MapRenderState renderState;
+    private final MapRenderState renderState;
 
-	private final HiresModelManager hiresModelManager;
-	private final LowresModelManager lowresModelManager;
+    private final HiresModelManager hiresModelManager;
+    private final LowresModelManager lowresModelManager;
 
-	private Predicate<Vector2i> tileFilter;
+    private Predicate<Vector2i> tileFilter;
 
-	private long renderTimeSumNanos;
-	private long tilesRendered;
+    private long renderTimeSumNanos;
+    private long tilesRendered;
 
-	public BmMap(String id, String name, World world, Path fileRoot, ResourcePack resourcePack, MapSettings settings) throws IOException {
-		this.id = Objects.requireNonNull(id);
-		this.name = Objects.requireNonNull(name);
-		this.world = Objects.requireNonNull(world);
-		this.fileRoot = Objects.requireNonNull(fileRoot);
+    public BmMap(String id, String name, World world, Path fileRoot, ResourcePack resourcePack, MapSettings settings) throws IOException {
+        this.id = Objects.requireNonNull(id);
+        this.name = Objects.requireNonNull(name);
+        this.world = Objects.requireNonNull(world);
+        this.fileRoot = Objects.requireNonNull(fileRoot);
 
-		Objects.requireNonNull(resourcePack);
-		Objects.requireNonNull(settings);
+        Objects.requireNonNull(resourcePack);
+        Objects.requireNonNull(settings);
 
-		this.renderState = new MapRenderState();
+        this.renderState = new MapRenderState();
 
-		File rstateFile = getRenderStateFile();
-		if (rstateFile.exists()) {
-			try {
-				this.renderState.load(rstateFile);
-			} catch (IOException ex) {
-				Logger.global.logWarning("Failed to load render-state for map '" + getId() + "': " + ex);
-			}
-		}
+        File rstateFile = getRenderStateFile();
+        if (rstateFile.exists()) {
+            try {
+                this.renderState.load(rstateFile);
+            } catch (IOException ex) {
+                Logger.global.logWarning("Failed to load render-state for map '" + getId() + "': " + ex);
+            }
+        }
 
-		this.hiresModelManager = new HiresModelManager(
-				fileRoot.resolve("hires"),
-				resourcePack,
-				settings,
-				new Grid(settings.getHiresTileSize(), 2)
-		);
+        this.hiresModelManager = new HiresModelManager(
+                fileRoot.resolve("hires"),
+                resourcePack,
+                settings,
+                new Grid(settings.getHiresTileSize(), 2)
+        );
 
-		this.lowresModelManager = new LowresModelManager(
-				fileRoot.resolve("lowres"),
-				new Vector2i(settings.getLowresPointsPerLowresTile(), settings.getLowresPointsPerLowresTile()),
-				new Vector2i(settings.getLowresPointsPerHiresTile(), settings.getLowresPointsPerHiresTile()),
-				settings.useGzipCompression()
-		);
+        this.lowresModelManager = new LowresModelManager(
+                fileRoot.resolve("lowres"),
+                new Vector2i(settings.getLowresPointsPerLowresTile(), settings.getLowresPointsPerLowresTile()),
+                new Vector2i(settings.getLowresPointsPerHiresTile(), settings.getLowresPointsPerHiresTile()),
+                settings.useGzipCompression()
+        );
 
-		this.tileFilter = t -> true;
+        this.tileFilter = t -> true;
 
-		this.renderTimeSumNanos = 0;
-		this.tilesRendered = 0;
-	}
+        this.renderTimeSumNanos = 0;
+        this.tilesRendered = 0;
+    }
 
-	public void renderTile(Vector2i tile) {
-		if (!tileFilter.test(tile)) return;
+    public void renderTile(Vector2i tile) {
+        if (!tileFilter.test(tile)) return;
 
-		long start = System.nanoTime();
+        long start = System.nanoTime();
 
-		HiresTileMeta tileMeta = hiresModelManager.render(world, tile);
-		lowresModelManager.render(tileMeta);
+        HiresTileMeta tileMeta = hiresModelManager.render(world, tile);
+        lowresModelManager.render(tileMeta);
 
-		long end = System.nanoTime();
-		long delta = end - start;
+        long end = System.nanoTime();
+        long delta = end - start;
 
-		renderTimeSumNanos += delta;
-		tilesRendered ++;
-	}
+        renderTimeSumNanos += delta;
+        tilesRendered ++;
+    }
 
-	public synchronized void save() {
-		lowresModelManager.save();
+    public synchronized void save() {
+        lowresModelManager.save();
 
-		try {
-			this.renderState.save(getRenderStateFile());
-		} catch (IOException ex){
-			Logger.global.logError("Failed to save render-state for map: '" + this.id + "'!", ex);
-		}
-	}
+        try {
+            this.renderState.save(getRenderStateFile());
+        } catch (IOException ex){
+            Logger.global.logError("Failed to save render-state for map: '" + this.id + "'!", ex);
+        }
+    }
 
-	public File getRenderStateFile() {
-		return fileRoot.resolve(".rstate").toFile();
-	}
+    public File getRenderStateFile() {
+        return fileRoot.resolve(".rstate").toFile();
+    }
 
-	public String getId() {
-		return id;
-	}
+    public String getId() {
+        return id;
+    }
 
-	public String getName() {
-		return name;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public World getWorld() {
-		return world;
-	}
+    public World getWorld() {
+        return world;
+    }
 
-	public Path getFileRoot() {
-		return fileRoot;
-	}
+    public Path getFileRoot() {
+        return fileRoot;
+    }
 
-	public MapRenderState getRenderState() {
-		return renderState;
-	}
+    public MapRenderState getRenderState() {
+        return renderState;
+    }
 
-	public HiresModelManager getHiresModelManager() {
-		return hiresModelManager;
-	}
+    public HiresModelManager getHiresModelManager() {
+        return hiresModelManager;
+    }
 
-	public LowresModelManager getLowresModelManager() {
-		return lowresModelManager;
-	}
+    public LowresModelManager getLowresModelManager() {
+        return lowresModelManager;
+    }
 
-	public Predicate<Vector2i> getTileFilter() {
-		return tileFilter;
-	}
+    public Predicate<Vector2i> getTileFilter() {
+        return tileFilter;
+    }
 
-	public void setTileFilter(Predicate<Vector2i> tileFilter) {
-		this.tileFilter = tileFilter;
-	}
+    public void setTileFilter(Predicate<Vector2i> tileFilter) {
+        this.tileFilter = tileFilter;
+    }
 
-	public long getAverageNanosPerTile() {
-		return renderTimeSumNanos / tilesRendered;
-	}
+    public long getAverageNanosPerTile() {
+        return renderTimeSumNanos / tilesRendered;
+    }
 
-	@Override
-	public int hashCode() {
-		return id.hashCode();
-	}
-	
-	@Override
-	public boolean equals(Object obj) {
-		if (obj instanceof BmMap) {
-			BmMap that = (BmMap) obj;
-			
-			return this.id.equals(that.id);
-		}
-		
-		return false;
-	}
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
 
-	@Override
-	public String toString() {
-		return "BmMap{" +
-			   "id='" + id + '\'' +
-			   ", name='" + name + '\'' +
-			   ", world=" + world +
-			   ", fileRoot=" + fileRoot +
-			   '}';
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (obj instanceof BmMap) {
+            BmMap that = (BmMap) obj;
+
+            return this.id.equals(that.id);
+        }
+
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return "BmMap{" +
+               "id='" + id + '\'' +
+               ", name='" + name + '\'' +
+               ", world=" + world +
+               ", fileRoot=" + fileRoot +
+               '}';
+    }
 
 }

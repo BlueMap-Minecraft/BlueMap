@@ -40,79 +40,79 @@ import java.util.zip.GZIPOutputStream;
 
 public class HiresModelManager {
 
-	private final Path fileRoot;
-	private final HiresModelRenderer renderer;
-	private final Grid tileGrid;
-	private final boolean useGzip;
+    private final Path fileRoot;
+    private final HiresModelRenderer renderer;
+    private final Grid tileGrid;
+    private final boolean useGzip;
 
-	public HiresModelManager(Path fileRoot, ResourcePack resourcePack, RenderSettings renderSettings, Grid tileGrid) {
-		this(fileRoot, new HiresModelRenderer(resourcePack, renderSettings), tileGrid, renderSettings.useGzipCompression());
-	}
+    public HiresModelManager(Path fileRoot, ResourcePack resourcePack, RenderSettings renderSettings, Grid tileGrid) {
+        this(fileRoot, new HiresModelRenderer(resourcePack, renderSettings), tileGrid, renderSettings.useGzipCompression());
+    }
 
-	public HiresModelManager(Path fileRoot, HiresModelRenderer renderer, Grid tileGrid, boolean useGzip) {
-		this.fileRoot = fileRoot;
-		this.renderer = renderer;
+    public HiresModelManager(Path fileRoot, HiresModelRenderer renderer, Grid tileGrid, boolean useGzip) {
+        this.fileRoot = fileRoot;
+        this.renderer = renderer;
 
-		this.tileGrid = tileGrid;
-		
-		this.useGzip = useGzip;
-	}
-	
-	/**
-	 * Renders the given world tile with the provided render-settings
-	 */
-	public HiresTileMeta render(World world, Vector2i tile) {
-		Vector2i tileMin = tileGrid.getCellMin(tile);
-		Vector2i tileMax = tileGrid.getCellMax(tile);
+        this.tileGrid = tileGrid;
 
-		Vector3i modelMin = new Vector3i(tileMin.getX(), Integer.MIN_VALUE, tileMin.getY());
-		Vector3i modelMax = new Vector3i(tileMax.getX(), Integer.MAX_VALUE, tileMax.getY());
+        this.useGzip = useGzip;
+    }
 
-		HiresTileModel model = HiresTileModel.claimInstance();
+    /**
+     * Renders the given world tile with the provided render-settings
+     */
+    public HiresTileMeta render(World world, Vector2i tile) {
+        Vector2i tileMin = tileGrid.getCellMin(tile);
+        Vector2i tileMax = tileGrid.getCellMax(tile);
 
-		HiresTileMeta tileMeta = renderer.render(world, modelMin, modelMax, model);
-		save(model, tile);
+        Vector3i modelMin = new Vector3i(tileMin.getX(), Integer.MIN_VALUE, tileMin.getY());
+        Vector3i modelMax = new Vector3i(tileMax.getX(), Integer.MAX_VALUE, tileMax.getY());
 
-		HiresTileModel.recycleInstance(model);
+        HiresTileModel model = HiresTileModel.claimInstance();
 
-		return tileMeta;
-	}
-	
-	private void save(final HiresTileModel model, Vector2i tile) {
-		File file = getFile(tile, useGzip);
+        HiresTileMeta tileMeta = renderer.render(world, modelMin, modelMax, model);
+        save(model, tile);
 
-		OutputStream os = null;
-		try {
-			os = AtomicFileHelper.createFilepartOutputStream(file);
-			os = new BufferedOutputStream(os);
-			if (useGzip) os = new GZIPOutputStream(os);
+        HiresTileModel.recycleInstance(model);
 
-			model.writeBufferGeometryJson(os);
-		} catch (IOException e){
-			Logger.global.logError("Failed to save hires model: " + file, e);
-		} finally {
-			try {
-				if (os != null) {
-					os.close();
-				}
-			} catch (IOException e) {
-				Logger.global.logError("Failed to close file: " + file, e);
-			}
-		}
-	}
-	
-	/**
-	 * Returns the tile-grid
-	 */
-	public Grid getTileGrid() {
-		return tileGrid;
-	}
-	
-	/**
-	 * Returns the file for a tile
-	 */
-	public File getFile(Vector2i tilePos, boolean gzip){
-		return FileUtils.coordsToFile(fileRoot, tilePos, "json" + (gzip ? ".gz" : ""));
-	}
-	
+        return tileMeta;
+    }
+
+    private void save(final HiresTileModel model, Vector2i tile) {
+        File file = getFile(tile, useGzip);
+
+        OutputStream os = null;
+        try {
+            os = AtomicFileHelper.createFilepartOutputStream(file);
+            os = new BufferedOutputStream(os);
+            if (useGzip) os = new GZIPOutputStream(os);
+
+            model.writeBufferGeometryJson(os);
+        } catch (IOException e){
+            Logger.global.logError("Failed to save hires model: " + file, e);
+        } finally {
+            try {
+                if (os != null) {
+                    os.close();
+                }
+            } catch (IOException e) {
+                Logger.global.logError("Failed to close file: " + file, e);
+            }
+        }
+    }
+
+    /**
+     * Returns the tile-grid
+     */
+    public Grid getTileGrid() {
+        return tileGrid;
+    }
+
+    /**
+     * Returns the file for a tile
+     */
+    public File getFile(Vector2i tilePos, boolean gzip){
+        return FileUtils.coordsToFile(fileRoot, tilePos, "json" + (gzip ? ".gz" : ""));
+    }
+
 }

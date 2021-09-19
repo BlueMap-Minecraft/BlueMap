@@ -27,5 +27,5 @@ package de.bluecolored.bluemap.common;
 import java.io.IOException;
 
 public class MissingResourcesException extends IOException {
-	private static final long serialVersionUID = 2084565069965755048L;
+    private static final long serialVersionUID = 2084565069965755048L;
 }

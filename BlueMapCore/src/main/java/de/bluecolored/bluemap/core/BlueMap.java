@@ -34,34 +34,34 @@ import java.util.concurrent.ForkJoinPool;
 
 public class BlueMap {
 
-	// early-loading this class, to fix a classloading issue
-	private static final RemovalCause RC = null;
+    // early-loading this class, to fix a classloading issue
+    private static final RemovalCause RC = null;
 
-	public static final String VERSION, GIT_HASH, GIT_CLEAN;
-	static {
-		String version = "DEV", gitHash = "DEV", gitClean = "DEV";
-		try {
-			ConfigurationNode node = GsonConfigurationLoader.builder()
-					.url(BlueMap.class.getResource("/de/bluecolored/bluemap/version.json"))
-					.build()
-					.load();
+    public static final String VERSION, GIT_HASH, GIT_CLEAN;
+    static {
+        String version = "DEV", gitHash = "DEV", gitClean = "DEV";
+        try {
+            ConfigurationNode node = GsonConfigurationLoader.builder()
+                    .url(BlueMap.class.getResource("/de/bluecolored/bluemap/version.json"))
+                    .build()
+                    .load();
 
-			version = node.node("version").getString("DEV");
-			gitHash = node.node("git-hash").getString("DEV");
-			gitClean = node.node("git-clean").getString("DEV");
-		} catch (IOException ex) {
-			Logger.global.logError("Failed to load version.json from resources!", ex);
-		}
-		
-		if (version.equals("${version}")) version = "DEV";
-		if (gitHash.equals("${gitHash}")) version = "DEV";
-		if (gitClean.equals("${gitClean}")) version = "DEV";
-		
-		VERSION = version;
-		GIT_HASH = gitHash;
-		GIT_CLEAN = gitClean;
-	}
+            version = node.node("version").getString("DEV");
+            gitHash = node.node("git-hash").getString("DEV");
+            gitClean = node.node("git-clean").getString("DEV");
+        } catch (IOException ex) {
+            Logger.global.logError("Failed to load version.json from resources!", ex);
+        }
 
-	public static final ForkJoinPool THREAD_POOL = new ForkJoinPool();
-	
+        if (version.equals("${version}")) version = "DEV";
+        if (gitHash.equals("${gitHash}")) version = "DEV";
+        if (gitClean.equals("${gitClean}")) version = "DEV";
+
+        VERSION = version;
+        GIT_HASH = gitHash;
+        GIT_CLEAN = gitClean;
+    }
+
+    public static final ForkJoinPool THREAD_POOL = new ForkJoinPool();
+
 }

@@ -29,24 +29,24 @@ import com.flowpowered.math.vector.Vector3i;
 import java.util.Objects;
 
 public enum Axis {
-	
-	X (Vector3i.UNIT_X),
-	Y (Vector3i.UNIT_Y),
-	Z (Vector3i.UNIT_Z);
-	
-	private final Vector3i axisVector; 
-	
-	Axis(Vector3i axisVector){
-		this.axisVector = axisVector;
-	}
-	
-	public Vector3i toVector(){
-		return axisVector;
-	}
-	
-	public static Axis fromString(String name){
-		Objects.requireNonNull(name);
-		
-		return valueOf(name.toUpperCase());
-	}
+
+    X (Vector3i.UNIT_X),
+    Y (Vector3i.UNIT_Y),
+    Z (Vector3i.UNIT_Z);
+
+    private final Vector3i axisVector;
+
+    Axis(Vector3i axisVector){
+        this.axisVector = axisVector;
+    }
+
+    public Vector3i toVector(){
+        return axisVector;
+    }
+
+    public static Axis fromString(String name){
+        Objects.requireNonNull(name);
+
+        return valueOf(name.toUpperCase());
+    }
 }

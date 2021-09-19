@@ -28,118 +28,118 @@ import de.bluecolored.bluemap.core.util.Tristate;
 
 public class BlockProperties {
 
-	public static final BlockProperties DEFAULT = new BlockProperties();
-	
-	private Tristate culling, occluding, alwaysWaterlogged, randomOffset;
+    public static final BlockProperties DEFAULT = new BlockProperties();
 
-	public BlockProperties() {
-		this.culling = Tristate.UNDEFINED;
-		this.occluding = Tristate.UNDEFINED;
-		this.alwaysWaterlogged = Tristate.UNDEFINED;
-		this.randomOffset = Tristate.UNDEFINED;
-	}
+    private Tristate culling, occluding, alwaysWaterlogged, randomOffset;
 
-	public BlockProperties(
-			Tristate culling,
-			Tristate occluding,
-			Tristate alwaysWaterlogged,
-			Tristate randomOffset
-	) {
-		this.culling = culling;
-		this.occluding = occluding;
-		this.alwaysWaterlogged = alwaysWaterlogged;
-		this.randomOffset = randomOffset;
-	}
-	
-	public boolean isCulling() {
-		return culling.getOr(true);
-	}
-	
-	public boolean isOccluding() {
-		return occluding.getOr(true);
-	}
+    public BlockProperties() {
+        this.culling = Tristate.UNDEFINED;
+        this.occluding = Tristate.UNDEFINED;
+        this.alwaysWaterlogged = Tristate.UNDEFINED;
+        this.randomOffset = Tristate.UNDEFINED;
+    }
 
-	public boolean isAlwaysWaterlogged() {
-		return alwaysWaterlogged.getOr(false);
-	}
+    public BlockProperties(
+            Tristate culling,
+            Tristate occluding,
+            Tristate alwaysWaterlogged,
+            Tristate randomOffset
+    ) {
+        this.culling = culling;
+        this.occluding = occluding;
+        this.alwaysWaterlogged = alwaysWaterlogged;
+        this.randomOffset = randomOffset;
+    }
 
-	public boolean isRandomOffset() {
-		return randomOffset.getOr(false);
-	}
+    public boolean isCulling() {
+        return culling.getOr(true);
+    }
 
-	public Builder toBuilder() {
-		return new BlockProperties(
-				culling,
-				occluding,
-				alwaysWaterlogged,
-				randomOffset
-		).new Builder();
-	}
+    public boolean isOccluding() {
+        return occluding.getOr(true);
+    }
 
-	public static Builder builder() {
-		return new BlockProperties().new Builder();
-	}
+    public boolean isAlwaysWaterlogged() {
+        return alwaysWaterlogged.getOr(false);
+    }
 
-	public class Builder {
+    public boolean isRandomOffset() {
+        return randomOffset.getOr(false);
+    }
 
-		public Builder culling(boolean culling) {
-			BlockProperties.this.culling = culling ? Tristate.TRUE : Tristate.FALSE;
-			return this;
-		}
+    public Builder toBuilder() {
+        return new BlockProperties(
+                culling,
+                occluding,
+                alwaysWaterlogged,
+                randomOffset
+        ).new Builder();
+    }
 
-		public Builder occluding(boolean occluding) {
-			BlockProperties.this.occluding = occluding ? Tristate.TRUE : Tristate.FALSE;
-			return this;
-		}
+    public static Builder builder() {
+        return new BlockProperties().new Builder();
+    }
 
-		public Builder alwaysWaterlogged(boolean alwaysWaterlogged) {
-			BlockProperties.this.alwaysWaterlogged = alwaysWaterlogged ? Tristate.TRUE : Tristate.FALSE;
-			return this;
-		}
+    public class Builder {
 
-		public Builder randomOffset(boolean randomOffset) {
-			BlockProperties.this.randomOffset = randomOffset ? Tristate.TRUE : Tristate.FALSE;
-			return this;
-		}
+        public Builder culling(boolean culling) {
+            BlockProperties.this.culling = culling ? Tristate.TRUE : Tristate.FALSE;
+            return this;
+        }
 
-		public Builder from(BlockProperties other) {
-			culling = other.culling.getOr(culling);
-			occluding = other.occluding.getOr(occluding);
-			alwaysWaterlogged = other.alwaysWaterlogged.getOr(alwaysWaterlogged);
-			randomOffset = other.randomOffset.getOr(randomOffset);
-			return this;
-		}
+        public Builder occluding(boolean occluding) {
+            BlockProperties.this.occluding = occluding ? Tristate.TRUE : Tristate.FALSE;
+            return this;
+        }
 
-		public BlockProperties build() {
-			return BlockProperties.this;
-		}
+        public Builder alwaysWaterlogged(boolean alwaysWaterlogged) {
+            BlockProperties.this.alwaysWaterlogged = alwaysWaterlogged ? Tristate.TRUE : Tristate.FALSE;
+            return this;
+        }
 
-		public Tristate isCulling() {
-			return culling;
-		}
+        public Builder randomOffset(boolean randomOffset) {
+            BlockProperties.this.randomOffset = randomOffset ? Tristate.TRUE : Tristate.FALSE;
+            return this;
+        }
 
-		public Tristate isOccluding() {
-			return occluding;
-		}
+        public Builder from(BlockProperties other) {
+            culling = other.culling.getOr(culling);
+            occluding = other.occluding.getOr(occluding);
+            alwaysWaterlogged = other.alwaysWaterlogged.getOr(alwaysWaterlogged);
+            randomOffset = other.randomOffset.getOr(randomOffset);
+            return this;
+        }
 
-		public Tristate isAlwaysWaterlogged() {
-			return alwaysWaterlogged;
-		}
+        public BlockProperties build() {
+            return BlockProperties.this;
+        }
 
-		public Tristate isRandomOffset() {
-			return randomOffset;
-		}
+        public Tristate isCulling() {
+            return culling;
+        }
 
-	}
+        public Tristate isOccluding() {
+            return occluding;
+        }
 
-	@Override
-	public String toString() {
-		return "BlockProperties{" +
-			   "culling=" + culling +
-			   ", occluding=" + occluding +
-			   ", alwaysWaterlogged=" + alwaysWaterlogged +
-			   ", randomOffset=" + randomOffset +
-			   '}';
-	}
+        public Tristate isAlwaysWaterlogged() {
+            return alwaysWaterlogged;
+        }
+
+        public Tristate isRandomOffset() {
+            return randomOffset;
+        }
+
+    }
+
+    @Override
+    public String toString() {
+        return "BlockProperties{" +
+               "culling=" + culling +
+               ", occluding=" + occluding +
+               ", alwaysWaterlogged=" + alwaysWaterlogged +
+               ", randomOffset=" + randomOffset +
+               '}';
+    }
 
 }

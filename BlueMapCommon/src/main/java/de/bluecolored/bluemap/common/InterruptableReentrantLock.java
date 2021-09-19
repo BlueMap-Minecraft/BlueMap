@@ -27,28 +27,28 @@ package de.bluecolored.bluemap.common;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class InterruptableReentrantLock extends ReentrantLock {
-	private static final long serialVersionUID = -6937282195139528001L;
-	
-	public InterruptableReentrantLock() {
-		super();
-	}
-	
-	public InterruptableReentrantLock(boolean fair) {
-		super(fair);
-	}
+    private static final long serialVersionUID = -6937282195139528001L;
 
-	/**
-	 * Acquires the lock and interrupts the currently holding thread if there is any.
-	 */
-	public void interruptAndLock() {
-		while (!tryLock()) {
-			Thread owner = getOwner();
-			if (owner != null) {
-				owner.interrupt();
-				lock();
-				return;
-			}
-		}
-	}
-	
+    public InterruptableReentrantLock() {
+        super();
+    }
+
+    public InterruptableReentrantLock(boolean fair) {
+        super(fair);
+    }
+
+    /**
+     * Acquires the lock and interrupts the currently holding thread if there is any.
+     */
+    public void interruptAndLock() {
+        while (!tryLock()) {
+            Thread owner = getOwner();
+            if (owner != null) {
+                owner.interrupt();
+                lock();
+                return;
+            }
+        }
+    }
+
 }

@@ -33,64 +33,64 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class ProgressTracker {
-	private static final AtomicInteger ID = new AtomicInteger(0);
+    private static final AtomicInteger ID = new AtomicInteger(0);
 
-	private final Timer timer;
-	private Supplier<Double> progressSupplier;
-	private final int averagingCount;
+    private final Timer timer;
+    private Supplier<Double> progressSupplier;
+    private final int averagingCount;
 
-	private long lastTime;
-	private double lastProgress;
+    private long lastTime;
+    private double lastProgress;
 
-	private final Deque<Long> timesPerProgress;
+    private final Deque<Long> timesPerProgress;
 
-	public ProgressTracker(long updateIntervall, int averagingCount) {
-		this.timer = new Timer("BlueMap-ProgressTracker-Timer-" + ID.getAndIncrement(), true);
-		this.progressSupplier = () -> 0d;
-		this.averagingCount = averagingCount;
-		this.timesPerProgress = new LinkedList<>();
+    public ProgressTracker(long updateIntervall, int averagingCount) {
+        this.timer = new Timer("BlueMap-ProgressTracker-Timer-" + ID.getAndIncrement(), true);
+        this.progressSupplier = () -> 0d;
+        this.averagingCount = averagingCount;
+        this.timesPerProgress = new LinkedList<>();
 
-		this.timer.scheduleAtFixedRate(new TimerTask() {
-			@Override
-			public void run() {
-				update();
-			}
-		}, updateIntervall, updateIntervall);
-	}
+        this.timer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                update();
+            }
+        }, updateIntervall, updateIntervall);
+    }
 
-	public synchronized void resetAndStart(Supplier<Double> progressSupplier) {
-		this.progressSupplier = progressSupplier;
-		this.lastTime = System.currentTimeMillis();
-		this.lastProgress = progressSupplier.get();
-		this.timesPerProgress.clear();
-	}
+    public synchronized void resetAndStart(Supplier<Double> progressSupplier) {
+        this.progressSupplier = progressSupplier;
+        this.lastTime = System.currentTimeMillis();
+        this.lastProgress = progressSupplier.get();
+        this.timesPerProgress.clear();
+    }
 
-	public synchronized long getAverageTimePerProgress() {
-		return timesPerProgress.stream()
-				.collect(Collectors.averagingLong(Long::longValue))
-				.longValue();
-	}
+    public synchronized long getAverageTimePerProgress() {
+        return timesPerProgress.stream()
+                .collect(Collectors.averagingLong(Long::longValue))
+                .longValue();
+    }
 
-	private synchronized void update() {
-		long now = System.currentTimeMillis();
-		double progress = progressSupplier.get();
+    private synchronized void update() {
+        long now = System.currentTimeMillis();
+        double progress = progressSupplier.get();
 
-		long deltaTime = now - lastTime;
-		double deltaProgress = progress - lastProgress;
+        long deltaTime = now - lastTime;
+        double deltaProgress = progress - lastProgress;
 
-		if (deltaProgress != 0) {
-			long totalDuration = (long) (deltaTime / deltaProgress);
+        if (deltaProgress != 0) {
+            long totalDuration = (long) (deltaTime / deltaProgress);
 
-			timesPerProgress.addLast(totalDuration);
-			while (timesPerProgress.size() > averagingCount) timesPerProgress.removeFirst();
+            timesPerProgress.addLast(totalDuration);
+            while (timesPerProgress.size() > averagingCount) timesPerProgress.removeFirst();
 
-			this.lastTime = now;
-			this.lastProgress = progress;
-		}
-	}
+            this.lastTime = now;
+            this.lastProgress = progress;
+        }
+    }
 
-	public void cancel() {
-		timer.cancel();
-	}
+    public void cancel() {
+        timer.cancel();
+    }
 
 }

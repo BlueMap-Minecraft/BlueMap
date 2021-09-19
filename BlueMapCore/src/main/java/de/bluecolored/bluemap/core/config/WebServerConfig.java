@@ -35,61 +35,61 @@ import java.net.InetSocketAddress;
 @DebugDump
 public class WebServerConfig {
 
-	private boolean enabled = true;
-	private File webRoot = new File("web");
+    private boolean enabled = true;
+    private File webRoot = new File("web");
 
-	private InetAddress bindAddress = null;
-	private int port = 8100;
-	private int maxConnections = 100;
+    private InetAddress bindAddress = null;
+    private int port = 8100;
+    private int maxConnections = 100;
 
-	public WebServerConfig(ConfigurationNode node) throws IOException {
-		
-		//enabled
-		enabled = node.node("enabled").getBoolean(false);
+    public WebServerConfig(ConfigurationNode node) throws IOException {
 
-		if (enabled) {
-			//webroot
-			String webRootString = node.node("webroot").getString();
-			if (webRootString == null) throw new IOException("Invalid configuration: Node webroot is not defined");
-			webRoot = ConfigManager.toFolder(webRootString);
-			
-			//ip
-			String bindAddressString = node.node("ip").getString("");
-			if (bindAddressString.isEmpty() || bindAddressString.equals("0.0.0.0") || bindAddressString.equals("::0")) {
-				bindAddress = new InetSocketAddress(0).getAddress(); // 0.0.0.0
-			} else if (bindAddressString.equals("#getLocalHost")) {
-				bindAddress = InetAddress.getLocalHost();
-			} else {
-				bindAddress = InetAddress.getByName(bindAddressString);
-			}
-			
-			//port
-			port = node.node("port").getInt(8100);
-			
-			//maxConnectionCount
-			maxConnections = node.node("maxConnectionCount").getInt(100);
-		}
-		
-	}
-	
-	public boolean isWebserverEnabled() {
-		return enabled;
-	}
-	
-	public File getWebRoot() {
-		return webRoot;
-	}
+        //enabled
+        enabled = node.node("enabled").getBoolean(false);
 
-	public InetAddress getWebserverBindAddress() {
-		return bindAddress;
-	}
+        if (enabled) {
+            //webroot
+            String webRootString = node.node("webroot").getString();
+            if (webRootString == null) throw new IOException("Invalid configuration: Node webroot is not defined");
+            webRoot = ConfigManager.toFolder(webRootString);
 
-	public int getWebserverPort() {
-		return port;
-	}
+            //ip
+            String bindAddressString = node.node("ip").getString("");
+            if (bindAddressString.isEmpty() || bindAddressString.equals("0.0.0.0") || bindAddressString.equals("::0")) {
+                bindAddress = new InetSocketAddress(0).getAddress(); // 0.0.0.0
+            } else if (bindAddressString.equals("#getLocalHost")) {
+                bindAddress = InetAddress.getLocalHost();
+            } else {
+                bindAddress = InetAddress.getByName(bindAddressString);
+            }
 
-	public int getWebserverMaxConnections() {
-		return maxConnections;
-	}
-	
+            //port
+            port = node.node("port").getInt(8100);
+
+            //maxConnectionCount
+            maxConnections = node.node("maxConnectionCount").getInt(100);
+        }
+
+    }
+
+    public boolean isWebserverEnabled() {
+        return enabled;
+    }
+
+    public File getWebRoot() {
+        return webRoot;
+    }
+
+    public InetAddress getWebserverBindAddress() {
+        return bindAddress;
+    }
+
+    public int getWebserverPort() {
+        return port;
+    }
+
+    public int getWebserverMaxConnections() {
+        return maxConnections;
+    }
+
 }

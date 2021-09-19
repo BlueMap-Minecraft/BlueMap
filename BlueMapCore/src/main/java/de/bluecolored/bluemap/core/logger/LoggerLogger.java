@@ -33,64 +33,64 @@ import java.util.logging.Logger;
 import java.util.logging.*;
 
 public class LoggerLogger extends AbstractLogger {
-	private static LoggerLogger instance = null;
-	
-	private Logger logger;
-	private SimpleFormatter formatter;
+    private static LoggerLogger instance = null;
 
-	private LoggerLogger() {
-		this.logger = Logger.getLogger("bluemap");
-		this.logger.setUseParentHandlers(false);
-		ConsoleHandler cHandler = new ConsoleHandler();
-		formatter = new SimpleFormatter() {
-			@Override
-			public synchronized String format(LogRecord record) {
-				String stackTrace = record.getThrown() == null ? "" : ExceptionUtils.getStackTrace(record.getThrown());
-				return String.format("[%1$s] %2$s%3$s%n", record.getLevel(), record.getMessage(), stackTrace);
-			}
-		};
-		cHandler.setFormatter(formatter);
-		this.logger.addHandler(cHandler);
-		
-	}
-	
-	public static LoggerLogger getInstance() {
-		if (instance == null) {
-			instance = new LoggerLogger();
-		}
-		return instance;
-	}
-	
-	public void addFileHandler(String filename, boolean append) {
-		try {
-			File file = new File(filename);
-			FileUtils.mkDirsParent(file);
-			FileHandler fHandler = new FileHandler(filename, append);
-			fHandler.setFormatter(formatter);
-			this.logger.addHandler(fHandler);
-		} catch (IOException e) {
-			de.bluecolored.bluemap.core.logger.Logger.global.logError("Error while opening log file!", e);
-		}
-	}
+    private Logger logger;
+    private SimpleFormatter formatter;
 
-	@Override
-	public void logError(String message, Throwable throwable) {
-		logger.log(Level.SEVERE, message, throwable);
-	}
+    private LoggerLogger() {
+        this.logger = Logger.getLogger("bluemap");
+        this.logger.setUseParentHandlers(false);
+        ConsoleHandler cHandler = new ConsoleHandler();
+        formatter = new SimpleFormatter() {
+            @Override
+            public synchronized String format(LogRecord record) {
+                String stackTrace = record.getThrown() == null ? "" : ExceptionUtils.getStackTrace(record.getThrown());
+                return String.format("[%1$s] %2$s%3$s%n", record.getLevel(), record.getMessage(), stackTrace);
+            }
+        };
+        cHandler.setFormatter(formatter);
+        this.logger.addHandler(cHandler);
 
-	@Override
-	public void logWarning(String message) {
-		logger.log(Level.WARNING, message);
-	}
+    }
 
-	@Override
-	public void logInfo(String message) {
-		logger.log(Level.INFO, message);
-	}
+    public static LoggerLogger getInstance() {
+        if (instance == null) {
+            instance = new LoggerLogger();
+        }
+        return instance;
+    }
 
-	@Override
-	public void logDebug(String message) {
-		logger.log(Level.FINE, message);
-	}
-	
+    public void addFileHandler(String filename, boolean append) {
+        try {
+            File file = new File(filename);
+            FileUtils.mkDirsParent(file);
+            FileHandler fHandler = new FileHandler(filename, append);
+            fHandler.setFormatter(formatter);
+            this.logger.addHandler(fHandler);
+        } catch (IOException e) {
+            de.bluecolored.bluemap.core.logger.Logger.global.logError("Error while opening log file!", e);
+        }
+    }
+
+    @Override
+    public void logError(String message, Throwable throwable) {
+        logger.log(Level.SEVERE, message, throwable);
+    }
+
+    @Override
+    public void logWarning(String message) {
+        logger.log(Level.WARNING, message);
+    }
+
+    @Override
+    public void logInfo(String message) {
+        logger.log(Level.INFO, message);
+    }
+
+    @Override
+    public void logDebug(String message) {
+        logger.log(Level.FINE, message);
+    }
+
 }

@@ -39,100 +39,100 @@ import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import java.util.*;
 
 public class SpongePlayer implements Player {
-	
-	private static final Map<GameMode, Gamemode> GAMEMODE_MAP = new HashMap<>(5);
-	static {
-		GAMEMODE_MAP.put(GameModes.ADVENTURE.get(), Gamemode.ADVENTURE);
-		GAMEMODE_MAP.put(GameModes.SURVIVAL.get(), Gamemode.SURVIVAL);
-		GAMEMODE_MAP.put(GameModes.CREATIVE.get(), Gamemode.CREATIVE);
-		GAMEMODE_MAP.put(GameModes.SPECTATOR.get(), Gamemode.SPECTATOR);
-		GAMEMODE_MAP.put(GameModes.NOT_SET.get(), Gamemode.SURVIVAL);
-	}
-	
-	private final UUID uuid;
-	private Text name;
-	private UUID world;
-	private Vector3d position;
-	private boolean online;
-	private boolean sneaking;
-	private boolean invisible;
-	private Gamemode gamemode;
-	
-	public SpongePlayer(UUID playerUUID) {
-		this.uuid = playerUUID;
-		update();
-	}
-	
-	@Override
-	public UUID getUuid() {
-		return this.uuid;
-	}
 
-	@Override
-	public Text getName() {
-		return this.name;
-	}
+    private static final Map<GameMode, Gamemode> GAMEMODE_MAP = new HashMap<>(5);
+    static {
+        GAMEMODE_MAP.put(GameModes.ADVENTURE.get(), Gamemode.ADVENTURE);
+        GAMEMODE_MAP.put(GameModes.SURVIVAL.get(), Gamemode.SURVIVAL);
+        GAMEMODE_MAP.put(GameModes.CREATIVE.get(), Gamemode.CREATIVE);
+        GAMEMODE_MAP.put(GameModes.SPECTATOR.get(), Gamemode.SPECTATOR);
+        GAMEMODE_MAP.put(GameModes.NOT_SET.get(), Gamemode.SURVIVAL);
+    }
 
-	@Override
-	public UUID getWorld() {
-		return this.world;
-	}
+    private final UUID uuid;
+    private Text name;
+    private UUID world;
+    private Vector3d position;
+    private boolean online;
+    private boolean sneaking;
+    private boolean invisible;
+    private Gamemode gamemode;
 
-	@Override
-	public Vector3d getPosition() {
-		return this.position;
-	}
+    public SpongePlayer(UUID playerUUID) {
+        this.uuid = playerUUID;
+        update();
+    }
 
-	@Override
-	public boolean isOnline() {
-		return this.online;
-	}
+    @Override
+    public UUID getUuid() {
+        return this.uuid;
+    }
 
-	@Override
-	public boolean isSneaking() {
-		return this.sneaking;
-	}
+    @Override
+    public Text getName() {
+        return this.name;
+    }
 
-	@Override
-	public boolean isInvisible() {
-		return this.invisible;
-	}
+    @Override
+    public UUID getWorld() {
+        return this.world;
+    }
 
-	@Override
-	public Gamemode getGamemode() {
-		return this.gamemode;
-	}
-	
-	/**
-	 * API access, only call on server thread!
-	 */
-	public void update() {
-		ServerPlayer player = Sponge.server().player(uuid).orElse(null);
-		if (player == null) {
-			this.online = false;
-			return;
-		}
-		
-		this.gamemode = GAMEMODE_MAP.get(player.get(Keys.GAME_MODE).orElse(GameModes.NOT_SET.get()));
-		if (this.gamemode == null) this.gamemode = Gamemode.SURVIVAL;
-		
-		boolean invis = player.get(Keys.VANISH).orElse(false);
-		if (!invis && player.get(Keys.IS_INVISIBLE).orElse(false)) invis = true;
-		if (!invis) {
-			Optional<List<PotionEffect>> effects = player.get(Keys.POTION_EFFECTS);
-			if (effects.isPresent()) {
-				for (PotionEffect effect : effects.get()) {
-					if (effect.type().equals(PotionEffectTypes.INVISIBILITY.get()) && effect.duration() > 0) invis = true;
-				}
-			}
-		}
-		this.invisible = invis;
-		
-		this.name = Text.of(player.name());
-		this.online = player.isOnline();
-		this.position = SpongePlugin.fromSpongePoweredVector(player.position());
-		this.sneaking = player.get(Keys.IS_SNEAKING).orElse(false);
-		this.world = player.world().uniqueId();
-	}
+    @Override
+    public Vector3d getPosition() {
+        return this.position;
+    }
+
+    @Override
+    public boolean isOnline() {
+        return this.online;
+    }
+
+    @Override
+    public boolean isSneaking() {
+        return this.sneaking;
+    }
+
+    @Override
+    public boolean isInvisible() {
+        return this.invisible;
+    }
+
+    @Override
+    public Gamemode getGamemode() {
+        return this.gamemode;
+    }
+
+    /**
+     * API access, only call on server thread!
+     */
+    public void update() {
+        ServerPlayer player = Sponge.server().player(uuid).orElse(null);
+        if (player == null) {
+            this.online = false;
+            return;
+        }
+
+        this.gamemode = GAMEMODE_MAP.get(player.get(Keys.GAME_MODE).orElse(GameModes.NOT_SET.get()));
+        if (this.gamemode == null) this.gamemode = Gamemode.SURVIVAL;
+
+        boolean invis = player.get(Keys.VANISH).orElse(false);
+        if (!invis && player.get(Keys.IS_INVISIBLE).orElse(false)) invis = true;
+        if (!invis) {
+            Optional<List<PotionEffect>> effects = player.get(Keys.POTION_EFFECTS);
+            if (effects.isPresent()) {
+                for (PotionEffect effect : effects.get()) {
+                    if (effect.type().equals(PotionEffectTypes.INVISIBILITY.get()) && effect.duration() > 0) invis = true;
+                }
+            }
+        }
+        this.invisible = invis;
+
+        this.name = Text.of(player.name());
+        this.online = player.isOnline();
+        this.position = SpongePlugin.fromSpongePoweredVector(player.position());
+        this.sneaking = player.get(Keys.IS_SNEAKING).orElse(false);
+        this.world = player.world().uniqueId();
+    }
 
 }

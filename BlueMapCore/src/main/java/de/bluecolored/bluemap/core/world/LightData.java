@@ -25,30 +25,30 @@
 package de.bluecolored.bluemap.core.world;
 
 public class LightData {
-	private int skyLight, blockLight;
-	
-	public LightData(int skyLight, int blockLight) {		
-		this.skyLight = skyLight;
-		this.blockLight = blockLight;
-	}
+    private int skyLight, blockLight;
 
-	public LightData set(int skyLight, int blockLight) {
-		this.skyLight = skyLight;
-		this.blockLight = blockLight;
-		return this;
-	}
+    public LightData(int skyLight, int blockLight) {
+        this.skyLight = skyLight;
+        this.blockLight = blockLight;
+    }
 
-	public int getSkyLight() {
-		return skyLight;
-	}
-	
-	public int getBlockLight() {
-		return blockLight;
-	}
-	
-	@Override
-	public String toString() {
-		return "LightData[B:" + getBlockLight() + "|S:" + getSkyLight() + "]";
-	}
-	
+    public LightData set(int skyLight, int blockLight) {
+        this.skyLight = skyLight;
+        this.blockLight = blockLight;
+        return this;
+    }
+
+    public int getSkyLight() {
+        return skyLight;
+    }
+
+    public int getBlockLight() {
+        return blockLight;
+    }
+
+    @Override
+    public String toString() {
+        return "LightData[B:" + getBlockLight() + "|S:" + getSkyLight() + "]";
+    }
+
 }

@@ -47,116 +47,116 @@ import java.util.concurrent.TimeoutException;
 
 public class SpongeCommands {
 
-	private final CommandDispatcher<CommandCause> dispatcher;
-	
-	public SpongeCommands(final Plugin plugin) {
-		this.dispatcher = new CommandDispatcher<>();
-		
-		// register commands
-		new Commands<>(plugin, dispatcher, cause -> new SpongeCommandSource(plugin, cause.audience(), cause.subject()));
-	}
-	
-	public Collection<SpongeCommandProxy> getRootCommands(){
-		Collection<SpongeCommandProxy> rootCommands = new ArrayList<>();
-		
-		for (CommandNode<CommandCause> node : this.dispatcher.getRoot().getChildren()) {
-			rootCommands.add(new SpongeCommandProxy(node.getName()));
-		}
-		
-		return rootCommands;
-	}
+    private final CommandDispatcher<CommandCause> dispatcher;
 
-	public class SpongeCommandProxy implements Command.Raw {
+    public SpongeCommands(final Plugin plugin) {
+        this.dispatcher = new CommandDispatcher<>();
 
-		private final String label;
+        // register commands
+        new Commands<>(plugin, dispatcher, cause -> new SpongeCommandSource(plugin, cause.audience(), cause.subject()));
+    }
 
-		protected SpongeCommandProxy(String label) {
-			this.label = label;
-		}
+    public Collection<SpongeCommandProxy> getRootCommands(){
+        Collection<SpongeCommandProxy> rootCommands = new ArrayList<>();
 
-		public String getLabel() {
-			return label;
-		}
+        for (CommandNode<CommandCause> node : this.dispatcher.getRoot().getChildren()) {
+            rootCommands.add(new SpongeCommandProxy(node.getName()));
+        }
 
-		@Override
-		public CommandResult process(CommandCause cause, ArgumentReader.Mutable arguments) {
-			String command = label;
-			if (!arguments.input().isEmpty()) {
-				command += " " + arguments.input();
-			}
+        return rootCommands;
+    }
 
-			try {
-				return CommandResult.builder().result(dispatcher.execute(command, cause)).build();
-			} catch (CommandSyntaxException ex) {
-				Component errText = Component.text(ex.getRawMessage().getString(), NamedTextColor.RED);
+    public class SpongeCommandProxy implements Command.Raw {
 
-				String context = ex.getContext();
-				if (context != null)
-					errText = errText.append(Component.newline()).append(Component.text(context, NamedTextColor.GRAY));
+        private final String label;
 
-				return CommandResult.error(errText);
-			}
-		}
+        protected SpongeCommandProxy(String label) {
+            this.label = label;
+        }
 
-		@Override
-		public List<CommandCompletion> complete(CommandCause cause, ArgumentReader.Mutable arguments) {
-			String command = label;
-			if (!arguments.input().isEmpty()) {
-				command += " " + arguments.input();
-			}
+        public String getLabel() {
+            return label;
+        }
 
-			List<CommandCompletion> completions = new ArrayList<>();
+        @Override
+        public CommandResult process(CommandCause cause, ArgumentReader.Mutable arguments) {
+            String command = label;
+            if (!arguments.input().isEmpty()) {
+                command += " " + arguments.input();
+            }
 
-			try {
-				Suggestions suggestions = dispatcher.getCompletionSuggestions(dispatcher.parse(command, cause)).get(100, TimeUnit.MILLISECONDS);
-				for (Suggestion suggestion : suggestions.getList()) {
-					String text = suggestion.getText();
+            try {
+                return CommandResult.builder().result(dispatcher.execute(command, cause)).build();
+            } catch (CommandSyntaxException ex) {
+                Component errText = Component.text(ex.getRawMessage().getString(), NamedTextColor.RED);
 
-					if (text.indexOf(' ') == -1) {
-						Message tooltip = suggestion.getTooltip();
-						if (tooltip == null) {
-							completions.add(CommandCompletion.of(text));
-						} else {
-							completions.add(CommandCompletion.of(text, Component.text(tooltip.getString())));
-						}
-					}
-				}
-			} catch (InterruptedException ignore) {
-				Thread.currentThread().interrupt();
-			} catch (ExecutionException | TimeoutException ignore) {}
+                String context = ex.getContext();
+                if (context != null)
+                    errText = errText.append(Component.newline()).append(Component.text(context, NamedTextColor.GRAY));
 
-			completions.sort(Comparator.comparing(CommandCompletion::completion));
+                return CommandResult.error(errText);
+            }
+        }
 
-			return completions;
-		}
+        @Override
+        public List<CommandCompletion> complete(CommandCause cause, ArgumentReader.Mutable arguments) {
+            String command = label;
+            if (!arguments.input().isEmpty()) {
+                command += " " + arguments.input();
+            }
 
-		@Override
-		public boolean canExecute(CommandCause cause) {
-			return true;
-		}
+            List<CommandCompletion> completions = new ArrayList<>();
 
-		@Override
-		public Optional<Component> shortDescription(CommandCause cause) {
-			return Optional.empty();
-		}
+            try {
+                Suggestions suggestions = dispatcher.getCompletionSuggestions(dispatcher.parse(command, cause)).get(100, TimeUnit.MILLISECONDS);
+                for (Suggestion suggestion : suggestions.getList()) {
+                    String text = suggestion.getText();
 
-		@Override
-		public Optional<Component> extendedDescription(CommandCause cause) {
-			return Optional.empty();
-		}
+                    if (text.indexOf(' ') == -1) {
+                        Message tooltip = suggestion.getTooltip();
+                        if (tooltip == null) {
+                            completions.add(CommandCompletion.of(text));
+                        } else {
+                            completions.add(CommandCompletion.of(text, Component.text(tooltip.getString())));
+                        }
+                    }
+                }
+            } catch (InterruptedException ignore) {
+                Thread.currentThread().interrupt();
+            } catch (ExecutionException | TimeoutException ignore) {}
 
-		@Override
-		public Component usage(CommandCause cause) {
-			CommandNode<CommandCause> node = dispatcher.getRoot().getChild(label);
-			if (node == null) return Component.text("/" + label);
+            completions.sort(Comparator.comparing(CommandCompletion::completion));
 
-			List<Component> lines = new ArrayList<>();
-			for (String usageString : dispatcher.getSmartUsage(node, cause).values()) {
-				lines.add(Component.text("/" + label + " ", NamedTextColor.WHITE).append(Component.text(usageString, NamedTextColor.GRAY)));
-			}
+            return completions;
+        }
 
-			return Component.join(Component.newline(), lines);
-		}
-	}
-	
+        @Override
+        public boolean canExecute(CommandCause cause) {
+            return true;
+        }
+
+        @Override
+        public Optional<Component> shortDescription(CommandCause cause) {
+            return Optional.empty();
+        }
+
+        @Override
+        public Optional<Component> extendedDescription(CommandCause cause) {
+            return Optional.empty();
+        }
+
+        @Override
+        public Component usage(CommandCause cause) {
+            CommandNode<CommandCause> node = dispatcher.getRoot().getChild(label);
+            if (node == null) return Component.text("/" + label);
+
+            List<Component> lines = new ArrayList<>();
+            for (String usageString : dispatcher.getSmartUsage(node, cause).values()) {
+                lines.add(Component.text("/" + label + " ", NamedTextColor.WHITE).append(Component.text(usageString, NamedTextColor.GRAY)));
+            }
+
+            return Component.join(Component.newline(), lines);
+        }
+    }
+
 }

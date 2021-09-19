@@ -37,75 +37,75 @@ import java.util.regex.Pattern;
 
 public class FileUtils {
 
-	private FileUtils(){}
+    private FileUtils(){}
 
-	public static void delete(File file) throws IOException {
-		if (file.exists()) org.apache.commons.io.FileUtils.forceDelete(file);
-	}
+    public static void delete(File file) throws IOException {
+        if (file.exists()) org.apache.commons.io.FileUtils.forceDelete(file);
+    }
 
-	public static void mkDirs(File directory) throws IOException {
-		org.apache.commons.io.FileUtils.forceMkdir(directory);
-	}
+    public static void mkDirs(File directory) throws IOException {
+        org.apache.commons.io.FileUtils.forceMkdir(directory);
+    }
 
-	public static void mkDirsParent(File file) throws IOException {
-		org.apache.commons.io.FileUtils.forceMkdirParent(file);
-	}
+    public static void mkDirsParent(File file) throws IOException {
+        org.apache.commons.io.FileUtils.forceMkdirParent(file);
+    }
 
-	public static void createFile(File file) throws IOException {
-		if (!file.exists()) {
-			org.apache.commons.io.FileUtils.forceMkdirParent(file);
-			if (!file.createNewFile()) throw new IOException("Could not create file '" + file + "'!");
-		} else {
-			if (!file.isFile()) throw new IOException("File '" + file + "' exists but is not a normal file!");
-		}
-	}
+    public static void createFile(File file) throws IOException {
+        if (!file.exists()) {
+            org.apache.commons.io.FileUtils.forceMkdirParent(file);
+            if (!file.createNewFile()) throw new IOException("Could not create file '" + file + "'!");
+        } else {
+            if (!file.isFile()) throw new IOException("File '" + file + "' exists but is not a normal file!");
+        }
+    }
 
-	public static File coordsToFile(Path root, Vector2i coords, String fileType){
-		String path = "x" + coords.getX() + "z" + coords.getY();
-		char[] cs = path.toCharArray();
-		List<String> folders = new ArrayList<>();
-		String folder = "";
-		for (char c : cs){
-			folder += c;
-			if (c >= '0' && c <= '9'){
-				folders.add(folder);
-				folder = "";
-			}
-		}
-		String fileName = folders.remove(folders.size() - 1);
-		
-		Path p = root;
-		for (String s : folders){
-			p = p.resolve(s);
-		}
-		
-		return p.resolve(fileName + "." + fileType).toFile();
-	}
-	
-	/**
-	 * The path-elements are being matched to the pattern-elements, 
-	 * each pattern-element can be a regex pattern to match against one path-element or "*" to represent any number of arbitrary elements (lazy: until the next pattern matches).
-	 */
-	public static boolean matchPath(Path path, String... pattern) {
-		int p = 0;
-		for (int i = 0; i < path.getNameCount(); i++) {
-			while (pattern[p].equals("*")) {
-				p++;
-				
-				if (pattern.length >= p) return true;
-			}
+    public static File coordsToFile(Path root, Vector2i coords, String fileType){
+        String path = "x" + coords.getX() + "z" + coords.getY();
+        char[] cs = path.toCharArray();
+        List<String> folders = new ArrayList<>();
+        String folder = "";
+        for (char c : cs){
+            folder += c;
+            if (c >= '0' && c <= '9'){
+                folders.add(folder);
+                folder = "";
+            }
+        }
+        String fileName = folders.remove(folders.size() - 1);
 
-			if (Pattern.matches(pattern[p], path.getName(i).toString())) {
-				p++;
-				continue;
-			}
-			
-			if (p > 0 && pattern[p-1].equals("*")) continue;
-			
-			return false;
-		}
-		
-		return true;
-	}
-	
+        Path p = root;
+        for (String s : folders){
+            p = p.resolve(s);
+        }
+
+        return p.resolve(fileName + "." + fileType).toFile();
+    }
+
+    /**
+     * The path-elements are being matched to the pattern-elements,
+     * each pattern-element can be a regex pattern to match against one path-element or "*" to represent any number of arbitrary elements (lazy: until the next pattern matches).
+     */
+    public static boolean matchPath(Path path, String... pattern) {
+        int p = 0;
+        for (int i = 0; i < path.getNameCount(); i++) {
+            while (pattern[p].equals("*")) {
+                p++;
+
+                if (pattern.length >= p) return true;
+            }
+
+            if (Pattern.matches(pattern[p], path.getName(i).toString())) {
+                p++;
+                continue;
+            }
+
+            if (p > 0 && pattern[p-1].equals("*")) continue;
+
+            return false;
+        }
+
+        return true;
+    }
+
 }

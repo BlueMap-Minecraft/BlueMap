@@ -41,169 +41,169 @@ import com.google.gson.stream.JsonWriter;
 
 public class BufferGeometry {
 
-	public Map<String, BufferAttribute> attributes;
-	public MaterialGroup[] groups;
+    public Map<String, BufferAttribute> attributes;
+    public MaterialGroup[] groups;
 
-	private BufferGeometry() {}
-	
-	public BufferGeometry(float[] position, float[] normal, float[] color, float[] uv, MaterialGroup[] groups) {
-		this.attributes = new HashMap<>();
-		addAttribute("position", new BufferAttribute(position, 3));
-		addAttribute("normal", new BufferAttribute(normal, 3));
-		addAttribute("color", new BufferAttribute(color, 3));
-		addAttribute("uv", new BufferAttribute(uv, 2));
+    private BufferGeometry() {}
 
-		this.groups = groups;
-	}
+    public BufferGeometry(float[] position, float[] normal, float[] color, float[] uv, MaterialGroup[] groups) {
+        this.attributes = new HashMap<>();
+        addAttribute("position", new BufferAttribute(position, 3));
+        addAttribute("normal", new BufferAttribute(normal, 3));
+        addAttribute("color", new BufferAttribute(color, 3));
+        addAttribute("uv", new BufferAttribute(uv, 2));
 
-	public void addAttribute(String name, BufferAttribute attribute) {
-		this.attributes.put(name, attribute);
-	}
+        this.groups = groups;
+    }
 
-	public boolean isValid() {
-		int faceCount = getFaceCount();
-		
-		for (BufferAttribute attribute : attributes.values()) {
-			if (attribute.getItemCount() != faceCount) return false;
-		}
-		
-		return true;
-	}
+    public void addAttribute(String name, BufferAttribute attribute) {
+        this.attributes.put(name, attribute);
+    }
 
-	public int getFaceCount() {
-		if (attributes.isEmpty()) return 0;
-		BufferAttribute attribute = attributes.values().iterator().next();
-		return attribute.getItemCount();
-	}
+    public boolean isValid() {
+        int faceCount = getFaceCount();
 
-	public String toJson() {
-		try {
+        for (BufferAttribute attribute : attributes.values()) {
+            if (attribute.getItemCount() != faceCount) return false;
+        }
 
-			StringWriter sw = new StringWriter();
-			Gson gson = new GsonBuilder().create();
-			JsonWriter json = gson.newJsonWriter(sw);
+        return true;
+    }
 
-			json.beginObject(); // main-object
+    public int getFaceCount() {
+        if (attributes.isEmpty()) return 0;
+        BufferAttribute attribute = attributes.values().iterator().next();
+        return attribute.getItemCount();
+    }
 
-			// set special values
-			json.name("type").value("BufferGeometry");
-			json.name("uuid").value(UUID.randomUUID().toString().toUpperCase());
+    public String toJson() {
+        try {
 
-			json.name("data").beginObject(); // data
-			json.name("attributes").beginObject(); // attributes
+            StringWriter sw = new StringWriter();
+            Gson gson = new GsonBuilder().create();
+            JsonWriter json = gson.newJsonWriter(sw);
 
-			for (Entry<String, BufferAttribute> entry : attributes.entrySet()) {
-				json.name(entry.getKey());
-				entry.getValue().writeJson(json);
-			}
+            json.beginObject(); // main-object
 
-			json.endObject(); // attributes
+            // set special values
+            json.name("type").value("BufferGeometry");
+            json.name("uuid").value(UUID.randomUUID().toString().toUpperCase());
 
-			json.name("groups").beginArray(); // groups
+            json.name("data").beginObject(); // data
+            json.name("attributes").beginObject(); // attributes
 
-			// write groups into json
-			for (MaterialGroup g : groups) {
-				json.beginObject();
+            for (Entry<String, BufferAttribute> entry : attributes.entrySet()) {
+                json.name(entry.getKey());
+                entry.getValue().writeJson(json);
+            }
 
-				json.name("materialIndex").value(g.getMaterialIndex());
-				json.name("start").value(g.getStart());
-				json.name("count").value(g.getCount());
+            json.endObject(); // attributes
 
-				json.endObject();
-			}
+            json.name("groups").beginArray(); // groups
 
-			json.endArray(); // groups
-			json.endObject(); // data
-			json.endObject(); // main-object
+            // write groups into json
+            for (MaterialGroup g : groups) {
+                json.beginObject();
 
-			// save and return
-			json.flush();
-			return sw.toString();
+                json.name("materialIndex").value(g.getMaterialIndex());
+                json.name("start").value(g.getStart());
+                json.name("count").value(g.getCount());
 
-		} catch (IOException e) {
-			// since we are using a StringWriter there should never be an IO exception
-			// thrown
-			throw new RuntimeException(e);
-		}
-	}
+                json.endObject();
+            }
 
-	public static BufferGeometry fromJson(String jsonString) throws IOException {
+            json.endArray(); // groups
+            json.endObject(); // data
+            json.endObject(); // main-object
 
-		Gson gson = new GsonBuilder().create();
-		JsonReader json = gson.newJsonReader(new StringReader(jsonString));
+            // save and return
+            json.flush();
+            return sw.toString();
 
-		List<MaterialGroup> groups = new ArrayList<>(10);
-		Map<String, BufferAttribute> attributes = new HashMap<>();
+        } catch (IOException e) {
+            // since we are using a StringWriter there should never be an IO exception
+            // thrown
+            throw new RuntimeException(e);
+        }
+    }
 
-		json.beginObject(); // root
-		while (json.hasNext()) {
-			String name1 = json.nextName();
+    public static BufferGeometry fromJson(String jsonString) throws IOException {
 
-			if (name1.equals("data")) {
-				json.beginObject(); // data
-				while (json.hasNext()) {
-					String name2 = json.nextName();
+        Gson gson = new GsonBuilder().create();
+        JsonReader json = gson.newJsonReader(new StringReader(jsonString));
 
-					if (name2.equals("attributes")) {
-						json.beginObject(); // attributes
-						while (json.hasNext()) {
-							String name3 = json.nextName();
-							attributes.put(name3, BufferAttribute.readJson(json));
-						}
-						json.endObject(); // attributes
-					}
+        List<MaterialGroup> groups = new ArrayList<>(10);
+        Map<String, BufferAttribute> attributes = new HashMap<>();
 
-					else if (name2.equals("groups")) {
-						json.beginArray(); // groups
-						while (json.hasNext()) {
-							MaterialGroup group = new MaterialGroup(0, 0, 0);
-							json.beginObject(); // group
-							while (json.hasNext()) {
-								String name3 = json.nextName();
+        json.beginObject(); // root
+        while (json.hasNext()) {
+            String name1 = json.nextName();
 
-								if (name3.equals("materialIndex")) {
-									group.setMaterialIndex(json.nextInt());
-								}
+            if (name1.equals("data")) {
+                json.beginObject(); // data
+                while (json.hasNext()) {
+                    String name2 = json.nextName();
 
-								else if (name3.equals("start")) {
-									group.setStart(json.nextInt());
-								}
+                    if (name2.equals("attributes")) {
+                        json.beginObject(); // attributes
+                        while (json.hasNext()) {
+                            String name3 = json.nextName();
+                            attributes.put(name3, BufferAttribute.readJson(json));
+                        }
+                        json.endObject(); // attributes
+                    }
 
-								else if (name3.equals("count")) {
-									group.setCount(json.nextInt());
-								}
+                    else if (name2.equals("groups")) {
+                        json.beginArray(); // groups
+                        while (json.hasNext()) {
+                            MaterialGroup group = new MaterialGroup(0, 0, 0);
+                            json.beginObject(); // group
+                            while (json.hasNext()) {
+                                String name3 = json.nextName();
 
-								else json.skipValue();
-							}
-							json.endObject(); // group
-							groups.add(group);
-						}
-						json.endArray(); // groups
-					}
+                                if (name3.equals("materialIndex")) {
+                                    group.setMaterialIndex(json.nextInt());
+                                }
 
-					else json.skipValue();
-				}
-				json.endObject();// data
-			}
+                                else if (name3.equals("start")) {
+                                    group.setStart(json.nextInt());
+                                }
 
-			else json.skipValue();
-		}
-		json.endObject(); // root
+                                else if (name3.equals("count")) {
+                                    group.setCount(json.nextInt());
+                                }
 
-		groups.sort((g1, g2) -> (int) Math.signum(g1.getStart() - g2.getStart()));
-		int nextGroup = 0;
-		for (MaterialGroup g : groups) {
-			if (g.getStart() != nextGroup)
-				throw new IllegalArgumentException("Group did not start at correct index! (Got " + g.getStart() + " but expected " + nextGroup + ")");
-			if (g.getCount() < 0) throw new IllegalArgumentException("Group has a negative count! (" + g.getCount() + ")");
-			nextGroup += g.getCount();
-		}
+                                else json.skipValue();
+                            }
+                            json.endObject(); // group
+                            groups.add(group);
+                        }
+                        json.endArray(); // groups
+                    }
 
-		BufferGeometry bufferGeometry = new BufferGeometry();
-		bufferGeometry.attributes = attributes;
-		bufferGeometry.groups = groups.toArray(new MaterialGroup[groups.size()]);
-		
-		return bufferGeometry;
-	}
+                    else json.skipValue();
+                }
+                json.endObject();// data
+            }
+
+            else json.skipValue();
+        }
+        json.endObject(); // root
+
+        groups.sort((g1, g2) -> (int) Math.signum(g1.getStart() - g2.getStart()));
+        int nextGroup = 0;
+        for (MaterialGroup g : groups) {
+            if (g.getStart() != nextGroup)
+                throw new IllegalArgumentException("Group did not start at correct index! (Got " + g.getStart() + " but expected " + nextGroup + ")");
+            if (g.getCount() < 0) throw new IllegalArgumentException("Group has a negative count! (" + g.getCount() + ")");
+            nextGroup += g.getCount();
+        }
+
+        BufferGeometry bufferGeometry = new BufferGeometry();
+        bufferGeometry.attributes = attributes;
+        bufferGeometry.groups = groups.toArray(new MaterialGroup[groups.size()]);
+
+        return bufferGeometry;
+    }
 
 }

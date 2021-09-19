@@ -41,96 +41,96 @@ import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 
 public class BukkitPlayer implements Player {
-	
-	private static final Map<GameMode, Gamemode> GAMEMODE_MAP = new EnumMap<>(GameMode.class);
-	static {
-		GAMEMODE_MAP.put(GameMode.ADVENTURE, Gamemode.ADVENTURE);
-		GAMEMODE_MAP.put(GameMode.SURVIVAL, Gamemode.SURVIVAL);
-		GAMEMODE_MAP.put(GameMode.CREATIVE, Gamemode.CREATIVE);
-		GAMEMODE_MAP.put(GameMode.SPECTATOR, Gamemode.SPECTATOR);
-	}
-	
-	private UUID uuid;
-	private Text name;
-	private UUID world;
-	private Vector3d position;
-	private boolean online;
-	private boolean sneaking;
-	private boolean invisible;
-	private Gamemode gamemode;
-	
-	public BukkitPlayer(UUID playerUUID) {
-		this.uuid = playerUUID;
-		update();
-	}
-	
-	@Override
-	public UUID getUuid() {
-		return this.uuid;
-	}
 
-	@Override
-	public Text getName() {
-		return this.name;
-	}
+    private static final Map<GameMode, Gamemode> GAMEMODE_MAP = new EnumMap<>(GameMode.class);
+    static {
+        GAMEMODE_MAP.put(GameMode.ADVENTURE, Gamemode.ADVENTURE);
+        GAMEMODE_MAP.put(GameMode.SURVIVAL, Gamemode.SURVIVAL);
+        GAMEMODE_MAP.put(GameMode.CREATIVE, Gamemode.CREATIVE);
+        GAMEMODE_MAP.put(GameMode.SPECTATOR, Gamemode.SPECTATOR);
+    }
 
-	@Override
-	public UUID getWorld() {
-		return this.world;
-	}
+    private UUID uuid;
+    private Text name;
+    private UUID world;
+    private Vector3d position;
+    private boolean online;
+    private boolean sneaking;
+    private boolean invisible;
+    private Gamemode gamemode;
 
-	@Override
-	public Vector3d getPosition() {
-		return this.position;
-	}
+    public BukkitPlayer(UUID playerUUID) {
+        this.uuid = playerUUID;
+        update();
+    }
 
-	@Override
-	public boolean isOnline() {
-		return this.online;
-	}
+    @Override
+    public UUID getUuid() {
+        return this.uuid;
+    }
 
-	@Override
-	public boolean isSneaking() {
-		return this.sneaking;
-	}
+    @Override
+    public Text getName() {
+        return this.name;
+    }
 
-	@Override
-	public boolean isInvisible() {
-		return this.invisible;
-	}
+    @Override
+    public UUID getWorld() {
+        return this.world;
+    }
 
-	@Override
-	public Gamemode getGamemode() {
-		return this.gamemode;
-	}
-	
-	/**
-	 * API access, only call on server thread!
-	 */
-	public void update() {
-		org.bukkit.entity.Player player = Bukkit.getPlayer(uuid);
-		if (player == null) {
-			this.online = false;
-			return;
-		}
-		
-		this.gamemode = GAMEMODE_MAP.get(player.getGameMode());
-		if (this.gamemode == null) this.gamemode = Gamemode.SURVIVAL;
-		
-		this.invisible = player.hasPotionEffect(PotionEffectType.INVISIBILITY);
-		
-		//also check for "vanished" players
+    @Override
+    public Vector3d getPosition() {
+        return this.position;
+    }
+
+    @Override
+    public boolean isOnline() {
+        return this.online;
+    }
+
+    @Override
+    public boolean isSneaking() {
+        return this.sneaking;
+    }
+
+    @Override
+    public boolean isInvisible() {
+        return this.invisible;
+    }
+
+    @Override
+    public Gamemode getGamemode() {
+        return this.gamemode;
+    }
+
+    /**
+     * API access, only call on server thread!
+     */
+    public void update() {
+        org.bukkit.entity.Player player = Bukkit.getPlayer(uuid);
+        if (player == null) {
+            this.online = false;
+            return;
+        }
+
+        this.gamemode = GAMEMODE_MAP.get(player.getGameMode());
+        if (this.gamemode == null) this.gamemode = Gamemode.SURVIVAL;
+
+        this.invisible = player.hasPotionEffect(PotionEffectType.INVISIBILITY);
+
+        //also check for "vanished" players
         for (MetadataValue meta : player.getMetadata("vanished")) {
             if (meta.asBoolean()) this.invisible = true;
         }
-		
-		this.name = Text.of(player.getName());
-		this.online = player.isOnline();
-		
-		Location location = player.getLocation();
-		this.position = new Vector3d(location.getX(), location.getY(), location.getZ());
-		this.sneaking = player.isSneaking();
-		this.world = player.getWorld().getUID();
-	}
+
+        this.name = Text.of(player.getName());
+        this.online = player.isOnline();
+
+        Location location = player.getLocation();
+        this.position = new Vector3d(location.getX(), location.getY(), location.getZ());
+        this.sneaking = player.isSneaking();
+        this.world = player.getWorld().getUID();
+    }
 
 }

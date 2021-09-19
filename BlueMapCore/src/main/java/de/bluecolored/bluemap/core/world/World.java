@@ -38,58 +38,58 @@ import java.util.UUID;
  */
 public interface World {
 
-	String getName();
-	
-	UUID getUUID();
-	
-	Path getSaveFolder();
+    String getName();
 
-	int getSkyLight();
-	
-	Vector3i getSpawnPoint();
-	
-	int getMaxY(int x, int z);
-	
-	int getMinY(int x, int z);
+    UUID getUUID();
 
-	Grid getChunkGrid();
+    Path getSaveFolder();
 
-	Grid getRegionGrid();
+    int getSkyLight();
 
-	/**
-	 * Returns the {@link Chunk} on the specified block-position
-	 */
-	Chunk getChunkAtBlock(int x, int y, int z);
+    Vector3i getSpawnPoint();
 
-	/**
-	 * Returns the {@link Chunk} on the specified chunk-position
-	 */
-	Chunk getChunk(int x, int z);
+    int getMaxY(int x, int z);
 
-	/**
-	 * Returns the {@link Region} on the specified region-position
-	 */
-	Region getRegion(int x, int z);
+    int getMinY(int x, int z);
 
-	/**
-	 * Returns a collection of all regions in this world.
-	 * <i>(Be aware that the collection is not cached and recollected each time from the world-files!)</i>
-	 */
-	Collection<Vector2i> listRegions();
+    Grid getChunkGrid();
 
-	/**
-	 * Invalidates the complete chunk cache (if there is a cache), so that every chunk has to be reloaded from disk
-	 */
-	void invalidateChunkCache();
+    Grid getRegionGrid();
 
-	/**
-	 * Invalidates the chunk from the chunk-cache (if there is a cache), so that the chunk has to be reloaded from disk
-	 */
-	void invalidateChunkCache(int x, int z);
-	
-	/**
-	 * Cleans up invalid cache-entries to free up memory
-	 */
-	void cleanUpChunkCache();
-	
+    /**
+     * Returns the {@link Chunk} on the specified block-position
+     */
+    Chunk getChunkAtBlock(int x, int y, int z);
+
+    /**
+     * Returns the {@link Chunk} on the specified chunk-position
+     */
+    Chunk getChunk(int x, int z);
+
+    /**
+     * Returns the {@link Region} on the specified region-position
+     */
+    Region getRegion(int x, int z);
+
+    /**
+     * Returns a collection of all regions in this world.
+     * <i>(Be aware that the collection is not cached and recollected each time from the world-files!)</i>
+     */
+    Collection<Vector2i> listRegions();
+
+    /**
+     * Invalidates the complete chunk cache (if there is a cache), so that every chunk has to be reloaded from disk
+     */
+    void invalidateChunkCache();
+
+    /**
+     * Invalidates the chunk from the chunk-cache (if there is a cache), so that the chunk has to be reloaded from disk
+     */
+    void invalidateChunkCache(int x, int z);
+
+    /**
+     * Cleans up invalid cache-entries to free up memory
+     */
+    void cleanUpChunkCache();
+
 }

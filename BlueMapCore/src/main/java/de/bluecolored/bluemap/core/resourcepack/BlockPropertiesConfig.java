@@ -38,45 +38,45 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 public class BlockPropertiesConfig {
-	
-	private final Map<String, List<BlockStateMapping<BlockProperties>>> mappings;
-	
-	public BlockPropertiesConfig() {
-		mappings = new ConcurrentHashMap<>();
-	}
 
-	public void load(ConfigurationNode node) {
-		for (Entry<Object, ? extends ConfigurationNode> e : node.childrenMap().entrySet()){
-			String key = e.getKey().toString();
-			try {
-				BlockState bsKey = BlockState.fromString(key);
-				BlockProperties.Builder bsValueBuilder = BlockProperties.builder();
+    private final Map<String, List<BlockStateMapping<BlockProperties>>> mappings;
 
-				readBool(e.getValue().node("culling"), bsValueBuilder::culling);
-				readBool(e.getValue().node("occluding"), bsValueBuilder::occluding);
-				readBool(e.getValue().node("alwaysWaterlogged"), bsValueBuilder::alwaysWaterlogged);
-				readBool(e.getValue().node("randomOffset"), bsValueBuilder::randomOffset);
+    public BlockPropertiesConfig() {
+        mappings = new ConcurrentHashMap<>();
+    }
 
-				BlockStateMapping<BlockProperties> mapping = new BlockStateMapping<>(bsKey, bsValueBuilder.build());
-				mappings.computeIfAbsent(bsKey.getFullId(), k -> new LinkedList<>()).add(0, mapping);
-			} catch (IllegalArgumentException ex) {
-				Logger.global.logWarning("Loading BlockPropertiesConfig: Failed to parse BlockState from key '" + key + "'");
-			}
-		}
-	}
+    public void load(ConfigurationNode node) {
+        for (Entry<Object, ? extends ConfigurationNode> e : node.childrenMap().entrySet()){
+            String key = e.getKey().toString();
+            try {
+                BlockState bsKey = BlockState.fromString(key);
+                BlockProperties.Builder bsValueBuilder = BlockProperties.builder();
 
-	private void readBool(ConfigurationNode node, Consumer<Boolean> target) {
-		if (!node.virtual()) target.accept(node.getBoolean());
-	}
+                readBool(e.getValue().node("culling"), bsValueBuilder::culling);
+                readBool(e.getValue().node("occluding"), bsValueBuilder::occluding);
+                readBool(e.getValue().node("alwaysWaterlogged"), bsValueBuilder::alwaysWaterlogged);
+                readBool(e.getValue().node("randomOffset"), bsValueBuilder::randomOffset);
 
-	public BlockProperties getBlockProperties(BlockState from){
-		for (BlockStateMapping<BlockProperties> bm : mappings.getOrDefault(from.getFullId(), Collections.emptyList())){
-			if (bm.fitsTo(from)){
-				return bm.getMapping();
-			}
-		}
+                BlockStateMapping<BlockProperties> mapping = new BlockStateMapping<>(bsKey, bsValueBuilder.build());
+                mappings.computeIfAbsent(bsKey.getFullId(), k -> new LinkedList<>()).add(0, mapping);
+            } catch (IllegalArgumentException ex) {
+                Logger.global.logWarning("Loading BlockPropertiesConfig: Failed to parse BlockState from key '" + key + "'");
+            }
+        }
+    }
 
-		return BlockProperties.DEFAULT;
-	}
-	
+    private void readBool(ConfigurationNode node, Consumer<Boolean> target) {
+        if (!node.virtual()) target.accept(node.getBoolean());
+    }
+
+    public BlockProperties getBlockProperties(BlockState from){
+        for (BlockStateMapping<BlockProperties> bm : mappings.getOrDefault(from.getFullId(), Collections.emptyList())){
+            if (bm.fitsTo(from)){
+                return bm.getMapping();
+            }
+        }
+
+        return BlockProperties.DEFAULT;
+    }
+
 }

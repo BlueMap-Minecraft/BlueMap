@@ -33,47 +33,47 @@ import org.spongepowered.configurate.serialize.SerializationException;
 
 public abstract class ObjectMarkerImpl extends MarkerImpl implements ObjectMarker {
 
-	private String detail;
+    private String detail;
 
-	private boolean hasUnsavedChanges;
+    private boolean hasUnsavedChanges;
 
-	public ObjectMarkerImpl(String id, BlueMapMap map, Vector3d position) {
-		super(id, map, position);
+    public ObjectMarkerImpl(String id, BlueMapMap map, Vector3d position) {
+        super(id, map, position);
 
-		this.detail = null;
+        this.detail = null;
 
-		this.hasUnsavedChanges = true;
-	}
+        this.hasUnsavedChanges = true;
+    }
 
-	@Override
-	public String getDetail() {
-		if (detail == null) return getLabel();
-		return detail;
-	}
+    @Override
+    public String getDetail() {
+        if (detail == null) return getLabel();
+        return detail;
+    }
 
-	@Override
-	public void setDetail(String detail) {
-		this.detail = detail;
-		this.hasUnsavedChanges = true;
-	}
+    @Override
+    public void setDetail(String detail) {
+        this.detail = detail;
+        this.hasUnsavedChanges = true;
+    }
 
-	@Override
-	public void load(BlueMapAPI api, ConfigurationNode markerNode, boolean overwriteChanges) throws MarkerFileFormatException {
-		super.load(api, markerNode, overwriteChanges);
+    @Override
+    public void load(BlueMapAPI api, ConfigurationNode markerNode, boolean overwriteChanges) throws MarkerFileFormatException {
+        super.load(api, markerNode, overwriteChanges);
 
-		if (!overwriteChanges && hasUnsavedChanges) return;
-		this.hasUnsavedChanges = false;
+        if (!overwriteChanges && hasUnsavedChanges) return;
+        this.hasUnsavedChanges = false;
 
-		this.detail = markerNode.node("detail").getString();
-	}
+        this.detail = markerNode.node("detail").getString();
+    }
 
-	@Override
-	public void save(ConfigurationNode markerNode) throws SerializationException {
-		super.save(markerNode);
+    @Override
+    public void save(ConfigurationNode markerNode) throws SerializationException {
+        super.save(markerNode);
 
-		if (this.detail != null) markerNode.node("detail").set(this.detail);
+        if (this.detail != null) markerNode.node("detail").set(this.detail);
 
-		hasUnsavedChanges = false;
-	}
+        hasUnsavedChanges = false;
+    }
 
 }

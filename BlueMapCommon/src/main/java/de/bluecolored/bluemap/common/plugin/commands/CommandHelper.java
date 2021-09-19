@@ -39,137 +39,137 @@ import java.util.*;
 
 public class CommandHelper {
 
-	private final Plugin plugin;
-	private final Map<String, WeakReference<RenderTask>> taskRefMap;
-	
-	public CommandHelper(Plugin plugin) {
-		this.plugin = plugin;
-		this.taskRefMap = new HashMap<>();
-	}
-	
-	public List<Text> createStatusMessage(){
-		List<Text> lines = new ArrayList<>();
+    private final Plugin plugin;
+    private final Map<String, WeakReference<RenderTask>> taskRefMap;
 
-		RenderManager renderer = plugin.getRenderManager();
-		List<RenderTask> tasks = renderer.getScheduledRenderTasks();
+    public CommandHelper(Plugin plugin) {
+        this.plugin = plugin;
+        this.taskRefMap = new HashMap<>();
+    }
 
-		lines.add(Text.of(TextColor.BLUE, "BlueMap - Status:"));
+    public List<Text> createStatusMessage(){
+        List<Text> lines = new ArrayList<>();
 
-		if (renderer.isRunning()) {
-			Text status;
-			if (tasks.isEmpty()) {
-				status = Text.of(TextColor.GRAY, "idle");
-			} else {
-				status = Text.of(TextColor.GREEN, "running");
-			}
+        RenderManager renderer = plugin.getRenderManager();
+        List<RenderTask> tasks = renderer.getScheduledRenderTasks();
 
-			status.setHoverText(Text.of("click to stop rendering"));
-			status.setClickAction(Text.ClickAction.RUN_COMMAND, "/bluemap stop");
+        lines.add(Text.of(TextColor.BLUE, "BlueMap - Status:"));
 
-			lines.add(Text.of(TextColor.WHITE, " Render-Threads are ", status, TextColor.WHITE, "!"));
+        if (renderer.isRunning()) {
+            Text status;
+            if (tasks.isEmpty()) {
+                status = Text.of(TextColor.GRAY, "idle");
+            } else {
+                status = Text.of(TextColor.GREEN, "running");
+            }
 
-			if (!tasks.isEmpty()) {
-				lines.add(Text.of(TextColor.WHITE, " Queued Tasks (" + tasks.size() + "):"));
-				for (int i = 0; i < tasks.size(); i++) {
-					if (i >= 10){
-						lines.add(Text.of(TextColor.GRAY, "..."));
-						break;
-					}
+            status.setHoverText(Text.of("click to stop rendering"));
+            status.setClickAction(Text.ClickAction.RUN_COMMAND, "/bluemap stop");
 
-					RenderTask task = tasks.get(i);
-					lines.add(Text.of(TextColor.GRAY, "  [" + getRefForTask(task) + "] ", TextColor.GOLD, task.getDescription()));
+            lines.add(Text.of(TextColor.WHITE, " Render-Threads are ", status, TextColor.WHITE, "!"));
 
-					if (i == 0) {
-						lines.add(Text.of(TextColor.GRAY, "   Progress: ", TextColor.WHITE,
-								(Math.round(task.estimateProgress() * 10000) / 100.0) + "%"));
+            if (!tasks.isEmpty()) {
+                lines.add(Text.of(TextColor.WHITE, " Queued Tasks (" + tasks.size() + "):"));
+                for (int i = 0; i < tasks.size(); i++) {
+                    if (i >= 10){
+                        lines.add(Text.of(TextColor.GRAY, "..."));
+                        break;
+                    }
 
-						long etaMs = renderer.estimateCurrentRenderTaskTimeRemaining();
-						if (etaMs > 0) {
-							lines.add(Text.of(TextColor.GRAY, "   ETA: ", TextColor.WHITE, DurationFormatUtils.formatDuration(etaMs, "HH:mm:ss")));
-						}
-					}
-				}
-			}
-		} else {
-			if (plugin.checkPausedByPlayerCount()) {
-				lines.add(Text.of(TextColor.WHITE, " Render-Threads are ",
-						Text.of(TextColor.GOLD, "paused")));
-				lines.add(Text.of(TextColor.GRAY, TextFormat.ITALIC, "   (there are " + plugin.getPluginConfig().getPlayerRenderLimit() + " or more players online)"));
-			} else {
-				lines.add(Text.of(TextColor.WHITE, " Render-Threads are ",
-						Text.of(TextColor.RED, "stopped")
-								.setHoverText(Text.of("click to start rendering"))
-								.setClickAction(Text.ClickAction.RUN_COMMAND, "/bluemap start"),
-						TextColor.GRAY, "!"));
-			}
+                    RenderTask task = tasks.get(i);
+                    lines.add(Text.of(TextColor.GRAY, "  [" + getRefForTask(task) + "] ", TextColor.GOLD, task.getDescription()));
 
-			if (!tasks.isEmpty()) {
-				lines.add(Text.of(TextColor.WHITE, " Queued Tasks (" + tasks.size() + "):"));
-				for (int i = 0; i < tasks.size(); i++) {
-					if (i >= 10){
-						lines.add(Text.of(TextColor.GRAY, "..."));
-						break;
-					}
+                    if (i == 0) {
+                        lines.add(Text.of(TextColor.GRAY, "   Progress: ", TextColor.WHITE,
+                                (Math.round(task.estimateProgress() * 10000) / 100.0) + "%"));
 
-					RenderTask task = tasks.get(i);
-					lines.add(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, task.getDescription()));
-				}
-			}
-		}
+                        long etaMs = renderer.estimateCurrentRenderTaskTimeRemaining();
+                        if (etaMs > 0) {
+                            lines.add(Text.of(TextColor.GRAY, "   ETA: ", TextColor.WHITE, DurationFormatUtils.formatDuration(etaMs, "HH:mm:ss")));
+                        }
+                    }
+                }
+            }
+        } else {
+            if (plugin.checkPausedByPlayerCount()) {
+                lines.add(Text.of(TextColor.WHITE, " Render-Threads are ",
+                        Text.of(TextColor.GOLD, "paused")));
+                lines.add(Text.of(TextColor.GRAY, TextFormat.ITALIC, "   (there are " + plugin.getPluginConfig().getPlayerRenderLimit() + " or more players online)"));
+            } else {
+                lines.add(Text.of(TextColor.WHITE, " Render-Threads are ",
+                        Text.of(TextColor.RED, "stopped")
+                                .setHoverText(Text.of("click to start rendering"))
+                                .setClickAction(Text.ClickAction.RUN_COMMAND, "/bluemap start"),
+                        TextColor.GRAY, "!"));
+            }
 
-		return lines;
-	}
-	
-	public Text worldHelperHover() {
-		StringJoiner joiner = new StringJoiner("\n");
-		for (World world : plugin.getWorlds()) {
-			joiner.add(world.getName());
-		}
-		
-		return Text.of("world").setHoverText(Text.of(TextColor.WHITE, "Available worlds: \n", TextColor.GRAY, joiner.toString()));
-	}
-	
-	public Text mapHelperHover() {
-		StringJoiner joiner = new StringJoiner("\n");
-		for (BmMap map : plugin.getMapTypes()) {
-			joiner.add(map.getId());
-		}
-		
-		return Text.of("map").setHoverText(Text.of(TextColor.WHITE, "Available maps: \n", TextColor.GRAY, joiner.toString()));
-	}
+            if (!tasks.isEmpty()) {
+                lines.add(Text.of(TextColor.WHITE, " Queued Tasks (" + tasks.size() + "):"));
+                for (int i = 0; i < tasks.size(); i++) {
+                    if (i >= 10){
+                        lines.add(Text.of(TextColor.GRAY, "..."));
+                        break;
+                    }
 
-	public synchronized Optional<RenderTask> getTaskForRef(String ref) {
-		return Optional.ofNullable(taskRefMap.get(ref)).map(WeakReference::get);
-	}
+                    RenderTask task = tasks.get(i);
+                    lines.add(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, task.getDescription()));
+                }
+            }
+        }
 
-	public synchronized Collection<String> getTaskRefs() {
-		return new ArrayList<>(taskRefMap.keySet());
-	}
+        return lines;
+    }
 
-	private synchronized String getRefForTask(RenderTask task) {
-		Iterator<Map.Entry<String, WeakReference<RenderTask>>> iterator = taskRefMap.entrySet().iterator();
-		while (iterator.hasNext()){
-			Map.Entry<String, WeakReference<RenderTask>> entry = iterator.next();
-			if (entry.getValue().get() == null) iterator.remove();
-			if (entry.getValue().get() == task) return entry.getKey();
-		}
+    public Text worldHelperHover() {
+        StringJoiner joiner = new StringJoiner("\n");
+        for (World world : plugin.getWorlds()) {
+            joiner.add(world.getName());
+        }
 
-		String newRef = safeRandomRef();
+        return Text.of("world").setHoverText(Text.of(TextColor.WHITE, "Available worlds: \n", TextColor.GRAY, joiner.toString()));
+    }
 
-		taskRefMap.put(newRef, new WeakReference<>(task));
-		return newRef;
-	}
+    public Text mapHelperHover() {
+        StringJoiner joiner = new StringJoiner("\n");
+        for (BmMap map : plugin.getMapTypes()) {
+            joiner.add(map.getId());
+        }
 
-	private synchronized String safeRandomRef() {
-		String ref = randomRef();
-		while (taskRefMap.containsKey(ref)) ref = randomRef();
-		return ref;
-	}
+        return Text.of("map").setHoverText(Text.of(TextColor.WHITE, "Available maps: \n", TextColor.GRAY, joiner.toString()));
+    }
 
-	private String randomRef() {
-		StringBuilder ref = new StringBuilder(Integer.toString(Math.abs(new Random().nextInt()), 16));
-		while (ref.length() < 4) ref.insert(0, "0");
-		return ref.subSequence(0, 4).toString();
-	}
+    public synchronized Optional<RenderTask> getTaskForRef(String ref) {
+        return Optional.ofNullable(taskRefMap.get(ref)).map(WeakReference::get);
+    }
+
+    public synchronized Collection<String> getTaskRefs() {
+        return new ArrayList<>(taskRefMap.keySet());
+    }
+
+    private synchronized String getRefForTask(RenderTask task) {
+        Iterator<Map.Entry<String, WeakReference<RenderTask>>> iterator = taskRefMap.entrySet().iterator();
+        while (iterator.hasNext()){
+            Map.Entry<String, WeakReference<RenderTask>> entry = iterator.next();
+            if (entry.getValue().get() == null) iterator.remove();
+            if (entry.getValue().get() == task) return entry.getKey();
+        }
+
+        String newRef = safeRandomRef();
+
+        taskRefMap.put(newRef, new WeakReference<>(task));
+        return newRef;
+    }
+
+    private synchronized String safeRandomRef() {
+        String ref = randomRef();
+        while (taskRefMap.containsKey(ref)) ref = randomRef();
+        return ref;
+    }
+
+    private String randomRef() {
+        StringBuilder ref = new StringBuilder(Integer.toString(Math.abs(new Random().nextInt()), 16));
+        while (ref.length() < 4) ref.insert(0, "0");
+        return ref.subSequence(0, 4).toString();
+    }
 
 }

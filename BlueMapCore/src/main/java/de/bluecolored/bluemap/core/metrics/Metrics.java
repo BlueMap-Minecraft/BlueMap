@@ -39,27 +39,27 @@ import java.nio.charset.StandardCharsets;
 
 public class Metrics {
 
-	private static final String METRICS_REPORT_URL = "https://metrics.bluecolored.de/bluemap/";
+    private static final String METRICS_REPORT_URL = "https://metrics.bluecolored.de/bluemap/";
 
-	public static void sendReportAsync(String implementation) {
-		new Thread(() -> sendReport(implementation)).start();
-	}
-	
-	public static void sendReport(String implementation) {
-		JsonObject data = new JsonObject();
-		data.addProperty("implementation", implementation);
-		data.addProperty("version", BlueMap.VERSION);
-		
-		try {
-			sendData(data.toString());
-		} catch (IOException | RuntimeException ex) {
-			Logger.global.logDebug("Failed to send Metrics-Report: " + ex);
-		}
-	}
-	
-	private static String sendData(String data) throws MalformedURLException, IOException {
-		byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
-		
+    public static void sendReportAsync(String implementation) {
+        new Thread(() -> sendReport(implementation)).start();
+    }
+
+    public static void sendReport(String implementation) {
+        JsonObject data = new JsonObject();
+        data.addProperty("implementation", implementation);
+        data.addProperty("version", BlueMap.VERSION);
+
+        try {
+            sendData(data.toString());
+        } catch (IOException | RuntimeException ex) {
+            Logger.global.logDebug("Failed to send Metrics-Report: " + ex);
+        }
+    }
+
+    private static String sendData(String data) throws MalformedURLException, IOException {
+        byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
+
         HttpsURLConnection connection = (HttpsURLConnection) new URL(METRICS_REPORT_URL).openConnection();
         connection.setRequestMethod("POST");
         connection.addRequestProperty("Content-Length", String.valueOf(bytes.length));
@@ -68,23 +68,23 @@ public class Metrics {
         connection.addRequestProperty("Connection", "close");
         connection.setRequestProperty("User-Agent", "BlueMap");
         connection.setDoOutput(true);
-        
+
         try (OutputStream out = connection.getOutputStream()){
-	        out.write(bytes);
-	        out.flush();
+            out.write(bytes);
+            out.flush();
         }
-        
+
         try (BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8))) {
-        	String line;
-        	StringBuilder builder = new StringBuilder();
-        	
-        	while ((line = in.readLine()) != null) {
-        		builder.append(line).append("\n");
-        	}
-        	
-        	return builder.toString(); 
+            String line;
+            StringBuilder builder = new StringBuilder();
+
+            while ((line = in.readLine()) != null) {
+                builder.append(line).append("\n");
+            }
+
+            return builder.toString();
         }
-        
-	}
-	
+
+    }
+
 }

@@ -30,13 +30,13 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 
 public interface PlayerLeaveCallback {
-	Event<PlayerLeaveCallback> EVENT = EventFactory.createArrayBacked(PlayerLeaveCallback.class,
-			(listeners) -> (server, player) -> {
-				for (PlayerLeaveCallback event : listeners) {
-					event.onPlayerLeave(server, player);
-				}
-			}
-	);
+    Event<PlayerLeaveCallback> EVENT = EventFactory.createArrayBacked(PlayerLeaveCallback.class,
+            (listeners) -> (server, player) -> {
+                for (PlayerLeaveCallback event : listeners) {
+                    event.onPlayerLeave(server, player);
+                }
+            }
+    );
 
-	void onPlayerLeave(MinecraftServer server, ServerPlayerEntity player);
+    void onPlayerLeave(MinecraftServer server, ServerPlayerEntity player);
 }

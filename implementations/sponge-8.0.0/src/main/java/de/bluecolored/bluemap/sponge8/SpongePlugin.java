@@ -70,260 +70,260 @@ import java.util.concurrent.ExecutorService;
 @org.spongepowered.plugin.builtin.jvm.Plugin(Plugin.PLUGIN_ID)
 public class SpongePlugin implements ServerInterface {
 
-	private final PluginContainer pluginContainer;
+    private final PluginContainer pluginContainer;
 
-	@Inject
-	@ConfigDir(sharedRoot = false)
-	private Path configurationDir;
-	
-	private final Plugin pluginInstance;
-	private final SpongeCommands commands;
+    @Inject
+    @ConfigDir(sharedRoot = false)
+    private Path configurationDir;
 
-	private ExecutorService asyncExecutor;
-	private ExecutorService syncExecutor;
-	
-	private int playerUpdateIndex = 0;
-	private final Map<UUID, Player> onlinePlayerMap;
-	private final List<SpongePlayer> onlinePlayerList;
-	
-	@Inject
-	public SpongePlugin(org.apache.logging.log4j.Logger logger, PluginContainer pluginContainer/*, Metrics.Factory metricsFactory*/) {
-		Logger.global = new Log4J2Logger(logger);
-		this.pluginContainer = pluginContainer;
+    private final Plugin pluginInstance;
+    private final SpongeCommands commands;
 
-		this.onlinePlayerMap = new ConcurrentHashMap<>();
-		this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
+    private ExecutorService asyncExecutor;
+    private ExecutorService syncExecutor;
 
-		final ArtifactVersion versionFromSponge = Sponge.platform().container(Platform.Component.GAME).metadata().version();
-		MinecraftVersion version = new MinecraftVersion(
-				versionFromSponge.getMajorVersion(),
-				versionFromSponge.getMinorVersion(),
-				versionFromSponge.getIncrementalVersion()
-		);
-		
-		this.pluginInstance = new Plugin(version, "sponge-8.0.0", this);
-		this.commands = new SpongeCommands(pluginInstance);
+    private int playerUpdateIndex = 0;
+    private final Map<UUID, Player> onlinePlayerMap;
+    private final List<SpongePlayer> onlinePlayerList;
 
-		//bstats
-		//metricsFactory.make(5911);
-	}
+    @Inject
+    public SpongePlugin(org.apache.logging.log4j.Logger logger, PluginContainer pluginContainer/*, Metrics.Factory metricsFactory*/) {
+        Logger.global = new Log4J2Logger(logger);
+        this.pluginContainer = pluginContainer;
 
-	@Listener
-	public void onRegisterCommands(final RegisterCommandEvent<Command.Raw> event) {
-		//register commands
-		for(SpongeCommandProxy command : commands.getRootCommands()) {
-			event.register(this.pluginContainer, command, command.getLabel());
-		}
+        this.onlinePlayerMap = new ConcurrentHashMap<>();
+        this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 
-	}
+        final ArtifactVersion versionFromSponge = Sponge.platform().container(Platform.Component.GAME).metadata().version();
+        MinecraftVersion version = new MinecraftVersion(
+                versionFromSponge.getMajorVersion(),
+                versionFromSponge.getMinorVersion(),
+                versionFromSponge.getIncrementalVersion()
+        );
 
-	@Listener
-	public void onServerStart(StartedEngineEvent<Server> evt) {
-		asyncExecutor = evt.game().asyncScheduler().createExecutor(pluginContainer);
-		syncExecutor = evt.engine().scheduler().createExecutor(pluginContainer);
-		
-		//start updating players
-		Task task = Task.builder()
-				.interval(Ticks.of(1))
-				.execute(this::updateSomePlayers)
-				.plugin(pluginContainer)
-				.build();
-		evt.engine().scheduler().submit(task);
-		
-		asyncExecutor.execute(() -> {
-			try {
-				Logger.global.logInfo("Loading...");
-				pluginInstance.load();
-				if (pluginInstance.isLoaded()) Logger.global.logInfo("Loaded!");
-			} catch (IOException | ParseResourceException | RuntimeException e) {
-				Logger.global.logError("Failed to load!", e);
-				pluginInstance.unload();
-			}
-		});
-	}
+        this.pluginInstance = new Plugin(version, "sponge-8.0.0", this);
+        this.commands = new SpongeCommands(pluginInstance);
 
-	@Listener
-	public void onServerStop(StoppingEngineEvent<Server> evt) {
-		Logger.global.logInfo("Stopping...");
-		evt.engine().scheduler().tasks(pluginContainer).forEach(ScheduledTask::cancel);
-		pluginInstance.unload();
-		Logger.global.logInfo("Saved and stopped!");
-	}
-	
-	@Listener
-	public void onServerReload(RefreshGameEvent evt) {
-		asyncExecutor.execute(() -> {
-			try {
-				Logger.global.logInfo("Reloading...");
-				pluginInstance.reload();
-				Logger.global.logInfo("Reloaded!");
-			} catch (IOException | ParseResourceException | RuntimeException e) {
-				Logger.global.logError("Failed to load!", e);
-				pluginInstance.unload();
-			}
-		});
+        //bstats
+        //metricsFactory.make(5911);
+    }
 
-		// update player list
-		onlinePlayerMap.clear();
-		synchronized (onlinePlayerList) {
-			onlinePlayerList.clear();
-			for (ServerPlayer spongePlayer : Sponge.server().onlinePlayers()) {
-				SpongePlayer player = new SpongePlayer(spongePlayer.uniqueId());
-				onlinePlayerMap.put(spongePlayer.uniqueId(), player);
-				onlinePlayerList.add(player);
-			}
-		}
-	}
+    @Listener
+    public void onRegisterCommands(final RegisterCommandEvent<Command.Raw> event) {
+        //register commands
+        for(SpongeCommandProxy command : commands.getRootCommands()) {
+            event.register(this.pluginContainer, command, command.getLabel());
+        }
 
-	@Listener
-	public void onPlayerJoin(ServerSideConnectionEvent.Join evt) {
-		SpongePlayer player = new SpongePlayer(evt.player().uniqueId());
-		onlinePlayerMap.put(evt.player().uniqueId(), player);
-		onlinePlayerList.add(player);
-	}
-	
-	@Listener
-	public void onPlayerLeave(ServerSideConnectionEvent.Disconnect evt) {
-		UUID playerUUID = evt.player().uniqueId();
-		onlinePlayerMap.remove(playerUUID);
-		synchronized (onlinePlayerList) {
-			onlinePlayerList.removeIf(p -> p.getUuid().equals(playerUUID));	
-		}
-	}
+    }
 
-	@Override
-	public void registerListener(ServerEventListener listener) {
-		Sponge.eventManager().registerListeners(this.pluginContainer, new EventForwarder(listener));
-	}
+    @Listener
+    public void onServerStart(StartedEngineEvent<Server> evt) {
+        asyncExecutor = evt.game().asyncScheduler().createExecutor(pluginContainer);
+        syncExecutor = evt.engine().scheduler().createExecutor(pluginContainer);
 
-	@Override
-	public void unregisterAllListeners() {
-		Sponge.eventManager().unregisterListeners(this.pluginContainer);
-		Sponge.eventManager().registerListeners(this.pluginContainer, this);
-	}
+        //start updating players
+        Task task = Task.builder()
+                .interval(Ticks.of(1))
+                .execute(this::updateSomePlayers)
+                .plugin(pluginContainer)
+                .build();
+        evt.engine().scheduler().submit(task);
 
-	@Override
-	public UUID getUUIDForWorld(File worldFolder) throws IOException {
-		try {
-			CompoundTag levelSponge = (CompoundTag) NBTUtil.readTag(new File(worldFolder, "level.dat"));
-			CompoundTag spongeData = levelSponge.getCompoundTag("SpongeData");
-			int[] uuidIntArray = spongeData.getIntArray("UUID");
-			if (uuidIntArray.length != 4) throw new IOException("World-UUID is stored in a wrong format! Is the worlds level.dat corrupted?");
-			return intArrayToUuid(uuidIntArray);
-		} catch (IOException | RuntimeException e) {
-			throw new IOException("Failed to read the worlds level.dat!", e);
-		}
-	}
+        asyncExecutor.execute(() -> {
+            try {
+                Logger.global.logInfo("Loading...");
+                pluginInstance.load();
+                if (pluginInstance.isLoaded()) Logger.global.logInfo("Loaded!");
+            } catch (IOException | ParseResourceException | RuntimeException e) {
+                Logger.global.logError("Failed to load!", e);
+                pluginInstance.unload();
+            }
+        });
+    }
 
-	@Override
-	public String getWorldName(UUID worldUUID) {
-		return getServerWorld(worldUUID)
-				.flatMap(
-						serverWorld -> serverWorld
-								.properties()
-								.displayName()
-								.map(PlainTextComponentSerializer.plainText()::serialize)
-				)
-				.orElse(null);
-	}
+    @Listener
+    public void onServerStop(StoppingEngineEvent<Server> evt) {
+        Logger.global.logInfo("Stopping...");
+        evt.engine().scheduler().tasks(pluginContainer).forEach(ScheduledTask::cancel);
+        pluginInstance.unload();
+        Logger.global.logInfo("Saved and stopped!");
+    }
 
-	private Optional<ServerWorld> getServerWorld(UUID worldUUID) {
-		for (ServerWorld world : Sponge.server().worldManager().worlds()) {
-			if (world.uniqueId().equals(worldUUID)) return Optional.of(world);
-		}
+    @Listener
+    public void onServerReload(RefreshGameEvent evt) {
+        asyncExecutor.execute(() -> {
+            try {
+                Logger.global.logInfo("Reloading...");
+                pluginInstance.reload();
+                Logger.global.logInfo("Reloaded!");
+            } catch (IOException | ParseResourceException | RuntimeException e) {
+                Logger.global.logError("Failed to load!", e);
+                pluginInstance.unload();
+            }
+        });
 
-		return Optional.empty();
-	}
+        // update player list
+        onlinePlayerMap.clear();
+        synchronized (onlinePlayerList) {
+            onlinePlayerList.clear();
+            for (ServerPlayer spongePlayer : Sponge.server().onlinePlayers()) {
+                SpongePlayer player = new SpongePlayer(spongePlayer.uniqueId());
+                onlinePlayerMap.put(spongePlayer.uniqueId(), player);
+                onlinePlayerList.add(player);
+            }
+        }
+    }
 
-	@Override
-	public File getConfigFolder() {
-		return configurationDir.toFile();
-	}
+    @Listener
+    public void onPlayerJoin(ServerSideConnectionEvent.Join evt) {
+        SpongePlayer player = new SpongePlayer(evt.player().uniqueId());
+        onlinePlayerMap.put(evt.player().uniqueId(), player);
+        onlinePlayerList.add(player);
+    }
 
-	@Override
-	public Collection<Player> getOnlinePlayers() {
-		return onlinePlayerMap.values();
-	}
+    @Listener
+    public void onPlayerLeave(ServerSideConnectionEvent.Disconnect evt) {
+        UUID playerUUID = evt.player().uniqueId();
+        onlinePlayerMap.remove(playerUUID);
+        synchronized (onlinePlayerList) {
+            onlinePlayerList.removeIf(p -> p.getUuid().equals(playerUUID));
+        }
+    }
 
-	@Override
-	public Optional<Player> getPlayer(UUID uuid) {
-		return Optional.ofNullable(onlinePlayerMap.get(uuid));
-	}
-	
-	@Override
-	public boolean isMetricsEnabled(boolean configValue) {
-		if (pluginContainer != null) {
-			Tristate metricsEnabled = Sponge.metricsConfigManager().collectionState(pluginContainer);
-			if (metricsEnabled != Tristate.UNDEFINED) {
-				return metricsEnabled == Tristate.TRUE;
-			}
-		}
-		
-		return Sponge.metricsConfigManager().globalCollectionState().asBoolean();
-	}
-	
-	@Override
-	public boolean persistWorldChanges(UUID worldUUID) throws IOException, IllegalArgumentException {
-		try {
-			return syncExecutor.submit(() -> {
-				ServerWorld world = getServerWorld(worldUUID).orElse(null);
-				if (world == null) throw new IllegalArgumentException("There is no world with this uuid: " + worldUUID);
-				world.save();
-				
-				return true;
-			}).get();
-		} catch (InterruptedException e) {
-			Thread.currentThread().interrupt();
-			throw new IOException(e);
-		} catch (ExecutionException e) {
-			Throwable t = e.getCause();
-			if (t instanceof IOException) throw (IOException) t;
-			if (t instanceof IllegalArgumentException) throw (IllegalArgumentException) t;
-			throw new IOException(t);
-		}
-	}
-	
-	/**
-	 * Only update some of the online players each tick to minimize performance impact on the server-thread.
-	 * Only call this method on the server-thread.
-	 */
-	private void updateSomePlayers() {
-		synchronized (onlinePlayerList) {
-			int onlinePlayerCount = onlinePlayerList.size();
-			if (onlinePlayerCount == 0) return;
+    @Override
+    public void registerListener(ServerEventListener listener) {
+        Sponge.eventManager().registerListeners(this.pluginContainer, new EventForwarder(listener));
+    }
 
-			int playersToBeUpdated = onlinePlayerCount / 20; //with 20 tps, each player is updated once a second
-			if (playersToBeUpdated == 0) playersToBeUpdated = 1;
+    @Override
+    public void unregisterAllListeners() {
+        Sponge.eventManager().unregisterListeners(this.pluginContainer);
+        Sponge.eventManager().registerListeners(this.pluginContainer, this);
+    }
 
-			for (int i = 0; i < playersToBeUpdated; i++) {
-				playerUpdateIndex++;
-				if (playerUpdateIndex >= 20 && playerUpdateIndex >= onlinePlayerCount) playerUpdateIndex = 0;
+    @Override
+    public UUID getUUIDForWorld(File worldFolder) throws IOException {
+        try {
+            CompoundTag levelSponge = (CompoundTag) NBTUtil.readTag(new File(worldFolder, "level.dat"));
+            CompoundTag spongeData = levelSponge.getCompoundTag("SpongeData");
+            int[] uuidIntArray = spongeData.getIntArray("UUID");
+            if (uuidIntArray.length != 4) throw new IOException("World-UUID is stored in a wrong format! Is the worlds level.dat corrupted?");
+            return intArrayToUuid(uuidIntArray);
+        } catch (IOException | RuntimeException e) {
+            throw new IOException("Failed to read the worlds level.dat!", e);
+        }
+    }
 
-				if (playerUpdateIndex < onlinePlayerCount) {
-					onlinePlayerList.get(playerUpdateIndex).update();
-				}
-			}
-		}
-	}
+    @Override
+    public String getWorldName(UUID worldUUID) {
+        return getServerWorld(worldUUID)
+                .flatMap(
+                        serverWorld -> serverWorld
+                                .properties()
+                                .displayName()
+                                .map(PlainTextComponentSerializer.plainText()::serialize)
+                )
+                .orElse(null);
+    }
 
-	public static Vector3d fromSpongePoweredVector(org.spongepowered.math.vector.Vector3d vec) {
-		return new Vector3d(vec.x(), vec.y(), vec.z());
-	}
+    private Optional<ServerWorld> getServerWorld(UUID worldUUID) {
+        for (ServerWorld world : Sponge.server().worldManager().worlds()) {
+            if (world.uniqueId().equals(worldUUID)) return Optional.of(world);
+        }
 
-	public static Vector3i fromSpongePoweredVector(org.spongepowered.math.vector.Vector3i vec) {
-		return new Vector3i(vec.x(), vec.y(), vec.z());
-	}
+        return Optional.empty();
+    }
 
-	public static Vector2i fromSpongePoweredVector(org.spongepowered.math.vector.Vector2i vec) {
-		return new Vector2i(vec.x(), vec.y());
-	}
+    @Override
+    public File getConfigFolder() {
+        return configurationDir.toFile();
+    }
 
-	private static UUID intArrayToUuid(int[] array) {
-		if (array.length != 4) throw new IllegalArgumentException("Int array has to contain exactly 4 ints!");
-		return new UUID(
-				(long) array[0] << 32 | (long) array[1] & 0x00000000FFFFFFFFL,
-				(long) array[2] << 32 | (long) array[3] & 0x00000000FFFFFFFFL
-		);
-	}
-	
+    @Override
+    public Collection<Player> getOnlinePlayers() {
+        return onlinePlayerMap.values();
+    }
+
+    @Override
+    public Optional<Player> getPlayer(UUID uuid) {
+        return Optional.ofNullable(onlinePlayerMap.get(uuid));
+    }
+
+    @Override
+    public boolean isMetricsEnabled(boolean configValue) {
+        if (pluginContainer != null) {
+            Tristate metricsEnabled = Sponge.metricsConfigManager().collectionState(pluginContainer);
+            if (metricsEnabled != Tristate.UNDEFINED) {
+                return metricsEnabled == Tristate.TRUE;
+            }
+        }
+
+        return Sponge.metricsConfigManager().globalCollectionState().asBoolean();
+    }
+
+    @Override
+    public boolean persistWorldChanges(UUID worldUUID) throws IOException, IllegalArgumentException {
+        try {
+            return syncExecutor.submit(() -> {
+                ServerWorld world = getServerWorld(worldUUID).orElse(null);
+                if (world == null) throw new IllegalArgumentException("There is no world with this uuid: " + worldUUID);
+                world.save();
+
+                return true;
+            }).get();
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IOException(e);
+        } catch (ExecutionException e) {
+            Throwable t = e.getCause();
+            if (t instanceof IOException) throw (IOException) t;
+            if (t instanceof IllegalArgumentException) throw (IllegalArgumentException) t;
+            throw new IOException(t);
+        }
+    }
+
+    /**
+     * Only update some of the online players each tick to minimize performance impact on the server-thread.
+     * Only call this method on the server-thread.
+     */
+    private void updateSomePlayers() {
+        synchronized (onlinePlayerList) {
+            int onlinePlayerCount = onlinePlayerList.size();
+            if (onlinePlayerCount == 0) return;
+
+            int playersToBeUpdated = onlinePlayerCount / 20; //with 20 tps, each player is updated once a second
+            if (playersToBeUpdated == 0) playersToBeUpdated = 1;
+
+            for (int i = 0; i < playersToBeUpdated; i++) {
+                playerUpdateIndex++;
+                if (playerUpdateIndex >= 20 && playerUpdateIndex >= onlinePlayerCount) playerUpdateIndex = 0;
+
+                if (playerUpdateIndex < onlinePlayerCount) {
+                    onlinePlayerList.get(playerUpdateIndex).update();
+                }
+            }
+        }
+    }
+
+    public static Vector3d fromSpongePoweredVector(org.spongepowered.math.vector.Vector3d vec) {
+        return new Vector3d(vec.x(), vec.y(), vec.z());
+    }
+
+    public static Vector3i fromSpongePoweredVector(org.spongepowered.math.vector.Vector3i vec) {
+        return new Vector3i(vec.x(), vec.y(), vec.z());
+    }
+
+    public static Vector2i fromSpongePoweredVector(org.spongepowered.math.vector.Vector2i vec) {
+        return new Vector2i(vec.x(), vec.y());
+    }
+
+    private static UUID intArrayToUuid(int[] array) {
+        if (array.length != 4) throw new IllegalArgumentException("Int array has to contain exactly 4 ints!");
+        return new UUID(
+                (long) array[0] << 32 | (long) array[1] & 0x00000000FFFFFFFFL,
+                (long) array[2] << 32 | (long) array[3] & 0x00000000FFFFFFFFL
+        );
+    }
+
 }

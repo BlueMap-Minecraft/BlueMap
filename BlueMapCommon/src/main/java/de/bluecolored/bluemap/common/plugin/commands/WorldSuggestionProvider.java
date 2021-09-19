@@ -32,21 +32,21 @@ import de.bluecolored.bluemap.core.world.World;
 
 public class WorldSuggestionProvider<S> extends AbstractSuggestionProvider<S> {
 
-	private Plugin plugin;
-	
-	public WorldSuggestionProvider(Plugin plugin) {
-		this.plugin = plugin;
-	}
-	
-	@Override
-	public Collection<String> getPossibleValues() {
-		Collection<String> values = new HashSet<>();
-		
-		for (World world : plugin.getWorlds()) {
-			values.add(world.getName());
-		}
-		
-		return values;
-	}
-	
+    private Plugin plugin;
+
+    public WorldSuggestionProvider(Plugin plugin) {
+        this.plugin = plugin;
+    }
+
+    @Override
+    public Collection<String> getPossibleValues() {
+        Collection<String> values = new HashSet<>();
+
+        for (World world : plugin.getWorlds()) {
+            values.add(world.getName());
+        }
+
+        return values;
+    }
+
 }
