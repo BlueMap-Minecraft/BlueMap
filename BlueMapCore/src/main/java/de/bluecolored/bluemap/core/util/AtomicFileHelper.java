@@ -28,10 +28,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 
 public class AtomicFileHelper {
 
@@ -52,11 +49,11 @@ public class AtomicFileHelper {
 
             try {
                 Files.move(partFile, file, StandardCopyOption.ATOMIC_MOVE);
-            } catch (FileNotFoundException ignore) {
+            } catch (FileNotFoundException | NoSuchFileException ignore) {
             } catch (IOException ex) {
                 try {
                     Files.move(partFile, file);
-                } catch (FileNotFoundException ignore) {}
+                } catch (FileNotFoundException | NoSuchFileException ignore) {}
             }
         });
     }
