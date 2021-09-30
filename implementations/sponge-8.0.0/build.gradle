@@ -1,6 +1,33 @@
-dependencies {
-    shadow "org.spongepowered:spongeapi:8.0.0-SNAPSHOT"
+import org.spongepowered.gradle.plugin.config.PluginLoaders
+import org.spongepowered.plugin.metadata.model.PluginDependency
 
+plugins {
+	id 'org.spongepowered.gradle.plugin' version '2.0.0'
+}
+
+sponge {
+	apiVersion("8.0.0-SNAPSHOT")
+	license("MIT")
+	loader {
+		name(PluginLoaders.JAVA_PLAIN)
+		version("1.0")
+	}
+	plugin("bluemap") {
+		displayName("bluemap")
+		entrypoint("de.bluecolored.bluemap.sponge8.SpongePlugin")
+		description("A 3d-map of your Minecraft worlds view-able in your browser using three.js (WebGL)")
+		contributor("Blue (TBlueF, Lukas Rieger)") {
+			description("Lead Developer")
+		}
+		dependency("spongeapi") {
+			loadOrder(PluginDependency.LoadOrder.AFTER)
+			version("8.0.0-SNAPSHOT")
+			optional(false)
+		}
+	}
+}
+
+dependencies {
 	implementation group: 'org.bstats', name: 'bstats-sponge', version: '2.2.1'
 
 	implementation (project(':BlueMapCommon')) {

@@ -119,8 +119,8 @@ public class SpongePlugin implements ServerInterface {
 
     @Listener
     public void onServerStart(StartedEngineEvent<Server> evt) {
-        asyncExecutor = evt.game().asyncScheduler().createExecutor(pluginContainer);
-        syncExecutor = evt.engine().scheduler().createExecutor(pluginContainer);
+        asyncExecutor = evt.game().asyncScheduler().executor(pluginContainer);
+        syncExecutor = evt.engine().scheduler().executor(pluginContainer);
 
         //start updating players
         Task task = Task.builder()
