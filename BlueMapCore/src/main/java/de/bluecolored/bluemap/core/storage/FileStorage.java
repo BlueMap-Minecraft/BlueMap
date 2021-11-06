@@ -73,6 +73,7 @@ public class FileStorage extends Storage {
 
         InputStream is = Files.newInputStream(file, StandardOpenOption.READ);
         is = new BufferedInputStream(is);
+        is = compression.decompress(is);
 
         return Optional.of(is);
     }
