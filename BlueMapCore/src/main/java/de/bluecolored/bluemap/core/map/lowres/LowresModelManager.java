@@ -28,42 +28,36 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3f;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.hires.HiresTileMeta;
+import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.threejs.BufferGeometry;
-import de.bluecolored.bluemap.core.util.FileUtils;
 import de.bluecolored.bluemap.core.util.math.Color;
 import org.apache.commons.io.IOUtils;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.zip.GZIPInputStream;
 
 public class LowresModelManager {
 
-    private final Path fileRoot;
+    private final Storage.TileStorage storage;
     private final Vector2i pointsPerLowresTile;
     private final Vector2i pointsPerHiresTile;
-    private final boolean useGzip;
 
-    private final Map<File, CachedModel> models;
+    private final Map<Vector2i, CachedModel> models;
 
-    public LowresModelManager(Path fileRoot, Vector2i pointsPerLowresTile, Vector2i pointsPerHiresTile, boolean useGzip) {
-        this.fileRoot = fileRoot;
+    public LowresModelManager(Storage.TileStorage storage, Vector2i pointsPerLowresTile, Vector2i pointsPerHiresTile) {
+        this.storage = storage;
 
         this.pointsPerLowresTile = pointsPerLowresTile;
         this.pointsPerHiresTile = pointsPerHiresTile;
 
         models = new ConcurrentHashMap<>();
-
-        this.useGzip = useGzip;
     }
 
     /**
@@ -116,7 +110,7 @@ public class LowresModelManager {
      * Saves all unsaved changes to the models to disk
      */
     public synchronized void save(){
-        for (Entry<File, CachedModel> entry : models.entrySet()){
+        for (Entry<Vector2i, CachedModel> entry : models.entrySet()){
             saveModel(entry.getKey(), entry.getValue());
         }
 
@@ -159,39 +153,31 @@ public class LowresModelManager {
         }
     }
 
-    /**
-     * Returns the file for a tile
-     */
-    public File getFile(Vector2i tile, boolean useGzip){
-        return FileUtils.coordsToFile(fileRoot, tile, "json" + (useGzip ? ".gz" : ""));
-    }
-
     private LowresModel getModel(Vector2i tile) {
 
-        File modelFile = getFile(tile, useGzip);
-        CachedModel model = models.get(modelFile);
+        CachedModel model = models.get(tile);
 
         if (model == null){
             synchronized (this) {
-                model = models.get(modelFile);
+                model = models.get(tile);
                 if (model == null){
 
-                    if (modelFile.exists()){
-                        try (FileInputStream fis = new FileInputStream(modelFile)) {
-                            InputStream is = fis;
-                            if (useGzip) is = new GZIPInputStream(is);
+                    try {
+                        Optional<InputStream> optIs = storage.read(tile);
+                        if (optIs.isPresent()){
+                            try (InputStream is = optIs.get()) {
+                                String json = IOUtils.toString(is, StandardCharsets.UTF_8);
 
-                            String json = IOUtils.toString(is, StandardCharsets.UTF_8);
-
-                            model = new CachedModel(BufferGeometry.fromJson(json));
-                        } catch (IllegalArgumentException | IOException ex){
-                            Logger.global.logWarning("Failed to load lowres model '" + modelFile + "': " + ex);
-
-                            try {
-                                FileUtils.delete(modelFile);
-                            } catch (IOException ex2) {
-                                Logger.global.logError("Failed to delete lowres-file: " + modelFile, ex2);
+                                model = new CachedModel(BufferGeometry.fromJson(json));
                             }
+                        }
+                    } catch (IllegalArgumentException | IOException ex){
+                        Logger.global.logWarning("Failed to load lowres model '" + tile + "': " + ex);
+
+                        try {
+                            storage.delete(tile);
+                        } catch (IOException ex2) {
+                            Logger.global.logError("Failed to delete lowres-file: " + tile, ex2);
                         }
                     }
 
@@ -199,7 +185,7 @@ public class LowresModelManager {
                         model = new CachedModel(pointsPerLowresTile);
                     }
 
-                    models.put(modelFile, model);
+                    models.put(tile, model);
 
                     tidyUpModelCache();
                 }
@@ -217,12 +203,12 @@ public class LowresModelManager {
      * This method gets automatically called if the cache grows, but if you want to ensure model will be saved after 2 minutes, you could e.g call this method every second.<br>
      */
     public synchronized void tidyUpModelCache() {
-        List<Entry<File, CachedModel>> entries = new ArrayList<>(models.size());
+        List<Entry<Vector2i, CachedModel>> entries = new ArrayList<>(models.size());
         entries.addAll(models.entrySet());
         entries.sort((e1, e2) -> (int) Math.signum(e1.getValue().cacheTime - e2.getValue().cacheTime));
 
         int size = entries.size();
-        for (Entry<File, CachedModel> e : entries) {
+        for (Entry<Vector2i, CachedModel> e : entries) {
             if (size > 10) {
                 saveAndRemoveModel(e.getKey(), e.getValue());
                 continue;
@@ -234,22 +220,22 @@ public class LowresModelManager {
         }
     }
 
-    private synchronized void saveAndRemoveModel(File modelFile, CachedModel model) {
-        models.remove(modelFile);
+    private synchronized void saveAndRemoveModel(Vector2i tile, CachedModel model) {
+        models.remove(tile);
         try {
-            model.save(modelFile, false, useGzip);
+            model.save(storage, tile,false);
             //logger.logDebug("Saved and unloaded lowres tile: " + model.getTile());
         } catch (IOException ex) {
-            Logger.global.logError("Failed to save and unload lowres-model: " + modelFile, ex);
+            Logger.global.logError("Failed to save and unload lowres-model: " + tile, ex);
         }
     }
 
-    private void saveModel(File modelFile, CachedModel model) {
+    private void saveModel(Vector2i tile, CachedModel model) {
         try {
-            model.save(modelFile, false, useGzip);
+            model.save(storage, tile, false);
             //logger.logDebug("Saved lowres tile: " + model.getTile());
         } catch (IOException ex) {
-            Logger.global.logError("Failed to save lowres-model: " + modelFile, ex);
+            Logger.global.logError("Failed to save lowres-model: " + tile, ex);
         }
 
         model.resetCacheTime();

@@ -26,16 +26,17 @@ package de.bluecolored.bluemap.core.map.lowres;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3f;
+import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.threejs.BufferGeometry;
-import de.bluecolored.bluemap.core.util.AtomicFileHelper;
 import de.bluecolored.bluemap.core.util.MathUtils;
 import de.bluecolored.bluemap.core.util.ModelUtils;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.zip.GZIPOutputStream;
 
 public class LowresModel {
 
@@ -79,7 +80,7 @@ public class LowresModel {
      * Saves this model to its file
      * @param force if this is false, the model is only saved if it has any changes
      */
-    public void save(File file, boolean force, boolean useGzip) throws IOException {
+    public void save(Storage.TileStorage storage, Vector2i tile, boolean force) throws IOException {
         if (!force && !hasUnsavedChanges) return;
         this.hasUnsavedChanges = false;
 
@@ -91,11 +92,9 @@ public class LowresModel {
         }
 
         synchronized (fileLock) {
-            OutputStream os = new BufferedOutputStream(AtomicFileHelper.createFilepartOutputStream(file));
-            if (useGzip) os = new GZIPOutputStream(os);
-            OutputStreamWriter osw = new OutputStreamWriter(os, StandardCharsets.UTF_8);
             try (
-                PrintWriter pw = new PrintWriter(osw)
+                PrintWriter pw = new PrintWriter(
+                        new OutputStreamWriter(storage.write(tile), StandardCharsets.UTF_8))
             ){
                 pw.print(json);
             }

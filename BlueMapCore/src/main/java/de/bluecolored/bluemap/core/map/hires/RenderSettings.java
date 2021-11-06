@@ -73,13 +73,6 @@ public interface RenderSettings {
         return true;
     }
 
-    /**
-     * If gzip compression will be used to compress the generated files
-     */
-    default boolean useGzipCompression() {
-        return true;
-    }
-
     default boolean isInsideRenderBoundaries(int x, int z) {
         Vector3i min = getMin();
         Vector3i max = getMax();

@@ -26,96 +26,179 @@ package de.bluecolored.bluemap.common.rendermanager;
 
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.map.BmMap;
+import de.bluecolored.bluemap.core.storage.FileStorage;
+import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.FileUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.LinkedList;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
-public class MapPurgeTask implements RenderTask {
+public abstract class MapPurgeTask implements RenderTask {
 
-    @DebugDump private final BmMap map;
-    @DebugDump private final Path directory;
-    @DebugDump private final int subFilesCount;
-    private final LinkedList<Path> subFiles;
-
-    @DebugDump private volatile boolean hasMoreWork;
-    @DebugDump private volatile boolean cancelled;
-
-    public MapPurgeTask(Path mapDirectory) throws IOException {
-        this(null, mapDirectory);
+    public static MapPurgeTask create(BmMap map) throws IOException {
+        Storage storage = map.getStorage();
+        if (storage instanceof FileStorage) {
+            return new MapFilePurgeTask(map, (FileStorage) storage);
+        } else {
+            return new MapStoragePurgeTask(map);
+        }
     }
 
-    public MapPurgeTask(BmMap map) throws IOException {
-        this(map, map.getFileRoot());
+    public static MapPurgeTask create(Path mapDirectory) throws IOException {
+        return new MapFilePurgeTask(mapDirectory);
     }
 
-    private MapPurgeTask(BmMap map, Path directory) throws IOException {
-        this.map = map;
-        this.directory = directory;
-        this.subFiles = Files.walk(directory, 3)
-                .collect(Collectors.toCollection(LinkedList::new));
-        this.subFilesCount = subFiles.size();
-        this.hasMoreWork = true;
-        this.cancelled = false;
+    @DebugDump
+    private static class MapFilePurgeTask extends MapPurgeTask {
+
+        private final BmMap map;
+        private final Path directory;
+        private final int subFilesCount;
+        private final LinkedList<Path> subFiles;
+
+        private volatile boolean hasMoreWork;
+        private volatile boolean cancelled;
+
+        public MapFilePurgeTask(Path mapDirectory) throws IOException {
+            this(null, mapDirectory);
+        }
+
+        public MapFilePurgeTask(BmMap map, FileStorage fileStorage) throws IOException {
+            this(map, fileStorage.getFilePath(map.getId()));
+        }
+
+        private MapFilePurgeTask(BmMap map, Path directory) throws IOException {
+            this.map = map;
+            this.directory = directory;
+            this.subFiles = Files.walk(directory, 3)
+                    .collect(Collectors.toCollection(LinkedList::new));
+            this.subFilesCount = subFiles.size();
+            this.hasMoreWork = true;
+            this.cancelled = false;
+        }
+
+        @Override
+        public void doWork() throws Exception {
+            synchronized (this) {
+                if (!this.hasMoreWork) return;
+                this.hasMoreWork = false;
+            }
+
+            try {
+                // delete subFiles first to be able to track the progress and cancel
+                while (!subFiles.isEmpty()) {
+                    Path subFile = subFiles.getLast();
+                    FileUtils.delete(subFile.toFile());
+                    subFiles.removeLast();
+                    if (this.cancelled) return;
+                }
+
+                // make sure everything is deleted
+                FileUtils.delete(directory.toFile());
+            } finally {
+                // reset map render state
+                if (this.map != null) {
+                    this.map.getRenderState().reset();
+                }
+            }
+        }
+
+        @Override
+        public boolean hasMoreWork() {
+            return this.hasMoreWork;
+        }
+
+        @Override
+        @DebugDump
+        public double estimateProgress() {
+            return 1d - (subFiles.size() / (double) subFilesCount);
+        }
+
+        @Override
+        public void cancel() {
+            this.cancelled = true;
+        }
+
+        @Override
+        public boolean contains(RenderTask task) {
+            if (task == this) return true;
+            if (task instanceof MapFilePurgeTask) {
+                return ((MapFilePurgeTask) task).directory.toAbsolutePath().normalize()
+                        .startsWith(this.directory.toAbsolutePath().normalize());
+            }
+
+            return false;
+        }
+
+        @Override
+        public String getDescription() {
+            return "Purge Map " + directory.getFileName();
+        }
+
     }
 
-    @Override
-    public void doWork() throws Exception {
-        synchronized (this) {
-            if (!this.hasMoreWork) return;
+    @DebugDump
+    private static class MapStoragePurgeTask extends MapPurgeTask {
+
+        private final BmMap map;
+
+        private volatile boolean hasMoreWork;
+
+        public MapStoragePurgeTask(BmMap map) {
+            this.map = Objects.requireNonNull(map);
+            this.hasMoreWork = true;
+        }
+
+        @Override
+        public void doWork() throws Exception {
+            synchronized (this) {
+                if (!this.hasMoreWork) return;
+                this.hasMoreWork = false;
+            }
+
+            try {
+                map.getStorage().purgeMap(map.getId());
+            } finally {
+                // reset map render state
+                map.getRenderState().reset();
+            }
+        }
+
+        @Override
+        public boolean hasMoreWork() {
+            return this.hasMoreWork;
+        }
+
+        @Override
+        @DebugDump
+        public double estimateProgress() {
+            return 0d;
+        }
+
+        @Override
+        public void cancel() {
             this.hasMoreWork = false;
         }
 
-        try {
-            // delete subFiles first to be able to track the progress and cancel
-            while (!subFiles.isEmpty()) {
-                Path subFile = subFiles.getLast();
-                FileUtils.delete(subFile.toFile());
-                subFiles.removeLast();
-                if (this.cancelled) return;
+        @Override
+        public boolean contains(RenderTask task) {
+            if (task == this) return true;
+            if (task instanceof MapStoragePurgeTask) {
+                return map.equals(((MapStoragePurgeTask) task).map);
             }
 
-            // make sure everything is deleted
-            FileUtils.delete(directory.toFile());
-        } finally {
-            // reset map render state
-            if (this.map != null) {
-                this.map.getRenderState().reset();
-            }
-        }
-    }
-
-    @Override
-    public boolean hasMoreWork() {
-        return this.hasMoreWork;
-    }
-
-    @Override
-    public double estimateProgress() {
-        return 1d - (subFiles.size() / (double) subFilesCount);
-    }
-
-    @Override
-    public void cancel() {
-        this.cancelled = true;
-    }
-
-    @Override
-    public boolean contains(RenderTask task) {
-        if (task == this) return true;
-        if (task instanceof MapPurgeTask) {
-            return ((MapPurgeTask) task).directory.toAbsolutePath().normalize().startsWith(this.directory.toAbsolutePath().normalize());
+            return false;
         }
 
-        return false;
-    }
+        @Override
+        public String getDescription() {
+            return "Purge Map " + map.getId();
+        }
 
-    @Override
-    public String getDescription() {
-        return "Purge Map " + directory.getFileName();
     }
 
 }

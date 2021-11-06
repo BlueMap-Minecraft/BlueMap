@@ -35,7 +35,6 @@ import de.bluecolored.bluemap.common.rendermanager.MapPurgeTask;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
-import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.world.Grid;
 
 import java.io.IOException;
@@ -96,7 +95,7 @@ public class RenderAPIImpl implements RenderAPI {
     @Override
     public boolean scheduleMapPurgeTask(BlueMapMap map) throws IOException {
         BlueMapMapImpl cmap = castMap(map);
-        return renderManager.scheduleRenderTask(new MapPurgeTask(cmap.getMapType()));
+        return renderManager.scheduleRenderTask(MapPurgeTask.create(cmap.getMapType()));
     }
 
     @Override

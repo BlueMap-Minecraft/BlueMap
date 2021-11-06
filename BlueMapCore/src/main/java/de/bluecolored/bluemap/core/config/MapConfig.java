@@ -28,6 +28,7 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.map.MapSettings;
+import de.bluecolored.bluemap.core.storage.Compression;
 import de.bluecolored.bluemap.core.util.ConfigUtils;
 import org.spongepowered.configurate.ConfigurationNode;
 
@@ -53,7 +54,7 @@ public class MapConfig implements MapSettings {
     private Vector3i min, max;
     private boolean renderEdges;
 
-    private boolean useGzip;
+    private Compression compression;
     private boolean ignoreMissingLightData;
 
     private int hiresTileSize;
@@ -106,7 +107,7 @@ public class MapConfig implements MapSettings {
         this.renderEdges = node.node("renderEdges").getBoolean(true);
 
         //useCompression
-        this.useGzip = node.node("useCompression").getBoolean(true);
+        this.compression = node.node("useCompression").getBoolean(true) ? Compression.GZIP : Compression.NONE;
 
         //ignoreMissingLightData
         this.ignoreMissingLightData = node.node("ignoreMissingLightData").getBoolean(false);
@@ -140,6 +141,10 @@ public class MapConfig implements MapSettings {
 
     public int getSkyColor() {
         return skyColor;
+    }
+
+    public Compression getCompression() {
+        return compression;
     }
 
     @Override
@@ -194,11 +199,6 @@ public class MapConfig implements MapSettings {
     @Override
     public boolean isRenderEdges() {
         return renderEdges;
-    }
-
-    @Override
-    public boolean useGzipCompression() {
-        return useGzip;
     }
 
 }

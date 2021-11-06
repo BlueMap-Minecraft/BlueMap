@@ -28,16 +28,19 @@ import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.hires.HiresModelManager;
-import de.bluecolored.bluemap.core.map.lowres.LowresModelManager;
 import de.bluecolored.bluemap.core.map.hires.HiresTileMeta;
+import de.bluecolored.bluemap.core.map.lowres.LowresModelManager;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.storage.*;
 import de.bluecolored.bluemap.core.world.Grid;
 import de.bluecolored.bluemap.core.world.World;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
 
 @DebugDump
@@ -46,7 +49,7 @@ public class BmMap {
     private final String id;
     private final String name;
     private final World world;
-    private final Path fileRoot;
+    private final Storage storage;
 
     private final MapRenderState renderState;
 
@@ -58,38 +61,37 @@ public class BmMap {
     private long renderTimeSumNanos;
     private long tilesRendered;
 
-    public BmMap(String id, String name, World world, Path fileRoot, ResourcePack resourcePack, MapSettings settings) throws IOException {
+    public BmMap(String id, String name, World world, Storage storage, ResourcePack resourcePack, MapSettings settings) throws IOException {
         this.id = Objects.requireNonNull(id);
         this.name = Objects.requireNonNull(name);
         this.world = Objects.requireNonNull(world);
-        this.fileRoot = Objects.requireNonNull(fileRoot);
+        this.storage = Objects.requireNonNull(storage);
 
         Objects.requireNonNull(resourcePack);
         Objects.requireNonNull(settings);
 
         this.renderState = new MapRenderState();
 
-        File rstateFile = getRenderStateFile();
-        if (rstateFile.exists()) {
-            try {
-                this.renderState.load(rstateFile);
+        Optional<InputStream> rstateData = storage.readMeta(id, MetaType.RENDER_STATE);
+        if (rstateData.isPresent()) {
+            try (InputStream in = rstateData.get()){
+                this.renderState.load(in);
             } catch (IOException ex) {
                 Logger.global.logWarning("Failed to load render-state for map '" + getId() + "': " + ex);
             }
         }
 
         this.hiresModelManager = new HiresModelManager(
-                fileRoot.resolve("hires"),
+                storage.tileStorage(id, TileType.HIRES),
                 resourcePack,
                 settings,
                 new Grid(settings.getHiresTileSize(), 2)
         );
 
         this.lowresModelManager = new LowresModelManager(
-                fileRoot.resolve("lowres"),
+                storage.tileStorage(id, TileType.LOWRES),
                 new Vector2i(settings.getLowresPointsPerLowresTile(), settings.getLowresPointsPerLowresTile()),
-                new Vector2i(settings.getLowresPointsPerHiresTile(), settings.getLowresPointsPerHiresTile()),
-                settings.useGzipCompression()
+                new Vector2i(settings.getLowresPointsPerHiresTile(), settings.getLowresPointsPerHiresTile())
         );
 
         this.tileFilter = t -> true;
@@ -116,15 +118,11 @@ public class BmMap {
     public synchronized void save() {
         lowresModelManager.save();
 
-        try {
-            this.renderState.save(getRenderStateFile());
+        try (OutputStream out = storage.writeMeta(id, MetaType.RENDER_STATE)) {
+            this.renderState.save(out);
         } catch (IOException ex){
             Logger.global.logError("Failed to save render-state for map: '" + this.id + "'!", ex);
         }
-    }
-
-    public File getRenderStateFile() {
-        return fileRoot.resolve(".rstate").toFile();
     }
 
     public String getId() {
@@ -139,8 +137,8 @@ public class BmMap {
         return world;
     }
 
-    public Path getFileRoot() {
-        return fileRoot;
+    public Storage getStorage() {
+        return storage;
     }
 
     public MapRenderState getRenderState() {
@@ -189,7 +187,7 @@ public class BmMap {
                "id='" + id + '\'' +
                ", name='" + name + '\'' +
                ", world=" + world +
-               ", fileRoot=" + fileRoot +
+               ", storage=" + storage +
                '}';
     }
 

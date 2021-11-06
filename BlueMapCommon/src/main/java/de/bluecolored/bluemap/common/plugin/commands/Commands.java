@@ -64,7 +64,6 @@ import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.World;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Function;
@@ -810,41 +809,33 @@ public class Commands<S> {
         CommandSource source = commandSourceInterface.apply(context.getSource());
 
         // parse map argument
-        String mapId = context.getArgument("map", String.class);
+        String mapString = context.getArgument("map", String.class);
+        BmMap map = parseMap(mapString).orElse(null);
+
+        if (map == null) {
+            source.sendMessage(Text.of(TextColor.RED, "There is no ", helper.mapHelperHover(), " with this name: ", TextColor.WHITE, mapString));
+            return 0;
+        }
 
         new Thread(() -> {
             try {
-                Path mapFolder = plugin.getRenderConfig().getWebRoot().toPath().resolve("data").resolve(mapId);
-                if (!Files.isDirectory(mapFolder)) {
-                    source.sendMessage(Text.of(TextColor.RED, "There is no map-data to purge for the map-id '" + mapId + "'!"));
-                    return;
-                }
-
-                Optional<BmMap> optMap = parseMap(mapId);
-
                 // delete map
-                MapPurgeTask purgeTask;
-                if (optMap.isPresent()){
-                    purgeTask = new MapPurgeTask(optMap.get());
-                } else {
-                    purgeTask = new MapPurgeTask(mapFolder);
-                }
+                MapPurgeTask purgeTask = MapPurgeTask.create(map);
 
                 plugin.getRenderManager().scheduleRenderTaskNext(purgeTask);
-                source.sendMessage(Text.of(TextColor.GREEN, "Created new Task to purge map '" + mapId + "'"));
+                source.sendMessage(Text.of(TextColor.GREEN, "Created new Task to purge map '" + map.getId() + "'"));
 
-                // if map is loaded, reset it and start updating it after the purge
-                if (optMap.isPresent()) {
-                    RenderTask updateTask = new MapUpdateTask(optMap.get());
-                    plugin.getRenderManager().scheduleRenderTask(updateTask);
-                    source.sendMessage(Text.of(TextColor.GREEN, "Created new Update-Task for map '" + mapId + "'"));
-                    source.sendMessage(Text.of(TextColor.GRAY, "If you don't want to render this map again, you need to remove it from your configuration first!"));
-                }
+                // reset the map and start updating it after the purge
+                RenderTask updateTask = new MapUpdateTask(map);
+                plugin.getRenderManager().scheduleRenderTask(updateTask);
+                source.sendMessage(Text.of(TextColor.GREEN, "Created new Update-Task for map '" + map.getId() + "'"));
+                source.sendMessage(Text.of(TextColor.GRAY, "If you don't this map to render again after the purge, use ",
+                        TextColor.DARK_GRAY, "/bluemap freeze " + map.getId(), TextColor.GRAY, " first!"));
 
                 source.sendMessage(Text.of(TextColor.GREEN, "Use ", TextColor.GRAY, "/bluemap", TextColor.GREEN, " to see the progress."));
             } catch (IOException | IllegalArgumentException e) {
-                source.sendMessage(Text.of(TextColor.RED, "There was an error trying to purge '" + mapId + "', see console for details."));
-                Logger.global.logError("Failed to purge map '" + mapId + "'!", e);
+                source.sendMessage(Text.of(TextColor.RED, "There was an error trying to purge '" + map.getId() + "', see console for details."));
+                Logger.global.logError("Failed to purge map '" + map.getId() + "'!", e);
             }
         }).start();
 

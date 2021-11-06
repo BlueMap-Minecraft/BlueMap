@@ -35,6 +35,8 @@ import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.storage.FileStorage;
+import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.world.World;
 import org.apache.commons.io.FileUtils;
 
@@ -164,11 +166,16 @@ public class BlueMapService {
                 }
             }
 
+            Storage storage = new FileStorage(
+                    getRenderConfig().getWebRoot().toPath().resolve("data"),
+                    mapConfig.getCompression()
+            );
+
             BmMap map = new BmMap(
                     id,
                     name,
                     world,
-                    getRenderConfig().getWebRoot().toPath().resolve("data").resolve(id),
+                    storage,
                     getResourcePack(),
                     mapConfig
             );

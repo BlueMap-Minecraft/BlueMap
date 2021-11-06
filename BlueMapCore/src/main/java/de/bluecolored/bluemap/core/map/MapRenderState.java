@@ -26,7 +26,6 @@ package de.bluecolored.bluemap.core.map;
 
 import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.core.debug.DebugDump;
-import de.bluecolored.bluemap.core.util.AtomicFileHelper;
 
 import java.io.*;
 import java.util.HashMap;
@@ -57,12 +56,9 @@ public class MapRenderState {
         regionRenderTimes.clear();
     }
 
-    public synchronized void save(File file) throws IOException {
-        OutputStream fOut = AtomicFileHelper.createFilepartOutputStream(file);
-        GZIPOutputStream gOut = new GZIPOutputStream(fOut);
-
+    public synchronized void save(OutputStream out) throws IOException {
         try (
-                DataOutputStream dOut = new DataOutputStream(gOut)
+                DataOutputStream dOut = new DataOutputStream(new GZIPOutputStream(out))
         ) {
             dOut.writeInt(regionRenderTimes.size());
 
@@ -79,13 +75,11 @@ public class MapRenderState {
         }
     }
 
-    public synchronized void load(File file) throws IOException {
+    public synchronized void load(InputStream in) throws IOException {
         regionRenderTimes.clear();
 
         try (
-                FileInputStream fIn = new FileInputStream(file);
-                GZIPInputStream gIn = new GZIPInputStream(fIn);
-                DataInputStream dIn = new DataInputStream(gIn)
+                DataInputStream dIn = new DataInputStream(new GZIPInputStream(in))
         ) {
             int size = dIn.readInt();
 
@@ -98,7 +92,7 @@ public class MapRenderState {
 
                 regionRenderTimes.put(regionPos, renderTime);
             }
-        }
+        } catch (EOFException ignore){} // ignoring a sudden end of stream, since it is save to only read as many as we can
     }
 
 }

@@ -28,34 +28,27 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.util.AtomicFileHelper;
-import de.bluecolored.bluemap.core.util.FileUtils;
+import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.world.Grid;
 import de.bluecolored.bluemap.core.world.World;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.util.zip.GZIPOutputStream;
 
 public class HiresModelManager {
 
-    private final Path fileRoot;
+    private final Storage.TileStorage storage;
     private final HiresModelRenderer renderer;
     private final Grid tileGrid;
-    private final boolean useGzip;
 
-    public HiresModelManager(Path fileRoot, ResourcePack resourcePack, RenderSettings renderSettings, Grid tileGrid) {
-        this(fileRoot, new HiresModelRenderer(resourcePack, renderSettings), tileGrid, renderSettings.useGzipCompression());
+    public HiresModelManager(Storage.TileStorage storage, ResourcePack resourcePack, RenderSettings renderSettings, Grid tileGrid) {
+        this(storage, new HiresModelRenderer(resourcePack, renderSettings), tileGrid);
     }
 
-    public HiresModelManager(Path fileRoot, HiresModelRenderer renderer, Grid tileGrid, boolean useGzip) {
-        this.fileRoot = fileRoot;
+    public HiresModelManager(Storage.TileStorage storage, HiresModelRenderer renderer, Grid tileGrid) {
+        this.storage = storage;
         this.renderer = renderer;
 
         this.tileGrid = tileGrid;
-
-        this.useGzip = useGzip;
     }
 
     /**
@@ -79,25 +72,10 @@ public class HiresModelManager {
     }
 
     private void save(final HiresTileModel model, Vector2i tile) {
-        File file = getFile(tile, useGzip);
-
-        OutputStream os = null;
-        try {
-            os = AtomicFileHelper.createFilepartOutputStream(file);
-            os = new BufferedOutputStream(os);
-            if (useGzip) os = new GZIPOutputStream(os);
-
+        try (OutputStream os = storage.write(tile)) {
             model.writeBufferGeometryJson(os);
         } catch (IOException e){
-            Logger.global.logError("Failed to save hires model: " + file, e);
-        } finally {
-            try {
-                if (os != null) {
-                    os.close();
-                }
-            } catch (IOException e) {
-                Logger.global.logError("Failed to close file: " + file, e);
-            }
+            Logger.global.logError("Failed to save hires model: " + tile, e);
         }
     }
 
@@ -106,13 +84,6 @@ public class HiresModelManager {
      */
     public Grid getTileGrid() {
         return tileGrid;
-    }
-
-    /**
-     * Returns the file for a tile
-     */
-    public File getFile(Vector2i tilePos, boolean gzip){
-        return FileUtils.coordsToFile(fileRoot, tilePos, "json" + (gzip ? ".gz" : ""));
     }
 
 }

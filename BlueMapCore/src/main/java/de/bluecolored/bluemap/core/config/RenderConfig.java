@@ -35,10 +35,10 @@ import java.util.List;
 @DebugDump
 public class RenderConfig {
 
-    private File webRoot = new File("web");
+    private File webRoot;
     private boolean useCookies;
     private boolean enableFreeFlight;
-    private List<MapConfig> mapConfigs = new ArrayList<>();
+    private List<MapConfig> mapConfigs;
 
     public RenderConfig(ConfigurationNode node) throws IOException {
 
