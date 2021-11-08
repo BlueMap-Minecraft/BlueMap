@@ -49,7 +49,7 @@ public class BiomeConfig {
     }
 
     public Biome getBiome(int id) {
-        if (id < biomes.length) {
+        if (id > 0 && id < biomes.length) {
             Biome biome = biomes[id];
             return biome != null ? biome : Biome.DEFAULT;
         }
