@@ -24,6 +24,8 @@
  */
 package de.bluecolored.bluemap.core.storage;
 
+import java.util.NoSuchElementException;
+
 public enum TileType {
 
     HIRES ("hires"),
@@ -38,4 +40,13 @@ public enum TileType {
     public String getTypeId() {
         return typeId;
     }
+
+    public static TileType forTypeId(String id) {
+        for (TileType type : values()) {
+            if (type.typeId.equals(id)) return type;
+        }
+
+        throw new NoSuchElementException("There is no TileType with id: " + id);
+    }
+
 }

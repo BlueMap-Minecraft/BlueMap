@@ -22,8 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.config;
+package de.bluecolored.bluemap.core.config.old;
 
+import de.bluecolored.bluemap.core.config.ConfigurationException;
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import org.spongepowered.configurate.ConfigurationNode;
 
@@ -42,7 +43,7 @@ public class WebServerConfig {
     private int port = 8100;
     private int maxConnections = 100;
 
-    public WebServerConfig(ConfigurationNode node) throws IOException {
+    public WebServerConfig(ConfigurationNode node) throws ConfigurationException {
 
         //enabled
         enabled = node.node("enabled").getBoolean(false);
@@ -50,17 +51,22 @@ public class WebServerConfig {
         if (enabled) {
             //webroot
             String webRootString = node.node("webroot").getString();
-            if (webRootString == null) throw new IOException("Invalid configuration: Node webroot is not defined");
+            if (webRootString == null) throw new ConfigurationException("Invalid configuration: Node webroot is not defined");
             webRoot = ConfigManager.toFolder(webRootString);
 
             //ip
             String bindAddressString = node.node("ip").getString("");
-            if (bindAddressString.isEmpty() || bindAddressString.equals("0.0.0.0") || bindAddressString.equals("::0")) {
-                bindAddress = new InetSocketAddress(0).getAddress(); // 0.0.0.0
-            } else if (bindAddressString.equals("#getLocalHost")) {
-                bindAddress = InetAddress.getLocalHost();
-            } else {
-                bindAddress = InetAddress.getByName(bindAddressString);
+            try {
+                if (bindAddressString.isEmpty() || bindAddressString.equals("0.0.0.0") ||
+                    bindAddressString.equals("::0")) {
+                    bindAddress = new InetSocketAddress(0).getAddress(); // 0.0.0.0
+                } else if (bindAddressString.equals("#getLocalHost")) {
+                    bindAddress = InetAddress.getLocalHost();
+                } else {
+                    bindAddress = InetAddress.getByName(bindAddressString);
+                }
+            } catch (IOException ex) {
+                throw new ConfigurationException("Failed to parse ip: '" + bindAddressString + "'", ex);
             }
 
             //port

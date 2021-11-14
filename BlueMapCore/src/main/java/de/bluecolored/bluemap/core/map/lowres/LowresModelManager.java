@@ -28,6 +28,7 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3f;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.hires.HiresTileMeta;
+import de.bluecolored.bluemap.core.storage.CompressedInputStream;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.threejs.BufferGeometry;
 import de.bluecolored.bluemap.core.util.math.Color;
@@ -163,9 +164,9 @@ public class LowresModelManager {
                 if (model == null){
 
                     try {
-                        Optional<InputStream> optIs = storage.read(tile);
+                        Optional<CompressedInputStream> optIs = storage.read(tile);
                         if (optIs.isPresent()){
-                            try (InputStream is = optIs.get()) {
+                            try (InputStream is = optIs.get().decompress()) {
                                 String json = IOUtils.toString(is, StandardCharsets.UTF_8);
 
                                 model = new CachedModel(BufferGeometry.fromJson(json));

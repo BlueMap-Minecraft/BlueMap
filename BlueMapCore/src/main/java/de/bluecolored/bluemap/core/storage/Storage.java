@@ -26,22 +26,28 @@ package de.bluecolored.bluemap.core.storage;
 
 import com.flowpowered.math.vector.Vector2i;
 
+import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Optional;
 
-public abstract class Storage {
+public abstract class Storage implements Closeable {
+
+    public abstract void initialize() throws IOException;
 
     public abstract OutputStream writeMapTile(String mapId, TileType tileType, Vector2i tile) throws IOException;
 
-    public abstract Optional<InputStream> readMapTile(String mapId, TileType tileType, Vector2i tile) throws IOException;
+    public abstract Optional<CompressedInputStream> readMapTile(String mapId, TileType tileType, Vector2i tile) throws IOException;
+
+    public abstract Optional<TileData> readMapTileData(String mapId, TileType tileType, Vector2i tile) throws IOException;
 
     public abstract void deleteMapTile(String mapId, TileType tileType, Vector2i tile) throws IOException;
 
     public abstract OutputStream writeMeta(String mapId, MetaType metaType) throws IOException;
 
-    public abstract Optional<InputStream> readMeta(String mapId, MetaType metaType) throws IOException;
+    public abstract Optional<CompressedInputStream> readMeta(String mapId, MetaType metaType) throws IOException;
+
+    public abstract void deleteMeta(String mapId, MetaType metaType) throws IOException;
 
     public abstract void purgeMap(String mapId) throws IOException;
 
@@ -60,11 +66,11 @@ public abstract class Storage {
         }
 
         public OutputStream write(Vector2i tile) throws IOException {
-            return Storage.this.writeMapTile(mapId, tileType, tile);
+            return writeMapTile(mapId, tileType, tile);
         }
 
-        public Optional<InputStream> read(Vector2i tile) throws IOException {
-            return Storage.this.readMapTile(mapId, tileType, tile);
+        public Optional<CompressedInputStream> read(Vector2i tile) throws IOException {
+            return readMapTile(mapId, tileType, tile);
         }
 
         public void delete(Vector2i tile) throws IOException {

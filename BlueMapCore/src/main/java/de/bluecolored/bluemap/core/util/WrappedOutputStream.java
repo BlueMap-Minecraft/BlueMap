@@ -24,42 +24,64 @@
  */
 package de.bluecolored.bluemap.core.util;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.file.*;
 
-public class AtomicFileHelper {
+public class WrappedOutputStream extends OutputStream {
 
-    public static OutputStream createFilepartOutputStream(final File file) throws IOException {
-        return createFilepartOutputStream(file.toPath());
+    private final OutputStream out;
+    private final AutoCloseable onClose;
+
+    public WrappedOutputStream(OutputStream out, AutoCloseable onClose) {
+        this.out = out;
+        this.onClose = onClose;
     }
 
-    public static OutputStream createFilepartOutputStream(final Path file) throws IOException {
-        final Path partFile = getPartFile(file);
-        Files.createDirectories(partFile.getParent());
+    @Override
+    public void write(int b) throws IOException {
+        out.write(b);
+    }
 
-        OutputStream os = Files.newOutputStream(partFile, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
-        return new WrappedOutputStream(os, () -> {
-            if (!Files.exists(partFile)) return;
+    @Override
+    public void write(byte[] b) throws IOException {
+        out.write(b);
+    }
 
-            Files.deleteIfExists(file);
-            Files.createDirectories(file.getParent());
+    @Override
+    public void write(byte[] b, int off, int len) throws IOException {
+        out.write(b, off, len);
+    }
 
-            try {
-                Files.move(partFile, file, StandardCopyOption.ATOMIC_MOVE);
-            } catch (FileNotFoundException | NoSuchFileException ignore) {
-            } catch (IOException ex) {
-                try {
-                    Files.move(partFile, file);
-                } catch (FileNotFoundException | NoSuchFileException ignore) {}
+    @Override
+    public void flush() throws IOException {
+        out.flush();
+    }
+
+    @Override
+    public void close() throws IOException {
+        IOException ioExcetion = null;
+
+        try {
+            out.close();
+        } catch (IOException ex) {
+            ioExcetion = ex;
+        }
+
+        try {
+            onClose.close();
+        } catch (Exception ex) {
+            if (ioExcetion == null) {
+                if (ex instanceof IOException) {
+                    ioExcetion = (IOException) ex;
+                } else {
+                    ioExcetion = new IOException(ex);
+                }
+            } else {
+                ioExcetion.addSuppressed(ex);
             }
-        });
-    }
+        }
 
-    private static Path getPartFile(Path file) {
-        return file.normalize().getParent().resolve(file.getFileName() + ".filepart");
+        if (ioExcetion != null) throw ioExcetion;
     }
 
 }

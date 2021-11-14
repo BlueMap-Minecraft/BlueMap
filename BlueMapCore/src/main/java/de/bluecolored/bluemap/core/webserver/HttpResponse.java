@@ -91,13 +91,12 @@ public class HttpResponse implements Closeable {
         if(data != null){
             chunkedPipe(data, out);
             out.flush();
-            data.close();
         }
     }
 
     @Override
     public void close() throws IOException {
-        data.close();
+        if (data != null) data.close();
     }
 
     private void writeLine(OutputStreamWriter writer, String line) throws IOException {

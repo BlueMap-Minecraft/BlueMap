@@ -27,49 +27,56 @@ package de.bluecolored.bluemap.core.storage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.NoSuchElementException;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 public enum Compression {
 
-    NONE("") {
-        @Override
-        public OutputStream compress(OutputStream out) {
-            return out;
-        }
+    NONE("none", "", out -> out, in -> in),
+    GZIP("gzip", ".gz", GZIPOutputStream::new, GZIPInputStream::new);
 
-        @Override
-        public InputStream decompress(InputStream in) {
-            return in;
-        }
-    },
-
-    GZIP(".gz"){
-
-        @Override
-        public OutputStream compress(OutputStream out) throws IOException {
-            return new GZIPOutputStream(out);
-        }
-
-        @Override
-        public InputStream decompress(InputStream in) throws IOException {
-            return new GZIPInputStream(in);
-        }
-
-    };
-
+    private final String typeId;
     private final String fileSuffix;
+    private final StreamTransformer<OutputStream> compressor;
+    private final StreamTransformer<InputStream> decompressor;
 
-    Compression(String fileSuffix) {
+    Compression(String typeId, String fileSuffix,
+                StreamTransformer<OutputStream> compressor,
+                StreamTransformer<InputStream> decompressor) {
         this.fileSuffix = fileSuffix;
+        this.typeId = typeId;
+        this.compressor = compressor;
+        this.decompressor = decompressor;
+    }
+
+    public String getTypeId() {
+        return typeId;
     }
 
     public String getFileSuffix() {
         return fileSuffix;
     }
 
-    public abstract OutputStream compress(OutputStream out) throws IOException;
+    public OutputStream compress(OutputStream out) throws IOException {
+        return compressor.apply(out);
+    }
 
-    public abstract InputStream decompress(InputStream in) throws IOException;
+    public InputStream decompress(InputStream in) throws IOException {
+        return decompressor.apply(in);
+    }
+
+    public static Compression forTypeId(String id) {
+        for (Compression compression : values()) {
+            if (compression.typeId.equals(id)) return compression;
+        }
+
+        throw new NoSuchElementException("There is no Compression with type-id: " + id);
+    }
+
+    @FunctionalInterface
+    private interface StreamTransformer<T> {
+        T apply(T original) throws IOException;
+    }
 
 }

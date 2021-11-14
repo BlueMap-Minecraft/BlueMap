@@ -28,25 +28,17 @@ import de.bluecolored.bluemap.core.webserver.HttpRequest;
 import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
 import de.bluecolored.bluemap.core.webserver.HttpResponse;
 import de.bluecolored.bluemap.core.webserver.HttpStatusCode;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.util.GregorianCalendar;
-import java.util.Locale;
-import java.util.Set;
-import java.util.TimeZone;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 public class FileRequestHandler implements HttpRequestHandler {
-
-    private static final long DEFLATE_MIN_SIZE = 10L * 1024L;
-    private static final long DEFLATE_MAX_SIZE = 10L * 1024L * 1024L;
-    private static final long INFLATE_MAX_SIZE = 10L * 1024L * 1024L;
 
     private final Path webRoot;
     private final String serverName;
@@ -86,16 +78,12 @@ public class FileRequestHandler implements HttpRequestHandler {
         if (path.startsWith("/")) path = path.substring(1);
         if (path.endsWith("/")) path = path.substring(0, path.length() - 1);
 
-        Path filePath = webRoot;
+        Path filePath;
         try {
             filePath = webRoot.resolve(path);
         } catch (InvalidPathException e){
             return new HttpResponse(HttpStatusCode.NOT_FOUND);
         }
-
-        // can we use deflation?
-        boolean isDeflationPossible = request.getLowercaseHeader("Accept-Encoding").contains("gzip");
-        boolean isDeflated = false;
 
         // check if file is in web-root
         if (!filePath.normalize().startsWith(webRoot)){
@@ -111,36 +99,18 @@ public class FileRequestHandler implements HttpRequestHandler {
             return response;
         }
 
-        if (!file.exists() || file.isDirectory()){
-            file = new File(filePath.toString() + ".gz");
-            isDeflated = true;
-        }
-
+        // default to index.html
         if (!file.exists() || file.isDirectory()){
             file = new File(filePath.toString() + "/index.html");
-            isDeflated = false;
         }
 
-        if (!file.exists() || file.isDirectory()){
-            file = new File(filePath.toString() + "/index.html.gz");
-            isDeflated = true;
-        }
-
+        // send empty tile-file if tile not exists
         if (!file.exists() && file.toPath().startsWith(webRoot.resolve("data"))){
             file = emptyTileFile;
-            isDeflated = false;
         }
 
         if (!file.exists() || file.isDirectory()) {
             return new HttpResponse(HttpStatusCode.NOT_FOUND);
-        }
-
-        if (isDeflationPossible && (!file.getName().endsWith(".gz"))){
-            File deflatedFile = new File(file.getAbsolutePath() + ".gz");
-            if (deflatedFile.exists()){
-                file = deflatedFile;
-                isDeflated = true;
-            }
         }
 
         // check if file is still in web-root and is not a directory
@@ -178,76 +148,17 @@ public class FileRequestHandler implements HttpRequestHandler {
 
         //add content type header
         String filetype = file.getName();
-        if (filetype.endsWith(".gz")) filetype = filetype.substring(0, filetype.length() - 3);
         int pointIndex = filetype.lastIndexOf('.');
         if (pointIndex >= 0) filetype = filetype.substring(pointIndex + 1);
-
-        String contentType = "text/plain";
-        switch (filetype) {
-        case "json" :
-            contentType = "application/json";
-            break;
-        case "png" :
-            contentType = "image/png";
-            break;
-        case "jpg" :
-        case "jpeg" :
-        case "jpe" :
-            contentType = "image/jpeg";
-            break;
-        case "svg" :
-            contentType = "image/svg+xml";
-            break;
-        case "css" :
-            contentType = "text/css";
-            break;
-        case "js" :
-            contentType = "text/javascript";
-            break;
-        case "html" :
-        case "htm" :
-        case "shtml" :
-            contentType = "text/html";
-            break;
-        case "xml" :
-            contentType = "text/xml";
-            break;
-        }
+        String contentType = toContentType(filetype);
         response.addHeader("Content-Type", contentType);
 
-
+        //send response
         try {
-            if (isDeflated){
-                if (isDeflationPossible || file.length() > INFLATE_MAX_SIZE){
-                    response.addHeader("Content-Encoding", "gzip");
-                    response.setData(new FileInputStream(file));
-                    return response;
-                } else {
-                    response.setData(new GZIPInputStream(new FileInputStream(file)));
-                    return response;
-                }
-            } else {
-                if (isDeflationPossible && file.length() > DEFLATE_MIN_SIZE && file.length() < DEFLATE_MAX_SIZE){
-                    FileInputStream fis = new FileInputStream(file);
-                    ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-                    GZIPOutputStream zos = new GZIPOutputStream(byteOut);
-                    IOUtils.copyLarge(fis, zos);
-                    zos.close();
-                    fis.close();
-                    byte[] compressedData = byteOut.toByteArray();
-                    response.setData(new ByteArrayInputStream(compressedData));
-                    response.addHeader("Content-Encoding", "gzip");
-                    return response;
-                } else {
-                    response.setData(new FileInputStream(file));
-                    return response;
-                }
-            }
-
+            response.setData(new FileInputStream(file));
+            return response;
         } catch (FileNotFoundException e) {
             return new HttpResponse(HttpStatusCode.NOT_FOUND);
-        } catch (IOException e) {
-            return new HttpResponse(HttpStatusCode.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -258,20 +169,21 @@ public class FileRequestHandler implements HttpRequestHandler {
     private static long stringToTimestamp(String timeString) throws IllegalArgumentException {
         try {
             int day = Integer.parseInt(timeString.substring(5, 7));
-            int month = 1;
+
+            int month = Calendar.JANUARY;
             switch (timeString.substring(8, 11)){
-            case "Jan" : month = 0;  break;
-            case "Feb" : month = 1;  break;
-            case "Mar" : month = 2;  break;
-            case "Apr" : month = 3;  break;
-            case "May" : month = 4;  break;
-            case "Jun" : month = 5;  break;
-            case "Jul" : month = 6;  break;
-            case "Aug" : month = 7;  break;
-            case "Sep" : month = 8;  break;
-            case "Oct" : month = 9; break;
-            case "Nov" : month = 10; break;
-            case "Dec" : month = 11; break;
+                case "Jan" : month = Calendar.JANUARY;  break;
+                case "Feb" : month = Calendar.FEBRUARY;  break;
+                case "Mar" : month = Calendar.MARCH;  break;
+                case "Apr" : month = Calendar.APRIL;  break;
+                case "May" : month = Calendar.MAY;  break;
+                case "Jun" : month = Calendar.JUNE;  break;
+                case "Jul" : month = Calendar.JULY;  break;
+                case "Aug" : month = Calendar.AUGUST;  break;
+                case "Sep" : month = Calendar.SEPTEMBER;  break;
+                case "Oct" : month = Calendar.OCTOBER; break;
+                case "Nov" : month = Calendar.NOVEMBER; break;
+                case "Dec" : month = Calendar.DECEMBER; break;
             }
             int year = Integer.parseInt(timeString.substring(12, 16));
             int hour = Integer.parseInt(timeString.substring(17, 19));
@@ -283,6 +195,41 @@ public class FileRequestHandler implements HttpRequestHandler {
         } catch (NumberFormatException | IndexOutOfBoundsException e){
             throw new IllegalArgumentException(e);
         }
+    }
+
+    private static String toContentType(String fileEnding) {
+        String contentType = "text/plain";
+        switch (fileEnding) {
+            case "json" :
+                contentType = "application/json";
+                break;
+            case "png" :
+                contentType = "image/png";
+                break;
+            case "jpg" :
+            case "jpeg" :
+            case "jpe" :
+                contentType = "image/jpeg";
+                break;
+            case "svg" :
+                contentType = "image/svg+xml";
+                break;
+            case "css" :
+                contentType = "text/css";
+                break;
+            case "js" :
+                contentType = "text/javascript";
+                break;
+            case "html" :
+            case "htm" :
+            case "shtml" :
+                contentType = "text/html";
+                break;
+            case "xml" :
+                contentType = "text/xml";
+                break;
+        }
+        return contentType;
     }
 
 }

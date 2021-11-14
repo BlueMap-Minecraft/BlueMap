@@ -22,15 +22,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common;
+package de.bluecolored.bluemap.core.storage;
 
-import de.bluecolored.bluemap.core.config.ConfigurationException;
+import java.io.IOException;
 
-public class MissingResourcesException extends ConfigurationException {
-    private static final long serialVersionUID = 2084565069965755048L;
+public interface TileData {
 
-    public MissingResourcesException() {
-        super("BlueMap is missing important resources!\n" +
-              "You must accept the required file download in order for BlueMap to work!");
-    }
+    CompressedInputStream readMapTile() throws IOException;
+
+    Compression getCompression();
+
+    long getSize();
+
+    long getLastModified();
+
 }

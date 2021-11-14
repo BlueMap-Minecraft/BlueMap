@@ -31,13 +31,16 @@ import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.rendermanager.RenderTask;
 import de.bluecolored.bluemap.common.web.FileRequestHandler;
+import de.bluecolored.bluemap.common.web.MapStorageRequestHandler;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
-import de.bluecolored.bluemap.core.config.WebServerConfig;
+import de.bluecolored.bluemap.core.config.ConfigurationException;
+import de.bluecolored.bluemap.core.config.old.WebServerConfig;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.logger.LoggerLogger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.metrics.Metrics;
+import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.FileUtils;
 import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
 import de.bluecolored.bluemap.core.webserver.WebServer;
@@ -51,7 +54,7 @@ import java.util.concurrent.TimeUnit;
 
 public class BlueMapCLI {
 
-    public void renderMaps(BlueMapService blueMap, boolean watch, boolean forceRender, boolean forceGenerateWebapp) throws IOException, InterruptedException {
+    public void renderMaps(BlueMapService blueMap, boolean watch, boolean forceRender, boolean forceGenerateWebapp) throws ConfigurationException, IOException, InterruptedException {
 
         //metrics report
         if (blueMap.getCoreConfig().isMetricsEnabled()) Metrics.sendReportAsync("cli");
@@ -165,12 +168,23 @@ public class BlueMapCLI {
         }
     }
 
-    public void startWebserver(BlueMapService blueMap, boolean verbose) throws IOException {
+    public void startWebserver(BlueMapService blueMap, boolean verbose) throws IOException, ConfigurationException, InterruptedException {
         Logger.global.logInfo("Starting webserver ...");
 
         WebServerConfig config = blueMap.getWebServerConfig();
         FileUtils.mkDirs(config.getWebRoot());
         HttpRequestHandler requestHandler = new FileRequestHandler(config.getWebRoot().toPath(), "BlueMap v" + BlueMap.VERSION);
+
+        try {
+            //use map-storage to provide map-tiles
+            Map<String, Storage> mapStorages = blueMap.getMapStorages();
+            requestHandler = new MapStorageRequestHandler(mapStorages::get, requestHandler);
+        } catch (ConfigurationException ex) {
+            Logger.global.logWarning(ex.getFormattedExplanation());
+            Logger.global.logError("Here is the full error:", ex);
+
+            Logger.global.logWarning("The webserver will still be started, but it will not be able to serve the map-tiles correctly!");
+        }
 
         WebServer webServer = new WebServer(
                 config.getWebserverBindAddress(),
@@ -265,6 +279,7 @@ public class BlueMapCLI {
                 blueMap.getCoreConfig();
                 blueMap.getRenderConfig();
                 blueMap.getWebServerConfig();
+                blueMap.getMapStorages();
 
                 //create resourcepacks folder
                 FileUtils.mkDirs(new File(configFolder, "resourcepacks"));
@@ -283,6 +298,12 @@ public class BlueMapCLI {
             Logger.global.logError("Failed to parse provided arguments!", e);
             BlueMapCLI.printHelp();
             System.exit(1);
+        } catch (ConfigurationException e) {
+            Logger.global.logWarning(e.getFormattedExplanation());
+            Throwable cause = e.getRootCause();
+            if (cause != null) {
+                Logger.global.logError("Detailed error:", e);
+            }
         } catch (IOException e) {
             Logger.global.logError("An IO-error occurred!", e);
             System.exit(1);

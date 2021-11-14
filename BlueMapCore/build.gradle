@@ -7,6 +7,7 @@ dependencies {
     api 'org.spongepowered:configurate-hocon:4.1.1'
     api 'org.spongepowered:configurate-gson:4.1.1'
     api 'com.github.Querz:NBT:4.0'
+    api 'org.apache.commons:commons-dbcp2:2.9.0'
 
     testImplementation 'org.junit.jupiter:junit-jupiter:5.4.2'
 }

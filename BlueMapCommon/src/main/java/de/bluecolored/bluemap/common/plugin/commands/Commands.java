@@ -431,7 +431,7 @@ public class Commands<S> {
                     source.sendMessage(Text.of(TextColor.RED, "Could not load BlueMap! See the console for details!"));
                 }
 
-            } catch (IOException | ParseResourceException | RuntimeException ex) {
+            } catch (Exception ex) {
                 Logger.global.logError("Failed to reload BlueMap!", ex);
 
                 source.sendMessage(Text.of(TextColor.RED, "There was an error reloading BlueMap! See the console for details!"));

@@ -22,60 +22,56 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.config;
+package de.bluecolored.bluemap.core.config.old;
 
+import de.bluecolored.bluemap.core.config.ConfigurationException;
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import org.spongepowered.configurate.ConfigurationNode;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 @DebugDump
-public class RenderConfig {
+public class CoreConfig {
 
-    private File webRoot;
-    private boolean useCookies;
-    private boolean enableFreeFlight;
-    private List<MapConfig> mapConfigs;
+    private boolean downloadAccepted = false;
+    private int renderThreadCount = 0;
+    private boolean metricsEnabled = false;
+    private File dataFolder = new File("data");
 
-    public RenderConfig(ConfigurationNode node) throws IOException {
+    public CoreConfig(ConfigurationNode node) throws ConfigurationException {
 
-        //webroot
-        String webRootString = node.node("webroot").getString();
-        if (webRootString == null) throw new IOException("Invalid configuration: Node webroot is not defined");
-        webRoot = ConfigManager.toFolder(webRootString);
+        //accept-download
+        downloadAccepted = node.node("accept-download").getBoolean(false);
 
-        //cookies
-        useCookies = node.node("useCookies").getBoolean(true);
+        //renderThreadCount
+        int processors = Runtime.getRuntime().availableProcessors();
+        renderThreadCount = node.node("renderThreadCount").getInt(0);
+        if (renderThreadCount <= 0) renderThreadCount = processors + renderThreadCount;
+        if (renderThreadCount <= 0) renderThreadCount = 1;
 
-        // free-flight mode
-        enableFreeFlight = node.node("enableFreeFlight").getBoolean(true);
+        //metrics
+        metricsEnabled = node.node("metrics").getBoolean(false);
 
-        //maps
-        mapConfigs = new ArrayList<>();
-        for (ConfigurationNode mapConfigNode : node.node("maps").childrenList()) {
-            mapConfigs.add(new MapConfig(mapConfigNode));
-        }
+        //data
+        dataFolder = ConfigManager.toFolder(node.node("data").getString("data"));
 
     }
 
-    public File getWebRoot() {
-        return webRoot;
+    public File getDataFolder() {
+        return dataFolder;
     }
 
-    public boolean isUseCookies() {
-        return useCookies;
+    public boolean isDownloadAccepted() {
+        return downloadAccepted;
     }
 
-    public boolean isEnableFreeFlight() {
-        return enableFreeFlight;
+    public boolean isMetricsEnabled() {
+        return metricsEnabled;
     }
 
-    public List<MapConfig> getMapConfigs(){
-        return mapConfigs;
+    public int getRenderThreadCount() {
+        return renderThreadCount;
     }
-
 
 }

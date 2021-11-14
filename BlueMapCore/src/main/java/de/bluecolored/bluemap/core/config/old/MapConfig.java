@@ -22,17 +22,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.config;
+package de.bluecolored.bluemap.core.config.old;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
+import de.bluecolored.bluemap.core.config.ConfigurationException;
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.map.MapSettings;
-import de.bluecolored.bluemap.core.storage.Compression;
 import de.bluecolored.bluemap.core.util.ConfigUtils;
 import org.spongepowered.configurate.ConfigurationNode;
 
-import java.io.IOException;
 import java.util.regex.Pattern;
 
 @DebugDump
@@ -54,7 +53,7 @@ public class MapConfig implements MapSettings {
     private Vector3i min, max;
     private boolean renderEdges;
 
-    private Compression compression;
+    private String storage;
     private boolean ignoreMissingLightData;
 
     private int hiresTileSize;
@@ -62,19 +61,19 @@ public class MapConfig implements MapSettings {
     private int lowresPointsPerHiresTile;
     private int lowresPointsPerLowresTile;
 
-    public MapConfig(ConfigurationNode node) throws IOException {
+    public MapConfig(ConfigurationNode node) throws ConfigurationException {
 
         //id
         this.id = node.node("id").getString("");
-        if (id.isEmpty()) throw new IOException("Invalid configuration: Node maps[?].id is not defined");
-        if (!VALID_ID_PATTERN.matcher(id).matches()) throw new IOException("Invalid configuration: Node maps[?].id '" + id + "' has invalid characters in it");
+        if (id.isEmpty()) throw new ConfigurationException("Invalid configuration: Node maps[?].id is not defined");
+        if (!VALID_ID_PATTERN.matcher(id).matches()) throw new ConfigurationException("Invalid configuration: Node maps[?].id '" + id + "' has invalid characters in it");
 
         //name
         this.name = node.node("name").getString(id);
 
         //world
         this.world = node.node("world").getString("");
-        if (world.isEmpty()) throw new IOException("Invalid configuration: Node maps[?].world is not defined");
+        if (world.isEmpty()) throw new ConfigurationException("Invalid configuration: Node maps[?].world is not defined");
 
         //startPos
         if (!node.node("startPos").virtual()) this.startPos = ConfigUtils.readVector2i(node.node("startPos"));
@@ -106,8 +105,8 @@ public class MapConfig implements MapSettings {
         //renderEdges
         this.renderEdges = node.node("renderEdges").getBoolean(true);
 
-        //useCompression
-        this.compression = node.node("useCompression").getBoolean(true) ? Compression.GZIP : Compression.NONE;
+        //storage
+        this.storage = node.node("storage").getString("file");
 
         //ignoreMissingLightData
         this.ignoreMissingLightData = node.node("ignoreMissingLightData").getBoolean(false);
@@ -119,7 +118,7 @@ public class MapConfig implements MapSettings {
 
         //check valid tile configuration values
         double blocksPerPoint = (double) this.hiresTileSize / (double) this.lowresPointsPerHiresTile;
-        if (blocksPerPoint != Math.floor(blocksPerPoint)) throw new IOException("Invalid configuration: Invalid map resolution settings of map " + id + ": hires.tileSize / lowres.pointsPerTile has to be an integer result");
+        if (blocksPerPoint != Math.floor(blocksPerPoint)) throw new ConfigurationException("Invalid configuration: Invalid map resolution settings of map " + id + ": hires.tileSize / lowres.pointsPerTile has to be an integer result");
 
     }
 
@@ -143,8 +142,8 @@ public class MapConfig implements MapSettings {
         return skyColor;
     }
 
-    public Compression getCompression() {
-        return compression;
+    public String getStorage() {
+        return storage;
     }
 
     @Override

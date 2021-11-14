@@ -26,7 +26,7 @@ package de.bluecolored.bluemap.common.rendermanager;
 
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.map.BmMap;
-import de.bluecolored.bluemap.core.storage.FileStorage;
+import de.bluecolored.bluemap.core.storage.file.FileStorage;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.FileUtils;
 

@@ -35,11 +35,13 @@ import de.bluecolored.bluemap.common.plugin.skins.PlayerSkinUpdater;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.web.FileRequestHandler;
+import de.bluecolored.bluemap.common.web.MapStorageRequestHandler;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
-import de.bluecolored.bluemap.core.config.CoreConfig;
-import de.bluecolored.bluemap.core.config.RenderConfig;
-import de.bluecolored.bluemap.core.config.WebServerConfig;
+import de.bluecolored.bluemap.core.config.ConfigurationException;
+import de.bluecolored.bluemap.core.config.old.CoreConfig;
+import de.bluecolored.bluemap.core.config.old.RenderConfig;
+import de.bluecolored.bluemap.core.config.old.WebServerConfig;
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -47,6 +49,7 @@ import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.metrics.Metrics;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.core.util.FileUtils;
+import de.bluecolored.bluemap.core.util.MappableFunction;
 import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
 import de.bluecolored.bluemap.core.webserver.WebServer;
 import de.bluecolored.bluemap.core.world.World;
@@ -116,9 +119,10 @@ public class Plugin implements ServerEventListener {
                 coreConfig = blueMap.getCoreConfig();
                 renderConfig = blueMap.getRenderConfig();
                 webServerConfig = blueMap.getWebServerConfig();
+                blueMap.getMapStorages();
 
                 //load plugin config
-                pluginConfig = new PluginConfig(blueMap.getConfigManager().loadOrCreate(
+                pluginConfig = new PluginConfig(blueMap.getConfigManagerOld().loadOrCreate(
                         new File(serverInterface.getConfigFolder(), "plugin.conf"),
                         Plugin.class.getResource("/de/bluecolored/bluemap/plugin.conf"),
                         Plugin.class.getResource("/de/bluecolored/bluemap/plugin-defaults.conf"),
@@ -135,26 +139,6 @@ public class Plugin implements ServerEventListener {
                 } catch (SerializationException ex) {
                     Logger.global.logWarning("Failed to load pluginState.json (invalid format), creating a new one...");
                     pluginState = new PluginState();
-                }
-
-                //create and start webserver
-                if (webServerConfig.isWebserverEnabled()) {
-                    FileUtils.mkDirs(webServerConfig.getWebRoot());
-                    HttpRequestHandler requestHandler = new FileRequestHandler(webServerConfig.getWebRoot().toPath(), "BlueMap v" + BlueMap.VERSION);
-
-                    //inject live api if enabled
-                    if (pluginConfig.isLiveUpdatesEnabled()) {
-                        requestHandler = new LiveAPIRequestHandler(serverInterface, pluginConfig, requestHandler);
-                    }
-
-                    webServer = new WebServer(
-                            webServerConfig.getWebserverBindAddress(),
-                            webServerConfig.getWebserverPort(),
-                            webServerConfig.getWebserverMaxConnections(),
-                            requestHandler,
-                            false
-                    );
-                    webServer.start();
                 }
 
                 //try load resources
@@ -180,6 +164,31 @@ public class Plugin implements ServerEventListener {
 
                     unload();
                     return;
+                }
+
+                //create and start webserver
+                if (webServerConfig.isWebserverEnabled()) {
+                    FileUtils.mkDirs(webServerConfig.getWebRoot());
+                    HttpRequestHandler requestHandler = new FileRequestHandler(webServerConfig.getWebRoot().toPath(), "BlueMap v" + BlueMap.VERSION);
+
+                    //use map-storage to provide map-tiles
+                    requestHandler = new MapStorageRequestHandler(
+                            MappableFunction.of(maps::get).mapNullable(BmMap::getStorage),
+                            requestHandler);
+
+                    //inject live api if enabled
+                    if (pluginConfig.isLiveUpdatesEnabled()) {
+                        requestHandler = new LiveAPIRequestHandler(serverInterface, pluginConfig, requestHandler);
+                    }
+
+                    webServer = new WebServer(
+                            webServerConfig.getWebserverBindAddress(),
+                            webServerConfig.getWebserverPort(),
+                            webServerConfig.getWebserverMaxConnections(),
+                            requestHandler,
+                            false
+                    );
+                    webServer.start();
                 }
 
                 //initialize render manager
@@ -275,6 +284,9 @@ public class Plugin implements ServerEventListener {
                 //done
                 loaded = true;
             }
+        } catch (ConfigurationException ex) {
+            Logger.global.logWarning(ex.getFormattedExplanation());
+            throw new IOException(ex);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             Logger.global.logWarning("Loading has been interrupted!");
@@ -310,11 +322,29 @@ public class Plugin implements ServerEventListener {
                 regionFileWatchServices = null;
 
                 //stop services
-                if (renderManager != null) renderManager.stop();
+                if (renderManager != null){
+                    renderManager.stop();
+                    try {
+                        renderManager.awaitShutdown();
+                    } catch (InterruptedException ex) {
+                        Thread.currentThread().interrupt();
+                    }
+                }
                 renderManager = null;
 
                 if (webServer != null) webServer.close();
                 webServer = null;
+
+                //close storages
+                if (maps != null) {
+                    maps.values().forEach(map -> {
+                        try {
+                            map.getStorage().close();
+                        } catch (IOException ex) {
+                            Logger.global.logWarning("Failed to close map-storage for map '" + map.getId() + "': " + ex);
+                        }
+                    });
+                }
 
                 //clear resources and configs
                 blueMap = null;

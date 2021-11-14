@@ -22,10 +22,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common;
+package de.bluecolored.bluemap.core.util;
 
-public interface ThrowingFunction<T, R, E extends Throwable> {
+import java.util.function.Function;
 
-    R apply(T t) throws E;
+@FunctionalInterface
+public interface MappableFunction<T, R> extends Function<T, R> {
+
+    default <S> MappableFunction<T, S> map(Function<R, S> mapping) {
+        return t -> mapping.apply(this.apply(t));
+    }
+
+    default <S> MappableFunction<T, S> mapNullable(Function<R, S> mapping) {
+        return t -> {
+            R r = this.apply(t);
+            if (r == null) return null;
+            return mapping.apply(r);
+        };
+    }
+
+    static <T, R> MappableFunction<T, R> of(Function<T, R> function) {
+        return function::apply;
+    }
 
 }

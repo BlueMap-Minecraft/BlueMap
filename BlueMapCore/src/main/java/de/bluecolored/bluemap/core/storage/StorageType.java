@@ -22,11 +22,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.util;
+package de.bluecolored.bluemap.core.storage;
 
-@FunctionalInterface
-public interface ThrowingRunnable<E extends Throwable>  {
+import de.bluecolored.bluemap.core.config.storage.FileConfig;
+import de.bluecolored.bluemap.core.config.storage.SQLConfig;
+import de.bluecolored.bluemap.core.storage.file.FileStorage;
+import de.bluecolored.bluemap.core.storage.sql.SQLStorage;
+import org.spongepowered.configurate.ConfigurationNode;
 
-    void run() throws E;
+import java.util.Objects;
+
+public enum StorageType {
+
+    FILE (node -> new FileStorage(Objects.requireNonNull(node.get(FileConfig.class)))),
+    SQL (node -> new SQLStorage(Objects.requireNonNull(node.get(SQLConfig.class))));
+
+    private final StorageProvider storageProvider;
+
+    StorageType(StorageProvider storageProvider) {
+        this.storageProvider = storageProvider;
+    }
+
+    public Storage create(ConfigurationNode node) throws Exception {
+        return storageProvider.provide(node);
+    }
+
+    @FunctionalInterface
+    private interface StorageProvider {
+        Storage provide(ConfigurationNode node) throws Exception;
+    }
 
 }

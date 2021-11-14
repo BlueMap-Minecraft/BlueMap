@@ -22,10 +22,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.storage;
+package de.bluecolored.bluemap.core.storage.file;
 
 import com.flowpowered.math.vector.Vector2i;
+import de.bluecolored.bluemap.core.config.storage.FileConfig;
 import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.core.storage.*;
 import de.bluecolored.bluemap.core.util.AtomicFileHelper;
 import de.bluecolored.bluemap.core.util.FileUtils;
 
@@ -38,21 +40,24 @@ import java.util.*;
 @DebugDump
 public class FileStorage extends Storage {
 
-    private static final EnumMap<MetaType, String> metaTypeFileNames = new EnumMap<>(MetaType.class);
-    static {
-        metaTypeFileNames.put(MetaType.TEXTURES, "../textures.json");
-        metaTypeFileNames.put(MetaType.SETTINGS, "../settings.json");
-        metaTypeFileNames.put(MetaType.MARKERS, "../markers.json");
-        metaTypeFileNames.put(MetaType.RENDER_STATE, ".rstate");
-    }
-
     private final Path root;
     private final Compression compression;
+
+    public FileStorage(FileConfig config) {
+        this.root = config.getRoot();
+        this.compression = config.getCompression();
+    }
 
     public FileStorage(Path root, Compression compression) {
         this.root = root;
         this.compression = compression;
     }
+
+    @Override
+    public void initialize() {}
+
+    @Override
+    public void close() throws IOException {}
 
     @Override
     public OutputStream writeMapTile(String mapId, TileType tileType, Vector2i tile) throws IOException {
@@ -66,16 +71,48 @@ public class FileStorage extends Storage {
     }
 
     @Override
-    public Optional<InputStream> readMapTile(String mapId, TileType tileType, Vector2i tile) throws IOException {
+    public Optional<CompressedInputStream> readMapTile(String mapId, TileType tileType, Vector2i tile) throws IOException {
         Path file = getFilePath(mapId, tileType, tile);
 
         if (!Files.exists(file)) return Optional.empty();
 
         InputStream is = Files.newInputStream(file, StandardOpenOption.READ);
         is = new BufferedInputStream(is);
-        is = compression.decompress(is);
 
-        return Optional.of(is);
+        return Optional.of(new CompressedInputStream(is, compression));
+    }
+
+    @Override
+    public Optional<TileData> readMapTileData(String mapId, TileType tileType, Vector2i tile) throws IOException {
+        Path file = getFilePath(mapId, tileType, tile);
+
+        if (!Files.exists(file)) return Optional.empty();
+
+        final long size = Files.size(file);
+        final long lastModified = Files.getLastModifiedTime(file).toMillis();
+
+        return Optional.of(new TileData() {
+            @Override
+            public CompressedInputStream readMapTile() throws IOException {
+                return FileStorage.this.readMapTile(mapId, tileType, tile)
+                        .orElseThrow(() -> new IOException("Tile no longer present!"));
+            }
+
+            @Override
+            public Compression getCompression() {
+                return compression;
+            }
+
+            @Override
+            public long getSize() {
+                return size;
+            }
+
+            @Override
+            public long getLastModified() {
+                return lastModified;
+            }
+        });
     }
 
     @Override
@@ -86,7 +123,7 @@ public class FileStorage extends Storage {
 
     @Override
     public OutputStream writeMeta(String mapId, MetaType metaType) throws IOException {
-        Path file = getFilePath(mapId).resolve(getFilename(metaType));
+        Path file = getFilePath(mapId).resolve(metaType.getFilePath());
 
         OutputStream os = AtomicFileHelper.createFilepartOutputStream(file);
         os = new BufferedOutputStream(os);
@@ -95,15 +132,21 @@ public class FileStorage extends Storage {
     }
 
     @Override
-    public Optional<InputStream> readMeta(String mapId, MetaType metaType) throws IOException {
-        Path file = getFilePath(mapId).resolve(getFilename(metaType));
+    public Optional<CompressedInputStream> readMeta(String mapId, MetaType metaType) throws IOException {
+        Path file = getFilePath(mapId).resolve(metaType.getFilePath());
 
         if (!Files.exists(file)) return Optional.empty();
 
         InputStream is = Files.newInputStream(file, StandardOpenOption.READ);
         is = new BufferedInputStream(is);
 
-        return Optional.of(is);
+        return Optional.of(new CompressedInputStream(is, Compression.NONE));
+    }
+
+    @Override
+    public void deleteMeta(String mapId, MetaType metaType) throws IOException {
+        Path file = getFilePath(mapId).resolve(metaType.getFilePath());
+        FileUtils.delete(file.toFile());
     }
 
     @Override
@@ -135,10 +178,6 @@ public class FileStorage extends Storage {
 
     public Path getFilePath(String mapId) {
         return root.resolve(mapId);
-    }
-
-    private static String getFilename(MetaType metaType) {
-        return metaTypeFileNames.getOrDefault(metaType, metaType.name().toLowerCase(Locale.ROOT));
     }
 
 }

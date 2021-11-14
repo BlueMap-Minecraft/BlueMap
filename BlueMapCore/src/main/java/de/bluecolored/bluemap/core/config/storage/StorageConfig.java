@@ -22,15 +22,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common;
+package de.bluecolored.bluemap.core.config.storage;
 
-import de.bluecolored.bluemap.core.config.ConfigurationException;
+import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.core.storage.StorageType;
+import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
-public class MissingResourcesException extends ConfigurationException {
-    private static final long serialVersionUID = 2084565069965755048L;
+@SuppressWarnings("FieldMayBeFinal")
+@DebugDump
+@ConfigSerializable
+public class StorageConfig {
 
-    public MissingResourcesException() {
-        super("BlueMap is missing important resources!\n" +
-              "You must accept the required file download in order for BlueMap to work!");
+    private StorageType storageType = StorageType.FILE;
+
+    public StorageType getStorageType() {
+        return storageType;
     }
+
 }

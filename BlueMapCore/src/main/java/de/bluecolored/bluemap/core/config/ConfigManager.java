@@ -24,110 +24,76 @@
  */
 package de.bluecolored.bluemap.core.config;
 
-
-import de.bluecolored.bluemap.core.BlueMap;
-import de.bluecolored.bluemap.core.util.FileUtils;
+import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
 import org.spongepowered.configurate.loader.ConfigurationLoader;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.nio.file.Path;
 
 public class ConfigManager {
 
-    private static final Set<Placeholder> CONFIG_PLACEHOLDERS = new HashSet<>();
+    private static final String[] CONFIG_FILE_ENDINGS = new String[] {
+            ".conf",
+            ".json"
+    };
 
-    static {
-        CONFIG_PLACEHOLDERS.add(new Placeholder("version", BlueMap.VERSION));
-        CONFIG_PLACEHOLDERS.add(new Placeholder("datetime-iso", () -> LocalDateTime.now().withNano(0).toString()));
+    private final Path configRoot;
+
+    public ConfigManager(Path configRoot) {
+        this.configRoot = configRoot;
     }
 
-    /**
-     * Loads or creates a config file for BlueMap.
-     *
-     * @param configFile The config file to load
-     * @param defaultConfig The default config that is used as a template if the config file does not exist (can be null)
-     * @param defaultValues The default values used if a key is not present in the config (can be null)
-     * @param usePlaceholders Whether to replace placeholders from the defaultConfig if it is newly generated
-     * @param generateEmptyConfig Whether to generate an empty config file if no default config is provided
-     * @return The loaded configuration node
-     * @throws IOException if an IOException occurs while loading
-     */
-    public ConfigurationNode loadOrCreate(File configFile, URL defaultConfig, URL defaultValues, boolean usePlaceholders, boolean generateEmptyConfig) throws IOException {
+    public ConfigurationNode loadConfig(Path rawPath) throws ConfigurationException {
+        Path path = findConfigPath(configRoot.resolve(rawPath));
 
-        ConfigurationNode configNode;
-        if (!configFile.exists()) {
-            FileUtils.mkDirsParent(configFile);
-
-            if (defaultConfig != null) {
-                //load content of default config
-                String content;
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(defaultConfig.openStream(), StandardCharsets.UTF_8))){
-                    content = reader.lines().collect(Collectors.joining("\n"));
-                }
-
-                //replace placeholders if enabled
-                if (usePlaceholders) {
-                    for (Placeholder placeholder : CONFIG_PLACEHOLDERS) {
-                        content = placeholder.apply(content);
-                    }
-                }
-
-                //create the config file
-                Files.write(configFile.toPath(), content.getBytes(StandardCharsets.UTF_8));
-
-                //load
-                configNode = getLoader(configFile).load();
-            } else {
-                //create empty config
-                ConfigurationLoader<? extends ConfigurationNode> loader = getLoader(configFile);
-                configNode = loader.createNode();
-
-                //save to create file
-                if (generateEmptyConfig) loader.save(configNode);
-            }
-        } else {
-            //load config
-            configNode = getLoader(configFile).load();
+        if (!Files.exists(path)) {
+            throw new ConfigurationException(
+                    "BlueMap tried to find this file, but it does not exist:\n" +
+                    path);
         }
 
-        //populate missing values with default values
-        if (defaultValues != null) {
-            ConfigurationNode defaultValuesNode = getLoader(defaultValues).load();
-            configNode.mergeFrom(defaultValuesNode);
+        if (!Files.isReadable(path)) {
+            throw new ConfigurationException(
+                    "BlueMap tried to read this file, but can not access it:\n" +
+                    path + "\n" +
+                    "Check if BlueMap has the permission to read this file.");
         }
 
-        return configNode;
+        try {
+            return getLoader(path).load();
+        } catch (ConfigurateException ex) {
+            throw new ConfigurationException(
+                    "BlueMap failed to parse this file:\n" +
+                    path + "\n" +
+                    "Check if the file is correctly formatted.\n" +
+                    "(for example there might be a } or ] or , missing somewhere)",
+                    ex);
+        }
     }
 
-    private ConfigurationLoader<? extends ConfigurationNode> getLoader(URL url){
-        if (url.getFile().endsWith(".json")) return GsonConfigurationLoader.builder().url(url).build();
-        else return HoconConfigurationLoader.builder().url(url).build();
+    public Path getConfigRoot() {
+        return configRoot;
     }
 
-    private ConfigurationLoader<? extends ConfigurationNode> getLoader(File file){
-        if (file.getName().endsWith(".json")) return GsonConfigurationLoader.builder().file(file).build();
-        else return HoconConfigurationLoader.builder().file(file).build();
+    private Path findConfigPath(Path rawPath) {
+        for (String fileEnding : CONFIG_FILE_ENDINGS) {
+            if (rawPath.getFileName().endsWith(fileEnding)) return rawPath;
+        }
+
+        for (String fileEnding : CONFIG_FILE_ENDINGS) {
+            Path path = rawPath.getParent().resolve(rawPath.getFileName() + fileEnding);
+            if (Files.exists(path)) return path;
+        }
+
+        return rawPath.getParent().resolve(rawPath.getFileName() + CONFIG_FILE_ENDINGS[0]);
     }
 
-    public static File toFolder(String pathString) throws IOException {
-        Objects.requireNonNull(pathString);
-
-        File file = new File(pathString);
-        if (file.exists() && !file.isDirectory()) throw new IOException("Invalid configuration: Path '" + file.getAbsolutePath() + "' is a file (should be a directory)");
-        return file;
+    private ConfigurationLoader<? extends ConfigurationNode> getLoader(Path path){
+        if (path.getFileName().endsWith(".json")) return GsonConfigurationLoader.builder().path(path).build();
+        else return HoconConfigurationLoader.builder().path(path).build();
     }
 
 }

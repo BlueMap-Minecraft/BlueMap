@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.config;
+package de.bluecolored.bluemap.core.config.old;
 
 import java.util.function.Supplier;
 import java.util.regex.Pattern;

@@ -22,15 +22,52 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common;
+package de.bluecolored.bluemap.core.storage;
 
-import de.bluecolored.bluemap.core.config.ConfigurationException;
+import java.io.IOException;
+import java.io.InputStream;
 
-public class MissingResourcesException extends ConfigurationException {
-    private static final long serialVersionUID = 2084565069965755048L;
+public class CompressedInputStream extends InputStream {
 
-    public MissingResourcesException() {
-        super("BlueMap is missing important resources!\n" +
-              "You must accept the required file download in order for BlueMap to work!");
+    private final InputStream in;
+    private final Compression compression;
+
+    public CompressedInputStream(InputStream in, Compression compression) {
+        this.in = in;
+        this.compression = compression;
     }
+
+    public InputStream decompress() throws IOException {
+        return compression.decompress(in);
+    }
+
+    public Compression getCompression() {
+        return compression;
+    }
+
+    @Override
+    public int read() throws IOException {
+        return in.read();
+    }
+
+    @Override
+    public int read(byte[] b, int off, int len) throws IOException {
+        return in.read(b, off, len);
+    }
+
+    @Override
+    public void close() throws IOException {
+        in.close();
+    }
+
+    @Override
+    public int available() throws IOException {
+        return in.available();
+    }
+
+    @Override
+    public void reset() throws IOException {
+        in.reset();
+    }
+
 }

@@ -26,9 +26,30 @@ package de.bluecolored.bluemap.core.storage;
 
 public enum MetaType {
 
-    TEXTURES,
-    SETTINGS,
-    MARKERS,
-    RENDER_STATE
+    //TEXTURES ("textures", "textures.json", "application/json"),
+    //SETTINGS ("settings", "settings.json", "application/json"),
+    //MARKERS ("markers", "markers.json", "application/json"),
+    RENDER_STATE ("render_state", ".rstate", "application/octet-stream");
 
+    private final String typeId;
+    private final String filePath;
+    private final String contentType;
+
+    MetaType(String typeId, String filePath, String contentType) {
+        this.typeId = typeId;
+        this.filePath = filePath;
+        this.contentType = contentType;
+    }
+
+    public String getTypeId() {
+        return typeId;
+    }
+
+    public String getFilePath() {
+        return filePath;
+    }
+
+    public String getContentType() {
+        return contentType;
+    }
 }

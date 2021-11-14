@@ -22,55 +22,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.config;
+package de.bluecolored.bluemap.core.config.storage;
 
 import de.bluecolored.bluemap.core.debug.DebugDump;
-import org.spongepowered.configurate.ConfigurationNode;
+import de.bluecolored.bluemap.core.storage.Compression;
+import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
-import java.io.File;
-import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
+@SuppressWarnings("FieldMayBeFinal")
 @DebugDump
-public class CoreConfig {
+@ConfigSerializable
+public class FileConfig extends StorageConfig {
 
-    private boolean downloadAccepted = false;
-    private int renderThreadCount = 0;
-    private boolean metricsEnabled = false;
-    private File dataFolder = new File("data");
+    private Path root = Paths.get("bluemap", "web", "data");
 
-    public CoreConfig(ConfigurationNode node) throws IOException {
+    private Compression compression = Compression.GZIP;
 
-        //accept-download
-        downloadAccepted = node.node("accept-download").getBoolean(false);
-
-        //renderThreadCount
-        int processors = Runtime.getRuntime().availableProcessors();
-        renderThreadCount = node.node("renderThreadCount").getInt(0);
-        if (renderThreadCount <= 0) renderThreadCount = processors + renderThreadCount;
-        if (renderThreadCount <= 0) renderThreadCount = 1;
-
-        //metrics
-        metricsEnabled = node.node("metrics").getBoolean(false);
-
-        //data
-        dataFolder = ConfigManager.toFolder(node.node("data").getString("data"));
-
+    public Path getRoot() {
+        return root;
     }
 
-    public File getDataFolder() {
-        return dataFolder;
-    }
-
-    public boolean isDownloadAccepted() {
-        return downloadAccepted;
-    }
-
-    public boolean isMetricsEnabled() {
-        return metricsEnabled;
-    }
-
-    public int getRenderThreadCount() {
-        return renderThreadCount;
+    public Compression getCompression() {
+        return compression;
     }
 
 }

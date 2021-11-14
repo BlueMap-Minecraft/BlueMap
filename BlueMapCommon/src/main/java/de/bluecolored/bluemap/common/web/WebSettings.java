@@ -26,7 +26,7 @@ package de.bluecolored.bluemap.common.web;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3f;
-import de.bluecolored.bluemap.core.config.MapConfig;
+import de.bluecolored.bluemap.core.config.old.MapConfig;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.util.FileUtils;
 import de.bluecolored.bluemap.core.util.MathUtils;
