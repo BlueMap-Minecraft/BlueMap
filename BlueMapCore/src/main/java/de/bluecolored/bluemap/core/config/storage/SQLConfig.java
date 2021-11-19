@@ -34,19 +34,18 @@ import java.nio.file.Paths;
 import java.util.Optional;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
-@DebugDump
 @ConfigSerializable
 public class SQLConfig extends StorageConfig {
 
-    private String driverJar = null;
-    private String driverClass = null;
-    private String dbUrl = "jdbc:mysql://localhost:3306/bluemap";
-    private String user = "root";
+    @DebugDump private String driverJar = null;
+    @DebugDump private String driverClass = null;
+    @DebugDump private String dbUrl = "jdbc:mysql://localhost:3306/bluemap";
+    @DebugDump private String user = "root";
     private String password = "";
 
-    private Compression compression = Compression.GZIP;
+    @DebugDump private Compression compression = Compression.GZIP;
 
-    private transient URL driverJarURL = null;
+    @DebugDump private transient URL driverJarURL = null;
 
     public Optional<URL> getDriverJar() throws MalformedURLException {
         if (driverJar == null) return Optional.empty();
