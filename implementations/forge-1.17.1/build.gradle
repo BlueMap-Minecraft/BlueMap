@@ -10,6 +10,8 @@ buildscript {
 
 apply plugin: 'net.minecraftforge.gradle'
 
+targetCompatibility = 1.16
+
 minecraft {
     mappings channel: 'official', version: '1.17.1'
 }
@@ -33,7 +35,7 @@ dependencies {
 
 build.dependsOn shadowJar {
 	destinationDirectory = file '../../build/release'
-	archiveFileName.set("BlueMap-${archiveVersion.get()}-forge-1.16.4.jar")
+	archiveFileName.set("BlueMap-${archiveVersion.get()}-forge-1.17.1.jar")
 	
 	configurations = [project.configurations.include]
 	

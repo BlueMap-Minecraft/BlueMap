@@ -24,21 +24,23 @@
  */
 package de.bluecolored.bluemap.forge;
 
+import com.flowpowered.math.vector.Vector3d;
+import de.bluecolored.bluemap.common.plugin.serverinterface.Gamemode;
+import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
+import de.bluecolored.bluemap.common.plugin.text.Text;
+import net.minecraft.client.renderer.EffectInstance;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.phys.Vec3;
+
 import java.io.IOException;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.UUID;
-
-import com.flowpowered.math.vector.Vector3d;
-
-import de.bluecolored.bluemap.common.plugin.serverinterface.Gamemode;
-import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
-import de.bluecolored.bluemap.common.plugin.text.Text;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.GameType;
 
 public class ForgePlayer implements Player {
 
@@ -50,7 +52,6 @@ public class ForgePlayer implements Player {
         GAMEMODE_MAP.put(GameType.SURVIVAL, Gamemode.SURVIVAL);
         GAMEMODE_MAP.put(GameType.CREATIVE, Gamemode.CREATIVE);
         GAMEMODE_MAP.put(GameType.SPECTATOR, Gamemode.SPECTATOR);
-        GAMEMODE_MAP.put(GameType.NOT_SET, Gamemode.SURVIVAL);
     }
 
     private UUID uuid;
@@ -121,28 +122,28 @@ public class ForgePlayer implements Player {
             return;
         }
 
-        ServerPlayerEntity player = server.getPlayerList().getPlayerByUUID(uuid);
+        ServerPlayer player = server.getPlayerList().getPlayer(uuid);
         if (player == null) {
             this.online = false;
             return;
         }
 
-        this.gamemode = GAMEMODE_MAP.get(player.interactionManager.getGameType());
+        this.gamemode = GAMEMODE_MAP.getOrDefault(player.gameMode.getGameModeForPlayer(), Gamemode.SURVIVAL);
         if (this.gamemode == null) this.gamemode = Gamemode.SURVIVAL;
 
-        EffectInstance invis = player.getActivePotionEffect(Effects.INVISIBILITY);
+        MobEffectInstance invis = player.getEffect(MobEffects.INVISIBILITY);
         this.invisible = invis != null && invis.getDuration() > 0;
 
         this.name = Text.of(player.getName().getString());
         this.online = true;
 
-        net.minecraft.util.math.vector.Vector3d pos = player.getPositionVec();
-        this.position = new Vector3d(pos.getX(), pos.getY(), pos.getZ());
-        this.sneaking = player.isSneaking();
+        Vec3 pos = player.getPosition(1f);
+        this.position = new Vector3d(pos.x(), pos.y(), pos.z());
+        this.sneaking = player.isCrouching();
 
         try {
-            this.world = mod.getUUIDForWorld(player.getServerWorld());
-        } catch (IOException e) {
+            this.world = mod.getUUIDForWorld((ServerLevel) player.getCommandSenderWorld());
+        } catch (IOException | ClassCastException e) {
             this.world = UNKNOWN_WORLD_UUID;
         }
     }

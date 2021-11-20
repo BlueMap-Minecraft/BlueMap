@@ -35,25 +35,24 @@ import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.client.Minecraft;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.DimensionType;
-import net.minecraft.world.server.ServerWorld;
-import net.minecraft.world.storage.FolderName;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.dimension.DimensionType;
+import net.minecraft.world.level.storage.LevelResource;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent.ServerTickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.ExtensionPoint;
+import net.minecraftforge.fml.IExtensionPoint;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.event.server.FMLServerStartedEvent;
-import net.minecraftforge.fml.event.server.FMLServerStartingEvent;
-import net.minecraftforge.fml.event.server.FMLServerStoppingEvent;
-import net.minecraftforge.fml.network.FMLNetworkConstants;
-import org.apache.commons.lang3.tuple.Pair;
+import net.minecraftforge.fmllegacy.network.FMLNetworkConstants;
+import net.minecraftforge.fmlserverevents.FMLServerStartedEvent;
+import net.minecraftforge.fmlserverevents.FMLServerStartingEvent;
+import net.minecraftforge.fmlserverevents.FMLServerStoppingEvent;
 import org.apache.logging.log4j.LogManager;
 
 import java.io.File;
@@ -66,17 +65,17 @@ import java.util.concurrent.ExecutionException;
 @Mod(Plugin.PLUGIN_ID)
 public class ForgeMod implements ServerInterface {
 
-    private Plugin pluginInstance = null;
+    private final Plugin pluginInstance;
     private MinecraftServer serverInstance = null;
 
-    private Map<File, UUID> worldUUIDs;
-    private ForgeEventForwarder eventForwarder;
+    private final Map<File, UUID> worldUUIDs;
+    private final ForgeEventForwarder eventForwarder;
 
-    private LoadingCache<ServerWorld, UUID> worldUuidCache;
+    private final LoadingCache<ServerLevel, UUID> worldUuidCache;
 
     private int playerUpdateIndex = 0;
-    private Map<UUID, Player> onlinePlayerMap;
-    private List<ForgePlayer> onlinePlayerList;
+    private final Map<UUID, Player> onlinePlayerMap;
+    private final List<ForgePlayer> onlinePlayerList;
 
     public ForgeMod() {
         Logger.global = new Log4jLogger(LogManager.getLogger(Plugin.PLUGIN_NAME));
@@ -84,7 +83,16 @@ public class ForgeMod implements ServerInterface {
         this.onlinePlayerMap = new ConcurrentHashMap<>();
         this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 
-        this.pluginInstance = new Plugin(new MinecraftVersion(1, 16, 2), "forge-1.16.2", this);
+        String versionString = net.minecraft.DetectedVersion.tryDetectVersion().getId();
+        MinecraftVersion mcVersion;
+        try {
+            mcVersion = MinecraftVersion.of(versionString);
+        } catch (IllegalArgumentException ex) {
+            mcVersion = new MinecraftVersion(1, 17, 1);
+            Logger.global.logWarning("Failed to derive version from version-string '" + versionString +
+                                     "', falling back to version: " + mcVersion.getVersionString());
+        }
+        this.pluginInstance = new Plugin(mcVersion, "forge-1.16.2", this);
 
         this.worldUUIDs = new ConcurrentHashMap<>();
         this.eventForwarder = new ForgeEventForwarder();
@@ -97,7 +105,7 @@ public class ForgeMod implements ServerInterface {
         MinecraftForge.EVENT_BUS.register(this);
 
         //Make sure the mod being absent on the other network side does not cause the client to display the server as incompatible
-        ModLoadingContext.get().registerExtensionPoint(ExtensionPoint.DISPLAYTEST, () -> Pair.of(() -> FMLNetworkConstants.IGNORESERVERONLY, (a, b) -> true));
+        ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class, () -> new IExtensionPoint.DisplayTest(() -> FMLNetworkConstants.IGNORESERVERONLY, (a, b) -> true));
     }
 
     @SubscribeEvent
@@ -105,13 +113,13 @@ public class ForgeMod implements ServerInterface {
         this.serverInstance = event.getServer();
 
         //register commands
-        new Commands<>(pluginInstance, event.getServer().getCommandManager().getDispatcher(), forgeSource -> new ForgeCommandSource(this, pluginInstance, forgeSource));
+        new Commands<>(pluginInstance, event.getServer().getCommands().getDispatcher(), forgeSource -> new ForgeCommandSource(this, pluginInstance, forgeSource));
     }
 
     @SubscribeEvent
     public void onServerStarted(FMLServerStartedEvent event) {
         //save worlds to generate level.dat files
-        serverInstance.save(false, true, true);
+        serverInstance.saveAllChunks(false, true, true);
 
         new Thread(() -> {
             Logger.global.logInfo("Loading...");
@@ -160,7 +168,7 @@ public class ForgeMod implements ServerInterface {
         return uuid;
     }
 
-    public UUID getUUIDForWorld(ServerWorld world) throws IOException {
+    public UUID getUUIDForWorld(ServerLevel world) throws IOException {
         try {
             return worldUuidCache.get(world);
         } catch (RuntimeException e) {
@@ -168,7 +176,7 @@ public class ForgeMod implements ServerInterface {
         }
     }
 
-    private UUID loadUUIDForWorld(ServerWorld world) throws IOException {
+    private UUID loadUUIDForWorld(ServerLevel world) throws IOException {
         File key = getFolderForWorld(world);
 
         UUID uuid = worldUUIDs.get(key);
@@ -180,10 +188,10 @@ public class ForgeMod implements ServerInterface {
         return uuid;
     }
 
-    private File getFolderForWorld(ServerWorld world) throws IOException {
+    private File getFolderForWorld(ServerLevel world) throws IOException {
         MinecraftServer server = world.getServer();
-        File worldFolder = world.getServer().getDataDirectory().toPath().resolve(server.func_240776_a_(FolderName.field_237253_i_)).toFile();
-        File dimensionFolder = DimensionType.func_236031_a_(world.func_234923_W_(), worldFolder);
+        File worldFolder = world.getServer().getServerDirectory().toPath().resolve(server.getWorldPath(LevelResource.ROOT)).toFile();
+        File dimensionFolder = DimensionType.getStorageFolder(world.dimension(), worldFolder);
         return dimensionFolder.getCanonicalFile();
     }
 
@@ -193,7 +201,7 @@ public class ForgeMod implements ServerInterface {
 
         serverInstance.execute(() -> {
             try {
-                for (ServerWorld world : serverInstance.getWorlds()) {
+                for (ServerLevel world : serverInstance.getAllLevels()) {
                     if (getUUIDForWorld(world).equals(worldUUID)) {
                         world.save(null, true, false);
                     }
@@ -225,20 +233,20 @@ public class ForgeMod implements ServerInterface {
 
     @SubscribeEvent
     public void onPlayerJoin(PlayerLoggedInEvent evt) {
-        PlayerEntity playerInstance = evt.getPlayer();
-        if (!(playerInstance instanceof ServerPlayerEntity)) return;
+        net.minecraft.world.entity.player.Player playerInstance = evt.getPlayer();
+        if (!(playerInstance instanceof ServerPlayer)) return;
 
-        ForgePlayer player = new ForgePlayer(this, playerInstance.getUniqueID());
+        ForgePlayer player = new ForgePlayer(this, playerInstance.getUUID());
         onlinePlayerMap.put(player.getUuid(), player);
         onlinePlayerList.add(player);
     }
 
     @SubscribeEvent
     public void onPlayerLeave(PlayerLoggedOutEvent evt) {
-        PlayerEntity player = evt.getPlayer();
-        if (!(player instanceof ServerPlayerEntity)) return;
+        net.minecraft.world.entity.player.Player player = evt.getPlayer();
+        if (!(player instanceof ServerPlayer)) return;
 
-        UUID playerUUID = player.getUniqueID();
+        UUID playerUUID = player.getUUID();
         onlinePlayerMap.remove(playerUUID);
         synchronized (onlinePlayerList) {
             onlinePlayerList.removeIf(p -> p.getUuid().equals(playerUUID));

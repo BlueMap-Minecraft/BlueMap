@@ -54,13 +54,13 @@ public class ForgeEventForwarder  {
 
     @SubscribeEvent
     public synchronized void onPlayerJoin(PlayerLoggedInEvent evt) {
-        UUID uuid = evt.getPlayer().getUniqueID();
+        UUID uuid = evt.getPlayer().getUUID();
         for (ServerEventListener listener : eventListeners) listener.onPlayerJoin(uuid);
     }
 
     @SubscribeEvent
     public synchronized void onPlayerLeave(PlayerLoggedOutEvent evt) {
-        UUID uuid = evt.getPlayer().getUniqueID();
+        UUID uuid = evt.getPlayer().getUUID();
         for (ServerEventListener listener : eventListeners) listener.onPlayerLeave(uuid);
     }
 

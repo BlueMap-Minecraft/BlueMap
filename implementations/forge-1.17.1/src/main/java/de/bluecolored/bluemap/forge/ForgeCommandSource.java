@@ -24,25 +24,27 @@
  */
 package de.bluecolored.bluemap.forge;
 
-import java.io.IOException;
-import java.util.Optional;
-
 import com.flowpowered.math.vector.Vector3d;
-
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.core.world.World;
-import net.minecraft.util.text.ITextComponent;
-import net.minecraft.world.server.ServerWorld;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.Component;
+import net.minecraft.network.chat.TextComponent;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.phys.Vec3;
+
+import java.io.IOException;
+import java.util.Optional;
 
 public class ForgeCommandSource implements CommandSource {
 
     private ForgeMod mod;
     private Plugin plugin;
-    private net.minecraft.command.CommandSource delegate;
+    private CommandSourceStack delegate;
 
-    public ForgeCommandSource(ForgeMod mod, Plugin plugin, net.minecraft.command.CommandSource delegate) {
+    public ForgeCommandSource(ForgeMod mod, Plugin plugin, CommandSourceStack delegate) {
         this.mod = mod;
         this.plugin = plugin;
         this.delegate = delegate;
@@ -50,31 +52,27 @@ public class ForgeCommandSource implements CommandSource {
 
     @Override
     public void sendMessage(Text text) {
-        delegate.sendFeedback(ITextComponent.Serializer.func_240643_a_(text.toJSONString()), false);
+        Component component = TextComponent.Serializer.fromJsonLenient(text.toJSONString());
+        if (component == null) component = new TextComponent(text.toPlainString());
+        delegate.sendSuccess(component, false);
     }
 
     @Override
     public boolean hasPermission(String permission) {
-        return delegate.hasPermissionLevel(1);
+        return delegate.hasPermission(1);
     }
 
     @Override
     public Optional<Vector3d> getPosition() {
-        net.minecraft.util.math.vector.Vector3d pos = delegate.getPos();
-        if (pos != null) {
-            return Optional.of(new Vector3d(pos.x, pos.y, pos.z));
-        }
-
-        return Optional.empty();
+        Vec3 pos = delegate.getPosition();
+        return Optional.of(new Vector3d(pos.x, pos.y, pos.z));
     }
 
     @Override
     public Optional<World> getWorld() {
         try {
-            ServerWorld world = delegate.getWorld();
-            if (world != null) {
-                return Optional.ofNullable(plugin.getWorld(mod.getUUIDForWorld(world)));
-            }
+            ServerLevel world = delegate.getLevel();
+            return Optional.ofNullable(plugin.getWorld(mod.getUUIDForWorld(world)));
         } catch (IOException ignore) {}
 
         return Optional.empty();
