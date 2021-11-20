@@ -24,8 +24,10 @@
  */
 package de.bluecolored.bluemap.core.resourcepack.texture;
 
+import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.util.math.Color;
 
+@DebugDump
 public class Texture {
 
     private final int id;

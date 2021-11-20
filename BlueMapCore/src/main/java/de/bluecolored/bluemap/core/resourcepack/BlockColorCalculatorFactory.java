@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.core.resourcepack;
 
 import com.flowpowered.math.GenericMath;
 import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.util.ConfigUtils;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.Biome;
@@ -207,8 +208,10 @@ public class BlockColorCalculatorFactory {
         }
 
         private void getColorFromMap(Biome biome, int[] colorMap, int defaultColor, Color target) {
-            double temperature = GenericMath.clamp(biome.getTemp(), 0, 1);
-            double humidity = GenericMath.clamp(biome.getHumidity(), 0, 1) * temperature;
+            double temperature = GenericMath.clamp(biome.getTemp(), 0.0, 1.0);
+            double humidity = GenericMath.clamp(biome.getHumidity(), 0.0, 1.0);
+
+            humidity *= temperature;
 
             int x = (int) ((1.0 - temperature) * 255.0);
             int y = (int) ((1.0 - humidity) * 255.0);

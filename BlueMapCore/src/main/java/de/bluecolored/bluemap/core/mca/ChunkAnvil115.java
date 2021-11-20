@@ -61,6 +61,8 @@ public class ChunkAnvil115 extends MCAChunk {
                 Section section = new Section(sectionTag);
                 if (section.getSectionY() >= 0 && section.getSectionY() < sections.length) sections[section.getSectionY()] = section;
             }
+        } else {
+            sections = new Section[0];
         }
 
         Tag<?> tag = levelData.get("Biomes"); //tag can be byte-array or int-array
@@ -116,16 +118,16 @@ public class ChunkAnvil115 extends MCAChunk {
     }
 
     @Override
-    public int getBiome(int x, int y, int z) {
+    public String getBiome(int x, int y, int z) {
         x = (x & 0xF) / 4; // Math.floorMod(pos.getX(), 16)
         z = (z & 0xF) / 4;
         y = y / 4;
         int biomeIntIndex = y * 16 + z * 4 + x;
 
-        if (biomeIntIndex < 0) return Biome.DEFAULT.getNumeralId();
-        if (biomeIntIndex >= this.biomes.length) return Biome.DEFAULT.getNumeralId();
+        if (biomeIntIndex < 0) return Biome.DEFAULT.getFullId();
+        if (biomeIntIndex >= this.biomes.length) return Biome.DEFAULT.getFullId();
 
-        return biomes[biomeIntIndex];
+        return LegacyBiomes.idFor(biomes[biomeIntIndex]);
     }
 
     private static class Section {

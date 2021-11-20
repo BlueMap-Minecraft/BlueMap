@@ -252,7 +252,7 @@ public class ResourcePack {
         return props.build();
     }
 
-    public Biome getBiome(int id) {
+    public Biome getBiome(String id) {
         return biomeConfig.getBiome(id);
     }
 

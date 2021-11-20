@@ -24,6 +24,9 @@
  */
 package de.bluecolored.bluemap.core.util.math;
 
+import de.bluecolored.bluemap.core.debug.DebugDump;
+
+@DebugDump
 public class Color {
 
     public float r, g, b, a;

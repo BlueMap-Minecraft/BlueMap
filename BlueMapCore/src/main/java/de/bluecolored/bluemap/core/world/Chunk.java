@@ -34,7 +34,7 @@ public interface Chunk {
 
     LightData getLightData(int x, int y, int z, LightData target);
 
-    int getBiome(int x, int y, int z);
+    String getBiome(int x, int y, int z);
 
     int getMaxY(int x, int z);
 

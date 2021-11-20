@@ -48,8 +48,8 @@ public class EmptyChunk extends MCAChunk {
     }
 
     @Override
-    public int getBiome(int x, int y, int z) {
-        return Biome.DEFAULT.getNumeralId();
+    public String getBiome(int x, int y, int z) {
+        return Biome.DEFAULT.getFullId();
     }
 
 }

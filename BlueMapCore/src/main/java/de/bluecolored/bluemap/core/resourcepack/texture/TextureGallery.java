@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.core.resourcepack.texture;
 
 import com.google.gson.*;
+import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.core.resourcepack.fileaccess.FileAccess;
@@ -40,6 +41,7 @@ import java.util.*;
  * A {@link TextureGallery} is managing {@link Texture}s and their id's and path's.<br>
  * I can also load and generate the texture.json file, or load new {@link Texture}s from a {@link FileAccess}.
  */
+@DebugDump
 public class TextureGallery {
 
     private static final String EMPTY_BASE64 = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAAEUlEQVR42mNkIAAYRxWMJAUAE5gAEdz4t9QAAAAASUVORK5CYII=";

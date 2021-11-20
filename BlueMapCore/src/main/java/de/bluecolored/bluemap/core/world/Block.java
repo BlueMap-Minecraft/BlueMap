@@ -33,7 +33,7 @@ public class Block<T extends Block<T>> {
 
     private BlockState blockState;
     private final LightData lightData = new LightData(-1, -1);
-    private int biomeId;
+    private String biomeId;
 
     public Block(World world, int x, int y, int z) {
         set(world, x, y, z);
@@ -75,7 +75,7 @@ public class Block<T extends Block<T>> {
     protected void reset() {
         this.blockState = null;
         this.lightData.set(-1, -1);
-        this.biomeId = -1;
+        this.biomeId = null;
     }
 
     public T add(int dx, int dy, int dz) {
@@ -145,8 +145,8 @@ public class Block<T extends Block<T>> {
         return lightData;
     }
 
-    public int getBiomeId() {
-        if (biomeId == -1) biomeId = getChunk().getBiome(x, y, z);
+    public String getBiomeId() {
+        if (biomeId == null) biomeId = getChunk().getBiome(x, y, z);
         return biomeId;
     }
 
