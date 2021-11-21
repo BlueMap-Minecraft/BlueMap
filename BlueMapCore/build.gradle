@@ -35,39 +35,24 @@ license {
 }
 
 //resource Extensions
+String[] resourceIds = [
+    "1_13", "1_15", "1_16", "1_18"
+];
+
 task zipResourceExtensions {
-   dependsOn 'zipResourceExtensions1_12'
-   dependsOn 'zipResourceExtensions1_13'
-   dependsOn 'zipResourceExtensions1_15'
-   dependsOn 'zipResourceExtensions1_16'
+    for (String id : resourceIds) {
+        dependsOn "zipResourceExtensions$id"
+    }
 }
 
-task zipResourceExtensions1_12(type: Zip) {
-   from fileTree('src/main/resourceExtensions/mc1_12')
-   archiveName 'resourceExtensions.zip'
-   destinationDir(file('src/main/resources/de/bluecolored/bluemap/mc1_12/'))
-   outputs.upToDateWhen { false }
-}
-
-task zipResourceExtensions1_13(type: Zip) {
-   from fileTree('src/main/resourceExtensions/mc1_13')
-   archiveName 'resourceExtensions.zip'
-   destinationDir(file('src/main/resources/de/bluecolored/bluemap/mc1_13/'))
-   outputs.upToDateWhen { false }
-}
-
-task zipResourceExtensions1_15(type: Zip) {
-   from fileTree('src/main/resourceExtensions/mc1_15')
-   archiveName 'resourceExtensions.zip'
-   destinationDir(file('src/main/resources/de/bluecolored/bluemap/mc1_15/'))
-   outputs.upToDateWhen { false }
-}
-
-task zipResourceExtensions1_16(type: Zip) {
-   from fileTree('src/main/resourceExtensions/mc1_16')
-   archiveName 'resourceExtensions.zip'
-   destinationDir(file('src/main/resources/de/bluecolored/bluemap/mc1_16/'))
-   outputs.upToDateWhen { false }
+for (String id : resourceIds) zipResourcesTask(id)
+void zipResourcesTask(String resourceId) {
+    task ("zipResourceExtensions$resourceId", type: Zip) {
+        from fileTree("src/main/resourceExtensions/mc$resourceId")
+        archiveName 'resourceExtensions.zip'
+        destinationDir(file("src/main/resources/de/bluecolored/bluemap/mc$resourceId/"))
+        outputs.upToDateWhen{ false }
+    }
 }
 
 //always update the zip before build

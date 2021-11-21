@@ -1,0 +1,64 @@
+import net.fabricmc.loom.task.RemapJarTask
+
+plugins {
+	id 'fabric-loom' version '0.8-SNAPSHOT'
+}
+
+configurations {
+	implementation.extendsFrom shadowInclude
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:1.18-pre1"
+	mappings "net.fabricmc:yarn:1.18-pre1+build.8:v2"
+	modImplementation "net.fabricmc:fabric-loader:0.11.3"
+	modImplementation "net.fabricmc.fabric-api:fabric-api:0.42.2+1.18"
+
+	shadowInclude (project(':BlueMapCommon')) {
+    	//exclude dependencies provided by fabric
+    	exclude group: 'com.google.guava', module: 'guava'
+		exclude group: 'com.google.code.gson', module: 'gson'
+		exclude group: 'org.apache.commons', module: 'commons-lang3'
+		exclude group: 'commons-io', module: 'commons-io'
+		exclude group: 'com.mojang', module: 'brigadier'
+    }
+}
+
+processResources {
+	inputs.property "version", project.version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": project.version
+	}
+}
+
+shadowJar {
+	configurations = [project.configurations.shadowInclude]
+
+	//relocate 'com.flowpowered.math', 'de.bluecolored.shadow.flowpowered.math' //DON'T relocate this, because the API depends on it
+	relocate 'com.typesafe.config', 'de.bluecolored.shadow.typesafe.config'
+	relocate 'net.querz.nbt', 'de.bluecolored.shadow.querz.nbt'
+	relocate 'org.spongepowered.configurate', 'de.bluecolored.shadow.configurate'
+	relocate 'com.github.benmanes.caffeine', 'de.bluecolored.shadow.benmanes.caffeine'
+	relocate 'com.google.errorprone', 'de.bluecolored.shadow.google.errorprone'
+	relocate 'org.aopalliance', 'de.bluecolored.shadow.aopalliance'
+	relocate 'javax.inject', 'de.bluecolored.shadow.javax.inject'
+	relocate 'com.google.inject', 'de.bluecolored.shadow.google.inject'
+	relocate 'org.checkerframework', 'de.bluecolored.shadow.checkerframework'
+	relocate 'org.codehaus', 'de.bluecolored.shadow.codehaus'
+	relocate 'io.leangen.geantyref', 'de.bluecolored.shadow.geantyref'
+}
+
+task ramappedShadowJar(type: RemapJarTask) {
+	destinationDirectory = file '../../build/release'
+	dependsOn tasks.shadowJar
+	input.set(tasks.shadowJar.archiveFile.get())
+	addNestedDependencies.set(true)
+	archiveFileName.set("BlueMap-${archiveVersion.get()}-fabric-1.18.jar")
+}
+build.dependsOn ramappedShadowJar
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+	archiveClassifier.set("sources")
+	from sourceSets.main.allSource
+}

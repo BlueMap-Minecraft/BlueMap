@@ -24,10 +24,12 @@
  */
 package de.bluecolored.bluemap.core.resourcepack;
 
+import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.world.BlockState;
 
 import java.util.Map.Entry;
 
+@DebugDump
 class BlockStateMapping<T> {
     private BlockState blockState;
     private T mapping;

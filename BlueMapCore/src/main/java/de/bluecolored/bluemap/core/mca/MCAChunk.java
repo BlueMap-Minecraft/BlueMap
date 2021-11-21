@@ -66,7 +66,7 @@ public abstract class MCAChunk implements Chunk {
     public abstract LightData getLightData(int x, int y, int z, LightData target);
 
     @Override
-    public abstract int getBiome(int x, int y, int z);
+    public abstract String getBiome(int x, int y, int z);
 
     @Override
     public int getMaxY(int x, int z) {
@@ -87,7 +87,8 @@ public abstract class MCAChunk implements Chunk {
 
         if (version < 2200) return new ChunkAnvil113(world, chunkTag);
         if (version < 2500) return new ChunkAnvil115(world, chunkTag);
-        return new ChunkAnvil116(world, chunkTag);
+        if (version < 2844) return new ChunkAnvil116(world, chunkTag);
+        return new ChunkAnvil118(world, chunkTag);
     }
 
     public static MCAChunk empty() {

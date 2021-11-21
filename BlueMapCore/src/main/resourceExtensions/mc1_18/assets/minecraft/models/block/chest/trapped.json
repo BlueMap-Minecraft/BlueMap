@@ -1,0 +1,6 @@
+{
+	"parent":"block/chest/chest",
+    "textures": {
+        "chest": "entity/chest/trapped"
+	}
+}

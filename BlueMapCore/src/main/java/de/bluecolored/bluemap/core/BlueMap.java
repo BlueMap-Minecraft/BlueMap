@@ -30,6 +30,7 @@ import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 
 import java.io.IOException;
+import java.util.UUID;
 import java.util.concurrent.ForkJoinPool;
 
 public class BlueMap {

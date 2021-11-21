@@ -24,50 +24,33 @@
  */
 package de.bluecolored.bluemap.core.resourcepack;
 
+import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.world.Biome;
 import org.spongepowered.configurate.ConfigurationNode;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
 
+@DebugDump
 public class BiomeConfig {
 
-    private Biome[] biomes;
+    private final Map<String, Biome> biomes;
 
     public BiomeConfig() {
-        biomes = new Biome[10];
+        biomes = new HashMap<>();
     }
 
     public void load(ConfigurationNode node) {
         for (Entry<Object, ? extends ConfigurationNode> e : node.childrenMap().entrySet()){
             String id = e.getKey().toString();
             Biome biome = Biome.create(id, e.getValue());
-
-            int numeralId = biome.getNumeralId();
-            ensureAvailability(numeralId);
-            biomes[numeralId] = biome;
+            biomes.put(id, biome);
         }
     }
 
-    public Biome getBiome(int id) {
-        if (id > 0 && id < biomes.length) {
-            Biome biome = biomes[id];
-            return biome != null ? biome : Biome.DEFAULT;
-        }
-
-        return Biome.DEFAULT;
-    }
-
-    private void ensureAvailability(int id) {
-        if (id >= biomes.length) {
-            int newSize = biomes.length;
-            do {
-                newSize = (int) (newSize * 1.5) + 1;
-            } while (id >= newSize);
-
-            Biome[] newArray = new Biome[newSize];
-            System.arraycopy(biomes, 0, newArray, 0, biomes.length);
-            biomes = newArray;
-        }
+    public Biome getBiome(String id) {
+        return biomes.getOrDefault(id, Biome.DEFAULT);
     }
 
 }

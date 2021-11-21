@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.core.resourcepack;
 
+import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.world.BlockProperties;
 import de.bluecolored.bluemap.core.world.BlockState;
@@ -37,6 +38,7 @@ import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
+@DebugDump
 public class BlockPropertiesConfig {
 
     private final Map<String, List<BlockStateMapping<BlockProperties>>> mappings;
