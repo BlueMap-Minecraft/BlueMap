@@ -9,8 +9,8 @@ configurations {
 }
 
 dependencies {
-	minecraft "com.mojang:minecraft:1.18-pre1"
-	mappings "net.fabricmc:yarn:1.18-pre1+build.8:v2"
+	minecraft "com.mojang:minecraft:1.18-pre5"
+	mappings "net.fabricmc:yarn:1.18-pre5+build.4:v2"
 	modImplementation "net.fabricmc:fabric-loader:0.11.3"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:0.42.2+1.18"
 

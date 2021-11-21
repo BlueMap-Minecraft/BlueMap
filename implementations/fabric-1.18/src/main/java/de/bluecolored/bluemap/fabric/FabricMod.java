@@ -26,7 +26,6 @@ package de.bluecolored.bluemap.fabric;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
-import com.google.gson.Gson;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.commands.Commands;
 import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
@@ -42,27 +41,16 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.loom.configuration.FabricApiExtension;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.WorldSavePath;
-import net.minecraft.util.registry.BuiltinRegistries;
-import net.minecraft.util.registry.Registry;
-import net.minecraft.world.biome.Biome;
-import net.minecraft.world.biome.BiomeEffects;
-import net.minecraft.world.biome.BiomeKeys;
-import net.minecraft.world.biome.BuiltinBiomes;
 import net.minecraft.world.dimension.DimensionType;
 import org.apache.logging.log4j.LogManager;
-import org.spongepowered.configurate.ConfigurateException;
-import org.spongepowered.configurate.ConfigurationNode;
-import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
@@ -173,9 +161,9 @@ public class FabricMod implements ModInitializer, ServerInterface {
 
     private UUID loadUUIDForWorld(ServerWorld world) throws IOException {
         MinecraftServer server = world.getServer();
-        File worldFolder = world.getServer().getRunDirectory().toPath().resolve(server.getSavePath(WorldSavePath.ROOT)).toFile();
-        File dimensionFolder = DimensionType.getSaveDirectory(world.getRegistryKey(), worldFolder);
-        File dimensionDir = dimensionFolder.getCanonicalFile();
+        Path worldFolder = world.getServer().getRunDirectory().toPath().resolve(server.getSavePath(WorldSavePath.ROOT));
+        Path dimensionFolder = DimensionType.getSaveDirectory(world.getRegistryKey(), worldFolder);
+        File dimensionDir = dimensionFolder.toFile().getCanonicalFile();
         return getUUIDForWorld(dimensionDir);
     }
 
