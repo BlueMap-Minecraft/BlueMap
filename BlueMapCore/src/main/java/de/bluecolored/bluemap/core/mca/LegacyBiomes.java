@@ -109,7 +109,7 @@ public class LegacyBiomes {
     }
 
     public static String idFor(int legacyId) {
-        if (legacyId < 0 || legacyId > BIOME_IDS.length) legacyId = 0;
+        if (legacyId < 0 || legacyId >= BIOME_IDS.length) legacyId = 0;
         return BIOME_IDS[legacyId];
     }
 

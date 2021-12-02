@@ -78,7 +78,7 @@ public class FabricMod implements ModInitializer, ServerInterface {
 
         pluginInstance = new Plugin(
                 MinecraftVersion.of(net.minecraft.MinecraftVersion.CURRENT.getReleaseTarget()),
-                "fabric-1.17", this);
+                "fabric-1.18", this);
 
         this.worldUUIDs = new ConcurrentHashMap<>();
         this.eventForwarder = new FabricEventForwarder(this);

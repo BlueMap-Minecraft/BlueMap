@@ -267,7 +267,6 @@ public class ChunkAnvil118 extends MCAChunk {
             y = (y & 0xF) / 4;
             int biomeIndex = y * 16 + z * 4 + x;
 
-            // this.biomes.length == bits per biome -- because -> available longs * 64 (bits per long) / 64 (biomes per section, 4*4*4)
             long value = MCAMath.getValueFromLongArray(biomes, biomeIndex, bitsPerBiome);
             if (value >= biomePalette.length) {
                 Logger.global.noFloodWarning("biomepalettewarning", "Got biome-palette value " + value + " but palette has size of " + biomePalette.length + "! (Future occasions of this error will not be logged)");

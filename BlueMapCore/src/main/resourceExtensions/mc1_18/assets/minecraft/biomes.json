@@ -33,6 +33,7 @@
         "humidity": 0.9,
         "temp": 0.8,
         "watercolor": 6388580,
+        "grasscolor": "#6A7039",
         "foliagecolor": 6975545
     },
     "minecraft:forest": {
