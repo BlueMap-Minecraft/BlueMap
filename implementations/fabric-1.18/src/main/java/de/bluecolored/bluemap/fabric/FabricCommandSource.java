@@ -33,6 +33,7 @@ import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.core.world.World;
+import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
@@ -56,7 +57,7 @@ public class FabricCommandSource implements CommandSource {
 
     @Override
     public boolean hasPermission(String permission) {
-        return delegate.hasPermissionLevel(1);
+        return Permissions.check(delegate, permission, 1);
     }
 
     @Override

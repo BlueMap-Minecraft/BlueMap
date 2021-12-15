@@ -13,6 +13,7 @@ dependencies {
 	mappings "net.fabricmc:yarn:1.17+build.1:v2"
 	modImplementation "net.fabricmc:fabric-loader:0.11.3"
 	modImplementation "net.fabricmc.fabric-api:fabric-api:0.34.9+1.17"
+	modImplementation "me.lucko:fabric-permissions-api:0.1-SNAPSHOT"
 
 	shadowInclude (project(':BlueMapCommon')) {
     	//exclude dependencies provided by fabric
