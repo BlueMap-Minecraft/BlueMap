@@ -13,6 +13,14 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 16
+    - uses: actions/cache@v2
+      with:
+        path: |
+          ~/.gradle/caches
+          ~/.gradle/wrapper
+        key: "${{ runner.os }}-bluemap-${{ hashFiles('**/*.gradle*') }}"
+        restore-keys: |
+          ${{ runner.os }}-bluemap-
     - name: Build with Gradle
       run: ./gradlew clean test build
     - uses: actions/upload-artifact@v2
