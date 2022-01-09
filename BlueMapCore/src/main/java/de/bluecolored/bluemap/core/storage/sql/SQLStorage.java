@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.core.storage.sql;
 import com.flowpowered.math.vector.Vector2i;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.config.ConfigurationException;
 import de.bluecolored.bluemap.core.config.storage.SQLConfig;
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -58,10 +59,13 @@ public class SQLStorage extends Storage {
     private final Compression compression;
 
     private final LoadingCache<String, Integer> mapFKs = Caffeine.newBuilder()
+            .executor(BlueMap.THREAD_POOL)
             .build(this::loadMapFK);
     private final LoadingCache<TileType, Integer> mapTileTypeFKs = Caffeine.newBuilder()
+            .executor(BlueMap.THREAD_POOL)
             .build(this::loadMapTileTypeFK);
     private final LoadingCache<Compression, Integer> mapTileCompressionFKs = Caffeine.newBuilder()
+            .executor(BlueMap.THREAD_POOL)
             .build(this::loadMapTileCompressionFK);
 
     public SQLStorage(SQLConfig config) throws ConfigurationException {
