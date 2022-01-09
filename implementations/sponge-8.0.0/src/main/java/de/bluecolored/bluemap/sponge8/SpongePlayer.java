@@ -122,7 +122,7 @@ public class SpongePlayer implements Player {
             Optional<List<PotionEffect>> effects = player.get(Keys.POTION_EFFECTS);
             if (effects.isPresent()) {
                 for (PotionEffect effect : effects.get()) {
-                    if (effect.type().equals(PotionEffectTypes.INVISIBILITY.get()) && effect.duration() > 0) invis = true;
+                    if (effect.type().equals(PotionEffectTypes.INVISIBILITY.get()) && effect.duration().ticks() > 0) invis = true;
                 }
             }
         }
