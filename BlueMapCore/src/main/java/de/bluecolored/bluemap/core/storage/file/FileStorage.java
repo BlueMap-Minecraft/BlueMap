@@ -65,7 +65,13 @@ public class FileStorage extends Storage {
 
         OutputStream os = AtomicFileHelper.createFilepartOutputStream(file);
         os = new BufferedOutputStream(os);
-        os = compression.compress(os);
+
+        try {
+            os = compression.compress(os);
+        } catch (IOException ex) {
+            os.close();
+            throw ex;
+        }
 
         return os;
     }
