@@ -15,3 +15,9 @@ tasks.register("build") {
         dependsOn(it.task(":release"))
     }
 }
+
+tasks.register("test") {
+    gradle.includedBuilds.forEach {
+        dependsOn(it.task(":test"))
+    }
+}
