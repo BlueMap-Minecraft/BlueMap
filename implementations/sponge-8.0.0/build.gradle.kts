@@ -125,7 +125,11 @@ tasks.shadowJar {
 	relocate ("org.checkerframework", "de.bluecolored.shadow.checkerframework")
 	relocate ("org.codehaus", "de.bluecolored.shadow.codehaus")
 	relocate ("io.leangen.geantyref", "de.bluecolored.shadow.geantyref")
-	relocate ("org.apache.commons", "de.bluecolored.shadow.apache.commons")
+
+	relocate ("org.apache.commons.dbcp2", "de.bluecolored.shadow.apache.commons.dbcp2")
+	relocate ("org.apache.commons.io", "de.bluecolored.shadow.apache.commons.io")
+	relocate ("org.apache.commons.logging", "de.bluecolored.shadow.apache.commons.logging")
+	relocate ("org.apache.commons.pool2", "de.bluecolored.shadow.apache.commons.pool2")
 }
 
 tasks.register("release") {

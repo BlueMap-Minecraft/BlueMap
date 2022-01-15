@@ -104,14 +104,20 @@ tasks.shadowJar {
 	relocate ("org.bstats", "de.bluecolored.shadow.bstats")
 	relocate ("com.mojang.brigadier", "de.bluecolored.shadow.mojang.brigadier")
 	relocate ("com.github.benmanes.caffeine", "de.bluecolored.shadow.benmanes.caffeine")
-	relocate ("com.google.errorprone", "de.bluecolored.shadow.google.errorprone")
 	relocate ("org.aopalliance", "de.bluecolored.shadow.aopalliance")
 	relocate ("javax.inject", "de.bluecolored.shadow.javax.inject")
-	relocate ("com.google.inject", "de.bluecolored.shadow.google.inject")
 	relocate ("org.checkerframework", "de.bluecolored.shadow.checkerframework")
 	relocate ("org.codehaus", "de.bluecolored.shadow.codehaus")
 	relocate ("io.leangen.geantyref", "de.bluecolored.shadow.geantyref")
-	relocate ("org.apache.commons", "de.bluecolored.shadow.apache.commons")
+
+	relocate ("com.google.errorprone", "de.bluecolored.shadow.google.errorprone")
+	relocate ("com.google.inject", "de.bluecolored.shadow.google.inject")
+
+	relocate ("org.apache.commons.dbcp2", "de.bluecolored.shadow.apache.commons.dbcp2")
+	relocate ("org.apache.commons.io", "de.bluecolored.shadow.apache.commons.io")
+	relocate ("org.apache.commons.lang3", "de.bluecolored.shadow.apache.commons.lang3")
+	relocate ("org.apache.commons.logging", "de.bluecolored.shadow.apache.commons.logging")
+	relocate ("org.apache.commons.pool2", "de.bluecolored.shadow.apache.commons.pool2")
 }
 
 tasks.register("release") {
