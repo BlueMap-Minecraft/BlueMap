@@ -92,7 +92,7 @@ public class ForgeMod implements ServerInterface {
             Logger.global.logWarning("Failed to derive version from version-string '" + versionString +
                                      "', falling back to version: " + mcVersion.getVersionString());
         }
-        this.pluginInstance = new Plugin(mcVersion, "forge-1.16.2", this);
+        this.pluginInstance = new Plugin(mcVersion, "forge-1.18.1", this);
 
         this.worldUUIDs = new ConcurrentHashMap<>();
         this.eventForwarder = new ForgeEventForwarder();
