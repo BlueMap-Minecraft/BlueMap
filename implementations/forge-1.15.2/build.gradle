@@ -29,7 +29,7 @@ group = "de.bluecolored.bluemap.forge"
 version = releaseProperties.version.toString()
 archivesBaseName = 'bluemap'
 
-def javaTarget = 16
+def javaTarget = 11
 java {
 	sourceCompatibility = JavaVersion.toVersion(javaTarget)
 	targetCompatibility = JavaVersion.toVersion(javaTarget)
