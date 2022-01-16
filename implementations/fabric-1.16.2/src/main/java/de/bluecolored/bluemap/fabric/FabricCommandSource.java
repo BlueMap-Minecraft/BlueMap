@@ -24,11 +24,7 @@
  */
 package de.bluecolored.bluemap.fabric;
 
-import java.io.IOException;
-import java.util.Optional;
-
 import com.flowpowered.math.vector.Vector3d;
-
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.plugin.text.Text;
@@ -37,6 +33,9 @@ import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
+
+import java.io.IOException;
+import java.util.Optional;
 
 public class FabricCommandSource implements CommandSource {
 
@@ -57,7 +56,12 @@ public class FabricCommandSource implements CommandSource {
 
     @Override
     public boolean hasPermission(String permission) {
-        return Permissions.check(delegate, permission, 1);
+        try {
+            Class.forName("me.lucko.fabric.api.permissions.v0.Permissions");
+            return Permissions.check(delegate, permission, 1);
+        } catch (ClassNotFoundException ex) {
+            return delegate.hasPermissionLevel(1);
+        }
     }
 
     @Override
