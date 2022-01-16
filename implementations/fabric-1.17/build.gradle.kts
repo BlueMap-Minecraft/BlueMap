@@ -39,6 +39,9 @@ repositories {
 	maven {
 		setUrl("https://maven.fabricmc.net/")
 	}
+	maven {
+		setUrl("https://oss.sonatype.org/content/repositories/snapshots")
+	}
 }
 
 val shadowInclude: Configuration by configurations.creating
@@ -61,6 +64,7 @@ dependencies {
 	mappings ("net.fabricmc:yarn:1.17+build.1:v2")
 	modImplementation ("net.fabricmc:fabric-loader:0.11.3")
 	modImplementation ("net.fabricmc.fabric-api:fabric-api:0.34.9+1.17")
+	modImplementation("me.lucko:fabric-permissions-api:0.1-SNAPSHOT")
 
 	testImplementation ("org.junit.jupiter:junit-jupiter:5.8.2")
 	testRuntimeOnly ("org.junit.jupiter:junit-jupiter-engine:5.8.2")

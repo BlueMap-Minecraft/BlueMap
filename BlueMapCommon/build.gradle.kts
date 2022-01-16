@@ -19,7 +19,7 @@ releaseProperties.load(file("../release.properties").inputStream())
 group = "de.bluecolored.bluemap.common"
 version = releaseProperties["version"].toString()
 
-val javaTarget = 8
+val javaTarget = 11
 java {
     sourceCompatibility = JavaVersion.toVersion(javaTarget)
     targetCompatibility = JavaVersion.toVersion(javaTarget)

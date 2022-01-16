@@ -20,7 +20,7 @@ releaseProperties.load(file("../../release.properties").inputStream())
 group = "de.bluecolored.bluemap.fabric"
 version = releaseProperties["version"].toString()
 
-val javaTarget = 8
+val javaTarget = 11
 java {
 	sourceCompatibility = JavaVersion.toVersion(javaTarget)
 	targetCompatibility = JavaVersion.toVersion(javaTarget)
@@ -38,6 +38,9 @@ repositories {
 	}
 	maven {
 		setUrl("https://maven.fabricmc.net/")
+	}
+	maven {
+		setUrl("https://oss.sonatype.org/content/repositories/snapshots")
 	}
 }
 
@@ -61,6 +64,7 @@ dependencies {
 	mappings ("net.fabricmc:yarn:1.16.3+build.1:v2")
 	modImplementation ("net.fabricmc:fabric-loader:0.9.3+build.207")
 	modImplementation ("net.fabricmc.fabric-api:fabric-api:0.20.2+build.402-1.16")
+	modImplementation("me.lucko:fabric-permissions-api:0.1-SNAPSHOT")
 
 	testImplementation ("org.junit.jupiter:junit-jupiter:5.8.2")
 	testRuntimeOnly ("org.junit.jupiter:junit-jupiter-engine:5.8.2")
