@@ -24,19 +24,14 @@
  */
 package de.bluecolored.bluemap.core;
 
-import com.github.benmanes.caffeine.cache.RemovalCause;
 import de.bluecolored.bluemap.core.logger.Logger;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 
 import java.io.IOException;
-import java.util.UUID;
 import java.util.concurrent.ForkJoinPool;
 
 public class BlueMap {
-
-    // early-loading this class, to fix a classloading issue
-    private static final RemovalCause RC = null;
 
     public static final String VERSION, GIT_HASH, GIT_CLEAN;
     static {
@@ -63,6 +58,17 @@ public class BlueMap {
         GIT_CLEAN = gitClean;
     }
 
-    public static final ForkJoinPool THREAD_POOL = new ForkJoinPool();
+    public static final ForkJoinPool THREAD_POOL = new ForkJoinPool(
+            Runtime.getRuntime().availableProcessors(),
+            ForkJoinPool.defaultForkJoinWorkerThreadFactory,
+            (thread, ex) -> {
+                if (ex instanceof ClassNotFoundException && ex.getMessage().contains("RemovalCause")) {
+                    Logger.global.noFloodWarning("RemovalCauseError", ex.getMessage());
+                } else {
+                    Logger.global.logError("Something went wrong!", ex);
+                }
+            },
+            false
+    );
 
 }
