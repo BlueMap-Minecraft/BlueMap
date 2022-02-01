@@ -1,0 +1,73 @@
+buildscript {
+    repositories {
+		maven { url = 'https://maven.minecraftforge.net' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
+    }
+}
+
+apply plugin: 'net.minecraftforge.gradle'
+
+targetCompatibility = 1.17
+
+minecraft {
+    mappings channel: 'official', version: '1.18.1'
+}
+
+configurations {
+	implementation.extendsFrom include
+}
+
+dependencies {
+	minecraft 'net.minecraftforge:forge:1.18.1-39.0.58'
+	
+    include (project(':BlueMapCommon')) {
+    	//exclude dependencies provided by forge
+    	exclude group: 'com.google.guava', module: 'guava'
+		exclude group: 'com.google.code.gson', module: 'gson'
+		exclude group: 'org.apache.commons', module: 'commons-lang3'
+		exclude group: 'commons-io', module: 'commons-io'
+		exclude group: 'com.mojang', module: 'brigadier'
+    }
+}
+
+build.dependsOn shadowJar {
+	destinationDirectory = file '../../build/release'
+	archiveFileName.set("BlueMap-${archiveVersion.get()}-forge-1.18.1.jar")
+	
+	configurations = [project.configurations.include]
+	
+	//relocate 'com.flowpowered.math', 'de.bluecolored.shadow.flowpowered.math' //DON'T relocate this, because the API depends on it
+	relocate 'com.typesafe.config', 'de.bluecolored.shadow.typesafe.config'
+	relocate 'net.querz.nbt', 'de.bluecolored.shadow.querz.nbt'
+	relocate 'org.spongepowered.configurate', 'de.bluecolored.shadow.configurate'
+	relocate 'com.github.benmanes.caffeine', 'de.bluecolored.shadow.benmanes.caffeine'
+	relocate 'com.google.errorprone', 'de.bluecolored.shadow.google.errorprone'
+	relocate 'org.aopalliance', 'de.bluecolored.shadow.aopalliance'
+	relocate 'javax.inject', 'de.bluecolored.shadow.javax.inject'
+	relocate 'com.google.inject', 'de.bluecolored.shadow.google.inject'
+	relocate 'org.checkerframework', 'de.bluecolored.shadow.checkerframework'
+	relocate 'org.codehaus', 'de.bluecolored.shadow.codehaus'
+	relocate 'io.leangen.geantyref', 'de.bluecolored.shadow.geantyref'
+}
+
+processResources {
+	from(sourceSets.main.resources.srcDirs) {
+		include 'mcmod.info','META-INF/mods.toml'
+		duplicatesStrategy = DuplicatesStrategy.WARN
+		
+		expand (
+			version: project.version
+		)
+	}
+}
+
+afterEvaluate {
+	reobf {
+		shadowJar {
+			mappings = createMcpToSrg.output
+		}
+	}
+}

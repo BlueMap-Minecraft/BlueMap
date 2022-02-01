@@ -1,7 +1,7 @@
 plugins {
 	id 'java'
 	id 'java-library'
-	id 'com.github.johnrengelman.shadow' version '6.1.0'
+	id 'com.github.johnrengelman.shadow' version '7.1.2'
 	id 'com.github.hierynomus.license' version '0.16.1'
 	id 'com.palantir.git-version' version '0.12.3'
 	id 'com.diffplug.spotless' version '5.14.2'
