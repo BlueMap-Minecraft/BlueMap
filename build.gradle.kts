@@ -21,3 +21,9 @@ tasks.register("test") {
         dependsOn(it.task(":test"))
     }
 }
+
+tasks.register("spotlessApply") {
+    gradle.includedBuilds.forEach {
+        dependsOn(it.task(":spotlessApply"))
+    }
+}

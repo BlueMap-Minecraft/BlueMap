@@ -40,39 +40,33 @@ import net.querz.nbt.NBTUtil;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+@DebugDump
 public class MCAWorld implements World {
 
     private static final Grid CHUNK_GRID = new Grid(16);
     private static final Grid REGION_GRID = new Grid(32).multiply(CHUNK_GRID);
 
-    @DebugDump private final UUID uuid;
-    @DebugDump private final Path worldFolder;
-    @DebugDump private final String name;
-    @DebugDump private final Vector3i spawnPoint;
+    private final Path worldFolder;
 
-    @DebugDump private final int skyLight;
-    @DebugDump private final boolean ignoreMissingLightData;
+    private final String name;
+    private final Vector3i spawnPoint;
+
+    private final int skyLight;
+    private final boolean ignoreMissingLightData;
 
     private final LoadingCache<Vector2i, MCARegion> regionCache;
     private final LoadingCache<Vector2i, MCAChunk> chunkCache;
 
-    private MCAWorld(
-            Path worldFolder,
-            UUID uuid,
-            String name,
-            Vector3i spawnPoint,
-            int skyLight,
-            boolean ignoreMissingLightData
-            ) {
-        this.uuid = uuid;
-        this.worldFolder = worldFolder;
-        this.name = name;
-        this.spawnPoint = spawnPoint;
-
+    public MCAWorld(Path worldFolder, int skyLight, boolean ignoreMissingLightData) throws IOException {
+        this.worldFolder = worldFolder.toRealPath();
         this.skyLight = skyLight;
         this.ignoreMissingLightData = ignoreMissingLightData;
 
@@ -87,6 +81,22 @@ public class MCAWorld implements World {
                 .maximumSize(500)
                 .expireAfterWrite(1, TimeUnit.MINUTES)
                 .build(this::loadChunk);
+
+        try {
+            Path levelFile = resolveLevelFile(worldFolder);
+            CompoundTag level = (CompoundTag) NBTUtil.readTag(levelFile.toFile());
+            CompoundTag levelData = level.getCompoundTag("Data");
+
+            this.name = levelData.getString("LevelName");
+
+            this.spawnPoint = new Vector3i(
+                    levelData.getInt("SpawnX"),
+                    levelData.getInt("SpawnY"),
+                    levelData.getInt("SpawnZ")
+            );
+        } catch (ClassCastException | NullPointerException ex) {
+            throw new IOException("Invalid level.dat format!", ex);
+        }
     }
 
     public BlockState getBlockState(Vector3i pos) {
@@ -142,11 +152,6 @@ public class MCAWorld implements World {
     @Override
     public String getName() {
         return name;
-    }
-
-    @Override
-    public UUID getUUID() {
-        return uuid;
     }
 
     @Override
@@ -256,60 +261,36 @@ public class MCAWorld implements World {
         return MCAChunk.empty();
     }
 
-    public static MCAWorld load(Path worldFolder, UUID uuid, String name, int skyLight, boolean ignoreMissingLightData) throws IOException {
-        try {
-            StringBuilder subDimensionName = new StringBuilder();
 
-            File levelFolder = worldFolder.toFile();
-            File levelFile = new File(levelFolder, "level.dat");
-            int searchDepth = 0;
-
-            while (!levelFile.exists() && searchDepth < 4) {
-                searchDepth++;
-                subDimensionName.insert(0, "/").insert(1, levelFolder.getName());
-                levelFolder = levelFolder.getParentFile();
-                if (levelFolder == null) break;
-
-                levelFile = new File(levelFolder, "level.dat");
-            }
-
-            if (!levelFile.exists()) {
-                throw new FileNotFoundException("Could not find a level.dat file for this world!");
-            }
-
-            CompoundTag level = (CompoundTag) NBTUtil.readTag(levelFile);
-            CompoundTag levelData = level.getCompoundTag("Data");
-
-            if (name == null) {
-                name = levelData.getString("LevelName") + subDimensionName;
-            }
-
-            Vector3i spawnPoint = new Vector3i(
-                    levelData.getInt("SpawnX"),
-                    levelData.getInt("SpawnY"),
-                    levelData.getInt("SpawnZ")
-            );
-
-            return new MCAWorld(
-                    worldFolder,
-                    uuid,
-                    name,
-                    spawnPoint,
-                    skyLight,
-                    ignoreMissingLightData
-            );
-        } catch (ClassCastException | NullPointerException ex) {
-            throw new IOException("Invaid level.dat format!", ex);
-        }
-    }
 
     @Override
     public String toString() {
         return "MCAWorld{" +
-               "uuid=" + uuid +
-               ", worldFolder=" + worldFolder +
-               ", name='" + name + '\'' +
-               '}';
+                "worldFolder=" + worldFolder +
+                ", name='" + name + '\'' +
+                ", spawnPoint=" + spawnPoint +
+                ", skyLight=" + skyLight +
+                ", ignoreMissingLightData=" + ignoreMissingLightData +
+                '}';
+    }
+
+    private static Path resolveLevelFile(Path worldFolder) throws IOException {
+        Path levelFolder = worldFolder.toRealPath();
+        Path levelFile = levelFolder.resolve("level.dat");
+        int searchDepth = 0;
+
+        while (!Files.isRegularFile(levelFile) && searchDepth < 4) {
+            searchDepth++;
+            levelFolder = levelFolder.getParent();
+            if (levelFolder == null) break;
+
+            levelFile = levelFolder.resolve("level.dat");
+        }
+
+        if (!Files.isRegularFile(levelFile))
+            throw new FileNotFoundException("Could not find a level.dat file for this world!");
+
+        return levelFile;
     }
 
     private static final int VEC_2I_CACHE_SIZE = 0x4000;

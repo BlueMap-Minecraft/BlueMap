@@ -27,10 +27,10 @@ package de.bluecolored.bluemap.common.web;
 import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.storage.*;
-import de.bluecolored.bluemap.core.webserver.HttpRequest;
-import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
-import de.bluecolored.bluemap.core.webserver.HttpResponse;
-import de.bluecolored.bluemap.core.webserver.HttpStatusCode;
+import de.bluecolored.bluemap.common.webserver.HttpRequest;
+import de.bluecolored.bluemap.common.webserver.HttpRequestHandler;
+import de.bluecolored.bluemap.common.webserver.HttpResponse;
+import de.bluecolored.bluemap.common.webserver.HttpStatusCode;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 

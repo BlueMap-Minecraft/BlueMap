@@ -44,8 +44,8 @@ public class HiresModelRenderer {
     }
 
     public HiresTileMeta render(World world, Vector3i modelMin, Vector3i modelMax, HiresTileModel model) {
-        Vector3i min = modelMin.max(renderSettings.getMin());
-        Vector3i max = modelMax.min(renderSettings.getMax());
+        Vector3i min = modelMin.max(renderSettings.getMinPos());
+        Vector3i max = modelMax.min(renderSettings.getMaxPos());
         Vector3i modelAnchor = new Vector3i(modelMin.getX(), 0, modelMin.getZ());
 
         HiresTileMeta tileMeta = new HiresTileMeta(modelMin.getX(), modelMin.getZ(), modelMax.getX(), modelMax.getZ()); //TODO: recycle tilemeta instances?

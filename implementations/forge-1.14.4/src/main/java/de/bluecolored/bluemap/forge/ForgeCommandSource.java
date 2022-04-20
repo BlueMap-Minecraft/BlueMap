@@ -39,9 +39,9 @@ import net.minecraft.world.server.ServerWorld;
 
 public class ForgeCommandSource implements CommandSource {
 
-    private ForgeMod mod;
-    private Plugin plugin;
-    private net.minecraft.command.CommandSource delegate;
+    private final ForgeMod mod;
+    private final Plugin plugin;
+    private final net.minecraft.command.CommandSource delegate;
 
     public ForgeCommandSource(ForgeMod mod, Plugin plugin, net.minecraft.command.CommandSource delegate) {
         this.mod = mod;
@@ -51,7 +51,9 @@ public class ForgeCommandSource implements CommandSource {
 
     @Override
     public void sendMessage(Text text) {
-        delegate.sendFeedback(ITextComponent.Serializer.fromJson(text.toJSONString()), false);
+        var component = ITextComponent.Serializer.fromJson(text.toJSONString());
+        if (component != null)
+            delegate.sendFeedback(component, false);
     }
 
     @Override
@@ -72,10 +74,9 @@ public class ForgeCommandSource implements CommandSource {
     @Override
     public Optional<World> getWorld() {
         try {
-            ServerWorld world = delegate.getWorld();
-            if (world != null) {
-                return Optional.ofNullable(plugin.getWorld(mod.getUUIDForWorld(world)));
-            }
+            var serverWorld = mod.getWorld(delegate.getWorld());
+            String worldId = plugin.getBlueMap().getWorldId(serverWorld.getSaveFolder());
+            return Optional.ofNullable(plugin.getWorlds().get(worldId));
         } catch (IOException ignore) {}
 
         return Optional.empty();

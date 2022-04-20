@@ -61,7 +61,7 @@ sponge {
 	}
 	plugin("bluemap") {
 		displayName("bluemap")
-		entrypoint("de.bluecolored.bluemap.sponge8.SpongePlugin")
+		entrypoint("de.bluecolored.bluemap.sponge.SpongePlugin")
 		description("A 3d-map of your Minecraft worlds view-able in your browser using three.js (WebGL)")
 		contributor("Blue (TBlueF, Lukas Rieger)") {
 			description("Lead Developer")

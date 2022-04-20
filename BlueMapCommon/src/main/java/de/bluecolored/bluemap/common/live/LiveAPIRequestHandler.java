@@ -24,21 +24,20 @@
  */
 package de.bluecolored.bluemap.common.live;
 
+import com.google.gson.stream.JsonWriter;
+import de.bluecolored.bluemap.common.config.PluginConfig;
+import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
+import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.common.webserver.HttpRequest;
+import de.bluecolored.bluemap.common.webserver.HttpRequestHandler;
+import de.bluecolored.bluemap.common.webserver.HttpResponse;
+import de.bluecolored.bluemap.common.webserver.HttpStatusCode;
+import de.bluecolored.bluemap.core.BlueMap;
+
 import java.io.IOException;
 import java.io.StringWriter;
 import java.util.HashMap;
 import java.util.Map;
-
-import com.google.gson.stream.JsonWriter;
-
-import de.bluecolored.bluemap.common.plugin.PluginConfig;
-import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
-import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
-import de.bluecolored.bluemap.core.BlueMap;
-import de.bluecolored.bluemap.core.webserver.HttpRequest;
-import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
-import de.bluecolored.bluemap.core.webserver.HttpResponse;
-import de.bluecolored.bluemap.core.webserver.HttpStatusCode;
 
 public class LiveAPIRequestHandler implements HttpRequestHandler {
 
@@ -62,7 +61,7 @@ public class LiveAPIRequestHandler implements HttpRequestHandler {
 
     @Override
     public HttpResponse handle(HttpRequest request) {
-        if (!config.isLiveUpdatesEnabled()) return this.notFoundHandler.handle(request);
+        if (!config.isLivePlayerMarkers()) return this.notFoundHandler.handle(request);
 
         String path = request.getPath();
 

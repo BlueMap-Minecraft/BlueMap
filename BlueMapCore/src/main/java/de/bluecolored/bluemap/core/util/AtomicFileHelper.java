@@ -47,15 +47,19 @@ public class AtomicFileHelper {
             Files.deleteIfExists(file);
             Files.createDirectories(file.getParent());
 
-            try {
-                Files.move(partFile, file, StandardCopyOption.ATOMIC_MOVE);
-            } catch (FileNotFoundException | NoSuchFileException ignore) {
-            } catch (IOException ex) {
-                try {
-                    Files.move(partFile, file);
-                } catch (FileNotFoundException | NoSuchFileException ignore) {}
-            }
+            AtomicFileHelper.move(partFile, file);
         });
+    }
+
+    public static void move(Path from, Path to) throws IOException {
+        try {
+            Files.move(from, to, StandardCopyOption.ATOMIC_MOVE);
+        } catch (FileNotFoundException | NoSuchFileException ignore) {
+        } catch (IOException ex) {
+            try {
+                Files.move(from, to);
+            } catch (FileNotFoundException | NoSuchFileException ignore) {}
+        }
     }
 
     private static Path getPartFile(Path file) {

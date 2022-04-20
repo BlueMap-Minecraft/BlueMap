@@ -31,7 +31,6 @@ import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.core.world.World;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.math.Vec3d;
 
 import java.io.IOException;
@@ -39,9 +38,9 @@ import java.util.Optional;
 
 public class FabricCommandSource implements CommandSource {
 
-    private FabricMod mod;
-    private Plugin plugin;
-    private ServerCommandSource delegate;
+    private final FabricMod mod;
+    private final Plugin plugin;
+    private final ServerCommandSource delegate;
 
     public FabricCommandSource(FabricMod mod, Plugin plugin, ServerCommandSource delegate) {
         this.mod = mod;
@@ -77,10 +76,9 @@ public class FabricCommandSource implements CommandSource {
     @Override
     public Optional<World> getWorld() {
         try {
-            ServerWorld world = delegate.getWorld();
-            if (world != null) {
-                return Optional.ofNullable(plugin.getWorld(mod.getUUIDForWorld(world)));
-            }
+            var serverWorld = mod.getWorld(delegate.getWorld());
+            String worldId = plugin.getBlueMap().getWorldId(serverWorld.getSaveFolder());
+            return Optional.ofNullable(plugin.getWorlds().get(worldId));
         } catch (IOException ignore) {}
 
         return Optional.empty();

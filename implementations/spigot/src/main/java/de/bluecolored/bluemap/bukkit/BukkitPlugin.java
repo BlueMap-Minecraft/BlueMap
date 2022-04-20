@@ -24,10 +24,14 @@
  */
 package de.bluecolored.bluemap.bukkit;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.common.plugin.serverinterface.ServerWorld;
+import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
@@ -43,14 +47,11 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -61,17 +62,19 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
     private final Plugin pluginInstance;
     private final EventForwarder eventForwarder;
     private final BukkitCommands commands;
+    private final MinecraftVersion minecraftVersion;
 
     private int playerUpdateIndex = 0;
     private final Map<UUID, Player> onlinePlayerMap;
     private final List<BukkitPlayer> onlinePlayerList;
 
+    private final LoadingCache<World, ServerWorld> worlds;
+
     public BukkitPlugin() {
         Logger.global = new JavaLogger(getLogger());
 
-        MinecraftVersion version = MinecraftVersion.LATEST_SUPPORTED;
-
         //try to get best matching minecraft-version
+        MinecraftVersion version = MinecraftVersion.LATEST_SUPPORTED;
         try {
             String versionString = getServer().getBukkitVersion();
             Matcher versionMatcher = Pattern.compile("(\\d+(?:\\.\\d+){1,2})[-_].*").matcher(versionString);
@@ -80,13 +83,20 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
         } catch (IllegalArgumentException e) {
             Logger.global.logWarning("Failed to detect the minecraft version of this server! Using latest version: " + version.getVersionString());
         }
+        this.minecraftVersion = version;
 
         this.onlinePlayerMap = new ConcurrentHashMap<>();
         this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 
         this.eventForwarder = new EventForwarder();
-        this.pluginInstance = new Plugin(version, "bukkit", this);
+        this.pluginInstance = new Plugin("bukkit", this);
         this.commands = new BukkitCommands(this.pluginInstance);
+
+        this.worlds = Caffeine.newBuilder()
+                .executor(BlueMap.THREAD_POOL)
+                .weakKeys()
+                .maximumSize(1000)
+                .build(BukkitWorld::new);
 
         BukkitPlugin.instance = this;
     }
@@ -158,6 +168,11 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
     }
 
     @Override
+    public MinecraftVersion getMinecraftVersion() {
+        return minecraftVersion;
+    }
+
+    @Override
     public void registerListener(ServerEventListener listener) {
         eventForwarder.addListener(listener);
     }
@@ -168,62 +183,24 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
     }
 
     @Override
-    public UUID getUUIDForWorld(final File worldPath) throws IOException {
-        //if it is a dimension folder
-        File worldFolder = worldPath;
-        while (!new File(worldFolder, "level.dat").exists()) {
-            File parent = worldFolder.getParentFile();
-            if (parent != null)
-                worldFolder = parent;
-            else
-                throw new IOException("Unable to find a level.dat for world: '" + worldPath + "'");
+    public Collection<ServerWorld> getLoadedWorlds() {
+        Collection<ServerWorld> loadedWorlds = new ArrayList<>(3);
+        for (World world : Bukkit.getWorlds()) {
+            loadedWorlds.add(worlds.get(world));
         }
+        return loadedWorlds;
+    }
 
-        final File normalizedWorldFolder = worldFolder.getCanonicalFile();
-
-        Future<UUID> futureUUID;
-        if (!Bukkit.isPrimaryThread()) {
-            futureUUID = Bukkit.getScheduler().callSyncMethod(BukkitPlugin.getInstance(), () -> getUUIDForWorldSync(normalizedWorldFolder));
-        } else {
-            futureUUID = CompletableFuture.completedFuture(getUUIDForWorldSync(normalizedWorldFolder));
-        }
-
-        try {
-            return futureUUID.get();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IOException(e);
-        } catch (ExecutionException e) {
-            if (e.getCause() instanceof IOException) {
-                throw (IOException) e.getCause();
-            } else {
-                throw new IOException(e);
-            }
-        }
+    public ServerWorld getWorld(World world) {
+        return worlds.get(world);
     }
 
     @Override
-    public String getWorldName(UUID worldUUID) {
-        World world = getServer().getWorld(worldUUID);
-        if (world != null) return world.getName();
-
-        return null;
+    public Path getConfigFolder() {
+        return getDataFolder().toPath();
     }
 
-    private UUID getUUIDForWorldSync (File worldFolder) throws IOException {
-        for (World world : getServer().getWorlds()) {
-            if (worldFolder.equals(world.getWorldFolder().getCanonicalFile())) return world.getUID();
-        }
-
-        throw new IOException("There is no world with this folder loaded: " + worldFolder.getPath());
-    }
-
-    @Override
-    public File getConfigFolder() {
-        return getDataFolder();
-    }
-
-    public Plugin getBlueMap() {
+    public Plugin getPlugin() {
         return pluginInstance;
     }
 
@@ -255,27 +232,6 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
     @Override
     public Optional<Player> getPlayer(UUID uuid) {
         return Optional.ofNullable(onlinePlayerMap.get(uuid));
-    }
-
-    @Override
-    public boolean persistWorldChanges(UUID worldUUID) throws IOException, IllegalArgumentException {
-        try {
-            return Bukkit.getScheduler().callSyncMethod(this, () -> {
-                World world = Bukkit.getWorld(worldUUID);
-                if (world == null) throw new IllegalArgumentException("There is no world with this uuid: " + worldUUID);
-                world.save();
-
-                return true;
-            }).get();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IOException(e);
-        } catch (ExecutionException e) {
-            Throwable t = e.getCause();
-            if (t instanceof IOException) throw (IOException) t;
-            if (t instanceof IllegalArgumentException) throw (IllegalArgumentException) t;
-            throw new IOException(t);
-        }
     }
 
     /**

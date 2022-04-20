@@ -25,7 +25,6 @@
 package de.bluecolored.bluemap.core.storage.file;
 
 import com.flowpowered.math.vector.Vector2i;
-import de.bluecolored.bluemap.core.config.storage.FileConfig;
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.storage.*;
 import de.bluecolored.bluemap.core.util.AtomicFileHelper;
@@ -43,7 +42,7 @@ public class FileStorage extends Storage {
     private final Path root;
     private final Compression compression;
 
-    public FileStorage(FileConfig config) {
+    public FileStorage(FileStorageSettings config) {
         this.root = config.getRoot();
         this.compression = config.getCompression();
     }

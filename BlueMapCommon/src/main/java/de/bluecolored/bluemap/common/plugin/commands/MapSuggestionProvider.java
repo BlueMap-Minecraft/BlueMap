@@ -24,15 +24,15 @@
  */
 package de.bluecolored.bluemap.common.plugin.commands;
 
+import de.bluecolored.bluemap.common.plugin.Plugin;
+import de.bluecolored.bluemap.core.map.BmMap;
+
 import java.util.Collection;
 import java.util.HashSet;
 
-import de.bluecolored.bluemap.core.map.BmMap;
-import de.bluecolored.bluemap.common.plugin.Plugin;
-
 public class MapSuggestionProvider<S> extends AbstractSuggestionProvider<S> {
 
-    private Plugin plugin;
+    private final Plugin plugin;
 
     public MapSuggestionProvider(Plugin plugin) {
         this.plugin = plugin;
@@ -40,13 +40,7 @@ public class MapSuggestionProvider<S> extends AbstractSuggestionProvider<S> {
 
     @Override
     public Collection<String> getPossibleValues() {
-        Collection<String> values = new HashSet<>();
-
-        for (BmMap map : plugin.getMapTypes()) {
-            values.add(map.getId());
-        }
-
-        return values;
+        return new HashSet<>(plugin.getMaps().keySet());
     }
 
 }

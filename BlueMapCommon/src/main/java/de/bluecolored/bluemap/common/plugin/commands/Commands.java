@@ -59,7 +59,6 @@ import de.bluecolored.bluemap.core.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.map.MapRenderState;
-import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.World;
 
@@ -318,7 +317,7 @@ public class Commands<S> {
     }
 
     private Optional<World> parseWorld(String worldName) {
-        for (World world : plugin.getWorlds()) {
+        for (World world : plugin.getWorlds().values()) {
             if (world.getName().equalsIgnoreCase(worldName)) {
                 return Optional.of(world);
             }
@@ -328,7 +327,7 @@ public class Commands<S> {
     }
 
     private Optional<BmMap> parseMap(String mapId) {
-        for (BmMap map : plugin.getMapTypes()) {
+        for (BmMap map : plugin.getMaps().values()) {
             if (map.getId().equalsIgnoreCase(mapId)) {
                 return Optional.of(map);
             }
@@ -360,23 +359,25 @@ public class Commands<S> {
             renderThreadCount = plugin.getRenderManager().getWorkerThreadCount();
         }
 
+        MinecraftVersion minecraftVersion = plugin.getServerInterface().getMinecraftVersion();
+
         source.sendMessage(Text.of(TextFormat.BOLD, TextColor.BLUE, "Version: ", TextColor.WHITE, BlueMap.VERSION));
         source.sendMessage(Text.of(TextColor.GRAY, "Commit: ", TextColor.WHITE, BlueMap.GIT_HASH + " (" + BlueMap.GIT_CLEAN + ")"));
         source.sendMessage(Text.of(TextColor.GRAY, "Implementation: ", TextColor.WHITE, plugin.getImplementationType()));
         source.sendMessage(Text.of(
-                TextColor.GRAY, "Minecraft compatibility: ", TextColor.WHITE, plugin.getMinecraftVersion().getVersionString(),
-                TextColor.GRAY, " (" + plugin.getMinecraftVersion().getResource().getVersion().getVersionString() + ")"
+                TextColor.GRAY, "Minecraft compatibility: ", TextColor.WHITE, minecraftVersion.getVersionString(),
+                TextColor.GRAY, " (" + minecraftVersion.getResource().getVersion().getVersionString() + ")"
                 ));
         source.sendMessage(Text.of(TextColor.GRAY, "Render-threads: ", TextColor.WHITE, renderThreadCount));
         source.sendMessage(Text.of(TextColor.GRAY, "Available processors: ", TextColor.WHITE, Runtime.getRuntime().availableProcessors()));
         source.sendMessage(Text.of(TextColor.GRAY, "Available memory: ", TextColor.WHITE, (Runtime.getRuntime().maxMemory() / 1024L / 1024L) + " MiB"));
 
-        if (plugin.getMinecraftVersion().isAtLeast(new MinecraftVersion(1, 15))) {
+        if (minecraftVersion.isAtLeast(new MinecraftVersion(1, 15))) {
             String clipboardValue =
                     "Version: " + BlueMap.VERSION + "\n" +
                     "Commit: " + BlueMap.GIT_HASH + " (" + BlueMap.GIT_CLEAN + ")\n" +
                     "Implementation: " + plugin.getImplementationType() + "\n" +
-                    "Minecraft compatibility: " + plugin.getMinecraftVersion().getVersionString() + " (" + plugin.getMinecraftVersion().getResource().getVersion().getVersionString() + ")\n" +
+                    "Minecraft compatibility: " + minecraftVersion.getVersionString() + " (" + minecraftVersion.getResource().getVersion().getVersionString() + ")\n" +
                     "Render-threads: " + renderThreadCount + "\n" +
                     "Available processors: " + Runtime.getRuntime().availableProcessors() + "\n" +
                     "Available memory: " + Runtime.getRuntime().maxMemory() / 1024L / 1024L + " MiB";
@@ -443,7 +444,7 @@ public class Commands<S> {
     public int debugClearCacheCommand(CommandContext<S> context) {
         CommandSource source = commandSourceInterface.apply(context.getSource());
 
-        for (World world : plugin.getWorlds()) {
+        for (World world : plugin.getWorlds().values()) {
             world.invalidateChunkCache();
         }
 
@@ -478,7 +479,7 @@ public class Commands<S> {
         new Thread(() -> {
             source.sendMessage(Text.of(TextColor.GOLD, "Saving world and flushing changes..."));
             try {
-                if (plugin.flushWorldUpdates(world.getUUID())) {
+                if (plugin.flushWorldUpdates(world)) {
                     source.sendMessage(Text.of(TextColor.GREEN, "Successfully saved and flushed all changes."));
                 } else {
                     source.sendMessage(Text.of(TextColor.RED, "This operation is not supported by this implementation (" + plugin.getImplementationType() + ")"));
@@ -550,7 +551,7 @@ public class Commands<S> {
         final CommandSource source = commandSourceInterface.apply(context.getSource());
 
         try {
-            Path file = plugin.getCoreConfig().getDataFolder().toPath().resolve("dump.json");
+            Path file = plugin.getConfigs().getCoreConfig().getData().resolve("dump.json");
             StateDumper.global().dump(file);
 
             source.sendMessage(Text.of(TextColor.GREEN, "Dump created at: " + file));
@@ -589,7 +590,7 @@ public class Commands<S> {
             new Thread(() -> {
                 plugin.getPluginState().setRenderThreadsEnabled(true);
 
-                plugin.getRenderManager().start(plugin.getCoreConfig().getRenderThreadCount());
+                plugin.getRenderManager().start(plugin.getConfigs().getCoreConfig().getRenderThreadCount());
                 source.sendMessage(Text.of(TextColor.GREEN, "Render-Threads started!"));
 
                 plugin.save();
@@ -741,12 +742,16 @@ public class Commands<S> {
             try {
                 List<BmMap> maps = new ArrayList<>();
                 if (worldToRender != null) {
-                    plugin.getServerInterface().persistWorldChanges(worldToRender.getUUID());
-                    for (BmMap map : plugin.getMapTypes()) {
-                        if (map.getWorld().getUUID().equals(worldToRender.getUUID())) maps.add(map);
+                    var world = plugin.getServerInterface().getWorld(worldToRender.getSaveFolder()).orElse(null);
+                    if (world != null) world.persistWorldChanges();
+
+                    for (BmMap map : plugin.getMaps().values()) {
+                        if (map.getWorld().getSaveFolder().equals(worldToRender.getSaveFolder())) maps.add(map);
                     }
                 } else {
-                    plugin.getServerInterface().persistWorldChanges(mapToRender.getWorld().getUUID());
+                    var world = plugin.getServerInterface().getWorld(mapToRender.getWorld().getSaveFolder()).orElse(null);
+                    if (world != null) world.persistWorldChanges();
+
                     maps.add(mapToRender);
                 }
 
@@ -781,7 +786,7 @@ public class Commands<S> {
         CommandSource source = commandSourceInterface.apply(context.getSource());
 
         Optional<String> ref = getOptionalArgument(context,"task-ref", String.class);
-        if (!ref.isPresent()) {
+        if (ref.isEmpty()) {
             plugin.getRenderManager().removeAllRenderTasks();
             source.sendMessage(Text.of(TextColor.GREEN, "All tasks cancelled!"));
             source.sendMessage(Text.of(TextColor.GRAY, "(Note, that an already started task might not be removed immediately. Some tasks needs to do some tidying-work first)"));
@@ -790,7 +795,7 @@ public class Commands<S> {
 
         Optional<RenderTask> task = helper.getTaskForRef(ref.get());
 
-        if (!task.isPresent()) {
+        if (task.isEmpty()) {
             source.sendMessage(Text.of(TextColor.RED, "There is no task with this reference '" + ref.get() + "'!"));
             return 0;
         }
@@ -846,8 +851,8 @@ public class Commands<S> {
         CommandSource source = commandSourceInterface.apply(context.getSource());
 
         source.sendMessage(Text.of(TextColor.BLUE, "Worlds loaded by BlueMap:"));
-        for (World world : plugin.getWorlds()) {
-            source.sendMessage(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, world.getName()).setHoverText(Text.of(world.getSaveFolder(), TextColor.GRAY, " (" + world.getUUID() + ")")));
+        for (var entry : plugin.getWorlds().entrySet()) {
+            source.sendMessage(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, entry.getValue().getName()).setHoverText(Text.of(entry.getValue().getSaveFolder(), TextColor.GRAY, " (" + entry.getKey() + ")")));
         }
 
         return 1;
@@ -857,7 +862,7 @@ public class Commands<S> {
         CommandSource source = commandSourceInterface.apply(context.getSource());
 
         source.sendMessage(Text.of(TextColor.BLUE, "Maps loaded by BlueMap:"));
-        for (BmMap map : plugin.getMapTypes()) {
+        for (BmMap map : plugin.getMaps().values()) {
             boolean unfrozen = plugin.getPluginState().getMapState(map).isUpdateEnabled();
             if (unfrozen) {
                 source.sendMessage(Text.of(
@@ -922,7 +927,7 @@ public class Commands<S> {
 
         // resolve api-map
         Optional<BlueMapMap> apiMap = api.getMap(map.getId());
-        if (!apiMap.isPresent()) {
+        if (apiMap.isEmpty()) {
             source.sendMessage(Text.of(TextColor.RED, "Failed to get map from API, try ", TextColor.GRAY, "/bluemap reload"));
             return 0;
         }

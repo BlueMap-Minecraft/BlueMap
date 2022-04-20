@@ -130,7 +130,7 @@ public class ConfigUtils {
     }
 
     /**
-     * Returns an color-integer. The value can be a normal integer, an integer in String-Format, or a string in hexadecimal format prefixed with # (css-style: e.g. #f16 becomes #ff1166).
+     * Returns a color-integer. The value can be a normal integer, an integer in String-Format, or a string in hexadecimal format prefixed with # (css-style: e.g. #f16 becomes #ff1166).
      * @param node The Configuration Node with the value
      * @return The parsed Integer
      * @throws NumberFormatException If the value is not formatted correctly or if there is no value present.
@@ -145,7 +145,16 @@ public class ConfigUtils {
         }
 
         String val = value.toString();
+        return parseColorFromString(val);
+    }
 
+    /**
+     * Returns a color-integer. The value can be an integer in String-Format or a string in hexadecimal format prefixed with # (css-style: e.g. #f16 becomes #ff1166).
+     * @param val The String to parse
+     * @return The parsed Integer
+     * @throws NumberFormatException If the value is not formatted correctly or if there is no value present.
+     */
+    public static int parseColorFromString(String val) {
         if (val.charAt(0) == '#') {
             val = val.substring(1);
             if (val.length() == 3) val = "f" + val;

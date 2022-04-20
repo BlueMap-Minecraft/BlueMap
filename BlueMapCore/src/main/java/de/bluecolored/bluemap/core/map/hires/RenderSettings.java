@@ -44,14 +44,14 @@ public interface RenderSettings {
     /**
      * The minimum position of blocks to render
      */
-    default Vector3i getMin() {
+    default Vector3i getMinPos() {
         return DEFAULT_MIN;
     }
 
     /**
      * The maximum position of blocks to render
      */
-    default Vector3i getMax() {
+    default Vector3i getMaxPos() {
         return DEFAULT_MAX;
     }
 
@@ -74,8 +74,8 @@ public interface RenderSettings {
     }
 
     default boolean isInsideRenderBoundaries(int x, int z) {
-        Vector3i min = getMin();
-        Vector3i max = getMax();
+        Vector3i min = getMinPos();
+        Vector3i max = getMaxPos();
 
         return
                 x >= min.getX() &&
@@ -85,8 +85,8 @@ public interface RenderSettings {
     }
 
     default boolean isInsideRenderBoundaries(int x, int y, int z) {
-        Vector3i min = getMin();
-        Vector3i max = getMax();
+        Vector3i min = getMinPos();
+        Vector3i max = getMaxPos();
 
         return
                 x >= min.getX() &&

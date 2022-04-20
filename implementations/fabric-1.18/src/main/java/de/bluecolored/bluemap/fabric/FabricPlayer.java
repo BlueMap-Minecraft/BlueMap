@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.fabric;
 
 import com.flowpowered.math.vector.Vector3d;
+import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.plugin.serverinterface.Gamemode;
 import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.text.Text;
@@ -42,8 +43,6 @@ import java.util.UUID;
 
 public class FabricPlayer implements Player {
 
-    private static final UUID UNKNOWN_WORLD_UUID = UUID.randomUUID();
-
     private static final Map<GameMode, Gamemode> GAMEMODE_MAP = new EnumMap<>(GameMode.class);
     static {
         GAMEMODE_MAP.put(GameMode.ADVENTURE, Gamemode.ADVENTURE);
@@ -52,20 +51,22 @@ public class FabricPlayer implements Player {
         GAMEMODE_MAP.put(GameMode.SPECTATOR, Gamemode.SPECTATOR);
     }
 
-    private UUID uuid;
+    private final UUID uuid;
     private Text name;
-    private UUID world;
+    private String world;
     private Vector3d position;
     private boolean online;
     private boolean sneaking;
     private boolean invisible;
     private Gamemode gamemode;
 
-    private FabricMod mod;
+    private final FabricMod mod;
+    private final BlueMapService blueMap;
 
-    public FabricPlayer(FabricMod mod, UUID playerUuid) {
+    public FabricPlayer(UUID playerUuid, FabricMod mod, BlueMapService blueMap) {
         this.uuid = playerUuid;
         this.mod = mod;
+        this.blueMap = blueMap;
 
         update();
     }
@@ -81,7 +82,7 @@ public class FabricPlayer implements Player {
     }
 
     @Override
-    public UUID getWorld() {
+    public String getWorld() {
         return this.world;
     }
 
@@ -140,9 +141,10 @@ public class FabricPlayer implements Player {
         this.sneaking = player.isSneaking();
 
         try {
-            this.world = mod.getUUIDForWorld(player.getWorld());
+            var world = mod.getWorld(player.getWorld());
+            this.world = blueMap.getWorldId(world.getSaveFolder());
         } catch (IOException e) {
-            this.world = UNKNOWN_WORLD_UUID;
+            this.world = "unknown";
         }
     }
 

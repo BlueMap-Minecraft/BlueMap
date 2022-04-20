@@ -25,12 +25,11 @@
 package de.bluecolored.bluemap.forge;
 
 import com.flowpowered.math.vector.Vector3d;
+import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.plugin.serverinterface.Gamemode;
 import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.text.Text;
-import net.minecraft.client.renderer.EffectInstance;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -44,8 +43,6 @@ import java.util.UUID;
 
 public class ForgePlayer implements Player {
 
-    private static final UUID UNKNOWN_WORLD_UUID = UUID.randomUUID();
-
     private static final Map<GameType, Gamemode> GAMEMODE_MAP = new EnumMap<>(GameType.class);
     static {
         GAMEMODE_MAP.put(GameType.ADVENTURE, Gamemode.ADVENTURE);
@@ -54,20 +51,22 @@ public class ForgePlayer implements Player {
         GAMEMODE_MAP.put(GameType.SPECTATOR, Gamemode.SPECTATOR);
     }
 
-    private UUID uuid;
+    private final UUID uuid;
     private Text name;
-    private UUID world;
+    private String world;
     private Vector3d position;
     private boolean online;
     private boolean sneaking;
     private boolean invisible;
     private Gamemode gamemode;
 
-    private ForgeMod mod;
+    private final ForgeMod mod;
+    private final BlueMapService blueMap;
 
-    public ForgePlayer(ForgeMod mod, UUID playerUuid) {
+    public ForgePlayer(UUID playerUuid, ForgeMod mod, BlueMapService blueMap) {
         this.uuid = playerUuid;
         this.mod = mod;
+        this.blueMap = blueMap;
 
         update();
     }
@@ -83,7 +82,7 @@ public class ForgePlayer implements Player {
     }
 
     @Override
-    public UUID getWorld() {
+    public String getWorld() {
         return this.world;
     }
 
@@ -142,9 +141,10 @@ public class ForgePlayer implements Player {
         this.sneaking = player.isCrouching();
 
         try {
-            this.world = mod.getUUIDForWorld((ServerLevel) player.getCommandSenderWorld());
-        } catch (IOException | ClassCastException e) {
-            this.world = UNKNOWN_WORLD_UUID;
+            var world = mod.getWorld(player.getLevel());
+            this.world = blueMap.getWorldId(world.getSaveFolder());
+        } catch (IOException e) {
+            this.world = "unknown";
         }
     }
 

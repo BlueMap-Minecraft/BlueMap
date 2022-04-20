@@ -24,8 +24,11 @@
  */
 package de.bluecolored.bluemap.bukkit;
 
-import java.util.Optional;
-
+import com.flowpowered.math.vector.Vector3d;
+import de.bluecolored.bluemap.common.plugin.Plugin;
+import de.bluecolored.bluemap.common.plugin.serverinterface.CommandSource;
+import de.bluecolored.bluemap.common.plugin.text.Text;
+import de.bluecolored.bluemap.core.world.World;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.BlockCommandSender;
@@ -33,17 +36,13 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
-import com.flowpowered.math.vector.Vector3d;
-
-import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.common.plugin.serverinterface.CommandSource;
-import de.bluecolored.bluemap.common.plugin.text.Text;
-import de.bluecolored.bluemap.core.world.World;
+import java.io.IOException;
+import java.util.Optional;
 
 public class BukkitCommandSource implements CommandSource {
 
-    private Plugin plugin;
-    private CommandSender delegate;
+    private final Plugin plugin;
+    private final CommandSender delegate;
 
     public BukkitCommandSource(Plugin plugin, CommandSender delegate) {
         this.plugin = plugin;
@@ -86,7 +85,11 @@ public class BukkitCommandSource implements CommandSource {
         Location location = getLocation();
 
         if (location != null) {
-            return Optional.ofNullable(plugin.getWorld(location.getWorld().getUID()));
+            try {
+                var serverWorld = BukkitPlugin.getInstance().getWorld(location.getWorld());
+                String worldId = plugin.getBlueMap().getWorldId(serverWorld.getSaveFolder());
+                return Optional.ofNullable(plugin.getWorlds().get(worldId));
+            } catch (IOException ignore) {}
         }
 
         return Optional.empty();

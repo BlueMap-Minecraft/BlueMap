@@ -27,7 +27,7 @@ package de.bluecolored.bluemap.common.plugin;
 import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.InterruptableReentrantLock;
 import de.bluecolored.bluemap.common.MissingResourcesException;
-import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
+import de.bluecolored.bluemap.common.config.*;
 import de.bluecolored.bluemap.common.live.LiveAPIRequestHandler;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
@@ -36,28 +36,23 @@ import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.web.FileRequestHandler;
 import de.bluecolored.bluemap.common.web.MapStorageRequestHandler;
+import de.bluecolored.bluemap.common.webserver.HttpRequestHandler;
+import de.bluecolored.bluemap.common.webserver.WebServer;
 import de.bluecolored.bluemap.core.BlueMap;
-import de.bluecolored.bluemap.core.MinecraftVersion;
-import de.bluecolored.bluemap.core.config.ConfigurationException;
-import de.bluecolored.bluemap.core.config.old.CoreConfig;
-import de.bluecolored.bluemap.core.config.old.RenderConfig;
-import de.bluecolored.bluemap.core.config.old.WebServerConfig;
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.metrics.Metrics;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
-import de.bluecolored.bluemap.core.util.FileUtils;
-import de.bluecolored.bluemap.core.util.MappableFunction;
-import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
-import de.bluecolored.bluemap.core.webserver.WebServer;
 import de.bluecolored.bluemap.core.world.World;
 import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 import org.spongepowered.configurate.serialize.SerializationException;
 
-import java.io.File;
 import java.io.IOException;
+import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -69,21 +64,14 @@ public class Plugin implements ServerEventListener {
 
     private final InterruptableReentrantLock loadingLock = new InterruptableReentrantLock();
 
-    private final MinecraftVersion minecraftVersion;
     private final String implementationType;
     private final ServerInterface serverInterface;
 
     private BlueMapService blueMap;
-    private BlueMapAPIImpl api;
-
-    private CoreConfig coreConfig;
-    private RenderConfig renderConfig;
-    private WebServerConfig webServerConfig;
-    private PluginConfig pluginConfig;
 
     private PluginState pluginState;
 
-    private Map<UUID, World> worlds;
+    private Map<String, World> worlds;
     private Map<String, BmMap> maps;
 
     private RenderManager renderManager;
@@ -97,8 +85,7 @@ public class Plugin implements ServerEventListener {
 
     private boolean loaded = false;
 
-    public Plugin(MinecraftVersion minecraftVersion, String implementationType, ServerInterface serverInterface) {
-        this.minecraftVersion = minecraftVersion;
+    public Plugin(String implementationType, ServerInterface serverInterface) {
         this.implementationType = implementationType.toLowerCase();
         this.serverInterface = serverInterface;
 
@@ -113,27 +100,17 @@ public class Plugin implements ServerEventListener {
                 if (loaded) return;
                 unload(); //ensure nothing is left running (from a failed load or something)
 
-                blueMap = new BlueMapService(minecraftVersion, serverInterface);
-
                 //load configs
-                coreConfig = blueMap.getCoreConfig();
-                renderConfig = blueMap.getRenderConfig();
-                webServerConfig = blueMap.getWebServerConfig();
-                blueMap.getMapStorages();
-
-                //load plugin config
-                pluginConfig = new PluginConfig(blueMap.getConfigManagerOld().loadOrCreate(
-                        new File(serverInterface.getConfigFolder(), "plugin.conf"),
-                        Plugin.class.getResource("/de/bluecolored/bluemap/plugin.conf"),
-                        Plugin.class.getResource("/de/bluecolored/bluemap/plugin-defaults.conf"),
-                        true,
-                        true
-                ));
+                blueMap = new BlueMapService(serverInterface);
+                CoreConfig coreConfig = getConfigs().getCoreConfig();
+                WebserverConfig webserverConfig = getConfigs().getWebserverConfig();
+                WebappConfig webappConfig = getConfigs().getWebappConfig();
+                PluginConfig pluginConfig = getConfigs().getPluginConfig();
 
                 //load plugin state
                 try {
                     GsonConfigurationLoader loader = GsonConfigurationLoader.builder()
-                            .file(new File(getCoreConfig().getDataFolder(), "pluginState.json"))
+                            .path(coreConfig.getData().resolve("pluginState.json"))
                             .build();
                     pluginState = loader.load().get(PluginState.class);
                 } catch (SerializationException ex) {
@@ -147,7 +124,7 @@ public class Plugin implements ServerEventListener {
                 } catch (MissingResourcesException ex) {
                     Logger.global.logWarning("BlueMap is missing important resources!");
                     Logger.global.logWarning("You must accept the required file download in order for BlueMap to work!");
-                    try { Logger.global.logWarning("Please check: " + blueMap.getCoreConfigFile().getCanonicalPath()); } catch (IOException ignored) {}
+                    Logger.global.logWarning("Please check: " + blueMap.getConfigs().getConfigManager().findConfigPath(Path.of("core")).toAbsolutePath().normalize());
                     Logger.global.logInfo("If you have changed the config you can simply reload the plugin using: /bluemap reload");
 
                     unload();
@@ -167,27 +144,34 @@ public class Plugin implements ServerEventListener {
                 }
 
                 //create and start webserver
-                if (webServerConfig.isWebserverEnabled()) {
-                    FileUtils.mkDirs(webServerConfig.getWebRoot());
-                    HttpRequestHandler requestHandler = new FileRequestHandler(webServerConfig.getWebRoot().toPath(), "BlueMap v" + BlueMap.VERSION);
+                if (webserverConfig.isEnabled()) {
+                    Path webroot = webserverConfig.getWebroot();
+                    Files.createDirectories(webroot);
+                    HttpRequestHandler requestHandler = new FileRequestHandler(webroot,
+                            "BlueMap " + BlueMap.VERSION + " " + BlueMap.GIT_HASH + " " + BlueMap.GIT_CLEAN);
 
                     //use map-storage to provide map-tiles
                     requestHandler = new MapStorageRequestHandler(
-                            MappableFunction.of(maps::get).mapNullable(BmMap::getStorage),
+                            id -> maps.get(id).getStorage(),
                             requestHandler);
 
                     //inject live api if enabled
-                    if (pluginConfig.isLiveUpdatesEnabled()) {
+                    if (pluginConfig.isLivePlayerMarkers()) {
                         requestHandler = new LiveAPIRequestHandler(serverInterface, pluginConfig, requestHandler);
                     }
 
-                    webServer = new WebServer(
-                            webServerConfig.getWebserverBindAddress(),
-                            webServerConfig.getWebserverPort(),
-                            webServerConfig.getWebserverMaxConnections(),
-                            requestHandler,
-                            false
-                    );
+                    try {
+                        webServer = new WebServer(
+                                webserverConfig.resolveIp(),
+                                webserverConfig.getPort(),
+                                webserverConfig.getMaxConnectionCount(),
+                                requestHandler,
+                                false
+                        );
+                    } catch (UnknownHostException ex) {
+                        throw new ConfigurationException("BlueMap failed to resolve the ip in your webserver-config.\n" +
+                                "Check if that is correctly configured.", ex);
+                    }
                     webServer.start();
                 }
 
@@ -213,10 +197,10 @@ public class Plugin implements ServerEventListener {
                 blueMap.updateWebAppSettings();
 
                 //start skin updater
-                if (pluginConfig.isLiveUpdatesEnabled()) {
+                if (pluginConfig.isLivePlayerMarkers()) {
                     this.skinUpdater = new PlayerSkinUpdater(
-                            new File(renderConfig.getWebRoot(), "assets" + File.separator + "playerheads"),
-                            new File(renderConfig.getWebRoot(), "assets" + File.separator + "steve.png")
+                            webappConfig.getWebroot().resolve("assets").resolve("playerheads").toFile(),
+                            webappConfig.getWebroot().resolve("assets").resolve("steve.png").toFile()
                     );
                     serverInterface.registerListener(skinUpdater);
                 }
@@ -245,8 +229,8 @@ public class Plugin implements ServerEventListener {
                 daemonTimer.schedule(fileWatcherRestartTask, TimeUnit.HOURS.toMillis(1), TimeUnit.HOURS.toMillis(1));
 
                 //periodically update all (non frozen) maps
-                if (pluginConfig.getFullUpdateIntervalMinutes() > 0) {
-                    long fullUpdateTime = TimeUnit.MINUTES.toMillis(pluginConfig.getFullUpdateIntervalMinutes());
+                if (pluginConfig.getFullUpdateInterval() > 0) {
+                    long fullUpdateTime = TimeUnit.MINUTES.toMillis(pluginConfig.getFullUpdateInterval());
                     TimerTask updateAllMapsTask = new TimerTask() {
                         @Override
                         public void run() {
@@ -264,7 +248,7 @@ public class Plugin implements ServerEventListener {
                 TimerTask metricsTask = new TimerTask() {
                     @Override
                     public void run() {
-                        if (Plugin.this.serverInterface.isMetricsEnabled(coreConfig.isMetricsEnabled()))
+                        if (Plugin.this.serverInterface.isMetricsEnabled().getOr(coreConfig::isMetrics))
                             Metrics.sendReport(Plugin.this.implementationType);
                     }
                 };
@@ -277,9 +261,9 @@ public class Plugin implements ServerEventListener {
                 //register listener
                 serverInterface.registerListener(this);
 
-                //enable api
-                this.api = new BlueMapAPIImpl(this);
-                this.api.register();
+                //enable api TODO
+                //this.api = new BlueMapAPIImpl(this);
+                //this.api.register();
 
                 //done
                 loaded = true;
@@ -302,9 +286,9 @@ public class Plugin implements ServerEventListener {
                 //save
                 save();
 
-                //disable api
-                if (api != null) api.unregister();
-                api = null;
+                //disable api TODO
+                //if (api != null) api.unregister();
+                //api = null;
 
                 //unregister listeners
                 serverInterface.unregisterAllListeners();
@@ -351,11 +335,6 @@ public class Plugin implements ServerEventListener {
                 worlds = null;
                 maps = null;
 
-                coreConfig = null;
-                renderConfig = null;
-                webServerConfig = null;
-                pluginConfig = null;
-
                 pluginState = null;
 
                 //done
@@ -375,7 +354,7 @@ public class Plugin implements ServerEventListener {
         if (pluginState != null) {
             try {
                 GsonConfigurationLoader loader = GsonConfigurationLoader.builder()
-                        .file(new File(getCoreConfig().getDataFolder(), "pluginState.json"))
+                        .path(blueMap.getConfigs().getCoreConfig().getData().resolve("pluginState.json"))
                         .build();
                 loader.save(loader.createNode().set(PluginState.class, pluginState));
             } catch (IOException ex) {
@@ -409,8 +388,10 @@ public class Plugin implements ServerEventListener {
         }
     }
 
-    public boolean flushWorldUpdates(UUID worldUUID) throws IOException {
-        return serverInterface.persistWorldChanges(worldUUID);
+    public boolean flushWorldUpdates(World world) throws IOException {
+        var implWorld = serverInterface.getWorld(world.getSaveFolder()).orElse(null);
+        if (implWorld != null) return implWorld.persistWorldChanges();
+        return false;
     }
 
     @Override
@@ -424,15 +405,18 @@ public class Plugin implements ServerEventListener {
     }
 
     public boolean checkPausedByPlayerCount() {
+        CoreConfig coreConfig = getConfigs().getCoreConfig();
+        PluginConfig pluginConfig = getConfigs().getPluginConfig();
+
         if (
-                getPluginConfig().getPlayerRenderLimit() > 0 &&
-                getServerInterface().getOnlinePlayers().size() >= getPluginConfig().getPlayerRenderLimit()
+                pluginConfig.getPlayerRenderLimit() > 0 &&
+                getServerInterface().getOnlinePlayers().size() >= pluginConfig.getPlayerRenderLimit()
         ) {
             if (renderManager.isRunning()) renderManager.stop();
             return true;
         } else {
             if (!renderManager.isRunning() && getPluginState().isRenderThreadsEnabled())
-                renderManager.start(getCoreConfig().getRenderThreadCount());
+                renderManager.start(coreConfig.getRenderThreadCount());
             return false;
         }
     }
@@ -441,36 +425,24 @@ public class Plugin implements ServerEventListener {
         return serverInterface;
     }
 
-    public CoreConfig getCoreConfig() {
-        return coreConfig;
+    public BlueMapService getBlueMap() {
+        return blueMap;
     }
 
-    public RenderConfig getRenderConfig() {
-        return renderConfig;
-    }
-
-    public WebServerConfig getWebServerConfig() {
-        return webServerConfig;
-    }
-
-    public PluginConfig getPluginConfig() {
-        return pluginConfig;
+    public BlueMapConfigs getConfigs() {
+        return blueMap.getConfigs();
     }
 
     public PluginState getPluginState() {
         return pluginState;
     }
 
-    public World getWorld(UUID uuid){
-        return worlds.get(uuid);
+    public Map<String, World> getWorlds(){
+        return worlds;
     }
 
-    public Collection<World> getWorlds(){
-        return worlds.values();
-    }
-
-    public Collection<BmMap> getMapTypes(){
-        return maps.values();
+    public Map<String, BmMap> getMaps(){
+        return maps;
     }
 
     public RenderManager getRenderManager() {
@@ -487,10 +459,6 @@ public class Plugin implements ServerEventListener {
 
     public String getImplementationType() {
         return implementationType;
-    }
-
-    public MinecraftVersion getMinecraftVersion() {
-        return minecraftVersion;
     }
 
     private void initFileWatcherTasks() {

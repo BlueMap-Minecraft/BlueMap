@@ -31,6 +31,7 @@ import de.bluecolored.bluemap.common.plugin.commands.Commands;
 import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.common.plugin.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -38,7 +39,6 @@ import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.server.ServerWorld;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent.ServerTickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
@@ -54,27 +54,23 @@ import net.minecraftforge.fml.network.FMLNetworkConstants;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.logging.log4j.LogManager;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 
 @Mod(Plugin.PLUGIN_ID)
 public class ForgeMod implements ServerInterface {
 
-    private Plugin pluginInstance = null;
+    private final Plugin pluginInstance;
     private MinecraftServer serverInstance = null;
 
-    private Map<File, UUID> worldUUIDs;
-    private ForgeEventForwarder eventForwarder;
-
-    private LoadingCache<ServerWorld, UUID> worldUuidCache;
+    private final ForgeEventForwarder eventForwarder;
+    private final LoadingCache<net.minecraft.world.server.ServerWorld, ServerWorld> worlds;
 
     private int playerUpdateIndex = 0;
-    private Map<UUID, Player> onlinePlayerMap;
-    private List<ForgePlayer> onlinePlayerList;
+    private final Map<UUID, Player> onlinePlayerMap;
+    private final List<ForgePlayer> onlinePlayerList;
 
     public ForgeMod() {
         Logger.global = new Log4jLogger(LogManager.getLogger(Plugin.PLUGIN_NAME));
@@ -82,15 +78,14 @@ public class ForgeMod implements ServerInterface {
         this.onlinePlayerMap = new ConcurrentHashMap<>();
         this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 
-        this.pluginInstance = new Plugin(new MinecraftVersion(1, 15, 2), "forge-1.15.2", this);
+        this.pluginInstance = new Plugin("forge-1.15.2", this);
 
-        this.worldUUIDs = new ConcurrentHashMap<>();
         this.eventForwarder = new ForgeEventForwarder();
-        this.worldUuidCache = Caffeine.newBuilder()
+        this.worlds = Caffeine.newBuilder()
                 .executor(BlueMap.THREAD_POOL)
                 .weakKeys()
                 .maximumSize(1000)
-                .build(this::loadUUIDForWorld);
+                .build(ForgeWorld::new);
 
         MinecraftForge.EVENT_BUS.register(this);
 
@@ -103,7 +98,9 @@ public class ForgeMod implements ServerInterface {
         this.serverInstance = event.getServer();
 
         //register commands
-        new Commands<>(pluginInstance, event.getServer().getCommandManager().getDispatcher(), forgeSource -> new ForgeCommandSource(this, pluginInstance, forgeSource));
+        new Commands<>(pluginInstance, event.getServer().getCommandManager().getDispatcher(), forgeSource ->
+                new ForgeCommandSource(this, pluginInstance, forgeSource)
+        );
     }
 
     @SubscribeEvent
@@ -136,6 +133,11 @@ public class ForgeMod implements ServerInterface {
     }
 
     @Override
+    public MinecraftVersion getMinecraftVersion() {
+        return new MinecraftVersion(1, 15, 2);
+    }
+
+    @Override
     public void registerListener(ServerEventListener listener) {
         eventForwarder.addEventListener(listener);
     }
@@ -146,85 +148,21 @@ public class ForgeMod implements ServerInterface {
     }
 
     @Override
-    public UUID getUUIDForWorld(File worldFolder) throws IOException {
-        worldFolder = worldFolder.getCanonicalFile();
-
-        UUID uuid = worldUUIDs.get(worldFolder);
-        if (uuid == null) {
-            uuid = UUID.randomUUID();
-            worldUUIDs.put(worldFolder, uuid);
+    public Collection<ServerWorld> getLoadedWorlds() {
+        Collection<ServerWorld> loadedWorlds = new ArrayList<>(3);
+        for (net.minecraft.world.server.ServerWorld serverWorld : serverInstance.getWorlds()) {
+            loadedWorlds.add(worlds.get(serverWorld));
         }
-
-        return uuid;
+        return loadedWorlds;
     }
 
-    public UUID getUUIDForWorld(ServerWorld world) throws IOException {
-        try {
-            return worldUuidCache.get(world);
-        } catch (RuntimeException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof IOException) throw (IOException) cause;
-            else throw new IOException(cause);
-        }
-    }
-
-    private UUID loadUUIDForWorld(ServerWorld world) throws IOException {
-        File key = getFolderForWorld(world);
-
-        UUID uuid = worldUUIDs.get(key);
-        if (uuid == null) {
-            uuid = UUID.randomUUID();
-            worldUUIDs.put(key, uuid);
-        }
-
-        return uuid;
-    }
-
-    private File getFolderForWorld(ServerWorld world) throws IOException {
-        File worldFolder = world.getSaveHandler().getWorldDirectory();
-
-        int dimensionId = world.getDimension().getType().getId();
-        if (dimensionId != 0) {
-            worldFolder = new File(worldFolder, "DIM" + dimensionId);
-        }
-
-        return worldFolder.getCanonicalFile();
+    public ServerWorld getWorld(net.minecraft.world.server.ServerWorld world) {
+        return worlds.get(world);
     }
 
     @Override
-    public boolean persistWorldChanges(UUID worldUUID) throws IOException, IllegalArgumentException {
-        final CompletableFuture<Boolean> taskResult = new CompletableFuture<>();
-
-        serverInstance.execute(() -> {
-            try {
-                for (ServerWorld world : serverInstance.getWorlds()) {
-                    if (getUUIDForWorld(world).equals(worldUUID)) {
-                        world.save(null, true, false);
-                    }
-                }
-
-                taskResult.complete(true);
-            } catch (Exception e) {
-                taskResult.completeExceptionally(e);
-            }
-        });
-
-        try {
-            return taskResult.get();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IOException(e);
-        } catch (ExecutionException e) {
-            Throwable t = e.getCause();
-            if (t instanceof IOException) throw (IOException) t;
-            if (t instanceof IllegalArgumentException) throw (IllegalArgumentException) t;
-            throw new IOException(t);
-        }
-    }
-
-    @Override
-    public File getConfigFolder() {
-        return new File("config/bluemap");
+    public Path getConfigFolder() {
+        return Path.of("config", "bluemap");
     }
 
     @SubscribeEvent
@@ -232,7 +170,7 @@ public class ForgeMod implements ServerInterface {
         PlayerEntity playerInstance = evt.getPlayer();
         if (!(playerInstance instanceof ServerPlayerEntity)) return;
 
-        ForgePlayer player = new ForgePlayer(this, playerInstance.getUniqueID());
+        ForgePlayer player = new ForgePlayer(playerInstance.getUniqueID(), this, getPlugin().getBlueMap());
         onlinePlayerMap.put(player.getUuid(), player);
         onlinePlayerList.add(player);
     }

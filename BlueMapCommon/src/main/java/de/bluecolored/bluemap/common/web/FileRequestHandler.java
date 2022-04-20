@@ -24,10 +24,10 @@
  */
 package de.bluecolored.bluemap.common.web;
 
-import de.bluecolored.bluemap.core.webserver.HttpRequest;
-import de.bluecolored.bluemap.core.webserver.HttpRequestHandler;
-import de.bluecolored.bluemap.core.webserver.HttpResponse;
-import de.bluecolored.bluemap.core.webserver.HttpStatusCode;
+import de.bluecolored.bluemap.common.webserver.HttpRequest;
+import de.bluecolored.bluemap.common.webserver.HttpRequestHandler;
+import de.bluecolored.bluemap.common.webserver.HttpResponse;
+import de.bluecolored.bluemap.common.webserver.HttpStatusCode;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
 import java.io.File;

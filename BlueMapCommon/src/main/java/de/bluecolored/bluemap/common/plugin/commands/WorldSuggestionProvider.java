@@ -24,15 +24,15 @@
  */
 package de.bluecolored.bluemap.common.plugin.commands;
 
-import java.util.Collection;
-import java.util.HashSet;
-
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.core.world.World;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 public class WorldSuggestionProvider<S> extends AbstractSuggestionProvider<S> {
 
-    private Plugin plugin;
+    private final Plugin plugin;
 
     public WorldSuggestionProvider(Plugin plugin) {
         this.plugin = plugin;
@@ -42,7 +42,7 @@ public class WorldSuggestionProvider<S> extends AbstractSuggestionProvider<S> {
     public Collection<String> getPossibleValues() {
         Collection<String> values = new HashSet<>();
 
-        for (World world : plugin.getWorlds()) {
+        for (World world : plugin.getWorlds().values()) {
             values.add(world.getName());
         }
 

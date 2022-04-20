@@ -30,25 +30,29 @@ import org.apache.commons.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class WebFilesManager {
 
-    private final File webRoot;
+    private final Path webRoot;
 
-    public WebFilesManager(File webRoot) {
+    public WebFilesManager(Path webRoot) {
         this.webRoot = webRoot;
     }
 
     public boolean needsUpdate() {
-        return !new File(webRoot, "index.html").exists();
+        return !Files.exists(webRoot.resolve("index.html"));
     }
 
     public void updateFiles() throws IOException {
         URL fileResource = getClass().getResource("/de/bluecolored/bluemap/webapp.zip");
         File tempFile = File.createTempFile("bluemap_webroot_extraction", null);
+
+        if (fileResource == null) throw new IOException("Failed to open bundled webapp.");
 
         try {
             FileUtils.copyURLToFile(fileResource, tempFile, 10000, 10000);
@@ -57,10 +61,10 @@ public class WebFilesManager {
                 while(entries.hasMoreElements()) {
                     ZipEntry zipEntry = entries.nextElement();
                     if (zipEntry.isDirectory()) {
-                        File dir = new File(webRoot, zipEntry.getName());
+                        File dir = webRoot.resolve(zipEntry.getName()).toFile();
                         FileUtils.forceMkdir(dir);
                     } else {
-                        File target = new File(webRoot, zipEntry.getName());
+                        File target = webRoot.resolve(zipEntry.getName()).toFile();
                         FileUtils.forceMkdirParent(target);
                         FileUtils.copyInputStreamToFile(zipFile.getInputStream(zipEntry), target);
                     }

@@ -38,11 +38,9 @@ import java.util.UUID;
  */
 public interface World {
 
-    String getName();
-
-    UUID getUUID();
-
     Path getSaveFolder();
+
+    String getName();
 
     int getSkyLight();
 

@@ -30,19 +30,16 @@ import de.bluecolored.bluemap.common.plugin.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.core.world.World;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.TextComponent;
-import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.phys.Vec3;
 
 import java.io.IOException;
 import java.util.Optional;
 
 public class ForgeCommandSource implements CommandSource {
 
-    private ForgeMod mod;
-    private Plugin plugin;
-    private CommandSourceStack delegate;
+    private final ForgeMod mod;
+    private final Plugin plugin;
+    private final CommandSourceStack delegate;
 
     public ForgeCommandSource(ForgeMod mod, Plugin plugin, CommandSourceStack delegate) {
         this.mod = mod;
@@ -52,9 +49,9 @@ public class ForgeCommandSource implements CommandSource {
 
     @Override
     public void sendMessage(Text text) {
-        Component component = TextComponent.Serializer.fromJsonLenient(text.toJSONString());
-        if (component == null) component = new TextComponent(text.toPlainString());
-        delegate.sendSuccess(component, false);
+        var component = TextComponent.Serializer.fromJsonLenient(text.toJSONString());
+        if (component != null)
+            delegate.sendSuccess(component, false);
     }
 
     @Override
@@ -64,15 +61,16 @@ public class ForgeCommandSource implements CommandSource {
 
     @Override
     public Optional<Vector3d> getPosition() {
-        Vec3 pos = delegate.getPosition();
+        var pos = delegate.getPosition();
         return Optional.of(new Vector3d(pos.x, pos.y, pos.z));
     }
 
     @Override
     public Optional<World> getWorld() {
         try {
-            ServerLevel world = delegate.getLevel();
-            return Optional.ofNullable(plugin.getWorld(mod.getUUIDForWorld(world)));
+            var serverWorld = mod.getWorld(delegate.getLevel());
+            String worldId = plugin.getBlueMap().getWorldId(serverWorld.getSaveFolder());
+            return Optional.ofNullable(plugin.getWorlds().get(worldId));
         } catch (IOException ignore) {}
 
         return Optional.empty();

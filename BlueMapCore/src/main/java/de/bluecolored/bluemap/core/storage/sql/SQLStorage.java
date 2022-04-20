@@ -28,8 +28,6 @@ import com.flowpowered.math.vector.Vector2i;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.core.BlueMap;
-import de.bluecolored.bluemap.core.config.ConfigurationException;
-import de.bluecolored.bluemap.core.config.storage.SQLConfig;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.storage.*;
 import de.bluecolored.bluemap.core.util.WrappedOutputStream;
@@ -68,7 +66,7 @@ public class SQLStorage extends Storage {
             .executor(BlueMap.THREAD_POOL)
             .build(this::loadMapTileCompressionFK);
 
-    public SQLStorage(SQLConfig config) throws ConfigurationException {
+    public SQLStorage(SQLStorageSettings config) throws MalformedURLException, SQLDriverException {
         try {
             if (config.getDriverClass().isPresent()) {
                 if (config.getDriverJar().isPresent()) {
@@ -79,11 +77,12 @@ public class SQLStorage extends Storage {
                     try {
                         driver = (Driver) driverClass.getDeclaredConstructor().newInstance();
                     } catch (Exception ex) {
-                        throw new ConfigurationException(
+                        throw new SQLDriverException("Failed to create an instance of the driver-class", ex);
+                        /*throw new ConfigurationException(
                                 "BlueMap is not able to create an instance of the configured Driver-Class.\n" +
                                 "This means that BlueMap can not load this Driver at runtime.\n" +
                                 "Instead you'll need to add your driver-jar to the classpath when starting your server," +
-                                "e.g. using the '-classpath' command-line argument", ex);
+                                "e.g. using the '-classpath' command-line argument", ex);*/
                     }
                     this.dataSource = createDataSource(config.getDbUrl(), config.getUser(), config.getPassword(), driver);
                 } else {
@@ -93,12 +92,10 @@ public class SQLStorage extends Storage {
             } else {
                 this.dataSource = createDataSource(config.getDbUrl(), config.getUser(), config.getPassword());
             }
-        } catch (MalformedURLException ex) {
-            throw new ConfigurationException(
-                    "The path to your driver-jar is invalid. Check your sql-storage-config!", ex);
         } catch (ClassNotFoundException ex) {
-            throw new ConfigurationException(
-                    "The driver-class does not exist. Check your sql-storage-config!", ex);
+            throw new SQLDriverException("The driver-class does not exist.", ex);
+            //throw new ConfigurationException("The path to your driver-jar is invalid. Check your sql-storage-config!", ex);
+            //throw new ConfigurationException("The driver-class does not exist. Check your sql-storage-config!", ex);
         }
 
         this.compression = config.getCompression();

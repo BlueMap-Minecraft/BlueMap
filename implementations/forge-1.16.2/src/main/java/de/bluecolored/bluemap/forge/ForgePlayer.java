@@ -24,13 +24,8 @@
  */
 package de.bluecolored.bluemap.forge;
 
-import java.io.IOException;
-import java.util.EnumMap;
-import java.util.Map;
-import java.util.UUID;
-
 import com.flowpowered.math.vector.Vector3d;
-
+import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.plugin.serverinterface.Gamemode;
 import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.text.Text;
@@ -40,9 +35,12 @@ import net.minecraft.potion.Effects;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.GameType;
 
-public class ForgePlayer implements Player {
+import java.io.IOException;
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.UUID;
 
-    private static final UUID UNKNOWN_WORLD_UUID = UUID.randomUUID();
+public class ForgePlayer implements Player {
 
     private static final Map<GameType, Gamemode> GAMEMODE_MAP = new EnumMap<>(GameType.class);
     static {
@@ -53,20 +51,22 @@ public class ForgePlayer implements Player {
         GAMEMODE_MAP.put(GameType.NOT_SET, Gamemode.SURVIVAL);
     }
 
-    private UUID uuid;
+    private final UUID uuid;
     private Text name;
-    private UUID world;
+    private String world;
     private Vector3d position;
     private boolean online;
     private boolean sneaking;
     private boolean invisible;
     private Gamemode gamemode;
 
-    private ForgeMod mod;
+    private final ForgeMod mod;
+    private final BlueMapService blueMap;
 
-    public ForgePlayer(ForgeMod mod, UUID playerUuid) {
+    public ForgePlayer(UUID playerUuid, ForgeMod mod, BlueMapService blueMap) {
         this.uuid = playerUuid;
         this.mod = mod;
+        this.blueMap = blueMap;
 
         update();
     }
@@ -82,7 +82,7 @@ public class ForgePlayer implements Player {
     }
 
     @Override
-    public UUID getWorld() {
+    public String getWorld() {
         return this.world;
     }
 
@@ -136,14 +136,15 @@ public class ForgePlayer implements Player {
         this.name = Text.of(player.getName().getString());
         this.online = true;
 
-        net.minecraft.util.math.vector.Vector3d pos = player.getPositionVec();
+        var pos = player.getPositionVec();
         this.position = new Vector3d(pos.getX(), pos.getY(), pos.getZ());
-        this.sneaking = player.isSneaking();
+        this.sneaking = player.isCrouching();
 
         try {
-            this.world = mod.getUUIDForWorld(player.getServerWorld());
+            var world = mod.getWorld(player.getServerWorld());
+            this.world = blueMap.getWorldId(world.getSaveFolder());
         } catch (IOException e) {
-            this.world = UNKNOWN_WORLD_UUID;
+            this.world = "unknown";
         }
     }
 

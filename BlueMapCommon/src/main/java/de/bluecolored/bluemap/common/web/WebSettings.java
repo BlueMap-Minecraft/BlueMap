@@ -25,18 +25,18 @@
 package de.bluecolored.bluemap.common.web;
 
 import com.flowpowered.math.vector.Vector2i;
-import com.flowpowered.math.vector.Vector3f;
-import de.bluecolored.bluemap.core.config.old.MapConfig;
+import de.bluecolored.bluemap.common.config.MapConfig;
 import de.bluecolored.bluemap.core.map.BmMap;
-import de.bluecolored.bluemap.core.util.FileUtils;
-import de.bluecolored.bluemap.core.util.MathUtils;
+import de.bluecolored.bluemap.core.util.ConfigUtils;
+import de.bluecolored.bluemap.core.util.math.Color;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 import org.spongepowered.configurate.loader.ConfigurationLoader;
 import org.spongepowered.configurate.serialize.SerializationException;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.stream.Collectors;
 
@@ -45,11 +45,11 @@ public class WebSettings {
     private final ConfigurationLoader<? extends ConfigurationNode> configLoader;
     private ConfigurationNode rootNode;
 
-    public WebSettings(File settingsFile) throws IOException {
-        FileUtils.createFile(settingsFile);
+    public WebSettings(Path settingsFile) throws IOException {
+        if (!Files.exists(settingsFile)) Files.createFile(settingsFile);
 
         configLoader = GsonConfigurationLoader.builder()
-                .file(settingsFile)
+                .path(settingsFile)
                 .build();
 
         load();
@@ -130,24 +130,24 @@ public class WebSettings {
 
         set(map.getWorld().getSpawnPoint().getX(), "maps", map.getId(), "startPos", "x");
         set(map.getWorld().getSpawnPoint().getZ(), "maps", map.getId(), "startPos", "z");
-        set(map.getWorld().getUUID().toString(), "maps", map.getId(), "world");
+        set(map.getWorldId(), "maps", map.getId(), "world");
     }
 
-    public void setFrom(MapConfig mapConfig) throws SerializationException {
+    public void setFrom(MapConfig mapConfig, String mapId) throws SerializationException {
         Vector2i startPos = mapConfig.getStartPos();
         if (startPos != null) {
-            set(startPos.getX(), "maps", mapConfig.getId(), "startPos", "x");
-            set(startPos.getY(), "maps", mapConfig.getId(), "startPos", "z");
+            set(startPos.getX(), "maps", mapId, "startPos", "x");
+            set(startPos.getY(), "maps", mapId, "startPos", "z");
         }
 
-        Vector3f skyColor = MathUtils.color3FromInt(mapConfig.getSkyColor());
-        set(skyColor.getX(), "maps", mapConfig.getId(), "skyColor", "r");
-        set(skyColor.getY(), "maps", mapConfig.getId(), "skyColor", "g");
-        set(skyColor.getZ(), "maps", mapConfig.getId(), "skyColor", "b");
+        Color skyColor = new Color().set(ConfigUtils.parseColorFromString(mapConfig.getSkyColor()));
+        set(skyColor.r, "maps", mapId, "skyColor", "r");
+        set(skyColor.g, "maps", mapId, "skyColor", "g");
+        set(skyColor.b, "maps", mapId, "skyColor", "b");
 
-        set(mapConfig.getAmbientLight(), "maps", mapConfig.getId(), "ambientLight");
+        set(mapConfig.getAmbientLight(), "maps", mapId, "ambientLight");
 
-        setName(mapConfig.getName(), mapConfig.getId());
+        setName(mapConfig.getName(), mapId);
     }
 
     public void setOrdinal(int ordinal, String mapId) throws SerializationException {

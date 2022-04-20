@@ -24,17 +24,15 @@
  */
 package de.bluecolored.bluemap.common;
 
+import de.bluecolored.bluemap.common.config.BlueMapConfigs;
+import de.bluecolored.bluemap.common.config.ConfigurationException;
+import de.bluecolored.bluemap.common.config.MapConfig;
+import de.bluecolored.bluemap.common.config.storage.StorageConfig;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.common.plugin.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.common.web.WebSettings;
 import de.bluecolored.bluemap.core.MinecraftVersion;
-import de.bluecolored.bluemap.core.config.ConfigManager;
-import de.bluecolored.bluemap.core.config.ConfigurationException;
-import de.bluecolored.bluemap.core.config.old.CoreConfig;
-import de.bluecolored.bluemap.core.config.old.MapConfig;
-import de.bluecolored.bluemap.core.config.old.RenderConfig;
-import de.bluecolored.bluemap.core.config.old.WebServerConfig;
-import de.bluecolored.bluemap.core.config.storage.StorageConfig;
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
@@ -42,16 +40,16 @@ import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.storage.Storage;
+import de.bluecolored.bluemap.core.util.AtomicFileHelper;
 import de.bluecolored.bluemap.core.world.World;
 import org.apache.commons.io.FileUtils;
-import org.spongepowered.configurate.ConfigurationNode;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 
 /**
@@ -59,62 +57,70 @@ import java.util.*;
  */
 @DebugDump
 public class BlueMapService {
-    private final MinecraftVersion minecraftVersion;
-    private final File configFolder;
-    private final ThrowingFunction<File, UUID, IOException> worldUUIDProvider;
-    private final ThrowingFunction<UUID, String, IOException> worldNameProvider;
+    private final ServerInterface serverInterface;
+    private final BlueMapConfigs configs;
 
-    private final ConfigManager configManager;
-    private final de.bluecolored.bluemap.core.config.old.ConfigManager configManagerOld;
-
-    private CoreConfig coreConfig;
-    private RenderConfig renderConfig;
-    private WebServerConfig webServerConfig;
-
+    private final Map<Path, String> worldIds;
     private final Map<String, Storage> storages;
+
+    private Map<String, World> worlds;
+    private Map<String, BmMap> maps;
 
     private ResourcePack resourcePack;
 
-    private Map<UUID, World> worlds;
-    private Map<String, BmMap> maps;
-    private Map<String, Storage> mapStorages;
+    public BlueMapService(ServerInterface serverInterface) throws ConfigurationException {
+        this.serverInterface = serverInterface;
+        this.configs = new BlueMapConfigs(serverInterface);
 
-    public BlueMapService(MinecraftVersion minecraftVersion, File configFolder) {
-        this.minecraftVersion = minecraftVersion;
-        this.configFolder = configFolder;
-
-        Map<File, UUID> uuids = new HashMap<>();
-        this.worldUUIDProvider = file -> {
-            UUID uuid = uuids.get(file);
-            if (uuid == null) {
-                uuid = UUID.randomUUID();
-                uuids.put(file, uuid);
-            }
-            return uuid;
-        };
-
-        this.worldNameProvider = uuid -> null;
-
+        this.worldIds = new HashMap<>();
         this.storages = new HashMap<>();
-
-        configManagerOld = new de.bluecolored.bluemap.core.config.old.ConfigManager();
-        configManager = new ConfigManager(this.configFolder.toPath());
     }
 
-    public BlueMapService(MinecraftVersion minecraftVersion, ServerInterface serverInterface) {
-        this.minecraftVersion = minecraftVersion;
-        this.configFolder = serverInterface.getConfigFolder();
-        this.worldUUIDProvider = serverInterface::getUUIDForWorld;
-        this.worldNameProvider = serverInterface::getWorldName;
+    public synchronized String getWorldId(Path worldFolder) throws IOException {
+        // fast-path
+        String id = worldIds.get(worldFolder);
+        if (id != null) return id;
 
-        this.storages = new HashMap<>();
+        // second try with normalized absolute path
+        worldFolder = worldFolder.toAbsolutePath().normalize();
+        id = worldIds.get(worldFolder);
+        if (id != null) return id;
 
-        this.configManagerOld = new de.bluecolored.bluemap.core.config.old.ConfigManager();
-        configManager = new ConfigManager(this.configFolder.toPath());
+        // secure (slower) query with real path
+        worldFolder = worldFolder.toRealPath();
+        id = worldIds.get(worldFolder);
+        if (id != null) return id;
+
+        // now we can be sure it wasn't loaded yet .. load
+
+        Path idFile = worldFolder.resolve("bluemap.id");
+        id = this.serverInterface.getWorld(worldFolder)
+                .flatMap(ServerWorld::getId)
+                .orElse(null);
+
+        if (id != null) {
+            // create/update id-file in worldfolder
+            Files.writeString(idFile, id, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+
+            worldIds.put(worldFolder, id);
+            return id;
+        }
+
+        if (!Files.exists(idFile)) {
+            id = UUID.randomUUID().toString();
+            Files.writeString(idFile, id, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+
+            worldIds.put(worldFolder, id);
+            return id;
+        }
+
+        id = Files.readString(idFile);
+        worldIds.put(worldFolder, id);
+        return id;
     }
 
     public synchronized void createOrUpdateWebApp(boolean force) throws ConfigurationException {
-        WebFilesManager webFilesManager = new WebFilesManager(getRenderConfig().getWebRoot());
+        WebFilesManager webFilesManager = new WebFilesManager(configs.getWebappConfig().getWebroot());
         if (force || webFilesManager.needsUpdate()) {
             try {
                 webFilesManager.updateFiles();
@@ -126,21 +132,19 @@ public class BlueMapService {
 
     public synchronized WebSettings updateWebAppSettings() throws ConfigurationException, InterruptedException {
         try {
-            WebSettings webSettings = new WebSettings(new File(getRenderConfig().getWebRoot(),
-                    "data" + File.separator + "settings.json"));
+            WebSettings webSettings = new WebSettings(configs.getWebappConfig().getWebroot().resolve("data").resolve("settings.json"));
 
-            webSettings.set(getRenderConfig().isUseCookies(), "useCookies");
-            webSettings.set(getRenderConfig().isEnableFreeFlight(), "freeFlightEnabled");
+            webSettings.set(configs.getWebappConfig().isUseCookies(), "useCookies");
+            webSettings.set(configs.getWebappConfig().isEnableFreeFlight(), "freeFlightEnabled");
             webSettings.setAllMapsEnabled(false);
             for (BmMap map : getMaps().values()) {
                 webSettings.setMapEnabled(true, map.getId());
                 webSettings.setFrom(map);
             }
             int ordinal = 0;
-            for (MapConfig map : getRenderConfig().getMapConfigs()) {
-                if (!getMaps().containsKey(map.getId())) continue; //don't add not loaded maps
-                webSettings.setOrdinal(ordinal++, map.getId());
-                webSettings.setFrom(map);
+            for (var entry : configs.getMapConfigs().entrySet()) {
+                webSettings.setOrdinal(ordinal++, entry.getKey());
+                webSettings.setFrom(entry.getValue(), entry.getKey());
             }
             webSettings.save();
 
@@ -150,7 +154,7 @@ public class BlueMapService {
         }
     }
 
-    public synchronized Map<UUID, World> getWorlds() throws ConfigurationException, InterruptedException {
+    public synchronized Map<String, World> getWorlds() throws ConfigurationException, InterruptedException {
         if (worlds == null) loadWorldsAndMaps();
         return worlds;
     }
@@ -160,60 +164,52 @@ public class BlueMapService {
         return maps;
     }
 
-    public synchronized Map<String, Storage> getMapStorages()  throws ConfigurationException {
-        if (mapStorages == null) {
-            mapStorages = new HashMap<>();
-            if (maps == null) {
-                for (MapConfig mapConfig : getRenderConfig().getMapConfigs()) {
-                    mapStorages.put(mapConfig.getId(), getStorage(mapConfig.getStorage()));
-                }
-            } else {
-                for (BmMap map : maps.values()) {
-                    mapStorages.put(map.getId(), map.getStorage());
-                }
-            }
-        }
-        return mapStorages;
-    }
-
     private synchronized void loadWorldsAndMaps() throws ConfigurationException, InterruptedException {
         maps = new HashMap<>();
         worlds = new HashMap<>();
 
-        for (MapConfig mapConfig : getRenderConfig().getMapConfigs()) {
-            String id = mapConfig.getId();
+        for (var entry : configs.getMapConfigs().entrySet()) {
+            MapConfig mapConfig = entry.getValue();
+
+            String id = entry.getKey();
             String name = mapConfig.getName();
 
-            File worldFolder = new File(mapConfig.getWorldPath());
-            if (!worldFolder.exists() || !worldFolder.isDirectory()) {
-                Logger.global.logWarning("Failed to load map '" + id + "': '" + worldFolder.getAbsolutePath() + "' does not exist or is no directory!");
-                continue;
+            Path worldFolder = mapConfig.getWorld();
+            if (!Files.exists(worldFolder) || !Files.isDirectory(worldFolder)) {
+                throw new ConfigurationException("Failed to load map '" + id + "': \n" +
+                        "'" + worldFolder.toAbsolutePath().normalize() + "' does not exist or is no directory!\n" +
+                        "Check if the 'world' setting in the config-file for that map is correct, or remove the entire config-file if you don't want that map.");
             }
 
-            UUID worldUUID;
+            String worldId;
             try {
-                worldUUID = worldUUIDProvider.apply(worldFolder);
-            } catch (IOException e) {
-                Logger.global.logError("Failed to load map '" + id + "': Failed to get UUID for the world!", e);
-                continue;
+                worldId = getWorldId(worldFolder);
+            } catch (IOException ex) {
+                throw new ConfigurationException("Failed to load map '" + id + "': \n" +
+                        "Could not load the ID for the world!\n" +
+                        "Make sure BlueMap has read and write access/permissions to the world-files for this map.",
+                        ex);
             }
 
-            World world = worlds.get(worldUUID);
+            World world = worlds.get(worldId);
             if (world == null) {
                 try {
-                    world = MCAWorld.load(worldFolder.toPath(), worldUUID, worldNameProvider.apply(worldUUID), mapConfig.getWorldSkyLight(), mapConfig.isIgnoreMissingLightData());
-                    worlds.put(worldUUID, world);
-                } catch (IOException e) {
-                    Logger.global.logError("Failed to load map '" + id + "'!", e);
-                    continue;
+                    world = new MCAWorld(worldFolder, mapConfig.getWorldSkyLight(), mapConfig.isIgnoreMissingLightData());
+                    worlds.put(worldId, world);
+                } catch (IOException ex) {
+                    throw new ConfigurationException("Failed to load world (" + worldId + ") for map '" + id + "'!\n" +
+                            "Is the level.dat of that world present and not corrupted?",
+                            ex);
                 }
             }
 
             Storage storage = getStorage(mapConfig.getStorage());
+
             try {
                 BmMap map = new BmMap(
                         id,
                         name,
+                        worldId,
                         world,
                         storage,
                         getResourcePack(),
@@ -222,7 +218,7 @@ public class BlueMapService {
 
                 maps.put(id, map);
             } catch (IOException ex) {
-                Logger.global.logError("Failed to load map '" + id + "'!", ex);
+                throw new ConfigurationException("Failed to load map '" + id + "'!", ex);
             }
         }
 
@@ -230,65 +226,40 @@ public class BlueMapService {
         maps = Collections.unmodifiableMap(maps);
     }
 
-    public synchronized Storage getStorage(String id) throws ConfigurationException {
-        Storage storage = storages.get(id);
+    public synchronized Storage getStorage(String storageId) throws ConfigurationException {
+        Storage storage = storages.get(storageId);
 
         if (storage == null) {
-            storage = loadStorage(id);
-            storages.put(id, storage);
+            try {
+                StorageConfig storageConfig = getConfigs().getStorageConfigs().get(storageId);
+                if (storageConfig == null) {
+                    throw new ConfigurationException("There is no storage-configuration for '" + storageId + "'!\n" +
+                            "You will either need to define that storage, or change the map-config to use a storage-config that exists.");
+                }
+
+                storage = storageConfig.createStorage();
+                storage.initialize();
+            } catch (Exception ex) {
+                throw new ConfigurationException("Failed to load and initialize the storage '" + storageId + "' for!",
+                        ex);
+            }
+
+            storages.put(storageId, storage);
         }
 
         return storage;
     }
 
-    private synchronized Storage loadStorage(String id) throws ConfigurationException {
-        Logger.global.logInfo("Loading storage '" + id + "'...");
-
-        Path storageFolder = Paths.get("storages");
-        Path storageConfigFolder = configManager.getConfigRoot().resolve(storageFolder);
-
-        if (!Files.exists(storageConfigFolder)){
-            try {
-                Files.createDirectories(storageConfigFolder);
-
-                Files.copy(
-                        Objects.requireNonNull(BlueMapService.class
-                                .getResourceAsStream("/de/bluecolored/bluemap/config/storages/file.conf")),
-                        storageConfigFolder.resolve("file.conf")
-                );
-                Files.copy(
-                        Objects.requireNonNull(BlueMapService.class
-                                .getResourceAsStream("/de/bluecolored/bluemap/config/storages/sql.conf")),
-                        storageConfigFolder.resolve("sql.conf")
-                );
-            } catch (IOException | NullPointerException ex) {
-                  Logger.global.logWarning("Failed to create default storage-configuration-files: " + ex);
-            }
-        }
-
-        try {
-            ConfigurationNode node = configManager.loadConfig(storageFolder.resolve(id));
-            StorageConfig storageConfig = Objects.requireNonNull(node.get(StorageConfig.class));
-            Storage storage = storageConfig.getStorageType().create(node);
-            storage.initialize();
-            return storage;
-        } catch (Exception ex) {
-            throw new ConfigurationException(
-                    "BlueMap tried to create the storage '" + id + "' but something went wrong.\n" +
-                    "Check if that storage is configured correctly.",
-                    ex
-            );
-        }
-    }
-
     public synchronized ResourcePack getResourcePack() throws ConfigurationException, InterruptedException {
         if (resourcePack == null) {
-            File defaultResourceFile = new File(getCoreConfig().getDataFolder(), "minecraft-client-" + minecraftVersion.getResource().getVersion().getVersionString() + ".jar");
-            File resourceExtensionsFile = new File(getCoreConfig().getDataFolder(), "resourceExtensions.zip");
+            MinecraftVersion minecraftVersion = serverInterface.getMinecraftVersion();
 
-            File textureExportFile = new File(getRenderConfig().getWebRoot(), "data" + File.separator + "textures.json");
+            File defaultResourceFile = new File(configs.getCoreConfig().getData().toFile(), "minecraft-client-" + minecraftVersion.getResource().getVersion().getVersionString() + ".jar");
+            File resourceExtensionsFile = new File(configs.getCoreConfig().getData().toFile(), "resourceExtensions.zip");
 
-            File resourcePackFolder = new File(configFolder, "resourcepacks");
+            File textureExportFile = configs.getWebappConfig().getWebroot().resolve("data").resolve("textures.json").toFile();
+
+            File resourcePackFolder = serverInterface.getConfigFolder().resolve("resourcepacks").toFile();
             try {
                 FileUtils.forceMkdir(resourcePackFolder);
             } catch (IOException ex) {
@@ -300,13 +271,16 @@ public class BlueMapService {
             }
 
             if (!defaultResourceFile.exists()) {
-                if (getCoreConfig().isDownloadAccepted()) {
-
+                if (configs.getCoreConfig().isAcceptDownload()) {
                     //download file
                     try {
                         Logger.global.logInfo("Downloading " + minecraftVersion.getResource().getClientUrl() + " to " + defaultResourceFile + " ...");
+
                         FileUtils.forceMkdirParent(defaultResourceFile);
-                        FileUtils.copyURLToFile(new URL(minecraftVersion.getResource().getClientUrl()), defaultResourceFile, 10000, 10000);
+                        File tempResourceFile = new File(defaultResourceFile.getParentFile(), defaultResourceFile.getName() + ".filepart");
+                        if (tempResourceFile.exists()) FileUtils.forceDelete(tempResourceFile);
+                        FileUtils.copyURLToFile(new URL(minecraftVersion.getResource().getClientUrl()), tempResourceFile, 10000, 10000);
+                        AtomicFileHelper.move(tempResourceFile.toPath(), defaultResourceFile.toPath());
                     } catch (IOException ex) {
                         throw new ConfigurationException("Failed to download resources!", ex);
                     }
@@ -350,7 +324,8 @@ public class BlueMapService {
                 resourcePack.load(resources);
                 resourcePack.saveTextureFile(textureExportFile);
             } catch (IOException | ParseResourceException e) {
-                throw new ConfigurationException("Failed to parse resources!", e);
+                throw new ConfigurationException("Failed to parse resources!\n" +
+                        "Is one of your resource-packs corrupted?", e);
             }
 
         }
@@ -358,71 +333,8 @@ public class BlueMapService {
         return resourcePack;
     }
 
-    @Deprecated
-    public synchronized de.bluecolored.bluemap.core.config.old.ConfigManager getConfigManagerOld() {
-        return configManagerOld;
-    }
-
-    public File getCoreConfigFile() {
-        return new File(configFolder, "core.conf");
-    }
-
-    public synchronized CoreConfig getCoreConfig() throws ConfigurationException {
-        if (coreConfig == null) {
-            coreConfig = new CoreConfig(configManagerOld.loadOrCreate(
-                    getCoreConfigFile(),
-                    Plugin.class.getResource("/de/bluecolored/bluemap/core.conf"),
-                    Plugin.class.getResource("/de/bluecolored/bluemap/core-defaults.conf"),
-                    true,
-                    true
-            ));
-        }
-
-        return coreConfig;
-    }
-
-    public File getRenderConfigFile() {
-        return new File(configFolder, "render.conf");
-    }
-
-    public synchronized RenderConfig getRenderConfig() throws ConfigurationException {
-        if (renderConfig == null) {
-            renderConfig = new RenderConfig(configManagerOld.loadOrCreate(
-                    getRenderConfigFile(),
-                    Plugin.class.getResource("/de/bluecolored/bluemap/render.conf"),
-                    Plugin.class.getResource("/de/bluecolored/bluemap/render-defaults.conf"),
-                    true,
-                    true
-            ));
-        }
-
-        return renderConfig;
-    }
-
-    public File getWebServerConfigFile() {
-        return new File(configFolder, "webserver.conf");
-    }
-
-    public synchronized WebServerConfig getWebServerConfig() throws ConfigurationException {
-        if (webServerConfig == null) {
-            webServerConfig = new WebServerConfig(configManagerOld.loadOrCreate(
-                    getWebServerConfigFile(),
-                    Plugin.class.getResource("/de/bluecolored/bluemap/webserver.conf"),
-                    Plugin.class.getResource("/de/bluecolored/bluemap/webserver-defaults.conf"),
-                    true,
-                    true
-            ));
-        }
-
-        return webServerConfig;
-    }
-
-    public File getConfigFolder() {
-        return configFolder;
-    }
-
-    private interface ThrowingFunction<T, R, E extends Throwable> {
-        R apply(T t) throws E;
+    public BlueMapConfigs getConfigs() {
+        return configs;
     }
 
 }

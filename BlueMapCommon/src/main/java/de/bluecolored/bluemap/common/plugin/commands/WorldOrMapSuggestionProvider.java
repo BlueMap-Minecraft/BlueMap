@@ -43,13 +43,11 @@ public class WorldOrMapSuggestionProvider<S> extends AbstractSuggestionProvider<
     public Collection<String> getPossibleValues() {
         Collection<String> values = new HashSet<>();
 
-        for (World world : plugin.getWorlds()) {
+        for (World world : plugin.getWorlds().values()) {
             values.add(world.getName());
         }
 
-        for (BmMap map : plugin.getMapTypes()) {
-            values.add(map.getId());
-        }
+        values.addAll(plugin.getMaps().keySet());
 
         return values;
     }

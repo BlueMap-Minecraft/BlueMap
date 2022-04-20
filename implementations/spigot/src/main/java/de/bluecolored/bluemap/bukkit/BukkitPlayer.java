@@ -24,21 +24,20 @@
  */
 package de.bluecolored.bluemap.bukkit;
 
-import java.util.EnumMap;
-import java.util.Map;
-import java.util.UUID;
-
+import com.flowpowered.math.vector.Vector3d;
+import de.bluecolored.bluemap.common.plugin.serverinterface.Gamemode;
+import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
+import de.bluecolored.bluemap.common.plugin.text.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.potion.PotionEffectType;
 
-import com.flowpowered.math.vector.Vector3d;
-
-import de.bluecolored.bluemap.common.plugin.serverinterface.Gamemode;
-import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
-import de.bluecolored.bluemap.common.plugin.text.Text;
+import java.io.IOException;
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.UUID;
 
 public class BukkitPlayer implements Player {
 
@@ -50,9 +49,9 @@ public class BukkitPlayer implements Player {
         GAMEMODE_MAP.put(GameMode.SPECTATOR, Gamemode.SPECTATOR);
     }
 
-    private UUID uuid;
+    private final UUID uuid;
     private Text name;
-    private UUID world;
+    private String world;
     private Vector3d position;
     private boolean online;
     private boolean sneaking;
@@ -75,7 +74,7 @@ public class BukkitPlayer implements Player {
     }
 
     @Override
-    public UUID getWorld() {
+    public String getWorld() {
         return this.world;
     }
 
@@ -130,7 +129,13 @@ public class BukkitPlayer implements Player {
         Location location = player.getLocation();
         this.position = new Vector3d(location.getX(), location.getY(), location.getZ());
         this.sneaking = player.isSneaking();
-        this.world = player.getWorld().getUID();
+
+        try {
+            var world = BukkitPlugin.getInstance().getWorld(player.getWorld());
+            this.world = BukkitPlugin.getInstance().getPlugin().getBlueMap().getWorldId(world.getSaveFolder());
+        } catch (IOException e) {
+            this.world = "unknown";
+        }
     }
 
 }

@@ -24,7 +24,7 @@
  */
 package de.bluecolored.bluemap.common;
 
-import de.bluecolored.bluemap.core.config.ConfigurationException;
+import de.bluecolored.bluemap.common.config.ConfigurationException;
 
 public class MissingResourcesException extends ConfigurationException {
     private static final long serialVersionUID = 2084565069965755048L;

@@ -31,6 +31,7 @@ import de.bluecolored.bluemap.common.plugin.commands.Commands;
 import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.common.plugin.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -43,31 +44,25 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.server.world.ServerWorld;
-import net.minecraft.util.WorldSavePath;
-import net.minecraft.world.dimension.DimensionType;
 import org.apache.logging.log4j.LogManager;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutionException;
 
 public class FabricMod implements ModInitializer, ServerInterface {
 
-    private Plugin pluginInstance = null;
+    private final Plugin pluginInstance;
     private MinecraftServer serverInstance = null;
 
-    private Map<File, UUID> worldUUIDs;
-    private FabricEventForwarder eventForwarder;
+    private final FabricEventForwarder eventForwarder;
 
-    private LoadingCache<ServerWorld, UUID> worldUuidCache;
+    private final LoadingCache<net.minecraft.server.world.ServerWorld, ServerWorld> worlds;
 
     private int playerUpdateIndex = 0;
-    private Map<UUID, Player> onlinePlayerMap;
-    private List<FabricPlayer> onlinePlayerList;
+    private final Map<UUID, Player> onlinePlayerMap;
+    private final List<FabricPlayer> onlinePlayerList;
 
     public FabricMod() {
         Logger.global = new Log4jLogger(LogManager.getLogger(Plugin.PLUGIN_NAME));
@@ -75,24 +70,25 @@ public class FabricMod implements ModInitializer, ServerInterface {
         this.onlinePlayerMap = new ConcurrentHashMap<>();
         this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 
-        pluginInstance = new Plugin(new MinecraftVersion(1, 16, 2), "fabric-1.16.2", this);
+        pluginInstance = new Plugin("fabric-1.16.2", this);
 
-        this.worldUUIDs = new ConcurrentHashMap<>();
         this.eventForwarder = new FabricEventForwarder(this);
-        this.worldUuidCache = Caffeine.newBuilder()
+        this.worlds = Caffeine.newBuilder()
                 .executor(BlueMap.THREAD_POOL)
                 .weakKeys()
                 .maximumSize(1000)
-                .build(this::loadUUIDForWorld);
+                .build(FabricWorld::new);
     }
 
     @Override
     public void onInitialize() {
 
         //register commands
-        CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) -> {
-            new Commands<>(pluginInstance, dispatcher, fabricSource -> new FabricCommandSource(this, pluginInstance, fabricSource));
-        });
+        CommandRegistrationCallback.EVENT.register((dispatcher, dedicated) ->
+                new Commands<>(pluginInstance, dispatcher, fabricSource ->
+                        new FabricCommandSource(this, pluginInstance, fabricSource)
+                )
+        );
 
         ServerLifecycleEvents.SERVER_STARTED.register((MinecraftServer server) -> {
             this.serverInstance = server;
@@ -124,6 +120,11 @@ public class FabricMod implements ModInitializer, ServerInterface {
     }
 
     @Override
+    public MinecraftVersion getMinecraftVersion() {
+        return new MinecraftVersion(1, 16, 2);
+    }
+
+    @Override
     public void registerListener(ServerEventListener listener) {
         eventForwarder.addEventListener(listener);
     }
@@ -134,76 +135,27 @@ public class FabricMod implements ModInitializer, ServerInterface {
     }
 
     @Override
-    public UUID getUUIDForWorld(File worldFolder) throws IOException {
-        worldFolder = worldFolder.getCanonicalFile();
-
-        UUID uuid = worldUUIDs.get(worldFolder);
-        if (uuid == null) {
-            uuid = UUID.randomUUID();
-            worldUUIDs.put(worldFolder, uuid);
+    public Collection<ServerWorld> getLoadedWorlds() {
+        Collection<ServerWorld> loadedWorlds = new ArrayList<>(3);
+        for (net.minecraft.server.world.ServerWorld serverWorld : serverInstance.getWorlds()) {
+            loadedWorlds.add(worlds.get(serverWorld));
         }
-
-        return uuid;
+        return loadedWorlds;
     }
 
-    public UUID getUUIDForWorld(ServerWorld world) throws IOException {
-        try {
-            return worldUuidCache.get(world);
-        } catch (RuntimeException e) {
-            Throwable cause = e.getCause();
-            if (cause instanceof IOException) throw (IOException) cause;
-            else throw new IOException(cause);
-        }
-    }
-
-    private UUID loadUUIDForWorld(ServerWorld world) throws IOException {
-        MinecraftServer server = world.getServer();
-        File worldFolder = world.getServer().getRunDirectory().toPath().resolve(server.getSavePath(WorldSavePath.ROOT)).toFile();
-        File dimensionFolder = DimensionType.getSaveDirectory(world.getRegistryKey(), worldFolder);
-        File dimensionDir = dimensionFolder.getCanonicalFile();
-        return getUUIDForWorld(dimensionDir);
+    public ServerWorld getWorld(net.minecraft.server.world.ServerWorld serverWorld) {
+        return worlds.get(serverWorld);
     }
 
     @Override
-    public boolean persistWorldChanges(UUID worldUUID) throws IOException, IllegalArgumentException {
-        final CompletableFuture<Boolean> taskResult = new CompletableFuture<>();
-
-        serverInstance.execute(() -> {
-            try {
-                for (ServerWorld world : serverInstance.getWorlds()) {
-                    if (getUUIDForWorld(world).equals(worldUUID)) {
-                        world.save(null, true, false);
-                    }
-                }
-
-                taskResult.complete(true);
-            } catch (Exception e) {
-                taskResult.completeExceptionally(e);
-            }
-        });
-
-        try {
-            return taskResult.get();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IOException(e);
-        } catch (ExecutionException e) {
-            Throwable t = e.getCause();
-            if (t instanceof IOException) throw (IOException) t;
-            if (t instanceof IllegalArgumentException) throw (IllegalArgumentException) t;
-            throw new IOException(t);
-        }
-    }
-
-    @Override
-    public File getConfigFolder() {
-        return new File("config/bluemap");
+    public Path getConfigFolder() {
+        return Path.of("config", "bluemap");
     }
 
     public void onPlayerJoin(MinecraftServer server, ServerPlayerEntity playerInstance) {
         if (this.serverInstance != server) return;
 
-        FabricPlayer player = new FabricPlayer(this, playerInstance.getUuid());
+        FabricPlayer player = new FabricPlayer(playerInstance.getUuid(), this, pluginInstance.getBlueMap());
         onlinePlayerMap.put(player.getUuid(), player);
         onlinePlayerList.add(player);
     }
