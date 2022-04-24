@@ -34,6 +34,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 @DebugDump
 public class MapUpdateTask extends CombinedRenderTask<WorldRegionRenderTask> {
@@ -42,19 +44,19 @@ public class MapUpdateTask extends CombinedRenderTask<WorldRegionRenderTask> {
     private final Collection<Vector2i> regions;
 
     public MapUpdateTask(BmMap map) {
-        this(map, getRegions(map.getWorld()));
+        this(map, getRegions(map));
     }
 
     public MapUpdateTask(BmMap map, boolean force) {
-        this(map, getRegions(map.getWorld()), force);
+        this(map, getRegions(map), force);
     }
 
     public MapUpdateTask(BmMap map, Vector2i center, int radius) {
-        this(map, getRegions(map.getWorld(), center, radius));
+        this(map, getRegions(map, center, radius));
     }
 
     public MapUpdateTask(BmMap map, Vector2i center, int radius, boolean force) {
-        this(map, getRegions(map.getWorld(), center, radius), force);
+        this(map, getRegions(map, center, radius), force);
     }
 
     public MapUpdateTask(BmMap map, Collection<Vector2i> regions) {
@@ -89,20 +91,37 @@ public class MapUpdateTask extends CombinedRenderTask<WorldRegionRenderTask> {
         return tasks;
     }
 
-    private static List<Vector2i> getRegions(World world) {
-        return getRegions(world, null, -1);
+    private static List<Vector2i> getRegions(BmMap map) {
+        return getRegions(map, null, -1);
     }
 
-    private static List<Vector2i> getRegions(World world, Vector2i center, int radius) {
-        if (center == null || radius < 0) return new ArrayList<>(world.listRegions()); //TODO: remove regions outside render-boundaries
+    private static List<Vector2i> getRegions(BmMap map, Vector2i center, int radius) {
+        World world = map.getWorld();
+        Grid regionGrid = world.getRegionGrid();
+
+        Predicate<Vector2i> regionFilter = r -> {
+            Vector2i cellMin = regionGrid.getCellMin(r);
+            if (cellMin.getX() > map.getMapSettings().getMaxPos().getX()) return false;
+            if (cellMin.getY() > map.getMapSettings().getMaxPos().getY()) return false;
+
+            Vector2i cellMax = regionGrid.getCellMax(r);
+            if (cellMax.getX() < map.getMapSettings().getMinPos().getX()) return false;
+            return cellMax.getY() >= map.getMapSettings().getMinPos().getY();
+        };
+
+        if (center == null || radius < 0) {
+            return world.listRegions().stream()
+                    .filter(regionFilter)
+                    .collect(Collectors.toList());
+        }
 
         List<Vector2i> regions = new ArrayList<>();
-
-        Grid regionGrid = world.getRegionGrid();
         Vector2i halfCell = regionGrid.getGridSize().div(2);
         int increasedRadiusSquared = (int) Math.pow(radius + Math.ceil(halfCell.length()), 2);
 
         for (Vector2i region : world.listRegions()) {
+            if (!regionFilter.test(region)) continue;
+
             Vector2i min = regionGrid.getCellMin(region);
             Vector2i regionCenter = min.add(halfCell);
 

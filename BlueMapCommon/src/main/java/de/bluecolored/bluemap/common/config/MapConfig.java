@@ -39,6 +39,9 @@ public class MapConfig implements MapSettings {
     private int minY = Integer.MIN_VALUE;
     private int maxY = Integer.MAX_VALUE;
 
+    private transient Vector3i min = null;
+    private transient Vector3i max = null;
+
     private boolean renderEdges = true;
 
     private String storage = "file";
@@ -83,11 +86,13 @@ public class MapConfig implements MapSettings {
     }
 
     public Vector3i getMinPos() {
-        return new Vector3i(minX, minY, minZ);
+        if (min == null) min = new Vector3i(minX, minY, minZ);
+        return min;
     }
 
     public Vector3i getMaxPos() {
-        return new Vector3i(maxX, maxY, maxZ);
+        if (max == null) max = new Vector3i(maxX, maxY, maxZ);
+        return max;
     }
 
     public boolean isRenderEdges() {

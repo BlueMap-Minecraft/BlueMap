@@ -53,6 +53,7 @@ public class BmMap {
     private final String worldId;
     private final World world;
     private final Storage storage;
+    private final MapSettings mapSettings;
 
     private final MapRenderState renderState;
 
@@ -70,9 +71,9 @@ public class BmMap {
         this.worldId = Objects.requireNonNull(worldId);
         this.world = Objects.requireNonNull(world);
         this.storage = Objects.requireNonNull(storage);
+        this.mapSettings = Objects.requireNonNull(settings);
 
         Objects.requireNonNull(resourcePack);
-        Objects.requireNonNull(settings);
 
         this.renderState = new MapRenderState();
 
@@ -147,6 +148,10 @@ public class BmMap {
 
     public Storage getStorage() {
         return storage;
+    }
+
+    public MapSettings getMapSettings() {
+        return mapSettings;
     }
 
     public MapRenderState getRenderState() {

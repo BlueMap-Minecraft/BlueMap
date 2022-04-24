@@ -32,6 +32,7 @@ import de.bluecolored.bluemap.core.world.Grid;
 import de.bluecolored.bluemap.core.world.Region;
 
 import java.util.*;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @DebugDump
@@ -91,10 +92,22 @@ public class WorldRegionRenderTask implements RenderTask {
             }
         }
 
+        Predicate<Vector2i> boundsTileFilter = t -> {
+            Vector2i cellMin = tileGrid.getCellMin(t);
+            if (cellMin.getX() > map.getMapSettings().getMaxPos().getX()) return false;
+            if (cellMin.getY() > map.getMapSettings().getMaxPos().getY()) return false;
+
+            Vector2i cellMax = tileGrid.getCellMax(t);
+            if (cellMax.getX() < map.getMapSettings().getMinPos().getX()) return false;
+            return cellMax.getY() >= map.getMapSettings().getMinPos().getY();
+        };
+
         this.tileCount = tileSet.size();
         this.tiles = tileSet.stream()
                 .sorted(WorldRegionRenderTask::compareVec2L) //sort with longs to avoid overflow (comparison uses distanceSquared)
                 .map(Vector2l::toInt) // back to ints
+                .filter(boundsTileFilter)
+                .filter(map.getTileFilter())
                 .collect(Collectors.toCollection(ArrayDeque::new));
 
         if (tiles.isEmpty()) complete();
