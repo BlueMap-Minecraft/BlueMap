@@ -834,7 +834,7 @@ public class Commands<S> {
                 RenderTask updateTask = new MapUpdateTask(map);
                 plugin.getRenderManager().scheduleRenderTask(updateTask);
                 source.sendMessage(Text.of(TextColor.GREEN, "Created new Update-Task for map '" + map.getId() + "'"));
-                source.sendMessage(Text.of(TextColor.GRAY, "If you don't this map to render again after the purge, use ",
+                source.sendMessage(Text.of(TextColor.GRAY, "If you don't want this map to render again after the purge, use ",
                         TextColor.DARK_GRAY, "/bluemap freeze " + map.getId(), TextColor.GRAY, " first!"));
 
                 source.sendMessage(Text.of(TextColor.GREEN, "Use ", TextColor.GRAY, "/bluemap", TextColor.GREEN, " to see the progress."));
