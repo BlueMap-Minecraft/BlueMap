@@ -590,7 +590,7 @@ public class Commands<S> {
             new Thread(() -> {
                 plugin.getPluginState().setRenderThreadsEnabled(true);
 
-                plugin.getRenderManager().start(plugin.getConfigs().getCoreConfig().getRenderThreadCount());
+                plugin.getRenderManager().start(plugin.getConfigs().getCoreConfig().resolveRenderThreadCount());
                 source.sendMessage(Text.of(TextColor.GREEN, "Render-Threads started!"));
 
                 plugin.save();

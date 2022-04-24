@@ -107,7 +107,7 @@ public class BlueMapCLI implements ServerInterface {
         Logger.global.logInfo("Start updating " + maps.size() + " maps (" + totalRegions + " regions, ~" + totalRegions * 1024L + " chunks)...");
 
         // start rendering
-        renderManager.start(blueMap.getConfigs().getCoreConfig().getRenderThreadCount());
+        renderManager.start(blueMap.getConfigs().getCoreConfig().resolveRenderThreadCount());
 
         Timer timer = new Timer("BlueMap-CLI-Timer", true);
         TimerTask updateInfoTask = new TimerTask() {

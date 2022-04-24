@@ -416,7 +416,7 @@ public class Plugin implements ServerEventListener {
             return true;
         } else {
             if (!renderManager.isRunning() && getPluginState().isRenderThreadsEnabled())
-                renderManager.start(coreConfig.getRenderThreadCount());
+                renderManager.start(coreConfig.resolveRenderThreadCount());
             return false;
         }
     }
