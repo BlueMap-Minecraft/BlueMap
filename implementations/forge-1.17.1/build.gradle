@@ -73,7 +73,7 @@ dependencies {
 	minecraft 'net.minecraftforge:forge:1.17.1-37.0.109'
 
 	shadowInclude ("de.bluecolored.bluemap.common:BlueMapCommon") {
-		//exclude dependencies provided by fabric
+		//exclude dependencies provided by forge
 		exclude (group: "com.google.guava", module: "guava")
 		exclude (group: "com.google.code.gson", module: "gson")
 		exclude (group: "org.apache.commons", module: "commons-lang3")
