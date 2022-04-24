@@ -27,10 +27,8 @@ public class CoreConfig {
     }
 
     public int resolveRenderThreadCount() {
-        if (renderThreadCount > 0)
-            return renderThreadCount;
-
-        return Runtime.getRuntime().availableProcessors() + renderThreadCount;
+        if (renderThreadCount > 0) return renderThreadCount;
+        return Math.max(Runtime.getRuntime().availableProcessors() + renderThreadCount, 1);
     }
 
     public boolean isMetrics() {
