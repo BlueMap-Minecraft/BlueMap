@@ -26,9 +26,9 @@ package de.bluecolored.bluemap.common.rendermanager;
 
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.map.BmMap;
-import de.bluecolored.bluemap.core.storage.file.FileStorage;
 import de.bluecolored.bluemap.core.storage.Storage;
-import de.bluecolored.bluemap.core.util.FileUtils;
+import de.bluecolored.bluemap.core.storage.file.FileStorage;
+import de.bluecolored.bluemap.core.util.DeletingPathVisitor;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -36,6 +36,7 @@ import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public abstract class MapPurgeTask implements RenderTask {
 
@@ -74,8 +75,9 @@ public abstract class MapPurgeTask implements RenderTask {
         private MapFilePurgeTask(BmMap map, Path directory) throws IOException {
             this.map = map;
             this.directory = directory;
-            this.subFiles = Files.walk(directory, 3)
-                    .collect(Collectors.toCollection(LinkedList::new));
+            try (Stream<Path> pathStream = Files.walk(directory, 3)) {
+                this.subFiles = pathStream.collect(Collectors.toCollection(LinkedList::new));
+            }
             this.subFilesCount = subFiles.size();
             this.hasMoreWork = true;
             this.cancelled = false;
@@ -92,13 +94,13 @@ public abstract class MapPurgeTask implements RenderTask {
                 // delete subFiles first to be able to track the progress and cancel
                 while (!subFiles.isEmpty()) {
                     Path subFile = subFiles.getLast();
-                    FileUtils.delete(subFile.toFile());
+                    Files.walkFileTree(subFile, DeletingPathVisitor.INSTANCE);
                     subFiles.removeLast();
                     if (this.cancelled) return;
                 }
 
                 // make sure everything is deleted
-                FileUtils.delete(directory.toFile());
+                Files.walkFileTree(directory, DeletingPathVisitor.INSTANCE);
             } finally {
                 // reset map render state
                 if (this.map != null) {

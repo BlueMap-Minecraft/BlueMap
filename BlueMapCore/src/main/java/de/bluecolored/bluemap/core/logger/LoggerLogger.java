@@ -24,7 +24,7 @@
  */
 package de.bluecolored.bluemap.core.logger;
 
-import de.bluecolored.bluemap.core.util.FileUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import java.io.File;
@@ -64,7 +64,7 @@ public class LoggerLogger extends AbstractLogger {
     public void addFileHandler(String filename, boolean append) {
         try {
             File file = new File(filename);
-            FileUtils.mkDirsParent(file);
+            FileUtils.forceMkdirParent(file);
             FileHandler fHandler = new FileHandler(filename, append);
             fHandler.setFormatter(formatter);
             this.logger.addHandler(fHandler);

@@ -35,7 +35,6 @@ import de.bluecolored.bluemap.common.plugin.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.server.MinecraftServer;
@@ -114,7 +113,7 @@ public class ForgeMod implements ServerInterface {
             try {
                 pluginInstance.load();
                 if (pluginInstance.isLoaded()) Logger.global.logInfo("Loaded!");
-            } catch (IOException | ParseResourceException e) {
+            } catch (IOException e) {
                 Logger.global.logError("Failed to load bluemap!", e);
                 pluginInstance.unload();
             }

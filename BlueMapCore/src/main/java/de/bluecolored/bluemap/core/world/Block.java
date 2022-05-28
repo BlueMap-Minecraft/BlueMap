@@ -173,7 +173,7 @@ public class Block<T extends Block<T>> {
                    '}';
         } else {
             return "Block{" +
-                   "world=" + world +
+                   "world=null" +
                    ", x=" + x +
                    ", y=" + y +
                    ", z=" + z +

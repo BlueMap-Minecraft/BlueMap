@@ -30,10 +30,7 @@ import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.LightData;
 import net.querz.nbt.*;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 
 @SuppressWarnings("FieldMayBeFinal")
@@ -125,7 +122,7 @@ public class ChunkAnvil118 extends MCAChunk {
         int sectionY = y >> 4;
 
         Section section = getSection(sectionY);
-        if (section == null) return Biome.DEFAULT.getFullId();
+        if (section == null) return Biome.DEFAULT.getFormatted();
 
         return section.getBiome(x, y, z);
     }
@@ -211,7 +208,7 @@ public class ChunkAnvil118 extends MCAChunk {
             String id = paletteEntry.getString("Name"); //shortcut to save time and memory
             if (AIR_ID.equals(id)) return BlockState.AIR;
 
-            Map<String, String> properties = new HashMap<>();
+            Map<String, String> properties = new LinkedHashMap<>();
 
             if (paletteEntry.containsKey("Properties")) {
                 CompoundTag propertiesTag = paletteEntry.getCompoundTag("Properties");
@@ -259,7 +256,7 @@ public class ChunkAnvil118 extends MCAChunk {
         }
 
         public String getBiome(int x, int y, int z) {
-            if (biomePalette.length == 0) return Biome.DEFAULT.getId();
+            if (biomePalette.length == 0) return Biome.DEFAULT.getValue();
             if (biomes.length == 0) return biomePalette[0];
 
             x = (x & 0xF) / 4; // Math.floorMod(pos.getX(), 16) / 4
@@ -270,7 +267,7 @@ public class ChunkAnvil118 extends MCAChunk {
             long value = MCAMath.getValueFromLongArray(biomes, biomeIndex, bitsPerBiome);
             if (value >= biomePalette.length) {
                 Logger.global.noFloodWarning("biomepalettewarning", "Got biome-palette value " + value + " but palette has size of " + biomePalette.length + "! (Future occasions of this error will not be logged)");
-                return Biome.DEFAULT.getId();
+                return Biome.DEFAULT.getValue();
             }
 
             return biomePalette[(int) value];

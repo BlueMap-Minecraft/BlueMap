@@ -44,7 +44,6 @@ import de.bluecolored.bluemap.core.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.metrics.Metrics;
-import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.core.world.World;
 import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 import org.spongepowered.configurate.serialize.SerializationException;
@@ -92,7 +91,7 @@ public class Plugin implements ServerEventListener {
         StateDumper.global().register(this);
     }
 
-    public void load() throws IOException, ParseResourceException {
+    public void load() throws IOException {
         try {
             loadingLock.lock();
             synchronized (this) {
@@ -345,7 +344,7 @@ public class Plugin implements ServerEventListener {
         }
     }
 
-    public void reload() throws IOException, ParseResourceException {
+    public void reload() throws IOException {
         unload();
         load();
     }

@@ -27,12 +27,14 @@ package de.bluecolored.bluemap.core.map.hires;
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.map.TextureGallery;
+import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.world.Grid;
 import de.bluecolored.bluemap.core.world.World;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.OutputStream;
 
 public class HiresModelManager {
 
@@ -40,8 +42,8 @@ public class HiresModelManager {
     private final HiresModelRenderer renderer;
     private final Grid tileGrid;
 
-    public HiresModelManager(Storage.TileStorage storage, ResourcePack resourcePack, RenderSettings renderSettings, Grid tileGrid) {
-        this(storage, new HiresModelRenderer(resourcePack, renderSettings), tileGrid);
+    public HiresModelManager(Storage.TileStorage storage, ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings, Grid tileGrid) {
+        this(storage, new HiresModelRenderer(resourcePack, textureGallery, renderSettings), tileGrid);
     }
 
     public HiresModelManager(Storage.TileStorage storage, HiresModelRenderer renderer, Grid tileGrid) {

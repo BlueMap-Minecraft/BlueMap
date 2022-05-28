@@ -34,23 +34,24 @@ import de.bluecolored.bluemap.common.plugin.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.common.web.WebSettings;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.core.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
-import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
-import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.AtomicFileHelper;
 import de.bluecolored.bluemap.core.world.World;
 import org.apache.commons.io.FileUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
+import java.util.concurrent.CompletionException;
+import java.util.stream.Stream;
 
 /**
  * This is the attempt to generalize as many actions as possible to have CLI and Plugins run on the same general setup-code.
@@ -74,6 +75,8 @@ public class BlueMapService {
 
         this.worldIds = new HashMap<>();
         this.storages = new HashMap<>();
+
+        StateDumper.global().register(this);
     }
 
     public synchronized String getWorldId(Path worldFolder) throws IOException {
@@ -130,7 +133,7 @@ public class BlueMapService {
         }
     }
 
-    public synchronized WebSettings updateWebAppSettings() throws ConfigurationException, InterruptedException {
+    public synchronized void updateWebAppSettings() throws ConfigurationException, InterruptedException {
         try {
             WebSettings webSettings = new WebSettings(configs.getWebappConfig().getWebroot().resolve("data").resolve("settings.json"));
 
@@ -147,8 +150,6 @@ public class BlueMapService {
                 webSettings.setFrom(entry.getValue(), entry.getKey());
             }
             webSettings.save();
-
-            return webSettings;
         } catch (IOException ex) {
             throw new ConfigurationException("Failed to update web-app settings!", ex);
         }
@@ -254,14 +255,13 @@ public class BlueMapService {
         if (resourcePack == null) {
             MinecraftVersion minecraftVersion = serverInterface.getMinecraftVersion();
 
-            File defaultResourceFile = new File(configs.getCoreConfig().getData().toFile(), "minecraft-client-" + minecraftVersion.getResource().getVersion().getVersionString() + ".jar");
-            File resourceExtensionsFile = new File(configs.getCoreConfig().getData().toFile(), "resourceExtensions.zip");
+            Path defaultResourceFile = configs.getCoreConfig().getData().resolve("minecraft-client-" + minecraftVersion.getResource().getVersion().getVersionString() + ".jar");
+            Path resourceExtensionsFile = configs.getCoreConfig().getData().resolve("resourceExtensions.zip");
 
-            File textureExportFile = configs.getWebappConfig().getWebroot().resolve("data").resolve("textures.json").toFile();
+            Path resourcePackFolder = serverInterface.getConfigFolder().resolve("resourcepacks");
 
-            File resourcePackFolder = serverInterface.getConfigFolder().resolve("resourcepacks").toFile();
             try {
-                FileUtils.forceMkdir(resourcePackFolder);
+                Files.createDirectories(resourcePackFolder);
             } catch (IOException ex) {
                 throw new ConfigurationException(
                         "BlueMap failed to create this folder:\n" +
@@ -270,17 +270,17 @@ public class BlueMapService {
                         ex);
             }
 
-            if (!defaultResourceFile.exists()) {
+            if (!Files.exists(defaultResourceFile)) {
                 if (configs.getCoreConfig().isAcceptDownload()) {
                     //download file
                     try {
                         Logger.global.logInfo("Downloading " + minecraftVersion.getResource().getClientUrl() + " to " + defaultResourceFile + " ...");
 
-                        FileUtils.forceMkdirParent(defaultResourceFile);
-                        File tempResourceFile = new File(defaultResourceFile.getParentFile(), defaultResourceFile.getName() + ".filepart");
-                        if (tempResourceFile.exists()) FileUtils.forceDelete(tempResourceFile);
-                        FileUtils.copyURLToFile(new URL(minecraftVersion.getResource().getClientUrl()), tempResourceFile, 10000, 10000);
-                        AtomicFileHelper.move(tempResourceFile.toPath(), defaultResourceFile.toPath());
+                        Files.createDirectories(defaultResourceFile.getParent());
+                        Path tempResourceFile = defaultResourceFile.getParent().resolve(defaultResourceFile.getFileName() + ".filepart");
+                        Files.deleteIfExists(tempResourceFile);
+                        FileUtils.copyURLToFile(new URL(minecraftVersion.getResource().getClientUrl()), tempResourceFile.toFile(), 10000, 10000);
+                        AtomicFileHelper.move(tempResourceFile, defaultResourceFile);
                     } catch (IOException ex) {
                         throw new ConfigurationException("Failed to download resources!", ex);
                     }
@@ -290,17 +290,15 @@ public class BlueMapService {
                 }
             }
 
-            Logger.global.logInfo("Loading resources...");
-
             try {
-                if (resourceExtensionsFile.exists()) FileUtils.forceDelete(resourceExtensionsFile);
-                FileUtils.forceMkdirParent(resourceExtensionsFile);
+                Files.deleteIfExists(resourceExtensionsFile);
+                Files.createDirectories(resourceExtensionsFile.getParent());
                 URL resourceExtensionsUrl = Objects.requireNonNull(
                         Plugin.class.getResource(
                                 "/de/bluecolored/bluemap/" + minecraftVersion.getResource().getResourcePrefix() +
                                 "/resourceExtensions.zip")
                 );
-                FileUtils.copyURLToFile(resourceExtensionsUrl, resourceExtensionsFile, 10000, 10000);
+                FileUtils.copyURLToFile(resourceExtensionsUrl, resourceExtensionsFile.toFile(), 10000, 10000);
             } catch (IOException ex) {
                 throw new ConfigurationException(
                         "Failed to create resourceExtensions.zip!\n" +
@@ -308,22 +306,31 @@ public class BlueMapService {
                         ex);
             }
 
-            //find more resource packs
-            File[] resourcePacks = resourcePackFolder.listFiles();
-            if (resourcePacks == null) resourcePacks = new File[0];
-            Arrays.sort(resourcePacks); //load resource packs in alphabetical order so you can reorder them by renaming
-
-            List<File> resources = new ArrayList<>(resourcePacks.length + 1);
-            resources.add(defaultResourceFile);
-            resources.addAll(Arrays.asList(resourcePacks));
-            resources.add(resourceExtensionsFile);
-
             try {
+                Logger.global.logInfo("Loading resources...");
                 resourcePack = new ResourcePack();
-                if (textureExportFile.exists()) resourcePack.loadTextureFile(textureExportFile);
-                resourcePack.load(resources);
-                resourcePack.saveTextureFile(textureExportFile);
-            } catch (IOException | ParseResourceException e) {
+
+                // load from resourcepack folder
+                try (Stream<Path> resourcepackFiles = Files.list(resourcePackFolder)) {
+                    resourcepackFiles
+                            .sorted(Comparator.reverseOrder())
+                            .forEach(resourcepackFile -> {
+                                try {
+                                    resourcePack.loadResources(resourcepackFile);
+                                } catch (IOException e) {
+                                    throw new CompletionException(e);
+                                }
+                            });
+                }
+
+                resourcePack.loadResources(resourceExtensionsFile);
+                resourcePack.loadResources(defaultResourceFile);
+
+                resourcePack.bake();
+
+                StateDumper.global().dump(Path.of("dump.json"));
+
+            } catch (IOException | RuntimeException e) {
                 throw new ConfigurationException("Failed to parse resources!\n" +
                         "Is one of your resource-packs corrupted?", e);
             }

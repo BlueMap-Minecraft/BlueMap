@@ -25,18 +25,21 @@
 package de.bluecolored.bluemap.core.map.hires.blockmodel;
 
 import com.flowpowered.math.TrigMath;
-import com.flowpowered.math.vector.Vector2f;
 import com.flowpowered.math.vector.Vector3f;
 import com.flowpowered.math.vector.Vector3i;
 import com.flowpowered.math.vector.Vector4f;
+import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.hires.BlockModelView;
 import de.bluecolored.bluemap.core.map.hires.HiresTileModel;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
-import de.bluecolored.bluemap.core.resourcepack.BlockColorCalculatorFactory;
-import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.resourcepack.blockmodel.BlockModelResource;
-import de.bluecolored.bluemap.core.resourcepack.blockmodel.TransformedBlockModelResource;
-import de.bluecolored.bluemap.core.resourcepack.texture.Texture;
+import de.bluecolored.bluemap.core.resources.BlockColorCalculatorFactory;
+import de.bluecolored.bluemap.core.resources.ResourcePath;
+import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resources.resourcepack.blockmodel.BlockModel;
+import de.bluecolored.bluemap.core.resources.resourcepack.blockmodel.Element;
+import de.bluecolored.bluemap.core.resources.resourcepack.blockmodel.Face;
+import de.bluecolored.bluemap.core.resources.resourcepack.blockstate.Variant;
+import de.bluecolored.bluemap.core.resources.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.util.math.MatrixM4f;
@@ -46,14 +49,19 @@ import de.bluecolored.bluemap.core.world.BlockNeighborhood;
 import de.bluecolored.bluemap.core.world.ExtendedBlock;
 import de.bluecolored.bluemap.core.world.LightData;
 
+import java.util.List;
+
 /**
  * This model builder creates a BlockStateModel using the information from parsed resource-pack json files.
  */
+@SuppressWarnings("DuplicatedCode")
 public class ResourceModelBuilder {
     private static final float BLOCK_SCALE = 1f / 16f;
 
-    private final BlockColorCalculatorFactory.BlockColorCalculator blockColorCalculator;
+    private final ResourcePack resourcePack;
+    private final TextureGallery textureGallery;
     private final RenderSettings renderSettings;
+    private final BlockColorCalculatorFactory.BlockColorCalculator blockColorCalculator;
 
     private final VectorM3f[] corners = new VectorM3f[8];
     private final VectorM2f[] rawUvs = new VectorM2f[4];
@@ -62,34 +70,41 @@ public class ResourceModelBuilder {
     private final Color mapColor = new Color();
 
     private BlockNeighborhood<?> block;
-    private TransformedBlockModelResource blockModelResource;
+    private Variant variant;
+    private BlockModel modelResource;
     private BlockModelView blockModel;
     private Color blockColor;
     private float blockColorOpacity;
 
-    public ResourceModelBuilder(ResourcePack resourcePack, RenderSettings renderSettings) {
-        this.blockColorCalculator = resourcePack.getBlockColorCalculatorFactory().createCalculator();
+    public ResourceModelBuilder(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
+        this.resourcePack = resourcePack;
+        this.textureGallery = textureGallery;
         this.renderSettings = renderSettings;
+        this.blockColorCalculator = resourcePack.getColorCalculatorFactory().createCalculator();
 
         for (int i = 0; i < corners.length; i++) corners[i] = new VectorM3f(0, 0, 0);
         for (int i = 0; i < uvs.length; i++) rawUvs[i] = new VectorM2f(0, 0);
     }
 
     private final MatrixM4f modelTransform = new MatrixM4f();
-    public void build(BlockNeighborhood<?> block, TransformedBlockModelResource bmr, BlockModelView blockModel, Color color) {
+    public void build(BlockNeighborhood<?> block, Variant variant, BlockModelView blockModel, Color color) {
         this.block = block;
         this.blockModel = blockModel;
         this.blockColor = color;
         this.blockColorOpacity = 0f;
-        this.blockModelResource = bmr;
+        this.variant = variant;
+        this.modelResource = variant.getModel().getResource();
 
         this.tintColor.set(0, 0, 0, -1, true);
 
         // render model
         int modelStart = blockModel.getStart();
 
-        for (BlockModelResource.Element element : blockModelResource.getModel().getElements()) {
-            buildModelElementResource(element, blockModel.initialize());
+        List<Element> elements = modelResource.getElements();
+        if (elements != null) {
+            for (Element element : elements) {
+                buildModelElementResource(element, blockModel.initialize());
+            }
         }
 
         if (color.a > 0) {
@@ -100,10 +115,10 @@ public class ResourceModelBuilder {
         blockModel.initialize(modelStart);
 
         // apply model-rotation
-        if (blockModelResource.hasRotation()) {
+        if (variant.isRotated()) {
             blockModel.transform(modelTransform.identity()
                     .translate(-0.5f, -0.5f, -0.5f)
-                    .multiplyTo(blockModelResource.getRotationMatrix())
+                    .multiplyTo(variant.getRotationMatrix())
                     .translate(0.5f, 0.5f, 0.5f)
             );
         }
@@ -118,11 +133,11 @@ public class ResourceModelBuilder {
     }
 
     private final MatrixM4f modelElementTransform = new MatrixM4f();
-    private void buildModelElementResource(BlockModelResource.Element bmer, BlockModelView blockModel) {
+    private void buildModelElementResource(Element element, BlockModelView blockModel) {
 
         //create faces
-        Vector3f from = bmer.getFrom();
-        Vector3f to = bmer.getTo();
+        Vector3f from = element.getFrom();
+        Vector3f to = element.getTo();
 
         float
                 minX = Math.min(from.getX(), to.getX()),
@@ -143,24 +158,24 @@ public class ResourceModelBuilder {
         c[7].x = maxX; c[7].y = maxY; c[7].z = maxZ;
 
         int modelStart = blockModel.getStart();
-        createElementFace(bmer, Direction.DOWN, c[0], c[2], c[3], c[1]);
-        createElementFace(bmer, Direction.UP, c[5], c[7], c[6], c[4]);
-        createElementFace(bmer, Direction.NORTH, c[2], c[0], c[4], c[6]);
-        createElementFace(bmer, Direction.SOUTH, c[1], c[3], c[7], c[5]);
-        createElementFace(bmer, Direction.WEST, c[0], c[1], c[5], c[4]);
-        createElementFace(bmer, Direction.EAST, c[3], c[2], c[6], c[7]);
+        createElementFace(element, Direction.DOWN, c[0], c[2], c[3], c[1]);
+        createElementFace(element, Direction.UP, c[5], c[7], c[6], c[4]);
+        createElementFace(element, Direction.NORTH, c[2], c[0], c[4], c[6]);
+        createElementFace(element, Direction.SOUTH, c[1], c[3], c[7], c[5]);
+        createElementFace(element, Direction.WEST, c[0], c[1], c[5], c[4]);
+        createElementFace(element, Direction.EAST, c[3], c[2], c[6], c[7]);
         blockModel.initialize(modelStart);
 
         //rotate and scale down
         blockModel.transform(modelElementTransform
-                .copy(bmer.getRotationMatrix())
+                .copy(element.getRotation().getMatrix())
                 .scale(BLOCK_SCALE, BLOCK_SCALE, BLOCK_SCALE)
         );
     }
 
     private final VectorM3f faceRotationVector = new VectorM3f(0, 0, 0);
-    private void createElementFace(BlockModelResource.Element element, Direction faceDir, VectorM3f c0, VectorM3f c1, VectorM3f c2, VectorM3f c3) {
-        BlockModelResource.Element.Face face = element.getFaces().get(faceDir);
+    private void createElementFace(Element element, Direction faceDir, VectorM3f c0, VectorM3f c1, VectorM3f c2, VectorM3f c3) {
+        Face face = element.getFaces().get(faceDir);
         if (face == null) return;
 
         Vector3i faceDirVector = faceDir.toVector();
@@ -206,8 +221,8 @@ public class ResourceModelBuilder {
         );
 
         // ####### texture
-        Texture texture = face.getTexture();
-        int textureId = texture.getId();
+        ResourcePath<Texture> texturePath = face.getTexture().getTexturePath(modelResource.getTextures()::get);
+        int textureId = textureGallery.get(texturePath);
         tileModel.setMaterialIndex(face1, textureId);
         tileModel.setMaterialIndex(face2, textureId);
 
@@ -232,15 +247,13 @@ public class ResourceModelBuilder {
 
         // UV-Lock counter-rotation
         float uvRotation = 0f;
-        if (blockModelResource.isUVLock() && blockModelResource.hasRotation()) {
-            Vector2f rotation = blockModelResource.getRotation();
-
-            float xRotSin = TrigMath.sin(rotation.getX() * TrigMath.DEG_TO_RAD);
-            float xRotCos = TrigMath.cos(rotation.getX() * TrigMath.DEG_TO_RAD);
+        if (variant.isUvlock() && variant.isRotated()) {
+            float xRotSin = TrigMath.sin(variant.getX() * TrigMath.DEG_TO_RAD);
+            float xRotCos = TrigMath.cos(variant.getX() * TrigMath.DEG_TO_RAD);
 
             uvRotation =
-                    rotation.getY() * (faceDirVector.getY() * xRotCos + faceDirVector.getZ() * xRotSin) +
-                    rotation.getX() * (1 - faceDirVector.getY());
+                    variant.getY() * (faceDirVector.getY() * xRotCos + faceDirVector.getZ() * xRotSin) +
+                    variant.getX() * (1 - faceDirVector.getY());
         }
 
         // rotate uv's
@@ -268,7 +281,7 @@ public class ResourceModelBuilder {
 
 
         // ####### face-tint
-        if (face.isTinted()) {
+        if (face.getTintindex() >= 0) {
             if (tintColor.a < 0) {
                 blockColorCalculator.getBlockColor(block, tintColor);
             }
@@ -290,7 +303,7 @@ public class ResourceModelBuilder {
 
         // ######## AO
         float ao0 = 1f, ao1 = 1f, ao2 = 1f, ao3 = 1f;
-        if (blockModelResource.getModel().isAmbientOcclusion()){
+        if (modelResource.isAmbientocclusion()){
             ao0 = testAo(c0, faceDir);
             ao1 = testAo(c1, faceDir);
             ao2 = testAo(c2, faceDir);
@@ -307,26 +320,29 @@ public class ResourceModelBuilder {
                 faceDirVector.getZ()
         );
         makeRotationRelative(faceRotationVector);
-        faceRotationVector.rotateAndScale(element.getRotationMatrix());
+        faceRotationVector.rotateAndScale(element.getRotation().getMatrix());
 
         float a = faceRotationVector.y;
-        if (a > 0){
-            mapColor.set(texture.getColorPremultiplied());
-            if (tintColor.a >= 0) {
-                mapColor.multiply(tintColor);
+        if (a > 0 && texturePath != null){
+            Texture texture = texturePath.getResource(resourcePack::getTexture);
+            if (texture != null) {
+                mapColor.set(texture.getColorPremultiplied());
+                if (tintColor.a >= 0) {
+                    mapColor.multiply(tintColor);
+                }
+
+                // apply light
+                float combinedLight = Math.max(sunLight / 15f, blockLight / 15f);
+                combinedLight = (1 - renderSettings.getAmbientLight()) * combinedLight + renderSettings.getAmbientLight();
+                mapColor.r *= combinedLight;
+                mapColor.g *= combinedLight;
+                mapColor.b *= combinedLight;
+
+                if (mapColor.a > blockColorOpacity)
+                    blockColorOpacity = mapColor.a;
+
+                blockColor.add(mapColor);
             }
-
-            // apply light
-            float combinedLight = Math.max(sunLight / 15f, blockLight / 15f);
-            combinedLight = (1 - renderSettings.getAmbientLight()) * combinedLight + renderSettings.getAmbientLight();
-            mapColor.r *= combinedLight;
-            mapColor.g *= combinedLight;
-            mapColor.b *= combinedLight;
-
-            if (mapColor.a > blockColorOpacity)
-                blockColorOpacity = mapColor.a;
-
-            blockColor.add(mapColor);
         }
     }
 
@@ -355,7 +371,7 @@ public class ResourceModelBuilder {
     }
 
     private void makeRotationRelative(VectorM3f direction){
-        direction.transform(blockModelResource.getRotationMatrix());
+        direction.transform(variant.getRotationMatrix());
     }
 
     private float testAo(VectorM3f vertex, Direction dir){
@@ -405,7 +421,7 @@ public class ResourceModelBuilder {
     }
 
     private static float hashToFloat(int x, int z, long seed) {
-        final long hash = x * 73428767 ^ z * 4382893 ^ seed * 457;
+        final long hash = x * 73428767L ^ z * 4382893L ^ seed * 457;
         return (hash * (hash + 456149) & 0x00ffffff) / (float) 0x01000000;
     }
 

@@ -107,9 +107,10 @@ public class Color {
         if (this.a == 1f) return this;
 
         if (premultiplied) {
-            this.r /= this.a;
-            this.g /= this.a;
-            this.b /= this.a;
+            float m = 1f / this.a;
+            this.r *= m;
+            this.g *= m;
+            this.b *= m;
         }
 
         this.a = 1f;

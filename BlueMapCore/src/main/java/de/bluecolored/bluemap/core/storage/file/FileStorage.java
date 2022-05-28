@@ -28,13 +28,15 @@ import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.storage.*;
 import de.bluecolored.bluemap.core.util.AtomicFileHelper;
-import de.bluecolored.bluemap.core.util.FileUtils;
+import de.bluecolored.bluemap.core.util.DeletingPathVisitor;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 @DebugDump
 public class FileStorage extends Storage {
@@ -123,7 +125,7 @@ public class FileStorage extends Storage {
     @Override
     public void deleteMapTile(String mapId, TileType tileType, Vector2i tile) throws IOException {
         Path file = getFilePath(mapId, tileType, tile);
-        FileUtils.delete(file.toFile());
+        Files.deleteIfExists(file);
     }
 
     @Override
@@ -151,12 +153,12 @@ public class FileStorage extends Storage {
     @Override
     public void deleteMeta(String mapId, MetaType metaType) throws IOException {
         Path file = getFilePath(mapId).resolve(metaType.getFilePath());
-        FileUtils.delete(file.toFile());
+        Files.deleteIfExists(file);
     }
 
     @Override
     public void purgeMap(String mapId) throws IOException {
-        FileUtils.delete(getFilePath(mapId).toFile());
+        Files.walkFileTree(getFilePath(mapId), DeletingPathVisitor.INSTANCE);
     }
 
     public Path getFilePath(String mapId, TileType tileType, Vector2i tile){

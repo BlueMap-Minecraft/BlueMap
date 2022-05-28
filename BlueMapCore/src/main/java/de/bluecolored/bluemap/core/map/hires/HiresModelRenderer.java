@@ -25,22 +25,23 @@
 package de.bluecolored.bluemap.core.map.hires;
 
 import com.flowpowered.math.vector.Vector3i;
+import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.hires.blockmodel.BlockStateModelFactory;
-import de.bluecolored.bluemap.core.resourcepack.NoSuchResourceException;
-import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.BlockNeighborhood;
-import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.World;
 
 public class HiresModelRenderer {
 
     private final ResourcePack resourcePack;
+    private final TextureGallery textureGallery;
     private final RenderSettings renderSettings;
 
-    public HiresModelRenderer(ResourcePack resourcePack, RenderSettings renderSettings) {
-        this.renderSettings = renderSettings;
+    public HiresModelRenderer(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
         this.resourcePack = resourcePack;
+        this.textureGallery = textureGallery;
+        this.renderSettings = renderSettings;
     }
 
     public HiresTileMeta render(World world, Vector3i modelMin, Vector3i modelMax, HiresTileModel model) {
@@ -51,7 +52,7 @@ public class HiresModelRenderer {
         HiresTileMeta tileMeta = new HiresTileMeta(modelMin.getX(), modelMin.getZ(), modelMax.getX(), modelMax.getZ()); //TODO: recycle tilemeta instances?
 
         // create new for each tile-render since the factory is not threadsafe
-        BlockStateModelFactory modelFactory = new BlockStateModelFactory(resourcePack, renderSettings);
+        BlockStateModelFactory modelFactory = new BlockStateModelFactory(resourcePack, textureGallery, renderSettings);
 
         int maxHeight, minY, maxY;
         Color columnColor = new Color(), blockColor = new Color();
@@ -76,16 +77,7 @@ public class HiresModelRenderer {
                         blockColor.set(0, 0, 0, 0, true);
                         blockModel.initialize();
 
-                        try {
-                            modelFactory.render(block, blockModel, blockColor);
-                        } catch (NoSuchResourceException e) {
-                            try {
-                                modelFactory.render(block, BlockState.MISSING, blockModel.reset(), blockColor);
-                            } catch (NoSuchResourceException e2) {
-                                e.addSuppressed(e2);
-                            }
-                            //Logger.global.noFloodDebug(block.getBlockState().getFullId() + "-hiresModelRenderer-blockmodelerr", "Failed to create BlockModel for BlockState: " + block.getBlockState() + " (" + e.toString() + ")");
-                        }
+                        modelFactory.render(block, blockModel, blockColor);
 
                         // skip empty blocks
                         if (blockModel.getSize() <= 0) continue;

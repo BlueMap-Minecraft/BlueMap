@@ -25,7 +25,7 @@
 package de.bluecolored.bluemap.core.world;
 
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
-import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 
 import java.util.Objects;
 
@@ -34,7 +34,8 @@ public class ExtendedBlock<T extends ExtendedBlock<T>> extends Block<T> {
     private final RenderSettings renderSettings;
     private BlockProperties properties;
     private Biome biome;
-    private Boolean insideRenderBounds;
+
+    private boolean insideRenderBoundsCalculated, insideRenderBounds;
 
     public ExtendedBlock(ResourcePack resourcePack, RenderSettings renderSettings, World world, int x, int y, int z) {
         super(world, x, y, z);
@@ -48,19 +49,20 @@ public class ExtendedBlock<T extends ExtendedBlock<T>> extends Block<T> {
 
         this.properties = null;
         this.biome = null;
-        this.insideRenderBounds = null;
+
+        this.insideRenderBoundsCalculated = false;
     }
 
     @Override
     public BlockState getBlockState() {
-        if (!isInsideRenderBounds() && renderSettings.isRenderEdges()) return BlockState.AIR;
+        if (renderSettings.isRenderEdges() && !isInsideRenderBounds()) return BlockState.AIR;
         return super.getBlockState();
     }
 
     @Override
     public LightData getLightData() {
         LightData ld = super.getLightData();
-        if (!isInsideRenderBounds() && renderSettings.isRenderEdges()) ld.set(getWorld().getSkyLight(), ld.getBlockLight());
+        if (renderSettings.isRenderEdges() && !isInsideRenderBounds()) ld.set(getWorld().getSkyLight(), ld.getBlockLight());
         return ld;
     }
 
@@ -78,8 +80,13 @@ public class ExtendedBlock<T extends ExtendedBlock<T>> extends Block<T> {
         return renderSettings;
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isInsideRenderBounds() {
-        if (insideRenderBounds == null) insideRenderBounds = renderSettings.isInsideRenderBoundaries(getX(), getY(), getZ());
+        if (!insideRenderBoundsCalculated) {
+            insideRenderBounds = renderSettings.isInsideRenderBoundaries(getX(), getY(), getZ());
+            insideRenderBoundsCalculated = true;
+        }
+
         return insideRenderBounds;
     }
 

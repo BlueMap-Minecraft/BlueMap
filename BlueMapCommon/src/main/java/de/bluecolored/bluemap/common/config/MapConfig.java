@@ -13,7 +13,6 @@ import java.nio.file.Path;
 @DebugDump
 @ConfigSerializable
 public class MapConfig implements MapSettings {
-    private transient Path configFile = null;
 
     private String name = null;
 

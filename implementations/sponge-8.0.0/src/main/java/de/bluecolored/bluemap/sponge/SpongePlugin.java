@@ -38,7 +38,6 @@ import de.bluecolored.bluemap.common.plugin.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.sponge.SpongeCommands.SpongeCommandProxy;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.spongepowered.api.Platform;
@@ -71,6 +70,7 @@ public class SpongePlugin implements ServerInterface {
 
     private final PluginContainer pluginContainer;
 
+    @SuppressWarnings("unused")
     @Inject
     @ConfigDir(sharedRoot = false)
     private Path configurationDir;
@@ -145,7 +145,7 @@ public class SpongePlugin implements ServerInterface {
                 Logger.global.logInfo("Loading...");
                 pluginInstance.load();
                 if (pluginInstance.isLoaded()) Logger.global.logInfo("Loaded!");
-            } catch (IOException | ParseResourceException | RuntimeException e) {
+            } catch (IOException | RuntimeException e) {
                 Logger.global.logError("Failed to load!", e);
                 pluginInstance.unload();
             }
@@ -167,7 +167,7 @@ public class SpongePlugin implements ServerInterface {
                 Logger.global.logInfo("Reloading...");
                 pluginInstance.reload();
                 Logger.global.logInfo("Reloaded!");
-            } catch (IOException | ParseResourceException | RuntimeException e) {
+            } catch (IOException | RuntimeException e) {
                 Logger.global.logError("Failed to load!", e);
                 pluginInstance.unload();
             }

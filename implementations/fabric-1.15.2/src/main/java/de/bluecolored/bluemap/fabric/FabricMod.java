@@ -35,7 +35,6 @@ import de.bluecolored.bluemap.common.plugin.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import de.bluecolored.bluemap.fabric.events.PlayerJoinCallback;
 import de.bluecolored.bluemap.fabric.events.PlayerLeaveCallback;
 import net.fabricmc.api.ModInitializer;
@@ -99,7 +98,7 @@ public class FabricMod implements ModInitializer, ServerInterface {
                 try {
                     pluginInstance.load();
                     if (pluginInstance.isLoaded()) Logger.global.logInfo("BlueMap loaded!");
-                } catch (IOException | ParseResourceException e) {
+                } catch (IOException e) {
                     Logger.global.logError("Failed to load bluemap!", e);
                     pluginInstance.unload();
                 }

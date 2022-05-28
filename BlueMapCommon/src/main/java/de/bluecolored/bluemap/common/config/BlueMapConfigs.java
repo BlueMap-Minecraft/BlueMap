@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.stream.Stream;
 
 @DebugDump
 public class BlueMapConfigs {
@@ -214,8 +215,8 @@ public class BlueMapConfigs {
             }
         }
 
-        try {
-            for (var configFile : Files.list(mapConfigFolder).toArray(Path[]::new)) {
+        try (Stream<Path> configFiles = Files.list(mapConfigFolder)) {
+            for (var configFile : configFiles.toArray(Path[]::new)) {
                 if (!configManager.isConfigFile(configFile)) continue;
                 Path rawConfig = configManager.getRaw(configFile);
                 String id = sanitiseMapId(rawConfig.getFileName().toString());
@@ -267,8 +268,8 @@ public class BlueMapConfigs {
         }
 
 
-        try {
-            for (var configFile : Files.list(storageConfigFolder).toArray(Path[]::new)) {
+        try (Stream<Path> configFiles = Files.list(storageConfigFolder)) {
+            for (var configFile : configFiles.toArray(Path[]::new)) {
                 if (!configManager.isConfigFile(configFile)) continue;
                 Path rawConfig = configManager.getRaw(configFile);
                 String id = rawConfig.getFileName().toString();
@@ -289,7 +290,7 @@ public class BlueMapConfigs {
     }
 
     private String sanitiseMapId(String id) {
-        return id.replaceAll("[^a-zA-Z0-9_]", "_");
+        return id.replaceAll("\\W", "_");
     }
 
     private ConfigTemplate createOverworldMapTemplate(String name, Path worldFolder) throws IOException {

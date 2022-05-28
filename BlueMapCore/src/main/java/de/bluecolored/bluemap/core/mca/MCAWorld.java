@@ -31,7 +31,6 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.Grid;
 import de.bluecolored.bluemap.core.world.World;
 import net.querz.nbt.CompoundTag;
@@ -97,10 +96,6 @@ public class MCAWorld implements World {
         } catch (ClassCastException | NullPointerException ex) {
             throw new IOException("Invalid level.dat format!", ex);
         }
-    }
-
-    public BlockState getBlockState(Vector3i pos) {
-        return getChunk(pos.getX() >> 4, pos.getZ() >> 4).getBlockState(pos.getX(), pos.getY(), pos.getZ());
     }
 
     @Override

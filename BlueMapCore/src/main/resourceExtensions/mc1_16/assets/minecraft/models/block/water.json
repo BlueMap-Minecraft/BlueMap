@@ -1,5 +1,5 @@
 {
-	"parent": "builtin/liquid",
+	"parent": "bluemap:builtin/liquid",
     "textures": {
         "particle": "block/water_still",
 		"still": "block/water_still",

@@ -25,6 +25,8 @@
 package de.bluecolored.bluemap.core.world;
 
 import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.core.util.Key;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -38,7 +40,7 @@ import java.util.regex.Pattern;
  * <i>The implementation of this class has to be thread-save!</i><br>
  */
 @DebugDump
-public class BlockState {
+public class BlockState extends Key {
 
     private static final Pattern BLOCKSTATE_SERIALIZATION_PATTERN = Pattern.compile("^(.+?)(?:\\[(.*)])?$");
 
@@ -48,67 +50,36 @@ public class BlockState {
     private boolean hashed;
     private int hash;
 
-    private final String namespace;
-    private final String id;
-    private final String fullId;
     private final Map<String, String> properties;
+    private final Property[] propertiesArray;
 
     private final boolean isAir, isWater, isWaterlogged;
 
-    public BlockState(String id) {
-        this(id, Collections.emptyMap());
+    public BlockState(String value) {
+        this(value, Collections.emptyMap());
     }
 
-    public BlockState(String id, Map<String, String> properties) {
+    public BlockState(String value, Map<String, String> properties) {
+        super(value);
+
         this.hashed = false;
         this.hash = 0;
 
         //this.properties = Collections.unmodifiableMap(new HashMap<>(properties)); // <- not doing this to reduce object-creation
         this.properties = properties;
-
-        //resolve namespace
-        String namespace = "minecraft";
-        int namespaceSeperator = id.indexOf(':');
-        if (namespaceSeperator > 0) {
-            namespace = id.substring(0, namespaceSeperator);
-            id = id.substring(namespaceSeperator + 1);
-        }
-
-        this.id = id;
-        this.namespace = namespace;
-        this.fullId = namespace + ":" + id;
+        this.propertiesArray = properties.entrySet().stream()
+                .map(e -> new Property(e.getKey(), e.getValue()))
+                .sorted()
+                .toArray(Property[]::new);
 
         // special fast-access properties
         this.isAir =
-                "minecraft:air".equals(this.fullId) ||
-                "minecraft:cave_air".equals(this.fullId) ||
-                "minecraft:void_air".equals(this.fullId);
+                "minecraft:air".equals(this.getFormatted()) ||
+                "minecraft:cave_air".equals(this.getFormatted()) ||
+                "minecraft:void_air".equals(this.getFormatted());
 
-        this.isWater = "minecraft:water".equals(this.fullId);
+        this.isWater = "minecraft:water".equals(this.getFormatted());
         this.isWaterlogged = "true".equals(properties.get("waterlogged"));
-    }
-
-    /**
-     * The namespace of this blockstate,<br>
-     * this is always "minecraft" in vanilla.<br>
-     */
-    public String getNamespace() {
-        return namespace;
-    }
-
-    /**
-     * The id of this blockstate,<br>
-     * also the name of the resource-file without the filetype that represents this block-state <i>(found in mineceraft in assets/minecraft/blockstates)</i>.<br>
-     */
-    public String getId() {
-        return id;
-    }
-
-    /**
-     * Returns the namespaced id of this blockstate
-     */
-    public String getFullId() {
-        return fullId;
     }
 
     /**
@@ -142,14 +113,14 @@ public class BlockState {
 
         if (!(obj instanceof BlockState)) return false;
         BlockState b = (BlockState) obj;
-        if (!Objects.equals(getFullId(), b.getFullId())) return false;
-        return Objects.equals(getProperties(), b.getProperties());
+        if (!Objects.equals(getFormatted(), b.getFormatted())) return false;
+        return Arrays.equals(propertiesArray, b.propertiesArray);
     }
 
     @Override
     public int hashCode() {
         if (!hashed){
-            hash = Objects.hash( getFullId(), getProperties() );
+            hash = Objects.hash( getFormatted(), getProperties() );
             hashed = true;
         }
 
@@ -163,7 +134,7 @@ public class BlockState {
             sj.add(e.getKey() + "=" + e.getValue());
         }
 
-        return getFullId() + "[" + sj.toString() + "]";
+        return getFormatted() + "[" + sj + "]";
     }
 
     public static BlockState fromString(String serializedBlockState) throws IllegalArgumentException {
@@ -189,6 +160,37 @@ public class BlockState {
         } catch (RuntimeException ex) {
             throw new IllegalArgumentException("'" + serializedBlockState + "' could not be parsed to a BlockState!");
         }
+    }
+
+    public static final class Property implements Comparable<Property> {
+        private final String key, value;
+
+        public Property(String key, String value) {
+            this.key = key.intern();
+            this.value = value.intern();
+        }
+
+        @SuppressWarnings("StringEquality")
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            Property property = (Property) o;
+            return key == property.key && value == property.value;
+        }
+
+        @Override
+        public int hashCode() {
+            return key.hashCode() * 31 ^ value.hashCode();
+        }
+
+
+        @Override
+        public int compareTo(@NotNull BlockState.Property o) {
+            int keyCompare = key.compareTo(o.key);
+            return keyCompare != 0 ? keyCompare : value.compareTo(o.value);
+        }
+
     }
 
 }

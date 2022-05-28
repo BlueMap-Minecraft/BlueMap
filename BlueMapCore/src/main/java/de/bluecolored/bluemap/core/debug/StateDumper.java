@@ -85,7 +85,7 @@ public class StateDumper {
             Class<?> type = instance.getClass();
 
             if (!alreadyDumped.add(instance)) {
-                node.set("<<" + instance.toString() + ">>");
+                node.set("<<" + instance + ">>");
                 return;
             }
 
@@ -99,8 +99,8 @@ public class StateDumper {
                 }
 
                 for (Map.Entry<?, ?> entry : map.entrySet()) {
-                    if (++count > 20) {
-                        node.appendListNode().set("<<" + (map.size() - 20) + " more elements>>");
+                    if (++count > 100) {
+                        node.appendListNode().set("<<" + (map.size() - 100) + " more elements>>");
                         break;
                     }
 
@@ -119,8 +119,8 @@ public class StateDumper {
 
                 int count = 0;
                 for (Object entry : (Collection<?>) instance) {
-                    if (++count > 20) {
-                        node.appendListNode().set("<<" + (((Collection<?>) instance).size() - 20) + " more elements>>");
+                    if (++count > 100) {
+                        node.appendListNode().set("<<" + (((Collection<?>) instance).size() - 100) + " more elements>>");
                         break;
                     }
 
@@ -137,8 +137,8 @@ public class StateDumper {
 
                 int count = 0;
                 for (Object entry : (Object[]) instance) {
-                    if (++count > 20) {
-                        node.appendListNode().set("<<" + (((Object[]) instance).length - 20) + " more elements>>");
+                    if (++count > 100) {
+                        node.appendListNode().set("<<" + (((Object[]) instance).length - 100) + " more elements>>");
                         break;
                     }
 
@@ -161,53 +161,55 @@ public class StateDumper {
                 return;
             }
 
-            boolean allFields = type.isAnnotationPresent(DebugDump.class);
-
             boolean foundSomething = false;
-            for (Field field : type.getDeclaredFields()) {
-                DebugDump dd = field.getAnnotation(DebugDump.class);
-                if (dd == null){
-                    if (!allFields) continue;
-                    if (Modifier.isStatic(field.getModifiers())) continue;
-                    if (Modifier.isTransient(field.getModifiers())) continue;
+            do {
+                boolean allFields = type.isAnnotationPresent(DebugDump.class);
+
+                for (Field field : type.getDeclaredFields()) {
+                    DebugDump dd = field.getAnnotation(DebugDump.class);
+                    if (dd == null) {
+                        if (!allFields) continue;
+                        if (Modifier.isStatic(field.getModifiers())) continue;
+                        if (Modifier.isTransient(field.getModifiers())) continue;
+                    }
+                    foundSomething = true;
+
+                    String key = "";
+                    if (dd != null) key = dd.value();
+                    if (key.isEmpty()) key = field.getName();
+
+                    if (options.acceptsType(field.getType())) {
+                        field.setAccessible(true);
+                        node.node(key).set(field.get(instance));
+                    } else {
+                        field.setAccessible(true);
+                        dumpInstance(field.get(instance), options, node.node(key), alreadyDumped);
+                    }
                 }
-                foundSomething = true;
 
-                String key = "";
-                if (dd != null) key = dd.value();
-                if (key.isEmpty()) key = field.getName();
+                for (Method method : type.getDeclaredMethods()) {
+                    DebugDump dd = method.getAnnotation(DebugDump.class);
+                    if (dd == null) continue;
+                    foundSomething = true;
 
-                if (options.acceptsType(field.getType())) {
-                    field.setAccessible(true);
-                    node.node(key).set(field.get(instance));
-                } else {
-                    field.setAccessible(true);
-                    dumpInstance(field.get(instance), options, node.node(key), alreadyDumped);
+                    String key = dd.value();
+                    if (key.isEmpty()) key = method.toGenericString().replace(' ', '_');
+
+                    if (options.acceptsType(method.getReturnType())) {
+                        method.setAccessible(true);
+                        node.node(key).set(method.invoke(instance));
+                    } else {
+                        method.setAccessible(true);
+                        dumpInstance(method.invoke(instance), options, node.node(key), alreadyDumped);
+                    }
                 }
-            }
-
-            for (Method method : type.getDeclaredMethods()) {
-                DebugDump dd = method.getAnnotation(DebugDump.class);
-                if (dd == null) continue;
-                foundSomething = true;
-
-                String key = dd.value();
-                if (key.isEmpty()) key = method.toGenericString().replace(' ', '_');
-
-                if (options.acceptsType(method.getReturnType())) {
-                    method.setAccessible(true);
-                    node.node(key).set(method.invoke(instance));
-                } else {
-                    method.setAccessible(true);
-                    dumpInstance(method.invoke(instance), options, node.node(key), alreadyDumped);
-                }
-            }
+            } while ((type = type.getSuperclass()) != null);
 
             if (!foundSomething) {
                 node.set(instance.toString());
             }
         } catch (Exception ex) {
-            node.set("Error: " + ex.toString());
+            node.set("Error: " + ex);
         }
     }
 

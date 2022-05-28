@@ -34,7 +34,6 @@ import de.bluecolored.bluemap.common.plugin.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.resourcepack.ParseResourceException;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -149,7 +148,7 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
                 Logger.global.logInfo("Loading...");
                 this.pluginInstance.load();
                 if (pluginInstance.isLoaded()) Logger.global.logInfo("Loaded!");
-            } catch (IOException | ParseResourceException | RuntimeException e) {
+            } catch (IOException | RuntimeException e) {
                 Logger.global.logError("Failed to load!", e);
                 this.pluginInstance.unload();
             }

@@ -25,18 +25,14 @@
 package de.bluecolored.bluemap.core.world;
 
 import de.bluecolored.bluemap.core.debug.DebugDump;
-import de.bluecolored.bluemap.core.util.ConfigUtils;
+import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.math.Color;
-import org.spongepowered.configurate.ConfigurationNode;
 
 @DebugDump
-public class Biome {
+public class Biome extends Key {
 
     public static final Biome DEFAULT = new Biome("minecraft:ocean");
 
-    private final String namespace;
-    private final String id;
-    private final String fullId;
     private float humidity = 0.5f;
     private float temp = 0.5f;
     private final Color waterColor = new Color().set(4159204).premultiplied();
@@ -44,43 +40,21 @@ public class Biome {
     private final Color overlayFoliageColor = new Color().premultiplied();
     private final Color overlayGrassColor = new Color().premultiplied();
 
-    public Biome(String id) {
-        //resolve namespace
-        String namespace = "minecraft";
-        int namespaceSeperator = id.indexOf(':');
-        if (namespaceSeperator > 0) {
-            namespace = id.substring(0, namespaceSeperator);
-            id = id.substring(namespaceSeperator + 1);
-        }
-
-        this.id = id;
-        this.namespace = namespace;
-        this.fullId = namespace + ":" + id;
+    public Biome(String formatted) {
+        super(formatted);
     }
 
-    public Biome(String id, float humidity, float temp, Color waterColor) {
-        this(id);
+    public Biome(String formatted, float humidity, float temp, Color waterColor) {
+        this(formatted);
         this.humidity = humidity;
         this.temp = temp;
-        this.waterColor.set(waterColor);
+        this.waterColor.set(waterColor).premultiplied();
     }
 
-    public Biome(String id, float humidity, float temp, Color waterColor, Color overlayFoliageColor, Color overlayGrassColor) {
-        this (id, humidity, temp, waterColor);
-        this.overlayFoliageColor.set(overlayFoliageColor);
-        this.overlayGrassColor.set(overlayGrassColor);
-    }
-
-    public String getNamespace() {
-        return namespace;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public String getFullId() {
-        return fullId;
+    public Biome(String formatted, float humidity, float temp, Color waterColor, Color overlayFoliageColor, Color overlayGrassColor) {
+        this(formatted, humidity, temp, waterColor);
+        this.overlayFoliageColor.set(overlayFoliageColor).premultiplied();
+        this.overlayGrassColor.set(overlayGrassColor).premultiplied();
     }
 
     public float getHumidity() {
@@ -103,23 +77,12 @@ public class Biome {
         return overlayGrassColor;
     }
 
-    public static Biome create(String id, ConfigurationNode node) {
-        Biome biome = new Biome(id);
-        biome.humidity = (float) node.node("humidity").getDouble(biome.humidity);
-        biome.temp = (float) node.node("temp").getDouble(biome.temp);
-        try { biome.waterColor.set(ConfigUtils.readColorInt(node.node("watercolor"))).premultiplied(); 				} catch (NumberFormatException ignored) {}
-        try { biome.overlayFoliageColor.set(ConfigUtils.readColorInt(node.node("foliagecolor"))).premultiplied(); 	} catch (NumberFormatException ignored) {}
-        try { biome.overlayGrassColor.set(ConfigUtils.readColorInt(node.node("grasscolor"))).premultiplied(); 		} catch (NumberFormatException ignored) {}
-
-        return biome;
-    }
-
     @Override
     public String toString() {
         return "Biome{" +
-               "id='" + id + '\'' +
-               ", namespace=" + namespace +
-               ", fullId=" + fullId +
+               "value='" + getValue() + '\'' +
+               ", namespace=" + getNamespace() +
+               ", formatted=" + getFormatted() +
                ", humidity=" + humidity +
                ", temp=" + temp +
                ", waterColor=" + waterColor +

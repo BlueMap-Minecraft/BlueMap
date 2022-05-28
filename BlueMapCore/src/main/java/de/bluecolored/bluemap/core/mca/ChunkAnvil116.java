@@ -133,7 +133,7 @@ public class ChunkAnvil116 extends MCAChunk {
 
     @Override
     public String getBiome(int x, int y, int z) {
-        if (biomes.length < 16) return Biome.DEFAULT.getFullId();
+        if (biomes.length < 16) return Biome.DEFAULT.getFormatted();
 
         x = (x & 0xF) / 4; // Math.floorMod(pos.getX(), 16)
         z = (z & 0xF) / 4;

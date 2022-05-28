@@ -124,8 +124,8 @@ public class ChunkAnvil115 extends MCAChunk {
         y = y / 4;
         int biomeIntIndex = y * 16 + z * 4 + x;
 
-        if (biomeIntIndex < 0) return Biome.DEFAULT.getFullId();
-        if (biomeIntIndex >= this.biomes.length) return Biome.DEFAULT.getFullId();
+        if (biomeIntIndex < 0) return Biome.DEFAULT.getFormatted();
+        if (biomeIntIndex >= this.biomes.length) return Biome.DEFAULT.getFormatted();
 
         return LegacyBiomes.idFor(biomes[biomeIntIndex]);
     }

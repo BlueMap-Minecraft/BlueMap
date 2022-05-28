@@ -26,13 +26,17 @@ package de.bluecolored.bluemap.core.map.hires.blockmodel;
 
 import com.flowpowered.math.TrigMath;
 import com.flowpowered.math.vector.Vector3i;
+import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.hires.BlockModelView;
 import de.bluecolored.bluemap.core.map.hires.HiresTileModel;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
-import de.bluecolored.bluemap.core.resourcepack.BlockColorCalculatorFactory;
-import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.resourcepack.blockmodel.TransformedBlockModelResource;
-import de.bluecolored.bluemap.core.resourcepack.texture.Texture;
+import de.bluecolored.bluemap.core.resources.BlockColorCalculatorFactory;
+import de.bluecolored.bluemap.core.resources.ResourcePath;
+import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resources.resourcepack.blockmodel.BlockModel;
+import de.bluecolored.bluemap.core.resources.resourcepack.blockmodel.TextureVariable;
+import de.bluecolored.bluemap.core.resources.resourcepack.blockstate.Variant;
+import de.bluecolored.bluemap.core.resources.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.util.math.MatrixM3f;
@@ -45,6 +49,7 @@ import de.bluecolored.bluemap.core.world.ExtendedBlock;
 /**
  * A model builder for all liquid blocks
  */
+@SuppressWarnings("DuplicatedCode")
 public class LiquidModelBuilder {
     private static final float BLOCK_SCALE = 1f / 16f;
     private static final MatrixM3f FLOWING_UV_SCALE = new MatrixM3f()
@@ -53,21 +58,25 @@ public class LiquidModelBuilder {
             .scale(0.5f, 0.5f, 1)
             .translate(0.5f, 0.5f);
 
-    private final BlockColorCalculatorFactory.BlockColorCalculator blockColorCalculator;
+    private final ResourcePack resourcePack;
+    private final TextureGallery textureGallery;
     private final RenderSettings renderSettings;
+    private final BlockColorCalculatorFactory.BlockColorCalculator blockColorCalculator;
 
     private final VectorM3f[] corners;
     private final VectorM2f[] uvs = new VectorM2f[4];
 
     private BlockNeighborhood<?> block;
     private BlockState blockState;
-    private TransformedBlockModelResource blockModelResource;
+    private BlockModel modelResource;
     private BlockModelView blockModel;
     private Color blockColor;
 
-    public LiquidModelBuilder(ResourcePack resourcePack, RenderSettings renderSettings) {
-        this.blockColorCalculator = resourcePack.getBlockColorCalculatorFactory().createCalculator();
+    public LiquidModelBuilder(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
+        this.resourcePack = resourcePack;
+        this.textureGallery = textureGallery;
         this.renderSettings = renderSettings;
+        this.blockColorCalculator = resourcePack.getColorCalculatorFactory().createCalculator();
 
         corners = new VectorM3f[]{
                 new VectorM3f( 0, 0, 0 ),
@@ -83,10 +92,10 @@ public class LiquidModelBuilder {
         for (int i = 0; i < uvs.length; i++) uvs[i] = new VectorM2f(0, 0);
     }
 
-    public void build(BlockNeighborhood<?> block, BlockState blockState, TransformedBlockModelResource bmr, BlockModelView blockModel, Color color) {
+    public void build(BlockNeighborhood<?> block, BlockState blockState, Variant variant, BlockModelView blockModel, Color color) {
         this.block = block;
         this.blockState = blockState;
-        this.blockModelResource = bmr;
+        this.modelResource = variant.getModel().getResource();
         this.blockModel = blockModel;
         this.blockColor = color;
 
@@ -115,11 +124,15 @@ public class LiquidModelBuilder {
             corners[7].y = 16f;
         }
 
-        Texture stillTexture = blockModelResource.getModel().getTexture("still");
-        Texture flowTexture = blockModelResource.getModel().getTexture("flow");
+        TextureVariable stillVariable = modelResource.getTextures().get("still");
+        TextureVariable flowVariable = modelResource.getTextures().get("flow");
+        ResourcePath<Texture> stillTexturePath = stillVariable == null ? null : stillVariable
+                .getTexturePath(modelResource.getTextures()::get);
+        ResourcePath<Texture> flowTexturePath = flowVariable == null ? null : flowVariable
+                .getTexturePath(modelResource.getTextures()::get);
 
-        int stillTextureId = stillTexture.getId();
-        int flowTextureId = flowTexture.getId();
+        int stillTextureId = textureGallery.get(stillTexturePath);
+        int flowTextureId = textureGallery.get(flowTexturePath);
 
         tintcolor.set(1f, 1f, 1f, 1f, true);
         if (blockState.isWater()) {
@@ -144,15 +157,19 @@ public class LiquidModelBuilder {
 
         //calculate mapcolor
         if (upFaceRendered) {
-            blockColor.set(stillTexture.getColorPremultiplied());
-            blockColor.multiply(tintcolor);
+            Texture stillTexture = stillTexturePath == null ? null : stillTexturePath.getResource(resourcePack::getTexture);
 
-            // apply light
-            float combinedLight = Math.max(block.getSunLightLevel() / 15f, block.getBlockLightLevel() / 15f);
-            combinedLight = (renderSettings.getAmbientLight() + combinedLight) / (renderSettings.getAmbientLight() + 1f);
-            blockColor.r *= combinedLight;
-            blockColor.g *= combinedLight;
-            blockColor.b *= combinedLight;
+            if (stillTexture != null) {
+                blockColor.set(stillTexture.getColorPremultiplied());
+                blockColor.multiply(tintcolor);
+
+                // apply light
+                float combinedLight = Math.max(block.getSunLightLevel() / 15f, block.getBlockLightLevel() / 15f);
+                combinedLight = (renderSettings.getAmbientLight() + combinedLight) / (renderSettings.getAmbientLight() + 1f);
+                blockColor.r *= combinedLight;
+                blockColor.g *= combinedLight;
+                blockColor.b *= combinedLight;
+            }
         } else {
             blockColor.set(0, 0, 0, 0, true);
         }
@@ -203,7 +220,7 @@ public class LiquidModelBuilder {
     }
 
     private boolean isSameLiquid(ExtendedBlock<?> block){
-        if (block.getBlockState().getFullId().equals(this.blockState.getFullId())) return true;
+        if (block.getBlockState().getFormatted().equals(this.blockState.getFormatted())) return true;
         return this.blockState.isWater() && (block.getBlockState().isWaterlogged() || block.getProperties().isAlwaysWaterlogged());
     }
 

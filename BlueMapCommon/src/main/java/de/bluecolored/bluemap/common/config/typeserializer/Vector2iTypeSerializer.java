@@ -1,7 +1,7 @@
 package de.bluecolored.bluemap.common.config.typeserializer;
 
 import com.flowpowered.math.vector.Vector2i;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.serialize.SerializationException;
 import org.spongepowered.configurate.serialize.TypeSerializer;

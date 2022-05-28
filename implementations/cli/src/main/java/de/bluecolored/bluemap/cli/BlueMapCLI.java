@@ -48,7 +48,6 @@ import de.bluecolored.bluemap.core.logger.LoggerLogger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.metrics.Metrics;
 import de.bluecolored.bluemap.core.storage.Storage;
-import de.bluecolored.bluemap.core.util.FileUtils;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
@@ -182,7 +181,7 @@ public class BlueMapCLI implements ServerInterface {
         Logger.global.logInfo("Starting webserver ...");
 
         WebserverConfig config = blueMap.getConfigs().getWebserverConfig();
-        FileUtils.mkDirs(config.getWebroot().toFile());
+        Files.createDirectories(config.getWebroot());
         HttpRequestHandler requestHandler = new FileRequestHandler(config.getWebroot(), "BlueMap v" + BlueMap.VERSION);
 
         try {
@@ -274,7 +273,7 @@ public class BlueMapCLI implements ServerInterface {
             cli.configFolder = Path.of(".");
             if (cmd.hasOption("c")) {
                 cli.configFolder = Path.of(cmd.getOptionValue("c"));
-                FileUtils.mkDirs(cli.configFolder.toFile());
+                Files.createDirectories(cli.configFolder);
             }
 
             //minecraft version
@@ -324,7 +323,7 @@ public class BlueMapCLI implements ServerInterface {
                 }
 
                 //create resourcepacks folder
-                FileUtils.mkDirs(cli.configFolder.resolve( "resourcepacks").toFile());
+                Files.createDirectories(cli.configFolder.resolve( "resourcepacks"));
 
                 //print help
                 BlueMapCLI.printHelp();
@@ -416,7 +415,7 @@ public class BlueMapCLI implements ServerInterface {
 
             if (file.isFile()) {
                 try {
-                    filename = "." + File.separator + new File("").getCanonicalFile().toPath().relativize(file.toPath()).toString();
+                    filename = "." + File.separator + new File("").getCanonicalFile().toPath().relativize(file.toPath());
                 } catch (IllegalArgumentException ex) {
                     filename = file.getAbsolutePath();
                 }
@@ -437,6 +436,6 @@ public class BlueMapCLI implements ServerInterface {
         footer.append(command).append(" -gs\n");
         footer.append("Generate the web-app and settings without starting a render\n\n");
 
-        formatter.printHelp(command + " [options]", "\nOptions:", createOptions(), "\n" + footer.toString());
+        formatter.printHelp(command + " [options]", "\nOptions:", createOptions(), "\n" + footer);
     }
 }

@@ -24,17 +24,12 @@
  */
 package de.bluecolored.bluemap.core.util;
 
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.*;
 
 public class AtomicFileHelper {
-
-    public static OutputStream createFilepartOutputStream(final File file) throws IOException {
-        return createFilepartOutputStream(file.toPath());
-    }
 
     public static OutputStream createFilepartOutputStream(final Path file) throws IOException {
         final Path partFile = getPartFile(file);

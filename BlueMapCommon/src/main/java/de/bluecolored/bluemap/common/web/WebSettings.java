@@ -46,7 +46,10 @@ public class WebSettings {
     private ConfigurationNode rootNode;
 
     public WebSettings(Path settingsFile) throws IOException {
-        if (!Files.exists(settingsFile)) Files.createFile(settingsFile);
+        if (!Files.exists(settingsFile)) {
+            Files.createDirectories(settingsFile.getParent());
+            Files.createFile(settingsFile);
+        }
 
         configLoader = GsonConfigurationLoader.builder()
                 .path(settingsFile)

@@ -30,7 +30,7 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.map.hires.HiresTileMeta;
 import de.bluecolored.bluemap.core.map.lowres.LowresModelManager;
-import de.bluecolored.bluemap.core.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.storage.CompressedInputStream;
 import de.bluecolored.bluemap.core.storage.MetaType;
 import de.bluecolored.bluemap.core.storage.Storage;
@@ -55,7 +55,9 @@ public class BmMap {
     private final Storage storage;
     private final MapSettings mapSettings;
 
+    private final ResourcePack resourcePack;
     private final MapRenderState renderState;
+    private final TextureGallery textureGallery;
 
     private final HiresModelManager hiresModelManager;
     private final LowresModelManager lowresModelManager;
@@ -73,22 +75,19 @@ public class BmMap {
         this.storage = Objects.requireNonNull(storage);
         this.mapSettings = Objects.requireNonNull(settings);
 
-        Objects.requireNonNull(resourcePack);
+        this.resourcePack = Objects.requireNonNull(resourcePack);
 
         this.renderState = new MapRenderState();
+        loadRenderState();
 
-        Optional<CompressedInputStream> rstateData = storage.readMeta(id, MetaType.RENDER_STATE);
-        if (rstateData.isPresent()) {
-            try (InputStream in = rstateData.get().decompress()){
-                this.renderState.load(in);
-            } catch (IOException ex) {
-                Logger.global.logWarning("Failed to load render-state for map '" + getId() + "': " + ex);
-            }
-        }
+        this.textureGallery = loadTextureGallery();
+        this.textureGallery.put(resourcePack);
+        saveTextureGallery();
 
         this.hiresModelManager = new HiresModelManager(
                 storage.tileStorage(id, TileType.HIRES),
-                resourcePack,
+                this.resourcePack,
+                this.textureGallery,
                 settings,
                 new Grid(settings.getHiresTileSize(), 2)
         );
@@ -122,11 +121,46 @@ public class BmMap {
 
     public synchronized void save() {
         lowresModelManager.save();
+        saveRenderState();
+    }
 
+    private void loadRenderState() throws IOException {
+        Optional<CompressedInputStream> rstateData = storage.readMeta(id, MetaType.RENDER_STATE);
+        if (rstateData.isPresent()) {
+            try (InputStream in = rstateData.get().decompress()){
+                this.renderState.load(in);
+            } catch (IOException ex) {
+                Logger.global.logWarning("Failed to load render-state for map '" + getId() + "': " + ex);
+            }
+        }
+    }
+
+    private void saveRenderState() {
         try (OutputStream out = storage.writeMeta(id, MetaType.RENDER_STATE)) {
             this.renderState.save(out);
         } catch (IOException ex){
             Logger.global.logError("Failed to save render-state for map: '" + this.id + "'!", ex);
+        }
+    }
+
+    private TextureGallery loadTextureGallery() throws IOException {
+        TextureGallery gallery = null;
+        Optional<CompressedInputStream> texturesData = storage.readMeta(id, MetaType.TEXTURES);
+        if (texturesData.isPresent()) {
+            try (InputStream in = texturesData.get().decompress()){
+                gallery = TextureGallery.readTexturesFile(in);
+            } catch (IOException ex) {
+                Logger.global.logError("Failed to load textures for map '" + getId() + "'!", ex);
+            }
+        }
+        return gallery != null ? gallery : new TextureGallery();
+    }
+
+    private void saveTextureGallery() {
+        try (OutputStream out = storage.writeMeta(id, MetaType.TEXTURES)) {
+            this.textureGallery.writeTexturesFile(this.resourcePack, out);
+        } catch (IOException ex) {
+            Logger.global.logError("Failed to save textures for map '" + getId() + "'!", ex);
         }
     }
 

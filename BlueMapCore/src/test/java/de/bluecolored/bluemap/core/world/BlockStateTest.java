@@ -38,14 +38,14 @@ public class BlockStateTest {
     @Test
     public void testIdNamespace() {
         BlockState blockState = new BlockState("someblock");
-        assertEquals("minecraft:someblock", blockState.getFullId());
+        assertEquals("minecraft:someblock", blockState.getFormatted());
         assertEquals("minecraft", blockState.getNamespace());
-        assertEquals("someblock", blockState.getId());
+        assertEquals("someblock", blockState.getValue());
 
         blockState = new BlockState("somemod:someblock");
-        assertEquals("somemod:someblock", blockState.getFullId());
+        assertEquals("somemod:someblock", blockState.getFormatted());
         assertEquals("somemod", blockState.getNamespace());
-        assertEquals("someblock", blockState.getId());
+        assertEquals("someblock", blockState.getValue());
     }
 
     @Test
@@ -68,21 +68,21 @@ public class BlockStateTest {
     @Test
     public void testFromString() {
         BlockState blockState = BlockState.fromString("somemod:someblock");
-        assertEquals("somemod:someblock", blockState.getFullId());
+        assertEquals("somemod:someblock", blockState.getFormatted());
         assertEquals("somemod", blockState.getNamespace());
-        assertEquals("someblock", blockState.getId());
+        assertEquals("someblock", blockState.getValue());
         assertTrue(blockState.getProperties().isEmpty());
 
         blockState = BlockState.fromString("somemod:someblock[]");
-        assertEquals("somemod:someblock", blockState.getFullId());
+        assertEquals("somemod:someblock", blockState.getFormatted());
         assertEquals("somemod", blockState.getNamespace());
-        assertEquals("someblock", blockState.getId());
+        assertEquals("someblock", blockState.getValue());
         assertTrue(blockState.getProperties().isEmpty());
 
         blockState = BlockState.fromString("somemod:someblock[testProp=testVal,testProp2=testVal2]");
-        assertEquals("somemod:someblock", blockState.getFullId());
+        assertEquals("somemod:someblock", blockState.getFormatted());
         assertEquals("somemod", blockState.getNamespace());
-        assertEquals("someblock", blockState.getId());
+        assertEquals("someblock", blockState.getValue());
         assertEquals("testVal", blockState.getProperties().get("testProp"));
         assertEquals("testVal2", blockState.getProperties().get("testProp2"));
     }
