@@ -327,9 +327,6 @@ public class BlueMapService {
                 resourcePack.loadResources(defaultResourceFile);
 
                 resourcePack.bake();
-
-                StateDumper.global().dump(Path.of("dump.json"));
-
             } catch (IOException | RuntimeException e) {
                 throw new ConfigurationException("Failed to parse resources!\n" +
                         "Is one of your resource-packs corrupted?", e);

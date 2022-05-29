@@ -8,6 +8,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
+import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.Direction;
 
 import java.io.IOException;
@@ -25,7 +26,17 @@ public class Element {
     private boolean shade = true;
     private EnumMap<Direction, Face> faces = new EnumMap<>(Direction.class);
 
-    private Element(){}
+    @SuppressWarnings("unused")
+    private Element() {}
+
+    private Element(Element copyFrom) {
+        this.from = copyFrom.from;
+        this.to = copyFrom.to;
+        this.rotation = copyFrom.rotation;
+        this.shade = copyFrom.shade;
+
+        copyFrom.faces.forEach((direction, face) -> this.faces.put(direction, face.copy()));
+    }
 
     private void init() {
         faces.forEach((direction, face) -> face.init(direction, this::calculateDefaultUV));
@@ -84,12 +95,22 @@ public class Element {
         return faces;
     }
 
+    public Element copy() {
+        return new Element(this);
+    }
+
     boolean isFullCube() {
         if (!(FULL_BLOCK_MIN.equals(from) && FULL_BLOCK_MAX.equals(to))) return false;
         for (Direction dir : Direction.values()) {
             if (!faces.containsKey(dir)) return false;
         }
         return true;
+    }
+
+    public void optimize(ResourcePack resourcePack) {
+        for (var face : faces.values())  {
+            face.optimize(resourcePack);
+        }
     }
 
     static class Adapter extends AbstractTypeAdapterFactory<Element> {

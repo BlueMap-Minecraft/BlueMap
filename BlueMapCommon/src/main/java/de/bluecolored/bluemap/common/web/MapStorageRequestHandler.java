@@ -117,8 +117,8 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
             // provide meta-data
             Matcher metaMatcher = META_PATTERN.matcher(path);
             if (metaMatcher.matches()) {
-                String mapId = tileMatcher.group(1);
-                String metaFilePath = tileMatcher.group(2);
+                String mapId = metaMatcher.group(1);
+                String metaFilePath = metaMatcher.group(2);
 
                 Storage storage = mapStorageProvider.apply(mapId);
                 if (storage != null) {
@@ -191,7 +191,6 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
 
             int month = Calendar.JANUARY;
             switch (timeString.substring(8, 11)){
-                case "Jan" : month = Calendar.JANUARY;  break;
                 case "Feb" : month = Calendar.FEBRUARY;  break;
                 case "Mar" : month = Calendar.MARCH;  break;
                 case "Apr" : month = Calendar.APRIL;  break;

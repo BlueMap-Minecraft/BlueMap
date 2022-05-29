@@ -6,10 +6,12 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
+import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.resourcepack.texture.Texture;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.function.Function;
 
 @DebugDump
@@ -21,8 +23,15 @@ public class TextureVariable {
 
     private transient volatile boolean isReference, isResolving;
 
+    private TextureVariable(TextureVariable copyFrom) {
+        this.referenceName = copyFrom.referenceName;
+        this.texturePath = copyFrom.texturePath;
+        this.isReference = copyFrom.isReference;
+        this.isResolving = copyFrom.isResolving;
+    }
+
     public TextureVariable(String referenceName) {
-        this.referenceName = referenceName;
+        this.referenceName = Objects.requireNonNull(referenceName);
         this.texturePath = null;
         this.isReference = true;
         this.isResolving = false;
@@ -30,7 +39,7 @@ public class TextureVariable {
 
     public TextureVariable(ResourcePath<Texture> texturePath) {
         this.referenceName = null;
-        this.texturePath = texturePath;
+        this.texturePath = Objects.requireNonNull(texturePath);
         this.isReference = false;
         this.isResolving = false;
     }
@@ -68,6 +77,7 @@ public class TextureVariable {
                 }
 
                 this.isReference = false;
+                this.isResolving = false;
             }
             return this.texturePath;
         }
@@ -79,6 +89,20 @@ public class TextureVariable {
 
     public boolean isReference() {
         return isReference;
+    }
+
+    public TextureVariable copy() {
+        synchronized (TextureVariable.class) {
+            return new TextureVariable(this);
+        }
+    }
+
+    public void optimize(ResourcePack resourcePack) {
+        synchronized (TextureVariable.class) {
+            if (texturePath != null) {
+                texturePath = resourcePack.getTexturePath(texturePath.getFormatted());
+            }
+        }
     }
 
     static class Adapter extends TypeAdapter<TextureVariable> {

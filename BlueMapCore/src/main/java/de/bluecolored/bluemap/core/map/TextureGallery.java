@@ -6,6 +6,7 @@ import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.resourcepack.texture.Texture;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.util.HashMap;
@@ -22,7 +23,8 @@ public class TextureGallery {
         this.nextId = 0;
     }
 
-    public int get(ResourcePath<Texture> textureResourcePath) {
+    public int get(@Nullable ResourcePath<Texture> textureResourcePath) {
+        if (textureResourcePath == null) textureResourcePath = ResourcePack.MISSING_TEXTURE;
         Integer ordinal = ordinalMap.get(textureResourcePath);
         return ordinal != null ? ordinal : 0;
     }

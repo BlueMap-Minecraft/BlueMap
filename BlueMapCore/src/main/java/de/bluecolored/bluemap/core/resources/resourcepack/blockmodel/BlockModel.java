@@ -7,9 +7,7 @@ import de.bluecolored.bluemap.core.resources.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
 @DebugDump
@@ -56,6 +54,18 @@ public class BlockModel {
         return occluding;
     }
 
+    public synchronized void optimize(ResourcePack resourcePack) {
+        for (var variable : this.textures.values()) {
+            variable.optimize(resourcePack);
+        }
+
+        if (this.elements != null) {
+            for (var element : elements) {
+                element.optimize(resourcePack);
+            }
+        }
+    }
+
     public synchronized void applyParent(ResourcePack resourcePack) {
         if (this.parent == null) return;
 
@@ -72,8 +82,17 @@ public class BlockModel {
         if (parent != null) {
             parent.applyParent(resourcePack);
 
-            parent.textures.forEach(this.textures::putIfAbsent);
-            if (this.elements == null) this.elements = parent.elements;
+            parent.textures.forEach(this::applyTextureVariable);
+            if (this.elements == null && parent.elements != null) {
+                this.elements = new ArrayList<>();
+                parent.elements.forEach(element -> this.elements.add(element.copy()));
+            }
+        }
+    }
+
+    private synchronized void applyTextureVariable(String key, TextureVariable value) {
+        if (!this.textures.containsKey(key)) {
+            this.textures.put(key, value.copy());
         }
     }
 

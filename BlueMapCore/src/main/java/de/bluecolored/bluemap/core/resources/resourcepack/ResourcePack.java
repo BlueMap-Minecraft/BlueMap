@@ -41,7 +41,9 @@ public class ResourcePack {
 
     private final Map<String, ResourcePath<BlockState>> blockStatePaths;
     private final Map<ResourcePath<BlockState>, BlockState> blockStates;
+    private final Map<String, ResourcePath<BlockModel>> blockModelPaths;
     private final Map<ResourcePath<BlockModel>, BlockModel> blockModels;
+    private final Map<String, ResourcePath<Texture>> texturePaths;
     private final Map<ResourcePath<Texture>, Texture> textures;
     private final Map<ResourcePath<BufferedImage>, BufferedImage> colormaps;
 
@@ -54,7 +56,9 @@ public class ResourcePack {
     public ResourcePack() {
         this.blockStatePaths = new HashMap<>();
         this.blockStates = new HashMap<>();
+        this.blockModelPaths = new HashMap<>();
         this.blockModels = new HashMap<>();
+        this.texturePaths = new HashMap<>();
         this.textures = new HashMap<>();
         this.colormaps = new HashMap<>();
 
@@ -66,6 +70,11 @@ public class ResourcePack {
                 .executor(BlueMap.THREAD_POOL)
                 .maximumSize(10000)
                 .build(this::loadBlockProperties);
+    }
+
+    @Nullable
+    public ResourcePath<BlockState> getBlockStatePath(String formatted) {
+        return blockStatePaths.get(formatted);
     }
 
     @Nullable
@@ -85,6 +94,11 @@ public class ResourcePack {
     }
 
     @Nullable
+    public ResourcePath<BlockModel> getBlockModelPath(String formatted) {
+        return blockModelPaths.get(formatted);
+    }
+
+    @Nullable
     public BlockModel getBlockModel(ResourcePath<BlockModel> path) {
         BlockModel blockModel = blockModels.get(path);
         return blockModel != null ? blockModel : MISSING_BLOCK_MODEL.getResource(blockModels::get);
@@ -92,6 +106,11 @@ public class ResourcePack {
 
     public Map<ResourcePath<BlockModel>, BlockModel> getBlockModels() {
         return blockModels;
+    }
+
+    @Nullable
+    public ResourcePath<Texture> getTexturePath(String formatted) {
+        return texturePaths.get(formatted);
     }
 
     @Nullable
@@ -279,12 +298,23 @@ public class ResourcePack {
     public synchronized void bake() throws IOException {
         Logger.global.logInfo("Baking resources...");
 
-        for (ResourcePath<BlockState> path : blockStates.keySet()) {
-            blockStatePaths.put(path.getFormatted(), path);
+        // fill path maps
+        blockStates.keySet().forEach(path -> blockStatePaths.put(path.getFormatted(), path));
+        blockModels.keySet().forEach(path -> blockModelPaths.put(path.getFormatted(), path));
+        textures.keySet().forEach(path -> texturePaths.put(path.getFormatted(), path));
+
+        // optimize references
+        for (BlockModel model : blockModels.values()) {
+            model.optimize(this);
         }
 
+        // apply model parents
         for (BlockModel model : blockModels.values()) {
             model.applyParent(this);
+        }
+
+        // calculate model properties
+        for (BlockModel model : blockModels.values()) {
             model.calculateProperties(this);
         }
 

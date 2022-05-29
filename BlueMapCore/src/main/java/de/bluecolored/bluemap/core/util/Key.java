@@ -44,12 +44,13 @@ public class Key {
         return formatted;
     }
 
+    @SuppressWarnings("StringEquality")
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ResourcePath<?> that = (ResourcePath<?>) o;
-        return getFormatted().equals(that.getFormatted());
+        return getFormatted() == that.getFormatted();
     }
 
     @Override
