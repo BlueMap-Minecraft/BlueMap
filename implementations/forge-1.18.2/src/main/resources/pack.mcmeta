@@ -1,0 +1,6 @@
+{
+    "pack": {
+        "description": "BlueMap - A 3d-map of your Minecraft worlds view-able in your browser using three.js (WebGL)",
+        "pack_format": 5
+    }
+}

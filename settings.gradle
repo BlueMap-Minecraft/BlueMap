@@ -27,6 +27,7 @@ include ':spigot'
 include ':forge-1.16.2'
 include ':forge-1.17.1'
 include ':forge-1.18.1'
+include ':forge-1.18.2'
 
 //include ':fabric-1.15.2'
 //include ':fabric-1.16.1'
@@ -50,6 +51,7 @@ project(':spigot').projectDir = "$rootDir/implementations/spigot" as File
 project(':forge-1.16.2').projectDir = "$rootDir/implementations/forge-1.16.2" as File
 project(':forge-1.17.1').projectDir = "$rootDir/implementations/forge-1.17.1" as File
 project(':forge-1.18.1').projectDir = "$rootDir/implementations/forge-1.18.1" as File
+project(':forge-1.18.2').projectDir = "$rootDir/implementations/forge-1.18.2" as File
 
 //project(':fabric-1.15.2').projectDir = "$rootDir/implementations/fabric-1.15.2" as File
 //project(':fabric-1.16.1').projectDir = "$rootDir/implementations/fabric-1.16.1" as File
