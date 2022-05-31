@@ -18,6 +18,8 @@ public class CoreConfig {
 
     private Path data = Path.of("bluemap");
 
+    private boolean scanForModResources = true;
+
     public boolean isAcceptDownload() {
         return acceptDownload;
     }
@@ -37,6 +39,10 @@ public class CoreConfig {
 
     public Path getData() {
         return data;
+    }
+
+    public boolean isScanForModResources() {
+        return scanForModResources;
     }
 
 }

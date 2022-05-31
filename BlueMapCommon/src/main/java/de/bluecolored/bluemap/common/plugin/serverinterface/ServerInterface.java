@@ -61,6 +61,11 @@ public interface ServerInterface {
     Path getConfigFolder();
 
     /**
+     * Returns the folder that contains the mod-jars
+     */
+    Optional<Path> getModsFolder();
+
+    /**
      * Gives the possibility to override the metrics-setting in the config
      */
     default Tristate isMetricsEnabled() {
@@ -78,5 +83,8 @@ public interface ServerInterface {
      */
     Optional<Player> getPlayer(UUID uuid);
 
+    default boolean isPluginConfigEnabled() {
+        return true;
+    }
 
 }

@@ -2,14 +2,17 @@ package de.bluecolored.bluemap.common.config;
 
 import de.bluecolored.bluemap.common.config.storage.StorageConfig;
 import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.util.Tristate;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Locale;
@@ -36,7 +39,7 @@ public class BlueMapConfigs {
         this.coreConfig = loadCoreConfig();
         this.webserverConfig = loadWebserverConfig();
         this.webappConfig = loadWebappConfig();
-        this.pluginConfig = loadPluginConfig();
+        this.pluginConfig = serverInterface.isPluginConfigEnabled() ? loadPluginConfig() : new PluginConfig();
         this.storageConfigs = Collections.unmodifiableMap(loadStorageConfigs());
         this.mapConfigs = Collections.unmodifiableMap(loadMapConfigs());
     }
@@ -75,11 +78,27 @@ public class BlueMapConfigs {
         Path configFolder = configFile.getParent();
 
         if (!Files.exists(configFile)) {
+
+            // determine render-thread preset (very pessimistic, rather let people increase it themselves)
+            Runtime runtime = Runtime.getRuntime();
+            int availableCores = runtime.availableProcessors();
+            long availableMemoryMiB = runtime.maxMemory() / 1024L / 1024L;
+            int presetRenderThreadCount = 1;
+            if (availableCores >= 6 && availableMemoryMiB >= 4096)
+                presetRenderThreadCount = 2;
+            if (availableCores >= 10 && availableMemoryMiB >= 8192)
+                presetRenderThreadCount = 3;
+
             try {
                 Files.createDirectories(configFolder);
                 Files.writeString(
                         configFolder.resolve("core.conf"),
                         configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/core.conf")
+                                .setConditional("metrics", serverInterface.isMetricsEnabled() == Tristate.UNDEFINED)
+                                .setVariable("timestamp", LocalDateTime.now().withNano(0).toString())
+                                .setVariable("version", BlueMap.VERSION)
+                                .setVariable("implementation", "bukkit")
+                                .setVariable("render-thread-count", Integer.toString(presetRenderThreadCount))
                                 .build(),
                         StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                 );

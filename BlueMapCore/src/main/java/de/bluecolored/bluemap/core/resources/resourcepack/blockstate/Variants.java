@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
 import de.bluecolored.bluemap.core.world.BlockState;
 import org.apache.commons.lang3.StringUtils;
@@ -60,7 +61,10 @@ public class Variants {
             in.beginObject();
             while (in.hasNext()) {
                 String name = in.nextName();
-                if (name.equals(JSON_COMMENT)) continue;
+                if (name.equals(JSON_COMMENT)) {
+                    in.skipValue();
+                    continue;
+                }
 
                 BlockStateCondition condition = parseConditionString(name);
                 VariantSet variantSet = gson.fromJson(in, VariantSet.class);
@@ -68,7 +72,7 @@ public class Variants {
 
                 if (variantSet.getCondition() == BlockStateCondition.all()) {
                     result.defaultVariant = variantSet;
-                } else {
+                } else if (variantSet.getCondition() != BlockStateCondition.none()) {
                     result.variants.add(variantSet);
                 }
             }
@@ -79,19 +83,23 @@ public class Variants {
 
         private BlockStateCondition parseConditionString(String conditionString) {
             List<BlockStateCondition> conditions = new ArrayList<>();
+            boolean invalid = false;
             if (!conditionString.isEmpty() && !conditionString.equals("default") && !conditionString.equals("normal")) {
                 String[] conditionSplit = StringUtils.split(conditionString, ',');
                 for (String element : conditionSplit) {
                     String[] keyval = StringUtils.split(element, "=", 2);
-                    if (keyval.length < 2)
-                        throw new IllegalArgumentException("Condition-String '" + conditionString + "' is invalid!");
+                    if (keyval.length < 2) {
+                        Logger.global.logDebug("Failed to parse condition: Condition-String '" + conditionString + "' is invalid!");
+                        invalid = true;
+                        continue;
+                    }
                     conditions.add(BlockStateCondition.property(keyval[0], keyval[1]));
                 }
             }
 
             BlockStateCondition condition;
             if (conditions.isEmpty()) {
-                condition = BlockStateCondition.all();
+                condition = invalid ? BlockStateCondition.none() : BlockStateCondition.all();
             } else if (conditions.size() == 1) {
                 condition = conditions.get(0);
             } else {

@@ -5,6 +5,7 @@ import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
+import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.world.BlockState;
 import org.apache.commons.lang3.StringUtils;
 
@@ -52,8 +53,11 @@ public class Multipart {
                 in.beginObject();
                 while (in.hasNext()) {
                     String key = in.nextName();
-                    if (key.equals("when")) condition = readCondition(in);
-                    if (key.equals("apply")) variantSet = gson.fromJson(in, VariantSet.class);
+                    switch (key) {
+                        case "when": condition = readCondition(in); break;
+                        case "apply": variantSet = gson.fromJson(in, VariantSet.class); break;
+                        default: in.skipValue(); break;
+                    }
                 }
                 in.endObject();
 
@@ -71,7 +75,10 @@ public class Multipart {
             in.beginObject();
             while (in.hasNext()) {
                 String name = in.nextName();
-                if (name.equals(JSON_COMMENT)) continue;
+                if (name.equals(JSON_COMMENT)) {
+                    in.skipValue();
+                    continue;
+                }
 
                 if (name.equals("OR")) {
                     List<BlockStateCondition> orConditions = new ArrayList<>();
@@ -82,8 +89,17 @@ public class Multipart {
                     in.endArray();
                     andConditions.add(
                             BlockStateCondition.or(orConditions.toArray(new BlockStateCondition[0])));
+                } else if (name.equals("AND")) {
+                    List<BlockStateCondition> andArray = new ArrayList<>();
+                    in.beginArray();
+                    while (in.hasNext()) {
+                        andArray.add(readCondition(in));
+                    }
+                    in.endArray();
+                    andConditions.add(
+                            BlockStateCondition.and(andArray.toArray(new BlockStateCondition[0])));
                 } else {
-                    String[] values = StringUtils.split(in.nextString(), '|');
+                    String[] values = StringUtils.split(ResourcesGson.nextStringOrBoolean(in), '|');
                     andConditions.add(BlockStateCondition.property(name, values));
                 }
             }

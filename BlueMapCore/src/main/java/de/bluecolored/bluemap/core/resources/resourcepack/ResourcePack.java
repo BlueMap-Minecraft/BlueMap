@@ -2,6 +2,8 @@ package de.bluecolored.bluemap.core.resources.resourcepack;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -31,13 +33,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 @DebugDump
 public class ResourcePack {
     public static final ResourcePath<BlockState> MISSING_BLOCK_STATE = new ResourcePath<>("bluemap", "missing");
-    public static final ResourcePath<BlockModel> MISSING_BLOCK_MODEL = new ResourcePath<>("bluemap", "missing");
-    public static final ResourcePath<Texture> MISSING_TEXTURE = new ResourcePath<>("bluemap", "missing");
+    public static final ResourcePath<BlockModel> MISSING_BLOCK_MODEL = new ResourcePath<>("bluemap", "block/missing");
+    public static final ResourcePath<Texture> MISSING_TEXTURE = new ResourcePath<>("bluemap", "block/missing");
 
     private final Map<String, ResourcePath<BlockState>> blockStatePaths;
     private final Map<ResourcePath<BlockState>, BlockState> blockStates;
@@ -155,16 +158,36 @@ public class ResourcePack {
     }
 
     public synchronized void loadResources(Path root) throws IOException {
-        Logger.global.logInfo("Loading resources from: " + root);
+        Logger.global.logDebug("Loading resources from: " + root + " ...");
+        loadResourcesInternal(root);
+    }
+
+    private synchronized void loadResourcesInternal(Path root) throws IOException {
 
         if (!Files.isDirectory(root)) {
             try (FileSystem fileSystem = FileSystems.newFileSystem(root, (ClassLoader) null)) {
                 for (Path fsRoot : fileSystem.getRootDirectories()) {
                     if (!Files.isDirectory(fsRoot)) continue;
-                    this.loadResources(fsRoot);
+                    this.loadResourcesInternal(fsRoot);
                 }
+            } catch (Exception ex) {
+                Logger.global.logDebug("Failed to read '" + root + "': " + ex);
             }
             return;
+        }
+
+        // load nested jars from fabric.mod.json if present
+        Path fabricModJson = root.resolve("fabric.mod.json");
+        if (Files.isRegularFile(fabricModJson)) {
+            try (BufferedReader reader = Files.newBufferedReader(fabricModJson)) {
+                 JsonObject rootElement = ResourcesGson.INSTANCE.fromJson(reader, JsonObject.class);
+                 for (JsonElement element : rootElement.getAsJsonArray("jars")) {
+                     Path file = root.resolve(element.getAsJsonObject().get("file").getAsString());
+                     if (Files.exists(file)) loadResourcesInternal(file);
+                 }
+            } catch (Exception ex) {
+                Logger.global.logDebug("Failed to read fabric.mod.json: " + ex);
+            }
         }
 
         try {
@@ -184,12 +207,14 @@ public class ResourcePack {
                                         return ResourcesGson.INSTANCE.fromJson(reader, BlockState.class);
                                     }
                                 }, blockStates));
-                    }),
+                    }, BlueMap.THREAD_POOL),
 
                     // load blockmodels
                     CompletableFuture.runAsync(() -> {
                         list(root.resolve("assets"))
-                                .map(path -> path.resolve("models").resolve("block"))
+                                .map(path -> path.resolve("models"))
+                                .flatMap(ResourcePack::list)
+                                .filter(path -> Pattern.matches("blocks?", path.getFileName().toString()))
                                 .filter(Files::isDirectory)
                                 .flatMap(ResourcePack::walk)
                                 .filter(path -> path.getFileName().toString().endsWith(".json"))
@@ -199,12 +224,14 @@ public class ResourcePack {
                                         return ResourcesGson.INSTANCE.fromJson(reader, BlockModel.class);
                                     }
                                 }, blockModels));
-                    }),
+                    }, BlueMap.THREAD_POOL),
 
                     // load textures
                     CompletableFuture.runAsync(() -> {
                         list(root.resolve("assets"))
-                                .map(path -> path.resolve("textures").resolve("block"))
+                                .map(path -> path.resolve("textures"))
+                                .flatMap(ResourcePack::list)
+                                .filter(path -> Pattern.matches("blocks?", path.getFileName().toString()))
                                 .filter(Files::isDirectory)
                                 .flatMap(ResourcePack::walk)
                                 .filter(path -> path.getFileName().toString().endsWith(".png"))
@@ -215,7 +242,7 @@ public class ResourcePack {
                                         return Texture.from(resourcePath, ImageIO.read(in));
                                     }
                                 }, textures));
-                    }),
+                    }, BlueMap.THREAD_POOL),
 
                     // load colormaps
                     CompletableFuture.runAsync(() -> {
@@ -227,7 +254,7 @@ public class ResourcePack {
                                         return ImageIO.read(in);
                                     }
                                 }, colormaps));
-                    }),
+                    }, BlueMap.THREAD_POOL),
 
                     // load block-color configs
                     CompletableFuture.runAsync(() -> {
@@ -241,7 +268,7 @@ public class ResourcePack {
                                         Logger.global.logDebug("Failed to parse resource-file '" + file + "': " + ex);
                                     }
                                 });
-                    }),
+                    }, BlueMap.THREAD_POOL),
 
                     // load biome configs
                     CompletableFuture.runAsync(() -> {
@@ -269,7 +296,7 @@ public class ResourcePack {
                                             }
                                         })
                                 );
-                    }),
+                    }, BlueMap.THREAD_POOL),
 
                     // load block-properties configs
                     CompletableFuture.runAsync(() -> {
@@ -283,7 +310,7 @@ public class ResourcePack {
                                         Logger.global.logDebug("Failed to parse resource-file '" + file + "': " + ex);
                                     }
                                 });
-                    })
+                    }, BlueMap.THREAD_POOL)
 
             ).join();
 
@@ -296,7 +323,7 @@ public class ResourcePack {
     }
 
     public synchronized void bake() throws IOException {
-        Logger.global.logInfo("Baking resources...");
+        Logger.global.logDebug("Baking resources...");
 
         // fill path maps
         blockStates.keySet().forEach(path -> blockStatePaths.put(path.getFormatted(), path));

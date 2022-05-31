@@ -60,7 +60,10 @@ public class TextureGallery {
             Texture[] textures = ResourcesGson.INSTANCE.fromJson(reader, Texture[].class);
             gallery.nextId = textures.length;
             for (int ordinal = 0; ordinal < textures.length; ordinal++) {
-                gallery.ordinalMap.put(textures[ordinal].getResourcePath(), ordinal);
+                Texture texture = textures[ordinal];
+                if (texture != null) {
+                    gallery.ordinalMap.put(textures[ordinal].getResourcePath(), ordinal);
+                }
             }
         } catch (JsonIOException ex) {
             throw new IOException(ex);

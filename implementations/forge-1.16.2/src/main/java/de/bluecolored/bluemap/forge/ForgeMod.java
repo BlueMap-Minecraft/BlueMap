@@ -164,6 +164,11 @@ public class ForgeMod implements ServerInterface {
         return Path.of("config", "bluemap");
     }
 
+    @Override
+    public Optional<Path> getModsFolder() {
+        return Optional.of(Path.of("mods"));
+    }
+
     @SubscribeEvent
     public void onPlayerJoin(PlayerLoggedInEvent evt) {
         PlayerEntity playerInstance = evt.getPlayer();

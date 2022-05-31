@@ -151,6 +151,11 @@ public class FabricMod implements ModInitializer, ServerInterface {
         return Path.of("config", "bluemap");
     }
 
+    @Override
+    public Optional<Path> getModsFolder() {
+        return Optional.of(Path.of("mods"));
+    }
+
     public void onPlayerJoin(MinecraftServer server, ServerPlayerEntity playerInstance) {
         if (this.serverInstance != server) return;
 

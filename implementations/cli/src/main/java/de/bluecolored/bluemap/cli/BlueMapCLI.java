@@ -240,6 +240,11 @@ public class BlueMapCLI implements ServerInterface {
     }
 
     @Override
+    public Optional<Path> getModsFolder() {
+        return Optional.empty();
+    }
+
+    @Override
     public Collection<Player> getOnlinePlayers() {
         return Collections.emptyList();
     }
@@ -247,6 +252,11 @@ public class BlueMapCLI implements ServerInterface {
     @Override
     public Optional<Player> getPlayer(UUID uuid) {
         return Optional.empty();
+    }
+
+    @Override
+    public boolean isPluginConfigEnabled() {
+        return false;
     }
 
     public static void main(String[] args) {

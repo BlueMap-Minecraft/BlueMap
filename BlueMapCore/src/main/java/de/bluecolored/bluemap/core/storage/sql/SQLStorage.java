@@ -623,7 +623,7 @@ public class SQLStorage extends Storage {
         return lookupFK("bluemap_map_tile_compression", "id", "compression", compression.getTypeId());
     }
 
-    @SuppressWarnings("SameParameterValue")
+    @SuppressWarnings({"SameParameterValue", "SqlResolve"})
     private int lookupFK(String table, String idField, String valueField, String value) throws SQLException, IOException {
         return recoveringConnection(connection -> {
             int key;

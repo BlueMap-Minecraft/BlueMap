@@ -19,6 +19,7 @@ public class DirectionAdapter extends TypeAdapter<Direction>  {
     public Direction read(JsonReader in) throws IOException {
         String name = in.nextString();
         if (name.equalsIgnoreCase("bottom")) return Direction.DOWN;
+        if (name.equalsIgnoreCase("top")) return Direction.UP;
         return Direction.fromString(name);
     }
 

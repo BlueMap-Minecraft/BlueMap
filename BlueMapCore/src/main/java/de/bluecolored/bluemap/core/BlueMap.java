@@ -30,6 +30,7 @@ import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 
 import java.io.IOException;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinWorkerThread;
 
 public class BlueMap {
 
@@ -60,7 +61,12 @@ public class BlueMap {
 
     public static final ForkJoinPool THREAD_POOL = new ForkJoinPool(
             Runtime.getRuntime().availableProcessors(),
-            ForkJoinPool.defaultForkJoinWorkerThreadFactory,
+            pool -> {
+                ForkJoinWorkerThread thread = ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
+                thread.setContextClassLoader(BlueMap.class.getClassLoader()); // use plugin-intended classloader
+                thread.setName("BlueMap-FJ-" + thread.getPoolIndex());
+                return thread;
+            },
             (thread, ex) -> {
                 if (ex instanceof ClassNotFoundException && ex.getMessage().contains("RemovalCause")) {
                     Logger.global.noFloodWarning("RemovalCauseError", ex.getMessage());

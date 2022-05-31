@@ -199,6 +199,11 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
         return getDataFolder().toPath();
     }
 
+    @Override
+    public Optional<Path> getModsFolder() {
+        return Optional.of(Path.of("mods")); // in case this is a Bukkit/Forge hybrid
+    }
+
     public Plugin getPlugin() {
         return pluginInstance;
     }

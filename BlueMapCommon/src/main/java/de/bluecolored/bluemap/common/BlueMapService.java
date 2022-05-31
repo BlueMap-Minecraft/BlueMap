@@ -176,7 +176,7 @@ public class BlueMapService {
             String name = mapConfig.getName();
 
             Path worldFolder = mapConfig.getWorld();
-            if (!Files.exists(worldFolder) || !Files.isDirectory(worldFolder)) {
+            if (!Files.isDirectory(worldFolder)) {
                 throw new ConfigurationException("Failed to load map '" + id + "': \n" +
                         "'" + worldFolder.toAbsolutePath().normalize() + "' does not exist or is no directory!\n" +
                         "Check if the 'world' setting in the config-file for that map is correct, or remove the entire config-file if you don't want that map.");
@@ -323,10 +323,48 @@ public class BlueMapService {
                             });
                 }
 
+                if (configs.getCoreConfig().isScanForModResources()) {
+
+                    // load from mods folder
+                    Path modsFolder = serverInterface.getModsFolder().orElse(null);
+                    if (modsFolder != null && Files.isDirectory(modsFolder)) {
+                        try (Stream<Path> resourcepackFiles = Files.list(modsFolder)) {
+                            resourcepackFiles
+                                    .filter(Files::isRegularFile)
+                                    .filter(file -> file.getFileName().toString().endsWith(".jar"))
+                                    .forEach(resourcepackFile -> {
+                                        try {
+                                            resourcePack.loadResources(resourcepackFile);
+                                        } catch (IOException e) {
+                                            throw new CompletionException(e);
+                                        }
+                                    });
+                        }
+                    }
+
+                    // load from datapacks
+                    for (Path worldFolder : getWorldFolders()) {
+                        Path datapacksFolder = worldFolder.resolve("datapacks");
+                        if (!Files.isDirectory(datapacksFolder)) continue;
+
+                        try (Stream<Path> resourcepackFiles = Files.list(worldFolder.resolve("datapacks"))) {
+                            resourcepackFiles
+                                    .forEach(resourcepackFile -> {
+                                        try {
+                                            resourcePack.loadResources(resourcepackFile);
+                                        } catch (IOException e) {
+                                            throw new CompletionException(e);
+                                        }
+                                    });
+                        }
+                    }
+
+                }
+
                 resourcePack.loadResources(resourceExtensionsFile);
                 resourcePack.loadResources(defaultResourceFile);
-
                 resourcePack.bake();
+                Logger.global.logInfo("Resources loaded.");
             } catch (IOException | RuntimeException e) {
                 throw new ConfigurationException("Failed to parse resources!\n" +
                         "Is one of your resource-packs corrupted?", e);
@@ -335,6 +373,17 @@ public class BlueMapService {
         }
 
         return resourcePack;
+    }
+
+    private Collection<Path> getWorldFolders() {
+        Set<Path> folders = new HashSet<>();
+        for (MapConfig mapConfig : configs.getMapConfigs().values()) {
+            Path folder = mapConfig.getWorld().toAbsolutePath().normalize();
+            if (Files.isDirectory(folder)) {
+                folders.add(folder);
+            }
+        }
+        return folders;
     }
 
     public BlueMapConfigs getConfigs() {

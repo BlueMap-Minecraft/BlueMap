@@ -236,6 +236,11 @@ public class SpongePlugin implements ServerInterface {
     }
 
     @Override
+    public Optional<Path> getModsFolder() {
+        return Optional.of(Path.of("mods"));
+    }
+
+    @Override
     public Collection<Player> getOnlinePlayers() {
         return onlinePlayerMap.values();
     }

@@ -7,11 +7,14 @@ import com.flowpowered.math.vector.Vector4f;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 import de.bluecolored.bluemap.core.resources.resourcepack.blockmodel.Face;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.util.math.Axis;
 import de.bluecolored.bluemap.core.util.math.Color;
 
+import java.io.IOException;
 import java.util.EnumMap;
 
 public class ResourcesGson {
@@ -35,6 +38,11 @@ public class ResourcesGson {
                 )
                 .create();
 
+    }
+
+    public static String nextStringOrBoolean(JsonReader in) throws IOException {
+        if (in.peek() == JsonToken.BOOLEAN) return Boolean.toString(in.nextBoolean());
+        return in.nextString();
     }
 
 }

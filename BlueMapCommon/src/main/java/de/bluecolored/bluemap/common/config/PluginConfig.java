@@ -3,10 +3,6 @@ package de.bluecolored.bluemap.common.config;
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
