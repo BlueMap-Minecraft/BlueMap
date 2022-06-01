@@ -63,17 +63,12 @@ public class BlueMap {
             Runtime.getRuntime().availableProcessors(),
             pool -> {
                 ForkJoinWorkerThread thread = ForkJoinPool.defaultForkJoinWorkerThreadFactory.newThread(pool);
-                thread.setContextClassLoader(BlueMap.class.getClassLoader()); // use plugin-intended classloader
-                thread.setName("BlueMap-FJ-" + thread.getPoolIndex());
+                // use current classloader, this fixes ClassLoading issues with forge
+                thread.setContextClassLoader(BlueMap.class.getClassLoader());
+                thread.setName("BlueMap-FJP-" + thread.getPoolIndex());
                 return thread;
             },
-            (thread, ex) -> {
-                if (ex instanceof ClassNotFoundException && ex.getMessage().contains("RemovalCause")) {
-                    Logger.global.noFloodWarning("RemovalCauseError", ex.getMessage());
-                } else {
-                    Logger.global.logError("Something went wrong!", ex);
-                }
-            },
+            null,
             false
     );
 
