@@ -8,6 +8,7 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Required;
 
 import java.nio.file.Path;
+import java.util.Optional;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
 @DebugDump
@@ -18,6 +19,8 @@ public class MapConfig implements MapSettings {
 
     @Required
     private Path world = Path.of("world");
+
+    private int sorting = 0;
 
     private Vector2i startPos = null;
 
@@ -60,8 +63,12 @@ public class MapConfig implements MapSettings {
         return world;
     }
 
-    public Vector2i getStartPos() {
-        return startPos;
+    public int getSorting() {
+        return sorting;
+    }
+
+    public Optional<Vector2i> getStartPos() {
+        return Optional.of(startPos);
     }
 
     public String getSkyColor() {

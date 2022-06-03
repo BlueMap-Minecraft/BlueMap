@@ -24,9 +24,18 @@
  */
 package de.bluecolored.bluemap.core.map;
 
+import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 
+import java.util.Optional;
+
 public interface MapSettings extends RenderSettings {
+
+    int getSorting();
+
+    Optional<Vector2i> getStartPos();
+
+    String getSkyColor();
 
     int getHiresTileSize();
 

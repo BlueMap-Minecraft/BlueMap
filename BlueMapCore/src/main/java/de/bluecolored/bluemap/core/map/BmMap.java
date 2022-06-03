@@ -30,6 +30,7 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.map.hires.HiresTileMeta;
 import de.bluecolored.bluemap.core.map.lowres.LowresModelManager;
+import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.storage.CompressedInputStream;
 import de.bluecolored.bluemap.core.storage.MetaType;
@@ -38,9 +39,7 @@ import de.bluecolored.bluemap.core.storage.TileType;
 import de.bluecolored.bluemap.core.world.Grid;
 import de.bluecolored.bluemap.core.world.World;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -83,6 +82,8 @@ public class BmMap {
         this.textureGallery = loadTextureGallery();
         this.textureGallery.put(resourcePack);
         saveTextureGallery();
+
+        saveMapSettings();
 
         this.hiresModelManager = new HiresModelManager(
                 storage.tileStorage(id, TileType.HIRES),
@@ -161,6 +162,17 @@ public class BmMap {
             this.textureGallery.writeTexturesFile(this.resourcePack, out);
         } catch (IOException ex) {
             Logger.global.logError("Failed to save textures for map '" + getId() + "'!", ex);
+        }
+    }
+
+    private void saveMapSettings() {
+        try (
+                OutputStream out = storage.writeMeta(id, MetaType.SETTINGS);
+                Writer writer = new OutputStreamWriter(out)
+        ) {
+            ResourcesGson.INSTANCE.toJson(this, writer);
+        } catch (Exception ex) {
+            Logger.global.logError("Failed to save settings for map '" + getId() + "'!", ex);
         }
     }
 
