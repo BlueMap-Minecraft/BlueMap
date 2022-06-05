@@ -117,7 +117,7 @@ public class MapUpdateTask extends CombinedRenderTask<WorldRegionRenderTask> {
 
         List<Vector2i> regions = new ArrayList<>();
         Vector2i halfCell = regionGrid.getGridSize().div(2);
-        int increasedRadiusSquared = (int) Math.pow(radius + Math.ceil(halfCell.length()), 2);
+        long increasedRadiusSquared = (long) Math.pow(radius + Math.ceil(halfCell.length()), 2);
 
         for (Vector2i region : world.listRegions()) {
             if (!regionFilter.test(region)) continue;
@@ -125,7 +125,7 @@ public class MapUpdateTask extends CombinedRenderTask<WorldRegionRenderTask> {
             Vector2i min = regionGrid.getCellMin(region);
             Vector2i regionCenter = min.add(halfCell);
 
-            if (regionCenter.distanceSquared(center) <= increasedRadiusSquared)
+            if (regionCenter.toLong().distanceSquared(center.toLong()) <= increasedRadiusSquared)
                 regions.add(region);
         }
 
