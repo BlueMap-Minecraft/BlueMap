@@ -24,16 +24,18 @@
  */
 package de.bluecolored.bluemap.cli;
 
+import de.bluecolored.bluemap.common.BlueMapConfigProvider;
 import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.MissingResourcesException;
+import de.bluecolored.bluemap.common.config.BlueMapConfigs;
 import de.bluecolored.bluemap.common.config.ConfigurationException;
 import de.bluecolored.bluemap.common.config.MapConfig;
 import de.bluecolored.bluemap.common.config.WebserverConfig;
 import de.bluecolored.bluemap.common.plugin.RegionFileWatchService;
-import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
-import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
-import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
-import de.bluecolored.bluemap.common.plugin.serverinterface.ServerWorld;
+import de.bluecolored.bluemap.common.serverinterface.Player;
+import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
+import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.rendermanager.RenderTask;
@@ -69,7 +71,6 @@ public class BlueMapCLI implements ServerInterface {
         if (blueMap.getConfigs().getCoreConfig().isMetrics()) Metrics.sendReportAsync("cli");
 
         blueMap.createOrUpdateWebApp(forceGenerateWebapp);
-        blueMap.updateWebAppSettings();
 
         //try load resources
         blueMap.getResourcePack();
@@ -254,11 +255,6 @@ public class BlueMapCLI implements ServerInterface {
         return Optional.empty();
     }
 
-    @Override
-    public boolean isPluginConfigEnabled() {
-        return false;
-    }
-
     public static void main(String[] args) {
         CommandLineParser parser = new DefaultParser();
 
@@ -280,7 +276,7 @@ public class BlueMapCLI implements ServerInterface {
             }
 
             //config folder
-            cli.configFolder = Path.of(".");
+            cli.configFolder = Path.of("config");
             if (cmd.hasOption("c")) {
                 cli.configFolder = Path.of(cmd.getOptionValue("c"));
                 Files.createDirectories(cli.configFolder);
@@ -298,7 +294,8 @@ public class BlueMapCLI implements ServerInterface {
                 }
             }
 
-            blueMap = new BlueMapService(cli);
+            BlueMapConfigs configs = new BlueMapConfigs(cli, Path.of("data"), Path.of("web"), false);
+            blueMap = new BlueMapService(cli, configs);
             boolean noActions = true;
 
             if (cmd.hasOption("w")) {
@@ -322,15 +319,13 @@ public class BlueMapCLI implements ServerInterface {
                 }
                 if (cmd.hasOption("s")) {
                     noActions = false;
-                    blueMap.updateWebAppSettings();
+                    blueMap.createOrUpdateWebApp(false);
                 }
             }
 
             // if nothing has been defined to do
             if (noActions) {
-                if (!Files.exists(blueMap.getConfigs().getConfigManager().findConfigPath(Path.of("core")))) {
-                    Logger.global.logInfo("Generating default config files for you, here: " + cli.configFolder.toAbsolutePath().normalize() + "\n");
-                }
+                Logger.global.logInfo("Generated default config files for you, here: " + cli.configFolder.toAbsolutePath().normalize() + "\n");
 
                 //create resourcepacks folder
                 Files.createDirectories(cli.configFolder.resolve( "resourcepacks"));
@@ -343,7 +338,12 @@ public class BlueMapCLI implements ServerInterface {
         } catch (MissingResourcesException e) {
             Logger.global.logWarning("BlueMap is missing important resources!");
             Logger.global.logWarning("You must accept the required file download in order for BlueMap to work!");
-            if (blueMap != null) Logger.global.logWarning("Please check: " + blueMap.getConfigs().getConfigManager().findConfigPath(Path.of("core")).toAbsolutePath().normalize());
+            if (blueMap != null) {
+                BlueMapConfigProvider configProvider = blueMap.getConfigs();
+                if (configProvider instanceof BlueMapConfigs) {
+                    Logger.global.logWarning("Please check: " + ((BlueMapConfigs) configProvider).getConfigManager().findConfigPath(Path.of("core")).toAbsolutePath().normalize());
+                }
+            }
             System.exit(2);
         } catch (ParseException e) {
             Logger.global.logError("Failed to parse provided arguments!", e);
@@ -402,8 +402,8 @@ public class BlueMapCLI implements ServerInterface {
         options.addOption("w", "webserver", false, "Starts the web-server, configured in the 'webserver.conf' file");
         options.addOption("b", "verbose", false, "Causes the web-server to log requests to the console");
 
-        options.addOption("g", "generate-webapp", false, "Generates the files for the web-app to the folder, configured in the 'render.conf' file (this is done automatically when rendering if the 'index.html' file in the webroot can't be found)");
-        options.addOption("s", "generate-websettings", false, "Generates the settings for the web-app, using the settings from the 'render.conf' file (this is done automatically when rendering)");
+        options.addOption("g", "generate-webapp", false, "Generates the files for the web-app to the folder configured in the 'webapp.conf' file");
+        options.addOption("s", "generate-websettings", false, "Updates the settings.json for the web-app");
 
         options.addOption("r", "render", false, "Renders the maps configured in the 'render.conf' file");
         options.addOption("f", "force-render", false, "Forces rendering everything, instead of only rendering chunks that have been modified since the last render");
@@ -443,8 +443,8 @@ public class BlueMapCLI implements ServerInterface {
         footer.append("Render the configured maps\n\n");
         footer.append(command).append(" -w\n");
         footer.append("Start only the webserver without doing anything else\n\n");
-        footer.append(command).append(" -gs\n");
-        footer.append("Generate the web-app and settings without starting a render\n\n");
+        footer.append(command).append(" -ru\n");
+        footer.append("Render the configured maps and then keeps watching the world-files and updates the map once something changed.\n\n");
 
         formatter.printHelp(command + " [options]", "\nOptions:", createOptions(), "\n" + footer);
     }

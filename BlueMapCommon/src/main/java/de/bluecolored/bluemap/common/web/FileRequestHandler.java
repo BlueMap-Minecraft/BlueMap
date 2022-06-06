@@ -70,7 +70,6 @@ public class FileRequestHandler implements HttpRequestHandler {
         return response;
     }
 
-    @SuppressWarnings ("resource")
     private HttpResponse generateResponse(HttpRequest request) {
         String path = request.getPath();
 
@@ -101,7 +100,7 @@ public class FileRequestHandler implements HttpRequestHandler {
 
         // default to index.html
         if (!file.exists() || file.isDirectory()){
-            file = new File(filePath.toString() + "/index.html");
+            file = new File(filePath + "/index.html");
         }
 
         // send empty tile-file if tile not exists
@@ -172,7 +171,6 @@ public class FileRequestHandler implements HttpRequestHandler {
 
             int month = Calendar.JANUARY;
             switch (timeString.substring(8, 11)){
-                case "Jan" : month = Calendar.JANUARY;  break;
                 case "Feb" : month = Calendar.FEBRUARY;  break;
                 case "Mar" : month = Calendar.MARCH;  break;
                 case "Apr" : month = Calendar.APRIL;  break;

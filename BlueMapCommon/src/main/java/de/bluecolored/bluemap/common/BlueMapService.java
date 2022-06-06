@@ -24,13 +24,12 @@
  */
 package de.bluecolored.bluemap.common;
 
-import de.bluecolored.bluemap.common.config.BlueMapConfigs;
 import de.bluecolored.bluemap.common.config.ConfigurationException;
 import de.bluecolored.bluemap.common.config.MapConfig;
 import de.bluecolored.bluemap.common.config.storage.StorageConfig;
 import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
-import de.bluecolored.bluemap.common.plugin.serverinterface.ServerWorld;
+import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.debug.StateDumper;
@@ -58,7 +57,7 @@ import java.util.stream.Stream;
 @DebugDump
 public class BlueMapService {
     private final ServerInterface serverInterface;
-    private final BlueMapConfigs configs;
+    private final BlueMapConfigProvider configs;
 
     private final Map<Path, String> worldIds;
     private final Map<String, Storage> storages;
@@ -68,9 +67,9 @@ public class BlueMapService {
 
     private ResourcePack resourcePack;
 
-    public BlueMapService(ServerInterface serverInterface) throws ConfigurationException {
+    public BlueMapService(ServerInterface serverInterface, BlueMapConfigProvider configProvider) {
         this.serverInterface = serverInterface;
-        this.configs = new BlueMapConfigs(serverInterface);
+        this.configs = configProvider;
 
         this.worldIds = new HashMap<>();
         this.storages = new HashMap<>();
@@ -122,35 +121,27 @@ public class BlueMapService {
     }
 
     public synchronized void createOrUpdateWebApp(boolean force) throws ConfigurationException {
-        WebFilesManager webFilesManager = new WebFilesManager(configs.getWebappConfig().getWebroot());
-        if (force || webFilesManager.needsUpdate()) {
-            try {
-                webFilesManager.updateFiles();
-            } catch (IOException ex) {
-                throw new ConfigurationException("Failed to update web-app files!", ex);
-            }
-        }
-    }
-
-    public synchronized void updateWebAppSettings() throws ConfigurationException, InterruptedException {
         try {
-            WebSettings webSettings = new WebSettings(configs.getWebappConfig().getWebroot().resolve("data").resolve("settings.json"));
+            WebFilesManager webFilesManager = new WebFilesManager(configs.getWebappConfig().getWebroot());
 
-            webSettings.set(configs.getWebappConfig().isUseCookies(), "useCookies");
-            webSettings.set(configs.getWebappConfig().isEnableFreeFlight(), "freeFlightEnabled");
-            webSettings.setAllMapsEnabled(false);
-            for (BmMap map : getMaps().values()) {
-                webSettings.setMapEnabled(true, map.getId());
-                webSettings.setFrom(map);
+            // update web-app files
+            if (force || webFilesManager.filesNeedUpdate()) {
+                webFilesManager.updateFiles();
             }
-            int ordinal = 0;
-            for (var entry : configs.getMapConfigs().entrySet()) {
-                webSettings.setOrdinal(ordinal++, entry.getKey());
-                webSettings.setFrom(entry.getValue(), entry.getKey());
+
+            // update settings.json
+            if (!configs.getWebappConfig().isUpdateSettingsFile()) {
+                webFilesManager.loadSettings();
+            } else {
+                webFilesManager.setFrom(configs.getWebappConfig());
             }
-            webSettings.save();
+            for (String mapId : configs.getMapConfigs().keySet()) {
+                webFilesManager.addMap(mapId);
+            }
+            webFilesManager.saveSettings();
+
         } catch (IOException ex) {
-            throw new ConfigurationException("Failed to update web-app settings!", ex);
+            throw new ConfigurationException("Failed to update web-app files!", ex);
         }
     }
 
@@ -385,7 +376,7 @@ public class BlueMapService {
         return folders;
     }
 
-    public BlueMapConfigs getConfigs() {
+    public BlueMapConfigProvider getConfigs() {
         return configs;
     }
 

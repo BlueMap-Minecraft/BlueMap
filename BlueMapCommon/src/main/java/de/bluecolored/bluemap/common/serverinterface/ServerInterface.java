@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.plugin.serverinterface;
+package de.bluecolored.bluemap.common.serverinterface;
 
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.util.Tristate;
@@ -82,9 +82,5 @@ public interface ServerInterface {
      * this method is only guaranteed to return a {@link Player} if the player is currently online.
      */
     Optional<Player> getPlayer(UUID uuid);
-
-    default boolean isPluginConfigEnabled() {
-        return true;
-    }
 
 }

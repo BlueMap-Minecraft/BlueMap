@@ -24,7 +24,7 @@
  */
 package de.bluecolored.bluemap.bukkit;
 
-import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
+import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;

@@ -24,8 +24,8 @@
  */
 package de.bluecolored.bluemap.fabric;
 
-import de.bluecolored.bluemap.common.plugin.serverinterface.Dimension;
-import de.bluecolored.bluemap.common.plugin.serverinterface.ServerWorld;
+import de.bluecolored.bluemap.common.serverinterface.Dimension;
+import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.WorldSavePath;
 import net.minecraft.world.World;

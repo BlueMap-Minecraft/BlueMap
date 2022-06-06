@@ -24,27 +24,68 @@
  */
 package de.bluecolored.bluemap.common;
 
+import de.bluecolored.bluemap.common.config.WebappConfig;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import org.apache.commons.io.FileUtils;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Enumeration;
+import java.nio.file.StandardOpenOption;
+import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
 public class WebFilesManager {
 
     private final Path webRoot;
+    private Settings settings;
 
     public WebFilesManager(Path webRoot) {
         this.webRoot = webRoot;
+        this.settings = new Settings();
     }
 
-    public boolean needsUpdate() {
+    public Path getSettingsFile() {
+        return webRoot.resolve("data").resolve("settings.json");
+    }
+
+    public void loadSettings() throws IOException {
+        try (BufferedReader reader = Files.newBufferedReader(getSettingsFile())) {
+            this.settings = ResourcesGson.INSTANCE.fromJson(reader, Settings.class);
+        }
+    }
+
+    public void saveSettings() throws IOException {
+        Files.createDirectories(getSettingsFile().getParent());
+        try (BufferedWriter writer = Files.newBufferedWriter(getSettingsFile(),
+                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+            ResourcesGson.INSTANCE.toJson(this.settings, writer);
+        }
+    }
+
+    public void resetSettings() {
+        this.settings = new Settings();
+    }
+
+    public void addMap(String mapId) {
+        this.settings.maps.add(mapId);
+    }
+
+    public void removeMap(String mapId) {
+        this.settings.maps.remove(mapId);
+    }
+
+    public void setFrom(WebappConfig webappConfig) {
+        this.settings.setFrom(webappConfig);
+    }
+
+    public boolean filesNeedUpdate() {
         return !Files.exists(webRoot.resolve("index.html"));
     }
 
@@ -75,6 +116,44 @@ public class WebFilesManager {
                 Logger.global.logWarning("Failed to delete file: " + tempFile);
             }
         }
+    }
+
+    @SuppressWarnings("all")
+    private static class Settings {
+
+        private boolean useCookies = true;
+
+        private boolean enableFreeFlight = true;
+
+        private String startLocation = null;
+
+        private float resolutionDefault = 1;
+
+        private int hiresSliderMax = 500;
+        private int hiresSliderDefault = 200;
+        private int hiresSliderMin = 50;
+
+        private int lowresSliderMax = 10000;
+        private int lowresSliderDefault = 2000;
+        private int lowresSliderMin = 500;
+
+        private Set<String> maps = new HashSet<>();
+
+        public void setFrom(WebappConfig config) {
+            this.useCookies = config.isUseCookies();
+            this.enableFreeFlight = config.isEnableFreeFlight();
+            this.startLocation = config.getStartLocation().orElse(null);
+            this.resolutionDefault = config.getResolutionDefault();
+            
+            this.hiresSliderMax = config.getHiresSliderMax();
+            this.hiresSliderDefault = config.getLowresSliderDefault();
+            this.hiresSliderMin = config.getHiresSliderMin();
+            
+            this.lowresSliderMax = config.getLowresSliderMax();
+            this.lowresSliderDefault = config.getLowresSliderDefault();
+            this.lowresSliderMin = config.getLowresSliderMin();
+        }
+        
     }
 
 }

@@ -24,10 +24,9 @@
  */
 package de.bluecolored.bluemap.sponge;
 
-import de.bluecolored.bluemap.common.plugin.serverinterface.Dimension;
-import de.bluecolored.bluemap.common.plugin.serverinterface.ServerWorld;
+import de.bluecolored.bluemap.common.serverinterface.Dimension;
+import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
-import org.spongepowered.api.world.WorldType;
 import org.spongepowered.api.world.WorldTypes;
 
 import java.io.IOException;

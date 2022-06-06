@@ -22,33 +22,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.plugin.serverinterface;
+package de.bluecolored.bluemap.common.serverinterface;
 
-import java.util.Optional;
+public enum Gamemode {
 
-import com.flowpowered.math.vector.Vector3d;
+    SURVIVAL ("survival"),
+    CREATIVE ("creative"),
+    ADVENTURE ("adventure"),
+    SPECTATOR ("spectator");
 
-import de.bluecolored.bluemap.common.plugin.text.Text;
-import de.bluecolored.bluemap.core.world.World;
+    private final String id;
 
-public interface CommandSource {
+    Gamemode(String id){
+        this.id = id;
+    }
 
-    void sendMessage(Text text);
+    public String getId() {
+        return id;
+    }
 
-    default void sendMessages(Iterable<Text> textLines) {
-        for (Text text : textLines) {
-            sendMessage(text);
+    public static Gamemode getById(String id) {
+        if (id == null) throw new NullPointerException("id cannot be null");
+
+        for (Gamemode gamemode : values()) {
+            if (gamemode.id.equals(id)) return gamemode;
         }
-    }
 
-    boolean hasPermission(String permission);
-
-    default Optional<World> getWorld() {
-        return Optional.empty();
-    }
-
-    default Optional<Vector3d> getPosition() {
-        return Optional.empty();
+        throw new IllegalArgumentException("There is no Gamemode with id: '" + id + "'");
     }
 
 }

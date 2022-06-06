@@ -24,13 +24,14 @@
  */
 package de.bluecolored.bluemap.common.plugin;
 
+import de.bluecolored.bluemap.common.BlueMapConfigProvider;
 import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.InterruptableReentrantLock;
 import de.bluecolored.bluemap.common.MissingResourcesException;
 import de.bluecolored.bluemap.common.config.*;
 import de.bluecolored.bluemap.common.live.LiveAPIRequestHandler;
-import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
-import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
+import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.common.plugin.skins.PlayerSkinUpdater;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
@@ -100,7 +101,7 @@ public class Plugin implements ServerEventListener {
                 unload(); //ensure nothing is left running (from a failed load or something)
 
                 //load configs
-                blueMap = new BlueMapService(serverInterface);
+                blueMap = new BlueMapService(serverInterface, new BlueMapConfigs(serverInterface));
                 CoreConfig coreConfig = getConfigs().getCoreConfig();
                 WebserverConfig webserverConfig = getConfigs().getWebserverConfig();
                 WebappConfig webappConfig = getConfigs().getWebappConfig();
@@ -123,7 +124,12 @@ public class Plugin implements ServerEventListener {
                 } catch (MissingResourcesException ex) {
                     Logger.global.logWarning("BlueMap is missing important resources!");
                     Logger.global.logWarning("You must accept the required file download in order for BlueMap to work!");
-                    Logger.global.logWarning("Please check: " + blueMap.getConfigs().getConfigManager().findConfigPath(Path.of("core")).toAbsolutePath().normalize());
+
+                    BlueMapConfigProvider configProvider = blueMap.getConfigs();
+                    if (configProvider instanceof BlueMapConfigs) {
+                        Logger.global.logWarning("Please check: " + ((BlueMapConfigs) configProvider).getConfigManager().findConfigPath(Path.of("core")).toAbsolutePath().normalize());
+                    }
+
                     Logger.global.logInfo("If you have changed the config you can simply reload the plugin using: /bluemap reload");
 
                     unload();
@@ -193,7 +199,6 @@ public class Plugin implements ServerEventListener {
 
                 //update webapp and settings
                 blueMap.createOrUpdateWebApp(false);
-                blueMap.updateWebAppSettings();
 
                 //start skin updater
                 if (pluginConfig.isLivePlayerMarkers()) {
@@ -428,7 +433,7 @@ public class Plugin implements ServerEventListener {
         return blueMap;
     }
 
-    public BlueMapConfigs getConfigs() {
+    public BlueMapConfigProvider getConfigs() {
         return blueMap.getConfigs();
     }
 

@@ -24,8 +24,8 @@
  */
 package de.bluecolored.bluemap.bukkit;
 
-import de.bluecolored.bluemap.common.plugin.serverinterface.Dimension;
-import de.bluecolored.bluemap.common.plugin.serverinterface.ServerWorld;
+import de.bluecolored.bluemap.common.serverinterface.Dimension;
+import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 

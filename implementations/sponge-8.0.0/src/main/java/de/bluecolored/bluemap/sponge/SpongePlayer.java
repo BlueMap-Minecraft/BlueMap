@@ -25,8 +25,8 @@
 package de.bluecolored.bluemap.sponge;
 
 import com.flowpowered.math.vector.Vector3d;
-import de.bluecolored.bluemap.common.plugin.serverinterface.Gamemode;
-import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
+import de.bluecolored.bluemap.common.serverinterface.Gamemode;
+import de.bluecolored.bluemap.common.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.Keys;
@@ -58,6 +58,7 @@ public class SpongePlayer implements Player {
     private boolean online;
     private boolean sneaking;
     private boolean invisible;
+    private boolean vanished;
     private Gamemode gamemode;
 
     public SpongePlayer(UUID playerUUID) {
@@ -101,6 +102,11 @@ public class SpongePlayer implements Player {
     }
 
     @Override
+    public boolean isVanished() {
+        return vanished;
+    }
+
+    @Override
     public Gamemode getGamemode() {
         return this.gamemode;
     }
@@ -118,17 +124,16 @@ public class SpongePlayer implements Player {
         this.gamemode = GAMEMODE_MAP.get(player.get(Keys.GAME_MODE).orElse(GameModes.NOT_SET.get()));
         if (this.gamemode == null) this.gamemode = Gamemode.SURVIVAL;
 
-        boolean invis = player.get(Keys.VANISH_STATE).orElse(VanishState.unvanished()).invisible();
-        if (!invis && player.get(Keys.IS_INVISIBLE).orElse(false)) invis = true;
-        if (!invis) {
-            Optional<List<PotionEffect>> effects = player.get(Keys.POTION_EFFECTS);
-            if (effects.isPresent()) {
-                for (PotionEffect effect : effects.get()) {
-                    if (effect.type().equals(PotionEffectTypes.INVISIBILITY.get()) && effect.duration().ticks() > 0) invis = true;
-                }
+        boolean invis = false;
+        Optional<List<PotionEffect>> effects = player.get(Keys.POTION_EFFECTS);
+        if (effects.isPresent()) {
+            for (PotionEffect effect : effects.get()) {
+                if (effect.type().equals(PotionEffectTypes.INVISIBILITY.get()) && effect.duration().ticks() > 0) invis = true;
             }
         }
         this.invisible = invis;
+
+        this.vanished = player.get(Keys.VANISH_STATE).orElse(VanishState.unvanished()).invisible();
 
         this.name = Text.of(player.name());
         this.online = player.isOnline();

@@ -26,8 +26,8 @@ package de.bluecolored.bluemap.common.live;
 
 import com.google.gson.stream.JsonWriter;
 import de.bluecolored.bluemap.common.config.PluginConfig;
-import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
-import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.common.serverinterface.Player;
+import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.common.webserver.HttpRequest;
 import de.bluecolored.bluemap.common.webserver.HttpRequestHandler;
 import de.bluecolored.bluemap.common.webserver.HttpResponse;
@@ -102,6 +102,7 @@ public class LiveAPIRequestHandler implements HttpRequestHandler {
                 if (!player.isOnline()) continue;
 
                 if (config.isHideInvisible() && player.isInvisible()) continue;
+                if (config.isHideVanished() && player.isVanished()) continue;
                 if (config.isHideSneaking() && player.isSneaking()) continue;
                 if (config.getHiddenGameModes().contains(player.getGamemode().getId())) continue;
 

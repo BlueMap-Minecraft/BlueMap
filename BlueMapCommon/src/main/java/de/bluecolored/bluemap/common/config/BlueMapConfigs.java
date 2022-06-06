@@ -1,7 +1,8 @@
 package de.bluecolored.bluemap.common.config;
 
+import de.bluecolored.bluemap.common.BlueMapConfigProvider;
 import de.bluecolored.bluemap.common.config.storage.StorageConfig;
-import de.bluecolored.bluemap.common.plugin.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -20,7 +21,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 @DebugDump
-public class BlueMapConfigs {
+public class BlueMapConfigs implements BlueMapConfigProvider {
 
     private final ServerInterface serverInterface;
     private final ConfigManager configManager;
@@ -33,14 +34,18 @@ public class BlueMapConfigs {
     private final Map<String, StorageConfig> storageConfigs;
 
     public BlueMapConfigs(ServerInterface serverInterface) throws ConfigurationException {
+        this(serverInterface, Path.of("bluemap"), Path.of("bluemap", "web"), true);
+    }
+
+    public BlueMapConfigs(ServerInterface serverInterface, Path defaultDataFolder, Path defaultWebroot, boolean usePluginConf) throws ConfigurationException {
         this.serverInterface = serverInterface;
         this.configManager = new ConfigManager(serverInterface.getConfigFolder());
 
-        this.coreConfig = loadCoreConfig();
-        this.webserverConfig = loadWebserverConfig();
-        this.webappConfig = loadWebappConfig();
-        this.pluginConfig = serverInterface.isPluginConfigEnabled() ? loadPluginConfig() : new PluginConfig();
-        this.storageConfigs = Collections.unmodifiableMap(loadStorageConfigs());
+        this.coreConfig = loadCoreConfig(defaultDataFolder);
+        this.webappConfig = loadWebappConfig(defaultWebroot);
+        this.webserverConfig = loadWebserverConfig(webappConfig.getWebroot());
+        this.pluginConfig = usePluginConf ? loadPluginConfig() : new PluginConfig();
+        this.storageConfigs = Collections.unmodifiableMap(loadStorageConfigs(webappConfig.getWebroot()));
         this.mapConfigs = Collections.unmodifiableMap(loadMapConfigs());
     }
 
@@ -48,31 +53,37 @@ public class BlueMapConfigs {
         return configManager;
     }
 
+    @Override
     public CoreConfig getCoreConfig() {
         return coreConfig;
     }
 
+    @Override
     public WebappConfig getWebappConfig() {
         return webappConfig;
     }
 
+    @Override
     public WebserverConfig getWebserverConfig() {
         return webserverConfig;
     }
 
+    @Override
     public PluginConfig getPluginConfig() {
         return pluginConfig;
     }
 
+    @Override
     public Map<String, MapConfig> getMapConfigs() {
         return mapConfigs;
     }
 
+    @Override
     public Map<String, StorageConfig> getStorageConfigs() {
         return storageConfigs;
     }
 
-    private synchronized CoreConfig loadCoreConfig() throws ConfigurationException {
+    private synchronized CoreConfig loadCoreConfig(Path defaultDataFolder) throws ConfigurationException {
         Path configFileRaw = Path.of("core");
         Path configFile = configManager.findConfigPath(configFileRaw);
         Path configFolder = configFile.getParent();
@@ -97,6 +108,7 @@ public class BlueMapConfigs {
                                 .setConditional("metrics", serverInterface.isMetricsEnabled() == Tristate.UNDEFINED)
                                 .setVariable("timestamp", LocalDateTime.now().withNano(0).toString())
                                 .setVariable("version", BlueMap.VERSION)
+                                .setVariable("data", formatPath(defaultDataFolder))
                                 .setVariable("implementation", "bukkit")
                                 .setVariable("render-thread-count", Integer.toString(presetRenderThreadCount))
                                 .build(),
@@ -110,7 +122,7 @@ public class BlueMapConfigs {
         return configManager.loadConfig(configFileRaw, CoreConfig.class);
     }
 
-    private synchronized WebserverConfig loadWebserverConfig() throws ConfigurationException {
+    private synchronized WebserverConfig loadWebserverConfig(Path defaultWebroot) throws ConfigurationException {
         Path configFileRaw = Path.of("webserver");
         Path configFile = configManager.findConfigPath(configFileRaw);
         Path configFolder = configFile.getParent();
@@ -121,6 +133,7 @@ public class BlueMapConfigs {
                 Files.writeString(
                         configFolder.resolve("webserver.conf"),
                         configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/webserver.conf")
+                                .setVariable("webroot", formatPath(defaultWebroot))
                                 .build(),
                         StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                 );
@@ -132,7 +145,7 @@ public class BlueMapConfigs {
         return configManager.loadConfig(configFileRaw, WebserverConfig.class);
     }
 
-    private synchronized WebappConfig loadWebappConfig() throws ConfigurationException {
+    private synchronized WebappConfig loadWebappConfig(Path defaultWebroot) throws ConfigurationException {
         Path configFileRaw = Path.of("webapp");
         Path configFile = configManager.findConfigPath(configFileRaw);
         Path configFolder = configFile.getParent();
@@ -143,6 +156,7 @@ public class BlueMapConfigs {
                 Files.writeString(
                         configFolder.resolve("webapp.conf"),
                         configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/webapp.conf")
+                                .setVariable("webroot", formatPath(defaultWebroot))
                                 .build(),
                         StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                 );
@@ -259,7 +273,7 @@ public class BlueMapConfigs {
         return mapConfigs;
     }
 
-    private synchronized Map<String, StorageConfig> loadStorageConfigs() throws ConfigurationException {
+    private synchronized Map<String, StorageConfig> loadStorageConfigs(Path defaultWebroot) throws ConfigurationException {
         Map<String, StorageConfig> storageConfigs = new HashMap<>();
 
         Path storageFolder = Paths.get("storages");
@@ -270,7 +284,9 @@ public class BlueMapConfigs {
                 Files.createDirectories(storageConfigFolder);
                 Files.writeString(
                         storageConfigFolder.resolve("file.conf"),
-                        configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/storages/file.conf").build(),
+                        configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/storages/file.conf")
+                                .setVariable("root", formatPath(defaultWebroot.resolve("data")))
+                                .build(),
                         StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                 );
                 Files.writeString(
@@ -315,6 +331,7 @@ public class BlueMapConfigs {
     private ConfigTemplate createOverworldMapTemplate(String name, Path worldFolder) throws IOException {
         return configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/maps/map.conf")
                 .setVariable("name", name)
+                .setVariable("sorting", "0")
                 .setVariable("world", formatPath(worldFolder))
                 .setVariable("sky-color", "#7dabff")
                 .setVariable("ambient-light", "0.1")
@@ -327,6 +344,7 @@ public class BlueMapConfigs {
     private ConfigTemplate createNetherMapTemplate(String name, Path worldFolder) throws IOException {
         return configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/maps/map.conf")
                 .setVariable("name", name)
+                .setVariable("sorting", "100")
                 .setVariable("world", formatPath(worldFolder))
                 .setVariable("sky-color", "#290000")
                 .setVariable("ambient-light", "0.6")
@@ -339,6 +357,7 @@ public class BlueMapConfigs {
     private ConfigTemplate createEndMapTemplate(String name, Path worldFolder) throws IOException {
         return configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/maps/map.conf")
                 .setVariable("name", name)
+                .setVariable("sorting", "200")
                 .setVariable("world", formatPath(worldFolder))
                 .setVariable("sky-color", "#080010")
                 .setVariable("ambient-light", "0.6")

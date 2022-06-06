@@ -1,9 +1,6 @@
 package de.bluecolored.bluemap.core.resources.adapter;
 
-import com.flowpowered.math.vector.Vector3d;
-import com.flowpowered.math.vector.Vector3f;
-import com.flowpowered.math.vector.Vector4d;
-import com.flowpowered.math.vector.Vector4f;
+import com.flowpowered.math.vector.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
@@ -29,6 +26,7 @@ public class ResourcesGson {
                 .registerTypeAdapter(Axis.class, new AxisAdapter())
                 .registerTypeAdapter(Color.class, new ColorAdapter())
                 .registerTypeAdapter(Direction.class, new DirectionAdapter())
+                .registerTypeAdapter(Vector2i.class, new Vector2iAdapter())
                 .registerTypeAdapter(Vector3d.class, new Vector3dAdapter())
                 .registerTypeAdapter(Vector3f.class, new Vector3fAdapter())
                 .registerTypeAdapter(Vector4d.class, new Vector4dAdapter())

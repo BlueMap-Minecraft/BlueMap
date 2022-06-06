@@ -26,8 +26,8 @@ package de.bluecolored.bluemap.forge;
 
 import com.flowpowered.math.vector.Vector3d;
 import de.bluecolored.bluemap.common.BlueMapService;
-import de.bluecolored.bluemap.common.plugin.serverinterface.Gamemode;
-import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
+import de.bluecolored.bluemap.common.serverinterface.Gamemode;
+import de.bluecolored.bluemap.common.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;

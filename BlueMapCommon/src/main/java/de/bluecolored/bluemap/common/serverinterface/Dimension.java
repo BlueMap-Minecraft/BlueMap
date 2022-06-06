@@ -1,4 +1,4 @@
-package de.bluecolored.bluemap.common.plugin.serverinterface;
+package de.bluecolored.bluemap.common.serverinterface;
 
 import java.nio.file.Path;
 

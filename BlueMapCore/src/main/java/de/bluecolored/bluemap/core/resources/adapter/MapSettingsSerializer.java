@@ -20,6 +20,9 @@ public class MapSettingsSerializer implements JsonSerializer<BmMap> {
         // name
         root.addProperty("name", map.getName());
 
+        // sorting
+        root.addProperty("sorting", map.getMapSettings().getSorting());
+
         // hires
         Vector2i hiresTileSize = map.getHiresModelManager().getTileGrid().getGridSize();
         Vector2i gridOrigin = map.getHiresModelManager().getTileGrid().getOffset();

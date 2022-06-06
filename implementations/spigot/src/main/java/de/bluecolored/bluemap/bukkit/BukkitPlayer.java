@@ -25,8 +25,8 @@
 package de.bluecolored.bluemap.bukkit;
 
 import com.flowpowered.math.vector.Vector3d;
-import de.bluecolored.bluemap.common.plugin.serverinterface.Gamemode;
-import de.bluecolored.bluemap.common.plugin.serverinterface.Player;
+import de.bluecolored.bluemap.common.serverinterface.Gamemode;
+import de.bluecolored.bluemap.common.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
@@ -56,6 +56,7 @@ public class BukkitPlayer implements Player {
     private boolean online;
     private boolean sneaking;
     private boolean invisible;
+    private boolean vanished;
     private Gamemode gamemode;
 
     public BukkitPlayer(UUID playerUUID) {
@@ -99,6 +100,11 @@ public class BukkitPlayer implements Player {
     }
 
     @Override
+    public boolean isVanished() {
+        return vanished;
+    }
+
+    @Override
     public Gamemode getGamemode() {
         return this.gamemode;
     }
@@ -119,9 +125,11 @@ public class BukkitPlayer implements Player {
         this.invisible = player.hasPotionEffect(PotionEffectType.INVISIBILITY);
 
         //also check for "vanished" players
+        boolean vanished = false;
         for (MetadataValue meta : player.getMetadata("vanished")) {
-            if (meta.asBoolean()) this.invisible = true;
+            if (meta.asBoolean()) vanished = true;
         }
+        this.vanished = vanished;
 
         this.name = Text.of(player.getName());
         this.online = player.isOnline();

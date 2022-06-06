@@ -72,9 +72,8 @@ public class BmMap {
         this.worldId = Objects.requireNonNull(worldId);
         this.world = Objects.requireNonNull(world);
         this.storage = Objects.requireNonNull(storage);
-        this.mapSettings = Objects.requireNonNull(settings);
-
         this.resourcePack = Objects.requireNonNull(resourcePack);
+        this.mapSettings = Objects.requireNonNull(settings);
 
         this.renderState = new MapRenderState();
         loadRenderState();
@@ -82,8 +81,6 @@ public class BmMap {
         this.textureGallery = loadTextureGallery();
         this.textureGallery.put(resourcePack);
         saveTextureGallery();
-
-        saveMapSettings();
 
         this.hiresModelManager = new HiresModelManager(
                 storage.tileStorage(id, TileType.HIRES),
@@ -103,6 +100,8 @@ public class BmMap {
 
         this.renderTimeSumNanos = 0;
         this.tilesRendered = 0;
+
+        saveMapSettings();
     }
 
     public void renderTile(Vector2i tile) {

@@ -68,7 +68,7 @@ public class MapConfig implements MapSettings {
     }
 
     public Optional<Vector2i> getStartPos() {
-        return Optional.of(startPos);
+        return Optional.ofNullable(startPos);
     }
 
     public String getSkyColor() {

@@ -24,7 +24,7 @@
  */
 package de.bluecolored.bluemap.fabric;
 
-import de.bluecolored.bluemap.common.plugin.serverinterface.ServerEventListener;
+import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.fabric.events.PlayerJoinCallback;
 import de.bluecolored.bluemap.fabric.events.PlayerLeaveCallback;
 import net.minecraft.server.MinecraftServer;

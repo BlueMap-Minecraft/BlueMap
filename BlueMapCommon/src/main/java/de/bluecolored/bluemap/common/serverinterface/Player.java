@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.plugin.serverinterface;
+package de.bluecolored.bluemap.common.serverinterface;
 
 import com.flowpowered.math.vector.Vector3d;
 import de.bluecolored.bluemap.common.plugin.text.Text;
@@ -44,7 +44,6 @@ public interface Player {
     /**
      * Return <code>true</code> if the player is sneaking.
      * <p><i>If the player is offline the value of this method is undetermined.</i></p>
-     * @return
      */
     boolean isSneaking();
 
@@ -53,6 +52,14 @@ public interface Player {
      * <p><i>If the player is offline the value of this method is undetermined.</i></p>
      */
     boolean isInvisible();
+
+    /**
+     * Returns <code>true</code> if the player is vanished
+     * <p><i>If the player is offline the value of this method is undetermined.</i></p>
+     */
+    default boolean isVanished() {
+        return false;
+    }
 
     /**
      * Returns the {@link Gamemode} this player is in
