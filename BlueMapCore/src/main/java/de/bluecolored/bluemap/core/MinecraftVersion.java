@@ -149,7 +149,8 @@ public class MinecraftVersion implements Comparable<MinecraftVersion> {
         MC_1_16 (new MinecraftVersion(1, 16), "mc1_16", "https://launcher.mojang.com/v1/objects/228fdf45541c4c2fe8aec4f20e880cb8fcd46621/client.jar"),
         MC_1_16_2 (new MinecraftVersion(1, 16, 2), "mc1_16", "https://launcher.mojang.com/v1/objects/653e97a2d1d76f87653f02242d243cdee48a5144/client.jar"),
         MC_1_17 (new MinecraftVersion(1, 17), "mc1_16", "https://launcher.mojang.com/v1/objects/1cf89c77ed5e72401b869f66410934804f3d6f52/client.jar"),
-        MC_1_18 (new MinecraftVersion(1, 18), "mc1_18", "https://launcher.mojang.com/v1/objects/020aa79e63a7aab5d6f30e5ec7a6c08baee6b64c/client.jar");
+        MC_1_18 (new MinecraftVersion(1, 18), "mc1_18", "https://launcher.mojang.com/v1/objects/020aa79e63a7aab5d6f30e5ec7a6c08baee6b64c/client.jar"),
+        MC_1_19 (new MinecraftVersion(1, 19), "mc1_18", "https://launcher.mojang.com/v1/objects/c0898ec7c6a5a2eaa317770203a1554260699994/client.jar");
 
         private final MinecraftVersion version;
         private final String resourcePrefix;
