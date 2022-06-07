@@ -36,6 +36,13 @@
         "grasscolor": "#6A7039",
         "foliagecolor": 6975545
     },
+    "minecraft:mangrove_swamp": {
+        "humidity": 0.9,
+        "temperature": 0.8,
+        "watercolor": "#3A7A6A",
+        "grasscolor": "#6A7039",
+        "foliagecolor": "#8DB127"
+    },
     "minecraft:forest": {
         "humidity": 0.8,
         "temperature": 0.7,
