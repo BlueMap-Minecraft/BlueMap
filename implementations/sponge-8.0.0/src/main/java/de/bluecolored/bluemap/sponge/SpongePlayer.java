@@ -55,6 +55,7 @@ public class SpongePlayer implements Player {
     private Text name;
     private String world;
     private Vector3d position;
+    private Vector3d rotation;
     private boolean online;
     private boolean sneaking;
     private boolean invisible;
@@ -84,6 +85,11 @@ public class SpongePlayer implements Player {
     @Override
     public Vector3d getPosition() {
         return this.position;
+    }
+
+    @Override
+    public Vector3d getRotation() {
+        return rotation;
     }
 
     @Override
@@ -138,6 +144,7 @@ public class SpongePlayer implements Player {
         this.name = Text.of(player.name());
         this.online = player.isOnline();
         this.position = SpongePlugin.fromSpongePoweredVector(player.position());
+        this.rotation = SpongePlugin.fromSpongePoweredVector(player.rotation());
         this.sneaking = player.get(Keys.IS_SNEAKING).orElse(false);
 
         try {

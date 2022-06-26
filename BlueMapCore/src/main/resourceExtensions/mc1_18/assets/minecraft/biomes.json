@@ -62,8 +62,8 @@
         "humidity": 0.8,
         "temperature": 0.7,
         "watercolor": 4159204,
-        "foliagecolor": "#5528340a",
-        "grasscolor": "#8828340a"
+        "foliagecolor": "#28340a55",
+        "grasscolor": "#28340a88"
     },
     "minecraft:old_growth_birch_forest": {
         "humidity": 0.6,

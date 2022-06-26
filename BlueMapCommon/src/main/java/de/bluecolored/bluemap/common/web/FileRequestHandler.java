@@ -41,14 +41,10 @@ import java.util.concurrent.TimeUnit;
 public class FileRequestHandler implements HttpRequestHandler {
 
     private final Path webRoot;
-    private final String serverName;
-
     private final File emptyTileFile;
 
-    public FileRequestHandler(Path webRoot, String serverName) {
+    public FileRequestHandler(Path webRoot) {
         this.webRoot = webRoot.normalize();
-        this.serverName = serverName;
-
         this.emptyTileFile = webRoot.resolve("assets").resolve("emptyTile.json").toFile();
     }
 
@@ -60,12 +56,7 @@ public class FileRequestHandler implements HttpRequestHandler {
         ) return new HttpResponse(HttpStatusCode.NOT_IMPLEMENTED);
 
         HttpResponse response = generateResponse(request);
-        response.addHeader("Server", this.serverName);
 
-        HttpStatusCode status = response.getStatusCode();
-        if (status.getCode() >= 400){
-            response.setData(status.getCode() + " - " + status.getMessage() + "\n" + this.serverName);
-        }
 
         return response;
     }
@@ -104,7 +95,7 @@ public class FileRequestHandler implements HttpRequestHandler {
         }
 
         // send empty tile-file if tile not exists
-        if (!file.exists() && file.toPath().startsWith(webRoot.resolve("data"))){
+        if (!file.exists() && file.toPath().startsWith(webRoot.resolve("maps"))){
             file = emptyTileFile;
         }
 

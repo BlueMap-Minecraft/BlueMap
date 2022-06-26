@@ -39,6 +39,11 @@ public interface Player {
 
     Vector3d getPosition();
 
+    /**
+     * x -> pitch, y -> yaw, z -> roll
+     */
+    Vector3d getRotation();
+
     boolean isOnline();
 
     /**

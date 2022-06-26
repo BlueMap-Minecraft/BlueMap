@@ -65,6 +65,10 @@ public class HttpResponse implements Closeable {
         setData(new ByteArrayInputStream(data.getBytes(StandardCharsets.UTF_8)));
     }
 
+    public boolean hasData() {
+        return this.data != null;
+    }
+
     /**
      * Writes this Response to an Output-Stream.<br>
      * <br>
@@ -73,7 +77,7 @@ public class HttpResponse implements Closeable {
     public void write(OutputStream out) throws IOException {
         OutputStreamWriter writer = new OutputStreamWriter(out, StandardCharsets.UTF_8);
 
-        if (data != null){
+        if (hasData()){
             addHeader("Transfer-Encoding", "chunked");
         } else {
             addHeader("Content-Length", "0");
@@ -88,7 +92,7 @@ public class HttpResponse implements Closeable {
         writeLine(writer, "");
         writer.flush();
 
-        if(data != null){
+        if(hasData()){
             chunkedPipe(data, out);
             out.flush();
         }

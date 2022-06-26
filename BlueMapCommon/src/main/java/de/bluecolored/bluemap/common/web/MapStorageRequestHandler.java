@@ -25,12 +25,13 @@
 package de.bluecolored.bluemap.common.web;
 
 import com.flowpowered.math.vector.Vector2i;
-import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.storage.*;
 import de.bluecolored.bluemap.common.webserver.HttpRequest;
 import de.bluecolored.bluemap.common.webserver.HttpRequestHandler;
 import de.bluecolored.bluemap.common.webserver.HttpResponse;
 import de.bluecolored.bluemap.common.webserver.HttpStatusCode;
+import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.map.BmMap;
+import de.bluecolored.bluemap.core.storage.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
@@ -39,21 +40,25 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.*;
-import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MapStorageRequestHandler implements HttpRequestHandler {
 
-    private static final Pattern TILE_PATTERN = Pattern.compile("data/([^/]+)/([^/]+)/x(-?[\\d/]+)z(-?[\\d/]+).*");
-    private static final Pattern META_PATTERN = Pattern.compile("data/([^/]+)/(.*)");
+    private static final Pattern TILE_PATTERN = Pattern.compile("([^/]+)/x(-?[\\d/]+)z(-?[\\d/]+).*");
 
-    private final Function<? super String, Storage> mapStorageProvider;
-    private final HttpRequestHandler notFoundHandler;
+    private final String mapId;
+    private final Storage mapStorage;
 
-    public MapStorageRequestHandler(Function<? super String, Storage> mapStorageProvider, HttpRequestHandler notFoundHandler) {
-        this.mapStorageProvider = mapStorageProvider;
-        this.notFoundHandler = notFoundHandler;
+
+    public MapStorageRequestHandler(BmMap map) {
+        this.mapId = map.getId();
+        this.mapStorage = map.getStorage();
+    }
+
+    public MapStorageRequestHandler(String mapId, Storage mapStorage) {
+        this.mapId = mapId;
+        this.mapStorage = mapStorage;
     }
 
     @Override
@@ -69,78 +74,64 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
             // provide map-tiles
             Matcher tileMatcher = TILE_PATTERN.matcher(path);
             if (tileMatcher.matches()) {
-                String mapId = tileMatcher.group(1);
-                String tileTypeId = tileMatcher.group(2);
-                Storage storage = mapStorageProvider.apply(mapId);
-                if (storage != null) {
-                    TileType tileType = TileType.forTypeId(tileTypeId);
-                    int x = Integer.parseInt(tileMatcher.group(3).replace("/", ""));
-                    int z = Integer.parseInt(tileMatcher.group(4).replace("/", ""));
-                    Optional<TileData> optTileData = storage.readMapTileData(mapId, tileType, new Vector2i(x, z));
+                String tileTypeId = tileMatcher.group(1);
+                TileType tileType = TileType.forTypeId(tileTypeId);
+                int x = Integer.parseInt(tileMatcher.group(2).replace("/", ""));
+                int z = Integer.parseInt(tileMatcher.group(3).replace("/", ""));
+                Optional<TileData> optTileData = mapStorage.readMapTileData(mapId, tileType, new Vector2i(x, z));
 
-                    if (optTileData.isPresent()) {
-                        TileData tileData = optTileData.get();
+                if (optTileData.isPresent()) {
+                    TileData tileData = optTileData.get();
 
-                        // check e-tag
-                        String eTag = calculateETag(path, tileData);
-                        Set<String> etagStringSet = request.getHeader("If-None-Match");
-                        if (!etagStringSet.isEmpty()){
-                            if(etagStringSet.iterator().next().equals(eTag)) {
+                    // check e-tag
+                    String eTag = calculateETag(path, tileData);
+                    Set<String> etagStringSet = request.getHeader("If-None-Match");
+                    if (!etagStringSet.isEmpty()){
+                        if(etagStringSet.iterator().next().equals(eTag)) {
+                            return new HttpResponse(HttpStatusCode.NOT_MODIFIED);
+                        }
+                    }
+
+                    // check modified-since
+                    long lastModified = tileData.getLastModified();
+                    Set<String> modStringSet = request.getHeader("If-Modified-Since");
+                    if (!modStringSet.isEmpty()){
+                        try {
+                            long since = stringToTimestamp(modStringSet.iterator().next());
+                            if (since + 1000 >= lastModified){
                                 return new HttpResponse(HttpStatusCode.NOT_MODIFIED);
                             }
-                        }
-
-                        // check modified-since
-                        long lastModified = tileData.getLastModified();
-                        Set<String> modStringSet = request.getHeader("If-Modified-Since");
-                        if (!modStringSet.isEmpty()){
-                            try {
-                                long since = stringToTimestamp(modStringSet.iterator().next());
-                                if (since + 1000 >= lastModified){
-                                    return new HttpResponse(HttpStatusCode.NOT_MODIFIED);
-                                }
-                            } catch (IllegalArgumentException ignored){}
-                        }
-
-                        CompressedInputStream compressedIn = tileData.readMapTile();
-                        HttpResponse response = new HttpResponse(HttpStatusCode.OK);
-                        response.addHeader("ETag", eTag);
-                        if (lastModified > 0)
-                            response.addHeader("Last-Modified", timestampToString(lastModified));
-                        response.addHeader("Content-Type", "application/json");
-                        writeToResponse(compressedIn, response, request);
-                        return response;
+                        } catch (IllegalArgumentException ignored){}
                     }
+
+                    CompressedInputStream compressedIn = tileData.readMapTile();
+                    HttpResponse response = new HttpResponse(HttpStatusCode.OK);
+                    response.addHeader("ETag", eTag);
+                    if (lastModified > 0)
+                        response.addHeader("Last-Modified", timestampToString(lastModified));
+                    response.addHeader("Content-Type", "application/json");
+                    writeToResponse(compressedIn, response, request);
+                    return response;
                 }
             }
 
             // provide meta-data
-            Matcher metaMatcher = META_PATTERN.matcher(path);
-            if (metaMatcher.matches()) {
-                String mapId = metaMatcher.group(1);
-                String metaFilePath = metaMatcher.group(2);
+            MetaType metaType = null;
+            for (MetaType mt : MetaType.values()) {
+                if (mt.getFilePath().equals(path)) {
+                    metaType = mt;
+                    break;
+                }
+            }
 
-                Storage storage = mapStorageProvider.apply(mapId);
-                if (storage != null) {
-
-                    MetaType metaType = null;
-                    for (MetaType mt : MetaType.values()) {
-                        if (mt.getFilePath().equals(metaFilePath)) {
-                            metaType = mt;
-                            break;
-                        }
-                    }
-
-                    if (metaType != null) {
-                        Optional<CompressedInputStream> optIn = storage.readMeta(mapId, metaType);
-                        if (optIn.isPresent()) {
-                            CompressedInputStream compressedIn = optIn.get();
-                            HttpResponse response = new HttpResponse(HttpStatusCode.OK);
-                            response.addHeader("Content-Type", metaType.getContentType());
-                            writeToResponse(compressedIn, response, request);
-                            return response;
-                        }
-                    }
+            if (metaType != null) {
+                Optional<CompressedInputStream> optIn = mapStorage.readMeta(mapId, metaType);
+                if (optIn.isPresent()) {
+                    CompressedInputStream compressedIn = optIn.get();
+                    HttpResponse response = new HttpResponse(HttpStatusCode.OK);
+                    response.addHeader("Content-Type", metaType.getContentType());
+                    writeToResponse(compressedIn, response, request);
+                    return response;
                 }
             }
 
@@ -150,7 +141,9 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
             return new HttpResponse(HttpStatusCode.INTERNAL_SERVER_ERROR);
         }
 
-        return this.notFoundHandler.handle(request);
+        HttpResponse response = new HttpResponse(HttpStatusCode.OK);
+        response.setData("{}");
+        return response;
     }
 
     private String calculateETag(String path, TileData tileData) {

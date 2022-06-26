@@ -56,6 +56,7 @@ public class FabricPlayer implements Player {
     private Text name;
     private String world;
     private Vector3d position;
+    private Vector3d rotation;
     private boolean online;
     private boolean sneaking;
     private boolean invisible;
@@ -90,6 +91,11 @@ public class FabricPlayer implements Player {
     @Override
     public Vector3d getPosition() {
         return this.position;
+    }
+
+    @Override
+    public Vector3d getRotation() {
+        return rotation;
     }
 
     @Override
@@ -139,6 +145,7 @@ public class FabricPlayer implements Player {
 
         Vec3d pos = player.getPos();
         this.position = new Vector3d(pos.getX(), pos.getY(), pos.getZ());
+        this.rotation = new Vector3d(player.pitch, player.headYaw, 0);
         this.sneaking = player.isSneaking();
 
         try {

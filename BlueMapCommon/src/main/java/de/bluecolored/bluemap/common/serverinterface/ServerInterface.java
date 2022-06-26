@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.common.serverinterface;
 
 import de.bluecolored.bluemap.core.MinecraftVersion;
+import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.util.Tristate;
 
 import java.nio.file.Path;
@@ -34,6 +35,7 @@ import java.util.UUID;
 
 public interface ServerInterface {
 
+    @DebugDump
     MinecraftVersion getMinecraftVersion();
 
     /**
@@ -53,21 +55,25 @@ public interface ServerInterface {
                 .findAny();
     }
 
+    @DebugDump
     Collection<ServerWorld> getLoadedWorlds();
 
     /**
      * Returns the Folder containing the configurations for the plugin
      */
+    @DebugDump
     Path getConfigFolder();
 
     /**
      * Returns the folder that contains the mod-jars
      */
+    @DebugDump
     Optional<Path> getModsFolder();
 
     /**
      * Gives the possibility to override the metrics-setting in the config
      */
+    @DebugDump
     default Tristate isMetricsEnabled() {
         return Tristate.UNDEFINED;
     }
@@ -75,6 +81,7 @@ public interface ServerInterface {
     /**
      * Returns a collection of the states of players that are currently online
      */
+    @DebugDump
     Collection<Player> getOnlinePlayers();
 
     /**

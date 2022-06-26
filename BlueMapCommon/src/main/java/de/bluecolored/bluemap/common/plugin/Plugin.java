@@ -29,17 +29,15 @@ import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.InterruptableReentrantLock;
 import de.bluecolored.bluemap.common.MissingResourcesException;
 import de.bluecolored.bluemap.common.config.*;
-import de.bluecolored.bluemap.common.live.LiveAPIRequestHandler;
-import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
-import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.common.plugin.skins.PlayerSkinUpdater;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
+import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
+import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.common.web.FileRequestHandler;
-import de.bluecolored.bluemap.common.web.MapStorageRequestHandler;
-import de.bluecolored.bluemap.common.webserver.HttpRequestHandler;
+import de.bluecolored.bluemap.common.web.MapRequestHandler;
+import de.bluecolored.bluemap.common.web.RoutingRequestHandler;
 import de.bluecolored.bluemap.common.webserver.WebServer;
-import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.debug.DebugDump;
 import de.bluecolored.bluemap.core.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -55,6 +53,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 @DebugDump
 public class Plugin implements ServerEventListener {
@@ -152,17 +151,19 @@ public class Plugin implements ServerEventListener {
                 if (webserverConfig.isEnabled()) {
                     Path webroot = webserverConfig.getWebroot();
                     Files.createDirectories(webroot);
-                    HttpRequestHandler requestHandler = new FileRequestHandler(webroot,
-                            "BlueMap " + BlueMap.VERSION + " " + BlueMap.GIT_HASH + " " + BlueMap.GIT_CLEAN);
 
-                    //use map-storage to provide map-tiles
-                    requestHandler = new MapStorageRequestHandler(
-                            id -> maps.get(id).getStorage(),
-                            requestHandler);
+                    RoutingRequestHandler routingRequestHandler = new RoutingRequestHandler();
 
-                    //inject live api if enabled
-                    if (pluginConfig.isLivePlayerMarkers()) {
-                        requestHandler = new LiveAPIRequestHandler(serverInterface, pluginConfig, requestHandler);
+                    // default route
+                    routingRequestHandler.register(".*", new FileRequestHandler(webroot));
+
+                    // map route
+                    for (BmMap map : maps.values()) {
+                        routingRequestHandler.register(
+                                "maps/" + Pattern.quote(map.getId()) + "/(.*)",
+                                "$1",
+                                new MapRequestHandler(map, serverInterface, pluginConfig)
+                        );
                     }
 
                     try {
@@ -170,7 +171,7 @@ public class Plugin implements ServerEventListener {
                                 webserverConfig.resolveIp(),
                                 webserverConfig.getPort(),
                                 webserverConfig.getMaxConnectionCount(),
-                                requestHandler,
+                                routingRequestHandler,
                                 false
                         );
                     } catch (UnknownHostException ex) {

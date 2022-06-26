@@ -149,8 +149,8 @@
 	"minecraft:dark_forest": {
 		"humidity": 0.8,
 		"temperature": 0.7,
-		"foliagecolor": "#5528340a",
-		"grasscolor": "#8828340a",
+		"foliagecolor": "#28340a55",
+		"grasscolor": "#28340a88",
 		"watercolor": 4159204
 	},
 	"minecraft:snowy_taiga": {
@@ -329,8 +329,8 @@
 	"minecraft:dark_forest_hills": {
 		"humidity": 0.8,
 		"temperature": 0.7,
-		"foliagecolor": "#5528340a",
-		"grasscolor": "#8828340a",
+		"foliagecolor": "#28340a55",
+		"grasscolor": "#28340a88",
 		"watercolor": 4159204
 	},
 	"minecraft:snowy_taiga_mountains": {

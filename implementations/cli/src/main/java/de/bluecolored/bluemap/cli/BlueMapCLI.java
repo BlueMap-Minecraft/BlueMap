@@ -32,24 +32,22 @@ import de.bluecolored.bluemap.common.config.ConfigurationException;
 import de.bluecolored.bluemap.common.config.MapConfig;
 import de.bluecolored.bluemap.common.config.WebserverConfig;
 import de.bluecolored.bluemap.common.plugin.RegionFileWatchService;
+import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
+import de.bluecolored.bluemap.common.rendermanager.RenderManager;
+import de.bluecolored.bluemap.common.rendermanager.RenderTask;
 import de.bluecolored.bluemap.common.serverinterface.Player;
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
-import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
-import de.bluecolored.bluemap.common.rendermanager.RenderManager;
-import de.bluecolored.bluemap.common.rendermanager.RenderTask;
 import de.bluecolored.bluemap.common.web.FileRequestHandler;
-import de.bluecolored.bluemap.common.web.MapStorageRequestHandler;
-import de.bluecolored.bluemap.common.webserver.HttpRequestHandler;
+import de.bluecolored.bluemap.common.web.MapRequestHandler;
+import de.bluecolored.bluemap.common.web.RoutingRequestHandler;
 import de.bluecolored.bluemap.common.webserver.WebServer;
-import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.logger.LoggerLogger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.metrics.Metrics;
-import de.bluecolored.bluemap.core.storage.Storage;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
@@ -59,6 +57,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 public class BlueMapCLI implements ServerInterface {
 
@@ -183,32 +182,30 @@ public class BlueMapCLI implements ServerInterface {
 
         WebserverConfig config = blueMap.getConfigs().getWebserverConfig();
         Files.createDirectories(config.getWebroot());
-        HttpRequestHandler requestHandler = new FileRequestHandler(config.getWebroot(), "BlueMap v" + BlueMap.VERSION);
 
-        try {
-            //use map-storage to provide map-tiles
-            Map<String, MapConfig> mapConfigs = blueMap.getConfigs().getMapConfigs();
-            Map<String, Storage> mapStorages = new HashMap<>();
-            for (var entry : mapConfigs.entrySet()) {
-                mapStorages.put(
-                        entry.getKey(),
-                        blueMap.getStorage(entry.getValue().getStorage())
-                );
-            }
+        RoutingRequestHandler routingRequestHandler = new RoutingRequestHandler();
 
-            requestHandler = new MapStorageRequestHandler(mapStorages::get, requestHandler);
-        } catch (ConfigurationException ex) {
-            Logger.global.logWarning(ex.getFormattedExplanation());
-            Logger.global.logError("Here is the full error:", ex);
+        // default route
+        routingRequestHandler.register(".*", new FileRequestHandler(config.getWebroot()));
 
-            Logger.global.logWarning("The webserver will still be started, but it will not be able to serve the map-tiles correctly!");
+        // map route
+        for (var entry : blueMap.getConfigs().getMapConfigs().entrySet()) {
+            String mapId = entry.getKey();
+            MapConfig mapConfig = entry.getValue();
+            String worldId = blueMap.getWorldId(mapConfig.getWorld());
+
+            routingRequestHandler.register(
+                    "maps/" + Pattern.quote(mapId) + "/(.*)",
+                    "$1",
+                    new MapRequestHandler(mapId, worldId, blueMap.getStorage(mapConfig.getStorage()), this, blueMap.getConfigs().getPluginConfig())
+            );
         }
 
         WebServer webServer = new WebServer(
                 config.resolveIp(),
                 config.getPort(),
                 config.getMaxConnectionCount(),
-                requestHandler,
+                routingRequestHandler,
                 verbose
         );
         webServer.start();

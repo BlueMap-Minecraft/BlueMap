@@ -157,9 +157,11 @@ public class ConfigUtils {
     public static int parseColorFromString(String val) {
         if (val.charAt(0) == '#') {
             val = val.substring(1);
-            if (val.length() == 3) val = "f" + val;
+            if (val.length() == 3) val = val + "f";
             if (val.length() == 4) val = "" + val.charAt(0) + val.charAt(0) + val.charAt(1) + val.charAt(1) + val.charAt(2) + val.charAt(2) + val.charAt(3) + val.charAt(3);
-            if (val.length() == 6) val = "ff" + val;
+            if (val.length() == 6) val = val + "ff";
+            if (val.length() != 8) throw new NumberFormatException("Invalid color format!");
+            val = val.substring(6, 8) + val.substring(0, 6); // move alpha to front
             return Integer.parseUnsignedInt(val, 16);
         }
 

@@ -285,7 +285,7 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
                 Files.writeString(
                         storageConfigFolder.resolve("file.conf"),
                         configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/storages/file.conf")
-                                .setVariable("root", formatPath(defaultWebroot.resolve("data")))
+                                .setVariable("root", formatPath(defaultWebroot.resolve("maps")))
                                 .build(),
                         StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                 );

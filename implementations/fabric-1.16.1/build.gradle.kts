@@ -8,7 +8,7 @@ plugins {
 	id ("com.palantir.git-version") version "0.12.3"
 	id ("com.github.node-gradle.node") version "3.0.1"
 	id ("com.github.johnrengelman.shadow") version "7.1.2"
-	id ("fabric-loom") version "0.8-SNAPSHOT"
+	id ("fabric-loom") version "0.12-SNAPSHOT"
 }
 
 val versionDetails: groovy.lang.Closure<com.palantir.gradle.gitversion.VersionDetails> by extra
@@ -129,10 +129,10 @@ tasks.register("remappedShadowJar", type = RemapJarTask::class) {
 	destinationDirectory.set(file("../../build/release"))
 	archiveFileName.set("BlueMap-${archiveVersion.get()}-${project.name}.jar")
 	dependsOn (tasks.shadowJar)
-	input.set(tasks.shadowJar.get().archiveFile.get())
+	inputFile.set(tasks.shadowJar.get().archiveFile)
 	addNestedDependencies.set(true)
 }
 
 tasks.register("release") {
-	dependsOn(tasks["remappedShadowJar"])
+	dependsOn("remappedShadowJar")
 }

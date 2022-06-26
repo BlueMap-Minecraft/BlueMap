@@ -36,7 +36,7 @@ import java.nio.file.Path;
 @ConfigSerializable
 public class FileConfig extends StorageConfig implements FileStorageSettings {
 
-    private Path root = Path.of("bluemap", "web", "data");
+    private Path root = Path.of("bluemap", "web", "maps");
 
     private Compression compression = Compression.GZIP;
 

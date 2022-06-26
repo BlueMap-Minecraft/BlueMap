@@ -161,56 +161,68 @@ public class StateDumper {
                 return;
             }
 
-            boolean foundSomething = false;
-            do {
-                boolean allFields = type.isAnnotationPresent(DebugDump.class);
-
-                for (Field field : type.getDeclaredFields()) {
-                    DebugDump dd = field.getAnnotation(DebugDump.class);
-                    if (dd == null) {
-                        if (!allFields) continue;
-                        if (Modifier.isStatic(field.getModifiers())) continue;
-                        if (Modifier.isTransient(field.getModifiers())) continue;
-                    }
-                    foundSomething = true;
-
-                    String key = "";
-                    if (dd != null) key = dd.value();
-                    if (key.isEmpty()) key = field.getName();
-
-                    if (options.acceptsType(field.getType())) {
-                        field.setAccessible(true);
-                        node.node(key).set(field.get(instance));
-                    } else {
-                        field.setAccessible(true);
-                        dumpInstance(field.get(instance), options, node.node(key), alreadyDumped);
-                    }
-                }
-
-                for (Method method : type.getDeclaredMethods()) {
-                    DebugDump dd = method.getAnnotation(DebugDump.class);
-                    if (dd == null) continue;
-                    foundSomething = true;
-
-                    String key = dd.value();
-                    if (key.isEmpty()) key = method.toGenericString().replace(' ', '_');
-
-                    if (options.acceptsType(method.getReturnType())) {
-                        method.setAccessible(true);
-                        node.node(key).set(method.invoke(instance));
-                    } else {
-                        method.setAccessible(true);
-                        dumpInstance(method.invoke(instance), options, node.node(key), alreadyDumped);
-                    }
-                }
-            } while ((type = type.getSuperclass()) != null);
-
+            boolean foundSomething = dumpAnnotatedInstance(type, instance, options, node, alreadyDumped);
             if (!foundSomething) {
                 node.set(instance.toString());
             }
+
         } catch (Exception ex) {
             node.set("Error: " + ex);
         }
+    }
+
+    private boolean dumpAnnotatedInstance(Class<?> type, Object instance, ConfigurationOptions options, ConfigurationNode node, Set<Object> alreadyDumped) throws Exception {
+        boolean foundSomething = false;
+        boolean allFields = type.isAnnotationPresent(DebugDump.class);
+
+        for (Field field : type.getDeclaredFields()) {
+            DebugDump dd = field.getAnnotation(DebugDump.class);
+            if (dd == null) {
+                if (!allFields) continue;
+                if (Modifier.isStatic(field.getModifiers())) continue;
+                if (Modifier.isTransient(field.getModifiers())) continue;
+            }
+            foundSomething = true;
+
+            String key = "";
+            if (dd != null) key = dd.value();
+            if (key.isEmpty()) key = field.getName();
+
+            field.setAccessible(true);
+            if (options.acceptsType(field.getType())) {
+                node.node(key).set(field.get(instance));
+            } else {
+                dumpInstance(field.get(instance), options, node.node(key), alreadyDumped);
+            }
+        }
+
+        for (Method method : type.getDeclaredMethods()) {
+            DebugDump dd = method.getAnnotation(DebugDump.class);
+            if (dd == null) continue;
+            foundSomething = true;
+
+            String key = dd.value();
+            if (key.isEmpty()) key = method.toGenericString().replace(' ', '_');
+
+            if (options.acceptsType(method.getReturnType())) {
+                method.setAccessible(true);
+                node.node(key).set(method.invoke(instance));
+            } else {
+                method.setAccessible(true);
+                dumpInstance(method.invoke(instance), options, node.node(key), alreadyDumped);
+            }
+        }
+
+        for (Class<?> iface : type.getInterfaces()) {
+            foundSomething |= dumpAnnotatedInstance(iface, instance, options, node, alreadyDumped);
+        }
+
+        Class<?> typeSuperclass = type.getSuperclass();
+        if (typeSuperclass != null) {
+            foundSomething |= dumpAnnotatedInstance(typeSuperclass, instance, options, node, alreadyDumped);
+        }
+
+        return foundSomething;
     }
 
     private void collectSystemInfo(ConfigurationNode node) throws SerializationException {

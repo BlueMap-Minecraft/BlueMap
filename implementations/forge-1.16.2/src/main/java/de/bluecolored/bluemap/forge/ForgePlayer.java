@@ -55,6 +55,7 @@ public class ForgePlayer implements Player {
     private Text name;
     private String world;
     private Vector3d position;
+    private Vector3d rotation;
     private boolean online;
     private boolean sneaking;
     private boolean invisible;
@@ -89,6 +90,11 @@ public class ForgePlayer implements Player {
     @Override
     public Vector3d getPosition() {
         return this.position;
+    }
+
+    @Override
+    public Vector3d getRotation() {
+        return rotation;
     }
 
     @Override
@@ -138,6 +144,7 @@ public class ForgePlayer implements Player {
 
         var pos = player.getPositionVec();
         this.position = new Vector3d(pos.getX(), pos.getY(), pos.getZ());
+        this.rotation = new Vector3d(player.rotationPitch, player.rotationYawHead, 0);
         this.sneaking = player.isCrouching();
 
         try {

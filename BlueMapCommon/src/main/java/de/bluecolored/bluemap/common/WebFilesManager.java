@@ -52,7 +52,7 @@ public class WebFilesManager {
     }
 
     public Path getSettingsFile() {
-        return webRoot.resolve("data").resolve("settings.json");
+        return webRoot.resolve("settings.json");
     }
 
     public void loadSettings() throws IOException {

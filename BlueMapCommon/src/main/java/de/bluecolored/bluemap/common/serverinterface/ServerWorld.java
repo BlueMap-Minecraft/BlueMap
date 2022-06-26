@@ -1,21 +1,27 @@
 package de.bluecolored.bluemap.common.serverinterface;
 
+import de.bluecolored.bluemap.core.debug.DebugDump;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Optional;
 
 public interface ServerWorld {
 
+    @DebugDump
     default Optional<String> getId() {
         return Optional.empty();
     }
 
+    @DebugDump
     default Optional<String> getName() {
         return Optional.empty();
     }
 
+    @DebugDump
     Path getSaveFolder();
 
+    @DebugDump
     default Dimension getDimension() {
         Path saveFolder = getSaveFolder();
         String lastName = saveFolder.getFileName().toString();

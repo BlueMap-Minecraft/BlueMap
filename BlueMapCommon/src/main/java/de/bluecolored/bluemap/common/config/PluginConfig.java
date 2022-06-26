@@ -13,12 +13,13 @@ public class PluginConfig {
 
     private boolean livePlayerMarkers = true;
 
-    private boolean skinDownload = true;
-
     private List<String> hiddenGameModes = new ArrayList<>();
     private boolean hideVanished = true;
     private boolean hideInvisible = true;
-    private boolean hideSneaking = true;
+    private boolean hideSneaking = false;
+    private boolean hideDifferentWorld = false;
+
+    private boolean skinDownload = true;
 
     private int playerRenderLimit = -1;
 
@@ -26,10 +27,6 @@ public class PluginConfig {
 
     public boolean isLivePlayerMarkers() {
         return livePlayerMarkers;
-    }
-
-    public boolean isSkinDownload() {
-        return skinDownload;
     }
 
     public List<String> getHiddenGameModes() {
@@ -46,6 +43,14 @@ public class PluginConfig {
 
     public boolean isHideSneaking() {
         return hideSneaking;
+    }
+
+    public boolean isHideDifferentWorld() {
+        return hideDifferentWorld;
+    }
+
+    public boolean isSkinDownload() {
+        return skinDownload;
     }
 
     public int getPlayerRenderLimit() {

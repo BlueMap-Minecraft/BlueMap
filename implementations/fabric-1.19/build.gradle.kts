@@ -129,10 +129,10 @@ tasks.register("remappedShadowJar", type = RemapJarTask::class) {
 	destinationDirectory.set(file("../../build/release"))
 	archiveFileName.set("BlueMap-${archiveVersion.get()}-${project.name}.jar")
 	dependsOn (tasks.shadowJar)
-	input.set(tasks.shadowJar.get().archiveFile.get())
+	inputFile.set(tasks.shadowJar.get().archiveFile)
 	addNestedDependencies.set(true)
 }
 
 tasks.register("release") {
-	dependsOn(tasks["remappedShadowJar"])
+	dependsOn("remappedShadowJar")
 }
