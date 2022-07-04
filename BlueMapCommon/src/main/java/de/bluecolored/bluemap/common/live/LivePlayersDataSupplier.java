@@ -8,6 +8,8 @@ import de.bluecolored.bluemap.core.logger.Logger;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class LivePlayersDataSupplier implements Supplier<String> {
@@ -15,11 +17,13 @@ public class LivePlayersDataSupplier implements Supplier<String> {
     private final ServerInterface server;
     private final PluginConfig config;
     private final String worldId;
+    private final Predicate<UUID> playerFilter;
 
-    public LivePlayersDataSupplier(ServerInterface server, PluginConfig config, String worldId) {
+    public LivePlayersDataSupplier(ServerInterface server, PluginConfig config, String worldId, Predicate<UUID> playerFilter) {
         this.server = server;
         this.config = config;
         this.worldId = worldId;
+        this.playerFilter = playerFilter;
     }
 
     @Override
@@ -41,6 +45,7 @@ public class LivePlayersDataSupplier implements Supplier<String> {
                     if (config.isHideSneaking() && player.isSneaking()) continue;
                     if (config.getHiddenGameModes().contains(player.getGamemode().getId())) continue;
                     if (config.isHideDifferentWorld() && !isCorrectWorld) continue;
+                    if (!this.playerFilter.test(player.getUuid())) continue;
 
                     json.beginObject();
                     json.name("uuid").value(player.getUuid().toString());

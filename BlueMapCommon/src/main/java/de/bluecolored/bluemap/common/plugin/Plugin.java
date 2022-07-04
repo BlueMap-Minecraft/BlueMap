@@ -53,6 +53,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 @DebugDump
@@ -162,7 +163,7 @@ public class Plugin implements ServerEventListener {
                         routingRequestHandler.register(
                                 "maps/" + Pattern.quote(map.getId()) + "/(.*)",
                                 "$1",
-                                new MapRequestHandler(map, serverInterface, pluginConfig)
+                                new MapRequestHandler(map, serverInterface, pluginConfig, Predicate.not(pluginState::isPlayerHidden))
                         );
                     }
 

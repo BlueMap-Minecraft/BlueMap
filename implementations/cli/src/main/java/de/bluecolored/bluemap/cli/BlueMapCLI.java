@@ -197,7 +197,7 @@ public class BlueMapCLI implements ServerInterface {
             routingRequestHandler.register(
                     "maps/" + Pattern.quote(mapId) + "/(.*)",
                     "$1",
-                    new MapRequestHandler(mapId, worldId, blueMap.getStorage(mapConfig.getStorage()), this, blueMap.getConfigs().getPluginConfig())
+                    new MapRequestHandler(mapId, worldId, blueMap.getStorage(mapConfig.getStorage()), this, blueMap.getConfigs().getPluginConfig(), uuid -> true)
             );
         }
 
