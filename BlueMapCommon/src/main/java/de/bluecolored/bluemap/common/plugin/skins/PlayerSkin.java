@@ -27,7 +27,7 @@ package de.bluecolored.bluemap.common.plugin.skins;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
-import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
 
 import javax.imageio.ImageIO;

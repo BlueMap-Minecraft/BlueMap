@@ -24,7 +24,7 @@
  */
 package de.bluecolored.bluemap.core.resources;
 
-import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.world.BlockState;
 
 import java.util.Map.Entry;

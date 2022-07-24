@@ -24,7 +24,7 @@
  */
 package de.bluecolored.bluemap.common.rendermanager;
 
-import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.api.debug.DebugDump;
 
 import java.util.ArrayList;
 import java.util.Collection;

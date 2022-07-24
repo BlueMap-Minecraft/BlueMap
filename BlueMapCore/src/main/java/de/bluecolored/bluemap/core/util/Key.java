@@ -1,6 +1,6 @@
 package de.bluecolored.bluemap.core.util;
 
-import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 
 @DebugDump

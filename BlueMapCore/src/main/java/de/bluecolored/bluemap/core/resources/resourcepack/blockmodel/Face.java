@@ -1,7 +1,7 @@
 package de.bluecolored.bluemap.core.resources.resourcepack.blockmodel;
 
 import com.flowpowered.math.vector.Vector4f;
-import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.Direction;
 

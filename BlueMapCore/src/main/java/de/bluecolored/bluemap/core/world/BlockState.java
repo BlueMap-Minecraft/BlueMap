@@ -24,7 +24,7 @@
  */
 package de.bluecolored.bluemap.core.world;
 
-import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.util.Key;
 import org.jetbrains.annotations.NotNull;
 

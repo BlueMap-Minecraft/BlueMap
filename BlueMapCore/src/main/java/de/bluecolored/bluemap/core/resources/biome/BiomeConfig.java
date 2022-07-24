@@ -25,7 +25,7 @@
 package de.bluecolored.bluemap.core.resources.biome;
 
 import com.google.gson.stream.JsonReader;
-import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.biome.datapack.DpBiome;
 import de.bluecolored.bluemap.core.world.Biome;

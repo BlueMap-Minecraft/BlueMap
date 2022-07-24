@@ -25,7 +25,8 @@
 package de.bluecolored.bluemap.core.map;
 
 import com.flowpowered.math.vector.Vector2i;
-import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.api.marker.MarkerSet;
+import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.map.hires.HiresTileMeta;
@@ -40,8 +41,10 @@ import de.bluecolored.bluemap.core.world.Grid;
 import de.bluecolored.bluemap.core.world.World;
 
 import java.io.*;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
 @DebugDump
@@ -60,6 +63,8 @@ public class BmMap {
 
     private final HiresModelManager hiresModelManager;
     private final LowresModelManager lowresModelManager;
+
+    private final Map<String, MarkerSet> markerSets;
 
     private Predicate<Vector2i> tileFilter;
 
@@ -97,6 +102,8 @@ public class BmMap {
         );
 
         this.tileFilter = t -> true;
+
+        this.markerSets = new ConcurrentHashMap<>();
 
         this.renderTimeSumNanos = 0;
         this.tilesRendered = 0;
@@ -209,6 +216,10 @@ public class BmMap {
 
     public LowresModelManager getLowresModelManager() {
         return lowresModelManager;
+    }
+
+    public Map<String, MarkerSet> getMarkerSets() {
+        return markerSets;
     }
 
     public Predicate<Vector2i> getTileFilter() {

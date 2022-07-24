@@ -28,6 +28,7 @@ import de.bluecolored.bluemap.common.BlueMapConfigProvider;
 import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.InterruptableReentrantLock;
 import de.bluecolored.bluemap.common.MissingResourcesException;
+import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.config.*;
 import de.bluecolored.bluemap.common.plugin.skins.PlayerSkinUpdater;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
@@ -38,7 +39,7 @@ import de.bluecolored.bluemap.common.web.FileRequestHandler;
 import de.bluecolored.bluemap.common.web.MapRequestHandler;
 import de.bluecolored.bluemap.common.web.RoutingRequestHandler;
 import de.bluecolored.bluemap.common.webserver.WebServer;
-import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
@@ -76,6 +77,8 @@ public class Plugin implements ServerEventListener {
 
     private RenderManager renderManager;
     private WebServer webServer;
+
+    private BlueMapAPIImpl api;
 
     private Timer daemonTimer;
 
@@ -267,9 +270,9 @@ public class Plugin implements ServerEventListener {
                 //register listener
                 serverInterface.registerListener(this);
 
-                //enable api TODO
-                //this.api = new BlueMapAPIImpl(this);
-                //this.api.register();
+                //enable api
+                this.api = new BlueMapAPIImpl(this);
+                this.api.register();
 
                 //done
                 loaded = true;
@@ -292,9 +295,9 @@ public class Plugin implements ServerEventListener {
                 //save
                 save();
 
-                //disable api TODO
-                //if (api != null) api.unregister();
-                //api = null;
+                //disable api
+                if (api != null) api.unregister();
+                api = null;
 
                 //unregister listeners
                 serverInterface.unregisterAllListeners();

@@ -25,7 +25,7 @@
 package de.bluecolored.bluemap.common.plugin.skins;
 
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
-import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.api.debug.DebugDump;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;

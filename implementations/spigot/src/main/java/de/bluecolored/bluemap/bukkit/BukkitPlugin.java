@@ -190,6 +190,27 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
         return loadedWorlds;
     }
 
+    @Override
+    public Optional<ServerWorld> getWorld(Object world) {
+        if (world instanceof Path)
+            return getWorld((Path) world);
+
+        if (world instanceof String) {
+            var serverWorld = Bukkit.getWorld((String) world);
+            if (serverWorld != null) world = serverWorld;
+        }
+
+        if (world instanceof UUID) {
+            var serverWorld = Bukkit.getWorld((UUID) world);
+            if (serverWorld != null) world = serverWorld;
+        }
+
+        if (world instanceof World)
+            return Optional.of(getWorld((World) world));
+
+        return Optional.empty();
+    }
+
     public ServerWorld getWorld(World world) {
         return worlds.get(world);
     }

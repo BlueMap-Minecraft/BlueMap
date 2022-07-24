@@ -24,7 +24,7 @@
  */
 package de.bluecolored.bluemap.core;
 
-import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.util.Lazy;
 
 import java.util.Arrays;

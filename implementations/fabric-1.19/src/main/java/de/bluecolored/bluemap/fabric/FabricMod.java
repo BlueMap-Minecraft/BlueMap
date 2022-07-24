@@ -43,6 +43,8 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.registry.RegistryKey;
+import net.minecraft.world.World;
 import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
@@ -140,6 +142,24 @@ public class FabricMod implements ModInitializer, ServerInterface {
             loadedWorlds.add(worlds.get(serverWorld));
         }
         return loadedWorlds;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Optional<ServerWorld> getWorld(Object world) {
+        if (world instanceof Path)
+            return getWorld((Path) world);
+
+        if (world instanceof RegistryKey) {
+            try {
+                world = serverInstance.getWorld((RegistryKey<World>) world);
+            } catch (ClassCastException ignored) {}
+        }
+
+        if (world instanceof net.minecraft.server.world.ServerWorld)
+            return Optional.of(getWorld((net.minecraft.server.world.ServerWorld) world));
+
+        return Optional.empty();
     }
 
     public ServerWorld getWorld(net.minecraft.server.world.ServerWorld serverWorld) {

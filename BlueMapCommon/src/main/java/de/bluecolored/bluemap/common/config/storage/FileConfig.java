@@ -24,7 +24,7 @@
  */
 package de.bluecolored.bluemap.common.config.storage;
 
-import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.storage.Compression;
 import de.bluecolored.bluemap.core.storage.file.FileStorageSettings;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;

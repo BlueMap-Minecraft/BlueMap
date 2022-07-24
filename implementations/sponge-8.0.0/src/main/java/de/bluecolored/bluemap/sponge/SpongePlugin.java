@@ -41,6 +41,7 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.sponge.SpongeCommands.SpongeCommandProxy;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.spongepowered.api.Platform;
+import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.Command;
@@ -224,6 +225,22 @@ public class SpongePlugin implements ServerInterface {
             loadedWorlds.add(worlds.get(world));
         }
         return loadedWorlds;
+    }
+
+    @Override
+    public Optional<ServerWorld> getWorld(Object world) {
+        if (world instanceof Path)
+            return getWorld((Path) world);
+
+        if (world instanceof ResourceKey) {
+            var serverWorld = Sponge.server().worldManager().world((ResourceKey) world).orElse(null);
+            if (serverWorld != null) world = serverWorld;
+        }
+
+        if (world instanceof org.spongepowered.api.world.server.ServerWorld)
+            return Optional.of(getWorld((org.spongepowered.api.world.server.ServerWorld) world));
+
+        return Optional.empty();
     }
 
     public ServerWorld getWorld(org.spongepowered.api.world.server.ServerWorld world) {

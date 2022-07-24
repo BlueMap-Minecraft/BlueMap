@@ -25,7 +25,7 @@
 package de.bluecolored.bluemap.core.storage.file;
 
 import com.flowpowered.math.vector.Vector2i;
-import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.storage.*;
 import de.bluecolored.bluemap.core.util.AtomicFileHelper;
 import de.bluecolored.bluemap.core.util.DeletingPathVisitor;

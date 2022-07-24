@@ -24,7 +24,7 @@
  */
 package de.bluecolored.bluemap.common.webserver;
 
-import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
 
 import java.io.IOException;

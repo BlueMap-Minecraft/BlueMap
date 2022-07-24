@@ -24,11 +24,9 @@
  */
 package de.bluecolored.bluemap.common.config.storage;
 
-import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.storage.Storage;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
-
-import java.io.IOException;
 
 @SuppressWarnings("FieldMayBeFinal")
 @DebugDump

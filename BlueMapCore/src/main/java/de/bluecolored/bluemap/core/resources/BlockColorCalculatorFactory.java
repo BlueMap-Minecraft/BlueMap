@@ -26,7 +26,7 @@ package de.bluecolored.bluemap.core.resources;
 
 import com.flowpowered.math.GenericMath;
 import com.google.gson.stream.JsonReader;
-import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.util.ConfigUtils;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.Biome;

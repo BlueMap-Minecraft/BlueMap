@@ -25,7 +25,7 @@
 package de.bluecolored.bluemap.common.serverinterface;
 
 import de.bluecolored.bluemap.core.MinecraftVersion;
-import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.util.Tristate;
 
 import java.nio.file.Path;
@@ -53,6 +53,10 @@ public interface ServerInterface {
         return getLoadedWorlds().stream()
                 .filter(world -> world.getSaveFolder().toAbsolutePath().normalize().equals(normalizedWorldFolder))
                 .findAny();
+    }
+
+    default Optional<ServerWorld> getWorld(Object world) {
+        return Optional.empty();
     }
 
     @DebugDump

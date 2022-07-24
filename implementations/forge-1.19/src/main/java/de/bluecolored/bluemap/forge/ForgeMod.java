@@ -35,9 +35,11 @@ import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent.ServerTickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
@@ -152,6 +154,24 @@ public class ForgeMod implements ServerInterface {
             loadedWorlds.add(worlds.get(serverWorld));
         }
         return loadedWorlds;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Optional<ServerWorld> getWorld(Object world) {
+        if (world instanceof Path)
+            return getWorld((Path) world);
+
+        if (world instanceof ResourceKey) {
+            try {
+                world = serverInstance.getLevel((ResourceKey<Level>) world);
+            } catch (ClassCastException ignored) {}
+        }
+
+        if (world instanceof ServerLevel)
+            return Optional.of(getWorld((ServerLevel) world));
+
+        return Optional.empty();
     }
 
     public ServerWorld getWorld(ServerLevel world) {

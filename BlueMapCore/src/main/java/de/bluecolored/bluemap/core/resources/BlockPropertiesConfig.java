@@ -25,7 +25,7 @@
 package de.bluecolored.bluemap.core.resources;
 
 import com.google.gson.stream.JsonReader;
-import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.world.BlockProperties;
 import de.bluecolored.bluemap.core.world.BlockState;
 

@@ -24,7 +24,7 @@
  */
 package de.bluecolored.bluemap.core.util.math;
 
-import de.bluecolored.bluemap.core.debug.DebugDump;
+import de.bluecolored.bluemap.api.debug.DebugDump;
 
 @DebugDump
 public class Color {

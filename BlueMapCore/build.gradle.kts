@@ -32,16 +32,16 @@ repositories {
 @Suppress("GradlePackageUpdate")
 dependencies {
     api ("com.github.ben-manes.caffeine:caffeine:2.8.5")
-    api ("com.google.code.gson:gson:2.8.0")
     api ("org.apache.commons:commons-lang3:3.6")
     api ("commons-io:commons-io:2.5")
-    api ("com.flowpowered:flow-math:1.0.3")
     api ("org.spongepowered:configurate-hocon:4.1.1")
     api ("org.spongepowered:configurate-gson:4.1.1")
     api ("com.github.Querz:NBT:4.0")
     api ("org.apache.commons:commons-dbcp2:2.9.0")
 
-    compileOnly ("org.jetbrains:annotations:16.0.2")
+    api ("de.bluecolored.bluemap.api:BlueMapAPI")
+
+    compileOnly ("org.jetbrains:annotations:23.0.0")
 
     testImplementation ("org.junit.jupiter:junit-jupiter:5.8.2")
     testRuntimeOnly ("org.junit.jupiter:junit-jupiter-engine:5.8.2")

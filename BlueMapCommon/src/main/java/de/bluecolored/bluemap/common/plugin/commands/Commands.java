@@ -38,14 +38,8 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
-import de.bluecolored.bluemap.api.BlueMapAPI;
-import de.bluecolored.bluemap.api.BlueMapMap;
-import de.bluecolored.bluemap.api.marker.MarkerAPI;
-import de.bluecolored.bluemap.api.marker.MarkerSet;
-import de.bluecolored.bluemap.api.marker.POIMarker;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.PluginState;
-import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.plugin.text.TextColor;
 import de.bluecolored.bluemap.common.plugin.text.TextFormat;
@@ -53,6 +47,7 @@ import de.bluecolored.bluemap.common.rendermanager.MapPurgeTask;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderTask;
 import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
+import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.debug.StateDumper;
@@ -64,7 +59,10 @@ import de.bluecolored.bluemap.core.world.World;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -209,40 +207,6 @@ public class Commands<S> {
                 .executes(this::mapsCommand)
                 .build();
 
-        LiteralCommandNode<S> markerCommand =
-                literal("marker")
-                .requires(requirements("bluemap.marker"))
-                .build();
-
-        LiteralCommandNode<S> createMarkerCommand =
-                literal("create")
-                .requires(requirements("bluemap.marker"))
-                .then(argument("id", StringArgumentType.word())
-                        .then(argument("map", StringArgumentType.string()).suggests(new MapSuggestionProvider<>(plugin))
-
-                            .then(argument("label", StringArgumentType.string())
-                                    .executes(this::createMarkerCommand))
-
-                            .then(argument("x", DoubleArgumentType.doubleArg())
-                                    .then(argument("y", DoubleArgumentType.doubleArg())
-                                            .then(argument("z", DoubleArgumentType.doubleArg())
-                                                    .then(argument("label", StringArgumentType.string())
-                                                            .executes(this::createMarkerCommand)))))))
-                .build();
-
-        LiteralCommandNode<S> removeMarkerCommand =
-                literal("remove")
-                .requires(requirements("bluemap.marker"))
-                .then(argument("id", StringArgumentType.word()).suggests(MarkerIdSuggestionProvider.getInstance())
-                        .executes(this::removeMarkerCommand))
-                .build();
-
-        LiteralCommandNode<S> listMarkersCommand =
-                literal("list")
-                .requires(requirements("bluemap.marker"))
-                .executes(this::listMarkersCommand)
-                .build();
-
         // command tree
         dispatcher.getRoot().addChild(baseCommand);
         baseCommand.addChild(versionCommand);
@@ -259,10 +223,6 @@ public class Commands<S> {
         baseCommand.addChild(purgeCommand);
         baseCommand.addChild(worldsCommand);
         baseCommand.addChild(mapsCommand);
-        baseCommand.addChild(markerCommand);
-        markerCommand.addChild(createMarkerCommand);
-        markerCommand.addChild(removeMarkerCommand);
-        markerCommand.addChild(listMarkersCommand);
     }
 
     private <B extends ArgumentBuilder<S, B>> B addRenderArguments(B builder, Command<S> command) {
@@ -878,139 +838,6 @@ public class Commands<S> {
                         TextColor.AQUA, TextFormat.ITALIC, "frozen!"
                 ).setHoverText(Text.of(TextColor.WHITE, "World: ", TextColor.GRAY, map.getWorld().getName())));
             }
-        }
-
-        return 1;
-    }
-
-    public int createMarkerCommand(CommandContext<S> context) {
-        CommandSource source = commandSourceInterface.apply(context.getSource());
-
-        String markerId = context.getArgument("id", String.class);
-        String markerLabel = context.getArgument("label", String.class)
-                .replace("<", "&lt;")
-                .replace(">", "&gt;");  //no html via commands
-
-        // parse map argument
-        String mapString = context.getArgument("map", String.class);
-        BmMap map = parseMap(mapString).orElse(null);
-
-        if (map == null) {
-            source.sendMessage(Text.of(TextColor.RED, "There is no ", helper.mapHelperHover(), " with this name: ", TextColor.WHITE, mapString));
-            return 0;
-        }
-
-        // parse position
-        Optional<Double> x = getOptionalArgument(context, "x", Double.class);
-        Optional<Double> y = getOptionalArgument(context, "y", Double.class);
-        Optional<Double> z = getOptionalArgument(context, "z", Double.class);
-
-        Vector3d position;
-
-        if (x.isPresent() && y.isPresent() && z.isPresent()) {
-            position = new Vector3d(x.get(), y.get(), z.get());
-        } else {
-            position = source.getPosition().orElse(null);
-
-            if (position == null) {
-                source.sendMessage(Text.of(TextColor.RED, "Can't detect a position from this command-source, you'll have to define the x,y,z coordinates for the marker!").setHoverText(Text.of(TextColor.GRAY, "/bluemap marker create " + markerId + " " + "[world|map] <x> <y> <z> <label>")));
-                return 0;
-            }
-        }
-
-        // get api
-        BlueMapAPI api = BlueMapAPI.getInstance().orElse(null);
-        if (api == null) {
-            source.sendMessage(Text.of(TextColor.RED, "MarkerAPI is not available, try ", TextColor.GRAY, "/bluemap reload"));
-            return 0;
-        }
-
-        // resolve api-map
-        Optional<BlueMapMap> apiMap = api.getMap(map.getId());
-        if (apiMap.isEmpty()) {
-            source.sendMessage(Text.of(TextColor.RED, "Failed to get map from API, try ", TextColor.GRAY, "/bluemap reload"));
-            return 0;
-        }
-
-        // add marker
-        try {
-            MarkerAPI markerApi = api.getMarkerAPI();
-
-            MarkerSet set = markerApi.getMarkerSet(DEFAULT_MARKER_SET_ID).orElse(null);
-            if (set == null) {
-                set = markerApi.createMarkerSet(DEFAULT_MARKER_SET_ID);
-                set.setLabel("Markers");
-            }
-
-            if (set.getMarker(markerId).isPresent()) {
-                source.sendMessage(Text.of(TextColor.RED, "There already is a marker with this id: ", TextColor.WHITE, markerId));
-                return 0;
-            }
-
-            POIMarker marker = set.createPOIMarker(markerId, apiMap.get(), position);
-            marker.setLabel(markerLabel);
-
-            markerApi.save();
-            MarkerIdSuggestionProvider.getInstance().forceUpdate();
-        } catch (IOException e) {
-            source.sendMessage(Text.of(TextColor.RED, "There was an error trying to add the marker, please check the console for details!"));
-            Logger.global.logError("Exception trying to add a marker!", e);
-        }
-
-        source.sendMessage(Text.of(TextColor.GREEN, "Marker added!"));
-        return 1;
-    }
-
-    public int removeMarkerCommand(CommandContext<S> context) {
-        CommandSource source = commandSourceInterface.apply(context.getSource());
-
-        String markerId = context.getArgument("id", String.class);
-
-        BlueMapAPI api = BlueMapAPI.getInstance().orElse(null);
-        if (api == null) {
-            source.sendMessage(Text.of(TextColor.RED, "MarkerAPI is not available, try ", TextColor.GRAY, "/bluemap reload"));
-            return 0;
-        }
-
-        try {
-            MarkerAPI markerApi = api.getMarkerAPI();
-
-            MarkerSet set = markerApi.createMarkerSet("markers");
-            if (!set.removeMarker(markerId)) {
-                source.sendMessage(Text.of(TextColor.RED, "There is no marker with this id: ", TextColor.WHITE, markerId));
-            }
-
-            markerApi.save();
-            MarkerIdSuggestionProvider.getInstance().forceUpdate();
-        } catch (IOException e) {
-            source.sendMessage(Text.of(TextColor.RED, "There was an error trying to remove the marker, please check the console for details!"));
-            Logger.global.logError("Exception trying to remove a marker!", e);
-        }
-
-        source.sendMessage(Text.of(TextColor.GREEN, "Marker removed!"));
-        return 1;
-    }
-
-    public int listMarkersCommand(CommandContext<S> context) {
-        CommandSource source = commandSourceInterface.apply(context.getSource());
-
-        BlueMapAPI api = BlueMapAPI.getInstance().orElse(null);
-        if (api == null) {
-            source.sendMessage(Text.of(TextColor.RED, "MarkerAPI is not available, try ", TextColor.GRAY, "/bluemap reload"));
-            return 0;
-        }
-
-        source.sendMessage(Text.of(TextColor.BLUE, "All Markers:"));
-
-        int i = 0;
-        Collection<String> markerIds = MarkerIdSuggestionProvider.getInstance().getPossibleValues();
-        for (String markerId : markerIds) {
-            if (i++ >= 40) {
-                source.sendMessage(Text.of(TextColor.GRAY, "[" + (markerIds.size() - 40) + " more ...]"));
-                break;
-            }
-
-            source.sendMessage(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, markerId));
         }
 
         return 1;

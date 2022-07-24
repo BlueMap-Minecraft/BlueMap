@@ -38,6 +38,8 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.RegistryKey;
+import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent.ServerTickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
@@ -153,6 +155,24 @@ public class ForgeMod implements ServerInterface {
             loadedWorlds.add(worlds.get(serverWorld));
         }
         return loadedWorlds;
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public Optional<ServerWorld> getWorld(Object world) {
+        if (world instanceof Path)
+            return getWorld((Path) world);
+
+        if (world instanceof RegistryKey) {
+            try {
+                world = serverInstance.getWorld((RegistryKey<World>) world);
+            } catch (ClassCastException ignored) {}
+        }
+
+        if (world instanceof net.minecraft.world.server.ServerWorld)
+            return Optional.of(getWorld((net.minecraft.world.server.ServerWorld) world));
+
+        return Optional.empty();
     }
 
     public ServerWorld getWorld(net.minecraft.world.server.ServerWorld world) {

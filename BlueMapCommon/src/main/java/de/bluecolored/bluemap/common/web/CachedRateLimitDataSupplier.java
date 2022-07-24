@@ -1,8 +1,11 @@
 package de.bluecolored.bluemap.common.web;
 
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Supplier;
 
 public class CachedRateLimitDataSupplier implements Supplier<String> {
+
+    private final ReentrantLock lock = new ReentrantLock();
 
     private final Supplier<String> delegate;
     private final long rateLimitMillis;
@@ -22,10 +25,16 @@ public class CachedRateLimitDataSupplier implements Supplier<String> {
     }
 
     protected void update() {
-        long now = System.currentTimeMillis();
-        if (data != null && now < updateTime + this.rateLimitMillis) return;
-        this.updateTime = now;
-        this.data = delegate.get();
+        if (lock.tryLock()) {
+            try {
+                long now = System.currentTimeMillis();
+                if (data != null && now < updateTime + this.rateLimitMillis) return;
+                this.data = delegate.get();
+                this.updateTime = now;
+            } finally {
+                lock.unlock();
+            }
+        }
     }
 
 }
