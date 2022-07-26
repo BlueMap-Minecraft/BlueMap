@@ -34,9 +34,9 @@ import java.util.concurrent.ForkJoinWorkerThread;
 
 public class BlueMap {
 
-    public static final String VERSION, GIT_HASH, GIT_CLEAN;
+    public static final String VERSION, GIT_HASH;
     static {
-        String version = "DEV", gitHash = "DEV", gitClean = "DEV";
+        String version = "DEV", gitHash = "DEV";
         try {
             ConfigurationNode node = GsonConfigurationLoader.builder()
                     .url(BlueMap.class.getResource("/de/bluecolored/bluemap/version.json"))
@@ -45,18 +45,15 @@ public class BlueMap {
 
             version = node.node("version").getString("DEV");
             gitHash = node.node("git-hash").getString("DEV");
-            gitClean = node.node("git-clean").getString("DEV");
         } catch (IOException ex) {
             Logger.global.logError("Failed to load version.json from resources!", ex);
         }
 
         if (version.equals("${version}")) version = "DEV";
         if (gitHash.equals("${gitHash}")) version = "DEV";
-        if (gitClean.equals("${gitClean}")) version = "DEV";
 
         VERSION = version;
         GIT_HASH = gitHash;
-        GIT_CLEAN = gitClean;
     }
 
     public static final ForkJoinPool THREAD_POOL = new ForkJoinPool(

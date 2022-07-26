@@ -322,7 +322,7 @@ public class Commands<S> {
         MinecraftVersion minecraftVersion = plugin.getServerInterface().getMinecraftVersion();
 
         source.sendMessage(Text.of(TextFormat.BOLD, TextColor.BLUE, "Version: ", TextColor.WHITE, BlueMap.VERSION));
-        source.sendMessage(Text.of(TextColor.GRAY, "Commit: ", TextColor.WHITE, BlueMap.GIT_HASH + " (" + BlueMap.GIT_CLEAN + ")"));
+        source.sendMessage(Text.of(TextColor.GRAY, "Commit: ", TextColor.WHITE, BlueMap.GIT_HASH));
         source.sendMessage(Text.of(TextColor.GRAY, "Implementation: ", TextColor.WHITE, plugin.getImplementationType()));
         source.sendMessage(Text.of(
                 TextColor.GRAY, "Minecraft compatibility: ", TextColor.WHITE, minecraftVersion.getVersionString(),
@@ -335,7 +335,7 @@ public class Commands<S> {
         if (minecraftVersion.isAtLeast(new MinecraftVersion(1, 15))) {
             String clipboardValue =
                     "Version: " + BlueMap.VERSION + "\n" +
-                    "Commit: " + BlueMap.GIT_HASH + " (" + BlueMap.GIT_CLEAN + ")\n" +
+                    "Commit: " + BlueMap.GIT_HASH + "\n" +
                     "Implementation: " + plugin.getImplementationType() + "\n" +
                     "Minecraft compatibility: " + minecraftVersion.getVersionString() + " (" + minecraftVersion.getResource().getVersion().getVersionString() + ")\n" +
                     "Render-threads: " + renderThreadCount + "\n" +

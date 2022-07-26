@@ -229,7 +229,6 @@ public class StateDumper {
     private void collectSystemInfo(ConfigurationNode node) throws SerializationException {
         node.node("bluemap-version").set(BlueMap.VERSION);
         node.node("git-hash").set(BlueMap.GIT_HASH);
-        node.node("git-clean").set(BlueMap.GIT_CLEAN);
 
         String[] properties = new String[]{
                 "java.runtime.name",

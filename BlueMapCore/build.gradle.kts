@@ -1,14 +1,29 @@
 import java.util.Properties
+import java.io.IOException
 
 plugins {
     java
     `java-library`
     id("com.diffplug.spotless") version "6.1.2"
-    id ("com.palantir.git-version") version "0.12.3"
 }
 
-val versionDetails: groovy.lang.Closure<com.palantir.gradle.gitversion.VersionDetails> by extra
-val git = versionDetails()
+fun String.runCommand(): String = ProcessBuilder(split("\\s(?=(?:[^'\"`]*(['\"`])[^'\"`]*\\1)*[^'\"`]*$)".toRegex()))
+    .directory(projectDir)
+    .redirectOutput(ProcessBuilder.Redirect.PIPE)
+    .redirectError(ProcessBuilder.Redirect.PIPE)
+    .start()
+    .apply { waitFor(60, TimeUnit.SECONDS) }
+    .run {
+        val error = errorStream.bufferedReader().readText().trim()
+        if (error.isNotEmpty()) {
+            throw IOException(error)
+        }
+        inputStream.bufferedReader().readText().trim()
+    }
+
+val gitHash = "git rev-parse --verify HEAD".runCommand()
+val clean = "git status --porcelain".runCommand().isEmpty()
+println("Git hash: $gitHash" + if (clean) "" else " (dirty)")
 
 val releaseProperties = Properties()
 releaseProperties.load(file("../release.properties").inputStream())
@@ -79,8 +94,7 @@ tasks.processResources {
 
         expand (
             "version" to project.version,
-            "gitHash" to git.gitHashFull,
-            "gitClean" to git.isCleanTag
+            "gitHash" to gitHash + if (clean) "" else " (dirty)",
         )
     }
 }

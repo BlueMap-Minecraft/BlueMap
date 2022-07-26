@@ -13,7 +13,7 @@ public class BlueMapResponseModifier implements HttpRequestHandler {
 
     public BlueMapResponseModifier(HttpRequestHandler delegate) {
         this.delegate = delegate;
-        this.serverName = "BlueMap " + BlueMap.VERSION + " " + BlueMap.GIT_HASH + " " + BlueMap.GIT_CLEAN;
+        this.serverName = "BlueMap " + BlueMap.VERSION + " " + BlueMap.GIT_HASH;
     }
 
     @Override
