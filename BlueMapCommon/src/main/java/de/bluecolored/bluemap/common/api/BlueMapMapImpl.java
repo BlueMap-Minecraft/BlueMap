@@ -3,7 +3,7 @@ package de.bluecolored.bluemap.common.api;
 import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.BlueMapWorld;
-import de.bluecolored.bluemap.api.marker.MarkerSet;
+import de.bluecolored.bluemap.api.markers.MarkerSet;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;

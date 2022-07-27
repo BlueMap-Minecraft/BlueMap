@@ -1,6 +1,6 @@
 package de.bluecolored.bluemap.common.web;
 
-import de.bluecolored.bluemap.api.marker.MarkerSet;
+import de.bluecolored.bluemap.api.markers.MarkerSet;
 import de.bluecolored.bluemap.common.config.PluginConfig;
 import de.bluecolored.bluemap.common.live.LiveMarkersDataSupplier;
 import de.bluecolored.bluemap.common.live.LivePlayersDataSupplier;
