@@ -1,23 +1,15 @@
 import com.github.gradle.node.npm.task.NpmTask
-import java.util.Properties
 import java.io.IOException
 
 plugins {
     java
     `java-library`
     id("com.diffplug.spotless") version "6.1.2"
-    id ("com.palantir.git-version") version "0.12.3"
     id ("com.github.node-gradle.node") version "3.0.1"
 }
 
-val versionDetails: groovy.lang.Closure<com.palantir.gradle.gitversion.VersionDetails> by extra
-val git = versionDetails()
-
-val releaseProperties = Properties()
-releaseProperties.load(file("../release.properties").inputStream())
-
 group = "de.bluecolored.bluemap.common"
-version = releaseProperties["version"].toString()
+version = "0.0.0"
 
 val javaTarget = 11
 java {
