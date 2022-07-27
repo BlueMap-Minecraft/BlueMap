@@ -23,17 +23,23 @@ fun String.runCommand(): String = ProcessBuilder(split("\\s(?=(?:[^'\"`]*(['\"`]
 
 val gitHash = "git rev-parse --verify HEAD".runCommand()
 val clean = "git status --porcelain".runCommand().isEmpty()
-val branch = "git branch --show-current".runCommand()
+val branch = "git rev-parse --abbrev-ref HEAD".runCommand()
 val commitCount = "git rev-list --count HEAD".runCommand()
+
+if (branch.isEmpty()) {
+    throw IllegalStateException("Could not determine branch name")
+}
+
 println("Git hash: $gitHash" + if (clean) "" else " (dirty)")
+println("Branch: $branch")
 
 val releaseProperties = Properties()
 releaseProperties.load(file("../release.properties").inputStream())
 
 group = "de.bluecolored.bluemap.core"
 version = releaseProperties["version"].toString() + ".$commitCount" +
-        if (clean) "" else ".dirty" +
-        if (branch == "master") "" else "-$branch"
+        (if (clean) "" else ".dirty") +
+        (if (branch == "master") "" else "-$branch")
 println("Version: $version")
 
 val javaTarget = 11
