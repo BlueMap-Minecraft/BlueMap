@@ -1,22 +1,13 @@
-import java.util.Properties
-
 plugins {
 	java
 	`java-library`
 	id("com.diffplug.spotless") version "6.1.2"
-	id ("com.palantir.git-version") version "0.12.3"
 	id ("com.github.node-gradle.node") version "3.0.1"
 	id ("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
-val versionDetails: groovy.lang.Closure<com.palantir.gradle.gitversion.VersionDetails> by extra
-val git = versionDetails()
-
-val releaseProperties = Properties()
-releaseProperties.load(file("../../release.properties").inputStream())
-
 group = "de.bluecolored.bluemap.bukkit"
-version = releaseProperties["version"].toString()
+version = "0.0.0"
 
 val javaTarget = 11
 java {
@@ -94,8 +85,9 @@ tasks.processResources {
 }
 
 tasks.shadowJar {
+	val version = System.getProperty("bluemap.version") ?: "" // set by BlueMapCore
 	destinationDirectory.set(file("../../build/release"))
-	archiveFileName.set("BlueMap-${archiveVersion.get()}-${project.name}.jar")
+	archiveFileName.set("BlueMap-${version}-${project.name}.jar")
 
 	//relocate ("com.flowpowered.math", "de.bluecolored.shadow.flowpowered.math") //DON"T relocate this, because the API depends on it
 	relocate ("com.typesafe.config", "de.bluecolored.shadow.typesafe.config")

@@ -13,20 +13,14 @@ plugins {
 	id "java"
 	id "java-library"
 	id "com.diffplug.spotless" version "6.1.2"
-	id "com.palantir.git-version" version "0.12.3"
 	id "com.github.node-gradle.node" version "3.0.1"
 	id "com.github.johnrengelman.shadow" version "7.1.2"
 }
 
 apply plugin: "net.minecraftforge.gradle"
 
-def git = versionDetails()
-
-def releaseProperties = new Properties()
-releaseProperties.load(new FileInputStream(file("../../release.properties")))
-
 group = "de.bluecolored.bluemap.forge"
-version = releaseProperties.version.toString()
+version = "0.0.0"
 archivesBaseName = 'bluemap'
 
 def javaTarget = 16
@@ -125,8 +119,10 @@ test {
 }
 
 shadowJar {
+	def version = System.getProperty("bluemap.version") ?: "" // set by BlueMapCore
 	destinationDirectory.set(file("../../build/release"))
-	archiveFileName.set("BlueMap-${archiveVersion.get()}-${project.name}.jar")
+	archiveFileName.set("BlueMap-${version}-${project.name}.jar")
+
 	configurations = [project.configurations.shadowInclude]
 
 	//relocate ("com.flowpowered.math", "de.bluecolored.shadow.flowpowered.math") //DON"T relocate this, because the API depends on it

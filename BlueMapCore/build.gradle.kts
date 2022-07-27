@@ -1,4 +1,3 @@
-import java.util.Properties
 import java.io.IOException
 
 plugins {
@@ -23,23 +22,17 @@ fun String.runCommand(): String = ProcessBuilder(split("\\s(?=(?:[^'\"`]*(['\"`]
 
 val gitHash = "git rev-parse --verify HEAD".runCommand()
 val clean = "git status --porcelain".runCommand().isEmpty()
-val branch = "git rev-parse --abbrev-ref HEAD".runCommand()
-val commitCount = "git rev-list --count HEAD".runCommand()
-
-if (branch.isEmpty()) {
-    throw IllegalStateException("Could not determine branch name")
-}
-
+val lastTag = "git describe --tags --abbrev=0".runCommand()
+val lastVersion = lastTag.substring(1) // remove the leading 'v'
+val commits = "git rev-list --count $lastTag..HEAD".runCommand()
 println("Git hash: $gitHash" + if (clean) "" else " (dirty)")
-println("Branch: $branch")
-
-val releaseProperties = Properties()
-releaseProperties.load(file("../release.properties").inputStream())
 
 group = "de.bluecolored.bluemap.core"
-version = releaseProperties["version"].toString() + ".$commitCount" +
-        (if (clean) "" else ".dirty") +
-        (if (branch == "master") "" else "-$branch")
+version = lastVersion +
+        (if (commits == "0") "" else "-$commits") +
+        (if (clean) "" else "-dirty")
+
+System.setProperty("bluemap.version", version.toString())
 println("Version: $version")
 
 val javaTarget = 11
