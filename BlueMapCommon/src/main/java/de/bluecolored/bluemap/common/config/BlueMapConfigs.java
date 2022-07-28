@@ -1,11 +1,10 @@
 package de.bluecolored.bluemap.common.config;
 
-import de.bluecolored.bluemap.api.markers.MarkerSet;
+import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.common.BlueMapConfigProvider;
 import de.bluecolored.bluemap.common.config.storage.StorageConfig;
 import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.BlueMap;
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.util.Tristate;
 
@@ -274,6 +273,7 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
         return mapConfigs;
     }
 
+    /*
     private synchronized Map<String, Map<String, MarkerSet>> loadMarkerConfigs() throws ConfigurationException {
         Map<String, Map<String, MarkerSet>> markerConfigs = new HashMap<>();
 
@@ -300,6 +300,7 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
             }
         }
     }
+     */
 
     private synchronized Map<String, StorageConfig> loadStorageConfigs(Path defaultWebroot) throws ConfigurationException {
         Map<String, StorageConfig> storageConfigs = new HashMap<>();
