@@ -1,5 +1,6 @@
 package de.bluecolored.bluemap.common.config;
 
+import de.bluecolored.bluemap.api.markers.MarkerSet;
 import de.bluecolored.bluemap.common.BlueMapConfigProvider;
 import de.bluecolored.bluemap.common.config.storage.StorageConfig;
 import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
@@ -271,6 +272,33 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
         }
 
         return mapConfigs;
+    }
+
+    private synchronized Map<String, Map<String, MarkerSet>> loadMarkerConfigs() throws ConfigurationException {
+        Map<String, Map<String, MarkerSet>> markerConfigs = new HashMap<>();
+
+        Path markerFolder = Paths.get("markers");
+        Path markerConfigFolder = configManager.getConfigRoot().resolve(markerFolder);
+
+        if (!Files.exists(markerConfigFolder)){
+            try {
+                Files.createDirectories(markerConfigFolder);
+                for (var mapConfigEntry : mapConfigs.entrySet()) {
+                    Files.writeString(
+                            markerConfigFolder.resolve(mapConfigEntry.getKey() + ".conf"),
+                            configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/markers/markers.conf")
+                                    .setVariable("map", mapConfig.getId())
+                                    .build(),
+                            StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
+                    );
+                }
+            } catch (IOException | NullPointerException ex) {
+                throw new ConfigurationException("BlueMap failed to create default marker-configuration-files in\n" +
+                        markerConfigFolder.toAbsolutePath().normalize() + "\n" +
+                        "Check if BlueMap has the permission to create and read from this folder.",
+                        ex);
+            }
+        }
     }
 
     private synchronized Map<String, StorageConfig> loadStorageConfigs(Path defaultWebroot) throws ConfigurationException {
