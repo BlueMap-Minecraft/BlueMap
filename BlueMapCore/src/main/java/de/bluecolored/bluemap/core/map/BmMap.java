@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.core.map;
 
 import com.flowpowered.math.vector.Vector2i;
+import de.bluecolored.bluemap.api.markers.MarkerGson;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
 import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -129,6 +130,7 @@ public class BmMap {
     public synchronized void save() {
         lowresModelManager.save();
         saveRenderState();
+        saveMarkerState();
     }
 
     private void loadRenderState() throws IOException {
@@ -142,7 +144,7 @@ public class BmMap {
         }
     }
 
-    private void saveRenderState() {
+    public synchronized void saveRenderState() {
         try (OutputStream out = storage.writeMeta(id, MetaType.RENDER_STATE)) {
             this.renderState.save(out);
         } catch (IOException ex){
@@ -179,6 +181,17 @@ public class BmMap {
             ResourcesGson.INSTANCE.toJson(this, writer);
         } catch (Exception ex) {
             Logger.global.logError("Failed to save settings for map '" + getId() + "'!", ex);
+        }
+    }
+
+    public synchronized void saveMarkerState() {
+        try (
+                OutputStream out = storage.writeMeta(id, MetaType.MARKERS);
+                Writer writer = new OutputStreamWriter(out)
+        ) {
+            MarkerGson.INSTANCE.toJson(this.markerSets, writer);
+        } catch (Exception ex) {
+            Logger.global.logError("Failed to save markers for map '" + getId() + "'!", ex);
         }
     }
 

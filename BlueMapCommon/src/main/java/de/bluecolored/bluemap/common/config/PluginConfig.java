@@ -19,6 +19,9 @@ public class PluginConfig {
     private boolean hideSneaking = false;
     private boolean hideDifferentWorld = false;
 
+    private int writeMarkersInterval = 0;
+    private int writePlayersInterval = 0;
+
     private boolean skinDownload = true;
 
     private int playerRenderLimit = -1;
@@ -47,6 +50,14 @@ public class PluginConfig {
 
     public boolean isHideDifferentWorld() {
         return hideDifferentWorld;
+    }
+
+    public int getWriteMarkersInterval() {
+        return writeMarkersInterval;
+    }
+
+    public int getWritePlayersInterval() {
+        return writePlayersInterval;
     }
 
     public boolean isSkinDownload() {

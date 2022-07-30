@@ -28,7 +28,8 @@ public enum MetaType {
 
     TEXTURES ("textures", "textures.json", "application/json"),
     SETTINGS ("settings", "settings.json", "application/json"),
-    //MARKERS ("markers", "markers.json", "application/json"),
+    MARKERS ("markers", "live/markers", "application/json"),
+    PLAYERS ("players", "live/players", "application/json"),
     RENDER_STATE ("render_state", ".rstate", "application/octet-stream");
 
     private final String typeId;

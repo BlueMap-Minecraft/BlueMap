@@ -80,6 +80,11 @@ public class BlueMapCLI implements ServerInterface {
         //load maps
         Map<String, BmMap> maps = blueMap.getMaps();
 
+        //write static markers
+        for (BmMap map : maps.values()) {
+
+        }
+
         //watcher
         List<RegionFileWatchService> regionFileWatchServices = new ArrayList<>();
         if (watch) {

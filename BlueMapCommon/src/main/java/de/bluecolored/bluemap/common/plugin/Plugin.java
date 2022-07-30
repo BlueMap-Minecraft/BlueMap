@@ -24,12 +24,14 @@
  */
 package de.bluecolored.bluemap.common.plugin;
 
+import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.common.BlueMapConfigProvider;
 import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.InterruptableReentrantLock;
 import de.bluecolored.bluemap.common.MissingResourcesException;
 import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.config.*;
+import de.bluecolored.bluemap.common.live.LivePlayersDataSupplier;
 import de.bluecolored.bluemap.common.plugin.skins.PlayerSkinUpdater;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
@@ -39,16 +41,19 @@ import de.bluecolored.bluemap.common.web.FileRequestHandler;
 import de.bluecolored.bluemap.common.web.MapRequestHandler;
 import de.bluecolored.bluemap.common.web.RoutingRequestHandler;
 import de.bluecolored.bluemap.common.webserver.WebServer;
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.metrics.Metrics;
+import de.bluecolored.bluemap.core.storage.MetaType;
 import de.bluecolored.bluemap.core.world.World;
 import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 import org.spongepowered.configurate.serialize.SerializationException;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -226,6 +231,30 @@ public class Plugin implements ServerEventListener {
                 };
                 daemonTimer.schedule(saveTask, TimeUnit.MINUTES.toMillis(2), TimeUnit.MINUTES.toMillis(2));
 
+                //periodically save markers
+                int writeMarkersInterval = pluginConfig.getWriteMarkersInterval();
+                if (writeMarkersInterval > 0) {
+                    TimerTask saveMarkersTask = new TimerTask() {
+                        @Override
+                        public void run() {
+                            saveMarkerStates();
+                        }
+                    };
+                    daemonTimer.schedule(saveMarkersTask, TimeUnit.SECONDS.toMillis(writeMarkersInterval), TimeUnit.SECONDS.toMillis(writeMarkersInterval));
+                }
+
+                //periodically save players
+                int writePlayersInterval = pluginConfig.getWritePlayersInterval();
+                if (writePlayersInterval > 0) {
+                    TimerTask savePlayersTask = new TimerTask() {
+                        @Override
+                        public void run() {
+                            savePlayerStates();
+                        }
+                    };
+                    daemonTimer.schedule(savePlayersTask, TimeUnit.SECONDS.toMillis(writePlayersInterval), TimeUnit.SECONDS.toMillis(writePlayersInterval));
+                }
+
                 //periodically restart the file-watchers
                 TimerTask fileWatcherRestartTask = new TimerTask() {
                     @Override
@@ -374,6 +403,35 @@ public class Plugin implements ServerEventListener {
         if (maps != null) {
             for (BmMap map : maps.values()) {
                 map.save();
+            }
+        }
+    }
+
+    public void saveMarkerStates() {
+        if (maps != null) {
+            for (BmMap map : maps.values()) {
+                map.saveMarkerState();
+            }
+        }
+    }
+
+    public void savePlayerStates() {
+        if (maps != null) {
+            for (BmMap map : maps.values()) {
+                var dataSupplier = new LivePlayersDataSupplier(
+                        serverInterface,
+                        getConfigs().getPluginConfig(),
+                        map.getWorldId(),
+                        Predicate.not(pluginState::isPlayerHidden)
+                );
+                try (
+                        OutputStream out = map.getStorage().writeMeta(map.getId(), MetaType.PLAYERS);
+                        Writer writer = new OutputStreamWriter(out)
+                ) {
+                    writer.write(dataSupplier.get());
+                } catch (Exception ex) {
+                    Logger.global.logError("Failed to save players for map '" + map.getId() + "'!", ex);
+                }
             }
         }
     }
