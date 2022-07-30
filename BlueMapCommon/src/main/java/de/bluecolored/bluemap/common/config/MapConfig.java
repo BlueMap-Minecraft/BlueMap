@@ -4,6 +4,7 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.map.MapSettings;
+import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import org.spongepowered.configurate.objectmapping.meta.Required;
 
@@ -49,6 +50,8 @@ public class MapConfig implements MapSettings {
     private String storage = "file";
 
     private boolean ignoreMissingLightData = false;
+
+    private ConfigurationNode markerSets = null;
 
     // hidden config fields
     private int hiresTileSize = 32;
@@ -111,6 +114,10 @@ public class MapConfig implements MapSettings {
 
     public boolean isIgnoreMissingLightData() {
         return ignoreMissingLightData;
+    }
+
+    public ConfigurationNode getMarkerSets() {
+        return markerSets;
     }
 
     public int getHiresTileSize() {

@@ -64,7 +64,7 @@ public class BmMap {
     private final HiresModelManager hiresModelManager;
     private final LowresModelManager lowresModelManager;
 
-    private final Map<String, MarkerSet> markerSets;
+    private final ConcurrentHashMap<String, MarkerSet> markerSets;
 
     private Predicate<Vector2i> tileFilter;
 

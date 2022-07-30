@@ -24,6 +24,14 @@
  */
 package de.bluecolored.bluemap.common;
 
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParseException;
+import com.google.gson.reflect.TypeToken;
+import de.bluecolored.bluemap.api.debug.DebugDump;
+import de.bluecolored.bluemap.api.markers.MarkerGson;
+import de.bluecolored.bluemap.api.markers.MarkerSet;
 import de.bluecolored.bluemap.common.config.ConfigurationException;
 import de.bluecolored.bluemap.common.config.MapConfig;
 import de.bluecolored.bluemap.common.config.storage.StorageConfig;
@@ -31,7 +39,6 @@ import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.MinecraftVersion;
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
@@ -41,8 +48,12 @@ import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.AtomicFileHelper;
 import de.bluecolored.bluemap.core.world.World;
 import org.apache.commons.io.FileUtils;
+import org.spongepowered.configurate.ConfigurateException;
+import org.spongepowered.configurate.gson.GsonConfigurationLoader;
+import org.spongepowered.configurate.loader.HeaderMode;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -206,11 +217,32 @@ public class BlueMapService {
                         getResourcePack(),
                         mapConfig
                 );
-
                 maps.put(id, map);
+
+                // load marker-config by converting it first from hocon to json and then loading it with MarkerGson
+                if (!mapConfig.getMarkerSets().empty()) {
+                    String markerJson = GsonConfigurationLoader.builder()
+                            .headerMode(HeaderMode.NONE)
+                            .lenient(false)
+                            .indent(0)
+                            .buildAndSaveString(mapConfig.getMarkerSets());
+                    Gson gson = MarkerGson.addAdapters(new GsonBuilder())
+                            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_DASHES)
+                            .create();
+                    Type markerSetType = new TypeToken<Map<String, MarkerSet>>() {}.getType();
+                    Map<String, MarkerSet> markerSets = gson.fromJson(markerJson, markerSetType);
+                    map.getMarkerSets().putAll(markerSets);
+                }
+
+            } catch (ConfigurateException | JsonParseException ex) {
+                throw new ConfigurationException("Failed to load map '" + id + "': \n" +
+                        "Failed to create the markers for this map!\n" +
+                        "Make sure your marker-configuration for this map is valid.",
+                        ex);
             } catch (IOException ex) {
                 throw new ConfigurationException("Failed to load map '" + id + "'!", ex);
             }
+
         }
 
         worlds = Collections.unmodifiableMap(worlds);
