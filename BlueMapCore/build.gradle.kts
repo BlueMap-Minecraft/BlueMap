@@ -92,6 +92,7 @@ tasks.test {
 }
 
 tasks.processResources {
+    outputs.upToDateWhen { false }
     from("src/main/resources") {
         include("de/bluecolored/bluemap/version.json")
         duplicatesStrategy = DuplicatesStrategy.INCLUDE

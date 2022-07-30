@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "de.bluecolored.bluemap.cli"
-version = "0.0.0"
+version = System.getProperty("bluemap.version") ?: "?" // set by BlueMapCore
 
 val javaTarget = 11
 java {
@@ -70,9 +70,8 @@ tasks.jar {
 }
 
 tasks.shadowJar {
-	val version = System.getProperty("bluemap.version") ?: "" // set by BlueMapCore
 	destinationDirectory.set(file("../../build/release"))
-	archiveFileName.set("BlueMap-${version}-${project.name}.jar")
+	archiveFileName.set("BlueMap-${project.version}-${project.name}.jar")
 
 	//relocate ("com.flowpowered.math", "de.bluecolored.shadow.flowpowered.math") //DON"T relocate this, because the API depends on it
 	relocate ("com.google", "de.bluecolored.shadow.google")

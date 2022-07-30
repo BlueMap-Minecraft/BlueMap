@@ -20,7 +20,7 @@ plugins {
 apply plugin: "net.minecraftforge.gradle"
 
 group = "de.bluecolored.bluemap.forge"
-version = "0.0.0"
+version = System.getProperty("bluemap.version") ?: "?" // set by BlueMapCore
 archivesBaseName = 'bluemap'
 
 def javaTarget = 17
@@ -119,9 +119,8 @@ test {
 }
 
 shadowJar {
-	def version = System.getProperty("bluemap.version") ?: "" // set by BlueMapCore
 	destinationDirectory.set(file("../../build/release"))
-	archiveFileName.set("BlueMap-${version}-${project.name}.jar")
+	archiveFileName.set("BlueMap-${project.version}-${project.name}.jar")
 
 	configurations = [project.configurations.shadowInclude]
 

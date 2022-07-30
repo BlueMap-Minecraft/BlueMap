@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "de.bluecolored.bluemap.fabric"
-version = "0.0.0"
+version = System.getProperty("bluemap.version") ?: "?" // set by BlueMapCore
 
 val javaTarget = 11
 java {
@@ -118,9 +118,8 @@ tasks.shadowJar {
 }
 
 tasks.register("remappedShadowJar", type = RemapJarTask::class) {
-	val version = System.getProperty("bluemap.version") ?: "" // set by BlueMapCore
 	destinationDirectory.set(file("../../build/release"))
-	archiveFileName.set("BlueMap-${version}-${project.name}.jar")
+	archiveFileName.set("BlueMap-${project.version}-${project.name}.jar")
 	dependsOn (tasks.shadowJar)
 	inputFile.set(tasks.shadowJar.get().archiveFile)
 	addNestedDependencies.set(true)
