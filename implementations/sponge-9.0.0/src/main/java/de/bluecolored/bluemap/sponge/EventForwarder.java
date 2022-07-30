@@ -24,45 +24,35 @@
  */
 package de.bluecolored.bluemap.sponge;
 
-import de.bluecolored.bluemap.core.logger.AbstractLogger;
-import org.apache.logging.log4j.Logger;
+import de.bluecolored.bluemap.common.plugin.text.Text;
+import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import org.spongepowered.api.event.Listener;
+import org.spongepowered.api.event.Order;
+import org.spongepowered.api.event.message.PlayerChatEvent;
+import org.spongepowered.api.event.network.ServerSideConnectionEvent;
 
-public class Log4J2Logger extends AbstractLogger {
+public class EventForwarder {
 
-    private final Logger out;
+    private ServerEventListener listener;
 
-    public Log4J2Logger(Logger out) {
-        this.out = out;
+    public EventForwarder(ServerEventListener listener) {
+        this.listener = listener;
     }
 
-    @Override
-    public void logError(String message, Throwable throwable) {
-        out.error(message, throwable);
+    @Listener(order = Order.POST)
+    public void onPlayerJoin(ServerSideConnectionEvent.Join evt) {
+        listener.onPlayerJoin(evt.player().uniqueId());
     }
 
-    @Override
-    public void logWarning(String message) {
-        out.warn(message);
+    @Listener(order = Order.POST)
+    public void onPlayerLeave(ServerSideConnectionEvent.Disconnect evt) {
+        listener.onPlayerJoin(evt.player().uniqueId());
     }
 
-    @Override
-    public void logInfo(String message) {
-        out.info(message);
-    }
-
-    @Override
-    public void logDebug(String message) {
-        if (out.isDebugEnabled()) out.debug(message);
-    }
-
-    @Override
-    public void noFloodDebug(String message) {
-        if (out.isDebugEnabled()) super.noFloodDebug(message);
-    }
-
-    @Override
-    public void noFloodDebug(String key, String message) {
-        if (out.isDebugEnabled()) super.noFloodDebug(key, message);
+    @Listener(order = Order.POST)
+    public void onPlayerChat(PlayerChatEvent evt) {
+        listener.onChatMessage(Text.of(PlainTextComponentSerializer.plainText().serialize(evt.message())));
     }
 
 }

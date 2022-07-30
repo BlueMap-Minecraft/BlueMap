@@ -19,3 +19,4 @@ includeBuild("implementations/forge-1.19")
 includeBuild("implementations/spigot")
 
 includeBuild("implementations/sponge-8.0.0")
+includeBuild("implementations/sponge-9.0.0")
