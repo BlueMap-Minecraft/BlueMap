@@ -27,9 +27,11 @@ public class BlueMapAPIImpl extends BlueMapAPI {
     public BlueMapAPIImpl(Plugin plugin) {
         this.plugin = plugin;
         this.worldCache = Caffeine.newBuilder()
+                .executor(BlueMap.THREAD_POOL)
                 .weakKeys()
                 .build(this::getWorldUncached);
         this.mapCache = Caffeine.newBuilder()
+                .executor(BlueMap.THREAD_POOL)
                 .weakKeys()
                 .build(this::getMapUncached);
     }

@@ -194,11 +194,13 @@ public class Plugin implements ServerEventListener {
                 renderManager = new RenderManager();
 
                 //update all maps
-                for (BmMap map : maps.values()) {
+                maps.values().stream()
+                        .sorted(Comparator.comparing(bmMap -> bmMap.getMapSettings().getSorting()))
+                        .forEach(map -> {
                     if (pluginState.getMapState(map).isUpdateEnabled()) {
                         renderManager.scheduleRenderTask(new MapUpdateTask(map));
                     }
-                }
+                });
 
                 //start render-manager
                 if (pluginState.isRenderThreadsEnabled()) {
