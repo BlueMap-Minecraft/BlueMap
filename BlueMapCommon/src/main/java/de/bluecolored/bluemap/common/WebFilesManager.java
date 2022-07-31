@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.common;
 
+import com.google.gson.GsonBuilder;
 import de.bluecolored.bluemap.common.config.WebappConfig;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
@@ -65,7 +66,10 @@ public class WebFilesManager {
         Files.createDirectories(getSettingsFile().getParent());
         try (BufferedWriter writer = Files.newBufferedWriter(getSettingsFile(),
                 StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-            ResourcesGson.INSTANCE.toJson(this.settings, writer);
+            ResourcesGson.addAdapter(new GsonBuilder())
+                    .setPrettyPrinting() // enable pretty printing for easy editing
+                    .create()
+                    .toJson(this.settings, writer);
         }
     }
 

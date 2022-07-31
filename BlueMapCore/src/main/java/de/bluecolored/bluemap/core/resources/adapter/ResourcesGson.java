@@ -17,12 +17,12 @@ import java.util.EnumMap;
 
 public class ResourcesGson {
 
-    public static final Gson INSTANCE = createGson();
+    public static final Gson INSTANCE = addAdapter(new GsonBuilder())
+            .setLenient()
+            .create();
 
-    private static Gson createGson() {
-
-        return new GsonBuilder()
-                .setLenient()
+    public static GsonBuilder addAdapter(GsonBuilder builder) {
+        return builder
                 .registerTypeAdapter(Axis.class, new AxisAdapter())
                 .registerTypeAdapter(Color.class, new ColorAdapter())
                 .registerTypeAdapter(Direction.class, new DirectionAdapter())
@@ -35,9 +35,7 @@ public class ResourcesGson {
                 .registerTypeAdapter(
                         new TypeToken<EnumMap<Direction, Face>>(){}.getType(),
                         new EnumMapInstanceCreator<Direction, Face>(Direction.class)
-                )
-                .create();
-
+                );
     }
 
     public static String nextStringOrBoolean(JsonReader in) throws IOException {
