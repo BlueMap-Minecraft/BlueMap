@@ -59,7 +59,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
-import java.util.concurrent.CompletionException;
 import java.util.stream.Stream;
 
 /**
@@ -329,20 +328,14 @@ public class BlueMapService {
             }
 
             try {
-                Logger.global.logInfo("Loading resources...");
                 resourcePack = new ResourcePack();
 
+                List<Path> resourcePackRoots = new ArrayList<>();
                 // load from resourcepack folder
                 try (Stream<Path> resourcepackFiles = Files.list(resourcePackFolder)) {
                     resourcepackFiles
                             .sorted(Comparator.reverseOrder())
-                            .forEach(resourcepackFile -> {
-                                try {
-                                    resourcePack.loadResources(resourcepackFile);
-                                } catch (IOException e) {
-                                    throw new CompletionException(e);
-                                }
-                            });
+                            .forEach(resourcePackRoots::add);
                 }
 
                 if (configs.getCoreConfig().isScanForModResources()) {
@@ -354,13 +347,7 @@ public class BlueMapService {
                             resourcepackFiles
                                     .filter(Files::isRegularFile)
                                     .filter(file -> file.getFileName().toString().endsWith(".jar"))
-                                    .forEach(resourcepackFile -> {
-                                        try {
-                                            resourcePack.loadResources(resourcepackFile);
-                                        } catch (IOException e) {
-                                            throw new CompletionException(e);
-                                        }
-                                    });
+                                    .forEach(resourcePackRoots::add);
                         }
                     }
 
@@ -370,23 +357,16 @@ public class BlueMapService {
                         if (!Files.isDirectory(datapacksFolder)) continue;
 
                         try (Stream<Path> resourcepackFiles = Files.list(worldFolder.resolve("datapacks"))) {
-                            resourcepackFiles
-                                    .forEach(resourcepackFile -> {
-                                        try {
-                                            resourcePack.loadResources(resourcepackFile);
-                                        } catch (IOException e) {
-                                            throw new CompletionException(e);
-                                        }
-                                    });
+                            resourcepackFiles.forEach(resourcePackRoots::add);
                         }
                     }
 
                 }
 
-                resourcePack.loadResources(resourceExtensionsFile);
-                resourcePack.loadResources(defaultResourceFile);
-                resourcePack.bake();
-                Logger.global.logInfo("Resources loaded.");
+                resourcePackRoots.add(resourceExtensionsFile);
+                resourcePackRoots.add(defaultResourceFile);
+
+                resourcePack.loadResources(resourcePackRoots);
             } catch (IOException | RuntimeException e) {
                 throw new ConfigurationException("Failed to parse resources!\n" +
                         "Is one of your resource-packs corrupted?", e);

@@ -4,8 +4,8 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.api.debug.DebugDump;
+import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.BlockColorCalculatorFactory;
 import de.bluecolored.bluemap.core.resources.BlockPropertiesConfig;
@@ -13,6 +13,7 @@ import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.biome.BiomeConfig;
 import de.bluecolored.bluemap.core.resources.resourcepack.blockmodel.BlockModel;
+import de.bluecolored.bluemap.core.resources.resourcepack.blockmodel.TextureVariable;
 import de.bluecolored.bluemap.core.resources.resourcepack.blockstate.BlockState;
 import de.bluecolored.bluemap.core.resources.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Tristate;
@@ -30,7 +31,9 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.regex.Pattern;
@@ -157,18 +160,33 @@ public class ResourcePack {
         return props.build();
     }
 
-    public synchronized void loadResources(Path root) throws IOException {
-        Logger.global.logDebug("Loading resources from: " + root + " ...");
-        loadResourcesInternal(root);
+    public synchronized void loadResources(Iterable<Path> roots) throws IOException {
+        Logger.global.logInfo("Loading resources...");
+
+        for (Path root : roots) {
+            Logger.global.logDebug("Loading resources from: " + root + " ...");
+            loadResourcePath(root, this::loadResources);
+        }
+
+        Logger.global.logInfo("Loading textures...");
+        for (Path root : roots) {
+            Logger.global.logDebug("Loading textures from: " + root + " ...");
+            loadResourcePath(root, this::loadTextures);
+        }
+
+        Logger.global.logInfo("Baking resources...");
+        bake();
+
+
+        Logger.global.logInfo("Resources loaded.");
     }
 
-    private synchronized void loadResourcesInternal(Path root) throws IOException {
-
+    private void loadResourcePath(Path root, PathLoader resourceLoader) throws IOException {
         if (!Files.isDirectory(root)) {
             try (FileSystem fileSystem = FileSystems.newFileSystem(root, (ClassLoader) null)) {
                 for (Path fsRoot : fileSystem.getRootDirectories()) {
                     if (!Files.isDirectory(fsRoot)) continue;
-                    this.loadResourcesInternal(fsRoot);
+                    loadResourcePath(fsRoot, resourceLoader);
                 }
             } catch (Exception ex) {
                 Logger.global.logDebug("Failed to read '" + root + "': " + ex);
@@ -180,16 +198,20 @@ public class ResourcePack {
         Path fabricModJson = root.resolve("fabric.mod.json");
         if (Files.isRegularFile(fabricModJson)) {
             try (BufferedReader reader = Files.newBufferedReader(fabricModJson)) {
-                 JsonObject rootElement = ResourcesGson.INSTANCE.fromJson(reader, JsonObject.class);
-                 for (JsonElement element : rootElement.getAsJsonArray("jars")) {
-                     Path file = root.resolve(element.getAsJsonObject().get("file").getAsString());
-                     if (Files.exists(file)) loadResourcesInternal(file);
-                 }
+                JsonObject rootElement = ResourcesGson.INSTANCE.fromJson(reader, JsonObject.class);
+                for (JsonElement element : rootElement.getAsJsonArray("jars")) {
+                    Path file = root.resolve(element.getAsJsonObject().get("file").getAsString());
+                    if (Files.exists(file)) loadResourcePath(file, resourceLoader);
+                }
             } catch (Exception ex) {
                 Logger.global.logDebug("Failed to read fabric.mod.json: " + ex);
             }
         }
 
+        resourceLoader.load(root);
+    }
+
+    private void loadResources(Path root) throws IOException {
         try {
             // do those in parallel
             CompletableFuture.allOf(
@@ -224,24 +246,6 @@ public class ResourcePack {
                                         return ResourcesGson.INSTANCE.fromJson(reader, BlockModel.class);
                                     }
                                 }, blockModels));
-                    }, BlueMap.THREAD_POOL),
-
-                    // load textures
-                    CompletableFuture.runAsync(() -> {
-                        list(root.resolve("assets"))
-                                .map(path -> path.resolve("textures"))
-                                .flatMap(ResourcePack::list)
-                                .filter(path -> Pattern.matches("blocks?", path.getFileName().toString()))
-                                .filter(Files::isDirectory)
-                                .flatMap(ResourcePack::walk)
-                                .filter(path -> path.getFileName().toString().endsWith(".png"))
-                                .filter(Files::isRegularFile)
-                                .forEach(file -> loadResource(root, file, () -> {
-                                    ResourcePath<Texture> resourcePath = new ResourcePath<>(root.relativize(file));
-                                    try (InputStream in = Files.newInputStream(file)) {
-                                        return Texture.from(resourcePath, ImageIO.read(in));
-                                    }
-                                }, textures));
                     }, BlueMap.THREAD_POOL),
 
                     // load colormaps
@@ -322,8 +326,42 @@ public class ResourcePack {
         }
     }
 
-    public synchronized void bake() throws IOException {
-        Logger.global.logDebug("Baking resources...");
+    private void loadTextures(Path root) throws IOException {
+        try {
+
+            // collect all used textures
+            Set<ResourcePath<Texture>> usedTextures = new HashSet<>();
+            for (BlockModel model : blockModels.values()) {
+                for (TextureVariable textureVariable : model.getTextures().values()) {
+                    if (textureVariable.isReference()) continue;
+                    usedTextures.add(textureVariable.getTexturePath());
+                }
+            }
+
+            // load textures
+            list(root.resolve("assets"))
+                    .map(path -> path.resolve("textures"))
+                    .flatMap(ResourcePack::walk)
+                    .filter(path -> path.getFileName().toString().endsWith(".png"))
+                    .filter(Files::isRegularFile)
+                    .forEach(file -> loadResource(root, file, () -> {
+                        ResourcePath<Texture> resourcePath = new ResourcePath<>(root.relativize(file));
+                        if (!usedTextures.contains(resourcePath)) return null; // don't load unused textures
+
+                        try (InputStream in = Files.newInputStream(file)) {
+                            return Texture.from(resourcePath, ImageIO.read(in));
+                        }
+                    }, textures));
+
+        } catch (RuntimeException ex) {
+            Throwable cause = ex.getCause();
+            if (cause instanceof IOException) throw (IOException) cause;
+            if (cause != null) throw new IOException(cause);
+            throw new IOException(ex);
+        }
+    }
+
+    private void bake() throws IOException {
 
         // fill path maps
         blockStates.keySet().forEach(path -> blockStatePaths.put(path.getFormatted(), path));
@@ -352,6 +390,7 @@ public class ResourcePack {
         BufferedImage grass = new ResourcePath<BufferedImage>("minecraft:colormap/grass").getResource(colormaps::get);
         if (grass == null) throw new IOException("Failed to bake resource-pack: No grass-colormap found!");
         this.colorCalculatorFactory.setGrassMap(grass);
+
     }
 
     private <T> void loadResource(Path root, Path file, Loader<T> loader, Map<ResourcePath<T>, T> resultMap) {
@@ -360,6 +399,8 @@ public class ResourcePack {
             if (resultMap.containsKey(resourcePath)) return; // don't load already present resources
 
             T resource = loader.load();
+            if (resource == null) return; // don't load missing resources
+
             resourcePath.setResource(resource);
             resultMap.put(resourcePath, resource);
         } catch (Exception ex) {
@@ -387,6 +428,10 @@ public class ResourcePack {
 
     private interface Loader<T> {
         T load() throws IOException;
+    }
+
+    private interface PathLoader {
+        void load(Path root) throws IOException;
     }
 
 }
