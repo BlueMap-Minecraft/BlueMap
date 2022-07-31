@@ -263,7 +263,7 @@ public class BlueMapService {
                 storage = storageConfig.createStorage();
                 storage.initialize();
             } catch (Exception ex) {
-                throw new ConfigurationException("Failed to load and initialize the storage '" + storageId + "' for!",
+                throw new ConfigurationException("Failed to load and initialize the storage '" + storageId + "'!",
                         ex);
             }
 
