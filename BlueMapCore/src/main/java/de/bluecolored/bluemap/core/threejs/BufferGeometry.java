@@ -24,20 +24,16 @@
  */
 package de.bluecolored.bluemap.core.threejs;
 
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.UUID;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+
+import java.io.IOException;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.util.*;
+import java.util.Map.Entry;
 
 public class BufferGeometry {
 
@@ -84,6 +80,7 @@ public class BufferGeometry {
             JsonWriter json = gson.newJsonWriter(sw);
 
             json.beginObject(); // main-object
+            json.name("tileGeometry").beginObject(); // tile-geometry-object
 
             // set special values
             json.name("type").value("BufferGeometry");
@@ -114,6 +111,7 @@ public class BufferGeometry {
 
             json.endArray(); // groups
             json.endObject(); // data
+            json.endObject(); // tile-geometry-object
             json.endObject(); // main-object
 
             // save and return

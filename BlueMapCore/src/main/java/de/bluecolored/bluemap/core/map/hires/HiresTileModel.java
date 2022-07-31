@@ -394,6 +394,7 @@ public class HiresTileModel {
         JsonWriter json = gson.newJsonWriter(new BufferedWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8), 81920));
 
         json.beginObject(); // main-object
+        json.name("tileGeometry").beginObject(); // tile-geometry-object
 
         // set special values
         json.name("type").value("BufferGeometry");
@@ -415,6 +416,7 @@ public class HiresTileModel {
         writeMaterialGroups(json);
 
         json.endObject(); // data
+        json.endObject(); // tile-geometry-object
         json.endObject(); // main-object
 
         // save and return
