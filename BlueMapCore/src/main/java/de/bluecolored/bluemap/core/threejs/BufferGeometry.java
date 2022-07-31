@@ -134,6 +134,10 @@ public class BufferGeometry {
         Map<String, BufferAttribute> attributes = new HashMap<>();
 
         json.beginObject(); // root
+
+        while (!"tileGeometry".equals(json.nextName())) json.skipValue(); // find tileGeometry
+        json.beginObject(); // tileGeometry
+
         while (json.hasNext()) {
             String name1 = json.nextName();
 
@@ -186,6 +190,9 @@ public class BufferGeometry {
 
             else json.skipValue();
         }
+        json.endObject(); // tileGeometry
+
+        while (json.hasNext()) json.skipValue(); // skip remaining values
         json.endObject(); // root
 
         groups.sort((g1, g2) -> (int) Math.signum(g1.getStart() - g2.getStart()));
