@@ -19,7 +19,7 @@ public class WebserverConfig {
 
     private String ip = "0.0.0.0";
 
-    private short port = 8100;
+    private int port = 8100;
 
     private int maxConnectionCount = 100;
 
@@ -45,7 +45,7 @@ public class WebserverConfig {
         }
     }
 
-    public short getPort() {
+    public int getPort() {
         return port;
     }
 
