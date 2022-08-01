@@ -1,6 +1,6 @@
 package de.bluecolored.bluemap.common.live;
 
-import de.bluecolored.bluemap.api.markers.MarkerGson;
+import de.bluecolored.bluemap.api.gson.MarkerGson;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
 
 import java.util.Map;
