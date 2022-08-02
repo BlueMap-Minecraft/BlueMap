@@ -32,6 +32,8 @@ import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 import org.spongepowered.configurate.serialize.SerializationException;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -168,7 +170,9 @@ public class StateDumper {
             }
 
         } catch (Exception ex) {
-            node.set("Error: " + ex);
+            StringWriter stringWriter = new StringWriter();
+            ex.printStackTrace(new PrintWriter(stringWriter));
+            node.set("Error: " + ex + " >> " + stringWriter);
         }
     }
 

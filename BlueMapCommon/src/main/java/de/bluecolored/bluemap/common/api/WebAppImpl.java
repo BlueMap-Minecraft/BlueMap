@@ -14,7 +14,7 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 public class WebAppImpl implements WebApp {
-    private static final String IMAGE_ROOT_PATH = "images";
+    private static final Path IMAGE_ROOT_PATH = Path.of("data", "images");
 
     private final Plugin plugin;
 
@@ -43,9 +43,10 @@ public class WebAppImpl implements WebApp {
         Path webRoot = getWebRoot().toAbsolutePath();
         String separator = webRoot.getFileSystem().getSeparator();
 
-        Path webDataRoot = webRoot.resolve("data");
-        Path imagePath = webDataRoot.resolve(Path.of(IMAGE_ROOT_PATH, path.replace("/", separator) + ".png")).toAbsolutePath();
+        Path imageRootFolder = webRoot.resolve(IMAGE_ROOT_PATH);
+        Path imagePath = imageRootFolder.resolve(Path.of(path.replace("/", separator) + ".png")).toAbsolutePath();
 
+        Files.createDirectories(imagePath.getParent());
         Files.deleteIfExists(imagePath);
         Files.createFile(imagePath);
 
@@ -64,24 +65,27 @@ public class WebAppImpl implements WebApp {
 
         Map<String, String> availableImagesMap = new HashMap<>();
 
-        try (Stream<Path> fileStream = Files.walk(imageRootPath)){
-            fileStream
-                    .filter(p -> !Files.isDirectory(p))
-                    .filter(p -> p.getFileName().toString().endsWith(".png"))
-                    .map(Path::toAbsolutePath)
-                    .forEach(p -> {
-                        try {
-                            String key = imageRootPath.relativize(p).toString();
-                            key = key
-                                    .substring(0, key.length() - 4) //remove .png
-                                    .replace(separator, "/");
+        if (Files.exists(imageRootPath)) {
+            try (Stream<Path> fileStream = Files.walk(imageRootPath)) {
+                fileStream
+                        .filter(p -> !Files.isDirectory(p))
+                        .filter(p -> p.getFileName().toString().endsWith(".png"))
+                        .map(Path::toAbsolutePath)
+                        .forEach(p -> {
+                            try {
+                                String key = imageRootPath.relativize(p).toString();
+                                key = key
+                                        .substring(0, key.length() - 4) //remove .png
+                                        .replace(separator, "/");
 
-                            String value = webRoot.relativize(p).toString()
-                                    .replace(separator, "/");
+                                String value = webRoot.relativize(p).toString()
+                                        .replace(separator, "/");
 
-                            availableImagesMap.put(key, value);
-                        } catch (IllegalArgumentException ignore) {}
-                    });
+                                availableImagesMap.put(key, value);
+                            } catch (IllegalArgumentException ignore) {
+                            }
+                        });
+            }
         }
 
         return availableImagesMap;
