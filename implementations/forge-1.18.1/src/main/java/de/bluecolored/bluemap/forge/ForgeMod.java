@@ -134,7 +134,7 @@ public class ForgeMod implements ServerInterface {
 
     @Override
     public MinecraftVersion getMinecraftVersion() {
-        return new MinecraftVersion(1, 17, 1);
+        return new MinecraftVersion(1, 18, 1);
     }
 
     @Override

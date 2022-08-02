@@ -78,7 +78,7 @@ public class ForgeMod implements ServerInterface {
         this.onlinePlayerMap = new ConcurrentHashMap<>();
         this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 
-        this.pluginInstance = new Plugin("forge-1.19", this);
+        this.pluginInstance = new Plugin("forge-1.19.1", this);
 
         this.eventForwarder = new ForgeEventForwarder();
         this.worlds = Caffeine.newBuilder()
@@ -134,7 +134,7 @@ public class ForgeMod implements ServerInterface {
 
     @Override
     public MinecraftVersion getMinecraftVersion() {
-        return new MinecraftVersion(1, 19, 0);
+        return new MinecraftVersion(1, 19, 1);
     }
 
     @Override
@@ -190,7 +190,7 @@ public class ForgeMod implements ServerInterface {
 
     @SubscribeEvent
     public void onPlayerJoin(PlayerLoggedInEvent evt) {
-        var playerInstance = evt.getPlayer();
+        var playerInstance = evt.getEntity();
         if (!(playerInstance instanceof ServerPlayer)) return;
 
         ForgePlayer player = new ForgePlayer(playerInstance.getUUID(), this, getPlugin().getBlueMap());
@@ -200,7 +200,7 @@ public class ForgeMod implements ServerInterface {
 
     @SubscribeEvent
     public void onPlayerLeave(PlayerLoggedOutEvent evt) {
-        var player = evt.getPlayer();
+        var player = evt.getEntity();
         if (!(player instanceof ServerPlayer)) return;
 
         UUID playerUUID = player.getUUID();
