@@ -234,7 +234,8 @@ public class SpongePlugin implements ServerInterface {
 
         if (world instanceof String) {
             ResourceKey resourceKey = ResourceKey.resolve((String) world);
-            if (resourceKey != null) world = resourceKey;
+            var serverWorld = Sponge.server().worldManager().world(resourceKey).orElse(null);
+            if (serverWorld != null) world = serverWorld;
         }
 
         if (world instanceof ResourceKey) {

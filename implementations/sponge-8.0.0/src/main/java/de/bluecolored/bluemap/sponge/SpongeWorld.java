@@ -63,7 +63,7 @@ public class SpongeWorld implements ServerWorld {
     public Optional<String> getId() {
         var world = delegate.get();
         if (world != null) {
-            return Optional.of(world.key().formatted());
+            return Optional.of(world.uniqueId().toString());
         }
         return Optional.empty();
     }
