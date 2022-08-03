@@ -35,7 +35,9 @@ import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
+import net.minecraft.core.Registry;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -161,6 +163,11 @@ public class ForgeMod implements ServerInterface {
     public Optional<ServerWorld> getWorld(Object world) {
         if (world instanceof Path)
             return getWorld((Path) world);
+
+        if (world instanceof String) {
+            ResourceLocation resourceLocation = ResourceLocation.tryParse((String) world);
+            if (resourceLocation != null) world = serverInstance.getLevel(ResourceKey.create(Registry.DIMENSION_REGISTRY, resourceLocation));
+        }
 
         if (world instanceof ResourceKey) {
             try {

@@ -162,6 +162,13 @@ public class ForgeMod implements ServerInterface {
         if (world instanceof Path)
             return getWorld((Path) world);
 
+        if (world instanceof String) {
+            ResourceLocation resourceLocation = ResourceLocation.tryCreate((String) world);
+            DimensionType dimensionType = null;
+            if (resourceLocation != null) dimensionType = DimensionType.byName(resourceLocation);
+            if (dimensionType != null) world = serverInstance.getWorld(dimensionType);
+        }
+
         if (world instanceof ResourceLocation) {
             DimensionType dimensionType = DimensionType.byName((ResourceLocation) world);
             if (dimensionType != null) world = dimensionType;

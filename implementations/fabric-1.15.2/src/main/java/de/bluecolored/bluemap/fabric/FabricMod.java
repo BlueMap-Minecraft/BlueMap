@@ -149,6 +149,11 @@ public class FabricMod implements ModInitializer, ServerInterface {
         if (world instanceof Path)
             return getWorld((Path) world);
 
+        if (world instanceof String) {
+            Identifier identifier = Identifier.tryParse((String) world);
+            if (identifier != null) world = identifier;
+        }
+
         if (world instanceof Identifier) {
             DimensionType dimensionType = DimensionType.byId((Identifier) world);
             if (dimensionType != null) world = dimensionType;
