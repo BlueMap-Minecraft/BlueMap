@@ -41,6 +41,7 @@ import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.minecraft.SharedConstants;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
@@ -124,7 +125,11 @@ public class FabricMod implements ModInitializer, ServerInterface {
 
     @Override
     public MinecraftVersion getMinecraftVersion() {
-        return new MinecraftVersion(1, 19);
+        try {
+            return MinecraftVersion.of(SharedConstants.getGameVersion().getReleaseTarget());
+        } catch (IllegalArgumentException ex) {
+            return MinecraftVersion.LATEST_SUPPORTED;
+        }
     }
 
     @Override
