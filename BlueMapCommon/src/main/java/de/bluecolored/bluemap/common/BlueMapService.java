@@ -105,20 +105,10 @@ public class BlueMapService {
         // now we can be sure it wasn't loaded yet .. load
 
         Path idFile = worldFolder.resolve("bluemap.id");
-        id = this.serverInterface.getWorld(worldFolder)
-                .flatMap(ServerWorld::getId)
-                .orElse(null);
-
-        if (id != null) {
-            // create/update id-file in worldfolder
-            Files.writeString(idFile, id, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-
-            worldIds.put(worldFolder, id);
-            return id;
-        }
-
         if (!Files.exists(idFile)) {
-            id = UUID.randomUUID().toString();
+            id = this.serverInterface.getWorld(worldFolder)
+                    .flatMap(ServerWorld::getId)
+                    .orElse(UUID.randomUUID().toString());
             Files.writeString(idFile, id, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
 
             worldIds.put(worldFolder, id);
