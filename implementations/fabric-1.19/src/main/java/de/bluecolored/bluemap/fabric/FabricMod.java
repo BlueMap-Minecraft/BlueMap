@@ -124,7 +124,7 @@ public class FabricMod implements ModInitializer, ServerInterface {
 
     @Override
     public MinecraftVersion getMinecraftVersion() {
-        return new MinecraftVersion(1, 18);
+        return new MinecraftVersion(1, 19);
     }
 
     @Override
