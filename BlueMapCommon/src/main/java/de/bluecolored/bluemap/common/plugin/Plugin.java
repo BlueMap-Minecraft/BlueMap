@@ -46,6 +46,7 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.metrics.Metrics;
 import de.bluecolored.bluemap.core.storage.MetaType;
+import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.world.World;
 import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 import org.spongepowered.configurate.serialize.SerializationException;
@@ -167,11 +168,23 @@ public class Plugin implements ServerEventListener {
                     routingRequestHandler.register(".*", new FileRequestHandler(webroot));
 
                     // map route
-                    for (BmMap map : maps.values()) {
+                    for (var mapConfigEntry : getConfigs().getMapConfigs().entrySet()) {
+                        String id = mapConfigEntry.getKey();
+                        MapConfig mapConfig = mapConfigEntry.getValue();
+
+                        MapRequestHandler mapRequestHandler;
+                        BmMap map = maps.get(id);
+                        if (map != null) {
+                            mapRequestHandler = new MapRequestHandler(map, serverInterface, pluginConfig, Predicate.not(pluginState::isPlayerHidden));
+                        } else {
+                            Storage storage = blueMap.getStorage(mapConfig.getStorage());
+                            mapRequestHandler = new MapRequestHandler(id, storage);
+                        }
+
                         routingRequestHandler.register(
-                                "maps/" + Pattern.quote(map.getId()) + "/(.*)",
+                                "maps/" + Pattern.quote(id) + "/(.*)",
                                 "$1",
-                                new MapRequestHandler(map, serverInterface, pluginConfig, Predicate.not(pluginState::isPlayerHidden))
+                                mapRequestHandler
                         );
                     }
 

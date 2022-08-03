@@ -4,9 +4,9 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.map.MapSettings;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
-import org.spongepowered.configurate.objectmapping.meta.Required;
 
 import java.nio.file.Path;
 import java.util.Optional;
@@ -18,8 +18,7 @@ public class MapConfig implements MapSettings {
 
     private String name = null;
 
-    @Required
-    private Path world = Path.of("world");
+    private Path world = null;
 
     private int sorting = 0;
 
@@ -58,10 +57,12 @@ public class MapConfig implements MapSettings {
     private int lowresPointsPerHiresTile = 4;
     private int lowresPointsPerLowresTile = 50;
 
+    @Nullable
     public String getName() {
         return name;
     }
 
+    @Nullable
     public Path getWorld() {
         return world;
     }
@@ -116,6 +117,7 @@ public class MapConfig implements MapSettings {
         return ignoreMissingLightData;
     }
 
+    @Nullable
     public ConfigurationNode getMarkerSets() {
         return markerSets;
     }

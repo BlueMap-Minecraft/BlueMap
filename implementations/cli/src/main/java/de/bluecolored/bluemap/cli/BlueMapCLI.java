@@ -29,7 +29,6 @@ import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.MissingResourcesException;
 import de.bluecolored.bluemap.common.config.BlueMapConfigs;
 import de.bluecolored.bluemap.common.config.ConfigurationException;
-import de.bluecolored.bluemap.common.config.MapConfig;
 import de.bluecolored.bluemap.common.config.WebserverConfig;
 import de.bluecolored.bluemap.common.plugin.RegionFileWatchService;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
@@ -48,6 +47,7 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.logger.LoggerLogger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.metrics.Metrics;
+import de.bluecolored.bluemap.core.storage.Storage;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
@@ -79,11 +79,6 @@ public class BlueMapCLI implements ServerInterface {
 
         //load maps
         Map<String, BmMap> maps = blueMap.getMaps();
-
-        //write static markers
-        for (BmMap map : maps.values()) {
-
-        }
 
         //watcher
         List<RegionFileWatchService> regionFileWatchServices = new ArrayList<>();
@@ -194,15 +189,13 @@ public class BlueMapCLI implements ServerInterface {
         routingRequestHandler.register(".*", new FileRequestHandler(config.getWebroot()));
 
         // map route
-        for (var entry : blueMap.getConfigs().getMapConfigs().entrySet()) {
-            String mapId = entry.getKey();
-            MapConfig mapConfig = entry.getValue();
-            String worldId = blueMap.getWorldId(mapConfig.getWorld());
+        for (var mapId : blueMap.getConfigs().getMapConfigs().keySet()) {
+            Storage storage = blueMap.getStorage(mapId);
 
             routingRequestHandler.register(
                     "maps/" + Pattern.quote(mapId) + "/(.*)",
                     "$1",
-                    new MapRequestHandler(mapId, worldId, blueMap.getStorage(mapConfig.getStorage()), Map.of(), this, blueMap.getConfigs().getPluginConfig(), uuid -> true)
+                    new MapRequestHandler(mapId, storage)
             );
         }
 

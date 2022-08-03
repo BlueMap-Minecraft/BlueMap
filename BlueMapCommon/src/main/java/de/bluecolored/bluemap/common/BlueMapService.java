@@ -174,8 +174,16 @@ public class BlueMapService {
 
             String id = entry.getKey();
             String name = mapConfig.getName();
+            if (name == null) name = id;
 
             Path worldFolder = mapConfig.getWorld();
+
+            // if there is no world configured, we assume the map is static, or supplied from a different server
+            if (worldFolder == null) {
+                Logger.global.logInfo("The map '" + name + "' has no world configured. The map will be displayed, but not updated!");
+                continue;
+            }
+
             if (!Files.isDirectory(worldFolder)) {
                 throw new ConfigurationException("Failed to load map '" + id + "': \n" +
                         "'" + worldFolder.toAbsolutePath().normalize() + "' does not exist or is no directory!\n" +
@@ -380,7 +388,9 @@ public class BlueMapService {
     private Collection<Path> getWorldFolders() {
         Set<Path> folders = new HashSet<>();
         for (MapConfig mapConfig : configs.getMapConfigs().values()) {
-            Path folder = mapConfig.getWorld().toAbsolutePath().normalize();
+            Path folder = mapConfig.getWorld();
+            if (folder == null) continue;
+            folder = folder.toAbsolutePath().normalize();
             if (Files.isDirectory(folder)) {
                 folders.add(folder);
             }

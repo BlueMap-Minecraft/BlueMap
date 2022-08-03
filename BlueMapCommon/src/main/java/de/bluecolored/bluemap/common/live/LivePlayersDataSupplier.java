@@ -5,6 +5,7 @@ import de.bluecolored.bluemap.common.config.PluginConfig;
 import de.bluecolored.bluemap.common.serverinterface.Player;
 import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.logger.Logger;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -16,7 +17,7 @@ public class LivePlayersDataSupplier implements Supplier<String> {
 
     private final ServerInterface server;
     private final PluginConfig config;
-    private final String worldId;
+    @Nullable private final String worldId;
     private final Predicate<UUID> playerFilter;
 
     public LivePlayersDataSupplier(ServerInterface server, PluginConfig config, String worldId, Predicate<UUID> playerFilter) {
