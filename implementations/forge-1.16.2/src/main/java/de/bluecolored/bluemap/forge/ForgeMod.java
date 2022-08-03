@@ -43,6 +43,7 @@ import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent.ServerTickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
@@ -99,9 +100,12 @@ public class ForgeMod implements ServerInterface {
     @SubscribeEvent
     public void onServerStarting(FMLServerStartingEvent event) {
         this.serverInstance = event.getServer();
+    }
 
+    @SubscribeEvent
+    public void onRegisterCommands(RegisterCommandsEvent event) {
         //register commands
-        new Commands<>(pluginInstance, event.getServer().getCommandManager().getDispatcher(), forgeSource ->
+        new Commands<>(pluginInstance, event.getDispatcher(), forgeSource ->
                 new ForgeCommandSource(this, pluginInstance, forgeSource)
         );
     }
