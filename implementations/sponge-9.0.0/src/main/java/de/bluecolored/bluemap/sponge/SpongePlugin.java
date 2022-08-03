@@ -232,6 +232,11 @@ public class SpongePlugin implements ServerInterface {
         if (world instanceof Path)
             return getWorld((Path) world);
 
+        if (world instanceof String) {
+            ResourceKey resourceKey = ResourceKey.resolve((String) world);
+            if (resourceKey != null) world = resourceKey;
+        }
+
         if (world instanceof ResourceKey) {
             var serverWorld = Sponge.server().worldManager().world((ResourceKey) world).orElse(null);
             if (serverWorld != null) world = serverWorld;

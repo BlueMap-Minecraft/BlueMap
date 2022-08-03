@@ -34,6 +34,7 @@ import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.util.Key;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
@@ -197,6 +198,11 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
 
         if (world instanceof String) {
             var serverWorld = Bukkit.getWorld((String) world);
+            if (serverWorld != null) world = serverWorld;
+        }
+
+        if (world instanceof String) {
+            var serverWorld = Bukkit.getWorld(new Key((String) world).getValue());
             if (serverWorld != null) world = serverWorld;
         }
 

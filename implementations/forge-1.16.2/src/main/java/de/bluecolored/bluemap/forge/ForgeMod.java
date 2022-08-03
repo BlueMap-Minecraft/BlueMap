@@ -39,6 +39,8 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.RegistryKey;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.registry.Registry;
 import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.TickEvent.ServerTickEvent;
@@ -162,6 +164,11 @@ public class ForgeMod implements ServerInterface {
     public Optional<ServerWorld> getWorld(Object world) {
         if (world instanceof Path)
             return getWorld((Path) world);
+
+        if (world instanceof String) {
+            ResourceLocation resourceLocation = ResourceLocation.tryCreate((String) world);
+            if (resourceLocation != null) world = serverInstance.getWorld(RegistryKey.func_240903_a_(Registry.field_239699_ae_, resourceLocation));
+        }
 
         if (world instanceof RegistryKey) {
             try {
