@@ -100,7 +100,9 @@ public abstract class MapPurgeTask implements RenderTask {
                 }
 
                 // make sure everything is deleted
-                Files.walkFileTree(directory, DeletingPathVisitor.INSTANCE);
+                if (Files.exists(directory)) {
+                    Files.walkFileTree(directory, DeletingPathVisitor.INSTANCE);
+                }
             } finally {
                 // reset map render state
                 if (this.map != null) {

@@ -131,6 +131,13 @@ public class BmMap {
         lowresModelManager.save();
         saveRenderState();
         saveMarkerState();
+
+        try {
+            if (storage.readMeta(id, MetaType.TEXTURES).isEmpty())
+                saveTextureGallery();
+        } catch (IOException e) {
+            Logger.global.logError("Failed to read texture gallery", e);
+        }
     }
 
     private void loadRenderState() throws IOException {
