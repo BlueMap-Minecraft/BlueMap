@@ -30,6 +30,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.api.debug.DebugDump;
+import de.bluecolored.bluemap.core.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.world.Grid;
 import de.bluecolored.bluemap.core.world.World;
@@ -46,6 +47,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 @DebugDump
 public class MCAWorld implements World {
@@ -291,14 +293,59 @@ public class MCAWorld implements World {
     private static final int VEC_2I_CACHE_SIZE = 0x4000;
     private static final int VEC_2I_CACHE_MASK = VEC_2I_CACHE_SIZE - 1;
     private static final Vector2i[] VEC_2I_CACHE = new Vector2i[VEC_2I_CACHE_SIZE];
+    private static final HitMissMetric HIT_MISS_METRIC = new HitMissMetric();
+    static {
+        StateDumper.global().register(HIT_MISS_METRIC);
+    }
+
     private static Vector2i vec2i(int x, int y) {
         int cacheIndex = (x * 1456 ^ y * 948375892) & VEC_2I_CACHE_MASK;
         Vector2i possibleMatch = VEC_2I_CACHE[cacheIndex];
 
-        if (possibleMatch != null && possibleMatch.getX() == x && possibleMatch.getY() == y)
+        if (possibleMatch != null && possibleMatch.getX() == x && possibleMatch.getY() == y) {
+            HIT_MISS_METRIC.hit();
             return possibleMatch;
+        }
 
+        HIT_MISS_METRIC.miss();
         return VEC_2I_CACHE[cacheIndex] = new Vector2i(x, y);
+    }
+
+    @DebugDump
+    private static class HitMissMetric {
+
+        private final AtomicLong
+                hits = new AtomicLong(),
+                misses = new AtomicLong();
+
+        public void hit() {
+            hits.incrementAndGet();
+        }
+
+        public void miss() {
+            misses.incrementAndGet();
+        }
+
+        public long getHits() {
+            return hits.get();
+        }
+
+        public long getMisses() {
+            return misses.get();
+        }
+
+        @DebugDump
+        public long getSum() {
+            return hits.get() + misses.get();
+        }
+
+        @DebugDump
+        public double getHitRate() {
+            long hits = getHits();
+            long misses = getMisses();
+            return (double) hits / (hits + misses);
+        }
+
     }
 
 }
