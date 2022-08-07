@@ -42,16 +42,16 @@ import java.util.Optional;
 public class FileStorage extends Storage {
 
     private final Path root;
-    private final Compression compression;
+    private final Compression hiresCompression;
 
     public FileStorage(FileStorageSettings config) {
         this.root = config.getRoot();
-        this.compression = config.getCompression();
+        this.hiresCompression = config.getCompression();
     }
 
     public FileStorage(Path root, Compression compression) {
         this.root = root;
-        this.compression = compression;
+        this.hiresCompression = compression;
     }
 
     @Override
@@ -61,8 +61,9 @@ public class FileStorage extends Storage {
     public void close() throws IOException {}
 
     @Override
-    public OutputStream writeMapTile(String mapId, TileType tileType, Vector2i tile) throws IOException {
-        Path file = getFilePath(mapId, tileType, tile);
+    public OutputStream writeMapTile(String mapId, int lod, Vector2i tile) throws IOException {
+        Compression compression = lod == 0 ? this.hiresCompression : Compression.NONE;
+        Path file = getFilePath(mapId, lod, tile);
 
         OutputStream os = AtomicFileHelper.createFilepartOutputStream(file);
         os = new BufferedOutputStream(os);
@@ -78,8 +79,9 @@ public class FileStorage extends Storage {
     }
 
     @Override
-    public Optional<CompressedInputStream> readMapTile(String mapId, TileType tileType, Vector2i tile) throws IOException {
-        Path file = getFilePath(mapId, tileType, tile);
+    public Optional<CompressedInputStream> readMapTile(String mapId, int lod, Vector2i tile) throws IOException {
+        Compression compression = lod == 0 ? this.hiresCompression : Compression.NONE;
+        Path file = getFilePath(mapId, lod, tile);
 
         if (!Files.exists(file)) return Optional.empty();
 
@@ -90,8 +92,9 @@ public class FileStorage extends Storage {
     }
 
     @Override
-    public Optional<TileData> readMapTileData(String mapId, TileType tileType, Vector2i tile) throws IOException {
-        Path file = getFilePath(mapId, tileType, tile);
+    public Optional<TileData> readMapTileData(String mapId, int lod, Vector2i tile) throws IOException {
+        Compression compression = lod == 0 ? this.hiresCompression : Compression.NONE;
+        Path file = getFilePath(mapId, lod, tile);
 
         if (!Files.exists(file)) return Optional.empty();
 
@@ -101,7 +104,7 @@ public class FileStorage extends Storage {
         return Optional.of(new TileData() {
             @Override
             public CompressedInputStream readMapTile() throws IOException {
-                return FileStorage.this.readMapTile(mapId, tileType, tile)
+                return FileStorage.this.readMapTile(mapId, lod, tile)
                         .orElseThrow(() -> new IOException("Tile no longer present!"));
             }
 
@@ -123,8 +126,8 @@ public class FileStorage extends Storage {
     }
 
     @Override
-    public void deleteMapTile(String mapId, TileType tileType, Vector2i tile) throws IOException {
-        Path file = getFilePath(mapId, tileType, tile);
+    public void deleteMapTile(String mapId, int lod, Vector2i tile) throws IOException {
+        Path file = getFilePath(mapId, lod, tile);
         Files.deleteIfExists(file);
     }
 
@@ -161,7 +164,7 @@ public class FileStorage extends Storage {
         Files.walkFileTree(getFilePath(mapId), DeletingPathVisitor.INSTANCE);
     }
 
-    public Path getFilePath(String mapId, TileType tileType, Vector2i tile){
+    public Path getFilePath(String mapId, int lod, Vector2i tile){
         String path = "x" + tile.getX() + "z" + tile.getY();
         char[] cs = path.toCharArray();
         List<String> folders = new ArrayList<>();
@@ -175,12 +178,16 @@ public class FileStorage extends Storage {
         }
         String fileName = folders.remove(folders.size() - 1);
 
-        Path p = getFilePath(mapId).resolve(tileType.getTypeId());
+        Path p = getFilePath(mapId).resolve("tiles").resolve(Integer.toString(lod));
         for (String s : folders){
             p = p.resolve(s);
         }
 
-        return p.resolve(fileName + ".json" + compression.getFileSuffix());
+        if (lod == 0) {
+            return p.resolve(fileName + ".json" + hiresCompression.getFileSuffix());
+        } else {
+            return p.resolve(fileName + ".png");
+        }
     }
 
     public Path getFilePath(String mapId) {

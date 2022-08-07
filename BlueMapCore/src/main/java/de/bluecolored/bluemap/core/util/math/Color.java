@@ -51,15 +51,24 @@ public class Color {
     }
 
     public Color set(int color) {
+        return set(color, false);
+    }
+
+    public Color set(int color, boolean premultiplied) {
         this.r = ((color >> 16) & 0xFF) / 255f;
         this.g = ((color >> 8) & 0xFF) / 255f;
         this.b = (color & 0xFF) / 255f;
         this.a = ((color >> 24) & 0xFF) / 255f;
-        this.premultiplied = false;
-
-        if (this.a == 0) this.a = 1f; // if the given integer does not define an alpha, we assume 1f
-
+        this.premultiplied = premultiplied;
         return this;
+    }
+
+    public int getInt() {
+        int r = (int) (this.r * 255) & 0xFF;
+        int g = (int) (this.g * 255) & 0xFF;
+        int b = (int) (this.b * 255) & 0xFF;
+        int a = (int) (this.a * 255) & 0xFF;
+        return (a << 24) | (r << 16) | (g << 8) | b;
     }
 
     public Color add(Color color) {
@@ -73,6 +82,18 @@ public class Color {
         this.g += color.g;
         this.b += color.b;
         this.a += color.a;
+
+        return this;
+    }
+
+    public Color div(int divisor) {
+        premultiplied();
+
+        float p = 1f / divisor;
+        this.r *= p;
+        this.g *= p;
+        this.b *= p;
+        this.a *= p;
 
         return this;
     }
@@ -106,7 +127,7 @@ public class Color {
     public Color flatten() {
         if (this.a == 1f) return this;
 
-        if (premultiplied) {
+        if (premultiplied && this.a > 0f) {
             float m = 1f / this.a;
             this.r *= m;
             this.g *= m;
@@ -130,10 +151,12 @@ public class Color {
 
     public Color straight() {
         if (premultiplied) {
-            float m = 1f / this.a;
-            this.r *= m;
-            this.g *= m;
-            this.b *= m;
+            if (this.a > 0f) {
+                float m = 1f / this.a;
+                this.r *= m;
+                this.g *= m;
+                this.b *= m;
+            }
             this.premultiplied = false;
         }
         return this;

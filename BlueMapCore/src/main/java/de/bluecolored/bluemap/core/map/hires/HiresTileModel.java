@@ -28,6 +28,7 @@ import com.flowpowered.math.TrigMath;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonWriter;
+import de.bluecolored.bluemap.core.util.InstancePool;
 import de.bluecolored.bluemap.core.util.math.MatrixM3f;
 import de.bluecolored.bluemap.core.util.math.MatrixM4f;
 import de.bluecolored.bluemap.core.util.math.VectorM3f;
@@ -38,7 +39,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class HiresTileModel {
     private static final double GROW_MULTIPLIER = 1.5;
@@ -53,7 +53,10 @@ public class HiresTileModel {
             FI_BLOCKLIGHT =     1       ,
             FI_MATERIAL_INDEX = 1       ;
 
-    private static final ConcurrentLinkedQueue<HiresTileModel> INSTANCE_POOL = new ConcurrentLinkedQueue<>();
+    private static final InstancePool<HiresTileModel> INSTANCE_POOL = new InstancePool<>(
+            () -> new HiresTileModel(100),
+            HiresTileModel::clear
+    );
 
     private int capacity;
     private int size;
@@ -694,21 +697,6 @@ public class HiresTileModel {
         materialIndex[face2] = vi;
     }
 
-    public static HiresTileModel claimInstance() {
-        HiresTileModel instance = INSTANCE_POOL.poll();
-        if (instance != null) {
-            instance.clear();
-        } else {
-            instance = new HiresTileModel(100);
-        }
-        return instance;
-    }
-
-    public static void recycleInstance(HiresTileModel instance) {
-        instance.clear();
-        INSTANCE_POOL.offer(instance);
-    }
-
     private static void calculateSurfaceNormal(
             double p1x, double p1y, double p1z,
             double p2x, double p2y, double p2z,
@@ -728,6 +716,10 @@ public class HiresTileModel {
         p1z /= length;
 
         target.set((float) p1x, (float) p1y, (float) p1z);
+    }
+
+    public static InstancePool<HiresTileModel> instancePool() {
+        return INSTANCE_POOL;
     }
 
 }

@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.core.map.hires;
 import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.hires.blockmodel.BlockStateModelFactory;
+import de.bluecolored.bluemap.core.map.lowres.LowresTileManager;
 import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.BlockNeighborhood;
@@ -44,12 +45,10 @@ public class HiresModelRenderer {
         this.renderSettings = renderSettings;
     }
 
-    public HiresTileMeta render(World world, Vector3i modelMin, Vector3i modelMax, HiresTileModel model) {
+    public void render(World world, Vector3i modelMin, Vector3i modelMax, HiresTileModel model, LowresTileManager lowresTileManager) {
         Vector3i min = modelMin.max(renderSettings.getMinPos());
         Vector3i max = modelMax.min(renderSettings.getMaxPos());
         Vector3i modelAnchor = new Vector3i(modelMin.getX(), 0, modelMin.getZ());
-
-        HiresTileMeta tileMeta = new HiresTileMeta(modelMin.getX(), modelMin.getZ(), modelMax.getX(), modelMax.getZ()); //TODO: recycle tilemeta instances?
 
         // create new for each tile-render since the factory is not threadsafe
         BlockStateModelFactory modelFactory = new BlockStateModelFactory(resourcePack, textureGallery, renderSettings);
@@ -93,12 +92,8 @@ public class HiresModelRenderer {
                     }
                 }
 
-                tileMeta.setHeight(x, z, maxHeight);
-                tileMeta.setColor(x, z, columnColor);
-
+                lowresTileManager.set(x, z, columnColor, maxHeight);
             }
         }
-
-        return tileMeta;
     }
 }

@@ -28,6 +28,7 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.TextureGallery;
+import de.bluecolored.bluemap.core.map.lowres.LowresTileManager;
 import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.world.Grid;
@@ -56,21 +57,19 @@ public class HiresModelManager {
     /**
      * Renders the given world tile with the provided render-settings
      */
-    public HiresTileMeta render(World world, Vector2i tile) {
+    public void render(World world, Vector2i tile, LowresTileManager lowresTileManager) {
         Vector2i tileMin = tileGrid.getCellMin(tile);
         Vector2i tileMax = tileGrid.getCellMax(tile);
 
         Vector3i modelMin = new Vector3i(tileMin.getX(), Integer.MIN_VALUE, tileMin.getY());
         Vector3i modelMax = new Vector3i(tileMax.getX(), Integer.MAX_VALUE, tileMax.getY());
 
-        HiresTileModel model = HiresTileModel.claimInstance();
+        HiresTileModel model = HiresTileModel.instancePool().claimInstance();
 
-        HiresTileMeta tileMeta = renderer.render(world, modelMin, modelMax, model);
+        renderer.render(world, modelMin, modelMax, model, lowresTileManager);
         save(model, tile);
 
-        HiresTileModel.recycleInstance(model);
-
-        return tileMeta;
+        HiresTileModel.instancePool().recycleInstance(model);
     }
 
     private void save(final HiresTileModel model, Vector2i tile) {

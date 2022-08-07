@@ -26,8 +26,9 @@ public class MapSettingsSerializer implements JsonSerializer<BmMap> {
         // hires
         Vector2i hiresTileSize = map.getHiresModelManager().getTileGrid().getGridSize();
         Vector2i gridOrigin = map.getHiresModelManager().getTileGrid().getOffset();
-        Vector2i lowresTileSize = map.getLowresModelManager().getTileSize();
-        Vector2i lowresPointsPerHiresTile = map.getLowresModelManager().getPointsPerHiresTile();
+        //Vector2i lowresTileSize = map.getLowresModelManager().getTileSize();
+        //Vector2i lowresPointsPerHiresTile = map.getLowresModelManager().getPointsPerHiresTile();
+        //TODO
 
         JsonObject hires = new JsonObject();
         hires.add("tileSize", context.serialize(hiresTileSize));
@@ -36,6 +37,7 @@ public class MapSettingsSerializer implements JsonSerializer<BmMap> {
         root.add("hires", hires);
 
         // lowres
+        /*
         Vector2i pointSize = hiresTileSize.div(lowresPointsPerHiresTile);
         Vector2i tileSize = pointSize.mul(lowresTileSize);
 
@@ -44,6 +46,7 @@ public class MapSettingsSerializer implements JsonSerializer<BmMap> {
         lowres.add("scale", context.serialize(pointSize));
         lowres.add("translate", context.serialize(pointSize.div(2)));
         root.add("lowres", lowres);
+         */
 
         // startPos
         Vector2i startPos = map.getMapSettings().getStartPos()

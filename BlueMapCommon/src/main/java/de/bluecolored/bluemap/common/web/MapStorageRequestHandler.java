@@ -45,7 +45,7 @@ import java.util.regex.Pattern;
 
 public class MapStorageRequestHandler implements HttpRequestHandler {
 
-    private static final Pattern TILE_PATTERN = Pattern.compile("([^/]+)/x(-?[\\d/]+)z(-?[\\d/]+).*");
+    private static final Pattern TILE_PATTERN = Pattern.compile("tiles/([\\d/]+)/x(-?[\\d/]+)z(-?[\\d/]+).*");
 
     private final String mapId;
     private final Storage mapStorage;
@@ -74,11 +74,10 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
             // provide map-tiles
             Matcher tileMatcher = TILE_PATTERN.matcher(path);
             if (tileMatcher.matches()) {
-                String tileTypeId = tileMatcher.group(1);
-                TileType tileType = TileType.forTypeId(tileTypeId);
+                int lod = Integer.parseInt(tileMatcher.group(1));
                 int x = Integer.parseInt(tileMatcher.group(2).replace("/", ""));
                 int z = Integer.parseInt(tileMatcher.group(3).replace("/", ""));
-                Optional<TileData> optTileData = mapStorage.readMapTileData(mapId, tileType, new Vector2i(x, z));
+                Optional<TileData> optTileData = mapStorage.readMapTileData(mapId, lod, new Vector2i(x, z));
 
                 if (optTileData.isPresent()) {
                     TileData tileData = optTileData.get();

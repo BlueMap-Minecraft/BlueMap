@@ -25,19 +25,17 @@
 package de.bluecolored.bluemap.core.map;
 
 import com.flowpowered.math.vector.Vector2i;
+import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.api.gson.MarkerGson;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.hires.HiresModelManager;
-import de.bluecolored.bluemap.core.map.hires.HiresTileMeta;
-import de.bluecolored.bluemap.core.map.lowres.LowresModelManager;
+import de.bluecolored.bluemap.core.map.lowres.LowresTileManager;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.storage.CompressedInputStream;
 import de.bluecolored.bluemap.core.storage.MetaType;
 import de.bluecolored.bluemap.core.storage.Storage;
-import de.bluecolored.bluemap.core.storage.TileType;
 import de.bluecolored.bluemap.core.world.Grid;
 import de.bluecolored.bluemap.core.world.World;
 
@@ -63,7 +61,7 @@ public class BmMap {
     private final TextureGallery textureGallery;
 
     private final HiresModelManager hiresModelManager;
-    private final LowresModelManager lowresModelManager;
+    private final LowresTileManager lowresTileManager;
 
     private final ConcurrentHashMap<String, MarkerSet> markerSets;
 
@@ -89,17 +87,18 @@ public class BmMap {
         saveTextureGallery();
 
         this.hiresModelManager = new HiresModelManager(
-                storage.tileStorage(id, TileType.HIRES),
+                storage.tileStorage(id, 0),
                 this.resourcePack,
                 this.textureGallery,
                 settings,
                 new Grid(settings.getHiresTileSize(), 2)
         );
 
-        this.lowresModelManager = new LowresModelManager(
-                storage.tileStorage(id, TileType.LOWRES),
-                new Vector2i(settings.getLowresPointsPerLowresTile(), settings.getLowresPointsPerLowresTile()),
-                new Vector2i(settings.getLowresPointsPerHiresTile(), settings.getLowresPointsPerHiresTile())
+        this.lowresTileManager = new LowresTileManager(
+                storage.mapStorage(id),
+                new Grid(new Vector2i(500, 500)),
+                3,
+                5
         );
 
         this.tileFilter = t -> true;
@@ -117,8 +116,7 @@ public class BmMap {
 
         long start = System.nanoTime();
 
-        HiresTileMeta tileMeta = hiresModelManager.render(world, tile);
-        lowresModelManager.render(tileMeta);
+        hiresModelManager.render(world, tile, lowresTileManager);
 
         long end = System.nanoTime();
         long delta = end - start;
@@ -128,7 +126,7 @@ public class BmMap {
     }
 
     public synchronized void save() {
-        lowresModelManager.save();
+        lowresTileManager.save();
         saveRenderState();
         saveMarkerState();
 
@@ -234,8 +232,8 @@ public class BmMap {
         return hiresModelManager;
     }
 
-    public LowresModelManager getLowresModelManager() {
-        return lowresModelManager;
+    public LowresTileManager getLowresTileManager() {
+        return lowresTileManager;
     }
 
     public Map<String, MarkerSet> getMarkerSets() {

@@ -35,7 +35,7 @@ public class Biome extends Key {
 
     private float humidity = 0.5f;
     private float temp = 0.5f;
-    private final Color waterColor = new Color().set(4159204).premultiplied();
+    private final Color waterColor = new Color().set(4159204 | 0xFF000000).premultiplied();
 
     private final Color overlayFoliageColor = new Color().premultiplied();
     private final Color overlayGrassColor = new Color().premultiplied();

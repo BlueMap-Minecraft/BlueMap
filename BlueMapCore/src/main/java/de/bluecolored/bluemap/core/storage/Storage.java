@@ -35,13 +35,13 @@ public abstract class Storage implements Closeable {
 
     public abstract void initialize() throws IOException;
 
-    public abstract OutputStream writeMapTile(String mapId, TileType tileType, Vector2i tile) throws IOException;
+    public abstract OutputStream writeMapTile(String mapId, int lod, Vector2i tile) throws IOException;
 
-    public abstract Optional<CompressedInputStream> readMapTile(String mapId, TileType tileType, Vector2i tile) throws IOException;
+    public abstract Optional<CompressedInputStream> readMapTile(String mapId, int lod, Vector2i tile) throws IOException;
 
-    public abstract Optional<TileData> readMapTileData(String mapId, TileType tileType, Vector2i tile) throws IOException;
+    public abstract Optional<TileData> readMapTileData(String mapId, int lod, Vector2i tile) throws IOException;
 
-    public abstract void deleteMapTile(String mapId, TileType tileType, Vector2i tile) throws IOException;
+    public abstract void deleteMapTile(String mapId, int lod, Vector2i tile) throws IOException;
 
     public abstract OutputStream writeMeta(String mapId, MetaType metaType) throws IOException;
 
@@ -51,30 +51,56 @@ public abstract class Storage implements Closeable {
 
     public abstract void purgeMap(String mapId) throws IOException;
 
-    public TileStorage tileStorage(final String mapId, final TileType tileType) {
-        return new TileStorage(mapId, tileType);
+    public MapStorage mapStorage(final String mapId) {
+        return new MapStorage(mapId);
+    }
+
+    public TileStorage tileStorage(final String mapId, final int lod) {
+        return new TileStorage(mapId, lod);
+    }
+
+    public class MapStorage {
+
+        private final String mapId;
+
+        private MapStorage(String mapId) {
+            this.mapId = mapId;
+        }
+
+        public OutputStream write(int lod, Vector2i tile) throws IOException {
+            return writeMapTile(mapId, lod, tile);
+        }
+
+        public Optional<CompressedInputStream> read(int lod, Vector2i tile) throws IOException {
+            return readMapTile(mapId, lod, tile);
+        }
+
+        public void delete(int lod, Vector2i tile) throws IOException {
+            deleteMapTile(mapId, lod, tile);
+        }
+
     }
 
     public class TileStorage {
 
         private final String mapId;
-        private final TileType tileType;
+        private final int lod;
 
-        private TileStorage(String mapId, TileType tileType) {
+        private TileStorage(String mapId, int lod) {
             this.mapId = mapId;
-            this.tileType = tileType;
+            this.lod = lod;
         }
 
         public OutputStream write(Vector2i tile) throws IOException {
-            return writeMapTile(mapId, tileType, tile);
+            return writeMapTile(mapId, lod, tile);
         }
 
         public Optional<CompressedInputStream> read(Vector2i tile) throws IOException {
-            return readMapTile(mapId, tileType, tile);
+            return readMapTile(mapId, lod, tile);
         }
 
         public void delete(Vector2i tile) throws IOException {
-            deleteMapTile(mapId, tileType, tile);
+            deleteMapTile(mapId, lod, tile);
         }
 
     }

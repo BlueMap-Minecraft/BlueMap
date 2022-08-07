@@ -54,14 +54,11 @@ import java.util.concurrent.CompletionException;
 public class SQLStorage extends Storage {
 
     private final DataSource dataSource;
-    private final Compression compression;
+    private final Compression hiresCompression;
 
     private final LoadingCache<String, Integer> mapFKs = Caffeine.newBuilder()
             .executor(BlueMap.THREAD_POOL)
             .build(this::loadMapFK);
-    private final LoadingCache<TileType, Integer> mapTileTypeFKs = Caffeine.newBuilder()
-            .executor(BlueMap.THREAD_POOL)
-            .build(this::loadMapTileTypeFK);
     private final LoadingCache<Compression, Integer> mapTileCompressionFKs = Caffeine.newBuilder()
             .executor(BlueMap.THREAD_POOL)
             .build(this::loadMapTileCompressionFK);
@@ -98,25 +95,26 @@ public class SQLStorage extends Storage {
             //throw new ConfigurationException("The driver-class does not exist. Check your sql-storage-config!", ex);
         }
 
-        this.compression = config.getCompression();
+        this.hiresCompression = config.getCompression();
     }
 
     public SQLStorage(String dbUrl, String user, String password, Compression compression) {
         this.dataSource = createDataSource(dbUrl, user, password);
-        this.compression = compression;
+        this.hiresCompression = compression;
     }
 
     public SQLStorage(DataSource dataSource, Compression compression) {
         this.dataSource = dataSource;
-        this.compression = compression;
+        this.hiresCompression = compression;
     }
 
     @Override
-    public OutputStream writeMapTile(String mapId, TileType tileType, Vector2i tile) throws IOException {
+    public OutputStream writeMapTile(String mapId, int lod, Vector2i tile) throws IOException {
+        Compression compression = lod == 0 ? this.hiresCompression : Compression.NONE;
+
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
         return new WrappedOutputStream(compression.compress(byteOut), () -> {
             int mapFK = getMapFK(mapId);
-            int tileTypeFK = getMapTileTypeFK(tileType);
             int tileCompressionFK = getMapTileCompressionFK(compression);
 
             recoveringConnection(connection -> {
@@ -128,10 +126,10 @@ public class SQLStorage extends Storage {
 
                     executeUpdate(connection,
                             //language=SQL
-                            "REPLACE INTO `bluemap_map_tile` (`map`, `type`, `x`, `z`, `compression`, `data`) " +
+                            "REPLACE INTO `bluemap_map_tile` (`map`, `lod`, `x`, `z`, `compression`, `data`) " +
                             "VALUES (?, ?, ?, ?, ?, ?)",
                             mapFK,
-                            tileTypeFK,
+                            lod,
                             tile.getX(),
                             tile.getY(),
                             tileCompressionFK,
@@ -145,7 +143,9 @@ public class SQLStorage extends Storage {
     }
 
     @Override
-    public Optional<CompressedInputStream> readMapTile(String mapId, TileType tileType, Vector2i tile) throws IOException {
+    public Optional<CompressedInputStream> readMapTile(String mapId, int lod, Vector2i tile) throws IOException {
+        Compression compression = lod == 0 ? this.hiresCompression : Compression.NONE;
+
         try {
             byte[] data = recoveringConnection(connection -> {
                     ResultSet result = executeQuery(connection,
@@ -154,17 +154,15 @@ public class SQLStorage extends Storage {
                             "FROM `bluemap_map_tile` t " +
                             " INNER JOIN `bluemap_map` m " +
                             "  ON t.`map` = m.`id` " +
-                            " INNER JOIN `bluemap_map_tile_type` u " +
-                            "  ON t.`type` = u.`id` " +
                             " INNER JOIN `bluemap_map_tile_compression` c " +
                             "  ON t.`compression` = c.`id` " +
                             "WHERE m.`map_id` = ? " +
-                            "AND u.`type` = ? " +
+                            "AND t.`lod` = ? " +
                             "AND t.`x` = ? " +
                             "AND t.`z` = ? " +
                             "AND c.`compression` = ?",
                             mapId,
-                            tileType.getTypeId(),
+                            lod,
                             tile.getX(),
                             tile.getY(),
                             compression.getTypeId()
@@ -186,40 +184,39 @@ public class SQLStorage extends Storage {
     }
 
     @Override
-    public Optional<TileData> readMapTileData(final String mapId, final TileType tileType, final Vector2i tile) throws IOException {
+    public Optional<TileData> readMapTileData(final String mapId, int lod, final Vector2i tile) throws IOException {
+        Compression compression = lod == 0 ? this.hiresCompression : Compression.NONE;
+
         try {
             TileData tileData = recoveringConnection(connection -> {
                 ResultSet result = executeQuery(connection,
                         //language=SQL
-                        "SELECT c.`compression`, t.`changed`, LENGTH(t.`data`) as 'size' " +
+                        "SELECT t.`changed`, LENGTH(t.`data`) as 'size' " +
                         "FROM `bluemap_map_tile` t " +
                         " INNER JOIN `bluemap_map` m " +
                         "  ON t.`map` = m.`id` " +
-                        " INNER JOIN `bluemap_map_tile_type` u " +
-                        "  ON t.`type` = u.`id` " +
                         " INNER JOIN `bluemap_map_tile_compression` c " +
                         "  ON t.`compression` = c.`id` " +
                         "WHERE m.`map_id` = ? " +
-                        "AND u.`type` = ? " +
+                        "AND t.`lod` = ? " +
                         "AND t.`x` = ? " +
                         "AND t.`z` = ? " +
                         "AND c.`compression` = ?",
                         mapId,
-                        tileType.getTypeId(),
+                        lod,
                         tile.getX(),
                         tile.getY(),
                         compression.getTypeId()
                 );
 
                 if (result.next()) {
-                    final Compression compression = Compression.forTypeId(result.getString("compression"));
                     final long lastModified = result.getTimestamp("changed").getTime();
                     final long size = result.getLong("size");
 
                     return new TileData() {
                         @Override
                         public CompressedInputStream readMapTile() throws IOException {
-                            return SQLStorage.this.readMapTile(mapId, tileType, tile)
+                            return SQLStorage.this.readMapTile(mapId, lod, tile)
                                     .orElseThrow(() -> new IOException("Tile no longer present!"));
                         }
 
@@ -250,7 +247,7 @@ public class SQLStorage extends Storage {
     }
 
     @Override
-    public void deleteMapTile(String mapId, TileType tileType, Vector2i tile) throws IOException {
+    public void deleteMapTile(String mapId, int lod, Vector2i tile) throws IOException {
         try {
             recoveringConnection(connection ->
                 executeUpdate(connection,
@@ -259,14 +256,12 @@ public class SQLStorage extends Storage {
                         "FROM `bluemap_map_tile` t " +
                         " INNER JOIN `bluemap_map` m " +
                         "  ON t.`map` = m.`id` " +
-                        " INNER JOIN `bluemap_map_tile_type` u " +
-                        "  ON t.`type` = u.`id` " +
                         "WHERE m.`map_id` = ? " +
-                        "AND u.`type` = ? " +
+                        "AND t.`lod` = ? " +
                         "AND t.`x` = ? " +
                         "AND t.`z` = ?",
                         mapId,
-                        tileType.getTypeId(),
+                        lod,
                         tile.getX(),
                         tile.getY()
                 ), 2);
@@ -423,7 +418,7 @@ public class SQLStorage extends Storage {
             }
 
             // validate schema version
-            if (schemaVersion < 0 || schemaVersion > 1)
+            if (schemaVersion < 0 || schemaVersion > 2)
                 throw new IOException("Unknown schema-version: " + schemaVersion);
 
             // update schema to current version
@@ -438,15 +433,6 @@ public class SQLStorage extends Storage {
                             "`map_id` VARCHAR(255) NOT NULL," +
                             "PRIMARY KEY (`id`)," +
                             "UNIQUE INDEX `map_id` (`map_id`)" +
-                            ");"
-                    );
-
-                    connection.createStatement().executeUpdate(
-                            "CREATE TABLE `bluemap_map_tile_type` (" +
-                            "`id` SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT," +
-                            "`type` VARCHAR(255) NOT NULL," +
-                            "PRIMARY KEY (`id`)," +
-                            "UNIQUE INDEX `type` (`type`)" +
                             ");"
                     );
 
@@ -471,15 +457,14 @@ public class SQLStorage extends Storage {
                     connection.createStatement().executeUpdate(
                             "CREATE TABLE `bluemap_map_tile` (" +
                             "`map` SMALLINT UNSIGNED NOT NULL," +
-                            "`type` SMALLINT UNSIGNED NOT NULL," +
+                            "`lod` SMALLINT UNSIGNED NOT NULL," +
                             "`x` INT NOT NULL," +
                             "`z` INT NOT NULL," +
                             "`compression` SMALLINT UNSIGNED NOT NULL," +
                             "`changed` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," +
                             "`data` LONGBLOB NOT NULL," +
-                            "PRIMARY KEY (`map`, `type`, `x`, `z`)," +
+                            "PRIMARY KEY (`map`, `lod`, `x`, `z`)," +
                             "CONSTRAINT `fk_bluemap_map_tile_map` FOREIGN KEY (`map`) REFERENCES `bluemap_map` (`id`) ON UPDATE RESTRICT ON DELETE RESTRICT," +
-                            "CONSTRAINT `fk_bluemap_map_tile_type` FOREIGN KEY (`type`) REFERENCES `bluemap_map_tile_type` (`id`) ON UPDATE RESTRICT ON DELETE RESTRICT," +
                             "CONSTRAINT `fk_bluemap_map_tile_compression` FOREIGN KEY (`compression`) REFERENCES `bluemap_map_tile_compression` (`id`) ON UPDATE RESTRICT ON DELETE RESTRICT" +
                             ");"
                     );
@@ -489,12 +474,17 @@ public class SQLStorage extends Storage {
                             "UPDATE `bluemap_storage_meta` " +
                             "SET `value` = ? " +
                             "WHERE `key` = ?",
-                            "1", "schema_version"
+                            "2", "schema_version"
                     );
                 }, 2);
 
-                //schemaVersion = 1;
+                schemaVersion = 2;
             }
+
+            if (schemaVersion == 1)
+                throw new IOException("Outdated database schema: " + schemaVersion +
+                        " (Cannot automatically update, reset your database and reload bluemap to fix this)");
+
         } catch (SQLException ex) {
             throw new IOException(ex);
         }
@@ -585,19 +575,6 @@ public class SQLStorage extends Storage {
         }
     }
 
-    private int getMapTileTypeFK(TileType tileType) throws SQLException {
-        try {
-            return Objects.requireNonNull(mapTileTypeFKs.get(tileType));
-        } catch (CompletionException ex) {
-            Throwable cause = ex.getCause();
-
-            if (cause instanceof SQLException)
-                throw (SQLException) cause;
-
-            throw ex;
-        }
-    }
-
     private int getMapTileCompressionFK(Compression compression) throws SQLException {
         try {
             return Objects.requireNonNull(mapTileCompressionFKs.get(compression));
@@ -613,10 +590,6 @@ public class SQLStorage extends Storage {
 
     private int loadMapFK(String mapId) throws SQLException, IOException {
         return lookupFK("bluemap_map", "id", "map_id", mapId);
-    }
-
-    private int loadMapTileTypeFK(TileType mapTileType) throws SQLException, IOException {
-        return lookupFK("bluemap_map_tile_type", "id", "type", mapTileType.getTypeId());
     }
 
     private int loadMapTileCompressionFK(Compression compression) throws SQLException, IOException {
