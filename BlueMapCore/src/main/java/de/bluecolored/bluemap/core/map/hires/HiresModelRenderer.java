@@ -87,7 +87,7 @@ public class HiresModelRenderer {
                         //update color and height (only if not 100% translucent)
                         if (blockColor.a > 0) {
                             maxHeight = y;
-                            columnColor.overlay(blockColor);
+                            columnColor.overlay(blockColor.premultiplied());
                         }
                     }
                 }

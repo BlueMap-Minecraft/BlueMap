@@ -150,7 +150,7 @@ public class WebFilesManager {
             this.resolutionDefault = config.getResolutionDefault();
             
             this.hiresSliderMax = config.getHiresSliderMax();
-            this.hiresSliderDefault = config.getLowresSliderDefault();
+            this.hiresSliderDefault = config.getHiresSliderDefault();
             this.hiresSliderMin = config.getHiresSliderMin();
             
             this.lowresSliderMax = config.getLowresSliderMax();

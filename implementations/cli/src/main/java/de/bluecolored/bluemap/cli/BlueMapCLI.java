@@ -189,13 +189,13 @@ public class BlueMapCLI implements ServerInterface {
         routingRequestHandler.register(".*", new FileRequestHandler(config.getWebroot()));
 
         // map route
-        for (var mapId : blueMap.getConfigs().getMapConfigs().keySet()) {
-            Storage storage = blueMap.getStorage(mapId);
+        for (var mapConfigEntry : blueMap.getConfigs().getMapConfigs().entrySet()) {
+            Storage storage = blueMap.getStorage(mapConfigEntry.getValue().getStorage());
 
             routingRequestHandler.register(
-                    "maps/" + Pattern.quote(mapId) + "/(.*)",
+                    "maps/" + Pattern.quote(mapConfigEntry.getKey()) + "/(.*)",
                     "$1",
-                    new MapRequestHandler(mapId, storage)
+                    new MapRequestHandler(mapConfigEntry.getKey(), storage)
             );
         }
 
