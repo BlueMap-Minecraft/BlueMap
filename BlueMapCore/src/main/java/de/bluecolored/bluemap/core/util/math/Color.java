@@ -142,10 +142,10 @@ public class Color {
     @Override
     public String toString() {
         return "Color{" +
-               "r=" + r +
-               ", g=" + g +
-               ", b=" + b +
-               ", a=" + a +
+               "r=" + r + " (" + (int) (r * 255) + ")" +
+               ", g=" + g + " (" + (int) (g * 255) + ")" +
+               ", b=" + b + " (" + (int) (b * 255) + ")" +
+               ", a=" + a + " (" + (int) (a * 255) + ")" +
                ", premultiplied=" + premultiplied +
                '}';
     }

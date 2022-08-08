@@ -108,7 +108,7 @@ public class ResourceModelBuilder {
         }
 
         if (color.a > 0) {
-            color.flatten();
+            color.flatten().straight();
             color.a = blockColorOpacity;
         }
 
