@@ -49,6 +49,7 @@ import de.bluecolored.bluemap.core.util.AtomicFileHelper;
 import de.bluecolored.bluemap.core.world.World;
 import org.apache.commons.io.FileUtils;
 import org.spongepowered.configurate.ConfigurateException;
+import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 import org.spongepowered.configurate.loader.HeaderMode;
 
@@ -59,6 +60,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 /**
@@ -81,13 +83,13 @@ public class BlueMapService {
         this.serverInterface = serverInterface;
         this.configs = configProvider;
 
-        this.worldIds = new HashMap<>();
+        this.worldIds = new ConcurrentHashMap<>();
         this.storages = new HashMap<>();
 
         StateDumper.global().register(this);
     }
 
-    public synchronized String getWorldId(Path worldFolder) throws IOException {
+    public String getWorldId(Path worldFolder) throws IOException {
         // fast-path
         String id = worldIds.get(worldFolder);
         if (id != null) return id;
@@ -102,22 +104,29 @@ public class BlueMapService {
         id = worldIds.get(worldFolder);
         if (id != null) return id;
 
-        // now we can be sure it wasn't loaded yet .. load
+        synchronized (this) {
+            // check again if another thread has already added the world
+            id = worldIds.get(worldFolder);
+            if (id != null) return id;
 
-        Path idFile = worldFolder.resolve("bluemap.id");
-        if (!Files.exists(idFile)) {
-            id = this.serverInterface.getWorld(worldFolder)
-                    .flatMap(ServerWorld::getId)
-                    .orElse(UUID.randomUUID().toString());
-            Files.writeString(idFile, id, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+            Logger.global.logDebug("Loading world id for '" + worldFolder + "'...");
 
+            // now we can be sure it wasn't loaded yet .. load
+            Path idFile = worldFolder.resolve("bluemap.id");
+            if (!Files.exists(idFile)) {
+                id = this.serverInterface.getWorld(worldFolder)
+                        .flatMap(ServerWorld::getId)
+                        .orElse(UUID.randomUUID().toString());
+                Files.writeString(idFile, id, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+
+                worldIds.put(worldFolder, id);
+                return id;
+            }
+
+            id = Files.readString(idFile);
             worldIds.put(worldFolder, id);
             return id;
         }
-
-        id = Files.readString(idFile);
-        worldIds.put(worldFolder, id);
-        return id;
     }
 
     public synchronized void createOrUpdateWebApp(boolean force) throws ConfigurationException {
@@ -217,12 +226,13 @@ public class BlueMapService {
                 maps.put(id, map);
 
                 // load marker-config by converting it first from hocon to json and then loading it with MarkerGson
-                if (!mapConfig.getMarkerSets().empty()) {
+                ConfigurationNode markerSetNode = mapConfig.getMarkerSets();
+                if (markerSetNode != null && !markerSetNode.empty()) {
                     String markerJson = GsonConfigurationLoader.builder()
                             .headerMode(HeaderMode.NONE)
                             .lenient(false)
                             .indent(0)
-                            .buildAndSaveString(mapConfig.getMarkerSets());
+                            .buildAndSaveString(markerSetNode);
                     Gson gson = MarkerGson.addAdapters(new GsonBuilder())
                             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_DASHES)
                             .create();
@@ -256,6 +266,8 @@ public class BlueMapService {
                     throw new ConfigurationException("There is no storage-configuration for '" + storageId + "'!\n" +
                             "You will either need to define that storage, or change the map-config to use a storage-config that exists.");
                 }
+
+                Logger.global.logInfo("Initializing Storage: '" + storageId + "' (Type: " + storageConfig.getStorageType() + ")");
 
                 storage = storageConfig.createStorage();
                 storage.initialize();

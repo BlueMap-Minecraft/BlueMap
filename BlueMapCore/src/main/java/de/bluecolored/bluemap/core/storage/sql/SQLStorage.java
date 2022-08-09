@@ -538,34 +538,28 @@ public class SQLStorage extends Storage {
     @SuppressWarnings("SameParameterValue")
     private <R> R recoveringConnection(ConnectionFunction<R> action, int tries) throws SQLException, IOException {
         SQLException sqlException = null;
-        for (int i = 0; i < tries; i++) {
-            try (Connection connection = dataSource.getConnection()) {
-                connection.setAutoCommit(false);
 
-                R result;
-                try {
-                    result = action.apply(connection);
-                    connection.commit();
-                } catch (SQLRecoverableException ex) {
-                    connection.rollback();
-                    if (sqlException == null) {
-                        sqlException = ex;
-                    } else {
-                        sqlException.addSuppressed(ex);
+        try {
+            for (int i = 0; i < tries; i++) {
+                try (Connection connection = dataSource.getConnection()) {
+                    R result;
+                    try {
+                        result = action.apply(connection);
+                        connection.commit();
+                        return result;
+                    } catch (SQLRecoverableException ex) {
+                        if (sqlException == null) {
+                            sqlException = ex;
+                        } else {
+                            sqlException.addSuppressed(ex);
+                        }
                     }
-                    continue;
-                } catch (SQLException | RuntimeException ex) {
-                    connection.rollback();
-                    throw ex;
                 }
-
-                connection.setAutoCommit(true);
-                return result;
-            } catch (SQLException | IOException | RuntimeException ex) {
-                if (sqlException != null)
-                    ex.addSuppressed(sqlException);
-                throw ex;
             }
+        } catch (SQLException | IOException | RuntimeException ex) {
+            if (sqlException != null)
+                ex.addSuppressed(sqlException);
+            throw ex;
         }
 
         assert sqlException != null; // should never be null if we end up here
@@ -680,9 +674,16 @@ public class SQLStorage extends Storage {
 
     private DataSource createDataSource(ConnectionFactory connectionFactory) {
         PoolableConnectionFactory poolableConnectionFactory =
-                new PoolableConnectionFactory(connectionFactory, null);
+                new PoolableConnectionFactory(() -> {
+                    Logger.global.logDebug("Creating new SQL-Connection...");
+                    return connectionFactory.createConnection();
+                }, null);
         poolableConnectionFactory.setPoolStatements(true);
         poolableConnectionFactory.setMaxOpenPreparedStatements(20);
+        poolableConnectionFactory.setDefaultAutoCommit(false);
+        poolableConnectionFactory.setAutoCommitOnReturn(false);
+        poolableConnectionFactory.setRollbackOnReturn(true);
+        poolableConnectionFactory.setFastFailValidation(true);
 
         GenericObjectPoolConfig<PoolableConnection> objectPoolConfig = new GenericObjectPoolConfig<>();
         objectPoolConfig.setMinIdle(1);
