@@ -68,38 +68,99 @@ public class Grid {
         return offset;
     }
 
+    public int getCellX(int posX) {
+        return Math.floorDiv(posX - offset.getX(), gridSize.getX());
+    }
+
+    public int getCellY(int posY) {
+        return Math.floorDiv(posY - offset.getY(), gridSize.getY());
+    }
+
     public Vector2i getCell(Vector2i pos) {
         return new Vector2i(
-                Math.floorDiv(pos.getX() - offset.getX(), gridSize.getX()),
-                Math.floorDiv(pos.getY() - offset.getY(), gridSize.getY())
+                getCellX(pos.getX()),
+                getCellY(pos.getY())
         );
+    }
+
+    public int getLocalX(int posX) {
+        return Math.floorMod(posX - offset.getX(), gridSize.getX());
+    }
+
+    public int getLocalY(int posY) {
+        return Math.floorMod(posY - offset.getY(), gridSize.getY());
+    }
+
+    public Vector2i getLocal(Vector2i pos) {
+        return new Vector2i(
+                getLocalX(pos.getX()),
+                getLocalY(pos.getY())
+        );
+    }
+
+    public int getCellMinX(int cellX) {
+        return cellX * gridSize.getX() + offset.getX();
+    }
+
+    public int getCellMinY(int cellY) {
+        return cellY * gridSize.getY() + offset.getY();
     }
 
     public Vector2i getCellMin(Vector2i cell) {
         return new Vector2i(
-                cell.getX() * gridSize.getX() + offset.getX(),
-                cell.getY() * gridSize.getY() + offset.getY()
+                getCellMinX(cell.getX()),
+                getCellMinY(cell.getY())
         );
+    }
+
+    public int getCellMaxX(int cellX) {
+        return (cellX + 1) * gridSize.getX() + offset.getX() - 1;
+    }
+
+    public int getCellMaxY(int cellY) {
+        return (cellY + 1) * gridSize.getY() + offset.getY() - 1;
     }
 
     public Vector2i getCellMax(Vector2i cell) {
         return new Vector2i(
-                (cell.getX() + 1) * gridSize.getX() + offset.getX() - 1,
-                (cell.getY() + 1) * gridSize.getY() + offset.getY() - 1
+                getCellMaxX(cell.getX()),
+                getCellMaxY(cell.getY())
         );
     }
 
+    public int getCellMinX(int cellX, Grid targetGrid) {
+        return targetGrid.getCellX(getCellMinX(cellX));
+    }
+
+    public int getCellMinY(int cellY, Grid targetGrid) {
+        return targetGrid.getCellY(getCellMinY(cellY));
+    }
+
     public Vector2i getCellMin(Vector2i cell, Grid targetGrid) {
-        return targetGrid.getCell(getCellMin(cell));
+        return new Vector2i(
+                getCellMinX(cell.getX(), targetGrid),
+                getCellMinY(cell.getY(), targetGrid)
+        );
+    }
+
+    public int getCellMaxX(int cellX, Grid targetGrid) {
+        return targetGrid.getCellX(getCellMaxX(cellX));
+    }
+
+    public int getCellMaxY(int cellY, Grid targetGrid) {
+        return targetGrid.getCellY(getCellMaxY(cellY));
     }
 
     public Vector2i getCellMax(Vector2i cell, Grid targetGrid) {
-        return targetGrid.getCell(getCellMax(cell));
+        return new Vector2i(
+                getCellMaxX(cell.getX(), targetGrid),
+                getCellMaxY(cell.getY(), targetGrid)
+        );
     }
 
     public Collection<Vector2i> getIntersecting(Vector2i cell, Grid targetGrid) {
         Vector2i min = getCellMin(cell, targetGrid);
-        Vector2i max = getCellMin(cell, targetGrid);
+        Vector2i max = getCellMax(cell, targetGrid);
 
         if (min.equals(max)) return Collections.singleton(min);
 

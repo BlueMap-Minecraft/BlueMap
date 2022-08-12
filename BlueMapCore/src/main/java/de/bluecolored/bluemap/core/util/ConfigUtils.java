@@ -24,129 +24,9 @@
  */
 package de.bluecolored.bluemap.core.util;
 
-import com.flowpowered.math.vector.*;
-import org.spongepowered.configurate.ConfigurationNode;
-import org.spongepowered.configurate.NodePath;
-import org.spongepowered.configurate.serialize.SerializationException;
-
-import java.util.List;
-
 public class ConfigUtils {
 
     private ConfigUtils(){}
-
-    public static Vector2i readVector2i(ConfigurationNode vectorNode){
-        if (vectorNode.isList()){
-            List<? extends ConfigurationNode> list = vectorNode.childrenList();
-            return new Vector2i(
-                    list.get(0).getInt(),
-                    list.get(1).getInt()
-                );
-        }
-
-        return new Vector2i(
-                vectorNode.node("x").getInt(),
-                vectorNode.node("y").getInt()
-            );
-    }
-
-    public static Vector3i readVector3i(ConfigurationNode vectorNode){
-        if (vectorNode.isList()){
-            List<? extends ConfigurationNode> list = vectorNode.childrenList();
-            return new Vector3i(
-                    list.get(0).getInt(),
-                    list.get(1).getInt(),
-                    list.get(2).getInt()
-                );
-        }
-
-        return new Vector3i(
-                vectorNode.node("x").getInt(),
-                vectorNode.node("y").getInt(),
-                vectorNode.node("z").getInt()
-            );
-    }
-
-    public static Vector3f readVector3f(ConfigurationNode vectorNode){
-        if (vectorNode.isList()){
-            List<? extends ConfigurationNode> list = vectorNode.childrenList();
-            return new Vector3f(
-                    list.get(0).getFloat(),
-                    list.get(1).getFloat(),
-                    list.get(2).getFloat()
-                );
-        }
-
-        return new Vector3f(
-                vectorNode.node("x").getFloat(),
-                vectorNode.node("y").getFloat(),
-                vectorNode.node("z").getFloat()
-            );
-    }
-
-    public static Vector4i readVector4i(ConfigurationNode vectorNode){
-        if (vectorNode.isList()){
-            List<? extends ConfigurationNode> list = vectorNode.childrenList();
-            return new Vector4i(
-                    list.get(0).getInt(),
-                    list.get(1).getInt(),
-                    list.get(2).getInt(),
-                    list.get(3).getInt()
-                );
-        }
-
-        return new Vector4i(
-                vectorNode.node("x").getInt(),
-                vectorNode.node("y").getInt(),
-                vectorNode.node("z").getInt(),
-                vectorNode.node("w").getInt()
-            );
-    }
-
-    public static Vector4f readVector4f(ConfigurationNode vectorNode){
-        if (vectorNode.isList()){
-            List<? extends ConfigurationNode> list = vectorNode.childrenList();
-            return new Vector4f(
-                    list.get(0).getFloat(),
-                    list.get(1).getFloat(),
-                    list.get(2).getFloat(),
-                    list.get(3).getFloat()
-                );
-        }
-
-        return new Vector4f(
-                vectorNode.node("x").getFloat(),
-                vectorNode.node("y").getFloat(),
-                vectorNode.node("z").getFloat(),
-                vectorNode.node("w").getFloat()
-            );
-    }
-
-    public static void writeVector4f(ConfigurationNode vectorNode, Vector4f v) throws SerializationException {
-        vectorNode.appendListNode().set(v.getX());
-        vectorNode.appendListNode().set(v.getY());
-        vectorNode.appendListNode().set(v.getZ());
-        vectorNode.appendListNode().set(v.getW());
-    }
-
-    /**
-     * Returns a color-integer. The value can be a normal integer, an integer in String-Format, or a string in hexadecimal format prefixed with # (css-style: e.g. #f16 becomes #ff1166).
-     * @param node The Configuration Node with the value
-     * @return The parsed Integer
-     * @throws NumberFormatException If the value is not formatted correctly or if there is no value present.
-     */
-    public static int readColorInt(ConfigurationNode node) throws NumberFormatException {
-        Object value = node.raw();
-
-        if (value == null) throw new NumberFormatException("No value!");
-
-        if (value instanceof Number) {
-            return ((Number) value).intValue();
-        }
-
-        String val = value.toString();
-        return parseColorFromString(val);
-    }
 
     /**
      * Returns a color-integer. The value can be an integer in String-Format or a string in hexadecimal format prefixed with # (css-style: e.g. #f16 becomes #ff1166).
@@ -165,16 +45,9 @@ public class ConfigUtils {
             return Integer.parseUnsignedInt(val, 16);
         }
 
-        return Integer.parseInt(val);
-    }
-
-    public static String nodePathToString(ConfigurationNode node) {
-        NodePath keys = node.path();
-        String[] stringKeys = new String[keys.size()];
-        for (int i = 0; i < keys.size(); i++) {
-            stringKeys[i] = keys.get(i).toString();
-        }
-        return String.join(".", stringKeys);
+        int color = Integer.parseInt(val);
+        if ((color & 0xFF000000) == 0) color |= 0xFF000000; // assume full alpha if not present
+        return color;
     }
 
 }

@@ -229,7 +229,7 @@ public class BlockColorCalculatorFactory {
             int y = (int) ((1.0 - humidity) * 255.0);
 
             int index = y << 8 | x;
-            int color = index >= colorMap.length ? defaultColor : colorMap[index];
+            int color = (index >= colorMap.length ? defaultColor : colorMap[index]) | 0xFF000000;
 
             target.set(color);
         }

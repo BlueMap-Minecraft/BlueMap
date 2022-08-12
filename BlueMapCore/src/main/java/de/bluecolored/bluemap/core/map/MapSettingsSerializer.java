@@ -1,11 +1,11 @@
-package de.bluecolored.bluemap.core.resources.adapter;
+package de.bluecolored.bluemap.core.map;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-import de.bluecolored.bluemap.core.map.BmMap;
+import de.bluecolored.bluemap.core.map.lowres.LowresTileManager;
 import de.bluecolored.bluemap.core.util.ConfigUtils;
 import de.bluecolored.bluemap.core.util.math.Color;
 
@@ -26,8 +26,6 @@ public class MapSettingsSerializer implements JsonSerializer<BmMap> {
         // hires
         Vector2i hiresTileSize = map.getHiresModelManager().getTileGrid().getGridSize();
         Vector2i gridOrigin = map.getHiresModelManager().getTileGrid().getOffset();
-        Vector2i lowresTileSize = map.getLowresModelManager().getTileSize();
-        Vector2i lowresPointsPerHiresTile = map.getLowresModelManager().getPointsPerHiresTile();
 
         JsonObject hires = new JsonObject();
         hires.add("tileSize", context.serialize(hiresTileSize));
@@ -36,13 +34,12 @@ public class MapSettingsSerializer implements JsonSerializer<BmMap> {
         root.add("hires", hires);
 
         // lowres
-        Vector2i pointSize = hiresTileSize.div(lowresPointsPerHiresTile);
-        Vector2i tileSize = pointSize.mul(lowresTileSize);
+        LowresTileManager lowresTileManager = map.getLowresTileManager();
 
         JsonObject lowres = new JsonObject();
-        lowres.add("tileSize", context.serialize(tileSize));
-        lowres.add("scale", context.serialize(pointSize));
-        lowres.add("translate", context.serialize(pointSize.div(2)));
+        lowres.add("tileSize", context.serialize(lowresTileManager.getTileGrid().getGridSize()));
+        lowres.add("lodFactor", context.serialize(lowresTileManager.getLodFactor()));
+        lowres.add("lodCount", context.serialize(lowresTileManager.getLodCount()));
         root.add("lowres", lowres);
 
         // startPos

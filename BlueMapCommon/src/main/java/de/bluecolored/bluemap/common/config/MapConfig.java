@@ -54,8 +54,9 @@ public class MapConfig implements MapSettings {
 
     // hidden config fields
     private int hiresTileSize = 32;
-    private int lowresPointsPerHiresTile = 4;
-    private int lowresPointsPerLowresTile = 50;
+    private int lowresTileSize = 500;
+    private int lodCount = 3;
+    private int lodFactor = 5;
 
     @Nullable
     public String getName() {
@@ -126,12 +127,16 @@ public class MapConfig implements MapSettings {
         return hiresTileSize;
     }
 
-    public int getLowresPointsPerHiresTile() {
-        return lowresPointsPerHiresTile;
+    public int getLowresTileSize() {
+        return lowresTileSize;
     }
 
-    public int getLowresPointsPerLowresTile() {
-        return lowresPointsPerLowresTile;
+    public int getLodCount() {
+        return lodCount;
+    }
+
+    public int getLodFactor() {
+        return lodFactor;
     }
 
 }

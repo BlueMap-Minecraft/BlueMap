@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.core.map.hires;
 
 import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.map.TextureGallery;
+import de.bluecolored.bluemap.core.map.TileMetaConsumer;
 import de.bluecolored.bluemap.core.map.hires.blockmodel.BlockStateModelFactory;
 import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.math.Color;
@@ -44,17 +45,20 @@ public class HiresModelRenderer {
         this.renderSettings = renderSettings;
     }
 
-    public HiresTileMeta render(World world, Vector3i modelMin, Vector3i modelMax, HiresTileModel model) {
+    public void render(World world, Vector3i modelMin, Vector3i modelMax, HiresTileModel model) {
+        render(world, modelMin, modelMax, model, (x, z, c, h, l) -> {});
+    }
+
+    public void render(World world, Vector3i modelMin, Vector3i modelMax, HiresTileModel model, TileMetaConsumer tileMetaConsumer) {
         Vector3i min = modelMin.max(renderSettings.getMinPos());
         Vector3i max = modelMax.min(renderSettings.getMaxPos());
         Vector3i modelAnchor = new Vector3i(modelMin.getX(), 0, modelMin.getZ());
-
-        HiresTileMeta tileMeta = new HiresTileMeta(modelMin.getX(), modelMin.getZ(), modelMax.getX(), modelMax.getZ()); //TODO: recycle tilemeta instances?
 
         // create new for each tile-render since the factory is not threadsafe
         BlockStateModelFactory modelFactory = new BlockStateModelFactory(resourcePack, textureGallery, renderSettings);
 
         int maxHeight, minY, maxY;
+        double topBlockLight;
         Color columnColor = new Color(), blockColor = new Color();
         BlockNeighborhood<?> block = new BlockNeighborhood<>(resourcePack, renderSettings, world, 0, 0, 0);
         BlockModelView blockModel = new BlockModelView(model);
@@ -64,6 +68,8 @@ public class HiresModelRenderer {
             for (z = min.getZ(); z <= max.getZ(); z++){
 
                 maxHeight = 0;
+                topBlockLight = 0f;
+
                 columnColor.set(0, 0, 0, 1, true);
 
                 if (renderSettings.isInsideRenderBoundaries(x, z)) {
@@ -89,16 +95,16 @@ public class HiresModelRenderer {
                         if (blockColor.a > 0) {
                             maxHeight = y;
                             columnColor.overlay(blockColor.premultiplied());
+                            topBlockLight = Math.floor(topBlockLight * (1 - blockColor.a));
                         }
+
+                        //update topBlockLight
+                        topBlockLight = Math.max(topBlockLight, block.getBlockLightLevel());
                     }
                 }
 
-                tileMeta.setHeight(x, z, maxHeight);
-                tileMeta.setColor(x, z, columnColor);
-
+                tileMetaConsumer.set(x, z, columnColor, maxHeight, (int) topBlockLight);
             }
         }
-
-        return tileMeta;
     }
 }

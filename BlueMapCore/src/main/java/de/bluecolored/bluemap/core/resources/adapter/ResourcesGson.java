@@ -6,7 +6,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.resources.resourcepack.blockmodel.Face;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.util.math.Axis;
@@ -31,7 +30,6 @@ public class ResourcesGson {
                 .registerTypeAdapter(Vector3f.class, new Vector3fAdapter())
                 .registerTypeAdapter(Vector4d.class, new Vector4dAdapter())
                 .registerTypeAdapter(Vector4f.class, new Vector4fAdapter())
-                .registerTypeAdapter(BmMap.class, new MapSettingsSerializer())
                 .registerTypeAdapter(
                         new TypeToken<EnumMap<Direction, Face>>(){}.getType(),
                         new EnumMapInstanceCreator<Direction, Face>(Direction.class)

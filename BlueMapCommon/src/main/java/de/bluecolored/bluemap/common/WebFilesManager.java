@@ -133,6 +133,9 @@ public class WebFilesManager {
 
         private float resolutionDefault = 1;
 
+        private int minZoomDistance = 5;
+        private int maxZoomDistance = 100000;
+
         private int hiresSliderMax = 500;
         private int hiresSliderDefault = 200;
         private int hiresSliderMin = 50;
@@ -148,6 +151,9 @@ public class WebFilesManager {
             this.enableFreeFlight = config.isEnableFreeFlight();
             this.startLocation = config.getStartLocation().orElse(null);
             this.resolutionDefault = config.getResolutionDefault();
+
+            this.minZoomDistance = config.getMinZoomDistance();
+            this.maxZoomDistance = config.getMaxZoomDistance();
             
             this.hiresSliderMax = config.getHiresSliderMax();
             this.hiresSliderDefault = config.getHiresSliderDefault();

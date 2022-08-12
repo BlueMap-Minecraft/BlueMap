@@ -58,7 +58,9 @@ public class ColorAdapter extends TypeAdapter<Color> {
                 value.set(ConfigUtils.parseColorFromString(in.nextString()));
                 break;
             case NUMBER:
-                value.set(in.nextInt());
+                int color = in.nextInt();
+                if ((color & 0xFF000000) == 0) color = color | 0xFF000000; // assume full alpha if not specified
+                value.set(color);
                 break;
             case NULL:
                 break;

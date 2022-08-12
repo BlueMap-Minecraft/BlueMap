@@ -28,9 +28,10 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
-import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.api.debug.DebugDump;
+import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.util.Vector2iCache;
 import de.bluecolored.bluemap.core.world.Grid;
 import de.bluecolored.bluemap.core.world.World;
 import net.querz.nbt.CompoundTag;
@@ -52,6 +53,8 @@ public class MCAWorld implements World {
 
     private static final Grid CHUNK_GRID = new Grid(16);
     private static final Grid REGION_GRID = new Grid(32).multiply(CHUNK_GRID);
+
+    private static final Vector2iCache VECTOR_2_I_CACHE = new Vector2iCache();
 
     private final Path worldFolder;
 
@@ -105,7 +108,7 @@ public class MCAWorld implements World {
 
     @Override
     public MCAChunk getChunk(int x, int z) {
-        return getChunk(vec2i(x, z));
+        return getChunk(VECTOR_2_I_CACHE.get(x, z));
     }
 
     private MCAChunk getChunk(Vector2i pos) {
@@ -114,7 +117,7 @@ public class MCAWorld implements World {
 
     @Override
     public MCARegion getRegion(int x, int z) {
-        return getRegion(vec2i(x, z));
+        return getRegion(VECTOR_2_I_CACHE.get(x, z));
     }
 
     private MCARegion getRegion(Vector2i pos) {
@@ -191,7 +194,7 @@ public class MCAWorld implements World {
 
     @Override
     public void invalidateChunkCache(int x, int z) {
-        chunkCache.invalidate(vec2i(x, z));
+        chunkCache.invalidate(VECTOR_2_I_CACHE.get(x, z));
     }
 
     @Override
@@ -286,19 +289,6 @@ public class MCAWorld implements World {
             throw new FileNotFoundException("Could not find a level.dat file for this world!");
 
         return levelFile;
-    }
-
-    private static final int VEC_2I_CACHE_SIZE = 0x4000;
-    private static final int VEC_2I_CACHE_MASK = VEC_2I_CACHE_SIZE - 1;
-    private static final Vector2i[] VEC_2I_CACHE = new Vector2i[VEC_2I_CACHE_SIZE];
-    private static Vector2i vec2i(int x, int y) {
-        int cacheIndex = (x * 1456 ^ y * 948375892) & VEC_2I_CACHE_MASK;
-        Vector2i possibleMatch = VEC_2I_CACHE[cacheIndex];
-
-        if (possibleMatch != null && possibleMatch.getX() == x && possibleMatch.getY() == y)
-            return possibleMatch;
-
-        return VEC_2I_CACHE[cacheIndex] = new Vector2i(x, y);
     }
 
 }
