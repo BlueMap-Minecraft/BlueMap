@@ -108,7 +108,10 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
                     response.addHeader("ETag", eTag);
                     if (lastModified > 0)
                         response.addHeader("Last-Modified", timestampToString(lastModified));
-                    response.addHeader("Content-Type", "application/json");
+
+                    if (lod == 0) response.addHeader("Content-Type", "application/json");
+                    else response.addHeader("Content-Type", "image/png");
+
                     writeToResponse(compressedIn, response, request);
                     return response;
                 }
@@ -159,6 +162,7 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
             response.setData(data);
         } else if (
                 compression != Compression.GZIP &&
+                !response.getHeader("Content-Type").contains("image/png") &&
                 request.getLowercaseHeader("Accept-Encoding").contains(Compression.GZIP.getTypeId())
         ) {
             response.addHeader("Content-Encoding", Compression.GZIP.getTypeId());

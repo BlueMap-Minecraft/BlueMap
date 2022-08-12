@@ -28,7 +28,7 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.TextureGallery;
-import de.bluecolored.bluemap.core.map.lowres.LowresTileManager;
+import de.bluecolored.bluemap.core.map.TileMetaConsumer;
 import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.world.Grid;
@@ -57,7 +57,7 @@ public class HiresModelManager {
     /**
      * Renders the given world tile with the provided render-settings
      */
-    public void render(World world, Vector2i tile, LowresTileManager lowresTileManager) {
+    public void render(World world, Vector2i tile, TileMetaConsumer tileMetaConsumer) {
         Vector2i tileMin = tileGrid.getCellMin(tile);
         Vector2i tileMax = tileGrid.getCellMax(tile);
 
@@ -66,7 +66,7 @@ public class HiresModelManager {
 
         HiresTileModel model = HiresTileModel.instancePool().claimInstance();
 
-        renderer.render(world, modelMin, modelMax, model, lowresTileManager);
+        renderer.render(world, modelMin, modelMax, model, tileMetaConsumer);
         save(model, tile);
 
         HiresTileModel.instancePool().recycleInstance(model);

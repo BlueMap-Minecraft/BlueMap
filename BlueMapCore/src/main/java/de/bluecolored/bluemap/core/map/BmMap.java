@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.core.map;
 
 import com.flowpowered.math.vector.Vector2i;
+import com.google.gson.GsonBuilder;
 import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.api.gson.MarkerGson;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
@@ -96,9 +97,9 @@ public class BmMap {
 
         this.lowresTileManager = new LowresTileManager(
                 storage.mapStorage(id),
-                new Grid(new Vector2i(500, 500)),
-                3,
-                5
+                new Grid(settings.getLowresTileSize()),
+                settings.getLodCount(),
+                settings.getLodFactor()
         );
 
         this.tileFilter = t -> true;
@@ -183,7 +184,10 @@ public class BmMap {
                 OutputStream out = storage.writeMeta(id, MetaType.SETTINGS);
                 Writer writer = new OutputStreamWriter(out)
         ) {
-            ResourcesGson.INSTANCE.toJson(this, writer);
+            ResourcesGson.addAdapter(new GsonBuilder())
+                    .registerTypeAdapter(BmMap.class, new MapSettingsSerializer())
+                    .create()
+                    .toJson(this, writer);
         } catch (Exception ex) {
             Logger.global.logError("Failed to save settings for map '" + getId() + "'!", ex);
         }

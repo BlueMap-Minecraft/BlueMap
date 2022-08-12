@@ -32,10 +32,14 @@ public class LowresTile {
         }
     }
 
-    public void set(int x, int z, Color color, int height) throws TileClosedException {
+    public void set(int x, int z, Color color, int height, int blockLight) throws TileClosedException {
         if (closed) throw new TileClosedException();
         texture.setRGB(x, z, color.straight().getInt());
-        texture.setRGB(x, size.getY() + z, (height & 0x00FFFFFF) | 0xFF000000);
+        texture.setRGB(x, size.getY() + z,
+                (height & 0x0000FFFF) |
+                ((blockLight << 16) & 0x00FF0000) |
+                0xFF000000
+        );
     }
 
     public Color getColor(int x, int z, Color target) {
@@ -43,10 +47,14 @@ public class LowresTile {
     }
 
     public int getHeight(int x, int z) {
-        int height = texture.getRGB(x, size.getY() + z) & 0x00FFFFFF;
-        if (height > 0x00800000)
-            return height | 0xFF000000;
+        int height = texture.getRGB(x, size.getY() + z) & 0x0000FFFF;
+        if (height > 0x00008000)
+            return height | 0xFFFF0000;
         return height;
+    }
+
+    public int getBlockLight(int x, int z) {
+        return (texture.getRGB(x, size.getY() + z) & 0x00FF0000) >> 16;
     }
 
     public void save(OutputStream out) throws IOException {

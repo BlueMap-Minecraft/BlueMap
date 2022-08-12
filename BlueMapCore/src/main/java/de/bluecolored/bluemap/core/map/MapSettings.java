@@ -39,8 +39,10 @@ public interface MapSettings extends RenderSettings {
 
     int getHiresTileSize();
 
-    int getLowresPointsPerLowresTile();
+    int getLowresTileSize();
 
-    int getLowresPointsPerHiresTile();
+    int getLodCount();
+
+    int getLodFactor();
 
 }

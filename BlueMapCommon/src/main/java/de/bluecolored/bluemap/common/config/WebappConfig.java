@@ -24,6 +24,9 @@ public class WebappConfig {
 
     private float resolutionDefault = 1;
 
+    private int minZoomDistance = 5;
+    private int maxZoomDistance = 100000;
+
     private int hiresSliderMax = 500;
     private int hiresSliderDefault = 200;
     private int hiresSliderMin = 50;
@@ -58,6 +61,14 @@ public class WebappConfig {
 
     public float getResolutionDefault() {
         return resolutionDefault;
+    }
+
+    public int getMinZoomDistance() {
+        return minZoomDistance;
+    }
+
+    public int getMaxZoomDistance() {
+        return maxZoomDistance;
     }
 
     public int getHiresSliderMax() {

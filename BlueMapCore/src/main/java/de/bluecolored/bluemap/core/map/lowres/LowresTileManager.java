@@ -4,6 +4,7 @@ import com.flowpowered.math.vector.Vector2i;
 import com.github.benmanes.caffeine.cache.*;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.map.TileMetaConsumer;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.Vector2iCache;
 import de.bluecolored.bluemap.core.util.math.Color;
@@ -19,7 +20,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-public class LowresTileManager {
+public class LowresTileManager implements TileMetaConsumer {
 
     private final Storage.MapStorage mapStorage;
 
@@ -90,7 +91,7 @@ public class LowresTileManager {
 
         // write to next LOD (prepare for the most confusing grid-math you will ever see)
         Color averageColor = new Color();
-        int averageHeight;
+        int averageHeight, averageBlockLight;
         int count;
 
         Color color = new Color();
@@ -106,16 +107,19 @@ public class LowresTileManager {
             for (int gY = 0; gY < groupCount.getY(); gY++) {
                 averageColor.set(0, 0, 0, 0, true);
                 averageHeight = 0;
+                averageBlockLight = 0;
                 count = 0;
                 for (int x = 0; x < lodFactor; x++) {
                     for (int y = 0; y < lodFactor; y++) {
                         count++;
                         averageColor.add(tile.getColor(gX * lodFactor + x, gY * lodFactor + y, color).premultiplied());
                         averageHeight += tile.getHeight(gX * lodFactor + x, gY * lodFactor + y);
+                        averageBlockLight += tile.getBlockLight(gX * lodFactor + x, gY * lodFactor + y);
                     }
                 }
                 averageColor.div(count);
                 averageHeight /= count;
+                averageBlockLight /= count;
 
                 set(
                         nextLodTileX,
@@ -124,7 +128,8 @@ public class LowresTileManager {
                         Math.floorMod(tilePos.getX(), lodFactor) * groupCount.getX() + gX,
                         Math.floorMod(tilePos.getY(), lodFactor) * groupCount.getY() + gY,
                         averageColor,
-                        averageHeight
+                        averageHeight,
+                        averageBlockLight
                 );
             }
         }
@@ -141,15 +146,16 @@ public class LowresTileManager {
         return tileCaches.get(lod - 1).get(vector2iCache.get(x, z));
     }
 
-    public void set(int x, int z, Color color, int height) {
+    @Override
+    public void set(int x, int z, Color color, int height, int blockLight) {
         int cellX = tileGrid.getCellX(x);
         int cellZ = tileGrid.getCellY(z);
         int localX = tileGrid.getLocalX(x);
         int localZ = tileGrid.getLocalY(z);
-        set(cellX, cellZ, 1, localX, localZ, color, height);
+        set(cellX, cellZ, 1, localX, localZ, color, height, blockLight);
     }
 
-    private void set(int cellX, int cellZ, int lod, int pixelX, int pixelZ, Color color, int height) {
+    private void set(int cellX, int cellZ, int lod, int pixelX, int pixelZ, Color color, int height, int blockLight) {
 
         int tries = 0;
         LowresTile.TileClosedException closedException;
@@ -158,28 +164,40 @@ public class LowresTileManager {
             closedException = null;
             try {
                 getTile(cellX, cellZ, lod)
-                        .set(pixelX, pixelZ, color, height);
+                        .set(pixelX, pixelZ, color, height, blockLight);
 
                 // for seamless edges
                 if (pixelX == 0) {
                     getTile(cellX - 1, cellZ, lod)
-                            .set(tileGrid.getGridSize().getX(), pixelZ, color, height);
+                            .set(tileGrid.getGridSize().getX(), pixelZ, color, height, blockLight);
                 }
 
                 if (pixelZ == 0) {
                     getTile(cellX, cellZ - 1, lod)
-                            .set(pixelX, tileGrid.getGridSize().getY(), color, height);
+                            .set(pixelX, tileGrid.getGridSize().getY(), color, height, blockLight);
                 }
 
                 if (pixelX == 0 && pixelZ == 0) {
                     getTile(cellX - 1, cellZ - 1, lod)
-                            .set(tileGrid.getGridSize().getX(), tileGrid.getGridSize().getY(), color, height);
+                            .set(tileGrid.getGridSize().getX(), tileGrid.getGridSize().getY(), color, height, blockLight);
                 }
             } catch (LowresTile.TileClosedException ex) {
                 closedException = ex;
             }
         } while (closedException != null && tries < 10);
 
+    }
+
+    public Grid getTileGrid() {
+        return tileGrid;
+    }
+
+    public int getLodCount() {
+        return lodCount;
+    }
+
+    public int getLodFactor() {
+        return lodFactor;
     }
 
 }
