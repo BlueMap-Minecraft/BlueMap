@@ -38,7 +38,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @DebugDump
-public class MapUpdateTask extends CombinedRenderTask<WorldRegionRenderTask> {
+public class MapUpdateTask extends CombinedRenderTask<RenderTask> {
 
     private final BmMap map;
     private final Collection<Vector2i> regions;
@@ -77,9 +77,9 @@ public class MapUpdateTask extends CombinedRenderTask<WorldRegionRenderTask> {
         return regions;
     }
 
-    private static Collection<WorldRegionRenderTask> createTasks(BmMap map, Collection<Vector2i> regions, boolean force) {
-        List<WorldRegionRenderTask> tasks = new ArrayList<>(regions.size());
-        regions.forEach(region -> tasks.add(new WorldRegionRenderTask(map, region, force)));
+    private static Collection<RenderTask> createTasks(BmMap map, Collection<Vector2i> regions, boolean force) {
+        ArrayList<WorldRegionRenderTask> regionTasks = new ArrayList<>(regions.size());
+        regions.forEach(region -> regionTasks.add(new WorldRegionRenderTask(map, region, force)));
 
         // get spawn region
         World world = map.getWorld();
@@ -87,7 +87,15 @@ public class MapUpdateTask extends CombinedRenderTask<WorldRegionRenderTask> {
         Grid regionGrid = world.getRegionGrid();
         Vector2i spawnRegion = regionGrid.getCell(spawnPoint);
 
-        tasks.sort(WorldRegionRenderTask.defaultComparator(spawnRegion));
+        // sort tasks by distance to the spawn region
+        regionTasks.sort(WorldRegionRenderTask.defaultComparator(spawnRegion));
+
+        // save map before and after the whole update
+        ArrayList<RenderTask> tasks = new ArrayList<>(regionTasks.size() + 2);
+        tasks.add(new MapSaveTask(map));
+        tasks.addAll(regionTasks);
+        tasks.add(new MapSaveTask(map));
+
         return tasks;
     }
 

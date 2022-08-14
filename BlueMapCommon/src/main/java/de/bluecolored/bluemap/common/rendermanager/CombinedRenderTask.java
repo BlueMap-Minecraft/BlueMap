@@ -26,10 +26,7 @@ package de.bluecolored.bluemap.common.rendermanager;
 
 import de.bluecolored.bluemap.api.debug.DebugDump;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 @DebugDump
 public class CombinedRenderTask<T extends RenderTask> implements RenderTask {
@@ -105,8 +102,11 @@ public class CombinedRenderTask<T extends RenderTask> implements RenderTask {
 
     @Override
     public String getDescription() {
-        //return description + " (" + (this.currentTaskIndex + 1) + "/" + tasks.size() + ")";
         return description;
     }
 
+    @Override
+    public Optional<String> getDetail() {
+        return Optional.ofNullable(this.tasks.get(this.currentTaskIndex).getDescription());
+    }
 }

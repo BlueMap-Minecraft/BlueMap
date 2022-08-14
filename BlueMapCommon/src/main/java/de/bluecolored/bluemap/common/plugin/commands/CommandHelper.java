@@ -30,7 +30,6 @@ import de.bluecolored.bluemap.common.plugin.text.TextColor;
 import de.bluecolored.bluemap.common.plugin.text.TextFormat;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.rendermanager.RenderTask;
-import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.world.World;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
@@ -80,6 +79,11 @@ public class CommandHelper {
                     lines.add(Text.of(TextColor.GRAY, "  [" + getRefForTask(task) + "] ", TextColor.GOLD, task.getDescription()));
 
                     if (i == 0) {
+                        String detail = task.getDetail().orElse(null);
+                        if (detail != null) {
+                            lines.add(Text.of(TextColor.GRAY, "   Detail: ", TextColor.WHITE, detail));
+                        }
+
                         lines.add(Text.of(TextColor.GRAY, "   Progress: ", TextColor.WHITE,
                                 (Math.round(task.estimateProgress() * 10000) / 100.0) + "%"));
 

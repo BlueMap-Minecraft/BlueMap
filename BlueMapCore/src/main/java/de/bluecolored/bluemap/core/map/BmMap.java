@@ -130,7 +130,9 @@ public class BmMap {
         lowresTileManager.save();
         saveRenderState();
         saveMarkerState();
+        saveMapSettings();
 
+        // only save texture gallery if not present in storage
         try {
             if (storage.readMeta(id, MetaType.TEXTURES).isEmpty())
                 saveTextureGallery();

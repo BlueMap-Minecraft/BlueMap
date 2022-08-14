@@ -85,6 +85,19 @@ public class HiresModelRenderer {
 
                         modelFactory.render(block, blockModel, blockColor);
 
+                        //update topBlockLight
+                        if (
+                                y >= renderSettings.getRemoveCavesBelowY() ||
+                                (renderSettings.isCaveDetectionUsesBlockLight() ? block.getBlockLightLevel() : block.getSunLightLevel()) > 0
+                        ) {
+                            if (blockColor.a > 0) {
+                                topBlockLight = Math.floor(topBlockLight * (1 - blockColor.a));
+                            }
+                            topBlockLight = Math.max(topBlockLight, block.getBlockLightLevel());
+                        } else {
+                            topBlockLight = 0;
+                        }
+
                         // skip empty blocks
                         if (blockModel.getSize() <= 0) continue;
 
@@ -95,11 +108,7 @@ public class HiresModelRenderer {
                         if (blockColor.a > 0) {
                             maxHeight = y;
                             columnColor.overlay(blockColor.premultiplied());
-                            topBlockLight = Math.floor(topBlockLight * (1 - blockColor.a));
                         }
-
-                        //update topBlockLight
-                        topBlockLight = Math.max(topBlockLight, block.getBlockLightLevel());
                     }
                 }
 

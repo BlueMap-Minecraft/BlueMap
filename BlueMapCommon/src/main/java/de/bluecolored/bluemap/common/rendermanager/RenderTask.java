@@ -24,6 +24,8 @@
  */
 package de.bluecolored.bluemap.common.rendermanager;
 
+import java.util.Optional;
+
 public interface RenderTask {
 
     void doWork() throws Exception;
@@ -54,5 +56,9 @@ public interface RenderTask {
     }
 
     String getDescription();
+
+    default Optional<String> getDetail() {
+        return Optional.empty();
+    }
 
 }

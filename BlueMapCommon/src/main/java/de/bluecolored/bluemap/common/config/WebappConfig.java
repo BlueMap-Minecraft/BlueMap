@@ -28,10 +28,10 @@ public class WebappConfig {
     private int maxZoomDistance = 100000;
 
     private int hiresSliderMax = 500;
-    private int hiresSliderDefault = 200;
-    private int hiresSliderMin = 50;
+    private int hiresSliderDefault = 100;
+    private int hiresSliderMin = 0;
 
-    private int lowresSliderMax = 10000;
+    private int lowresSliderMax = 7000;
     private int lowresSliderDefault = 2000;
     private int lowresSliderMin = 500;
 
