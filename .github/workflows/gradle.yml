@@ -1,33 +1,41 @@
 name: Java CI
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - "*"
+    tags:
+      - "*"
+  pull_request:
+    branches:
+      - "*"
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-      with:
-        submodules: recursive
-        fetch-depth: 0 # needed for versioning
-    - name: Set up JDK 1.17
-      uses: actions/setup-java@v1
-      with:
-        java-version: 17
-    - uses: actions/cache@v2
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: "${{ runner.os }}-bluemap-${{ hashFiles('**/*.gradle*') }}"
-        restore-keys: |
-          ${{ runner.os }}-bluemap-
-    - name: Build with Gradle
-      run: ./gradlew clean test build
-    - uses: actions/upload-artifact@v2
-      with:
-        name: artifacts
-        path: build/release/*
+      - uses: actions/checkout@v3
+        with:
+          submodules: recursive
+          fetch-depth: 0 # needed for versioning
+      - name: Set up JDK 1.17
+        uses: actions/setup-java@v1
+        with:
+          java-version: 17
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: "${{ runner.os }}-bluemap-${{ hashFiles('**/*.gradle*') }}"
+          restore-keys: |
+            ${{ runner.os }}-bluemap-
+      - name: Build with Gradle
+        run: ./gradlew clean test build
+      - uses: actions/upload-artifact@v2
+        with:
+          name: artifacts
+          path: build/release/*
 
   docker:
     runs-on: ubuntu-latest
@@ -55,8 +63,9 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' }}
+            type=raw,value=latest,enable=${{ github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/') }}
             type=raw,value={{branch}}
+            type=raw,value={{tag}},enable=${{ startsWith(github.ref, 'refs/tags/') }}
           flavor: |
             latest=false
       - name: Build and push
