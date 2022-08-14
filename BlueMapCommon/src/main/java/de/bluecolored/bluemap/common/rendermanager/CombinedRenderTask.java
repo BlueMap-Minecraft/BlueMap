@@ -107,6 +107,7 @@ public class CombinedRenderTask<T extends RenderTask> implements RenderTask {
 
     @Override
     public Optional<String> getDetail() {
+        if (this.currentTaskIndex >= this.tasks.size()) return Optional.empty();
         return Optional.ofNullable(this.tasks.get(this.currentTaskIndex).getDescription());
     }
 }
