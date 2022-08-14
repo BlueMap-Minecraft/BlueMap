@@ -46,6 +46,8 @@ public class MapConfig implements MapSettings {
 
     private boolean renderEdges = true;
 
+    private boolean saveHiresLayer = true;
+
     private String storage = "file";
 
     private boolean ignoreMissingLightData = false;
@@ -108,6 +110,11 @@ public class MapConfig implements MapSettings {
 
     public boolean isRenderEdges() {
         return renderEdges;
+    }
+
+    @Override
+    public boolean isSaveHiresLayer() {
+        return saveHiresLayer;
     }
 
     public String getStorage() {

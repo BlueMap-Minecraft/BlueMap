@@ -97,4 +97,6 @@ public interface RenderSettings {
                 y <= max.getY();
     }
 
+    boolean isSaveHiresLayer();
+
 }

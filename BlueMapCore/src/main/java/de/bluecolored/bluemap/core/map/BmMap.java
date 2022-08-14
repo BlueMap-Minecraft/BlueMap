@@ -117,7 +117,7 @@ public class BmMap {
 
         long start = System.nanoTime();
 
-        hiresModelManager.render(world, tile, lowresTileManager);
+        hiresModelManager.render(world, tile, lowresTileManager, mapSettings.isSaveHiresLayer());
 
         long end = System.nanoTime();
         long delta = end - start;

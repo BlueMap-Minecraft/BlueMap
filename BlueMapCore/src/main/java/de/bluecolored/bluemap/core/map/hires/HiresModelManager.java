@@ -57,7 +57,7 @@ public class HiresModelManager {
     /**
      * Renders the given world tile with the provided render-settings
      */
-    public void render(World world, Vector2i tile, TileMetaConsumer tileMetaConsumer) {
+    public void render(World world, Vector2i tile, TileMetaConsumer tileMetaConsumer, boolean save) {
         Vector2i tileMin = tileGrid.getCellMin(tile);
         Vector2i tileMax = tileGrid.getCellMax(tile);
 
@@ -67,7 +67,7 @@ public class HiresModelManager {
         HiresTileModel model = HiresTileModel.instancePool().claimInstance();
 
         renderer.render(world, modelMin, modelMax, model, tileMetaConsumer);
-        save(model, tile);
+        if (save) save(model, tile);
 
         HiresTileModel.instancePool().recycleInstance(model);
     }
