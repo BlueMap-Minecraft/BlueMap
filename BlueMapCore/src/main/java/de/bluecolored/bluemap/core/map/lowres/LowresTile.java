@@ -8,15 +8,16 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class LowresTile {
 
     public static final int HEIGHT_UNDEFINED = Integer.MIN_VALUE;
 
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+
     private final BufferedImage texture;
     private final Vector2i size;
-
-    private volatile boolean closed = false;
 
     public LowresTile(Vector2i tileSize) {
         this.size = tileSize.add(1, 1); // add 1 for seamless edges
@@ -32,14 +33,18 @@ public class LowresTile {
         }
     }
 
-    public void set(int x, int z, Color color, int height, int blockLight) throws TileClosedException {
-        if (closed) throw new TileClosedException();
-        texture.setRGB(x, z, color.straight().getInt());
-        texture.setRGB(x, size.getY() + z,
-                (height & 0x0000FFFF) |
-                ((blockLight << 16) & 0x00FF0000) |
-                0xFF000000
-        );
+    public void set(int x, int z, Color color, int height, int blockLight) {
+        lock.readLock().lock();
+        try {
+            texture.setRGB(x, z, color.straight().getInt());
+            texture.setRGB(x, size.getY() + z,
+                    (height & 0x0000FFFF) |
+                            ((blockLight << 16) & 0x00FF0000) |
+                            0xFF000000
+            );
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     public Color getColor(int x, int z, Color target) {
@@ -58,16 +63,11 @@ public class LowresTile {
     }
 
     public void save(OutputStream out) throws IOException {
-        ImageIO.write(texture, "png", out);
-    }
-
-    public void close() {
-        closed = true;
-    }
-
-    public static class TileClosedException extends Exception {
-        public TileClosedException() {
-            super("Tile is closed");
+        lock.writeLock().lock();
+        try {
+            ImageIO.write(texture, "png", out);
+        } finally {
+            lock.writeLock().unlock();
         }
     }
 
