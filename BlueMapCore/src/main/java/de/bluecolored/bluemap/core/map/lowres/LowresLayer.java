@@ -57,7 +57,6 @@ public class LowresLayer {
     }
 
     public void save() {
-        Logger.global.logInfo("Saving lowres layer " + lod);
         tileCache.invalidateAll();
         tileCache.cleanUp();
     }
