@@ -40,6 +40,8 @@ public class ChunkAnvil116 extends MCAChunk {
     private boolean isGenerated;
     private boolean hasLight;
 
+    private long inhabitedTime;
+
     private int sectionMin, sectionMax;
     private Section[] sections;
 
@@ -54,6 +56,8 @@ public class ChunkAnvil116 extends MCAChunk {
         String status = levelData.getString("Status");
         this.isGenerated = status.equals("full");
         this.hasLight = isGenerated;
+
+        this.inhabitedTime = levelData.getLong("InhabitedTime");
 
         if (!isGenerated && getWorld().isIgnoreMissingLightData()) {
             isGenerated = !status.equals("empty");
@@ -107,6 +111,11 @@ public class ChunkAnvil116 extends MCAChunk {
     @Override
     public boolean isGenerated() {
         return isGenerated;
+    }
+
+    @Override
+    public long getInhabitedTime() {
+        return inhabitedTime;
     }
 
     @Override

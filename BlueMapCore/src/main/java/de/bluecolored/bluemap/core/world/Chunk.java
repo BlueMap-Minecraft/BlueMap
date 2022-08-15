@@ -30,6 +30,8 @@ public interface Chunk {
 
     int getDataVersion();
 
+    long getInhabitedTime();
+
     BlockState getBlockState(int x, int y, int z);
 
     LightData getLightData(int x, int y, int z, LightData target);

@@ -38,6 +38,11 @@ public class EmptyChunk extends MCAChunk {
     }
 
     @Override
+    public long getInhabitedTime() {
+        return 0;
+    }
+
+    @Override
     public BlockState getBlockState(int x, int y, int z) {
         return BlockState.AIR;
     }

@@ -38,6 +38,7 @@ import java.util.Map.Entry;
 public class ChunkAnvil113 extends MCAChunk {
     private boolean isGenerated;
     private boolean hasLight;
+    private long inhabitedTime;
     private Section[] sections;
     private int[] biomes;
 
@@ -50,6 +51,8 @@ public class ChunkAnvil113 extends MCAChunk {
         String status = levelData.getString("Status");
         this.isGenerated = status.equals("full");
         this.hasLight = isGenerated;
+
+        this.inhabitedTime = levelData.getLong("InhabitedTime");
 
         if (!isGenerated && getWorld().isIgnoreMissingLightData()) {
             isGenerated = !status.equals("empty");
@@ -90,6 +93,11 @@ public class ChunkAnvil113 extends MCAChunk {
     @Override
     public boolean isGenerated() {
         return isGenerated;
+    }
+
+    @Override
+    public long getInhabitedTime() {
+        return inhabitedTime;
     }
 
     @Override

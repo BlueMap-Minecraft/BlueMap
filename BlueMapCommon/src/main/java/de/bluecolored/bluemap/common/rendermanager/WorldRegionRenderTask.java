@@ -28,6 +28,7 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector2l;
 import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.map.BmMap;
+import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.Grid;
 import de.bluecolored.bluemap.core.world.Region;
 
@@ -151,7 +152,9 @@ public class WorldRegionRenderTask implements RenderTask {
 
         for (int x = minChunk.getX(); x <= maxChunk.getX(); x++) {
             for (int z = minChunk.getY(); z <= maxChunk.getY(); z++) {
-                if (!map.getWorld().getChunk(x, z).isGenerated()) return false;
+                Chunk chunk = map.getWorld().getChunk(x, z);
+                if (!chunk.isGenerated()) return false;
+                if (chunk.getInhabitedTime() < map.getMapSettings().getMinInhabitedTime()) return false;
             }
         }
 

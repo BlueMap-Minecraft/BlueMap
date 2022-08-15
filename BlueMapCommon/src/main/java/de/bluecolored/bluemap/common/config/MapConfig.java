@@ -44,6 +44,8 @@ public class MapConfig implements MapSettings {
     private transient Vector3i min = null;
     private transient Vector3i max = null;
 
+    private long minInhabitedTime = 0;
+
     private boolean renderEdges = true;
 
     private boolean saveHiresLayer = true;
@@ -106,6 +108,10 @@ public class MapConfig implements MapSettings {
     public Vector3i getMaxPos() {
         if (max == null) max = new Vector3i(maxX, maxY, maxZ);
         return max;
+    }
+
+    public long getMinInhabitedTime() {
+        return minInhabitedTime;
     }
 
     public boolean isRenderEdges() {

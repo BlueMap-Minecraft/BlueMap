@@ -60,6 +60,9 @@ public abstract class MCAChunk implements Chunk {
     }
 
     @Override
+    public abstract long getInhabitedTime();
+
+    @Override
     public abstract BlockState getBlockState(int x, int y, int z);
 
     @Override
