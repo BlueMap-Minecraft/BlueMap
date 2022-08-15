@@ -34,7 +34,7 @@ Keep in mind that we have to maintain all new features and keep supporting them 
 This means we always can decide to not accept a PR for any reason.
 
 ### Todo / planned features
-[Here is a todo-list](https://github.com/BlueMap-Minecraft/BlueMap/projects/1?fullscreen=true)! It is ordered by what i right now think is the priority, but it might always change or be reordered at my discretion. *(I develop BlueMap in my free-time, so nothing here is a promise and there are no ETA's)*
+[Here is a todo-list](https://github.com/orgs/BlueMap-Minecraft/projects/2)
 
 ### Links
 **Wiki:** https://bluecolo.red/map-wiki <br>
