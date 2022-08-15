@@ -8,6 +8,7 @@ import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.Vector2iCache;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.Grid;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -52,7 +53,15 @@ public class LowresLayer {
                 .scheduler(Scheduler.systemScheduler())
                 .expireAfterAccess(10, TimeUnit.SECONDS)
                 .expireAfterWrite(5, TimeUnit.MINUTES)
-                .removalListener(this::saveTile)
+                .writer(new CacheWriter<Vector2i, LowresTile>() {
+                    @Override
+                    public void write(@NonNull Vector2i key, @NonNull LowresTile value) {}
+
+                    @Override
+                    public void delete(@NonNull Vector2i key, @Nullable LowresTile value, @NonNull RemovalCause cause) {
+                        saveTile(key, value, cause);
+                    }
+                })
                 .build(tileWeakInstanceCache::get);
     }
 
@@ -63,13 +72,13 @@ public class LowresLayer {
 
     private LowresTile createTile(Vector2i tilePos) {
         try (InputStream in = mapStorage.read(lod, tilePos).orElse(null)) {
-            if (in == null)
-                return new LowresTile(tileGrid.getGridSize());
-            return new LowresTile(tileGrid.getGridSize(), in);
+            if (in != null) return new LowresTile(tileGrid.getGridSize(), in);
         } catch (IOException e) {
             Logger.global.logError("Failed to load tile " + tilePos + " (lod: " + lod + ")", e);
-            return null;
         }
+
+        // if the tile can not be loaded, we create a new one
+        return new LowresTile(tileGrid.getGridSize());
     }
 
     private void saveTile(Vector2i tilePos, @Nullable LowresTile tile, RemovalCause removalCause) {
