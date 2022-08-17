@@ -96,11 +96,11 @@ public class WorldRegionRenderTask implements RenderTask {
         Predicate<Vector2i> boundsTileFilter = t -> {
             Vector2i cellMin = tileGrid.getCellMin(t);
             if (cellMin.getX() > map.getMapSettings().getMaxPos().getX()) return false;
-            if (cellMin.getY() > map.getMapSettings().getMaxPos().getY()) return false;
+            if (cellMin.getY() > map.getMapSettings().getMaxPos().getZ()) return false;
 
             Vector2i cellMax = tileGrid.getCellMax(t);
             if (cellMax.getX() < map.getMapSettings().getMinPos().getX()) return false;
-            return cellMax.getY() >= map.getMapSettings().getMinPos().getY();
+            return cellMax.getY() >= map.getMapSettings().getMinPos().getZ();
         };
 
         this.tileCount = tileSet.size();

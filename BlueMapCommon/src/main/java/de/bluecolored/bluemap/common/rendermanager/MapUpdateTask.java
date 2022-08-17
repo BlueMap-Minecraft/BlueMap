@@ -110,11 +110,11 @@ public class MapUpdateTask extends CombinedRenderTask<RenderTask> {
         Predicate<Vector2i> regionFilter = r -> {
             Vector2i cellMin = regionGrid.getCellMin(r);
             if (cellMin.getX() > map.getMapSettings().getMaxPos().getX()) return false;
-            if (cellMin.getY() > map.getMapSettings().getMaxPos().getY()) return false;
+            if (cellMin.getY() > map.getMapSettings().getMaxPos().getZ()) return false;
 
             Vector2i cellMax = regionGrid.getCellMax(r);
             if (cellMax.getX() < map.getMapSettings().getMinPos().getX()) return false;
-            return cellMax.getY() >= map.getMapSettings().getMinPos().getY();
+            return cellMax.getY() >= map.getMapSettings().getMinPos().getZ();
         };
 
         if (center == null || radius < 0) {
