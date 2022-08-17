@@ -40,9 +40,7 @@ public class SQLConfig extends StorageConfig implements SQLStorageSettings {
 
     @DebugDump private String driverJar = null;
     @DebugDump private String driverClass = null;
-    @DebugDump private String dbUrl = "jdbc:mysql://localhost:3306/bluemap";
-    @DebugDump private String user = "root";
-    private String password = "";
+    private String connectionUrl = "jdbc:mysql://localhost/bluemap?permitMysqlScheme";
 
     @DebugDump private Compression compression = Compression.GZIP;
 
@@ -65,18 +63,8 @@ public class SQLConfig extends StorageConfig implements SQLStorageSettings {
     }
 
     @Override
-    public String getDbUrl() {
-        return dbUrl;
-    }
-
-    @Override
-    public String getUser() {
-        return user;
-    }
-
-    @Override
-    public String getPassword() {
-        return password;
+    public String getConnectionUrl() {
+        return connectionUrl;
     }
 
     @Override

@@ -81,13 +81,13 @@ public class SQLStorage extends Storage {
                                 "Instead you'll need to add your driver-jar to the classpath when starting your server," +
                                 "e.g. using the '-classpath' command-line argument", ex);*/
                     }
-                    this.dataSource = createDataSource(config.getDbUrl(), config.getUser(), config.getPassword(), driver);
+                    this.dataSource = createDataSource(config.getConnectionUrl(), driver);
                 } else {
                     Class.forName(config.getDriverClass().get());
-                    this.dataSource = createDataSource(config.getDbUrl(), config.getUser(), config.getPassword());
+                    this.dataSource = createDataSource(config.getConnectionUrl());
                 }
             } else {
-                this.dataSource = createDataSource(config.getDbUrl(), config.getUser(), config.getPassword());
+                this.dataSource = createDataSource(config.getConnectionUrl());
             }
         } catch (ClassNotFoundException ex) {
             throw new SQLDriverException("The driver-class does not exist.", ex);
@@ -98,8 +98,8 @@ public class SQLStorage extends Storage {
         this.hiresCompression = config.getCompression();
     }
 
-    public SQLStorage(String dbUrl, String user, String password, Compression compression) {
-        this.dataSource = createDataSource(dbUrl, user, password);
+    public SQLStorage(String dbUrl, Compression compression) {
+        this.dataSource = createDataSource(dbUrl);
         this.hiresCompression = compression;
     }
 
@@ -621,25 +621,17 @@ public class SQLStorage extends Storage {
         }, 2);
     }
 
-    private DataSource createDataSource(String dbUrl, String user, String password) {
-        ConnectionFactory connectionFactory = new DriverManagerConnectionFactory(
-                dbUrl,
-                user,
-                password
-        );
-
-        return createDataSource(connectionFactory);
+    private DataSource createDataSource(String dbUrl) {
+        Logger.global.logInfo("Creating datasource for: " + dbUrl);
+        return createDataSource(new DriverManagerConnectionFactory(dbUrl));
     }
 
-    private DataSource createDataSource(String dbUrl, String user, String password, Driver driver) {
-        Properties properties = new Properties();
-        properties.put("user", user);
-        properties.put("password", password);
-
+    private DataSource createDataSource(String dbUrl, Driver driver) {
+        Logger.global.logInfo("Creating driver-datasource for: " + dbUrl);
         ConnectionFactory connectionFactory = new DriverConnectionFactory(
                 driver,
                 dbUrl,
-                properties
+                new Properties()
         );
 
         return createDataSource(connectionFactory);

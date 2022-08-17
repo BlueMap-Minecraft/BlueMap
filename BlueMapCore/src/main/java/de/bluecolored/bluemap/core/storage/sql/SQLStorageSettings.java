@@ -12,11 +12,7 @@ public interface SQLStorageSettings {
 
     Optional<String> getDriverClass();
 
-    String getDbUrl();
-
-    String getUser();
-
-    String getPassword();
+    String getConnectionUrl();
 
     Compression getCompression();
 
