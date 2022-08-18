@@ -125,7 +125,7 @@ public class RegionFileWatchService extends Thread {
                         scheduledUpdates.remove(regionPos);
                         renderManager.scheduleRenderTask(task);
 
-                        if (verbose) Logger.global.logInfo("Scheduled update for region-file: " + regionPos);
+                        if (verbose) Logger.global.logInfo("Scheduled update for region-file: " + regionPos + " (Map: " + map.getId() + ")");
                     }
                 }
             };

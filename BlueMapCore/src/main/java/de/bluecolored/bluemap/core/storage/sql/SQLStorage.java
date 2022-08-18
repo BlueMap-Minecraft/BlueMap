@@ -622,12 +622,10 @@ public class SQLStorage extends Storage {
     }
 
     private DataSource createDataSource(String dbUrl) {
-        Logger.global.logInfo("Creating datasource for: " + dbUrl);
         return createDataSource(new DriverManagerConnectionFactory(dbUrl));
     }
 
     private DataSource createDataSource(String dbUrl, Driver driver) {
-        Logger.global.logInfo("Creating driver-datasource for: " + dbUrl);
         ConnectionFactory connectionFactory = new DriverConnectionFactory(
                 driver,
                 dbUrl,
