@@ -15,6 +15,8 @@ public class Vector2iTypeSerializer implements TypeSerializer<Vector2i> {
         var xNode = node.node("x");
         var yNode = node.node("y");
 
+        if (yNode.virtual()) yNode = node.node("z"); // fallback to z if y is not present
+
         if (xNode.virtual() || yNode.virtual()) throw new SerializationException("Cannot parse Vector2i: value x or y missing");
 
         return Vector2i.from(
