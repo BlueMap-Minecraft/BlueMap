@@ -140,15 +140,15 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
             onlinePlayerList.add(bukkitPlayer);
         }
 
-        //start updating players
-        getServer().getScheduler().runTaskTimer(this, this::updateSomePlayers, 1, 1);
-
         //load bluemap
         getServer().getScheduler().runTaskAsynchronously(this, () -> {
             try {
                 Logger.global.logInfo("Loading...");
                 this.pluginInstance.load();
                 if (pluginInstance.isLoaded()) Logger.global.logInfo("Loaded!");
+
+                //start updating players
+                getServer().getScheduler().runTaskTimer(this, this::updateSomePlayers, 1, 1);
             } catch (IOException | RuntimeException e) {
                 Logger.global.logError("Failed to load!", e);
                 this.pluginInstance.unload();
