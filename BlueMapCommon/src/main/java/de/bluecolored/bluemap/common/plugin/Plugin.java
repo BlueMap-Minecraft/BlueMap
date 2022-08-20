@@ -478,12 +478,22 @@ public class Plugin implements ServerEventListener {
 
     @Override
     public void onPlayerJoin(UUID playerUuid) {
-        checkPausedByPlayerCount();
+        checkPausedByPlayerCountSoon();
     }
 
     @Override
     public void onPlayerLeave(UUID playerUuid) {
-        checkPausedByPlayerCount();
+        checkPausedByPlayerCountSoon();
+    }
+
+    private void checkPausedByPlayerCountSoon() {
+        // check is done a second later to make sure the player has actually joined/left and is no longer on the list
+        daemonTimer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                checkPausedByPlayerCount();
+            }
+        }, 1000);
     }
 
     public boolean checkPausedByPlayerCount() {
