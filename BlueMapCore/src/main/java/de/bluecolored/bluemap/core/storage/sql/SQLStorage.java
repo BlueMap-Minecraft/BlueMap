@@ -45,10 +45,8 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.sql.*;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Properties;
+import java.time.Duration;
+import java.util.*;
 import java.util.concurrent.CompletionException;
 
 public class SQLStorage extends Storage {
@@ -81,13 +79,13 @@ public class SQLStorage extends Storage {
                                 "Instead you'll need to add your driver-jar to the classpath when starting your server," +
                                 "e.g. using the '-classpath' command-line argument", ex);*/
                     }
-                    this.dataSource = createDataSource(config.getConnectionUrl(), driver);
+                    this.dataSource = createDataSource(config.getConnectionUrl(), config.getConnectionProperties(), config.getMaxConnections(), driver);
                 } else {
                     Class.forName(config.getDriverClass().get());
-                    this.dataSource = createDataSource(config.getConnectionUrl());
+                    this.dataSource = createDataSource(config.getConnectionUrl(), config.getConnectionProperties(), config.getMaxConnections());
                 }
             } else {
-                this.dataSource = createDataSource(config.getConnectionUrl());
+                this.dataSource = createDataSource(config.getConnectionUrl(), config.getConnectionProperties(), config.getMaxConnections());
             }
         } catch (ClassNotFoundException ex) {
             throw new SQLDriverException("The driver-class does not exist.", ex);
@@ -96,16 +94,6 @@ public class SQLStorage extends Storage {
         }
 
         this.hiresCompression = config.getCompression();
-    }
-
-    public SQLStorage(String dbUrl, Compression compression) {
-        this.dataSource = createDataSource(dbUrl);
-        this.hiresCompression = compression;
-    }
-
-    public SQLStorage(DataSource dataSource, Compression compression) {
-        this.dataSource = dataSource;
-        this.hiresCompression = compression;
     }
 
     @Override
@@ -532,9 +520,8 @@ public class SQLStorage extends Storage {
         try {
             for (int i = 0; i < tries; i++) {
                 try (Connection connection = dataSource.getConnection()) {
-                    R result;
                     try {
-                        result = action.apply(connection);
+                        R result = action.apply(connection);
                         connection.commit();
                         return result;
                     } catch (SQLRecoverableException ex) {
@@ -621,21 +608,27 @@ public class SQLStorage extends Storage {
         }, 2);
     }
 
-    private DataSource createDataSource(String dbUrl) {
-        return createDataSource(new DriverManagerConnectionFactory(dbUrl));
+    private DataSource createDataSource(String dbUrl, Map<String, String> properties, int maxPoolSize) {
+        Properties props = new Properties();
+        props.putAll(properties);
+
+        return createDataSource(new DriverManagerConnectionFactory(dbUrl, props), maxPoolSize);
     }
 
-    private DataSource createDataSource(String dbUrl, Driver driver) {
+    private DataSource createDataSource(String dbUrl, Map<String, String> properties, int maxPoolSize, Driver driver) {
+        Properties props = new Properties();
+        props.putAll(properties);
+
         ConnectionFactory connectionFactory = new DriverConnectionFactory(
                 driver,
                 dbUrl,
-                new Properties()
+                props
         );
 
-        return createDataSource(connectionFactory);
+        return createDataSource(connectionFactory, maxPoolSize);
     }
 
-    private DataSource createDataSource(ConnectionFactory connectionFactory) {
+    private DataSource createDataSource(ConnectionFactory connectionFactory, int maxPoolSize) {
         PoolableConnectionFactory poolableConnectionFactory =
                 new PoolableConnectionFactory(() -> {
                     Logger.global.logDebug("Creating new SQL-Connection...");
@@ -649,9 +642,14 @@ public class SQLStorage extends Storage {
         poolableConnectionFactory.setFastFailValidation(true);
 
         GenericObjectPoolConfig<PoolableConnection> objectPoolConfig = new GenericObjectPoolConfig<>();
+        objectPoolConfig.setTestWhileIdle(true);
+        objectPoolConfig.setTimeBetweenEvictionRuns(Duration.ofSeconds(10));
+        objectPoolConfig.setNumTestsPerEvictionRun(3);
+        objectPoolConfig.setBlockWhenExhausted(true);
         objectPoolConfig.setMinIdle(1);
-        objectPoolConfig.setMaxIdle(Runtime.getRuntime().availableProcessors() * 2);
-        objectPoolConfig.setMaxTotal(-1);
+        objectPoolConfig.setMaxIdle(Runtime.getRuntime().availableProcessors());
+        objectPoolConfig.setMaxTotal(maxPoolSize);
+        objectPoolConfig.setMaxWaitMillis(Duration.ofSeconds(30).toMillis());
 
         ObjectPool<PoolableConnection> connectionPool =
                 new GenericObjectPool<>(poolableConnectionFactory, objectPoolConfig);

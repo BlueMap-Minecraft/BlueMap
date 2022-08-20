@@ -4,6 +4,7 @@ import de.bluecolored.bluemap.core.storage.Compression;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Map;
 import java.util.Optional;
 
 public interface SQLStorageSettings {
@@ -13,6 +14,10 @@ public interface SQLStorageSettings {
     Optional<String> getDriverClass();
 
     String getConnectionUrl();
+
+    Map<String, String> getConnectionProperties();
+
+    int getMaxConnections();
 
     Compression getCompression();
 

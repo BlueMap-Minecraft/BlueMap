@@ -32,6 +32,8 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
@@ -42,9 +44,13 @@ public class SQLConfig extends StorageConfig implements SQLStorageSettings {
     @DebugDump private String driverClass = null;
     private String connectionUrl = "jdbc:mysql://localhost/bluemap?permitMysqlScheme";
 
+    private Map<String, String> connectionProperties = new HashMap<>();
+
     @DebugDump private Compression compression = Compression.GZIP;
 
     @DebugDump private transient URL driverJarURL = null;
+
+    @DebugDump private int maxConnections = -1;
 
     @Override
     public Optional<URL> getDriverJar() throws MalformedURLException {
@@ -65,6 +71,16 @@ public class SQLConfig extends StorageConfig implements SQLStorageSettings {
     @Override
     public String getConnectionUrl() {
         return connectionUrl;
+    }
+
+    @Override
+    public Map<String, String> getConnectionProperties() {
+        return connectionProperties;
+    }
+
+    @Override
+    public int getMaxConnections() {
+        return maxConnections;
     }
 
     @Override
