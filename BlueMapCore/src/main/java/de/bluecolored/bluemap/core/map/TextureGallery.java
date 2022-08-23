@@ -9,6 +9,7 @@ import de.bluecolored.bluemap.core.resources.resourcepack.texture.Texture;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,10 +42,11 @@ public class TextureGallery {
 
     public void writeTexturesFile(ResourcePack resourcePack, OutputStream out) throws IOException {
         Texture[] textures = new Texture[nextId];
+        Arrays.fill(textures, Texture.MISSING);
+
         ordinalMap.forEach((textureResourcePath, ordinal) -> {
             Texture texture = textureResourcePath.getResource(resourcePack::getTexture);
-            if (texture == null) texture = Texture.MISSING;
-            textures[ordinal] = texture;
+            if (texture != null) textures[ordinal] = texture;
         });
 
         try (Writer writer = new OutputStreamWriter(out)) {
