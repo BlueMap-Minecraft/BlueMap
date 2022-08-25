@@ -37,6 +37,11 @@ public class WebAppImpl implements WebApp {
     }
 
     @Override
+    public boolean getPlayerVisibility(UUID player) {
+        return plugin.getPluginState().isPlayerHidden(player);
+    }
+
+    @Override
     public String createImage(BufferedImage image, String path) throws IOException {
         path = path.replaceAll("[^a-zA-Z0-9_.\\-/]", "_");
 
