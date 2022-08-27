@@ -28,6 +28,10 @@ public abstract class Logger {
 
     public static Logger global = stdOut();
 
+    public void logError(Throwable throwable) {
+        logError(throwable.getMessage(), throwable);
+    }
+
     public abstract void logError(String message, Throwable throwable);
 
     public abstract void logWarning(String message);
@@ -55,6 +59,13 @@ public abstract class Logger {
      * Only log the debug-message if no message has been logged before with the same key.
      */
     public abstract void noFloodDebug(String key, String message);
+
+    /**
+     * Only log the error if no message has been logged before with the same content.
+     */
+    public void noFloodError(Throwable throwable){
+        noFloodError(throwable.getMessage(), throwable);
+    }
 
     /**
      * Only log the error if no message has been logged before with the same content.

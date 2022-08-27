@@ -372,19 +372,17 @@ public class Plugin implements ServerEventListener {
                 if (webServer != null) webServer.close();
                 webServer = null;
 
-                //close storages
-                if (maps != null) {
-                    maps.values().forEach(map -> {
-                        try {
-                            map.getStorage().close();
-                        } catch (IOException ex) {
-                            Logger.global.logWarning("Failed to close map-storage for map '" + map.getId() + "': " + ex);
-                        }
-                    });
+                //close bluemap
+                if (blueMap != null) {
+                    try {
+                        blueMap.close();
+                    } catch (IOException ex) {
+                        Logger.global.logError("Failed to close a bluemap-service!", ex);
+                    }
                 }
-
-                //clear resources and configs
                 blueMap = null;
+
+                //clear resources
                 worlds = null;
                 maps = null;
 

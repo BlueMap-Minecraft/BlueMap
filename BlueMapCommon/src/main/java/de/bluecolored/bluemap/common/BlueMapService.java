@@ -53,6 +53,7 @@ import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 import org.spongepowered.configurate.loader.HeaderMode;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.URL;
@@ -67,7 +68,7 @@ import java.util.stream.Stream;
  * This is the attempt to generalize as many actions as possible to have CLI and Plugins run on the same general setup-code.
  */
 @DebugDump
-public class BlueMapService {
+public class BlueMapService implements Closeable {
     private final ServerInterface serverInterface;
     private final BlueMapConfigProvider configs;
 
@@ -154,106 +155,112 @@ public class BlueMapService {
         }
     }
 
-    public synchronized Map<String, World> getWorlds() throws ConfigurationException, InterruptedException {
+    public synchronized Map<String, World> getWorlds() throws InterruptedException {
         if (worlds == null) loadWorldsAndMaps();
         return worlds;
     }
 
-    public synchronized Map<String, BmMap> getMaps() throws ConfigurationException, InterruptedException {
+    public synchronized Map<String, BmMap> getMaps() throws InterruptedException {
         if (maps == null) loadWorldsAndMaps();
         return maps;
     }
 
-    private synchronized void loadWorldsAndMaps() throws ConfigurationException, InterruptedException {
+    private synchronized void loadWorldsAndMaps() throws InterruptedException {
         maps = new HashMap<>();
         worlds = new HashMap<>();
 
         for (var entry : configs.getMapConfigs().entrySet()) {
-            MapConfig mapConfig = entry.getValue();
-
-            String id = entry.getKey();
-            String name = mapConfig.getName();
-            if (name == null) name = id;
-
-            Path worldFolder = mapConfig.getWorld();
-
-            // if there is no world configured, we assume the map is static, or supplied from a different server
-            if (worldFolder == null) {
-                Logger.global.logInfo("The map '" + name + "' has no world configured. The map will be displayed, but not updated!");
-                continue;
-            }
-
-            if (!Files.isDirectory(worldFolder)) {
-                throw new ConfigurationException("Failed to load map '" + id + "': \n" +
-                        "'" + worldFolder.toAbsolutePath().normalize() + "' does not exist or is no directory!\n" +
-                        "Check if the 'world' setting in the config-file for that map is correct, or remove the entire config-file if you don't want that map.");
-            }
-
-            String worldId;
             try {
-                worldId = getWorldId(worldFolder);
-            } catch (IOException ex) {
-                throw new ConfigurationException("Failed to load map '" + id + "': \n" +
-                        "Could not load the ID for the world!\n" +
-                        "Make sure BlueMap has read and write access/permissions to the world-files for this map.",
-                        ex);
+                loadMapConfig(entry.getKey(), entry.getValue());
+            } catch (ConfigurationException ex) {
+                Logger.global.logError(ex);
             }
-
-            World world = worlds.get(worldId);
-            if (world == null) {
-                try {
-                    world = new MCAWorld(worldFolder, mapConfig.getWorldSkyLight(), mapConfig.isIgnoreMissingLightData());
-                    worlds.put(worldId, world);
-                } catch (IOException ex) {
-                    throw new ConfigurationException("Failed to load world (" + worldId + ") for map '" + id + "'!\n" +
-                            "Is the level.dat of that world present and not corrupted?",
-                            ex);
-                }
-            }
-
-            Storage storage = getStorage(mapConfig.getStorage());
-
-            try {
-                BmMap map = new BmMap(
-                        id,
-                        name,
-                        worldId,
-                        world,
-                        storage,
-                        getResourcePack(),
-                        mapConfig
-                );
-                maps.put(id, map);
-
-                // load marker-config by converting it first from hocon to json and then loading it with MarkerGson
-                ConfigurationNode markerSetNode = mapConfig.getMarkerSets();
-                if (markerSetNode != null && !markerSetNode.empty()) {
-                    String markerJson = GsonConfigurationLoader.builder()
-                            .headerMode(HeaderMode.NONE)
-                            .lenient(false)
-                            .indent(0)
-                            .buildAndSaveString(markerSetNode);
-                    Gson gson = MarkerGson.addAdapters(new GsonBuilder())
-                            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_DASHES)
-                            .create();
-                    Type markerSetType = new TypeToken<Map<String, MarkerSet>>() {}.getType();
-                    Map<String, MarkerSet> markerSets = gson.fromJson(markerJson, markerSetType);
-                    map.getMarkerSets().putAll(markerSets);
-                }
-
-            } catch (ConfigurateException | JsonParseException ex) {
-                throw new ConfigurationException("Failed to load map '" + id + "': \n" +
-                        "Failed to create the markers for this map!\n" +
-                        "Make sure your marker-configuration for this map is valid.",
-                        ex);
-            } catch (IOException ex) {
-                throw new ConfigurationException("Failed to load map '" + id + "'!", ex);
-            }
-
         }
 
         worlds = Collections.unmodifiableMap(worlds);
         maps = Collections.unmodifiableMap(maps);
+    }
+
+    private synchronized void loadMapConfig(String id, MapConfig mapConfig) throws ConfigurationException, InterruptedException {
+        String name = mapConfig.getName();
+        if (name == null) name = id;
+
+        Path worldFolder = mapConfig.getWorld();
+
+        // if there is no world configured, we assume the map is static, or supplied from a different server
+        if (worldFolder == null) {
+            Logger.global.logInfo("The map '" + name + "' has no world configured. The map will be displayed, but not updated!");
+            return;
+        }
+
+        if (!Files.isDirectory(worldFolder)) {
+            throw new ConfigurationException(
+                    "'" + worldFolder.toAbsolutePath().normalize() + "' does not exist or is no directory!\n" +
+                    "Check if the 'world' setting in the config-file for that map is correct, or remove the entire config-file if you don't want that map.");
+        }
+
+        String worldId;
+        try {
+            worldId = getWorldId(worldFolder);
+        } catch (IOException ex) {
+            throw new ConfigurationException(
+                    "Could not load the ID for the world (" + worldFolder.toAbsolutePath().normalize() + ")!\n" +
+                    "Make sure BlueMap has read and write access/permissions to the world-files for this map.",
+                    ex);
+        }
+
+        World world = worlds.get(worldId);
+        if (world == null) {
+            try {
+                world = new MCAWorld(worldFolder, mapConfig.getWorldSkyLight(), mapConfig.isIgnoreMissingLightData());
+                worlds.put(worldId, world);
+            } catch (IOException ex) {
+                throw new ConfigurationException(
+                        "Failed to load world '" + worldId + "' (" + worldFolder.toAbsolutePath().normalize() + ")!\n" +
+                        "Is the level.dat of that world present and not corrupted?",
+                        ex);
+            }
+        }
+
+        Storage storage = getStorage(mapConfig.getStorage());
+
+        try {
+
+            BmMap map = new BmMap(
+                    id,
+                    name,
+                    worldId,
+                    world,
+                    storage,
+                    getResourcePack(),
+                    mapConfig
+            );
+            maps.put(id, map);
+
+            // load marker-config by converting it first from hocon to json and then loading it with MarkerGson
+            ConfigurationNode markerSetNode = mapConfig.getMarkerSets();
+            if (markerSetNode != null && !markerSetNode.empty()) {
+                String markerJson = GsonConfigurationLoader.builder()
+                        .headerMode(HeaderMode.NONE)
+                        .lenient(false)
+                        .indent(0)
+                        .buildAndSaveString(markerSetNode);
+                Gson gson = MarkerGson.addAdapters(new GsonBuilder())
+                        .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_DASHES)
+                        .create();
+                Type markerSetType = new TypeToken<Map<String, MarkerSet>>() {}.getType();
+                Map<String, MarkerSet> markerSets = gson.fromJson(markerJson, markerSetType);
+                map.getMarkerSets().putAll(markerSets);
+            }
+
+        } catch (ConfigurateException | JsonParseException ex) {
+            throw new ConfigurationException(
+                    "Failed to create the markers for map '" + id + "'!\n" +
+                    "Make sure your marker-configuration for this map is valid.",
+                    ex);
+        } catch (IOException | ConfigurationException ex) {
+            throw new ConfigurationException("Failed to load map '" + id + "'!", ex);
+        }
     }
 
     public synchronized Storage getStorage(String storageId) throws ConfigurationException {
@@ -272,8 +279,20 @@ public class BlueMapService {
                 storage = storageConfig.createStorage();
                 storage.initialize();
             } catch (Exception ex) {
-                throw new ConfigurationException("Failed to load and initialize the storage '" + storageId + "'!",
-                        ex);
+                ConfigurationException confEx = new ConfigurationException(
+                        "Failed to load and initialize the storage '" + storageId + "'!",
+                        ex
+                );
+
+                if (storage != null) {
+                    try {
+                        storage.close();
+                    } catch (Exception closeEx) {
+                        confEx.addSuppressed(closeEx);
+                    }
+                }
+
+                throw confEx;
             }
 
             storages.put(storageId, storage);
@@ -402,6 +421,25 @@ public class BlueMapService {
 
     public BlueMapConfigProvider getConfigs() {
         return configs;
+    }
+
+    @Override
+    public void close() throws IOException {
+        IOException exception = null;
+
+        for (Storage storage : storages.values()) {
+            try {
+                if (storage != null) {
+                    storage.close();
+                }
+            } catch (IOException ex) {
+                if (exception == null) exception = ex;
+                else exception.addSuppressed(ex);
+            }
+        }
+
+        if (exception != null)
+            throw exception;
     }
 
 }
