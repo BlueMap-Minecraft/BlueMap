@@ -84,6 +84,12 @@ public class LowresLayer {
     private void saveTile(Vector2i tilePos, @Nullable LowresTile tile, RemovalCause removalCause) {
         if (tile == null) return;
 
+        // check if storage is closed
+        if (mapStorage.getStorage().isClosed()){
+            Logger.global.logDebug("Tried to save tile " + tilePos + " (lod: " + lod + ") but storage is already closed.");
+            return;
+        }
+
         // save the tile
         try (OutputStream out = mapStorage.write(lod, tilePos)) {
             tile.save(out);

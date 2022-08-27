@@ -59,6 +59,8 @@ public abstract class Storage implements Closeable {
         return new TileStorage(mapId, lod);
     }
 
+    public abstract boolean isClosed();
+
     public class MapStorage {
 
         private final String mapId;
@@ -77,6 +79,10 @@ public abstract class Storage implements Closeable {
 
         public void delete(int lod, Vector2i tile) throws IOException {
             deleteMapTile(mapId, lod, tile);
+        }
+
+        public Storage getStorage() {
+            return Storage.this;
         }
 
     }
@@ -101,6 +107,10 @@ public abstract class Storage implements Closeable {
 
         public void delete(Vector2i tile) throws IOException {
             deleteMapTile(mapId, lod, tile);
+        }
+
+        public Storage getStorage() {
+            return Storage.this;
         }
 
     }

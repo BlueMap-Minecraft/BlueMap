@@ -61,7 +61,11 @@ public class SQLStorage extends Storage {
             .executor(BlueMap.THREAD_POOL)
             .build(this::loadMapTileCompressionFK);
 
+    private volatile boolean closed;
+
     public SQLStorage(SQLStorageSettings config) throws MalformedURLException, SQLDriverException {
+        this.closed = false;
+
         try {
             if (config.getDriverClass().isPresent()) {
                 if (config.getDriverJar().isPresent()) {
@@ -479,7 +483,13 @@ public class SQLStorage extends Storage {
     }
 
     @Override
+    public boolean isClosed() {
+        return closed;
+    }
+
+    @Override
     public void close() throws IOException {
+        this.closed = true;
         if (dataSource instanceof AutoCloseable) {
             try {
                 ((AutoCloseable) dataSource).close();

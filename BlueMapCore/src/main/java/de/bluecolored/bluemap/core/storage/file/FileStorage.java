@@ -58,6 +58,11 @@ public class FileStorage extends Storage {
     public void initialize() {}
 
     @Override
+    public boolean isClosed() {
+        return false;
+    }
+
+    @Override
     public void close() throws IOException {}
 
     @Override
