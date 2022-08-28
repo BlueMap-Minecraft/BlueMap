@@ -17,7 +17,7 @@ create **3D**-maps of your Minecraft worlds and display them in your browser
 <br>
 
 ## What is BlueMap
-BlueMap is basically a program that reads your Minecraft world files and generates not only a map, but also 3D-models of the whole surface.
+BlueMap is a program that reads your Minecraft world files and generates not only a map, but also 3D-models of the whole surface.
 With the web-app you then can look at those in your browser and basically view the world as if you were ingame! 
 Or just look at it from far away to get an overview.
 
