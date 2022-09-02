@@ -35,6 +35,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameMode;
+import net.minecraft.world.LightType;
 
 import java.io.IOException;
 import java.util.EnumMap;
@@ -56,6 +57,8 @@ public class FabricPlayer implements Player {
     private String world;
     private Vector3d position;
     private Vector3d rotation;
+    private int skyLight;
+    private int blockLight;
     private boolean online;
     private boolean sneaking;
     private boolean invisible;
@@ -95,6 +98,16 @@ public class FabricPlayer implements Player {
     @Override
     public Vector3d getRotation() {
         return rotation;
+    }
+
+    @Override
+    public int getSkyLight() {
+        return skyLight;
+    }
+
+    @Override
+    public int getBlockLight() {
+        return blockLight;
     }
 
     @Override
@@ -146,6 +159,9 @@ public class FabricPlayer implements Player {
         this.position = new Vector3d(pos.getX(), pos.getY(), pos.getZ());
         this.rotation = new Vector3d(player.getPitch(), player.getHeadYaw(), 0);
         this.sneaking = player.isSneaking();
+
+        this.skyLight = player.getWorld().getLightingProvider().get(LightType.SKY).getLightLevel(player.getBlockPos());
+        this.blockLight = player.getWorld().getLightingProvider().get(LightType.BLOCK).getLightLevel(player.getBlockPos());
 
         try {
             var world = mod.getWorld(player.getWorld());

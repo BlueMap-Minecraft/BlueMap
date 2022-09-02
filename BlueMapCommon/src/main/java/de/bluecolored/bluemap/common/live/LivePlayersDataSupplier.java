@@ -46,6 +46,8 @@ public class LivePlayersDataSupplier implements Supplier<String> {
                     if (config.isHideSneaking() && player.isSneaking()) continue;
                     if (config.getHiddenGameModes().contains(player.getGamemode().getId())) continue;
                     if (config.isHideDifferentWorld() && !isCorrectWorld) continue;
+                    if (player.getSkyLight() < config.getHideBelowSkyLight()) continue;
+                    if (player.getBlockLight() < config.getHideBelowBlockLight()) continue;
                     if (!this.playerFilter.test(player.getUuid())) continue;
 
                     json.beginObject();

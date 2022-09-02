@@ -35,6 +35,7 @@ import net.minecraft.potion.Effects;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameType;
+import net.minecraft.world.LightType;
 
 import java.io.IOException;
 import java.util.EnumMap;
@@ -57,6 +58,8 @@ public class ForgePlayer implements Player {
     private String world;
     private Vector3d position;
     private Vector3d rotation;
+    private int skyLight;
+    private int blockLight;
     private boolean online;
     private boolean sneaking;
     private boolean invisible;
@@ -96,6 +99,16 @@ public class ForgePlayer implements Player {
     @Override
     public Vector3d getRotation() {
         return rotation;
+    }
+
+    @Override
+    public int getSkyLight() {
+        return skyLight;
+    }
+
+    @Override
+    public int getBlockLight() {
+        return blockLight;
     }
 
     @Override
@@ -147,6 +160,9 @@ public class ForgePlayer implements Player {
         this.position = new Vector3d(pos.getX(), pos.getY(), pos.getZ());
         this.rotation = new Vector3d(player.rotationPitch, player.rotationYawHead, 0);
         this.sneaking = player.isCrouching();
+
+        this.skyLight = player.getServerWorld().getChunkProvider().getLightManager().getLightEngine(LightType.SKY).getLightFor(player.getPosition());
+        this.blockLight = player.getServerWorld().getChunkProvider().getLightManager().getLightEngine(LightType.BLOCK).getLightFor(player.getPosition());
 
         try {
             var world = mod.getWorld(player.getServerWorld());

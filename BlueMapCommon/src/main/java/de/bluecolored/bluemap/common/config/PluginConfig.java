@@ -18,6 +18,8 @@ public class PluginConfig {
     private boolean hideInvisible = true;
     private boolean hideSneaking = false;
     private boolean hideDifferentWorld = false;
+    private int hideBelowSkyLight = 0;
+    private int hideBelowBlockLight = 0;
 
     private int writeMarkersInterval = 0;
     private int writePlayersInterval = 0;
@@ -50,6 +52,14 @@ public class PluginConfig {
 
     public boolean isHideDifferentWorld() {
         return hideDifferentWorld;
+    }
+
+    public int getHideBelowSkyLight() {
+        return hideBelowSkyLight;
+    }
+
+    public int getHideBelowBlockLight() {
+        return hideBelowBlockLight;
     }
 
     public int getWriteMarkersInterval() {

@@ -44,6 +44,10 @@ public interface Player {
      */
     Vector3d getRotation();
 
+    int getSkyLight();
+
+    int getBlockLight();
+
     boolean isOnline();
 
     /**

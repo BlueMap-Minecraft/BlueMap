@@ -54,6 +54,8 @@ public class BukkitPlayer implements Player {
     private String world;
     private Vector3d position;
     private Vector3d rotation;
+    private int skyLight;
+    private int blockLight;
     private boolean online;
     private boolean sneaking;
     private boolean invisible;
@@ -88,6 +90,16 @@ public class BukkitPlayer implements Player {
     @Override
     public Vector3d getRotation() {
         return rotation;
+    }
+
+    @Override
+    public int getSkyLight() {
+        return skyLight;
+    }
+
+    @Override
+    public int getBlockLight() {
+        return blockLight;
     }
 
     @Override
@@ -144,6 +156,9 @@ public class BukkitPlayer implements Player {
         this.position = new Vector3d(location.getX(), location.getY(), location.getZ());
         this.rotation = new Vector3d(location.getPitch(), location.getYaw(), 0);
         this.sneaking = player.isSneaking();
+
+        this.skyLight = player.getLocation().getBlock().getLightFromSky();
+        this.blockLight = player.getLocation().getBlock().getLightFromBlocks();
 
         try {
             var world = BukkitPlugin.getInstance().getWorld(player.getWorld());

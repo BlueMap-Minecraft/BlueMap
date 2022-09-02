@@ -36,6 +36,7 @@ import org.spongepowered.api.effect.potion.PotionEffectTypes;
 import org.spongepowered.api.entity.living.player.gamemode.GameMode;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
+import org.spongepowered.api.world.LightTypes;
 
 import java.io.IOException;
 import java.util.*;
@@ -55,6 +56,8 @@ public class SpongePlayer implements Player {
     private String world;
     private Vector3d position;
     private Vector3d rotation;
+    private int skyLight;
+    private int blockLight;
     private boolean online;
     private boolean sneaking;
     private boolean invisible;
@@ -89,6 +92,16 @@ public class SpongePlayer implements Player {
     @Override
     public Vector3d getRotation() {
         return rotation;
+    }
+
+    @Override
+    public int getSkyLight() {
+        return skyLight;
+    }
+
+    @Override
+    public int getBlockLight() {
+        return blockLight;
     }
 
     @Override
@@ -145,6 +158,9 @@ public class SpongePlayer implements Player {
         this.position = SpongePlugin.fromSpongePoweredVector(player.position());
         this.rotation = SpongePlugin.fromSpongePoweredVector(player.rotation());
         this.sneaking = player.get(Keys.IS_SNEAKING).orElse(false);
+
+        this.skyLight = player.world().light(LightTypes.SKY, player.blockPosition());
+        this.blockLight = player.world().light(LightTypes.BLOCK, player.blockPosition());
 
         try {
             var world = SpongePlugin.getInstance().getWorld(player.world());

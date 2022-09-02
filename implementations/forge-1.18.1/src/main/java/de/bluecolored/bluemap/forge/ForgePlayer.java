@@ -29,11 +29,13 @@ import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.serverinterface.Gamemode;
 import de.bluecolored.bluemap.common.serverinterface.Player;
 import de.bluecolored.bluemap.common.plugin.text.Text;
+import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.phys.Vec3;
 
 import java.io.IOException;
@@ -56,6 +58,8 @@ public class ForgePlayer implements Player {
     private String world;
     private Vector3d position;
     private Vector3d rotation;
+    private int skyLight;
+    private int blockLight;
     private boolean online;
     private boolean sneaking;
     private boolean invisible;
@@ -95,6 +99,16 @@ public class ForgePlayer implements Player {
     @Override
     public Vector3d getRotation() {
         return rotation;
+    }
+
+    @Override
+    public int getSkyLight() {
+        return skyLight;
+    }
+
+    @Override
+    public int getBlockLight() {
+        return blockLight;
     }
 
     @Override
@@ -146,6 +160,9 @@ public class ForgePlayer implements Player {
         this.position = new Vector3d(pos.x(), pos.y(), pos.z());
         this.rotation = new Vector3d(player.getXRot(), player.getYHeadRot(), 0);
         this.sneaking = player.isCrouching();
+
+        this.skyLight = player.getLevel().getChunkSource().getLightEngine().getLayerListener(LightLayer.SKY).getLightValue(new BlockPos(player.getX(), player.getY(), player.getZ()));
+        this.blockLight = player.getLevel().getChunkSource().getLightEngine().getLayerListener(LightLayer.BLOCK).getLightValue(new BlockPos(player.getX(), player.getY(), player.getZ()));
 
         try {
             var world = mod.getWorld(player.getLevel());
