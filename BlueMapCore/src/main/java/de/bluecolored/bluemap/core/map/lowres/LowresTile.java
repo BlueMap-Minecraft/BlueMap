@@ -28,6 +28,10 @@ public class LowresTile {
         this.size = tileSize.add(1, 1); // add 1 for seamless edges
         this.texture = ImageIO.read(in);
 
+        if (this.texture == null) {
+            throw new IOException("No registered ImageReader is able to read the image-stream");
+        }
+
         if (this.texture.getWidth() != this.size.getX() || this.texture.getHeight() != this.size.getY() * 2) {
             throw new IOException("Size of tile does not match");
         }

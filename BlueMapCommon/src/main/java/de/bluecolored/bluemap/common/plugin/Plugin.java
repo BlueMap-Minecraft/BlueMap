@@ -486,12 +486,16 @@ public class Plugin implements ServerEventListener {
 
     private void checkPausedByPlayerCountSoon() {
         // check is done a second later to make sure the player has actually joined/left and is no longer on the list
-        daemonTimer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                checkPausedByPlayerCount();
-            }
-        }, 1000);
+        try {
+            daemonTimer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    checkPausedByPlayerCount();
+                }
+            }, 1000);
+        } catch (IllegalStateException ex) { // Timer is cancelled for some reason
+            Logger.global.logWarning("Timer is already cancelled, skipping player-limit checks!");
+        }
     }
 
     public boolean checkPausedByPlayerCount() {
