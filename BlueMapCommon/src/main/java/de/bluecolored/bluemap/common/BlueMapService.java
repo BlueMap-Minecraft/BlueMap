@@ -173,7 +173,11 @@ public class BlueMapService implements Closeable {
             try {
                 loadMapConfig(entry.getKey(), entry.getValue());
             } catch (ConfigurationException ex) {
-                Logger.global.logError(ex);
+                Logger.global.logWarning(ex.getFormattedExplanation());
+                Throwable cause = ex.getRootCause();
+                if (cause != null) {
+                    Logger.global.logError("Detailed error:", ex);
+                }
             }
         }
 

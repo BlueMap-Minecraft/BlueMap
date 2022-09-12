@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.common;
 
 import com.google.gson.GsonBuilder;
 import de.bluecolored.bluemap.common.config.WebappConfig;
+import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import org.apache.commons.io.FileUtils;
@@ -115,6 +116,13 @@ public class WebFilesManager {
                     }
                 }
             }
+
+            // set version in index.html
+            Path indexFile = webRoot.resolve("index.html");
+            String indexContent = Files.readString(indexFile);
+            indexContent = indexContent.replace("%version%", BlueMap.VERSION);
+            Files.writeString(indexFile, indexContent);
+
         } finally {
             if (!tempFile.delete()) {
                 Logger.global.logWarning("Failed to delete file: " + tempFile);
@@ -124,6 +132,8 @@ public class WebFilesManager {
 
     @SuppressWarnings("all")
     private static class Settings {
+
+        private String version = BlueMap.VERSION;
 
         private boolean useCookies = true;
 
