@@ -56,7 +56,9 @@ public class BlockStateModelFactory {
         render(block, block.getBlockState(), blockModel, blockColor);
     }
 
+    private final Color waterloggedColor = new Color();
     public void render(BlockNeighborhood<?> block, BlockState blockState, BlockModelView blockModel, Color blockColor) {
+        blockColor.set(0, 0, 0, 0, true);
 
         //shortcut for air
         if (blockState.isAir()) return;
@@ -68,29 +70,45 @@ public class BlockStateModelFactory {
 
         // add water if block is waterlogged
         if (blockState.isWaterlogged() || block.getProperties().isAlwaysWaterlogged()) {
-            renderModel(block, WATERLOGGED_BLOCKSTATE, blockModel.initialize(), blockColor);
+            waterloggedColor.set(0f, 0f, 0f, 0f, true);
+            renderModel(block, WATERLOGGED_BLOCKSTATE, blockModel.initialize(), waterloggedColor);
+            blockColor.set(waterloggedColor.overlay(blockColor.premultiplied()));
         }
 
         blockModel.initialize(modelStart);
     }
 
+    private final Color variantColor = new Color();
     private void renderModel(BlockNeighborhood<?> block, BlockState blockState, BlockModelView blockModel, Color blockColor) {
         int modelStart = blockModel.getStart();
 
         var stateResource = resourcePack.getBlockState(blockState);
         if (stateResource == null) return;
 
+        float blockColorOpacity = 0;
         variants.clear();
         stateResource.forEach(blockState, block.getX(), block.getY(), block.getZ(), variants::add);
         for (Variant variant : variants) {
             BlockModel modelResource = variant.getModel().getResource(resourcePack::getBlockModel);
             if (modelResource == null) continue;
 
+            variantColor.set(0f, 0f, 0f, 0f, true);
+
             if (modelResource.isLiquid()) {
-                liquidModelBuilder.build(block, blockState, variant, blockModel.initialize(), blockColor);
+                liquidModelBuilder.build(block, blockState, variant, blockModel.initialize(), variantColor);
             } else {
-                resourceModelBuilder.build(block, variant, blockModel.initialize(), blockColor);
+                resourceModelBuilder.build(block, variant, blockModel.initialize(), variantColor);
             }
+
+            if (variantColor.a > blockColorOpacity)
+                blockColorOpacity = variantColor.a;
+
+            blockColor.add(variantColor.premultiplied());
+        }
+
+        if (blockColor.a > 0) {
+            blockColor.flatten().straight();
+            blockColor.a = blockColorOpacity;
         }
 
         blockModel.initialize(modelStart);

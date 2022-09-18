@@ -80,7 +80,6 @@ public class HiresModelRenderer {
                         block.set(x, y, z);
                         if (!block.isInsideRenderBounds()) continue;
 
-                        blockColor.set(0, 0, 0, 0, true);
                         blockModel.initialize();
 
                         modelFactory.render(block, blockModel, blockColor);
