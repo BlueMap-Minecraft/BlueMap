@@ -151,7 +151,7 @@ public class Plugin implements ServerEventListener {
 
                 //warn if no maps are configured
                 if (maps.isEmpty()) {
-                    Logger.global.logWarning("There are no valid maps configured, please check your render-config! Disabling BlueMap...");
+                    Logger.global.logWarning("There are no valid maps configured, please check your map-configs! Disabling BlueMap...");
 
                     unload();
                     return;
