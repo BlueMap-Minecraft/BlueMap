@@ -790,12 +790,20 @@ public class Commands<S> {
                 plugin.getRenderManager().scheduleRenderTaskNext(purgeTask);
                 source.sendMessage(Text.of(TextColor.GREEN, "Created new Task to purge map '" + map.getId() + "'"));
 
-                // reset the map and start updating it after the purge
-                RenderTask updateTask = new MapUpdateTask(map);
-                plugin.getRenderManager().scheduleRenderTask(updateTask);
-                source.sendMessage(Text.of(TextColor.GREEN, "Created new Update-Task for map '" + map.getId() + "'"));
-                source.sendMessage(Text.of(TextColor.GRAY, "If you don't want this map to render again after the purge, use ",
-                        TextColor.DARK_GRAY, "/bluemap freeze " + map.getId(), TextColor.GRAY, " first!"));
+                // cancel task if currently rendering the same map
+                RenderTask currentRenderTask = plugin.getRenderManager().getCurrentRenderTask();
+                if (currentRenderTask instanceof MapUpdateTask && ((MapUpdateTask) currentRenderTask).getMap().getId().equals(map.getId())) {
+                    currentRenderTask.cancel();
+                }
+
+                // start updating the map after the purge
+                if (plugin.getPluginState().getMapState(map).isUpdateEnabled()) {
+                    RenderTask updateTask = new MapUpdateTask(map);
+                    plugin.getRenderManager().scheduleRenderTask(updateTask);
+                    source.sendMessage(Text.of(TextColor.GREEN, "Created new Update-Task for map '" + map.getId() + "'"));
+                    source.sendMessage(Text.of(TextColor.GRAY, "If you don't want this map to render again after the purge, use ",
+                            TextColor.DARK_GRAY, "/bluemap freeze " + map.getId(), TextColor.GRAY, " first!"));
+                }
 
                 source.sendMessage(Text.of(TextColor.GREEN, "Use ", TextColor.GRAY, "/bluemap", TextColor.GREEN, " to see the progress."));
             } catch (IOException | IllegalArgumentException e) {

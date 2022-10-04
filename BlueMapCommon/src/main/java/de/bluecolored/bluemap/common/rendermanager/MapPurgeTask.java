@@ -91,6 +91,9 @@ public abstract class MapPurgeTask implements RenderTask {
             }
 
             try {
+                // save lowres-tile-manager to clear/flush any buffered data
+                this.map.getLowresTileManager().save();
+
                 // delete subFiles first to be able to track the progress and cancel
                 while (!subFiles.isEmpty()) {
                     Path subFile = subFiles.getLast();
