@@ -25,10 +25,9 @@
 package de.bluecolored.bluemap.forge;
 
 import com.flowpowered.math.vector.Vector3d;
-import de.bluecolored.bluemap.common.BlueMapService;
+import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.serverinterface.Gamemode;
 import de.bluecolored.bluemap.common.serverinterface.Player;
-import de.bluecolored.bluemap.common.plugin.text.Text;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.potion.EffectInstance;
 import net.minecraft.potion.Effects;
@@ -66,12 +65,10 @@ public class ForgePlayer implements Player {
     private Gamemode gamemode;
 
     private final ForgeMod mod;
-    private final BlueMapService blueMap;
 
-    public ForgePlayer(UUID playerUuid, ForgeMod mod, BlueMapService blueMap) {
+    public ForgePlayer(UUID playerUuid, ForgeMod mod) {
         this.uuid = playerUuid;
         this.mod = mod;
-        this.blueMap = blueMap;
 
         update();
     }
@@ -166,7 +163,7 @@ public class ForgePlayer implements Player {
 
         try {
             var world = mod.getWorld(player.getServerWorld());
-            this.world = blueMap.getWorldId(world.getSaveFolder());
+            this.world = mod.getPlugin().getBlueMap().getWorldId(world.getSaveFolder());
         } catch (IOException e) {
             this.world = "unknown";
         }

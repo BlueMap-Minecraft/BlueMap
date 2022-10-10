@@ -163,7 +163,7 @@ public class BukkitPlayer implements Player {
         try {
             var world = BukkitPlugin.getInstance().getWorld(player.getWorld());
             this.world = BukkitPlugin.getInstance().getPlugin().getBlueMap().getWorldId(world.getSaveFolder());
-        } catch (IOException e) {
+        } catch (IOException | NullPointerException e) { // NullPointerException -> the plugin isn't fully loaded
             this.world = "unknown";
         }
     }

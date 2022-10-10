@@ -165,7 +165,7 @@ public class SpongePlayer implements Player {
         try {
             var world = SpongePlugin.getInstance().getWorld(player.world());
             this.world = SpongePlugin.getInstance().getPlugin().getBlueMap().getWorldId(world.getSaveFolder());
-        } catch (IOException e) {
+        } catch (IOException | NullPointerException e) { // NullPointerException -> the plugin isn't fully loaded
             this.world = "unknown";
         }
     }

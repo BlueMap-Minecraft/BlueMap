@@ -25,10 +25,9 @@
 package de.bluecolored.bluemap.fabric;
 
 import com.flowpowered.math.vector.Vector3d;
-import de.bluecolored.bluemap.common.BlueMapService;
+import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.serverinterface.Gamemode;
 import de.bluecolored.bluemap.common.serverinterface.Player;
-import de.bluecolored.bluemap.common.plugin.text.Text;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.server.MinecraftServer;
@@ -65,12 +64,10 @@ public class FabricPlayer implements Player {
     private Gamemode gamemode;
 
     private final FabricMod mod;
-    private final BlueMapService blueMap;
 
-    public FabricPlayer(UUID playerUuid, FabricMod mod, BlueMapService blueMap) {
+    public FabricPlayer(UUID playerUuid, FabricMod mod) {
         this.uuid = playerUuid;
         this.mod = mod;
-        this.blueMap = blueMap;
 
         update();
     }
@@ -165,8 +162,8 @@ public class FabricPlayer implements Player {
 
         try {
             var world = mod.getWorld(player.getServerWorld());
-            this.world = blueMap.getWorldId(world.getSaveFolder());
-        } catch (IOException e) {
+            this.world = mod.getPluginInstance().getBlueMap().getWorldId(world.getSaveFolder());
+        } catch (IOException | NullPointerException e) { // NullPointerException -> the plugin isn't fully loaded
             this.world = "unknown";
         }
     }
