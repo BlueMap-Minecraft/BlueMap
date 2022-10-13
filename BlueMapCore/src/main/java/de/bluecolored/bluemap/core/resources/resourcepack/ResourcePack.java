@@ -331,6 +331,7 @@ public class ResourcePack {
 
             // collect all used textures
             Set<ResourcePath<Texture>> usedTextures = new HashSet<>();
+            usedTextures.add(MISSING_TEXTURE);
             for (BlockModel model : blockModels.values()) {
                 for (TextureVariable textureVariable : model.getTextures().values()) {
                     if (textureVariable.isReference()) continue;
