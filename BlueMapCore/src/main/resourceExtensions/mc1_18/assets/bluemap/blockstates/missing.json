@@ -1,5 +1,5 @@
 {
     "variants": {
-        "": { "model": "bluemap:missing" }
+        "": { "model": "bluemap:block/missing" }
     }
 }
