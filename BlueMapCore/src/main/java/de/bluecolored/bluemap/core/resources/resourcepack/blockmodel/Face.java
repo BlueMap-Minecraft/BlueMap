@@ -30,8 +30,8 @@ public class Face {
         this.tintindex = copyFrom.tintindex;
     }
 
-    void init(Direction direction, Function<Direction, Vector4f> defaultUvCalculator) {
-        if (cullface == null) cullface = direction;
+    void init(Direction direction, Function<Direction, Vector4f> defaultUvCalculator, Function<Direction, Direction> defaultCullfaceCalculator) {
+        if (cullface == null) cullface = defaultCullfaceCalculator.apply(direction);
         if (uv == null) uv = defaultUvCalculator.apply(direction);
     }
 

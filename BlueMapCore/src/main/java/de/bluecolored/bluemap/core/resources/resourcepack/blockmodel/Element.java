@@ -39,7 +39,7 @@ public class Element {
     }
 
     private void init() {
-        faces.forEach((direction, face) -> face.init(direction, this::calculateDefaultUV));
+        faces.forEach((direction, face) -> face.init(direction, this::calculateDefaultUV, this::calculateDefaultCullface));
     }
 
     private Vector4f calculateDefaultUV(Direction face) {
@@ -72,6 +72,25 @@ public class Element {
                         16, 16
                 );
 
+        }
+    }
+
+    private Direction calculateDefaultCullface(Direction face) {
+        switch (face) {
+            case DOWN:
+                return from.getY() == 0f ? Direction.DOWN : null;
+            case UP:
+                return to.getY() == 1f ? Direction.UP : null;
+            case NORTH:
+                return from.getZ() == 0f ? Direction.NORTH : null;
+            case SOUTH:
+                return to.getZ() == 1f ? Direction.SOUTH : null;
+            case EAST:
+                return to.getX() == 1f ? Direction.EAST : null;
+            case WEST:
+                return from.getX() == 0f ? Direction.WEST : null;
+            default:
+                return null;
         }
     }
 
