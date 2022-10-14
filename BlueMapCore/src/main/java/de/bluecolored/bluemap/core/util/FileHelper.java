@@ -28,24 +28,32 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.*;
+import java.nio.file.attribute.FileAttribute;
 
-public class AtomicFileHelper {
+public class FileHelper {
 
+    /**
+     * Creates an OutputStream that writes to a ".filepart"-file first and then atomically moves (overwrites) to the final target atomically
+     * once the stream gets closed.
+     */
     public static OutputStream createFilepartOutputStream(final Path file) throws IOException {
         final Path partFile = getPartFile(file);
-        Files.createDirectories(partFile.getParent());
+        FileHelper.createDirectories(partFile.getParent());
 
         OutputStream os = Files.newOutputStream(partFile, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
         return new WrappedOutputStream(os, () -> {
             if (!Files.exists(partFile)) return;
 
             Files.deleteIfExists(file);
-            Files.createDirectories(file.getParent());
+            FileHelper.createDirectories(file.getParent());
 
-            AtomicFileHelper.move(partFile, file);
+            FileHelper.move(partFile, file);
         });
     }
 
+    /**
+     * Tries to move the file atomically, but fallbacks to a normal move operation if moving atomically fails
+     */
     public static void move(Path from, Path to) throws IOException {
         try {
             Files.move(from, to, StandardCopyOption.ATOMIC_MOVE);
@@ -55,6 +63,15 @@ public class AtomicFileHelper {
                 Files.move(from, to);
             } catch (FileNotFoundException | NoSuchFileException ignore) {}
         }
+    }
+
+    /**
+     * Same as {@link Files#createDirectories(Path, FileAttribute[])} but accepts symlinked folders.
+     * @see Files#createDirectories(Path, FileAttribute[])
+     */
+    public static Path createDirectories(Path dir, FileAttribute<?>... attrs) throws IOException {
+        if (Files.isDirectory(dir)) return dir;
+        return Files.createDirectories(dir, attrs);
     }
 
     private static Path getPartFile(Path file) {

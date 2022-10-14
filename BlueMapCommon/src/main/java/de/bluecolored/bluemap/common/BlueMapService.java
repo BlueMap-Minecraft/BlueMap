@@ -45,7 +45,7 @@ import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.storage.Storage;
-import de.bluecolored.bluemap.core.util.AtomicFileHelper;
+import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.world.World;
 import org.apache.commons.io.FileUtils;
 import org.spongepowered.configurate.ConfigurateException;
@@ -315,7 +315,7 @@ public class BlueMapService implements Closeable {
             Path resourcePackFolder = serverInterface.getConfigFolder().resolve("resourcepacks");
 
             try {
-                Files.createDirectories(resourcePackFolder);
+                FileHelper.createDirectories(resourcePackFolder);
             } catch (IOException ex) {
                 throw new ConfigurationException(
                         "BlueMap failed to create this folder:\n" +
@@ -330,11 +330,11 @@ public class BlueMapService implements Closeable {
                     try {
                         Logger.global.logInfo("Downloading " + minecraftVersion.getResource().getClientUrl() + " to " + defaultResourceFile + " ...");
 
-                        Files.createDirectories(defaultResourceFile.getParent());
+                        FileHelper.createDirectories(defaultResourceFile.getParent());
                         Path tempResourceFile = defaultResourceFile.getParent().resolve(defaultResourceFile.getFileName() + ".filepart");
                         Files.deleteIfExists(tempResourceFile);
                         FileUtils.copyURLToFile(new URL(minecraftVersion.getResource().getClientUrl()), tempResourceFile.toFile(), 10000, 10000);
-                        AtomicFileHelper.move(tempResourceFile, defaultResourceFile);
+                        FileHelper.move(tempResourceFile, defaultResourceFile);
                     } catch (IOException ex) {
                         throw new ConfigurationException("Failed to download resources!", ex);
                     }
@@ -346,7 +346,7 @@ public class BlueMapService implements Closeable {
 
             try {
                 Files.deleteIfExists(resourceExtensionsFile);
-                Files.createDirectories(resourceExtensionsFile.getParent());
+                FileHelper.createDirectories(resourceExtensionsFile.getParent());
                 URL resourceExtensionsUrl = Objects.requireNonNull(
                         Plugin.class.getResource(
                                 "/de/bluecolored/bluemap/" + minecraftVersion.getResource().getResourcePrefix() +

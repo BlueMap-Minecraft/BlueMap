@@ -2,6 +2,7 @@ package de.bluecolored.bluemap.common.api;
 
 import de.bluecolored.bluemap.api.WebApp;
 import de.bluecolored.bluemap.common.plugin.Plugin;
+import de.bluecolored.bluemap.core.util.FileHelper;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -51,7 +52,7 @@ public class WebAppImpl implements WebApp {
         Path imageRootFolder = webRoot.resolve(IMAGE_ROOT_PATH);
         Path imagePath = imageRootFolder.resolve(Path.of(path.replace("/", separator) + ".png")).toAbsolutePath();
 
-        Files.createDirectories(imagePath.getParent());
+        FileHelper.createDirectories(imagePath.getParent());
         Files.deleteIfExists(imagePath);
         Files.createFile(imagePath);
 

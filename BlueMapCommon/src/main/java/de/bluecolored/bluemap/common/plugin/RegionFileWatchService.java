@@ -30,6 +30,7 @@ import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
 import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
+import de.bluecolored.bluemap.core.util.FileHelper;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -60,7 +61,7 @@ public class RegionFileWatchService extends Thread {
         this.scheduledUpdates = new HashMap<>();
 
         Path folder = map.getWorld().getSaveFolder().resolve("region");
-        Files.createDirectories(folder);
+        FileHelper.createDirectories(folder);
 
         this.watchService = folder.getFileSystem().newWatchService();
 

@@ -48,12 +48,12 @@ import de.bluecolored.bluemap.core.logger.LoggerLogger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.metrics.Metrics;
 import de.bluecolored.bluemap.core.storage.Storage;
+import de.bluecolored.bluemap.core.util.FileHelper;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -181,7 +181,7 @@ public class BlueMapCLI implements ServerInterface {
         Logger.global.logInfo("Starting webserver ...");
 
         WebserverConfig config = blueMap.getConfigs().getWebserverConfig();
-        Files.createDirectories(config.getWebroot());
+        FileHelper.createDirectories(config.getWebroot());
 
         RoutingRequestHandler routingRequestHandler = new RoutingRequestHandler();
 
@@ -274,7 +274,7 @@ public class BlueMapCLI implements ServerInterface {
             cli.configFolder = Path.of("config");
             if (cmd.hasOption("c")) {
                 cli.configFolder = Path.of(cmd.getOptionValue("c"));
-                Files.createDirectories(cli.configFolder);
+                FileHelper.createDirectories(cli.configFolder);
             }
 
             //minecraft version
@@ -323,7 +323,7 @@ public class BlueMapCLI implements ServerInterface {
                 Logger.global.logInfo("Generated default config files for you, here: " + cli.configFolder.toAbsolutePath().normalize() + "\n");
 
                 //create resourcepacks folder
-                Files.createDirectories(cli.configFolder.resolve( "resourcepacks"));
+                FileHelper.createDirectories(cli.configFolder.resolve( "resourcepacks"));
 
                 //print help
                 BlueMapCLI.printHelp();

@@ -27,7 +27,7 @@ package de.bluecolored.bluemap.core.storage.file;
 import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.storage.*;
-import de.bluecolored.bluemap.core.util.AtomicFileHelper;
+import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.util.DeletingPathVisitor;
 
 import java.io.*;
@@ -70,7 +70,7 @@ public class FileStorage extends Storage {
         Compression compression = lod == 0 ? this.hiresCompression : Compression.NONE;
         Path file = getFilePath(mapId, lod, tile);
 
-        OutputStream os = AtomicFileHelper.createFilepartOutputStream(file);
+        OutputStream os = FileHelper.createFilepartOutputStream(file);
         os = new BufferedOutputStream(os);
 
         try {
@@ -140,7 +140,7 @@ public class FileStorage extends Storage {
     public OutputStream writeMeta(String mapId, MetaType metaType) throws IOException {
         Path file = getFilePath(mapId).resolve(metaType.getFilePath());
 
-        OutputStream os = AtomicFileHelper.createFilepartOutputStream(file);
+        OutputStream os = FileHelper.createFilepartOutputStream(file);
         os = new BufferedOutputStream(os);
 
         return os;

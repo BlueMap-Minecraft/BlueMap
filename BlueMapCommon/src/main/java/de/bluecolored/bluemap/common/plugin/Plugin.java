@@ -47,6 +47,7 @@ import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.metrics.Metrics;
 import de.bluecolored.bluemap.core.storage.MetaType;
 import de.bluecolored.bluemap.core.storage.Storage;
+import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.world.World;
 import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 import org.spongepowered.configurate.serialize.SerializationException;
@@ -56,7 +57,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.UnknownHostException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -160,7 +160,7 @@ public class Plugin implements ServerEventListener {
                 //create and start webserver
                 if (webserverConfig.isEnabled()) {
                     Path webroot = webserverConfig.getWebroot();
-                    Files.createDirectories(webroot);
+                    FileHelper.createDirectories(webroot);
 
                     RoutingRequestHandler routingRequestHandler = new RoutingRequestHandler();
 

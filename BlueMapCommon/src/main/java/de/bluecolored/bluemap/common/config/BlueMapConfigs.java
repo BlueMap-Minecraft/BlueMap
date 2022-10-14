@@ -6,6 +6,7 @@ import de.bluecolored.bluemap.common.config.storage.StorageConfig;
 import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.util.Tristate;
 
 import java.io.IOException;
@@ -101,7 +102,7 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
                 presetRenderThreadCount = 3;
 
             try {
-                Files.createDirectories(configFolder);
+                FileHelper.createDirectories(configFolder);
                 Files.writeString(
                         configFolder.resolve("core.conf"),
                         configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/core.conf")
@@ -129,7 +130,7 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
 
         if (!Files.exists(configFile)) {
             try {
-                Files.createDirectories(configFolder);
+                FileHelper.createDirectories(configFolder);
                 Files.writeString(
                         configFolder.resolve("webserver.conf"),
                         configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/webserver.conf")
@@ -152,7 +153,7 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
 
         if (!Files.exists(configFile)) {
             try {
-                Files.createDirectories(configFolder);
+                FileHelper.createDirectories(configFolder);
                 Files.writeString(
                         configFolder.resolve("webapp.conf"),
                         configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/webapp.conf")
@@ -175,7 +176,7 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
 
         if (!Files.exists(configFile)) {
             try {
-                Files.createDirectories(configFolder);
+                FileHelper.createDirectories(configFolder);
                 Files.writeString(
                         configFolder.resolve("plugin.conf"),
                         configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/plugin.conf")
@@ -198,7 +199,7 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
 
         if (!Files.exists(mapConfigFolder)){
             try {
-                Files.createDirectories(mapConfigFolder);
+                FileHelper.createDirectories(mapConfigFolder);
                 var worlds = serverInterface.getLoadedWorlds();
                 if (worlds.isEmpty()) {
                     Files.writeString(
@@ -281,7 +282,7 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
 
         if (!Files.exists(storageConfigFolder)){
             try {
-                Files.createDirectories(storageConfigFolder);
+                FileHelper.createDirectories(storageConfigFolder);
                 Files.writeString(
                         storageConfigFolder.resolve("file.conf"),
                         configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/storages/file.conf")

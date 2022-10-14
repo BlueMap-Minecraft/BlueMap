@@ -29,6 +29,7 @@ import de.bluecolored.bluemap.common.config.WebappConfig;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
+import de.bluecolored.bluemap.core.util.FileHelper;
 import org.apache.commons.io.FileUtils;
 
 import java.io.BufferedReader;
@@ -64,7 +65,7 @@ public class WebFilesManager {
     }
 
     public void saveSettings() throws IOException {
-        Files.createDirectories(getSettingsFile().getParent());
+        FileHelper.createDirectories(getSettingsFile().getParent());
         try (BufferedWriter writer = Files.newBufferedWriter(getSettingsFile(),
                 StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             ResourcesGson.addAdapter(new GsonBuilder())
