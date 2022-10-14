@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.core.util.math;
 
 import de.bluecolored.bluemap.api.debug.DebugDump;
 
+@SuppressWarnings("UnusedReturnValue")
 @DebugDump
 public class Color {
 
@@ -160,6 +161,29 @@ public class Color {
             this.premultiplied = false;
         }
         return this;
+    }
+
+    /**
+     * Parses the color from a string and sets it to this Color instance.
+     * The value can be an integer in String-Format or a string in hexadecimal format prefixed with # (css-style: e.g. #f16 becomes #ff1166).
+     * @param val The String to parse
+     * @return The parsed Integer
+     * @throws NumberFormatException If the value is not formatted correctly or if there is no value present.
+     */
+    public Color parse(String val) {
+        if (val.charAt(0) == '#') {
+            val = val.substring(1);
+            if (val.length() == 3) val = val + "f";
+            if (val.length() == 4) val = "" + val.charAt(0) + val.charAt(0) + val.charAt(1) + val.charAt(1) + val.charAt(2) + val.charAt(2) + val.charAt(3) + val.charAt(3);
+            if (val.length() == 6) val = val + "ff";
+            if (val.length() != 8) throw new NumberFormatException("Invalid color format!");
+            val = val.substring(6, 8) + val.substring(0, 6); // move alpha to front
+            return set(Integer.parseUnsignedInt(val, 16));
+        }
+
+        int color = Integer.parseInt(val);
+        if ((color & 0xFF000000) == 0) color |= 0xFF000000; // assume full alpha if not present
+        return set(color);
     }
 
     @Override

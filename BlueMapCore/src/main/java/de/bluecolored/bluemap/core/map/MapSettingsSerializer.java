@@ -6,7 +6,6 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 import de.bluecolored.bluemap.core.map.lowres.LowresTileManager;
-import de.bluecolored.bluemap.core.util.ConfigUtils;
 import de.bluecolored.bluemap.core.util.math.Color;
 
 import java.lang.reflect.Type;
@@ -48,7 +47,7 @@ public class MapSettingsSerializer implements JsonSerializer<BmMap> {
         root.add("startPos", context.serialize(startPos));
 
         // skyColor
-        Color skyColor = new Color().set(ConfigUtils.parseColorFromString(map.getMapSettings().getSkyColor()));
+        Color skyColor = new Color().parse(map.getMapSettings().getSkyColor());
         root.add("skyColor", context.serialize(skyColor));
 
         // ambientLight

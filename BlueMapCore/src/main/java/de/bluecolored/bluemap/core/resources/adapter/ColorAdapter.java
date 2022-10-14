@@ -4,7 +4,6 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
-import de.bluecolored.bluemap.core.util.ConfigUtils;
 import de.bluecolored.bluemap.core.util.math.Color;
 
 import java.io.IOException;
@@ -55,7 +54,7 @@ public class ColorAdapter extends TypeAdapter<Color> {
                 in.endObject();
                 break;
             case STRING:
-                value.set(ConfigUtils.parseColorFromString(in.nextString()));
+                value.parse(in.nextString());
                 break;
             case NUMBER:
                 int color = in.nextInt();

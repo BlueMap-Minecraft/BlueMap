@@ -27,7 +27,6 @@ package de.bluecolored.bluemap.core.resources;
 import com.flowpowered.math.GenericMath;
 import com.google.gson.stream.JsonReader;
 import de.bluecolored.bluemap.api.debug.DebugDump;
-import de.bluecolored.bluemap.core.util.ConfigUtils;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.BlockNeighborhood;
@@ -79,7 +78,7 @@ public class BlockColorCalculatorFactory {
                         break;
                     default:
                         final Color color = new Color();
-                        color.set(ConfigUtils.parseColorFromString(value)).premultiplied();
+                        color.parse(value).premultiplied();
                         colorFunction = (calculator, block, target) -> target.set(color);
                         break;
                 }
