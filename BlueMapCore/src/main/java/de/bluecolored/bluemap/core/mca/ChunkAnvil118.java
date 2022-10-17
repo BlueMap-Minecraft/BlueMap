@@ -210,7 +210,7 @@ public class ChunkAnvil118 extends MCAChunk {
             if (skyLight.length < 2048 && skyLight.length > 0) skyLight = Arrays.copyOf(skyLight, 2048);
 
             this.bitsPerBlock = this.blocks.length >> 6; // available longs * 64 (bits per long) / 4096 (blocks per section) (floored result)
-            this.bitsPerBiome = Math.max(1, Integer.SIZE - Integer.numberOfLeadingZeros(this.biomePalette.length - 1));
+            this.bitsPerBiome = Integer.SIZE - Integer.numberOfLeadingZeros(this.biomePalette.length - 1);
         }
 
         private BlockState readBlockStatePaletteEntry(CompoundTag paletteEntry) {
@@ -235,6 +235,7 @@ public class ChunkAnvil118 extends MCAChunk {
 
         public BlockState getBlockState(int x, int y, int z) {
             if (blocks.length == 0) return BlockState.AIR;
+            if (blockPalette.length == 1) return blockPalette[0];
 
             x &= 0xF; y &= 0xF; z &= 0xF; // Math.floorMod(pos.getX(), 16)
 
@@ -266,7 +267,7 @@ public class ChunkAnvil118 extends MCAChunk {
 
         public String getBiome(int x, int y, int z) {
             if (biomePalette.length == 0) return Biome.DEFAULT.getValue();
-            if (biomes.length == 0) return biomePalette[0];
+            if (biomePalette.length == 1 || biomes.length == 0) return biomePalette[0];
 
             x = (x & 0xF) / 4; // Math.floorMod(pos.getX(), 16) / 4
             z = (z & 0xF) / 4;
