@@ -210,7 +210,7 @@ public class ChunkAnvil118 extends MCAChunk {
             if (skyLight.length < 2048 && skyLight.length > 0) skyLight = Arrays.copyOf(skyLight, 2048);
 
             this.bitsPerBlock = this.blocks.length >> 6; // available longs * 64 (bits per long) / 4096 (blocks per section) (floored result)
-            this.bitsPerBiome = Integer.SIZE - Integer.numberOfLeadingZeros(this.biomePalette.length - 1);
+            this.bitsPerBiome = Math.max(1, Integer.SIZE - Integer.numberOfLeadingZeros(this.biomePalette.length - 1));
         }
 
         private BlockState readBlockStatePaletteEntry(CompoundTag paletteEntry) {
