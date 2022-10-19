@@ -628,10 +628,15 @@ public class HiresTileModel {
         MergeSort.mergeSortInt(materialIndexSort, 0, size, this::compareMaterialIndex, materialIndexSortSupport);
 
         // move
-        int s;
+        int s, c;
         for (int i = 0; i < size; i++) {
-            s = materialIndexSort[i];
-            while (s < i) s = materialIndexSort[s];
+            s = materialIndexSort[i]; c = 0;
+            while (s < i) {
+                s = materialIndexSort[s];
+
+                // should never happen, just making absolutely sure this can't get stuck in an endless loop
+                if (c++ > size) throw new IllegalStateException();
+            }
             swap(i, s);
         }
     }
@@ -696,11 +701,6 @@ public class HiresTileModel {
         vi = materialIndex[face1];
         materialIndex[face1] = materialIndex[face2];
         materialIndex[face2] = vi;
-
-        //swap material-index-sort (assuming FI_MATERIAL_INDEX = 1)
-        //vi = materialIndexSort[face1];
-        //materialIndexSort[face1] = materialIndexSort[face2];
-        //materialIndexSort[face2] = vi;
     }
 
     private static void calculateSurfaceNormal(
