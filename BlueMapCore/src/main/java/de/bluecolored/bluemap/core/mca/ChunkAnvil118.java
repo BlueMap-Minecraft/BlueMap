@@ -35,8 +35,6 @@ import java.util.Map.Entry;
 
 @SuppressWarnings("FieldMayBeFinal")
 public class ChunkAnvil118 extends MCAChunk {
-    private static final String AIR_ID = "minecraft:air";
-
     private boolean isGenerated;
     private boolean hasLight;
 
@@ -74,7 +72,7 @@ public class ChunkAnvil118 extends MCAChunk {
                 ListTag<CompoundTag> paletteTag = (ListTag<CompoundTag>) blockStatesTag.getListTag("palette");
                 if (paletteTag == null) continue;
                 if (paletteTag.size() == 0) continue;
-                if (paletteTag.size() == 1 && AIR_ID.equals(paletteTag.get(0).getString("Name"))) continue;
+                if (paletteTag.size() == 1 && BlockState.AIR.getFormatted().equals(paletteTag.get(0).getString("Name"))) continue;
 
                 Section section = new Section(sectionTag);
                 int y = section.getSectionY();
@@ -214,11 +212,10 @@ public class ChunkAnvil118 extends MCAChunk {
         }
 
         private BlockState readBlockStatePaletteEntry(CompoundTag paletteEntry) {
-            String id = paletteEntry.getString("Name"); //shortcut to save time and memory
-            if (AIR_ID.equals(id)) return BlockState.AIR;
+            String id = paletteEntry.getString("Name");
+            if (BlockState.AIR.getFormatted().equals(id)) return BlockState.AIR; //shortcut to save time and memory
 
             Map<String, String> properties = new LinkedHashMap<>();
-
             if (paletteEntry.containsKey("Properties")) {
                 CompoundTag propertiesTag = paletteEntry.getCompoundTag("Properties");
                 for (Entry<String, Tag<?>> property : propertiesTag) {

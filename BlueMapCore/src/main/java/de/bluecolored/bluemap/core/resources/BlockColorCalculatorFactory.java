@@ -123,13 +123,7 @@ public class BlockColorCalculatorFactory {
         }
 
         public Color getRedstoneColor(BlockNeighborhood<?> block, Color target) {
-            String powerString = block.getBlockState().getProperties().get("power");
-
-            int power = 15;
-            if (powerString != null) {
-                power = Integer.parseInt(powerString);
-            }
-
+            int power = block.getBlockState().getRedstonePower();
             return target.set(
                     (power + 5f) / 20f, 0f, 0f,
                     1f, true
@@ -141,11 +135,11 @@ public class BlockColorCalculatorFactory {
 
             int x, y, z,
                     minX = - 2,
-                    maxX = + 2,
+                    maxX =   2,
                     minY = - 1,
-                    maxY = + 1,
+                    maxY =   1,
                     minZ = - 2,
-                    maxZ = + 2;
+                    maxZ =   2;
 
             Biome biome;
             for (x = minX; x <= maxX; x++) {
@@ -165,11 +159,11 @@ public class BlockColorCalculatorFactory {
 
             int x, y, z,
                     minX = - 2,
-                    maxX = + 2,
+                    maxX =   2,
                     minY = - 1,
-                    maxY = + 1,
+                    maxY =   1,
                     minZ = - 2,
-                    maxZ = + 2;
+                    maxZ =   2;
 
             Biome biome;
             for (y = minY; y <= maxY; y++) {
@@ -194,11 +188,11 @@ public class BlockColorCalculatorFactory {
 
             int x, y, z,
                     minX = - 2,
-                    maxX = + 2,
+                    maxX =   2,
                     minY = - 1,
-                    maxY = + 1,
+                    maxY =   1,
                     minZ = - 2,
-                    maxZ = + 2;
+                    maxZ =   2;
 
             Biome biome;
             for (y = minY; y <= maxY; y++) {

@@ -54,6 +54,7 @@ public class BlockState extends Key {
     private final Property[] propertiesArray;
 
     private final boolean isAir, isWater, isWaterlogged;
+    private int liquidLevel = -1, redstonePower = -1;
 
     public BlockState(String value) {
         this(value, Collections.emptyMap());
@@ -80,6 +81,7 @@ public class BlockState extends Key {
 
         this.isWater = "minecraft:water".equals(this.getFormatted());
         this.isWaterlogged = "true".equals(properties.get("waterlogged"));
+
     }
 
     /**
@@ -107,13 +109,42 @@ public class BlockState extends Key {
         return isWaterlogged;
     }
 
+    public int getLiquidLevel() {
+        if (liquidLevel == -1) {
+            try {
+                String levelString = properties.get("level");
+                liquidLevel = levelString != null ? Integer.parseInt(levelString) : 0;
+                if (liquidLevel > 15) liquidLevel = 15;
+                if (liquidLevel < 0) liquidLevel = 0;
+            } catch (NumberFormatException ex) {
+                liquidLevel = 0;
+            }
+        }
+        return liquidLevel;
+    }
+
+    public int getRedstonePower() {
+        if (redstonePower == -1) {
+            try {
+                String levelString = properties.get("power");
+                redstonePower = levelString != null ? Integer.parseInt(levelString) : 0;
+                if (redstonePower > 15) redstonePower = 15;
+                if (redstonePower < 0) redstonePower = 0;
+            } catch (NumberFormatException ex) {
+                redstonePower = 15;
+            }
+        }
+        return redstonePower;
+    }
+
+    @SuppressWarnings("StringEquality")
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
 
         if (!(obj instanceof BlockState)) return false;
         BlockState b = (BlockState) obj;
-        if (!Objects.equals(getFormatted(), b.getFormatted())) return false;
+        if (getFormatted() != b.getFormatted()) return false;
         return Arrays.equals(propertiesArray, b.propertiesArray);
     }
 

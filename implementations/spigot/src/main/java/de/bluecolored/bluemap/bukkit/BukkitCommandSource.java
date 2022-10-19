@@ -26,8 +26,8 @@ package de.bluecolored.bluemap.bukkit;
 
 import com.flowpowered.math.vector.Vector3d;
 import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.plugin.text.Text;
+import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.core.world.World;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;

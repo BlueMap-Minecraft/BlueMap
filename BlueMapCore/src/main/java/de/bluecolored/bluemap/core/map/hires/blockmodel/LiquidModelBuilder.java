@@ -110,8 +110,7 @@ public class LiquidModelBuilder {
                 (renderSettings.isCaveDetectionUsesBlockLight() ? block.getBlockLightLevel() : block.getSunLightLevel()) == 0f
         ) return;
 
-        int level = getLiquidLevel(blockState);
-
+        int level = blockState.getLiquidLevel();
         if (level < 8 && !(level == 0 && isSameLiquid(block.getNeighborBlock(0, 1, 0)))){
             corners[4].y = getLiquidCornerHeight(-1,  -1);
             corners[5].y = getLiquidCornerHeight(-1,  0);
@@ -196,7 +195,7 @@ public class LiquidModelBuilder {
                 neighbor = block.getNeighborBlock(ix, 0, iz);
                 neighborBlockState = neighbor.getBlockState();
                 if (isSameLiquid(neighbor)){
-                    if (getLiquidLevel(neighborBlockState) == 0) return 14f;
+                    if (neighborBlockState.getLiquidLevel() == 0) return 14f;
 
                     sumHeight += getLiquidBaseHeight(neighborBlockState);
                     count++;
@@ -216,22 +215,18 @@ public class LiquidModelBuilder {
     }
 
     private boolean isLiquidBlockingBlock(BlockState blockState){
-        return !blockState.equals(BlockState.AIR);
+        return !blockState.isAir();
     }
 
+    @SuppressWarnings("StringEquality")
     private boolean isSameLiquid(ExtendedBlock<?> block){
-        if (block.getBlockState().getFormatted().equals(this.blockState.getFormatted())) return true;
+        if (block.getBlockState().getFormatted() == this.blockState.getFormatted()) return true;
         return this.blockState.isWater() && (block.getBlockState().isWaterlogged() || block.getProperties().isAlwaysWaterlogged());
     }
 
     private float getLiquidBaseHeight(BlockState block){
-        int level = getLiquidLevel(block);
+        int level = block.getLiquidLevel();
         return level >= 8 ? 16f : 14f - level * 1.9f;
-    }
-
-    private int getLiquidLevel(BlockState block){
-        String levelString = block.getProperties().get("level");
-        return levelString != null ? Integer.parseInt(levelString) : 0;
     }
 
     private final MatrixM3f uvTransform = new MatrixM3f();
