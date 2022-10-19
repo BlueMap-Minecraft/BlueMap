@@ -397,8 +397,6 @@ public class HiresTileModel {
         Gson gson = new GsonBuilder().create();
         JsonWriter json = gson.newJsonWriter(new BufferedWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8), 81920));
 
-        Writer w = null;
-
         json.beginObject(); // main-object
         json.name("tileGeometry").beginObject(); // tile-geometry-object
 
