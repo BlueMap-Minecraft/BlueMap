@@ -34,7 +34,10 @@ import de.bluecolored.bluemap.core.util.math.MatrixM3f;
 import de.bluecolored.bluemap.core.util.math.MatrixM4f;
 import de.bluecolored.bluemap.core.util.math.VectorM3f;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
@@ -625,10 +628,11 @@ public class HiresTileModel {
         MergeSort.mergeSortInt(materialIndexSort, 0, size, this::compareMaterialIndex, materialIndexSortSupport);
 
         // move
+        int s;
         for (int i = 0; i < size; i++) {
-            while (materialIndexSort[i] != i) {
-                swap(i, materialIndexSort[i]);
-            }
+            s = materialIndexSort[i];
+            while (s < i) s = materialIndexSort[s];
+            swap(i, s);
         }
     }
 
@@ -694,9 +698,9 @@ public class HiresTileModel {
         materialIndex[face2] = vi;
 
         //swap material-index-sort (assuming FI_MATERIAL_INDEX = 1)
-        vi = materialIndexSort[face1];
-        materialIndexSort[face1] = materialIndexSort[face2];
-        materialIndexSort[face2] = vi;
+        //vi = materialIndexSort[face1];
+        //materialIndexSort[face1] = materialIndexSort[face2];
+        //materialIndexSort[face2] = vi;
     }
 
     private static void calculateSurfaceNormal(
