@@ -29,14 +29,12 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonWriter;
 import de.bluecolored.bluemap.core.util.InstancePool;
+import de.bluecolored.bluemap.core.util.MergeSort;
 import de.bluecolored.bluemap.core.util.math.MatrixM3f;
 import de.bluecolored.bluemap.core.util.math.MatrixM4f;
 import de.bluecolored.bluemap.core.util.math.VectorM3f;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 
@@ -64,7 +62,7 @@ public class HiresTileModel {
     private double[] position;
     private float[] color, uv, ao;
     private byte[] sunlight, blocklight;
-    private int[] materialIndex;
+    private int[] materialIndex, materialIndexSort, materialIndexSortSupport;
 
     public HiresTileModel(int initialCapacity) {
         if (initialCapacity < 0) throw new IllegalArgumentException("initialCapacity is negative");
@@ -388,6 +386,9 @@ public class HiresTileModel {
         sunlight =      new byte    [capacity * FI_SUNLIGHT];
         blocklight =    new byte    [capacity * FI_BLOCKLIGHT];
         materialIndex = new int     [capacity * FI_MATERIAL_INDEX];
+
+        materialIndexSort = new int[materialIndex.length];
+        materialIndexSortSupport = new int [materialIndex.length];
     }
 
     public void writeBufferGeometryJson(OutputStream out) throws IOException {
@@ -395,6 +396,8 @@ public class HiresTileModel {
 
         Gson gson = new GsonBuilder().create();
         JsonWriter json = gson.newJsonWriter(new BufferedWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8), 81920));
+
+        Writer w = null;
 
         json.beginObject(); // main-object
         json.name("tileGeometry").beginObject(); // tile-geometry-object
@@ -583,20 +586,20 @@ public class HiresTileModel {
                 material = materialIndex[i];
 
                 if (material != lastMaterial) {
-                   json.name("count").value((i - groupStart) * 3);
+                   json.name("count").value((i - groupStart) * 3L);
                    json.endObject();
 
                    groupStart = i;
 
                    json.beginObject();
                    json.name("materialIndex").value(material);
-                   json.name("start").value(groupStart * 3);
+                   json.name("start").value(groupStart * 3L);
                 }
 
                 lastMaterial = material;
             }
 
-            json.name("count").value((miSize - groupStart) * 3);
+            json.name("count").value((miSize - groupStart) * 3L);
             json.endObject();
 
         }
@@ -611,32 +614,28 @@ public class HiresTileModel {
         else json.value(d);
     }
 
-    /**
-     * Does an optimized selection sort to sort all faces based on their material-index.
-     * A selection sort is chosen, because it requires the least amount of swaps, which seem (untested) to be the most expensive operation here
-     */
     private void sort() {
         if (size <= 1) return; // nothing to sort
 
-        int prev = Integer.MIN_VALUE, min, minIndex, i, j;
-        for (i = 0; i < size - 1; i++){
-            minIndex = i;
-            min = materialIndex[minIndex];
-            if (min <= prev) continue; // shortcut
-
-            for (j = i + 1; j < size; j++){
-                if (materialIndex[j] < min){
-                    minIndex = j;
-                    min = materialIndex[minIndex];
-                }
-            }
-
-            if (minIndex != i) {
-                swap(minIndex, i);
-            }
-
-            prev = min;
+        // initialize material-index-sort
+        for (int i = 0; i < size; i++) {
+            materialIndexSort[i] = i;
+            materialIndexSortSupport[i] = i;
         }
+
+        // sort
+        MergeSort.mergeSortInt(materialIndexSort, 0, size, this::compareMaterialIndex, materialIndexSortSupport);
+
+        // move
+        for (int i = 0; i < size; i++) {
+            while (materialIndexSort[i] != i) {
+                swap(i, materialIndexSort[i]);
+            }
+        }
+    }
+
+    private int compareMaterialIndex(int i1, int i2) {
+        return Integer.compare(materialIndex[i1], materialIndex[i2]);
     }
 
     private void swap(int face1, int face2) {
@@ -695,6 +694,11 @@ public class HiresTileModel {
         vi = materialIndex[face1];
         materialIndex[face1] = materialIndex[face2];
         materialIndex[face2] = vi;
+
+        //swap material-index-sort (assuming FI_MATERIAL_INDEX = 1)
+        vi = materialIndexSort[face1];
+        materialIndexSort[face1] = materialIndexSort[face2];
+        materialIndexSort[face2] = vi;
     }
 
     private static void calculateSurfaceNormal(
