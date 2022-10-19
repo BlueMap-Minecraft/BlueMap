@@ -15,7 +15,7 @@ public class BlockModel {
 
     private ResourcePath<BlockModel> parent;
     private Map<String, TextureVariable> textures = new HashMap<>();
-    private List<Element> elements;
+    private Element[] elements;
     private boolean ambientocclusion = true;
 
     private transient boolean liquid = false;
@@ -34,7 +34,7 @@ public class BlockModel {
     }
 
     @Nullable
-    public List<Element> getElements() {
+    public Element[] getElements() {
         return elements;
     }
 
@@ -84,8 +84,10 @@ public class BlockModel {
 
             parent.textures.forEach(this::applyTextureVariable);
             if (this.elements == null && parent.elements != null) {
-                this.elements = new ArrayList<>();
-                parent.elements.forEach(element -> this.elements.add(element.copy()));
+                this.elements = new Element[parent.elements.length];
+                for (int i = 0; i < this.elements.length; i++){
+                    this.elements[i] = parent.elements[i].copy();
+                }
             }
         }
     }

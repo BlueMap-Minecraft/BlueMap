@@ -20,12 +20,12 @@ import java.util.function.Consumer;
 @JsonAdapter(Variants.Adapter.class)
 public class Variants {
 
-    private List<VariantSet> variants = new ArrayList<>();
+    private VariantSet[] variants = new VariantSet[0];
     private VariantSet defaultVariant;
 
     private Variants(){}
 
-    public List<VariantSet> getVariants() {
+    public VariantSet[] getVariants() {
         return variants;
     }
 
@@ -56,7 +56,8 @@ public class Variants {
 
         @Override
         public Variants read(JsonReader in, Gson gson) throws IOException {
-            Variants result = new Variants();
+            VariantSet defaultVariant = null;
+            List<VariantSet> variants = new ArrayList<>();
 
             in.beginObject();
             while (in.hasNext()) {
@@ -71,13 +72,16 @@ public class Variants {
                 variantSet.setCondition(condition);
 
                 if (variantSet.getCondition() == BlockStateCondition.all()) {
-                    result.defaultVariant = variantSet;
+                    defaultVariant = variantSet;
                 } else if (variantSet.getCondition() != BlockStateCondition.none()) {
-                    result.variants.add(variantSet);
+                    variants.add(variantSet);
                 }
             }
             in.endObject();
 
+            Variants result = new Variants();
+            result.defaultVariant = defaultVariant;
+            result.variants = variants.toArray(VariantSet[]::new);
             return result;
         }
 

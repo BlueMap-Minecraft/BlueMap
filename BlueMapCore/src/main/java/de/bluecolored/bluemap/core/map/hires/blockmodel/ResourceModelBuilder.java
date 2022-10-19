@@ -49,8 +49,6 @@ import de.bluecolored.bluemap.core.world.BlockNeighborhood;
 import de.bluecolored.bluemap.core.world.ExtendedBlock;
 import de.bluecolored.bluemap.core.world.LightData;
 
-import java.util.List;
-
 /**
  * This model builder creates a BlockStateModel using the information from parsed resource-pack json files.
  */
@@ -100,7 +98,7 @@ public class ResourceModelBuilder {
         // render model
         int modelStart = blockModel.getStart();
 
-        List<Element> elements = modelResource.getElements();
+        Element[] elements = modelResource.getElements();
         if (elements != null) {
             for (Element element : elements) {
                 buildModelElementResource(element, blockModel.initialize());

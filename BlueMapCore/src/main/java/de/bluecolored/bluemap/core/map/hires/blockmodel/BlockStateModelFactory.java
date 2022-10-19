@@ -35,7 +35,7 @@ import de.bluecolored.bluemap.core.world.BlockNeighborhood;
 import de.bluecolored.bluemap.core.world.BlockState;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.List;
 
 public class BlockStateModelFactory {
 
@@ -43,7 +43,7 @@ public class BlockStateModelFactory {
     private final ResourceModelBuilder resourceModelBuilder;
     private final LiquidModelBuilder liquidModelBuilder;
 
-    private final Collection<Variant> variants = new ArrayList<>();
+    private final List<Variant> variants = new ArrayList<>();
 
     public BlockStateModelFactory(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
         this.resourcePack = resourcePack;
@@ -88,7 +88,11 @@ public class BlockStateModelFactory {
         float blockColorOpacity = 0;
         variants.clear();
         stateResource.forEach(blockState, block.getX(), block.getY(), block.getZ(), variants::add);
-        for (Variant variant : variants) {
+
+        //noinspection ForLoopReplaceableByForEach
+        for (int i = 0; i < variants.size(); i++) {
+            Variant variant = variants.get(i);
+
             BlockModel modelResource = variant.getModel().getResource(resourcePack::getBlockModel);
             if (modelResource == null) continue;
 

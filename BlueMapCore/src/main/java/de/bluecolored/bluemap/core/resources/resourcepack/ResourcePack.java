@@ -199,9 +199,11 @@ public class ResourcePack {
         if (Files.isRegularFile(fabricModJson)) {
             try (BufferedReader reader = Files.newBufferedReader(fabricModJson)) {
                 JsonObject rootElement = ResourcesGson.INSTANCE.fromJson(reader, JsonObject.class);
-                for (JsonElement element : rootElement.getAsJsonArray("jars")) {
-                    Path file = root.resolve(element.getAsJsonObject().get("file").getAsString());
-                    if (Files.exists(file)) loadResourcePath(file, resourceLoader);
+                if (rootElement.has("jars")) {
+                    for (JsonElement element : rootElement.getAsJsonArray("jars")) {
+                        Path file = root.resolve(element.getAsJsonObject().get("file").getAsString());
+                        if (Files.exists(file)) loadResourcePath(file, resourceLoader);
+                    }
                 }
             } catch (Exception ex) {
                 Logger.global.logDebug("Failed to read fabric.mod.json: " + ex);

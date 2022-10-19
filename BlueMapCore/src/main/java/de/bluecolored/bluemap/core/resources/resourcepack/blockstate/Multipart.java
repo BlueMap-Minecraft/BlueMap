@@ -19,11 +19,11 @@ import java.util.function.Consumer;
 @JsonAdapter(Multipart.Adapter.class)
 public class Multipart {
 
-    private List<VariantSet> parts = new ArrayList<>();
+    private VariantSet[] parts = new VariantSet[0];
 
     private Multipart(){}
 
-    public List<VariantSet> getParts() {
+    public VariantSet[] getParts() {
         return parts;
     }
 
@@ -43,7 +43,7 @@ public class Multipart {
 
         @Override
         public Multipart read(JsonReader in, Gson gson) throws IOException {
-            Multipart result = new Multipart();
+            List<VariantSet> parts = new ArrayList<>();
 
             in.beginArray();
             while (in.hasNext()) {
@@ -63,10 +63,12 @@ public class Multipart {
 
                 if (variantSet == null) continue;
                 if (condition != null) variantSet.setCondition(condition);
-                result.parts.add(variantSet);
+                parts.add(variantSet);
             }
             in.endArray();
 
+            Multipart result = new Multipart();
+            result.parts = parts.toArray(VariantSet[]::new);
             return result;
         }
 

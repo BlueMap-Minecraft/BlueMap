@@ -2,15 +2,13 @@ package de.bluecolored.bluemap.core.resources.resourcepack.blockstate;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.JsonAdapter;
-import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.List;
+import java.util.Arrays;
 import java.util.function.Consumer;
 
 @SuppressWarnings("FieldMayBeFinal")
@@ -19,15 +17,15 @@ import java.util.function.Consumer;
 public class VariantSet {
 
     private BlockStateCondition condition;
-    private List<Variant> variants;
+    private Variant[] variants;
 
     private transient double totalWeight;
 
-    public VariantSet(List<Variant> variants) {
+    public VariantSet(Variant... variants) {
         this(BlockStateCondition.all(), variants);
     }
 
-    public VariantSet(BlockStateCondition condition, List<Variant> variants) {
+    public VariantSet(BlockStateCondition condition, Variant... variants) {
         this.condition = condition;
         this.variants = variants;
 
@@ -42,12 +40,12 @@ public class VariantSet {
         this.condition = condition;
     }
 
-    public List<Variant> getVariants() {
+    public Variant[] getVariants() {
         return variants;
     }
 
     private double summarizeWeights() {
-        return variants.stream()
+        return Arrays.stream(variants)
                 .mapToDouble(Variant::getWeight)
                 .sum();
     }
@@ -64,7 +62,7 @@ public class VariantSet {
     }
 
     private static float hashToFloat(int x, int y, int z) {
-        final long hash = x * 73438747 ^ y * 9357269 ^ z * 4335792;
+        final long hash = x * 73438747L ^ y * 9357269L ^ z * 4335792L;
         return (hash * (hash + 456149) & 0x00ffffff) / (float) 0x01000000;
     }
 
@@ -76,11 +74,11 @@ public class VariantSet {
 
         @Override
         public VariantSet read(JsonReader in, Gson gson) throws IOException {
-            List<Variant> variants;
+            Variant[] variants;
             if (in.peek() == JsonToken.BEGIN_ARRAY) {
-                variants = gson.fromJson(in, new TypeToken<List<Variant>>(){}.getType());
+                variants = gson.fromJson(in, Variant[].class);
             } else {
-                variants = Collections.singletonList(gson.fromJson(in, Variant.class));
+                variants = new Variant[]{ gson.fromJson(in, Variant.class) };
             }
 
             return new VariantSet(variants);
