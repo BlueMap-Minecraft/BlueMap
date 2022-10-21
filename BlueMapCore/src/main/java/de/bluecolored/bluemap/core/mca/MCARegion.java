@@ -62,7 +62,7 @@ public class MCARegion implements Region {
 
             int xzChunk = Math.floorMod(chunkZ, 32) * 32 + Math.floorMod(chunkX, 32);
 
-            raf.seek(xzChunk * 4);
+            raf.seek(xzChunk * 4L);
             int offset = raf.read() << 16;
             offset |= (raf.read() & 0xFF) << 8;
             offset |= raf.read() & 0xFF;
@@ -125,7 +125,7 @@ public class MCARegion implements Region {
                 }
             }
         } catch (RuntimeException | IOException ex) {
-            Logger.global.logWarning("Failed to read .mca file: " + regionFile.getAbsolutePath() + " (" + ex.toString() + ")");
+            Logger.global.logWarning("Failed to read .mca file: " + regionFile.getAbsolutePath() + " (" + ex + ")");
         }
 
         return chunks;

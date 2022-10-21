@@ -66,14 +66,6 @@ public class ChunkAnvil118 extends MCAChunk {
 
             for (CompoundTag sectionTag : sectionsTag) {
 
-                // skip empty sections
-                CompoundTag blockStatesTag = sectionTag.getCompoundTag("block_states");
-                if (blockStatesTag == null) continue;
-                ListTag<CompoundTag> paletteTag = (ListTag<CompoundTag>) blockStatesTag.getListTag("palette");
-                if (paletteTag == null) continue;
-                if (paletteTag.size() == 0) continue;
-                if (paletteTag.size() == 1 && BlockState.AIR.getFormatted().equals(paletteTag.get(0).getString("Name"))) continue;
-
                 Section section = new Section(sectionTag);
                 int y = section.getSectionY();
 
