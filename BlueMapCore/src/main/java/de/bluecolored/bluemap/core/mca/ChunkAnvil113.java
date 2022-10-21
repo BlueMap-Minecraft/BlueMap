@@ -194,6 +194,7 @@ public class ChunkAnvil113 extends MCAChunk {
         }
 
         public BlockState getBlockState(int x, int y, int z) {
+            if (palette.length == 1) return palette[0];
             if (blocks.length == 0) return BlockState.AIR;
 
             x &= 0xF; y &= 0xF; z &= 0xF; // Math.floorMod(pos.getX(), 16)
