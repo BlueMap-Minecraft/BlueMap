@@ -395,8 +395,6 @@ public class HiresTileModel {
     }
 
     public void writeBufferGeometryJson(OutputStream out) throws IOException {
-        sort();
-
         Gson gson = new GsonBuilder().create();
         JsonWriter json = gson.newJsonWriter(new BufferedWriter(new OutputStreamWriter(out, StandardCharsets.UTF_8), 81920));
 
@@ -615,7 +613,7 @@ public class HiresTileModel {
         else json.value(d);
     }
 
-    private void sort() {
+    public void sort() {
         if (size <= 1) return; // nothing to sort
 
         // initialize material-index-sort

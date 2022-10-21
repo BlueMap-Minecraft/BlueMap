@@ -67,7 +67,11 @@ public class HiresModelManager {
         HiresTileModel model = HiresTileModel.instancePool().claimInstance();
 
         renderer.render(world, modelMin, modelMax, model, tileMetaConsumer);
-        if (save) save(model, tile);
+
+        if (save){
+            model.sort();
+            save(model, tile);
+        }
 
         HiresTileModel.instancePool().recycleInstance(model);
     }
