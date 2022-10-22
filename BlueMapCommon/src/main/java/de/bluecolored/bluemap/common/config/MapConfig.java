@@ -31,7 +31,7 @@ public class MapConfig implements MapSettings {
     private int worldSkyLight = 15;
 
     private int removeCavesBelowY = 55;
-
+    private int caveDetectionOceanFloor = 10000;
     private boolean caveDetectionUsesBlockLight = false;
 
     private int minX = Integer.MIN_VALUE;
@@ -98,6 +98,10 @@ public class MapConfig implements MapSettings {
 
     public boolean isCaveDetectionUsesBlockLight() {
         return caveDetectionUsesBlockLight;
+    }
+
+    public int getCaveDetectionOceanFloor() {
+        return caveDetectionOceanFloor;
     }
 
     public Vector3i getMinPos() {

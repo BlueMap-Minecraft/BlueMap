@@ -36,7 +36,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+@SuppressWarnings("FieldMayBeFinal")
 public class ChunkAnvil116 extends MCAChunk {
+    private static final long[] EMPTY_LONG_ARRAY = new long[0];
+
     private boolean isGenerated;
     private boolean hasLight;
 
@@ -46,6 +49,9 @@ public class ChunkAnvil116 extends MCAChunk {
     private Section[] sections;
 
     private int[] biomes;
+
+    private long[] oceanFloorHeights = EMPTY_LONG_ARRAY;
+    private long[] worldSurfaceHeights = EMPTY_LONG_ARRAY;
 
     @SuppressWarnings("unchecked")
     public ChunkAnvil116(MCAWorld world, CompoundTag chunkTag) {
@@ -61,6 +67,12 @@ public class ChunkAnvil116 extends MCAChunk {
 
         if (!isGenerated && getWorld().isIgnoreMissingLightData()) {
             isGenerated = !status.equals("empty");
+        }
+
+        if (levelData.containsKey("Heightmaps")) {
+            CompoundTag heightmapsTag = levelData.getCompoundTag("Heightmaps");
+            this.worldSurfaceHeights = heightmapsTag.getLongArray("WORLD_SURFACE");
+            this.oceanFloorHeights = heightmapsTag.getLongArray("OCEAN_FLOOR");
         }
 
         if (levelData.containsKey("Sections")) {
@@ -164,6 +176,22 @@ public class ChunkAnvil116 extends MCAChunk {
     @Override
     public int getMaxY(int x, int z) {
         return sectionMax * 16 + 15;
+    }
+
+    @Override
+    public int getWorldSurfaceY(int x, int z) {
+        if (this.worldSurfaceHeights.length < 37) return 0;
+
+        x &= 0xF; z &= 0xF;
+        return (int) MCAMath.getValueFromLongArray(this.worldSurfaceHeights, z * 16 + x, 9);
+    }
+
+    @Override
+    public int getOceanFloorY(int x, int z) {
+        if (this.oceanFloorHeights.length < 37) return 0;
+
+        x &= 0xF; z &= 0xF;
+        return (int) MCAMath.getValueFromLongArray(this.oceanFloorHeights, z * 16 + x, 9);
     }
 
     private Section getSection(int y) {

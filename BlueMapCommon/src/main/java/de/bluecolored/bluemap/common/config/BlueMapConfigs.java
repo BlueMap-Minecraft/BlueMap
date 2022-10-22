@@ -337,7 +337,7 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
                 .setVariable("sky-color", "#7dabff")
                 .setVariable("ambient-light", "0.1")
                 .setVariable("world-sky-light", "15")
-                .setVariable("remove-caves-below-y", "55")
+                .setVariable("remove-caves-below-y", "-2")
                 .setConditional("max-y-comment", true)
                 .setVariable("max-y", "100");
     }

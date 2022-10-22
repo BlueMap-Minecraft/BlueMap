@@ -35,12 +35,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+@SuppressWarnings("FieldMayBeFinal")
 public class ChunkAnvil115 extends MCAChunk {
+    private static final long[] EMPTY_LONG_ARRAY = new long[0];
+
     private boolean isGenerated;
     private boolean hasLight;
     private long inhabitedTime;
     private Section[] sections;
     private int[] biomes;
+
+    private long[] oceanFloorHeights = EMPTY_LONG_ARRAY;
+    private long[] worldSurfaceHeights = EMPTY_LONG_ARRAY;
 
     @SuppressWarnings("unchecked")
     public ChunkAnvil115(MCAWorld world, CompoundTag chunkTag) {
@@ -56,6 +62,12 @@ public class ChunkAnvil115 extends MCAChunk {
 
         if (!isGenerated && getWorld().isIgnoreMissingLightData()) {
             isGenerated = !status.equals("empty");
+        }
+
+        if (levelData.containsKey("Heightmaps")) {
+            CompoundTag heightmapsTag = levelData.getCompoundTag("Heightmaps");
+            this.worldSurfaceHeights = heightmapsTag.getLongArray("WORLD_SURFACE");
+            this.oceanFloorHeights = heightmapsTag.getLongArray("OCEAN_FLOOR");
         }
 
         sections = new Section[32]; //32 supports a max world-height of 512 which is the max that the hightmaps of Minecraft V1.13+ can store with 9 bits, i believe?
@@ -136,6 +148,22 @@ public class ChunkAnvil115 extends MCAChunk {
         if (biomeIntIndex >= this.biomes.length) return Biome.DEFAULT.getFormatted();
 
         return LegacyBiomes.idFor(biomes[biomeIntIndex]);
+    }
+
+    @Override
+    public int getWorldSurfaceY(int x, int z) {
+        if (this.worldSurfaceHeights.length < 36) return 0;
+
+        x &= 0xF; z &= 0xF;
+        return (int) MCAMath.getValueFromLongStream(this.worldSurfaceHeights, z * 16 + x, 9);
+    }
+
+    @Override
+    public int getOceanFloorY(int x, int z) {
+        if (this.oceanFloorHeights.length < 36) return 0;
+
+        x &= 0xF; z &= 0xF;
+        return (int) MCAMath.getValueFromLongStream(this.oceanFloorHeights, z * 16 + x, 9);
     }
 
     private static class Section {

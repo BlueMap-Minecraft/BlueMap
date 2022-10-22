@@ -35,12 +35,18 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
+@SuppressWarnings("FieldMayBeFinal")
 public class ChunkAnvil113 extends MCAChunk {
+    private static final long[] EMPTY_LONG_ARRAY = new long[0];
+
     private boolean isGenerated;
     private boolean hasLight;
     private long inhabitedTime;
     private Section[] sections;
     private int[] biomes;
+
+    private long[] oceanFloorHeights = EMPTY_LONG_ARRAY;
+    private long[] worldSurfaceHeights = EMPTY_LONG_ARRAY;
 
     @SuppressWarnings("unchecked")
     public ChunkAnvil113(MCAWorld world, CompoundTag chunkTag) {
@@ -56,6 +62,12 @@ public class ChunkAnvil113 extends MCAChunk {
 
         if (!isGenerated && getWorld().isIgnoreMissingLightData()) {
             isGenerated = !status.equals("empty");
+        }
+
+        if (levelData.containsKey("Heightmaps")) {
+            CompoundTag heightmapsTag = levelData.getCompoundTag("Heightmaps");
+            this.worldSurfaceHeights = heightmapsTag.getLongArray("WORLD_SURFACE");
+            this.oceanFloorHeights = heightmapsTag.getLongArray("OCEAN_FLOOR");
         }
 
         sections = new Section[32]; //32 supports a max world-height of 512 which is the max that the hightmaps of Minecraft V1.13+ can store with 9 bits, i believe?
@@ -127,8 +139,7 @@ public class ChunkAnvil113 extends MCAChunk {
 
     @Override
     public String getBiome(int x, int y, int z) {
-        x = x & 0xF; // Math.floorMod(pos.getX(), 16)
-        z = z & 0xF;
+        x &= 0xF; z &= 0xF;
         int biomeIntIndex = z * 16 + x;
 
         if (biomeIntIndex >= this.biomes.length) return Biome.DEFAULT.getFormatted();
@@ -136,7 +147,23 @@ public class ChunkAnvil113 extends MCAChunk {
         return LegacyBiomes.idFor(biomes[biomeIntIndex]);
     }
 
-    private class Section {
+    @Override
+    public int getWorldSurfaceY(int x, int z) {
+        if (this.worldSurfaceHeights.length < 36) return 0;
+
+        x &= 0xF; z &= 0xF;
+        return (int) MCAMath.getValueFromLongStream(this.worldSurfaceHeights, z * 16 + x, 9);
+    }
+
+    @Override
+    public int getOceanFloorY(int x, int z) {
+        if (this.oceanFloorHeights.length < 36) return 0;
+
+        x &= 0xF; z &= 0xF;
+        return (int) MCAMath.getValueFromLongStream(this.oceanFloorHeights, z * 16 + x, 9);
+    }
+
+    private static class Section {
         private static final String AIR_ID = "minecraft:air";
 
         private int sectionY;

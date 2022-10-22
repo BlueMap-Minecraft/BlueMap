@@ -81,6 +81,12 @@ public abstract class MCAChunk implements Chunk {
         return 0;
     }
 
+    @Override
+    public int getWorldSurfaceY(int x, int z) { return 0; }
+
+    @Override
+    public int getOceanFloorY(int x, int z) { return 0; }
+
     protected MCAWorld getWorld() {
         return world;
     }

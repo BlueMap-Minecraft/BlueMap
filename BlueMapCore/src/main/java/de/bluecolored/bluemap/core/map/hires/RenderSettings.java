@@ -37,6 +37,11 @@ public interface RenderSettings {
     int getRemoveCavesBelowY();
 
     /**
+     * The y-level relative to the ocean-floor heightmap below which caves will not be rendered
+     */
+    int getCaveDetectionOceanFloor();
+
+    /**
      * If blocklight should be used instead of sky light to detect "caves"
      */
     boolean isCaveDetectionUsesBlockLight();

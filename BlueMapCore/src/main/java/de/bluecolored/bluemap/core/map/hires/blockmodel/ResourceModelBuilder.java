@@ -73,6 +73,7 @@ public class ResourceModelBuilder {
     private BlockModelView blockModel;
     private Color blockColor;
     private float blockColorOpacity;
+    private boolean isCave;
 
     public ResourceModelBuilder(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
         this.resourcePack = resourcePack;
@@ -92,6 +93,10 @@ public class ResourceModelBuilder {
         this.blockColorOpacity = 0f;
         this.variant = variant;
         this.modelResource = variant.getModel().getResource();
+
+        this.isCave =
+                this.block.getY() < renderSettings.getRemoveCavesBelowY() &&
+                this.block.getY() < block.getChunk().getOceanFloorY(block.getX(), block.getZ()) + renderSettings.getCaveDetectionOceanFloor();
 
         this.tintColor.set(0, 0, 0, -1, true);
 
@@ -193,10 +198,7 @@ public class ResourceModelBuilder {
         int blockLight = Math.max(blockLightData.getBlockLight(), facedLightData.getBlockLight());
 
         // filter out faces that are in a "cave" that should not be rendered
-        if (
-                this.block.getY() < renderSettings.getRemoveCavesBelowY() &&
-                (renderSettings.isCaveDetectionUsesBlockLight() ? blockLight : sunLight) == 0f
-        ) return;
+        if (isCave && (renderSettings.isCaveDetectionUsesBlockLight() ? blockLight : sunLight) == 0f) return;
 
         // initialize the faces
         blockModel.initialize();

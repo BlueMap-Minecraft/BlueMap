@@ -42,4 +42,8 @@ public interface Chunk {
 
     int getMinY(int x, int z);
 
+    int getWorldSurfaceY(int x, int z);
+
+    int getOceanFloorY(int x, int z);
+
 }
