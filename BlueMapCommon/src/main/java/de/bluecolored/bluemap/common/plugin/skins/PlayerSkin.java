@@ -83,19 +83,21 @@ public class PlayerSkin {
     }
 
     public BufferedImage createHead(BufferedImage skinTexture) {
-        BufferedImage head = new BufferedImage(8,  8, skinTexture.getType());
+        BufferedImage head;
 
         BufferedImage layer1 = skinTexture.getSubimage(8, 8, 8, 8);
         BufferedImage layer2 = skinTexture.getSubimage(40, 8, 8, 8);
 
         try {
+            head = new BufferedImage(48,  48, BufferedImage.TYPE_INT_ARGB);
             Graphics2D g = head.createGraphics();
-            g.drawImage(layer1, 0, 0, null);
-            g.drawImage(layer2, 0, 0, null);
+            g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+            g.drawImage(layer1, 4, 4, 40, 40, null);
+            g.drawImage(layer2, 0, 0, 48, 48, null);
         } catch (Throwable t) { // There might be problems with headless servers when loading the graphics class, so we catch every exception and error on purpose here
             Logger.global.noFloodWarning("headless-graphics-fail",
                     "Could not access Graphics2D to render player-skin texture. Try adding '-Djava.awt.headless=true' to your startup flags or ignore this warning.");
-
+            head = new BufferedImage(8, 8, skinTexture.getType());
             layer1.copyData(head.getRaster());
         }
 
