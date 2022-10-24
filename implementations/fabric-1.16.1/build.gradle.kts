@@ -140,7 +140,6 @@ modrinth {
 	dependencies {
 		required.project("P7dR8mSH") // Fabric API
 	}
-	debugMode.set(true)
 }
 
 tasks.register("publish") {

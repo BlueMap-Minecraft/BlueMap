@@ -175,7 +175,6 @@ modrinth {
 	changelog = "Releasenotes and Changelog:\nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}"
 	uploadFile = shadowJar
 	gameVersions = ["1.19", "1.19.1", "1.19.2"]
-	debugMode = true
 }
 
 task publish {

@@ -137,7 +137,6 @@ modrinth {
 	uploadFile.set(tasks.findByName("shadowJar"))
 	loaders.addAll("sponge")
 	gameVersions.addAll("1.18.2")
-	debugMode.set(true)
 }
 
 tasks.register("publish") {
