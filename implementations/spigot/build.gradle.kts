@@ -4,6 +4,7 @@ plugins {
 	id("com.diffplug.spotless") version "6.1.2"
 	id ("com.github.node-gradle.node") version "3.0.1"
 	id ("com.github.johnrengelman.shadow") version "7.1.2"
+	id ("com.modrinth.minotaur") version "2.+"
 }
 
 group = "de.bluecolored.bluemap.bukkit"
@@ -113,4 +114,27 @@ tasks.shadowJar {
 
 tasks.register("release") {
 	dependsOn(tasks.shadowJar)
+}
+
+modrinth {
+	token.set(System.getenv("MODRINTH_TOKEN"))
+	projectId.set("swbUV1cr")
+	versionNumber.set("${project.version}-${project.name}")
+	changelog.set("Releasenotes and Changelog:\nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}")
+	uploadFile.set(tasks.findByName("shadowJar"))
+	loaders.addAll("spigot")
+	gameVersions.addAll(
+		"1.13.2",
+		"1.13.2", "1.13.2", "1.13.2", "1.13.2", "1.13.2",
+		"1.13.2", "1.13.2", "1.13.2",
+		"1.13.2","1.13.2","1.13.2","1.13.2","1.13.2","1.13.2",
+		"1.13.2","1.13.2",
+		"1.13.2","1.13.2","1.13.2",
+		"1.19", "1.19.1", "1.19.2"
+	)
+	debugMode.set(true)
+}
+
+tasks.register("publish") {
+	dependsOn("modrinth")
 }

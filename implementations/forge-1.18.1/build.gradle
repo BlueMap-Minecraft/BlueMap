@@ -15,6 +15,7 @@ plugins {
 	id "com.diffplug.spotless" version "6.1.2"
 	id "com.github.node-gradle.node" version "3.0.1"
 	id "com.github.johnrengelman.shadow" version "7.1.2"
+	id "com.modrinth.minotaur" version "2.+"
 }
 
 apply plugin: "net.minecraftforge.gradle"
@@ -164,4 +165,18 @@ afterEvaluate {
 
 task release {
 	dependsOn(build)
+}
+
+modrinth {
+	token = System.getenv("MODRINTH_TOKEN")
+	projectId = "swbUV1cr"
+	versionNumber = "${project.version}-${project.name}"
+	changelog = "Releasenotes and Changelog:\nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}"
+	uploadFile = shadowJar
+	gameVersions = ["1.18.1", "1.18.2"]
+	debugMode = true
+}
+
+task publish {
+	dependsOn(tasks.findByName("modrinth"))
 }

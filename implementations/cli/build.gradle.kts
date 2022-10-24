@@ -92,3 +92,7 @@ tasks.shadowJar {
 tasks.register("release") {
 	dependsOn(tasks.shadowJar)
 }
+
+tasks.register("publish") {
+
+}

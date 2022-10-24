@@ -27,3 +27,9 @@ tasks.register("spotlessApply") {
         dependsOn(it.task(":spotlessApply"))
     }
 }
+
+tasks.register("publish") {
+    gradle.includedBuilds.forEach {
+        dependsOn(it.task(":publish"))
+    }
+}
