@@ -26,4 +26,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-bluemap-
       - name: Build with Gradle
+        env:
+          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
         run: ./gradlew publish
