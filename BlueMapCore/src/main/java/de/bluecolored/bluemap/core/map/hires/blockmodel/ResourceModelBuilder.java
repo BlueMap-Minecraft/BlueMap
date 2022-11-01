@@ -321,6 +321,7 @@ public class ResourceModelBuilder {
         );
         makeRotationRelative(faceRotationVector);
         faceRotationVector.rotateAndScale(element.getRotation().getMatrix());
+        if (variant.isRotated()) faceRotationVector.transform(variant.getRotationMatrix());
 
         float a = faceRotationVector.y;
         if (a > 0 && texturePath != null){
