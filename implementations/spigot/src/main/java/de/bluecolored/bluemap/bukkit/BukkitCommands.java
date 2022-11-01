@@ -32,8 +32,10 @@ import com.mojang.brigadier.tree.CommandNode;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.commands.Commands;
 import org.apache.commons.lang.StringUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.RemoteConsoleCommandSender;
 import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -54,7 +56,14 @@ public class BukkitCommands implements Listener {
         this.dispatcher = new CommandDispatcher<>();
 
         // register commands
-        new Commands<>(plugin, dispatcher, bukkitSender -> new BukkitCommandSource(plugin, bukkitSender));
+        new Commands<>(plugin, dispatcher, bukkitSender -> {
+
+            // RCON doesn't work async, use console instead
+            if (bukkitSender instanceof RemoteConsoleCommandSender)
+                return new BukkitCommandSource(plugin, Bukkit.getConsoleSender());
+
+            return new BukkitCommandSource(plugin, bukkitSender);
+        });
     }
 
     public Collection<BukkitCommand> getRootCommands(){
