@@ -151,6 +151,11 @@ public class ChunkAnvil115 extends MCAChunk {
     }
 
     @Override
+    public int getMaxY(int x, int z) {
+        return sections.length * 16 + 15;
+    }
+
+    @Override
     public int getWorldSurfaceY(int x, int z) {
         if (this.worldSurfaceHeights.length < 36) return 0;
 
