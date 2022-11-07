@@ -39,7 +39,7 @@ public class WebAppImpl implements WebApp {
 
     @Override
     public boolean getPlayerVisibility(UUID player) {
-        return plugin.getPluginState().isPlayerHidden(player);
+        return !plugin.getPluginState().isPlayerHidden(player);
     }
 
     @Override
