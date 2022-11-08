@@ -66,6 +66,7 @@ public class BlockPropertiesConfig {
                         case "occluding": bsValueBuilder.occluding(json.nextBoolean()); break;
                         case "alwaysWaterlogged": bsValueBuilder.alwaysWaterlogged(json.nextBoolean()); break;
                         case "randomOffset": bsValueBuilder.randomOffset(json.nextBoolean()); break;
+                        case "cullingIdentical": bsValueBuilder.cullingIdentical(json.nextBoolean()); break;
                         default: break;
                     }
                 }

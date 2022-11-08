@@ -32,25 +32,28 @@ public class BlockProperties {
 
     public static final BlockProperties DEFAULT = new BlockProperties();
 
-    private Tristate culling, occluding, alwaysWaterlogged, randomOffset;
+    private Tristate culling, occluding, alwaysWaterlogged, randomOffset, cullingIdentical;
 
     public BlockProperties() {
         this.culling = Tristate.UNDEFINED;
         this.occluding = Tristate.UNDEFINED;
         this.alwaysWaterlogged = Tristate.UNDEFINED;
         this.randomOffset = Tristate.UNDEFINED;
+        this.cullingIdentical = Tristate.UNDEFINED;
     }
 
     public BlockProperties(
             Tristate culling,
             Tristate occluding,
             Tristate alwaysWaterlogged,
-            Tristate randomOffset
+            Tristate randomOffset,
+            Tristate cullingIdentical
     ) {
         this.culling = culling;
         this.occluding = occluding;
         this.alwaysWaterlogged = alwaysWaterlogged;
         this.randomOffset = randomOffset;
+        this.cullingIdentical = cullingIdentical;
     }
 
     public boolean isCulling() {
@@ -69,12 +72,17 @@ public class BlockProperties {
         return randomOffset.getOr(false);
     }
 
+    public boolean getCullingIdentical() {
+        return cullingIdentical.getOr(false);
+    }
+
     public Builder toBuilder() {
         return new BlockProperties(
                 culling,
                 occluding,
                 alwaysWaterlogged,
-                randomOffset
+                randomOffset,
+                cullingIdentical
         ).new Builder();
     }
 
@@ -104,11 +112,17 @@ public class BlockProperties {
             return this;
         }
 
+        public Builder cullingIdentical(boolean cullingIdentical) {
+            BlockProperties.this.cullingIdentical = cullingIdentical ? Tristate.TRUE : Tristate.FALSE;
+            return this;
+        }
+
         public Builder from(BlockProperties other) {
             culling = other.culling.getOr(culling);
             occluding = other.occluding.getOr(occluding);
             alwaysWaterlogged = other.alwaysWaterlogged.getOr(alwaysWaterlogged);
             randomOffset = other.randomOffset.getOr(randomOffset);
+            cullingIdentical = other.cullingIdentical.getOr(cullingIdentical);
             return this;
         }
 
@@ -132,6 +146,10 @@ public class BlockProperties {
             return randomOffset;
         }
 
+        public Tristate isCullingIdentical() {
+            return cullingIdentical;
+        }
+
     }
 
     @Override
@@ -141,6 +159,7 @@ public class BlockProperties {
                ", occluding=" + occluding +
                ", alwaysWaterlogged=" + alwaysWaterlogged +
                ", randomOffset=" + randomOffset +
+               ", cullingIdentical=" + cullingIdentical +
                '}';
     }
 

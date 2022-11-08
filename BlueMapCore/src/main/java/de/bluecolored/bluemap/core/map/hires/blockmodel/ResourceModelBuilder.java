@@ -46,6 +46,7 @@ import de.bluecolored.bluemap.core.util.math.MatrixM4f;
 import de.bluecolored.bluemap.core.util.math.VectorM2f;
 import de.bluecolored.bluemap.core.util.math.VectorM3f;
 import de.bluecolored.bluemap.core.world.BlockNeighborhood;
+import de.bluecolored.bluemap.core.world.BlockProperties;
 import de.bluecolored.bluemap.core.world.ExtendedBlock;
 import de.bluecolored.bluemap.core.world.LightData;
 
@@ -186,7 +187,9 @@ public class ResourceModelBuilder {
         // face culling
         if (face.getCullface() != null) {
             ExtendedBlock<?> b = getRotationRelativeBlock(face.getCullface());
-            if (b.getProperties().isCulling()) return;
+            BlockProperties p = b.getProperties();
+            if (p.isCulling()) return;
+            if (p.getCullingIdentical() && b.getBlockState().equals(block.getBlockState())) return;
         }
 
         // light calculation
