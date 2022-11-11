@@ -146,7 +146,7 @@ modrinth {
 }
 
 curseforge {
-	apiKey = System.getenv("CURSEFORGE_TOKEN")
+	apiKey = System.getenv("CURSEFORGE_TOKEN") ?: ""
 	project(closureOf<CurseProject> {
 		id = "406463"
 		changelogType = "markdown"
