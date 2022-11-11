@@ -1,4 +1,6 @@
+import com.matthewprenger.cursegradle.CurseArtifact
 import com.matthewprenger.cursegradle.CurseProject
+import com.matthewprenger.cursegradle.CurseRelation
 import com.matthewprenger.cursegradle.Options
 import net.fabricmc.loom.task.RemapJarTask
 
@@ -166,7 +168,11 @@ curseforge {
 
 		addGameVersion("1.15.2")
 
-		mainArtifact(tasks.findByName("remappedShadowJar"))
+		mainArtifact(tasks.findByName("remappedShadowJar"), closureOf<CurseArtifact> {
+			relations(closureOf<CurseRelation> {
+				requiredDependency("fabric-api")
+			})
+		})
 	})
 	options(closureOf<Options> {
 		javaVersionAutoDetect = false
