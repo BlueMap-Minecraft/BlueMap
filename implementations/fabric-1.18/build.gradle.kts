@@ -1,3 +1,5 @@
+import com.matthewprenger.cursegradle.CurseProject
+import com.matthewprenger.cursegradle.Options
 import net.fabricmc.loom.task.RemapJarTask
 
 plugins {
@@ -8,6 +10,7 @@ plugins {
 	id ("com.github.johnrengelman.shadow") version "7.1.2"
 	id ("fabric-loom") version "0.12-SNAPSHOT"
 	id ("com.modrinth.minotaur") version "2.+"
+	id ("com.matthewprenger.cursegradle") version "1.4.0"
 }
 
 group = "de.bluecolored.bluemap.fabric"
@@ -142,6 +145,33 @@ modrinth {
 	}
 }
 
+curseforge {
+	apiKey = System.getenv("CURSEFORGE_TOKEN")
+	project(closureOf<CurseProject> {
+		id = "406463"
+		changelogType = "markdown"
+		changelog = "**Releasenotes and Changelog:**\n\nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}"
+		releaseType = "release"
+
+		addGameVersion("Fabric")
+
+		addGameVersion("Java 18")
+		addGameVersion("Java 17")
+
+		addGameVersion("1.18")
+		addGameVersion("1.18.1")
+		addGameVersion("1.18.2")
+
+		mainArtifact(tasks.findByName("remappedShadowJar"))
+	})
+	options(closureOf<Options> {
+		javaVersionAutoDetect = false
+		javaIntegration = false
+		forgeGradleIntegration = false
+	})
+}
+
 tasks.register("publish") {
 	dependsOn("modrinth")
+	dependsOn("curseforge")
 }

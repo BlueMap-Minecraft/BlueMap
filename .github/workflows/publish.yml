@@ -28,4 +28,5 @@ jobs:
       - name: Build with Gradle
         env:
           MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
         run: ./gradlew publish

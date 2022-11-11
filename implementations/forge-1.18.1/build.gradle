@@ -16,6 +16,7 @@ plugins {
 	id "com.github.node-gradle.node" version "3.0.1"
 	id "com.github.johnrengelman.shadow" version "7.1.2"
 	id "com.modrinth.minotaur" version "2.+"
+	id "com.matthewprenger.cursegradle" version "1.4.0"
 }
 
 apply plugin: "net.minecraftforge.gradle"
@@ -176,6 +177,32 @@ modrinth {
 	gameVersions = ["1.18.1", "1.18.2"]
 }
 
+curseforge {
+	apiKey = System.getenv("CURSEFORGE_TOKEN")
+	project {
+		id = "406463"
+		changelogType = "markdown"
+		changelog = "**Releasenotes and Changelog:**\n\nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}"
+		releaseType = "release"
+
+		addGameVersion "Forge"
+
+		addGameVersion "Java 18"
+		addGameVersion "Java 17"
+
+		addGameVersion "1.18.1"
+		addGameVersion "1.18.2"
+
+		mainArtifact shadowJar
+	}
+	options {
+		javaVersionAutoDetect = false
+		javaIntegration = false
+		forgeGradleIntegration = false
+	}
+}
+
 task publish {
 	dependsOn(tasks.findByName("modrinth"))
+	dependsOn(tasks.findByName("curseforge"))
 }
