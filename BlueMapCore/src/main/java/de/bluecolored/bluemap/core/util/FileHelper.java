@@ -56,7 +56,7 @@ public class FileHelper {
      */
     public static void move(Path from, Path to) throws IOException {
         try {
-            Files.move(from, to, StandardCopyOption.ATOMIC_MOVE);
+            Files.move(from, to, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
         } catch (FileNotFoundException | NoSuchFileException ignore) {
         } catch (IOException ex) {
             try {
