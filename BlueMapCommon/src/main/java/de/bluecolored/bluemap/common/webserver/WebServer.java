@@ -28,10 +28,7 @@ import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketException;
+import java.net.*;
 import java.util.concurrent.*;
 
 @DebugDump
@@ -73,7 +70,7 @@ public class WebServer extends Thread {
 
         try {
             server = new ServerSocket(port, maxConnections, bindAddress);
-            server.setSoTimeout(0);
+            server.setSoTimeout(1000);
         } catch (IOException e){
             Logger.global.logError("Error while starting the WebServer!", e);
             return;
@@ -101,7 +98,9 @@ public class WebServer extends Thread {
                     Logger.global.logWarning("Dropped an incoming HttpConnection! (Too many connections?)");
                 }
 
-            } catch (SocketException e){
+            } catch (SocketTimeoutException ignore) {
+                // will be thrown regularly if no connection is coming in
+            } catch (SocketException ignore){
                 // this mainly occurs if the socket got closed, so we ignore this error
             } catch (IOException e){
                 Logger.global.logError("Error while creating a new HttpConnection!", e);
