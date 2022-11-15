@@ -3,7 +3,6 @@ rootProject.name = "BlueMap"
 includeBuild("implementations/cli")
 
 includeBuild("implementations/fabric-1.15.2")
-includeBuild("implementations/fabric-1.16.1")
 includeBuild("implementations/fabric-1.16.2")
 includeBuild("implementations/fabric-1.17")
 includeBuild("implementations/fabric-1.18")
