@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "bluemap",
+  "version": "${version}",
+
+  "name": "BlueMap",
+  "description": "A 3d-map of your Minecraft worlds view-able in your browser using three.js (WebGL)",
+  "authors": [
+    "Blue (TBlueF, Lukas Rieger)"
+  ],
+  "contact": {
+    "homepage": "https://github.com/BlueMap-Minecraft",
+    "sources": "https://github.com/BlueMap-Minecraft/BlueMap"
+  },
+
+  "license": "MIT",
+  "icon": "assets/bluemap/icon.png",
+
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "de.bluecolored.bluemap.fabric.FabricMod"
+    ]
+  },
+  "mixins": [
+    "bluemap.mixins.json"
+  ],
+
+  "depends": {
+    "fabricloader": ">=0.11.3",
+    "fabric": "*",
+    "fabric-api-base": "*",
+    "minecraft": ">=1.18-alpha.21.37.a"
+  },
+  "suggests": {}
+}
