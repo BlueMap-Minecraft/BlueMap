@@ -37,6 +37,13 @@ public class Texture {
         this.texture = texture;
     }
 
+    private Texture(ResourcePath<Texture> resourcePath) {
+        this.resourcePath = resourcePath;
+        this.color = MISSING.color;
+        this.halfTransparent = MISSING.halfTransparent;
+        this.texture = MISSING.texture;
+    }
+
     public ResourcePath<Texture> getResourcePath() {
         return resourcePath;
     }
@@ -129,6 +136,10 @@ public class Texture {
         alpha /= count;
 
         return new Color().set(red, green, blue, alpha, false);
+    }
+
+    public static Texture missing(ResourcePath<Texture> resourcePath) {
+        return new Texture(resourcePath);
     }
 
 }

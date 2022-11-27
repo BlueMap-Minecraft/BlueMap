@@ -47,6 +47,10 @@ public class TextureGallery {
         ordinalMap.forEach((textureResourcePath, ordinal) -> {
             Texture texture = textureResourcePath.getResource(resourcePack::getTexture);
             if (texture != null) textures[ordinal] = texture;
+
+            // make sure the resource-path doesn't get lost
+            if (textures[ordinal].getResourcePath().equals(ResourcePack.MISSING_TEXTURE))
+                textures[ordinal] = Texture.missing(textureResourcePath);
         });
 
         try (Writer writer = new OutputStreamWriter(out)) {
