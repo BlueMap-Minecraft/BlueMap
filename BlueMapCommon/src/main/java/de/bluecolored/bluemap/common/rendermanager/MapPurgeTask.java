@@ -29,6 +29,7 @@ import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.storage.file.FileStorage;
 import de.bluecolored.bluemap.core.util.DeletingPathVisitor;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -56,7 +57,7 @@ public abstract class MapPurgeTask implements RenderTask {
     @DebugDump
     private static class MapFilePurgeTask extends MapPurgeTask {
 
-        private final BmMap map;
+        @Nullable private final BmMap map;
         private final Path directory;
         private final int subFilesCount;
         private final LinkedList<Path> subFiles;
@@ -72,7 +73,7 @@ public abstract class MapPurgeTask implements RenderTask {
             this(map, fileStorage.getFilePath(map.getId()));
         }
 
-        private MapFilePurgeTask(BmMap map, Path directory) throws IOException {
+        private MapFilePurgeTask(@Nullable BmMap map, Path directory) throws IOException {
             this.map = map;
             this.directory = directory;
             try (Stream<Path> pathStream = Files.walk(directory, 3)) {
@@ -92,7 +93,7 @@ public abstract class MapPurgeTask implements RenderTask {
 
             try {
                 // save lowres-tile-manager to clear/flush any buffered data
-                this.map.getLowresTileManager().save();
+                if (this.map != null) this.map.getLowresTileManager().save();
 
                 // delete subFiles first to be able to track the progress and cancel
                 while (!subFiles.isEmpty()) {
@@ -106,6 +107,10 @@ public abstract class MapPurgeTask implements RenderTask {
                 if (Files.exists(directory)) {
                     Files.walkFileTree(directory, DeletingPathVisitor.INSTANCE);
                 }
+
+                // reset texture-gallery
+                if (this.map != null) this.map.resetTextureGallery();
+
             } finally {
                 // reset map render state
                 if (this.map != null) {

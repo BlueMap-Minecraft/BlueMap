@@ -24,6 +24,11 @@ public class TextureGallery {
         this.nextId = 0;
     }
 
+    public void clear() {
+        this.ordinalMap.clear();
+        this.nextId = 0;
+    }
+
     public int get(@Nullable ResourcePath<Texture> textureResourcePath) {
         if (textureResourcePath == null) textureResourcePath = ResourcePack.MISSING_TEXTURE;
         Integer ordinal = ordinalMap.get(textureResourcePath);

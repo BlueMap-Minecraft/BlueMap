@@ -181,6 +181,11 @@ public class BmMap {
         }
     }
 
+    public synchronized void resetTextureGallery() {
+        this.textureGallery.clear();
+        this.textureGallery.put(this.resourcePack);
+    }
+
     private void saveMapSettings() {
         try (
                 OutputStream out = storage.writeMeta(id, MetaType.SETTINGS);
