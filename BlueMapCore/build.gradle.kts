@@ -3,6 +3,7 @@ import java.io.IOException
 plugins {
     java
     `java-library`
+    `maven-publish`
     id("com.diffplug.spotless") version "6.1.2"
 }
 
@@ -131,4 +132,16 @@ fun zipResourcesTask(resourceId: String) {
 //always update the zip before build
 tasks.processResources {
     dependsOn("zipResourceExtensions")
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = project.group.toString()
+            artifactId = project.name
+            version = project.version.toString()
+
+            from(components["java"])
+        }
+    }
 }

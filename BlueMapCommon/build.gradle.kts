@@ -4,6 +4,7 @@ import java.io.IOException
 plugins {
     java
     `java-library`
+    `maven-publish`
     id("com.diffplug.spotless") version "6.1.2"
     id ("com.github.node-gradle.node") version "3.0.1"
 }
@@ -95,4 +96,16 @@ tasks.register("zipWebapp", type = Zip::class) {
 //always update the zip before build
 tasks.processResources {
     dependsOn("zipWebapp")
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = project.group.toString()
+            artifactId = project.name
+            version = project.version.toString()
+
+            from(components["java"])
+        }
+    }
 }
