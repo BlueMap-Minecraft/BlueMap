@@ -58,14 +58,14 @@ dependencies {
 		exclude (group = "com.mojang", module = "brigadier")
 	}
 
-	minecraft ("com.mojang:minecraft:1.19.3-pre2")
-	mappings ("net.fabricmc:yarn:1.19.3-pre2+build.6:v2")
-	modImplementation ("net.fabricmc:fabric-loader:0.14.10")
-	modImplementation ("net.fabricmc.fabric-api:fabric-api:0.67.2+1.19.3")
+	minecraft ("com.mojang:minecraft:1.19.3")
+	mappings ("net.fabricmc:yarn:1.19.3+build.2")
+	modImplementation ("net.fabricmc:fabric-loader:0.14.11")
+	modImplementation ("net.fabricmc.fabric-api:fabric-api:0.68.1+1.19.3")
 	modImplementation("me.lucko:fabric-permissions-api:0.1-SNAPSHOT")
 
-	testImplementation ("org.junit.jupiter:junit-jupiter:5.8.2")
-	testRuntimeOnly ("org.junit.jupiter:junit-jupiter-engine:5.8.2")
+	testImplementation ("org.junit.jupiter:junit-jupiter:5.9.0")
+	testRuntimeOnly ("org.junit.jupiter:junit-jupiter-engine:5.9.0")
 }
 
 spotless {

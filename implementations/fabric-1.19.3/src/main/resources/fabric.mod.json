@@ -27,10 +27,10 @@
   ],
 
   "depends": {
-    "fabricloader": ">=0.11.3",
+    "fabricloader": ">=0.14.11",
     "fabric": "*",
     "fabric-api-base": "*",
-    "minecraft": ">=1.18-alpha.21.37.a"
+    "minecraft": "*"
   },
   "suggests": {}
 }
