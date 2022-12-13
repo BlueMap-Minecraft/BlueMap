@@ -114,9 +114,10 @@ public class Commands<S> {
 
         LiteralCommandNode<S> debugCommand =
                 literal("debug")
-                .requires(requirements("bluemap.debug"))
+                .requires(requirementsUnloaded("bluemap.debug"))
 
                 .then(literal("block")
+                        .requires(requirements("bluemap.debug"))
                         .executes(this::debugBlockCommand)
 
                         .then(argument("world", StringArgumentType.string()).suggests(new WorldSuggestionProvider<>(plugin))
@@ -126,12 +127,14 @@ public class Commands<S> {
                                                         .executes(this::debugBlockCommand))))))
 
                 .then(literal("flush")
+                        .requires(requirements("bluemap.debug"))
                         .executes(this::debugFlushCommand)
 
                         .then(argument("world", StringArgumentType.string()).suggests(new WorldSuggestionProvider<>(plugin))
                                 .executes(this::debugFlushCommand)))
 
                 .then(literal("cache")
+                        .requires(requirements("bluemap.debug"))
                         .executes(this::debugClearCacheCommand))
 
 
@@ -397,7 +400,7 @@ public class Commands<S> {
 
                 source.sendMessage(Text.of(TextColor.RED, "There was an error reloading BlueMap! See the console for details!"));
             }
-        }).start();
+        }, "BlueMap-Plugin-ReloadCommand").start();
         return 1;
     }
 
@@ -448,7 +451,7 @@ public class Commands<S> {
                 source.sendMessage(Text.of(TextColor.RED, "There was an unexpected exception trying to save the world. Please check the console for more details..."));
                 Logger.global.logError("Unexpected exception trying to save the world!", ex);
             }
-        }).start();
+        }, "BlueMap-Plugin-DebugFlushCommand").start();
 
         return 1;
     }
@@ -502,7 +505,7 @@ public class Commands<S> {
                     Text.of(TextColor.GOLD, "Block at you: ", TextColor.WHITE, block),
                     Text.of(TextColor.GOLD, "Block below you: ", TextColor.WHITE, blockBelow)
                 ));
-        }).start();
+        }, "BlueMap-Plugin-DebugBlockCommand").start();
 
         return 1;
     }
@@ -534,7 +537,7 @@ public class Commands<S> {
                 source.sendMessage(Text.of(TextColor.GREEN, "Render-Threads stopped!"));
 
                 plugin.save();
-            }).start();
+            }, "BlueMap-Plugin-StopCommand").start();
         } else {
             source.sendMessage(Text.of(TextColor.RED, "Render-Threads are already stopped!"));
             return 0;
@@ -554,7 +557,7 @@ public class Commands<S> {
                 source.sendMessage(Text.of(TextColor.GREEN, "Render-Threads started!"));
 
                 plugin.save();
-            }).start();
+            }, "BlueMap-Plugin-StartCommand").start();
         } else {
             source.sendMessage(Text.of(TextColor.RED, "Render-Threads are already running!"));
             return 0;
@@ -595,7 +598,7 @@ public class Commands<S> {
                 source.sendMessage(Text.of(TextColor.GRAY, "Any currently scheduled updates for this map have been cancelled."));
 
                 plugin.save();
-            }).start();
+            }, "BlueMap-Plugin-FreezeCommand").start();
         } else {
             source.sendMessage(Text.of(TextColor.RED, "This map is already frozen!"));
             return 0;
@@ -627,7 +630,7 @@ public class Commands<S> {
                 source.sendMessage(Text.of(TextColor.GREEN, "Map ", TextColor.WHITE, mapString, TextColor.GREEN, " is no longer frozen and will be automatically updated!"));
 
                 plugin.save();
-            }).start();
+            }, "BlueMap-Plugin-UnfreezeCommand").start();
         } else {
             source.sendMessage(Text.of(TextColor.RED, "This map is not frozen!"));
             return 0;
@@ -737,7 +740,7 @@ public class Commands<S> {
                 source.sendMessage(Text.of(TextColor.RED, "There was an unexpected exception trying to save the world. Please check the console for more details..."));
                 Logger.global.logError("Unexpected exception trying to save the world!", ex);
             }
-        }).start();
+        }, "BlueMap-Plugin-UpdateCommand").start();
 
         return 1;
     }
@@ -810,7 +813,7 @@ public class Commands<S> {
                 source.sendMessage(Text.of(TextColor.RED, "There was an error trying to purge '" + map.getId() + "', see console for details."));
                 Logger.global.logError("Failed to purge map '" + map.getId() + "'!", e);
             }
-        }).start();
+        }, "BlueMap-Plugin-PurgeCommand").start();
 
         return 1;
     }

@@ -107,7 +107,7 @@ public class FabricMod implements ModInitializer, ServerInterface {
                     Logger.global.logError("Failed to load bluemap!", e);
                     pluginInstance.unload();
                 }
-            }).start();
+            }, "BlueMap-Plugin-Loading").start();
         });
 
         ServerLifecycleEvents.SERVER_STOPPING.register((MinecraftServer server) -> {

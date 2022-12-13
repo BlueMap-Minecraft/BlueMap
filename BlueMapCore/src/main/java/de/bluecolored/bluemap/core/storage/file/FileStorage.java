@@ -97,7 +97,7 @@ public class FileStorage extends Storage {
     }
 
     @Override
-    public Optional<TileData> readMapTileData(String mapId, int lod, Vector2i tile) throws IOException {
+    public Optional<TileInfo> readMapTileInfo(String mapId, int lod, Vector2i tile) throws IOException {
         Compression compression = lod == 0 ? this.hiresCompression : Compression.NONE;
         Path file = getFilePath(mapId, lod, tile);
 
@@ -106,7 +106,7 @@ public class FileStorage extends Storage {
         final long size = Files.size(file);
         final long lastModified = Files.getLastModifiedTime(file).toMillis();
 
-        return Optional.of(new TileData() {
+        return Optional.of(new TileInfo() {
             @Override
             public CompressedInputStream readMapTile() throws IOException {
                 return FileStorage.this.readMapTile(mapId, lod, tile)
@@ -137,8 +137,8 @@ public class FileStorage extends Storage {
     }
 
     @Override
-    public OutputStream writeMeta(String mapId, MetaType metaType) throws IOException {
-        Path file = getFilePath(mapId).resolve(metaType.getFilePath());
+    public OutputStream writeMeta(String mapId, String name) throws IOException {
+        Path file = getMetaFilePath(mapId, name);
 
         OutputStream os = FileHelper.createFilepartOutputStream(file);
         os = new BufferedOutputStream(os);
@@ -147,20 +147,43 @@ public class FileStorage extends Storage {
     }
 
     @Override
-    public Optional<CompressedInputStream> readMeta(String mapId, MetaType metaType) throws IOException {
-        Path file = getFilePath(mapId).resolve(metaType.getFilePath());
+    public Optional<InputStream> readMeta(String mapId, String name) throws IOException {
+        Path file = getMetaFilePath(mapId, name);
 
         if (!Files.exists(file)) return Optional.empty();
 
         InputStream is = Files.newInputStream(file, StandardOpenOption.READ);
         is = new BufferedInputStream(is);
 
-        return Optional.of(new CompressedInputStream(is, Compression.NONE));
+        return Optional.of(is);
     }
 
     @Override
-    public void deleteMeta(String mapId, MetaType metaType) throws IOException {
-        Path file = getFilePath(mapId).resolve(metaType.getFilePath());
+    public Optional<MetaInfo> readMetaInfo(String mapId, String name) throws IOException {
+        Path file = getMetaFilePath(mapId, name);
+
+        if (!Files.exists(file)) return Optional.empty();
+
+        final long size = Files.size(file);
+
+        return Optional.of(new MetaInfo() {
+            @Override
+            public InputStream readMeta() throws IOException {
+                return FileStorage.this.readMeta(mapId, name)
+                        .orElseThrow(() -> new IOException("Meta no longer present!"));
+            }
+
+            @Override
+            public long getSize() {
+                return size;
+            }
+
+        });
+    }
+
+    @Override
+    public void deleteMeta(String mapId, String name) throws IOException {
+        Path file = getMetaFilePath(mapId, name);
         Files.deleteIfExists(file);
     }
 
@@ -197,6 +220,11 @@ public class FileStorage extends Storage {
 
     public Path getFilePath(String mapId) {
         return root.resolve(mapId);
+    }
+
+    public Path getMetaFilePath(String mapId, String name) {
+        return getFilePath(mapId).resolve(escapeMetaName(name)
+                .replace("/", root.getFileSystem().getSeparator()));
     }
 
 }

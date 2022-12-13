@@ -22,59 +22,51 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.config;
+package de.bluecolored.bluemap.common.api;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
-import org.spongepowered.configurate.objectmapping.ConfigSerializable;
+import de.bluecolored.bluemap.api.AssetStorage;
+import de.bluecolored.bluemap.core.storage.Storage;
 
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
-import java.nio.file.Path;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Optional;
 
-@SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
-@DebugDump
-@ConfigSerializable
-public class WebserverConfig {
+public class AssetStorageImpl implements AssetStorage {
 
-    private boolean enabled = true;
+    private static final String ASSET_PATH = "live/assets/";
 
-    private Path webroot = Path.of("bluemap", "web");
+    private final Storage storage;
+    private final String mapId;
 
-    private String ip = "0.0.0.0";
-
-    private int port = 8100;
-
-    private int maxConnectionCount = 100;
-
-    public boolean isEnabled() {
-        return enabled;
+    public AssetStorageImpl(Storage storage, String mapId) {
+        this.storage = storage;
+        this.mapId = mapId;
     }
 
-    public Path getWebroot() {
-        return webroot;
+    @Override
+    public OutputStream writeAsset(String name) throws IOException {
+        return storage.writeMeta(mapId, ASSET_PATH + name);
     }
 
-    public String getIp() {
-        return ip;
+    @Override
+    public Optional<InputStream> readAsset(String name) throws IOException {
+        return storage.readMeta(mapId, ASSET_PATH + name);
     }
 
-    public InetAddress resolveIp() throws UnknownHostException {
-        if (ip.isEmpty() || ip.equals("0.0.0.0") || ip.equals("::0")) {
-            return new InetSocketAddress(0).getAddress();
-        } else if (ip.equals("#getLocalHost")) {
-            return InetAddress.getLocalHost();
-        } else {
-            return InetAddress.getByName(ip);
-        }
+    @Override
+    public boolean assetExists(String name) throws IOException {
+        return storage.readMetaInfo(mapId, ASSET_PATH + name).isPresent();
     }
 
-    public int getPort() {
-        return port;
+    @Override
+    public String getAssetUrl(String name) {
+        return "maps/" + mapId + "/" + Storage.escapeMetaName(ASSET_PATH + name);
     }
 
-    public int getMaxConnectionCount() {
-        return maxConnectionCount;
+    @Override
+    public void deleteAsset(String name) throws IOException {
+        storage.deleteMeta(mapId, ASSET_PATH + name);
     }
 
 }

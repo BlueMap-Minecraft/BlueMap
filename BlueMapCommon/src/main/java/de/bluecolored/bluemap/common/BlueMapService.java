@@ -75,6 +75,8 @@ public class BlueMapService implements Closeable {
     private final Map<Path, String> worldIds;
     private final Map<String, Storage> storages;
 
+    private volatile WebFilesManager webFilesManager;
+
     private Map<String, World> worlds;
     private Map<String, BmMap> maps;
 
@@ -130,9 +132,20 @@ public class BlueMapService implements Closeable {
         }
     }
 
+    public WebFilesManager getWebFilesManager() {
+        if (webFilesManager == null) {
+            synchronized (this) {
+                if (webFilesManager == null)
+                    webFilesManager = new WebFilesManager(configs.getWebappConfig().getWebroot());
+            }
+        }
+
+        return webFilesManager;
+    }
+
     public synchronized void createOrUpdateWebApp(boolean force) throws ConfigurationException {
         try {
-            WebFilesManager webFilesManager = new WebFilesManager(configs.getWebappConfig().getWebroot());
+            WebFilesManager webFilesManager = getWebFilesManager();
 
             // update web-app files
             if (force || webFilesManager.filesNeedUpdate()) {
@@ -142,6 +155,7 @@ public class BlueMapService implements Closeable {
             // update settings.json
             if (!configs.getWebappConfig().isUpdateSettingsFile()) {
                 webFilesManager.loadSettings();
+                webFilesManager.addFrom(configs.getWebappConfig());
             } else {
                 webFilesManager.setFrom(configs.getWebappConfig());
             }

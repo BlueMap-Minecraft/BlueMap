@@ -28,6 +28,7 @@ import com.flowpowered.math.vector.Vector2i;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Optional;
 
@@ -39,15 +40,17 @@ public abstract class Storage implements Closeable {
 
     public abstract Optional<CompressedInputStream> readMapTile(String mapId, int lod, Vector2i tile) throws IOException;
 
-    public abstract Optional<TileData> readMapTileData(String mapId, int lod, Vector2i tile) throws IOException;
+    public abstract Optional<TileInfo> readMapTileInfo(String mapId, int lod, Vector2i tile) throws IOException;
 
     public abstract void deleteMapTile(String mapId, int lod, Vector2i tile) throws IOException;
 
-    public abstract OutputStream writeMeta(String mapId, MetaType metaType) throws IOException;
+    public abstract OutputStream writeMeta(String mapId, String name) throws IOException;
 
-    public abstract Optional<CompressedInputStream> readMeta(String mapId, MetaType metaType) throws IOException;
+    public abstract Optional<InputStream> readMeta(String mapId, String name) throws IOException;
 
-    public abstract void deleteMeta(String mapId, MetaType metaType) throws IOException;
+    public abstract Optional<MetaInfo> readMetaInfo(String mapId, String name) throws IOException;
+
+    public abstract void deleteMeta(String mapId, String name) throws IOException;
 
     public abstract void purgeMap(String mapId) throws IOException;
 
@@ -113,6 +116,10 @@ public abstract class Storage implements Closeable {
             return Storage.this;
         }
 
+    }
+
+    public static String escapeMetaName(String name) {
+        return name.replaceAll("[^\\w\\d.\\-_/]", "_").replace("..", "_.");
     }
 
 }

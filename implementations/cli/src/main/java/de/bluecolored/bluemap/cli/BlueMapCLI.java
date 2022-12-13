@@ -69,7 +69,8 @@ public class BlueMapCLI implements ServerInterface {
         //metrics report
         if (blueMap.getConfigs().getCoreConfig().isMetrics()) Metrics.sendReportAsync("cli");
 
-        blueMap.createOrUpdateWebApp(forceGenerateWebapp);
+        if (blueMap.getConfigs().getWebappConfig().isEnabled())
+            blueMap.createOrUpdateWebApp(forceGenerateWebapp);
 
         //try load resources
         blueMap.getResourcePack();
@@ -161,7 +162,7 @@ public class BlueMapCLI implements ServerInterface {
             Logger.global.logInfo("Stopped.");
         };
 
-        Thread shutdownHook = new Thread(shutdown);
+        Thread shutdownHook = new Thread(shutdown, "BlueMap-CLI-ShutdownHook");
         Runtime.getRuntime().addShutdownHook(shutdownHook);
 
         // wait until done, then shutdown if not watching

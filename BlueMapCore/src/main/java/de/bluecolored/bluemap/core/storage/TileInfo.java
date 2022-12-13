@@ -24,33 +24,16 @@
  */
 package de.bluecolored.bluemap.core.storage;
 
-public enum MetaType {
+import java.io.IOException;
 
-    TEXTURES ("textures", "textures.json", "application/json"),
-    SETTINGS ("settings", "settings.json", "application/json"),
-    MARKERS ("markers", "live/markers", "application/json"),
-    PLAYERS ("players", "live/players", "application/json"),
-    RENDER_STATE ("render_state", ".rstate", "application/octet-stream");
+public interface TileInfo {
 
-    private final String typeId;
-    private final String filePath;
-    private final String contentType;
+    CompressedInputStream readMapTile() throws IOException;
 
-    MetaType(String typeId, String filePath, String contentType) {
-        this.typeId = typeId;
-        this.filePath = filePath;
-        this.contentType = contentType;
-    }
+    Compression getCompression();
 
-    public String getTypeId() {
-        return typeId;
-    }
+    long getSize();
 
-    public String getFilePath() {
-        return filePath;
-    }
+    long getLastModified();
 
-    public String getContentType() {
-        return contentType;
-    }
 }

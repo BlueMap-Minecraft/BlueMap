@@ -37,10 +37,7 @@ import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
 import javax.sql.DataSource;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -176,11 +173,11 @@ public class SQLStorage extends Storage {
     }
 
     @Override
-    public Optional<TileData> readMapTileData(final String mapId, int lod, final Vector2i tile) throws IOException {
+    public Optional<TileInfo> readMapTileInfo(final String mapId, int lod, final Vector2i tile) throws IOException {
         Compression compression = lod == 0 ? this.hiresCompression : Compression.NONE;
 
         try {
-            TileData tileData = recoveringConnection(connection -> {
+            TileInfo tileInfo = recoveringConnection(connection -> {
                 ResultSet result = executeQuery(connection,
                         //language=SQL
                         "SELECT t.`changed`, LENGTH(t.`data`) as 'size' " +
@@ -205,7 +202,7 @@ public class SQLStorage extends Storage {
                     final long lastModified = result.getTimestamp("changed").getTime();
                     final long size = result.getLong("size");
 
-                    return new TileData() {
+                    return new TileInfo() {
                         @Override
                         public CompressedInputStream readMapTile() throws IOException {
                             return SQLStorage.this.readMapTile(mapId, lod, tile)
@@ -232,7 +229,7 @@ public class SQLStorage extends Storage {
                 }
             }, 2);
 
-            return Optional.ofNullable(tileData);
+            return Optional.ofNullable(tileInfo);
         } catch (SQLException | NoSuchElementException ex) {
             throw new IOException(ex);
         }
@@ -263,7 +260,7 @@ public class SQLStorage extends Storage {
     }
 
     @Override
-    public OutputStream writeMeta(String mapId, MetaType metaType) {
+    public OutputStream writeMeta(String mapId, String name) {
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
         return new WrappedOutputStream(byteOut, () -> {
             int mapFK = getMapFK(mapId);
@@ -280,7 +277,7 @@ public class SQLStorage extends Storage {
                             "REPLACE INTO `bluemap_map_meta` (`map`, `key`, `value`) " +
                             "VALUES (?, ?, ?)",
                             mapFK,
-                            metaType.getTypeId(),
+                            escapeMetaName(name),
                             dataBlob
                     );
                 } finally {
@@ -291,7 +288,7 @@ public class SQLStorage extends Storage {
     }
 
     @Override
-    public Optional<CompressedInputStream> readMeta(String mapId, MetaType metaType) throws IOException {
+    public Optional<InputStream> readMeta(String mapId, String name) throws IOException {
         try {
             byte[] data = recoveringConnection(connection -> {
                 ResultSet result = executeQuery(connection,
@@ -303,7 +300,7 @@ public class SQLStorage extends Storage {
                         "WHERE m.`map_id` = ? " +
                         "AND t.`key` = ?",
                         mapId,
-                        metaType.getTypeId()
+                        escapeMetaName(name)
                 );
 
                 if (result.next()) {
@@ -322,7 +319,50 @@ public class SQLStorage extends Storage {
     }
 
     @Override
-    public void deleteMeta(String mapId, MetaType metaType) throws IOException {
+    public Optional<MetaInfo> readMetaInfo(String mapId, String name) throws IOException {
+        try {
+            MetaInfo tileInfo = recoveringConnection(connection -> {
+                ResultSet result = executeQuery(connection,
+                        //language=SQL
+                        "SELECT LENGTH(t.`value`) as 'size' " +
+                                "FROM `bluemap_map_meta` t " +
+                                " INNER JOIN `bluemap_map` m " +
+                                "  ON t.`map` = m.`id` " +
+                                "WHERE m.`map_id` = ? " +
+                                "AND t.`key` = ?",
+                        mapId,
+                        escapeMetaName(name)
+                );
+
+                if (result.next()) {
+                    final long size = result.getLong("size");
+
+                    return new MetaInfo() {
+                        @Override
+                        public InputStream readMeta() throws IOException {
+                            return SQLStorage.this.readMeta(mapId, name)
+                                    .orElseThrow(() -> new IOException("Tile no longer present!"));
+                        }
+
+                        @Override
+                        public long getSize() {
+                            return size;
+                        }
+
+                    };
+                } else {
+                    return null;
+                }
+            }, 2);
+
+            return Optional.ofNullable(tileInfo);
+        } catch (SQLException | NoSuchElementException ex) {
+            throw new IOException(ex);
+        }
+    }
+
+    @Override
+    public void deleteMeta(String mapId, String name) throws IOException {
         try {
             recoveringConnection(connection ->
                     executeUpdate(connection,
@@ -334,7 +374,7 @@ public class SQLStorage extends Storage {
                             "WHERE m.`map_id` = ? " +
                             "AND t.`key` = ?",
                             mapId,
-                            metaType.getTypeId()
+                            escapeMetaName(name)
                     ), 2);
         } catch (SQLException ex) {
             throw new IOException(ex);

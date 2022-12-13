@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.common.web;
 
 import com.flowpowered.math.vector.Vector2i;
+import de.bluecolored.bluemap.api.ContentTypeRegistry;
 import de.bluecolored.bluemap.common.webserver.HttpRequest;
 import de.bluecolored.bluemap.common.webserver.HttpRequestHandler;
 import de.bluecolored.bluemap.common.webserver.HttpResponse;
@@ -35,10 +36,7 @@ import de.bluecolored.bluemap.core.storage.*;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -77,13 +75,13 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
                 int lod = Integer.parseInt(tileMatcher.group(1));
                 int x = Integer.parseInt(tileMatcher.group(2).replace("/", ""));
                 int z = Integer.parseInt(tileMatcher.group(3).replace("/", ""));
-                Optional<TileData> optTileData = mapStorage.readMapTileData(mapId, lod, new Vector2i(x, z));
+                Optional<TileInfo> optTileInfo = mapStorage.readMapTileInfo(mapId, lod, new Vector2i(x, z));
 
-                if (optTileData.isPresent()) {
-                    TileData tileData = optTileData.get();
+                if (optTileInfo.isPresent()) {
+                    TileInfo tileInfo = optTileInfo.get();
 
                     // check e-tag
-                    String eTag = calculateETag(path, tileData);
+                    String eTag = calculateETag(path, tileInfo);
                     Set<String> etagStringSet = request.getHeader("If-None-Match");
                     if (!etagStringSet.isEmpty()){
                         if(etagStringSet.iterator().next().equals(eTag)) {
@@ -92,7 +90,7 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
                     }
 
                     // check modified-since
-                    long lastModified = tileData.getLastModified();
+                    long lastModified = tileInfo.getLastModified();
                     Set<String> modStringSet = request.getHeader("If-Modified-Since");
                     if (!modStringSet.isEmpty()){
                         try {
@@ -103,7 +101,7 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
                         } catch (IllegalArgumentException ignored){}
                     }
 
-                    CompressedInputStream compressedIn = tileData.readMapTile();
+                    CompressedInputStream compressedIn = tileInfo.readMapTile();
                     HttpResponse response = new HttpResponse(HttpStatusCode.OK);
                     response.addHeader("ETag", eTag);
                     if (lastModified > 0)
@@ -118,23 +116,13 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
             }
 
             // provide meta-data
-            MetaType metaType = null;
-            for (MetaType mt : MetaType.values()) {
-                if (mt.getFilePath().equals(path)) {
-                    metaType = mt;
-                    break;
-                }
-            }
-
-            if (metaType != null) {
-                Optional<CompressedInputStream> optIn = mapStorage.readMeta(mapId, metaType);
-                if (optIn.isPresent()) {
-                    CompressedInputStream compressedIn = optIn.get();
-                    HttpResponse response = new HttpResponse(HttpStatusCode.OK);
-                    response.addHeader("Content-Type", metaType.getContentType());
-                    writeToResponse(compressedIn, response, request);
-                    return response;
-                }
+            Optional<InputStream> optIn = mapStorage.readMeta(mapId, path);
+            if (optIn.isPresent()) {
+                CompressedInputStream compressedIn = new CompressedInputStream(optIn.get(), Compression.NONE);
+                HttpResponse response = new HttpResponse(HttpStatusCode.OK);
+                response.addHeader("Content-Type", ContentTypeRegistry.fromFileName(path));
+                writeToResponse(compressedIn, response, request);
+                return response;
             }
 
         } catch (NumberFormatException | NoSuchElementException ignore){
@@ -148,8 +136,8 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
         return response;
     }
 
-    private String calculateETag(String path, TileData tileData) {
-        return Long.toHexString(tileData.getSize()) + Integer.toHexString(path.hashCode()) + Long.toHexString(tileData.getLastModified());
+    private String calculateETag(String path, TileInfo tileInfo) {
+        return Long.toHexString(tileInfo.getSize()) + Integer.toHexString(path.hashCode()) + Long.toHexString(tileInfo.getLastModified());
     }
 
     private void writeToResponse(CompressedInputStream data, HttpResponse response, HttpRequest request) throws IOException {

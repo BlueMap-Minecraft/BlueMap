@@ -24,62 +24,105 @@
  */
 package de.bluecolored.bluemap.common.plugin.skins;
 
-import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.api.debug.DebugDump;
-import org.apache.commons.io.FileUtils;
+import de.bluecolored.bluemap.api.plugin.PlayerIconFactory;
+import de.bluecolored.bluemap.api.plugin.SkinProvider;
+import de.bluecolored.bluemap.common.plugin.Plugin;
+import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
+import de.bluecolored.bluemap.core.BlueMap;
+import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.map.BmMap;
 
-import java.io.File;
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 @DebugDump
 public class PlayerSkinUpdater implements ServerEventListener {
 
-    private File storageFolder;
-    private File defaultSkin;
+    private final Plugin plugin;
+    private final Map<UUID, Long> skinUpdates;
 
-    private final Map<UUID, PlayerSkin> skins;
+    private SkinProvider skinProvider;
+    private PlayerIconFactory playerMarkerIconFactory;
 
-    public PlayerSkinUpdater(File storageFolder, File defaultSkin) throws IOException {
-        this.storageFolder = storageFolder;
-        this.defaultSkin = defaultSkin;
-        this.skins = new ConcurrentHashMap<>();
+    public PlayerSkinUpdater(Plugin plugin) {
+        this.plugin = plugin;
+        this.skinUpdates = new ConcurrentHashMap<>();
 
-        FileUtils.forceMkdir(this.storageFolder);
+        skinProvider = new MojangSkinProvider();
+        playerMarkerIconFactory = new DefaultPlayerIconFactory();
     }
 
-    public void updateSkin(UUID playerUuid) {
-        PlayerSkin skin = skins.get(playerUuid);
+    public CompletableFuture<Void> updateSkin(final UUID playerUuid) {
 
-        if (skin == null) {
-            skin = new PlayerSkin(playerUuid);
-            skins.put(playerUuid, skin);
-        }
+        // only update if last update was longer then an hour ago
+        long lastUpdate = skinUpdates.getOrDefault(playerUuid, 0L);
+        long now = System.currentTimeMillis();
+        if (now - lastUpdate < TimeUnit.HOURS.toMillis(1)) return CompletableFuture.completedFuture(null);
+        skinUpdates.put(playerUuid, now);
 
-        skin.update(storageFolder, defaultSkin);
+        // do the update async
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return skinProvider.load(playerUuid);
+            } catch (IOException e) {
+                throw new CompletionException("The skin provider threw an exception while loading the skin for UUID: '" + playerUuid + "'!", e);
+            }
+        }, BlueMap.THREAD_POOL).thenAcceptAsync(skin -> {
+            if (skin.isEmpty()) {
+                Logger.global.logDebug("No player-skin provided for UUID: " + playerUuid);
+                return;
+            }
+
+            Map<String, BmMap> maps = plugin.getMaps();
+            if (maps == null) {
+                Logger.global.logDebug("Could not update skin, since the plugin seems not to be ready.");
+                return;
+            }
+
+            BufferedImage playerHead = playerMarkerIconFactory.apply(playerUuid, skin.get());
+
+            for (BmMap map : maps.values()) {
+                try (OutputStream out = map.getStorage().writeMeta(map.getId(), "live/assets/playerheads/" + playerUuid + ".png")) {
+                    ImageIO.write(playerHead, "png", out);
+                } catch (IOException ex) {
+                    Logger.global.logError("Failed to write player skin to storage: " + playerUuid, ex);
+                }
+            }
+        }, BlueMap.THREAD_POOL);
     }
 
     @Override
     public void onPlayerJoin(UUID playerUuid) {
-        updateSkin(playerUuid);
+        updateSkin(playerUuid).exceptionally(ex -> {
+            Logger.global.logError("Failed to update player skin: " + playerUuid, ex);
+            return null;
+        });
     }
 
-    public File getStorageFolder() {
-        return storageFolder;
+    public SkinProvider getSkinProvider() {
+        return skinProvider;
     }
 
-    public void setStorageFolder(File storageFolder) {
-        this.storageFolder = storageFolder;
+    public void setSkinProvider(SkinProvider skinProvider) {
+        this.skinProvider = Objects.requireNonNull(skinProvider, "skinProvider can not be null");
     }
 
-    public File getDefaultSkin() {
-        return defaultSkin;
+    public PlayerIconFactory getPlayerMarkerIconFactory() {
+        return playerMarkerIconFactory;
     }
 
-    public void setDefaultSkin(File defaultSkin) {
-        this.defaultSkin = defaultSkin;
+    public void setPlayerMarkerIconFactory(PlayerIconFactory playerMarkerIconFactory) {
+        this.playerMarkerIconFactory = Objects.requireNonNull(playerMarkerIconFactory, "playerMarkerIconFactory can not be null");
     }
 
 }

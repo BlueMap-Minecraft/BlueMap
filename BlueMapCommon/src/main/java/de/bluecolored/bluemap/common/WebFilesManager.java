@@ -87,8 +87,20 @@ public class WebFilesManager {
         this.settings.maps.remove(mapId);
     }
 
+    public Set<String> getScripts() {
+        return this.settings.scripts;
+    }
+
+    public Set<String> getStyles() {
+        return this.settings.styles;
+    }
+
     public void setFrom(WebappConfig webappConfig) {
         this.settings.setFrom(webappConfig);
+    }
+
+    public void addFrom(WebappConfig webappConfig) {
+        this.settings.addFrom(webappConfig);
     }
 
     public boolean filesNeedUpdate() {
@@ -156,6 +168,8 @@ public class WebFilesManager {
         private int lowresSliderMin = 500;
 
         private Set<String> maps = new HashSet<>();
+        private Set<String> scripts = new HashSet<>();
+        private Set<String> styles = new HashSet<>();
 
         public void setFrom(WebappConfig config) {
             this.useCookies = config.isUseCookies();
@@ -165,16 +179,26 @@ public class WebFilesManager {
 
             this.minZoomDistance = config.getMinZoomDistance();
             this.maxZoomDistance = config.getMaxZoomDistance();
-            
+
             this.hiresSliderMax = config.getHiresSliderMax();
             this.hiresSliderDefault = config.getHiresSliderDefault();
             this.hiresSliderMin = config.getHiresSliderMin();
-            
+
             this.lowresSliderMax = config.getLowresSliderMax();
             this.lowresSliderDefault = config.getLowresSliderDefault();
             this.lowresSliderMin = config.getLowresSliderMin();
+
+            this.styles.clear();
+            this.scripts.clear();
+
+            addFrom(config);
         }
-        
+
+        public void addFrom(WebappConfig config) {
+            this.scripts.addAll(config.getScripts());
+            this.styles.addAll(config.getStyles());
+        }
+
     }
 
 }

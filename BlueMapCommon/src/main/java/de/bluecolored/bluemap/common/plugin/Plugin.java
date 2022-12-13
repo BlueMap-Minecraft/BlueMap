@@ -45,7 +45,6 @@ import de.bluecolored.bluemap.core.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.metrics.Metrics;
-import de.bluecolored.bluemap.core.storage.MetaType;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.world.World;
@@ -223,19 +222,17 @@ public class Plugin implements ServerEventListener {
                 }
 
                 //update webapp and settings
-                blueMap.createOrUpdateWebApp(false);
+                if (webappConfig.isEnabled())
+                    blueMap.createOrUpdateWebApp(false);
 
                 //start skin updater
                 if (pluginConfig.isLivePlayerMarkers()) {
-                    this.skinUpdater = new PlayerSkinUpdater(
-                            webappConfig.getWebroot().resolve("assets").resolve("playerheads").toFile(),
-                            webappConfig.getWebroot().resolve("assets").resolve("steve.png").toFile()
-                    );
+                    this.skinUpdater = new PlayerSkinUpdater(this);
                     serverInterface.registerListener(skinUpdater);
                 }
 
                 //init timer
-                daemonTimer = new Timer("BlueMap-Plugin-Daemon-Timer", true);
+                daemonTimer = new Timer("BlueMap-Plugin-DaemonTimer", true);
 
                 //periodically save
                 TimerTask saveTask = new TimerTask() {
@@ -317,6 +314,9 @@ public class Plugin implements ServerEventListener {
                 //enable api
                 this.api = new BlueMapAPIImpl(this);
                 this.api.register();
+
+                //save webapp settings again (for api-registered scripts and styles)
+                this.getBlueMap().getWebFilesManager().saveSettings();
 
                 //done
                 loaded = true;
@@ -438,7 +438,7 @@ public class Plugin implements ServerEventListener {
                         Predicate.not(pluginState::isPlayerHidden)
                 );
                 try (
-                        OutputStream out = map.getStorage().writeMeta(map.getId(), MetaType.PLAYERS);
+                        OutputStream out = map.getStorage().writeMeta(map.getId(), BmMap.META_FILE_PLAYERS);
                         Writer writer = new OutputStreamWriter(out)
                 ) {
                     writer.write(dataSupplier.get());
@@ -553,6 +553,10 @@ public class Plugin implements ServerEventListener {
 
     public String getImplementationType() {
         return implementationType;
+    }
+
+    public PlayerSkinUpdater getSkinUpdater() {
+        return skinUpdater;
     }
 
     private void initFileWatcherTasks() {

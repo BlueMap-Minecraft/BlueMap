@@ -34,8 +34,6 @@ import de.bluecolored.bluemap.core.map.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.map.lowres.LowresTileManager;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.storage.CompressedInputStream;
-import de.bluecolored.bluemap.core.storage.MetaType;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.world.Grid;
 import de.bluecolored.bluemap.core.world.World;
@@ -49,6 +47,12 @@ import java.util.function.Predicate;
 
 @DebugDump
 public class BmMap {
+
+    public static final String META_FILE_SETTINGS = "settings.json";
+    public static final String META_FILE_TEXTURES = "textures.json";
+    public static final String META_FILE_RENDER_STATE = ".rstate";
+    public static final String META_FILE_MARKERS = "live/players.json";
+    public static final String META_FILE_PLAYERS = "live/players.json";
 
     private final String id;
     private final String name;
@@ -134,7 +138,7 @@ public class BmMap {
 
         // only save texture gallery if not present in storage
         try {
-            if (storage.readMeta(id, MetaType.TEXTURES).isEmpty())
+            if (storage.readMeta(id, META_FILE_TEXTURES).isEmpty())
                 saveTextureGallery();
         } catch (IOException e) {
             Logger.global.logError("Failed to read texture gallery", e);
@@ -142,9 +146,9 @@ public class BmMap {
     }
 
     private void loadRenderState() throws IOException {
-        Optional<CompressedInputStream> rstateData = storage.readMeta(id, MetaType.RENDER_STATE);
+        Optional<InputStream> rstateData = storage.readMeta(id, META_FILE_RENDER_STATE);
         if (rstateData.isPresent()) {
-            try (InputStream in = rstateData.get().decompress()){
+            try (InputStream in = rstateData.get()){
                 this.renderState.load(in);
             } catch (IOException ex) {
                 Logger.global.logWarning("Failed to load render-state for map '" + getId() + "': " + ex);
@@ -153,7 +157,7 @@ public class BmMap {
     }
 
     public synchronized void saveRenderState() {
-        try (OutputStream out = storage.writeMeta(id, MetaType.RENDER_STATE)) {
+        try (OutputStream out = storage.writeMeta(id, META_FILE_RENDER_STATE)) {
             this.renderState.save(out);
         } catch (IOException ex){
             Logger.global.logError("Failed to save render-state for map: '" + this.id + "'!", ex);
@@ -162,9 +166,9 @@ public class BmMap {
 
     private TextureGallery loadTextureGallery() throws IOException {
         TextureGallery gallery = null;
-        Optional<CompressedInputStream> texturesData = storage.readMeta(id, MetaType.TEXTURES);
+        Optional<InputStream> texturesData = storage.readMeta(id, META_FILE_TEXTURES);
         if (texturesData.isPresent()) {
-            try (InputStream in = texturesData.get().decompress()){
+            try (InputStream in = texturesData.get()){
                 gallery = TextureGallery.readTexturesFile(in);
             } catch (IOException ex) {
                 Logger.global.logError("Failed to load textures for map '" + getId() + "'!", ex);
@@ -174,7 +178,7 @@ public class BmMap {
     }
 
     private void saveTextureGallery() {
-        try (OutputStream out = storage.writeMeta(id, MetaType.TEXTURES)) {
+        try (OutputStream out = storage.writeMeta(id, META_FILE_TEXTURES)) {
             this.textureGallery.writeTexturesFile(this.resourcePack, out);
         } catch (IOException ex) {
             Logger.global.logError("Failed to save textures for map '" + getId() + "'!", ex);
@@ -188,7 +192,7 @@ public class BmMap {
 
     private void saveMapSettings() {
         try (
-                OutputStream out = storage.writeMeta(id, MetaType.SETTINGS);
+                OutputStream out = storage.writeMeta(id, META_FILE_SETTINGS);
                 Writer writer = new OutputStreamWriter(out)
         ) {
             ResourcesGson.addAdapter(new GsonBuilder())
@@ -202,7 +206,7 @@ public class BmMap {
 
     public synchronized void saveMarkerState() {
         try (
-                OutputStream out = storage.writeMeta(id, MetaType.MARKERS);
+                OutputStream out = storage.writeMeta(id, META_FILE_MARKERS);
                 Writer writer = new OutputStreamWriter(out)
         ) {
             MarkerGson.INSTANCE.toJson(this.markerSets, writer);

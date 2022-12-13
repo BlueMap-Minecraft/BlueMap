@@ -1,4 +1,5 @@
 import java.io.IOException
+import java.util.concurrent.TimeoutException
 
 plugins {
     java
@@ -12,7 +13,11 @@ fun String.runCommand(): String = ProcessBuilder(split("\\s(?=(?:[^'\"`]*(['\"`]
     .redirectOutput(ProcessBuilder.Redirect.PIPE)
     .redirectError(ProcessBuilder.Redirect.PIPE)
     .start()
-    .apply { waitFor(60, TimeUnit.SECONDS) }
+    .apply {
+        if (!waitFor(10, TimeUnit.SECONDS)) {
+            throw TimeoutException("Failed to execute command: '" + this@runCommand + "'")
+        }
+    }
     .run {
         val error = errorStream.bufferedReader().readText().trim()
         if (error.isNotEmpty()) {

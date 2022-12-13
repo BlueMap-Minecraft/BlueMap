@@ -125,7 +125,7 @@ public class ForgeMod implements ServerInterface {
                 Logger.global.logError("Failed to load bluemap!", e);
                 pluginInstance.unload();
             }
-        }).start();
+        }, "BlueMap-Plugin-Loading").start();
     }
 
     @SubscribeEvent

@@ -41,7 +41,7 @@ public class Metrics {
     private static final String METRICS_REPORT_URL = "https://metrics.bluecolored.de/bluemap/";
 
     public static void sendReportAsync(String implementation) {
-        new Thread(() -> sendReport(implementation)).start();
+        new Thread(() -> sendReport(implementation), "BlueMap-Plugin-SendMetricsReport").start();
     }
 
     public static void sendReport(String implementation) {
