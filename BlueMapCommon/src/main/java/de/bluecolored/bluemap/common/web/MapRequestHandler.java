@@ -31,13 +31,13 @@ public class MapRequestHandler extends RoutingRequestHandler {
         register(".*", new MapStorageRequestHandler(mapId, mapStorage));
 
         if (livePlayersDataSupplier != null) {
-            register("live/players", "", new JsonDataRequestHandler(
+            register("live/players\\.json", "", new JsonDataRequestHandler(
                     new CachedRateLimitDataSupplier(livePlayersDataSupplier,1000)
             ));
         }
 
         if (liveMarkerDataSupplier != null) {
-            register("live/markers", "", new JsonDataRequestHandler(
+            register("live/markers\\.json", "", new JsonDataRequestHandler(
                     new CachedRateLimitDataSupplier(liveMarkerDataSupplier,10000)
             ));
         }
