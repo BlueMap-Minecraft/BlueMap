@@ -69,6 +69,7 @@ public class MapConfig implements MapSettings {
     private transient Vector3i max = null;
 
     private long minInhabitedTime = 0;
+    private int minInhabitedTimeRadius = 0;
 
     private boolean renderEdges = true;
 
@@ -96,34 +97,42 @@ public class MapConfig implements MapSettings {
         return world;
     }
 
+    @Override
     public int getSorting() {
         return sorting;
     }
 
+    @Override
     public Optional<Vector2i> getStartPos() {
         return Optional.ofNullable(startPos);
     }
 
+    @Override
     public String getSkyColor() {
         return skyColor;
     }
 
+    @Override
     public float getAmbientLight() {
         return ambientLight;
     }
 
+    @Override
     public int getWorldSkyLight() {
         return worldSkyLight;
     }
 
+    @Override
     public int getRemoveCavesBelowY() {
         return removeCavesBelowY;
     }
 
+    @Override
     public boolean isCaveDetectionUsesBlockLight() {
         return caveDetectionUsesBlockLight;
     }
 
+    @Override
     public int getCaveDetectionOceanFloor() {
         return caveDetectionOceanFloor;
     }
@@ -138,10 +147,17 @@ public class MapConfig implements MapSettings {
         return max;
     }
 
+    @Override
     public long getMinInhabitedTime() {
         return minInhabitedTime;
     }
 
+    @Override
+    public int getMinInhabitedTimeRadius() {
+        return minInhabitedTimeRadius;
+    }
+
+    @Override
     public boolean isRenderEdges() {
         return renderEdges;
     }
@@ -164,18 +180,22 @@ public class MapConfig implements MapSettings {
         return markerSets;
     }
 
+    @Override
     public int getHiresTileSize() {
         return hiresTileSize;
     }
 
+    @Override
     public int getLowresTileSize() {
         return lowresTileSize;
     }
 
+    @Override
     public int getLodCount() {
         return lodCount;
     }
 
+    @Override
     public int getLodFactor() {
         return lodFactor;
     }

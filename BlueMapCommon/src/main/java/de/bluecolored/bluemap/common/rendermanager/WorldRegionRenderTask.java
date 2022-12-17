@@ -130,7 +130,7 @@ public class WorldRegionRenderTask implements RenderTask {
         }
 
         //Logger.global.logInfo("Working on " + worldRegion + " - Tile " + tile);
-        if (isAllChunksInTileGenerated(tile)) {
+        if (tileRenderPreconditions(tile)) {
             map.renderTile(tile); // <- actual work
         }
 
@@ -143,22 +143,37 @@ public class WorldRegionRenderTask implements RenderTask {
         }
     }
 
-    private boolean isAllChunksInTileGenerated(Vector2i tile) {
+    private boolean tileRenderPreconditions(Vector2i tile) {
         Grid tileGrid = map.getHiresModelManager().getTileGrid();
         Grid chunkGrid = map.getWorld().getChunkGrid();
 
         Vector2i minChunk = tileGrid.getCellMin(tile, chunkGrid);
         Vector2i maxChunk = tileGrid.getCellMax(tile, chunkGrid);
 
+        long minInhab = map.getMapSettings().getMinInhabitedTime();
+        int minInhabRadius = map.getMapSettings().getMinInhabitedTimeRadius();
+        if (minInhabRadius < 0) minInhabRadius = 0;
+        if (minInhabRadius > 16) minInhabRadius = 16; // sanity check
+        boolean isInhabited = false;
+
         for (int x = minChunk.getX(); x <= maxChunk.getX(); x++) {
             for (int z = minChunk.getY(); z <= maxChunk.getY(); z++) {
                 Chunk chunk = map.getWorld().getChunk(x, z);
                 if (!chunk.isGenerated()) return false;
-                if (chunk.getInhabitedTime() < map.getMapSettings().getMinInhabitedTime()) return false;
+                if (chunk.getInhabitedTime() < minInhab) isInhabited = true;
             }
         }
 
-        return true;
+        if (minInhabRadius > 0) {
+            for (int x = minChunk.getX() - minInhabRadius; x <= maxChunk.getX() + minInhabRadius; x++) {
+                for (int z = minChunk.getY() - minInhabRadius; z <= maxChunk.getY() + minInhabRadius; z++) {
+                    Chunk chunk = map.getWorld().getChunk(x, z);
+                    if (chunk.getInhabitedTime() < minInhab) isInhabited = true;
+                }
+            }
+        }
+
+        return isInhabited;
     }
 
     private void complete() {

@@ -39,6 +39,8 @@ public interface MapSettings extends RenderSettings {
 
     long getMinInhabitedTime();
 
+    int getMinInhabitedTimeRadius();
+
     int getHiresTileSize();
 
     int getLowresTileSize();
