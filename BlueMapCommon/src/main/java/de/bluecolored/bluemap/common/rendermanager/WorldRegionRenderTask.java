@@ -160,7 +160,7 @@ public class WorldRegionRenderTask implements RenderTask {
             for (int z = minChunk.getY(); z <= maxChunk.getY(); z++) {
                 Chunk chunk = map.getWorld().getChunk(x, z);
                 if (!chunk.isGenerated()) return false;
-                if (chunk.getInhabitedTime() < minInhab) isInhabited = true;
+                if (chunk.getInhabitedTime() >= minInhab) isInhabited = true;
             }
         }
 
@@ -168,7 +168,10 @@ public class WorldRegionRenderTask implements RenderTask {
             for (int x = minChunk.getX() - minInhabRadius; x <= maxChunk.getX() + minInhabRadius; x++) {
                 for (int z = minChunk.getY() - minInhabRadius; z <= maxChunk.getY() + minInhabRadius; z++) {
                     Chunk chunk = map.getWorld().getChunk(x, z);
-                    if (chunk.getInhabitedTime() < minInhab) isInhabited = true;
+                    if (chunk.getInhabitedTime() >= minInhab) {
+                        isInhabited = true;
+                        break;
+                    }
                 }
             }
         }
