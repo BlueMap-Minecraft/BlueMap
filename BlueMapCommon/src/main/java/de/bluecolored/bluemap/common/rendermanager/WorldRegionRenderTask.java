@@ -164,7 +164,7 @@ public class WorldRegionRenderTask implements RenderTask {
             }
         }
 
-        if (minInhabRadius > 0) {
+        if (minInhabRadius > 0 && !isInhabited) {
             for (int x = minChunk.getX() - minInhabRadius; x <= maxChunk.getX() + minInhabRadius; x++) {
                 for (int z = minChunk.getY() - minInhabRadius; z <= maxChunk.getY() + minInhabRadius; z++) {
                     Chunk chunk = map.getWorld().getChunk(x, z);
