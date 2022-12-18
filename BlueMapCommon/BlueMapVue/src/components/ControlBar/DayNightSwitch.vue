@@ -13,7 +13,7 @@
 </template>
 
 <script>
-import {animate, EasingFunctions} from "bluemap/src/util/Utils";
+import {animate, EasingFunctions} from "@/js/util/Utils";
 import SvgButton from "@/components/ControlBar/SvgButton";
 
 let animation;

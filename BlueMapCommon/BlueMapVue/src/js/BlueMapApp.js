@@ -22,20 +22,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-import "bluemap/src/BlueMap";
-import {MapViewer} from "bluemap/src/MapViewer";
-import {MapControls} from "bluemap/src/controls/map/MapControls";
-import {FreeFlightControls} from "bluemap/src/controls/freeflight/FreeFlightControls";
+import "@/js/BlueMap";
+import {MapViewer} from "@/js/MapViewer";
+import {MapControls} from "@/js/controls/map/MapControls";
+import {FreeFlightControls} from "@/js/controls/freeflight/FreeFlightControls";
 import {FileLoader, MathUtils, Vector3} from "three";
-import {Map as BlueMapMap} from "bluemap/src/map/Map";
-import {alert, animate, EasingFunctions, generateCacheHash} from "bluemap/src/util/Utils";
+import {Map as BlueMapMap} from "@/js/map/Map";
+import {alert, animate, EasingFunctions, generateCacheHash} from "@/js/util/Utils";
 import {MainMenu} from "@/js/MainMenu";
 import {PopupMarker} from "@/js/PopupMarker";
-import {MarkerSet} from "bluemap/src/markers/MarkerSet";
+import {MarkerSet} from "@/js/markers/MarkerSet";
 import {getLocalStorage, round, setLocalStorage} from "@/js/Utils";
 import i18n from "../i18n";
-import {PlayerMarkerManager} from "bluemap/src/markers/PlayerMarkerManager";
-import {NormalMarkerManager} from "bluemap/src/markers/NormalMarkerManager";
+import {PlayerMarkerManager} from "@/js/markers/PlayerMarkerManager";
+import {NormalMarkerManager} from "@/js/markers/NormalMarkerManager";
 
 export class BlueMapApp {
 

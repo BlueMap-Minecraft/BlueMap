@@ -60,7 +60,7 @@ Object3D.prototype.onClick = function(event) {
         if (!Array.isArray(event.eventStack)) event.eventStack = [];
         event.eventStack.push(this);
 
-        return this.parent.onClick(event);asd
+        return this.parent.onClick(event);
     }
 
     return false;

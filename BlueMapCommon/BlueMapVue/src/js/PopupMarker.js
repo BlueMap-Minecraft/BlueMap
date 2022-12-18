@@ -22,9 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-import {Marker} from "bluemap/src/markers/Marker";
-import {CSS2DObject} from "bluemap/src/util/CSS2DRenderer";
-import {animate, htmlToElement} from "bluemap/src/util/Utils";
+import {Marker} from "@/js/markers/Marker";
+import {CSS2DObject} from "@/js/util/CSS2DRenderer";
+import {animate, htmlToElement} from "@/js/util/Utils";
 import {BoxGeometry, MeshBasicMaterial, Mesh, Vector2} from "three";
 import i18n from "../i18n";
 
