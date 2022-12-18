@@ -51,7 +51,7 @@ spotless {
 node {
     version.set("14.16.1")
     download.set(true)
-    nodeProjectDir.set(file("BlueMapVue/"))
+    nodeProjectDir.set(file("webapp/"))
 }
 
 tasks.withType(JavaCompile::class).configureEach {
@@ -71,25 +71,25 @@ tasks.test {
 
 tasks.register("buildWebapp", type = NpmTask::class) {
     doFirst {
-        if (!file("BlueMapVue/dist/").deleteRecursively())
+        if (!file("webapp/dist/").deleteRecursively())
             throw IOException("Failed to delete build directory!")
     }
 
     dependsOn ("npmInstall")
     args.set(listOf("run", "build"))
 
-    inputs.dir("BlueMapVue/")
-    outputs.dir("BlueMapVue/dist/")
+    inputs.dir("webapp/")
+    outputs.dir("webapp/dist/")
 }
 
 tasks.register("zipWebapp", type = Zip::class) {
     dependsOn ("buildWebapp")
-    from (fileTree("BlueMapVue/dist/"))
+    from (fileTree("webapp/dist/"))
     archiveFileName.set("webapp.zip")
     destinationDirectory.set(file("src/main/resources/de/bluecolored/bluemap/"))
 
     //outputs.upToDateWhen { false }
-    inputs.dir("BlueMapVue/dist/")
+    inputs.dir("webapp/dist/")
     outputs.file("src/main/resources/de/bluecolored/bluemap/webapp.zip")
 }
 
