@@ -1,0 +1,91 @@
+/*
+ * This file is part of BlueMap, licensed under the MIT License (MIT).
+ *
+ * Copyright (c) Blue (Lukas Rieger) <https://bluecolored.de>
+ * Copyright (c) contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+// responsive breaks
+$mobile-break: 575.98px;
+
+// themes
+@mixin dark-theme {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+
+  --theme-bg: #181818;
+  --theme-bg-hover: #222;
+  --theme-bg-light: #444;
+  --theme-fg: #fff;
+  --theme-fg-light: #aaa;
+
+  //SwitchButton
+  --theme-switch-button-on: #00489d;
+
+  //DayNightSwitch
+  --theme-stars-day: #fff;
+  --theme-moon-day: #ff0;
+  --theme-stars-night: #444;
+  --theme-moon-night: #000;
+}
+
+@mixin light-theme {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 16px;
+  font-weight: 500;
+
+  --theme-bg: #eee;
+  --theme-bg-hover: #ddd;
+  --theme-bg-light: #999;
+  --theme-fg: #000;
+  --theme-fg-light: #333;
+
+  //SwitchButton
+  --theme-switch-button-on: #6593dc;
+
+  //DayNightSwitch
+  --theme-stars-day: #444;
+  --theme-moon-day: #000;
+  --theme-stars-night: #fff;
+  --theme-moon-night: #ff0;
+}
+
+@mixin contrast-theme {
+  font-family: 'Quicksand', sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+
+  --theme-bg: #000;
+  --theme-bg-hover: #222;
+  --theme-bg-light: #666;
+  --theme-fg: #fff;
+  --theme-fg-light: #aaa;
+
+  //SwitchButton
+  --theme-switch-button-on: #006fff;
+
+  //DayNightSwitch
+  --theme-stars-day: #fff;
+  --theme-moon-day: #ff0;
+  --theme-stars-night: #444;
+  --theme-moon-night: #000;
+}

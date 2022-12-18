@@ -1,6 +1,3 @@
 [submodule "BlueMapAPI"]
 	path = BlueMapAPI
 	url = https://github.com/BlueMap-Minecraft/BlueMapAPI
-[submodule "BlueMapVue"]
-	path = BlueMapCommon/BlueMapVue
-	url = https://github.com/BlueMap-Minecraft/BlueMapVue

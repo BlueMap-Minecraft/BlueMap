@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json.schemastore.org/web-manifest-combined.json",
+  "name": "BlueMap",
+  "short_name": "BlueMap",
+  "start_url": "..",
+  "display": "standalone",
+  "background_color": "#181818",
+  "theme_color": "#006EDE",
+  "description": "BlueMap is a tool that generates 3D maps of your Minecraft worlds and displays them in your browser.",
+  "icons": [{
+    "src": "logoCircle512.png",
+    "sizes": "512x512",
+    "type": "image/png"
+  },{
+    "src": "logoCircle64.png",
+    "sizes": "64x64",
+    "type": "image/png"
+  }]
+}
