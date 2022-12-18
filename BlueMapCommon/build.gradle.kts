@@ -6,7 +6,7 @@ plugins {
     `java-library`
     `maven-publish`
     id("com.diffplug.spotless") version "6.1.2"
-    id ("com.github.node-gradle.node") version "3.0.1"
+    id ("com.github.node-gradle.node") version "3.5.0"
 }
 
 group = "de.bluecolored.bluemap.common"
@@ -49,7 +49,7 @@ spotless {
 }
 
 node {
-    version.set("14.16.1")
+    version.set("16.15.0")
     download.set(true)
     nodeProjectDir.set(file("webapp/"))
 }
