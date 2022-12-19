@@ -10,7 +10,7 @@
   },
   "dependencies": {
     "hammerjs": "^2.0.8",
-    "three": "~0.123.0",
+    "three": "~0.125.0",
     "vue": "^3.2.45",
     "vue-i18n": "^9.2.2",
     "hocon-parser": "^1.0.1"
