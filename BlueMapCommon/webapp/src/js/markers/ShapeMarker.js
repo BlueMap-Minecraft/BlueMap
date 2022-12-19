@@ -22,14 +22,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-import {Color, DoubleSide, Mesh, ShaderMaterial, Shape, ShapeBufferGeometry, Vector2} from "three";
-import {LineMaterial} from "../util/lines/LineMaterial";
+import {Color, DoubleSide, Mesh, ShaderMaterial, Shape, ShapeGeometry, UniformsUtils, Vector2} from "three";
+import {LineMaterial} from "three/examples/jsm/lines/LineMaterial";
 import {MARKER_FILL_VERTEX_SHADER} from "./MarkerFillVertexShader";
 import {MARKER_FILL_FRAGMENT_SHADER} from "./MarkerFillFragmentShader";
-import {LineGeometry} from "../util/lines/LineGeometry";
-import {Line2} from "../util/lines/Line2";
+import {LineGeometry} from "three/examples/jsm/lines/LineGeometry";
+import {Line2} from "three/examples/jsm/lines/Line2";
 import {deepEquals} from "../util/Utils";
 import {ObjectMarker} from "./ObjectMarker";
+import {lineShader} from "../util/LineShader";
 
 export class ShapeMarker extends ObjectMarker {
 
@@ -278,10 +279,10 @@ class ShapeMarkerFill extends Mesh {
 
     /**
      * @param shape {Shape}
-     * @returns {ShapeBufferGeometry}
+     * @returns {ShapeGeometry}
      */
     static createGeometry(shape) {
-        let geometry = new ShapeBufferGeometry(shape, 5);
+        let geometry = new ShapeGeometry(shape, 5);
         geometry.rotateX(Math.PI / 2); //make y to z
 
         return geometry;
@@ -306,6 +307,9 @@ class ShapeMarkerBorder extends Line2 {
             depthTest: true,
             vertexColors: false,
             dashed: false,
+            uniforms: UniformsUtils.clone( lineShader.uniforms ),
+            vertexShader: lineShader.vertexShader,
+            fragmentShader: lineShader.fragmentShader
         });
         material.uniforms.fadeDistanceMin = { value: 0 };
         material.uniforms.fadeDistanceMax = { value: Number.MAX_VALUE };

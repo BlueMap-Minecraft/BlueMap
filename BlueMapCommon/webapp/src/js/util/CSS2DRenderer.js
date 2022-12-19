@@ -9,69 +9,68 @@ import {
     Object3D, Vector2,
     Vector3
 } from "three";
-import {dispatchEvent, htmlToElement} from "./Utils";
+import {dispatchEvent} from "./Utils";
 
-var CSS2DObject = function ( element ) {
+class CSS2DObject extends Object3D {
 
-    Object3D.call( this );
+    constructor(element) {
+        super();
 
-    this.element = document.createElement("div");
-    let parent = element.parentNode;
-    parent.replaceChild(this.element, element);
-    this.element.appendChild(element);
+        this.element = document.createElement("div");
+        let parent = element.parentNode;
+        parent.replaceChild(this.element, element);
+        this.element.appendChild(element);
 
-    this.element.style.position = 'absolute';
+        this.element.style.position = 'absolute';
 
-    this.anchor = new Vector2();
+        this.anchor = new Vector2();
 
-    this.events = null;
+        this.events = null;
 
-    this.addEventListener( 'removed', function () {
+        this.addEventListener('removed', function () {
 
-        this.traverse( function ( object ) {
+            this.traverse(function (object) {
 
-            if ( object.element instanceof Element && object.element.parentNode !== null ) {
+                if (object.element instanceof Element && object.element.parentNode !== null) {
 
-                object.element.parentNode.removeChild( object.element );
+                    object.element.parentNode.removeChild(object.element);
 
+                }
+
+            });
+
+        });
+
+        let lastClick = -1;
+        let handleClick = event => {
+            let doubleTap = false;
+
+            let now = Date.now();
+            if (now - lastClick < 500) {
+                doubleTap = true;
             }
 
-        } );
+            lastClick = now;
 
-    } );
+            let data = {doubleTap: doubleTap};
 
-    let lastClick = -1;
-    let handleClick = event => {
-        let doubleTap = false;
-
-        let now = Date.now();
-        if (now - lastClick < 500){
-            doubleTap = true;
+            if (this.onClick({event: event, data: data})) {
+                event.preventDefault();
+                event.stopPropagation();
+            } else {
+                // fire event
+                dispatchEvent(this.events, "bluemapMapInteraction", {
+                    data: data,
+                    object: this,
+                });
+            }
         }
 
-        lastClick = now;
-
-        let data = {doubleTap: doubleTap};
-
-        if (this.onClick( {event: event, data: data} )) {
-            event.preventDefault();
-            event.stopPropagation();
-        } else {
-            // fire event
-            dispatchEvent(this.events, "bluemapMapInteraction", {
-                data: data,
-                object: this,
-            });
-        }
+        this.element.addEventListener("click", handleClick);
+        this.element.addEventListener("touch", handleClick);
     }
 
-    this.element.addEventListener("click", handleClick);
-    this.element.addEventListener("touch", handleClick);
-
-};
-
-CSS2DObject.prototype = Object.create( Object3D.prototype );
-CSS2DObject.prototype.constructor = CSS2DObject;
+}
 
 //
 
@@ -217,7 +216,7 @@ var CSS2DRenderer = function (events = null) {
 
     this.render = function ( scene, camera ) {
 
-        if ( scene.autoUpdate === true ) scene.updateMatrixWorld();
+        if ( scene.matrixWorldAutoUpdate === true ) scene.updateMatrixWorld();
         if ( camera.parent === null ) camera.updateMatrixWorld();
 
         viewMatrix.copy( camera.matrixWorldInverse );

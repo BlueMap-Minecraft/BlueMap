@@ -22,14 +22,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-import {Color, DoubleSide, ExtrudeBufferGeometry, Mesh, ShaderMaterial, Shape, Vector2} from "three";
-import {LineMaterial} from "../util/lines/LineMaterial";
+import {Color, DoubleSide, ExtrudeGeometry, Mesh, ShaderMaterial, Shape, UniformsUtils, Vector2} from "three";
+import {LineMaterial} from "three/examples/jsm/lines/LineMaterial";
 import {MARKER_FILL_VERTEX_SHADER} from "./MarkerFillVertexShader";
 import {MARKER_FILL_FRAGMENT_SHADER} from "./MarkerFillFragmentShader";
-import {Line2} from "../util/lines/Line2";
+import {Line2} from "three/examples/jsm/lines/Line2";
 import {deepEquals} from "../util/Utils";
-import {LineSegmentsGeometry} from "../util/lines/LineSegmentsGeometry";
+import {LineSegmentsGeometry} from "three/examples/jsm/lines/LineSegmentsGeometry";
 import {ObjectMarker} from "./ObjectMarker";
+import {lineShader} from "../util/LineShader";
 
 export class ExtrudeMarker extends ObjectMarker {
 
@@ -281,10 +282,10 @@ class ExtrudeMarkerFill extends Mesh {
 
     /**
      * @param shape {Shape}
-     * @returns {ExtrudeBufferGeometry}
+     * @returns {ExtrudeGeometry}
      */
     static createGeometry(shape) {
-        let geometry = new ExtrudeBufferGeometry(shape, {
+        let geometry = new ExtrudeGeometry(shape, {
             depth: 1,
             steps: 5,
             bevelEnabled: false
@@ -313,6 +314,9 @@ class ExtrudeMarkerBorder extends Line2 {
             depthTest: true,
             vertexColors: false,
             dashed: false,
+            uniforms: UniformsUtils.clone( lineShader.uniforms ),
+            vertexShader: lineShader.vertexShader,
+            fragmentShader: lineShader.fragmentShader
         });
         material.uniforms.fadeDistanceMin = { value: 0 };
         material.uniforms.fadeDistanceMax = { value: Number.MAX_VALUE };

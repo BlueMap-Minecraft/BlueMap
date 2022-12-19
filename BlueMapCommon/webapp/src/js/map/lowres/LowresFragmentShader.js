@@ -81,6 +81,8 @@ void main() {
 	if (vDistance < 900.0 && texture(hiresTileMap.map, ((vWorldPosition.xz - hiresTileMap.translate) / hiresTileMap.scale - hiresTileMap.pos) / hiresTileMap.size + 0.5).r > 0.75) discard;
 	
 	vec4 color = texture(textureImage, posToColorUV(vPosition.xz));
+	color.a = 1.0; // don't use alpha channel 
+	
 	vec4 meta = texture(textureImage, posToMetaUV(vPosition.xz));
 	
 	float height = metaToHeight(meta);

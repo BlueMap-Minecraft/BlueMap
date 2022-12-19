@@ -26,8 +26,7 @@ import {pathFromCoords} from "../util/Utils";
 import {
     TextureLoader,
     Mesh,
-    PlaneBufferGeometry,
-    VertexColors,
+    PlaneGeometry,
     FrontSide,
     ShaderMaterial,
     NearestFilter,
@@ -52,7 +51,7 @@ export class LowresTileLoader {
         this.uniforms = uniforms;
 
         this.textureLoader = new TextureLoader();
-        this.geometry = new PlaneBufferGeometry(
+        this.geometry = new PlaneGeometry(
             tileSettings.tileSize.x + 1, tileSettings.tileSize.z + 1,
             Math.ceil(100 / (lod * 2)), Math.ceil(100 / (lod * 2))
         );
@@ -109,10 +108,9 @@ export class LowresTileLoader {
                         },
                         vertexShader: this.vertexShader,
                         fragmentShader: this.fragmentShader,
-                        transparent: false,
                         depthWrite: true,
                         depthTest: true,
-                        vertexColors: VertexColors,
+                        vertexColors: true,
                         side: FrontSide,
                         wireframe: false,
                     });

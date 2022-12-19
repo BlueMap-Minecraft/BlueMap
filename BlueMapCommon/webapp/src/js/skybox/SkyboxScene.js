@@ -32,7 +32,7 @@ export class SkyboxScene extends Scene {
 	constructor(uniforms) {
 		super();
 
-		this.autoUpdate = false;
+		this.matrixWorldAutoUpdate  = false;
 
 		Object.defineProperty(this, 'isSkyboxScene', {value: true});
 

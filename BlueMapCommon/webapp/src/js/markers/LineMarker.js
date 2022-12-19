@@ -22,12 +22,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-import {Color} from "three";
-import {LineMaterial} from "../util/lines/LineMaterial";
-import {LineGeometry} from "../util/lines/LineGeometry";
-import {Line2} from "../util/lines/Line2";
+import {Color, UniformsUtils} from "three";
+import {LineMaterial} from "three/examples/jsm/lines/LineMaterial";
+import {LineGeometry} from "three/examples/jsm/lines/LineGeometry";
+import {Line2} from "three/examples/jsm/lines/Line2";
 import {deepEquals} from "../util/Utils";
 import {ObjectMarker} from "./ObjectMarker";
+import {lineShader} from "../util/LineShader";
 
 export class LineMarker extends ObjectMarker {
 
@@ -174,6 +175,9 @@ class LineMarkerLine extends Line2 {
             depthTest: true,
             vertexColors: false,
             dashed: false,
+            uniforms: UniformsUtils.clone( lineShader.uniforms ),
+            vertexShader: lineShader.vertexShader,
+            fragmentShader: lineShader.fragmentShader
         });
         material.uniforms.fadeDistanceMin = { value: 0 };
         material.uniforms.fadeDistanceMax = { value: Number.MAX_VALUE };

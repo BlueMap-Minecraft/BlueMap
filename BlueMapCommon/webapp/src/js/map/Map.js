@@ -30,11 +30,9 @@ import {
 	NearestFilter,
 	NearestMipMapLinearFilter,
 	Raycaster,
-	Scene,
 	ShaderMaterial,
 	Texture,
-	Vector3,
-	VertexColors
+	Vector3
 } from "three";
 import {alert, dispatchEvent, generateCacheHash, getPixel, hashTile, stringToImage, vecArrToObj} from "../util/Utils";
 import {TileManager} from "./TileManager";
@@ -119,12 +117,12 @@ export class Map {
                 this.hiresMaterial = this.createHiresMaterial(hiresVertexShader, hiresFragmentShader, uniforms, textures);
 
                 this.hiresTileManager = new TileManager(new TileLoader(`${this.data.dataUrl}tiles/0/`, this.hiresMaterial, this.data.hires, this.loadBlocker, tileCacheHash), this.onTileLoad("hires"), this.onTileUnload("hires"), this.events);
-				this.hiresTileManager.scene.autoUpdate = false;
+				this.hiresTileManager.scene.matrixWorldAutoUpdate = false;
 
                 this.lowresTileManager = [];
 				for (let i = 0; i < this.data.lowres.lodCount; i++) {
 					this.lowresTileManager[i] = new TileManager(new LowresTileLoader(`${this.data.dataUrl}tiles/`, this.data.lowres, i + 1, lowresVertexShader, lowresFragmentShader, uniforms, async () => {}, tileCacheHash), this.onTileLoad("lowres"), this.onTileUnload("lowres"), this.events);
-					this.lowresTileManager[i].scene.autoUpdate = false;
+					this.lowresTileManager[i].scene.matrixWorldAutoUpdate = false;
 				}
 
                 alert(this.events, `Map '${this.data.id}' is loaded.`, "fine");
@@ -304,7 +302,7 @@ export class Map {
 				transparent: transparent,
 				depthWrite: true,
 				depthTest: true,
-				vertexColors: VertexColors,
+				vertexColors: true,
 				side: FrontSide,
 				wireframe: false,
 			});
@@ -331,7 +329,7 @@ export class Map {
 			transparent: false,
 			depthWrite: true,
 			depthTest: true,
-			vertexColors: VertexColors,
+			vertexColors: true,
 			side: FrontSide,
 			wireframe: false
 		});

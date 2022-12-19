@@ -136,12 +136,16 @@ export class CombinedCamera extends PerspectiveCamera {
         return this.ortho < 1;
     }
 
+    set isPerspectiveCamera(value) {}
+
     /**
      * @returns {boolean}
      */
     get isOrthographicCamera() {
         return !this.isPerspectiveCamera;
     }
+
+    set isOrthographicCamera(value) {}
 
     /**
      * @returns {string}
