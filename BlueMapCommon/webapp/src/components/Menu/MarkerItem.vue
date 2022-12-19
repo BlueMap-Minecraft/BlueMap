@@ -11,7 +11,7 @@
             {{marker.type}}-marker
           </div>
           <div>
-            ({{marker.position.x | position}} | {{marker.position.y | position}} | {{marker.position.z | position}})
+            ({{ position(marker.position.x) }} | {{ position(marker.position.y) }} | {{ position(marker.position.z) }})
           </div>
         </div>
       </div>
@@ -58,11 +58,11 @@ export default {
       }
 
       return this.marker.id;
-    }
-  },
-  filters: {
-    position(v) {
-      return Math.floor(v);
+    },
+    position() {
+      return (v) => {
+        return Math.floor(v);
+      }
     }
   },
   methods: {
@@ -101,7 +101,7 @@ export default {
 </script>
 
 <style lang="scss">
-@import "~@/scss/variables.scss";
+@import "/src/scss/variables.scss";
 
 .side-menu .marker-item {
   display: flex;

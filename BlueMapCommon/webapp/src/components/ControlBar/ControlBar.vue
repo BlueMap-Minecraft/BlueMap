@@ -61,12 +61,12 @@
 </template>
 
 <script>
-  import PositionInput from "@/components/ControlBar/PositionInput";
-  import Compass from "@/components/ControlBar/Compass";
-  import DayNightSwitch from "@/components/ControlBar/DayNightSwitch";
-  import ControlsSwitch from "@/components/ControlBar/ControlsSwitch";
-  import MenuButton from "@/components/ControlBar/MenuButton";
-  import SvgButton from "@/components/ControlBar/SvgButton";
+  import PositionInput from "./PositionInput.vue";
+  import Compass from "./Compass.vue";
+  import DayNightSwitch from "./DayNightSwitch.vue";
+  import ControlsSwitch from "./ControlsSwitch.vue";
+  import MenuButton from "./MenuButton.vue";
+  import SvgButton from "./SvgButton.vue";
 
   export default {
     name: "ControlBar",
@@ -109,7 +109,7 @@
 </script>
 
 <style lang="scss">
-  @import "~@/scss/variables.scss";
+@import "/src/scss/variables.scss";
 
   .control-bar {
     position: fixed;

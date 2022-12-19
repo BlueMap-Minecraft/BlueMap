@@ -22,11 +22,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-import {Marker} from "@/js/markers/Marker";
-import {CSS2DObject} from "@/js/util/CSS2DRenderer";
-import {animate, htmlToElement} from "@/js/util/Utils";
+import {Marker} from "./markers/Marker";
+import {CSS2DObject} from "./util/CSS2DRenderer";
+import {animate, htmlToElement} from "./util/Utils";
 import {BoxGeometry, MeshBasicMaterial, Mesh, Vector2} from "three";
-import i18n from "../i18n";
+import {i18n} from "../i18n";
 
 export class PopupMarker extends Marker {
 
@@ -59,7 +59,7 @@ export class PopupMarker extends Marker {
         this.events.addEventListener('bluemapMapInteraction', this.onMapInteraction);
 
         window.addEventListener("mousedown", this.removeHandler);
-        window.addEventListener("touchstart", this.removeHandler);
+        window.addEventListener("touchstart", this.removeHandler, { passive: true });
         window.addEventListener("keydown", this.removeHandler);
         window.addEventListener("mousewheel", this.removeHandler);
     }

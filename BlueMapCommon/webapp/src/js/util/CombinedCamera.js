@@ -23,6 +23,7 @@
  * THE SOFTWARE.
  */
 import {MathUtils, Matrix4, PerspectiveCamera} from "three";
+import {reactive} from "vue";
 
 export class CombinedCamera extends PerspectiveCamera {
 
@@ -38,7 +39,7 @@ export class CombinedCamera extends PerspectiveCamera {
 
         this.needsUpdate = true;
 
-        this.data = {
+        this.data = reactive({
             fov: this.fov,
             aspect: this.aspect,
             near: this.near,
@@ -46,7 +47,7 @@ export class CombinedCamera extends PerspectiveCamera {
             zoom: this.zoom,
             ortho: ortho,
             distance: 1,
-        };
+        });
 
         // redirect parent properties
         Object.defineProperty(this, "fov", {
@@ -82,8 +83,8 @@ export class CombinedCamera extends PerspectiveCamera {
         if (!this.perspectiveProjection)
             this.perspectiveProjection = new Matrix4();
 
-        if (!this.data)
-            this.data = {};
+        //if (!this.data)
+        //    this.data = {};
 
         //copied from PerspectiveCamera
         const near = this.near;

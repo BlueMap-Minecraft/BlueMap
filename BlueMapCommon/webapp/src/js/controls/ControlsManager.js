@@ -26,6 +26,7 @@
 import {MathUtils, Vector3} from "three";
 import {dispatchEvent} from "../util/Utils";
 import {Map} from "../map/Map";
+import {reactive} from "vue";
 
 export class ControlsManager {
 
@@ -36,7 +37,7 @@ export class ControlsManager {
 	constructor(mapViewer, camera) {
 		Object.defineProperty( this, 'isControlsManager', { value: true } );
 
-		this.data = {
+		this.data = reactive({
 			mapViewer: null,
 			camera: null,
 			controls: null,
@@ -44,7 +45,7 @@ export class ControlsManager {
 			rotation: 0,
 			angle: 0,
 			tilt: 0,
-		};
+		});
 
 		this.mapViewer = mapViewer;
 		this.camera = camera;

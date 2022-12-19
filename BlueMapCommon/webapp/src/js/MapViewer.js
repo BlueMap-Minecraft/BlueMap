@@ -36,6 +36,7 @@ import {LOWRES_FRAGMENT_SHADER} from "./map/lowres/LowresFragmentShader";
 import {CombinedCamera} from "./util/CombinedCamera";
 import {CSS2DRenderer} from "./util/CSS2DRenderer";
 import {MarkerSet} from "./markers/MarkerSet";
+import {reactive} from "vue";
 
 export class MapViewer {
 
@@ -49,7 +50,7 @@ export class MapViewer {
 		this.rootElement = element;
 		this.events = events;
 
-		this.data = {
+		this.data = reactive({
 			map: null,
 			camera: null,
 			controlsManager: null,
@@ -71,7 +72,7 @@ export class MapViewer {
 			loadedCenter: new Vector2(0, 0),
 			loadedHiresViewDistance: 200,
 			loadedLowresViewDistance: 2000,
-		}
+		});
 
 		this.tileCacheHash = generateCacheHash();
 

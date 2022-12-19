@@ -8,11 +8,11 @@
       <div class="stats">
         <div>
           {{ markerSet.markers.length }}
-          {{ $tc('markers.marker', markerSet.markers.length) }}
+          {{ $t('markers.marker', markerSet.markers.length) }}
         </div>
         <div v-if="filteredMarkerSets.length > 0">
           {{ filteredMarkerSets.length }}
-          {{ $tc('markers.markerSet', filteredMarkerSets.length) }}
+          {{ $t('markers.markerSet', filteredMarkerSets.length) }}
         </div>
       </div>
     </div>
@@ -28,7 +28,7 @@
 </template>
 
 <script>
-import SwitchHandle from "@/components/Menu/SwitchHandle";
+import SwitchHandle from "./SwitchHandle.vue";
 
 export default {
   name: "MarkerSet",
@@ -50,6 +50,7 @@ export default {
   methods: {
     toggle() {
       if (this.markerSet.toggleable) {
+        // eslint-disable-next-line vue/no-mutating-props
         this.markerSet.visible = !this.markerSet.visible
       }
     }

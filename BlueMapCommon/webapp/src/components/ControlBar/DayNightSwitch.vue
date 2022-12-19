@@ -13,8 +13,8 @@
 </template>
 
 <script>
-import {animate, EasingFunctions} from "@/js/util/Utils";
-import SvgButton from "@/components/ControlBar/SvgButton";
+import {animate, EasingFunctions} from "../../js/util/Utils";
+import SvgButton from "./SvgButton.vue";
 
 let animation;
 

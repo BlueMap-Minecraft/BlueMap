@@ -63,7 +63,7 @@ export class PoiMarker extends HtmlMarker {
 
         setTimeout(function () {
             window.addEventListener("mousedown", eventHandler);
-            window.addEventListener("touchstart", eventHandler);
+            window.addEventListener("touchstart", eventHandler, { passive: true });
             window.addEventListener("keydown", eventHandler);
             window.addEventListener("mousewheel", eventHandler);
         }, 0);

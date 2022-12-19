@@ -12,10 +12,10 @@
 </template>
 
 <script>
-import MarkerItem from "@/components/Menu/MarkerItem";
-import TextInput from "@/components/Menu/TextInput";
-import MarkerSet from "@/components/Menu/MarkerSet";
-import {MainMenu} from "@/js/MainMenu";
+import MarkerItem from "./MarkerItem.vue";
+import TextInput from "./TextInput.vue";
+import MarkerSet from "./MarkerSet.vue";
+import {MainMenu} from "../../js/MainMenu";
 export default {
   name: "MarkerSetMenu",
   components: {MarkerSet, TextInput, MarkerItem},
@@ -42,8 +42,7 @@ export default {
         if (!this.filter.search) return true;
         if (marker.id.includesCI(this.filter.search)) return true;
         if (marker.label && marker.label.includesCI(this.filter.search)) return true;
-        if (marker.type === "player" && (marker.name.includesCI(this.filter.search) || marker.playerUuid.includesCI(this.filter.search))) return true;
-        return false;
+        return marker.type === "player" && (marker.name.includesCI(this.filter.search) || marker.playerUuid.includesCI(this.filter.search));
       });
     },
     filteredMarkerSets() {

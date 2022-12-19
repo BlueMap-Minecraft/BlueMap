@@ -12,7 +12,7 @@
 </template>
 
 <script>
-import MenuButton from "@/components/ControlBar/MenuButton";
+import MenuButton from "../ControlBar/MenuButton.vue";
 
 export default {
   name: "SideMenu",
@@ -45,7 +45,7 @@ export default {
 </script>
 
 <style lang="scss">
-@import "~@/scss/variables.scss";
+@import "/src/scss/variables.scss";
 
 .side-menu {
   position: fixed;

@@ -22,20 +22,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-import "@/js/BlueMap";
-import {MapViewer} from "@/js/MapViewer";
-import {MapControls} from "@/js/controls/map/MapControls";
-import {FreeFlightControls} from "@/js/controls/freeflight/FreeFlightControls";
+import "./BlueMap";
+import {MapViewer} from "./MapViewer";
+import {MapControls} from "./controls/map/MapControls";
+import {FreeFlightControls} from "./controls/freeflight/FreeFlightControls";
 import {FileLoader, MathUtils, Vector3} from "three";
-import {Map as BlueMapMap} from "@/js/map/Map";
-import {alert, animate, EasingFunctions, generateCacheHash} from "@/js/util/Utils";
-import {MainMenu} from "@/js/MainMenu";
-import {PopupMarker} from "@/js/PopupMarker";
-import {MarkerSet} from "@/js/markers/MarkerSet";
-import {getLocalStorage, round, setLocalStorage} from "@/js/Utils";
-import i18n from "../i18n";
-import {PlayerMarkerManager} from "@/js/markers/PlayerMarkerManager";
-import {NormalMarkerManager} from "@/js/markers/NormalMarkerManager";
+import {Map as BlueMapMap} from "./map/Map";
+import {alert, animate, EasingFunctions, generateCacheHash} from "./util/Utils";
+import {MainMenu} from "./MainMenu";
+import {PopupMarker} from "./PopupMarker";
+import {MarkerSet} from "./markers/MarkerSet";
+import {getLocalStorage, round, setLocalStorage} from "./Utils";
+import {i18n, setLanguage} from "../i18n";
+import {PlayerMarkerManager} from "./markers/PlayerMarkerManager";
+import {NormalMarkerManager} from "./markers/NormalMarkerManager";
+import {reactive} from "vue";
 
 export class BlueMapApp {
 
@@ -86,9 +87,9 @@ export class BlueMapApp {
 
         this.dataUrl = "maps/";
 
-        this.mainMenu = new MainMenu();
+        this.mainMenu = reactive(new MainMenu());
 
-        this.appState = {
+        this.appState = reactive({
             controls: {
                 state: "perspective",
                 mouseSensitivity: 1,
@@ -103,7 +104,7 @@ export class BlueMapApp {
                 clipboard: true
             },
             debug: false
-        };
+        });
 
         // init
         this.updateControlsSettings();
@@ -401,7 +402,7 @@ export class BlueMapApp {
     initGeneralEvents() {
         //close menu on fullscreen
         document.addEventListener("fullscreenchange", evt => {
-            if (document.fullscreen) {
+            if (document.fullscreenElement) {
                 this.mainMenu.closeAll();
             }
         });
@@ -594,7 +595,7 @@ export class BlueMapApp {
         this.updateControlsSettings();
         this.setTheme(this.loadUserSetting("theme", this.appState.theme));
         this.setScreenshotClipboard(this.loadUserSetting("screenshotClipboard", this.appState.screenshot.clipboard));
-        await i18n.setLanguage(this.loadUserSetting("lang", i18n.locale));
+        await setLanguage(this.loadUserSetting("lang", i18n.locale.value));
         this.setDebug(this.loadUserSetting("debug", this.appState.debug));
 
         alert(this.events, "Settings loaded!", "info");
@@ -614,7 +615,7 @@ export class BlueMapApp {
         this.saveUserSetting("pauseTileLoading", this.appState.controls.pauseTileLoading);
         this.saveUserSetting("theme", this.appState.theme);
         this.saveUserSetting("screenshotClipboard", this.appState.screenshot.clipboard);
-        this.saveUserSetting("lang", i18n.locale);
+        this.saveUserSetting("lang", i18n.locale.value);
         this.saveUserSetting("debug", this.appState.debug);
 
         alert(this.events, "Settings saved!", "info");

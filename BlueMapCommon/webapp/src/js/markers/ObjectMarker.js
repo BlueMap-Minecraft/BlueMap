@@ -132,7 +132,7 @@ export class LabelPopup extends CSS2DObject {
             };
 
             window.addEventListener("mousedown", removeHandler);
-            window.addEventListener("touchstart", removeHandler);
+            window.addEventListener("touchstart", removeHandler, { passive: true });
             window.addEventListener("keydown", removeHandler);
             window.addEventListener("mousewheel", removeHandler);
         }

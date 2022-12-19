@@ -32,7 +32,7 @@
 </template>
 
 <script>
-  import SvgButton from "@/components/ControlBar/SvgButton";
+  import SvgButton from "./SvgButton.vue";
 
   export default {
     name: "ControlsSwitch",

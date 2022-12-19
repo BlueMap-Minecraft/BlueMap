@@ -29,6 +29,7 @@ import {ExtrudeMarker} from "./ExtrudeMarker";
 import {LineMarker} from "./LineMarker";
 import {HtmlMarker} from "./HtmlMarker";
 import {PoiMarker} from "./PoiMarker";
+import {reactive} from "vue";
 
 export class MarkerSet extends Scene {
 
@@ -44,7 +45,7 @@ export class MarkerSet extends Scene {
         /** @type {Map<string, Marker>} */
         this.markers = new Map();
 
-        this.data = {
+        this.data = reactive({
             id: id,
             label: id,
             toggleable: true,
@@ -52,7 +53,7 @@ export class MarkerSet extends Scene {
             markerSets: [],
             markers: [],
             visible: this.visible,
-        };
+        });
 
         Object.defineProperty(this, "visible", {
             get() { return this.data.visible },

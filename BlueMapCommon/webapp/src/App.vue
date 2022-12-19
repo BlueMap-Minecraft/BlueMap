@@ -7,9 +7,9 @@
 </template>
 
 <script>
-import ControlBar from "@/components/ControlBar/ControlBar";
-import MainMenu from "@/components/Menu/MainMenu";
-import FreeFlightMobileControls from "@/components/Controls/FreeFlightMobileControls";
+import ControlBar from "./components/ControlBar/ControlBar.vue";
+import MainMenu from "./components/Menu/MainMenu.vue";
+import FreeFlightMobileControls from "./components/Controls/FreeFlightMobileControls.vue";
 
 export default {
   name: 'App',
@@ -27,7 +27,7 @@ export default {
 </script>
 
 <style lang="scss">
-  @import "~@/scss/global.scss";
+  @import "./scss/global.scss";
 
   #map-container {
     position: absolute;

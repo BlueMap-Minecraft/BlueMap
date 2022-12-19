@@ -3,7 +3,7 @@
     <label>
       <span class="label">{{label}}:</span>
       <input type="number"
-             v-bind:value="value | format"
+             v-bind:value="format(value)"
              v-on:input="$emit('input', $event)"
              v-on:keydown="$event.stopPropagation()"
       >
@@ -18,9 +18,11 @@ export default {
     label: String,
     value: Number
   },
-  filters: {
-    format(value) {
-      return Math.floor(value);
+  computed: {
+    format() {
+      return (value) => {
+        return Math.floor(value);
+      }
     }
   }
 }

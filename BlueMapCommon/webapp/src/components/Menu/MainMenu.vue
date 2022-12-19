@@ -33,12 +33,12 @@
 </template>
 
 <script>
-import SideMenu from "@/components/Menu/SideMenu";
-import SimpleButton from "@/components/Menu/SimpleButton";
-import SettingsMenu from "@/components/Menu/SettingsMenu";
-import {MainMenu} from "@/js/MainMenu";
-import MarkerSetMenu from "@/components/Menu/MarkerSetMenu";
-import MapButton from "@/components/Menu/MapButton";
+import SideMenu from "./SideMenu.vue";
+import SimpleButton from "./SimpleButton.vue";
+import SettingsMenu from "./SettingsMenu.vue";
+import {MainMenu} from "../../js/MainMenu";
+import MarkerSetMenu from "./MarkerSetMenu.vue";
+import MapButton from "./MapButton.vue";
 
 export default {
   name: "MainMenu",

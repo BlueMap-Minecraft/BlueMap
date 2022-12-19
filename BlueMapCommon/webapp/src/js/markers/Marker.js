@@ -23,6 +23,7 @@
  * THE SOFTWARE.
  */
 import {MathUtils, Object3D, Vector3} from "three";
+import {reactive} from "vue";
 
 export class Marker extends Object3D {
 
@@ -33,12 +34,12 @@ export class Marker extends Object3D {
         super();
         Object.defineProperty(this, 'isMarker', {value: true});
 
-        this.data = {
+        this.data = reactive({
             id: markerId,
             type: "marker",
             position: this.position,
             visible: this.visible
-        };
+        });
 
         // redirect parent properties
         Object.defineProperty(this, "position", {

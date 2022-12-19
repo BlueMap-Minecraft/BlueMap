@@ -40,6 +40,7 @@ import {alert, dispatchEvent, generateCacheHash, getPixel, hashTile, stringToIma
 import {TileManager} from "./TileManager";
 import {TileLoader} from "./TileLoader";
 import {LowresTileLoader} from "./LowresTileLoader";
+import {reactive} from "vue";
 
 export class Map {
 
@@ -55,7 +56,7 @@ export class Map {
 		this.loadBlocker = loadBlocker;
 		this.events = events;
 
-		this.data = {
+		this.data = reactive({
 			id: id,
 			sorting: 0,
 			dataUrl: dataUrl,
@@ -75,7 +76,7 @@ export class Map {
 				lodFactor: 5,
 				lodCount: 3
 			}
-		};
+		});
 
 		this.raycaster = new Raycaster();
 

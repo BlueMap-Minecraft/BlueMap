@@ -14,7 +14,7 @@
 </template>
 
 <script>
-import SvgButton from "@/components/ControlBar/SvgButton";
+import SvgButton from "./SvgButton.vue";
 export default {
   name: "MenuButton",
   components: {SvgButton},
@@ -35,7 +35,7 @@ export default {
       }
       path {
         transition: transform 0.3s, fill 0.3s;
-        transform: translate(0 0) rotate(0);
+        transform: translate(0, 0) rotate(0);
 
         &:nth-child(1) {
           transform-origin: 15px 9px;

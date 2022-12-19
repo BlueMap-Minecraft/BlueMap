@@ -40,6 +40,7 @@ import {TouchRotateControls} from "./touch/TouchRotateControls";
 import {TouchAngleControls} from "./touch/TouchAngleControls";
 import {TouchZoomControls} from "./touch/TouchZoomControls";
 import {PlayerMarker} from "../../markers/PlayerMarker";
+import {reactive} from "vue";
 
 const HALF_PI = Math.PI * 0.5;
 
@@ -53,9 +54,9 @@ export class MapControls {
     constructor(rootElement) {
         this.rootElement = rootElement;
 
-        this.data = {
+        this.data = reactive({
             followingPlayer: null
-        };
+        });
 
         /** @type {ControlsManager} */
         this.manager = null;

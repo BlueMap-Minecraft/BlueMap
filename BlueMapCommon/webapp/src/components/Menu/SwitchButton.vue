@@ -6,7 +6,7 @@
 </template>
 
 <script>
-import SwitchHandle from "@/components/Menu/SwitchHandle";
+import SwitchHandle from "./SwitchHandle.vue";
 export default {
   name: "SwitchButton",
   components: {SwitchHandle},

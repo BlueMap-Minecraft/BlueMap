@@ -31,6 +31,7 @@ import {MouseRotateControls} from "./mouse/MouseRotateControls";
 import {MouseAngleControls} from "./mouse/MouseAngleControls";
 import {KeyHeightControls} from "./keyboard/KeyHeightControls";
 import {TouchPanControls} from "./touch/TouchPanControls";
+import {reactive} from "vue";
 
 export class FreeFlightControls {
 
@@ -41,9 +42,9 @@ export class FreeFlightControls {
         this.target = target;
         this.manager = null;
 
-        this.data = {
+        this.data = reactive({
 
-        };
+        });
 
         this.hammer = new Manager(this.target);
         this.initializeHammer();

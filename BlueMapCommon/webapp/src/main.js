@@ -23,10 +23,10 @@
  * THE SOFTWARE.
  */
 
-import Vue from 'vue'
-import App from './App.vue'
-import {BlueMapApp} from "@/js/BlueMapApp";
-import i18n from './i18n';
+import * as Vue from 'vue';
+import App from './App.vue';
+import {BlueMapApp} from "./js/BlueMapApp";
+import {i18nModule, loadLanguageSettings} from "./i18n";
 
 // utils
 String.prototype.includesCI = function (val) {
@@ -34,33 +34,30 @@ String.prototype.includesCI = function (val) {
 }
 
 // bluemap app
-try {
-  const bluemap = new BlueMapApp(document.getElementById("map-container"));
-  window.bluemap = bluemap;
+async function load() {
+  try {
+    const bluemap = new BlueMapApp(document.getElementById("map-container"));
+    window.bluemap = bluemap;
 
-// init vue
-  Vue.config.productionTip = false;
-  Object.defineProperty(Vue.prototype, '$bluemap', {
-    get() {
-      return bluemap;
-    }
-  });
+    // init vue
+    const vue = Vue.createApp(App, {
+      i18nModule,
+      render: h => h(App)
+    });
+    vue.config.globalProperties.$bluemap = bluemap;
 
-  const vue = new Vue({
-    i18n,
-    render: h => h(App)
-  }).$mount('#app');
+    // load languages
+    vue.use(i18nModule);
+    await loadLanguageSettings()
 
-// load languages
-  i18n.loadLanguageSettings().catch(error => console.error(error));
+    // load bluemap next tick (to let the assets load first)
+    const app = vue.mount('#app');
+    await app.$nextTick();
+    await bluemap.load();
 
-// load bluemap next tick (to let the assets load first)
-  vue.$nextTick(() => {
-    bluemap.load().catch(error => console.error(error));
-  });
-} catch (e) {
-  console.error("Failed to load BlueMap webapp!", e);
-  document.body.innerHTML = `
+  } catch (e) {
+    console.error("Failed to load BlueMap webapp!", e);
+    document.body.innerHTML = `
     <div id="bm-app-err">
       <div>
         <img src="assets/logo.png" alt="bluemap logo">
@@ -69,4 +66,7 @@ try {
       </div>
     </div>
   `;
+  }
 }
+
+load().catch(error => console.error(error));

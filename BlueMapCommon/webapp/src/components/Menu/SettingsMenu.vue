@@ -45,10 +45,10 @@
       <SwitchButton :on="appState.screenshot.clipboard" @action="appState.screenshot.clipboard = !appState.screenshot.clipboard; $bluemap.saveUserSettings()">{{ $t("screenshot.clipboard") }}</SwitchButton>
     </Group>
 
-    <Group v-if="$i18n.languages.length > 1" :title="$t('language.title')">
-      <SimpleButton v-for="lang of $i18n.languages" :key="lang.locale"
+    <Group v-if="languages.length > 1" :title="$t('language.title')">
+      <SimpleButton v-for="lang of languages" :key="lang.locale"
                     :active="lang.locale === $i18n.locale"
-                    @action="$i18n.setLanguage(lang.locale); $bluemap.saveUserSettings();"
+                    @action="changeLanguage(lang.locale); $bluemap.saveUserSettings();"
       >{{lang.name}}</SimpleButton>
     </Group>
 
@@ -59,11 +59,11 @@
 </template>
 
 <script>
-import Group from "@/components/Menu/Group";
-import SimpleButton from "@/components/Menu/SimpleButton";
-import Slider from "@/components/Menu/Slider";
-import SwitchButton from "@/components/Menu/SwitchButton";
-import i18n from "../../i18n";
+import Group from "./Group.vue";
+import SimpleButton from "./SimpleButton.vue";
+import Slider from "./Slider.vue";
+import SwitchButton from "./SwitchButton.vue";
+import {i18n, setLanguage} from "../../i18n";
 
 const themes = [
   {get name(){ return i18n.t("theme.default")}, value: null},
@@ -94,6 +94,7 @@ name: "SettingsMenu",
         },
         ...this.$bluemap.settings
       },
+      languages: i18n.languages,
 
       qualityStages: qualityStages,
       themes: themes,
@@ -106,6 +107,9 @@ name: "SettingsMenu",
     renderDistanceFormatter(value) {
       let f = parseFloat(value);
       return f === 0 ? this.$t("renderDistance.off") : f.toFixed(0);
+    },
+    changeLanguage(lang) {
+      setLanguage(lang)
     }
   }
 }
