@@ -1,5 +1,5 @@
 <template>
-  <SvgButton class="menu-button" :class="{close: close, back: back}" @action="$emit('action', $event)">
+  <SvgButton class="menu-button" :class="{close: close, back: back}">
     <svg viewBox="0 0 30 30">
       <g>
         <path d="M25.004,9.294c0,0.806-0.75,1.46-1.676,1.46H6.671c-0.925,0-1.674-0.654-1.674-1.46l0,0
