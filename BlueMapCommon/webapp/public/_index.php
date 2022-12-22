@@ -2,14 +2,14 @@
 
 // !!! SET YOUR SQL-CONNECTION SETTINGS HERE: !!!
 
-$hostname = "127.0.0.1";
+$hostname = '127.0.0.1';
 $port     = 3306;
-$username = "root";
-$password = "";
-$database = "bluemap";
+$username = 'root';
+$password = '';
+$database = 'bluemap';
 
 // set this to "none" if you disabled compression on your maps
-$hiresCompression = "gzip"; 
+$hiresCompression = 'gzip';
 
 // !!! END - DONT CHANGE ANYTHING AFTER THIS LINE !!!
 
