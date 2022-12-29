@@ -51,7 +51,7 @@ public class BmMap {
     public static final String META_FILE_SETTINGS = "settings.json";
     public static final String META_FILE_TEXTURES = "textures.json";
     public static final String META_FILE_RENDER_STATE = ".rstate";
-    public static final String META_FILE_MARKERS = "live/players.json";
+    public static final String META_FILE_MARKERS = "live/markers.json";
     public static final String META_FILE_PLAYERS = "live/players.json";
 
     private final String id;
