@@ -1,6 +1,7 @@
 <template>
   <div id="app" :class="{'theme-light': appState.theme === 'light', 'theme-dark': appState.theme === 'dark', 'theme-contrast': appState.theme === 'contrast'}">
     <FreeFlightMobileControls v-if="appState.controls.state === 'free'" />
+    <ZoomButtons v-if="appState.controls.showZoomButtons && appState.controls.state !== 'free'" />
     <ControlBar />
     <MainMenu :menu="appState.menu" />
   </div>
@@ -10,13 +11,15 @@
 import ControlBar from "./components/ControlBar/ControlBar.vue";
 import MainMenu from "./components/Menu/MainMenu.vue";
 import FreeFlightMobileControls from "./components/Controls/FreeFlightMobileControls.vue";
+import ZoomButtons from "./components/Controls/ZoomButtons.vue";
 
 export default {
   name: 'App',
   components: {
     FreeFlightMobileControls,
     MainMenu,
-    ControlBar
+    ControlBar,
+    ZoomButtons
   },
   data() {
     return {

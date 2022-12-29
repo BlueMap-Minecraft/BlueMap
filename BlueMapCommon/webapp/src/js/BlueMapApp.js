@@ -93,6 +93,7 @@ export class BlueMapApp {
             controls: {
                 state: "perspective",
                 mouseSensitivity: 1,
+                showZoomButtons: true,
                 invertMouse: false,
                 enableFreeFlight: false,
                 pauseTileLoading: false
@@ -592,6 +593,7 @@ export class BlueMapApp {
         this.appState.controls.mouseSensitivity = this.loadUserSetting("mouseSensitivity", this.appState.controls.mouseSensitivity);
         this.appState.controls.invertMouse = this.loadUserSetting("invertMouse", this.appState.controls.invertMouse);
         this.appState.controls.pauseTileLoading = this.loadUserSetting("pauseTileLoading", this.appState.controls.pauseTileLoading);
+        this.appState.controls.showZoomButtons = this.loadUserSetting("showZoomButtons", this.appState.controls.showZoomButtons);
         this.updateControlsSettings();
         this.setTheme(this.loadUserSetting("theme", this.appState.theme));
         this.setScreenshotClipboard(this.loadUserSetting("screenshotClipboard", this.appState.screenshot.clipboard));
@@ -613,6 +615,7 @@ export class BlueMapApp {
         this.saveUserSetting("mouseSensitivity", this.appState.controls.mouseSensitivity);
         this.saveUserSetting("invertMouse", this.appState.controls.invertMouse);
         this.saveUserSetting("pauseTileLoading", this.appState.controls.pauseTileLoading);
+        this.saveUserSetting("showZoomButtons", this.appState.controls.showZoomButtons);
         this.saveUserSetting("theme", this.appState.theme);
         this.saveUserSetting("screenshotClipboard", this.appState.screenshot.clipboard);
         this.saveUserSetting("lang", i18n.locale.value);

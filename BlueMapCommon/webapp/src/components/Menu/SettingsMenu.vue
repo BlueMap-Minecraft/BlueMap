@@ -28,6 +28,10 @@
       <SwitchButton :on="!appState.controls.pauseTileLoading" @action="appState.controls.pauseTileLoading = !appState.controls.pauseTileLoading; $bluemap.saveUserSettings()">{{ $t("renderDistance.loadHiresWhileMoving") }}</SwitchButton>
     </Group>
 
+    <Group :title="$t('mapControls.title')">
+      <SwitchButton :on="appState.controls.showZoomButtons" @action="appState.controls.showZoomButtons = !appState.controls.showZoomButtons; $bluemap.saveUserSettings()">{{ $t("mapControls.showZoomButtons") }}</SwitchButton>
+    </Group>
+
     <Group :title="$t('freeFlightControls.title')">
       <Slider :value="appState.controls.mouseSensitivity" :min="0.1" :max="5" :step="0.05"
               @update="appState.controls.mouseSensitivity = $event; $bluemap.updateControlsSettings();" @lazy="$bluemap.saveUserSettings()">{{ $t("freeFlightControls.mouseSensitivity") }}</Slider>
