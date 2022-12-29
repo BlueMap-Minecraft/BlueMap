@@ -77,6 +77,7 @@ public class WebAppImpl implements WebApp {
     }
 
     @Override
+    @Deprecated(forRemoval = true)
     public String createImage(BufferedImage image, String path) throws IOException {
         path = path.replaceAll("[^a-zA-Z0-9_.\\-/]", "_");
 

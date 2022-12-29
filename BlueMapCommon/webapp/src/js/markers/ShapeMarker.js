@@ -26,11 +26,11 @@ import {Color, DoubleSide, Mesh, ShaderMaterial, Shape, ShapeGeometry, UniformsU
 import {LineMaterial} from "three/examples/jsm/lines/LineMaterial";
 import {MARKER_FILL_VERTEX_SHADER} from "./MarkerFillVertexShader";
 import {MARKER_FILL_FRAGMENT_SHADER} from "./MarkerFillFragmentShader";
-import {LineGeometry} from "three/examples/jsm/lines/LineGeometry";
 import {Line2} from "three/examples/jsm/lines/Line2";
 import {deepEquals} from "../util/Utils";
 import {ObjectMarker} from "./ObjectMarker";
 import {lineShader} from "../util/LineShader";
+import {LineSegmentsGeometry} from "three/examples/jsm/lines/LineSegmentsGeometry";
 
 export class ShapeMarker extends ObjectMarker {
 
@@ -81,6 +81,7 @@ export class ShapeMarker extends ObjectMarker {
      *      detail: string,
      *      shape: {x: number, z: number}[],
      *      shapeY: number,
+     *      holes: {x: number, z: number}[][],
      *      height: number,
      *      link: string,
      *      newTab: boolean,
@@ -99,9 +100,10 @@ export class ShapeMarker extends ObjectMarker {
         // update shape only if needed, based on last update-data
         if (
             !this._markerData.shape || !deepEquals(markerData.shape, this._markerData.shape) ||
+            !this._markerData.holes || !deepEquals(markerData.holes, this._markerData.holes) ||
             !this._markerData.position || !deepEquals(markerData.position, this._markerData.position)
         ){
-            this.setShape(this.createShapeFromData(markerData.shape));
+            this.setShape(this.createShapeWithHolesFromData(markerData.shape, markerData.holes));
         }
 
         // update shapeY
@@ -146,11 +148,11 @@ export class ShapeMarker extends ObjectMarker {
     /**
      * @private
      * Creates a shape from a data object, usually parsed json from a markers.json
-     * @param shapeData {object}
-     * @returns {Shape}
+     * @param shapeData {{x: number, z: number}[]}
+     * @returns {Shape | false}
      */
     createShapeFromData(shapeData) {
-        /** @type {THREE.Vector2[]} **/
+        /** @type {Vector2[]} **/
         let points = [];
 
         if (Array.isArray(shapeData)){
@@ -160,9 +162,33 @@ export class ShapeMarker extends ObjectMarker {
 
                 points.push(new Vector2(x, z));
             });
+
+            return new Shape(points);
         }
 
-        return new Shape(points);
+        return false;
+    }
+
+    /**
+     * @private
+     * Creates a shape with holes from a data object, usually parsed json from a markers.json
+     * @param shapeData {{x: number, z: number}[]}
+     * @param holes {{x: number, z: number}[][]}
+     * @returns {Shape}
+     */
+    createShapeWithHolesFromData(shapeData, holes) {
+        const shape = this.createShapeFromData(shapeData);
+
+        if (shape && Array.isArray(holes)){
+            holes.forEach(hole => {
+                const holeShape = this.createShapeFromData(hole);
+                if (holeShape) {
+                    shape.holes.push(holeShape);
+                }
+            })
+        }
+
+        return shape;
     }
 
 }
@@ -296,7 +322,7 @@ class ShapeMarkerBorder extends Line2 {
      * @param shape {Shape}
      */
     constructor(shape) {
-        let geometry = new LineGeometry();
+        let geometry = new LineSegmentsGeometry();
         geometry.setPositions(ShapeMarkerBorder.createLinePoints(shape));
 
         let material = new LineMaterial({
@@ -412,13 +438,13 @@ class ShapeMarkerBorder extends Line2 {
      * @param shape {Shape}
      */
     updateGeometry(shape) {
-        this.geometry = new LineGeometry();
+        this.geometry = new LineSegmentsGeometry();
         this.geometry.setPositions(ShapeMarkerBorder.createLinePoints(shape));
         this.computeLineDistances();
     }
 
     /**
-     * @param renderer {THREE.WebGLRenderer}
+     * @param renderer {WebGLRenderer}
      */
     onBeforeRender(renderer) {
         renderer.getSize(this.material.resolution);
@@ -435,9 +461,30 @@ class ShapeMarkerBorder extends Line2 {
      */
     static createLinePoints(shape) {
         let points3d = [];
-        let points = shape.getPoints(5);
-        points.forEach(point => points3d.push(point.x, 0, point.y));
-        points3d.push(points[0].x, 0, points[0].y);
+
+        points3d.push(...this.convertPoints(shape.getPoints(5)));
+        shape.getPointsHoles(5).forEach(hole => points3d.push(...this.convertPoints(hole)));
+
+        return points3d;
+    }
+
+    /**
+     * @private
+     * @param points {{x: number, y: number}[]}
+     * @return {number[]}
+     */
+    static convertPoints(points) {
+        points.push(points[0]);
+        let points3d = [];
+
+        let prevPoint = null;
+        points.forEach(point => {
+            if (prevPoint) {
+                points3d.push(prevPoint.x, 0, prevPoint.y);
+                points3d.push(point.x, 0, point.y);
+            }
+            prevPoint = point;
+        });
 
         return points3d;
     }

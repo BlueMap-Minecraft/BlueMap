@@ -86,6 +86,7 @@ export class ExtrudeMarker extends ObjectMarker {
      *      shape: {x: number, z: number}[],
      *      shapeMinY: number,
      *      shapeMaxY: number,
+     *      holes: {x: number, z: number}[][],
      *      link: string,
      *      newTab: boolean,
      *      depthTest: boolean,
@@ -102,9 +103,10 @@ export class ExtrudeMarker extends ObjectMarker {
         // update shape only if needed, based on last update-data
         if (
             !this._markerData.shape || !deepEquals(markerData.shape, this._markerData.shape) ||
+            !this._markerData.holes || !deepEquals(markerData.holes, this._markerData.holes) ||
             !this._markerData.position || !deepEquals(markerData.position, this._markerData.position)
         ){
-            this.setShape(this.createShapeFromData(markerData.shape));
+            this.setShape(this.createShapeWithHolesFromData(markerData.shape, markerData.holes));
         }
 
         // update shapeY
@@ -149,11 +151,11 @@ export class ExtrudeMarker extends ObjectMarker {
     /**
      * @private
      * Creates a shape from a data object, usually parsed json from a markers.json
-     * @param shapeData {object}
-     * @returns {Shape}
+     * @param shapeData {{x: number, z: number}[]}
+     * @returns {Shape | false}
      */
     createShapeFromData(shapeData) {
-        /** @type {THREE.Vector2[]} **/
+        /** @type {Vector2[]} **/
         let points = [];
 
         if (Array.isArray(shapeData)){
@@ -163,9 +165,33 @@ export class ExtrudeMarker extends ObjectMarker {
 
                 points.push(new Vector2(x, z));
             });
+
+            return new Shape(points);
         }
 
-        return new Shape(points);
+        return false;
+    }
+
+    /**
+     * @private
+     * Creates a shape with holes from a data object, usually parsed json from a markers.json
+     * @param shapeData {{x: number, z: number}[]}
+     * @param holes {{x: number, z: number}[][]}
+     * @returns {Shape}
+     */
+    createShapeWithHolesFromData(shapeData, holes) {
+        const shape = this.createShapeFromData(shapeData);
+
+        if (shape && Array.isArray(holes)){
+            holes.forEach(hole => {
+                const holeShape = this.createShapeFromData(hole);
+                if (holeShape) {
+                    shape.holes.push(holeShape);
+                }
+            })
+        }
+
+        return shape;
     }
 
 }
@@ -425,7 +451,7 @@ class ExtrudeMarkerBorder extends Line2 {
     }
 
     /**
-     * @param renderer {THREE.WebGLRenderer}
+     * @param renderer {WebGLRenderer}
      */
     onBeforeRender(renderer) {
         renderer.getSize(this.material.resolution);
@@ -442,7 +468,20 @@ class ExtrudeMarkerBorder extends Line2 {
      */
     static createLinePoints(shape) {
         let points3d = [];
-        let points = shape.getPoints(5);
+
+        points3d.push(...this.convertPoints(shape.getPoints(5)));
+        shape.getPointsHoles(5).forEach(hole => points3d.push(...this.convertPoints(hole)));
+
+        return points3d;
+    }
+
+    /**
+     * @private
+     * @param points {{x: number, y: number}[]}
+     * @return {number[]}
+     */
+    static convertPoints(points) {
+        let points3d = [];
         points.push(points[0]);
 
         let prevPoint = null;
