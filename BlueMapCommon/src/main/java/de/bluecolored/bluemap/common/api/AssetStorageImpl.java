@@ -34,7 +34,7 @@ import java.util.Optional;
 
 public class AssetStorageImpl implements AssetStorage {
 
-    private static final String ASSET_PATH = "live/assets/";
+    private static final String ASSET_PATH = "assets/";
 
     private final Storage storage;
     private final String mapId;

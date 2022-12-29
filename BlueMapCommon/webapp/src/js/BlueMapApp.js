@@ -356,7 +356,7 @@ export class BlueMapApp {
         const map = this.mapViewer.map;
         if (!map) return;
 
-        this.playerMarkerManager = new PlayerMarkerManager(this.mapViewer.markers, map.data.dataUrl + "live/players.json", map.data.dataUrl + "live/assets/playerheads/", this.events);
+        this.playerMarkerManager = new PlayerMarkerManager(this.mapViewer.markers, map.data.dataUrl + "live/players.json", map.data.dataUrl + "assets/playerheads/", this.events);
         this.playerMarkerManager.setAutoUpdateInterval(0);
         return this.playerMarkerManager.update()
             .then(() => {
