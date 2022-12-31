@@ -48,7 +48,7 @@ export class MouseZoomControls {
     start(manager) {
         this.manager = manager;
 
-        this.target.addEventListener("wheel", this.onMouseWheel, {passive: true});
+        this.target.addEventListener("wheel", this.onMouseWheel, {passive: false});
     }
 
     stop() {
@@ -82,6 +82,8 @@ export class MouseZoomControls {
      * @param evt {WheelEvent}
      */
     onMouseWheel = evt => {
+        evt.preventDefault();
+
         let delta = evt.deltaY;
         if (evt.deltaMode === WheelEvent.DOM_DELTA_PIXEL) delta *= 0.01;
         if (evt.deltaMode === WheelEvent.DOM_DELTA_LINE) delta *= 0.33;

@@ -78,7 +78,7 @@ export class FreeFlightControls {
         this.target.addEventListener("contextmenu", this.onContextMenu);
         this.target.addEventListener("mousedown", this.onMouseDown);
         this.target.addEventListener("mouseup", this.onMouseUp);
-        window.addEventListener("wheel", this.onWheel, {passive: true});
+        window.addEventListener("wheel", this.onWheel, {passive: false});
     }
 
     stop() {
@@ -134,6 +134,8 @@ export class FreeFlightControls {
     }
 
     onWheel = evt => {
+        evt.preventDefault();
+
         let delta = evt.deltaY;
         if (evt.deltaMode === WheelEvent.DOM_DELTA_PIXEL) delta *= 0.01;
         if (evt.deltaMode === WheelEvent.DOM_DELTA_LINE) delta *= 0.33;
