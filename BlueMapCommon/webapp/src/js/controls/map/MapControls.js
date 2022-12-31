@@ -214,7 +214,7 @@ export class MapControls {
     }
 
     getMaxPerspectiveAngleForDistance(distance) {
-        return MathUtils.clamp((1 - Math.pow(Math.max(distance - 5, 0.001) / 500, 0.5)) * HALF_PI,0, HALF_PI)
+        return MathUtils.clamp((1 - Math.pow(Math.max(distance - 5, 0.001) * 0.0005, 0.5)) * HALF_PI,0, HALF_PI)
     }
 
     initializeHammer() {

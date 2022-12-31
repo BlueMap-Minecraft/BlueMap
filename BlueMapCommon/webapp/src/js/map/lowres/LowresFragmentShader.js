@@ -41,6 +41,7 @@ struct TileMap {
 	vec2 pos; 
 };
 
+uniform float distance;
 uniform float sunlightStrength;
 uniform float ambientLight;
 uniform TileMap hiresTileMap;
@@ -52,7 +53,7 @@ uniform float lodScale;
 
 varying vec3 vPosition;
 varying vec3 vWorldPosition;
-varying float vDistance;
+//varying float vDistance;
 
 float metaToHeight(vec4 meta) {
 	float heightUnsigned = meta.g * 65280.0 + meta.b * 255.0;
@@ -78,7 +79,7 @@ vec2 posToMetaUV(vec2 pos) {
 
 void main() {
 	//discard if hires tile is loaded at that position
-	if (vDistance < 900.0 && texture(hiresTileMap.map, ((vWorldPosition.xz - hiresTileMap.translate) / hiresTileMap.scale - hiresTileMap.pos) / hiresTileMap.size + 0.5).r > 0.75) discard;
+	if (distance < 1000.0 && texture(hiresTileMap.map, ((vWorldPosition.xz - hiresTileMap.translate) / hiresTileMap.scale - hiresTileMap.pos) / hiresTileMap.size + 0.5).r > 0.75) discard;
 	
 	vec4 color = texture(textureImage, posToColorUV(vPosition.xz));
 	color.a = 1.0; // don't use alpha channel 
@@ -96,7 +97,7 @@ void main() {
 	float aoStrength = 0.0;
 	if(lod == 1.0) {
 		aoStrength = smoothstep(PI - 0.8, PI - 0.2, acos(-clamp(viewMatrix[1][2], 0.0, 1.0)));
-		aoStrength *= 1.0 - smoothstep(300.0, 500.0, vDistance);
+		aoStrength *= 1.0 - smoothstep(200.0, 600.0, distance);
 		
 		if (aoStrength > 0.0) { 
 			const float r = 3.0;

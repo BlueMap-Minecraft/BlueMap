@@ -55,6 +55,7 @@ export class MapViewer {
 			camera: null,
 			controlsManager: null,
 			uniforms: {
+				distance: { value: 0 },
 				sunlightStrength: { value: 1 },
 				ambientLight: { value: 0 },
 				skyColor: { value: new Color(0.5, 0.5, 1) },
@@ -303,6 +304,7 @@ export class MapViewer {
 			this.camera.position.z -= sZ;
 
 			// update uniforms
+			this.data.uniforms.distance.value = this.controlsManager.distance;
 			this.data.uniforms.hiresTileMap.value.pos.copy(this.map.hiresTileManager.centerTile);
 			this.data.uniforms.hiresTileMap.value.translate.set(
 				this.map.data.hires.translate.x - sX,
@@ -374,6 +376,7 @@ export class MapViewer {
 						this.renderer.initTexture(texture);
 					}
 
+					this.data.uniforms.distance.value = this.controlsManager.distance;
 					this.data.uniforms.skyColor.value = map.data.skyColor;
 					this.data.uniforms.ambientLight.value = map.data.ambientLight;
 					this.data.uniforms.hiresTileMap.value.map = map.hiresTileManager.tileMap.texture;
