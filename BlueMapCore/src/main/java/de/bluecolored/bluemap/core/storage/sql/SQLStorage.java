@@ -511,26 +511,30 @@ public class SQLStorage extends Storage {
                 recoveringConnection(connection -> {
 
                     // delete potential files that are already in the new format to avoid constraint-issues
-                    connection.createStatement().executeUpdate(
-                            "DELETE FROM `bluemap_storage_meta`" +
-                                    "WHERE `key` IN('settings.json', 'textures.json', '.rstate')"
+                    executeUpdate(connection,
+                            "DELETE FROM `bluemap_map_meta`" +
+                                    "WHERE `key` IN (?, ?, ?)",
+                    "settings.json", "textures.json", ".rstate"
                     );
 
                     // rename files
-                    connection.createStatement().executeUpdate(
-                            "UPDATE `bluemap_storage_meta`" +
-                                    "SET `key` = 'settings.json'" +
-                                    "WHERE `key` = 'settings'"
+                    executeUpdate(connection,
+                            "UPDATE `bluemap_map_meta` " +
+                                    "SET `key` = ? " +
+                                    "WHERE `key` = ?",
+                    "settings.json", "settings"
                     );
-                    connection.createStatement().executeUpdate(
-                            "UPDATE `bluemap_storage_meta`" +
-                                    "SET `key` = 'textures.json'" +
-                                    "WHERE `key` = 'textures'"
+                    executeUpdate(connection,
+                            "UPDATE `bluemap_map_meta` " +
+                                    "SET `key` = ? " +
+                                    "WHERE `key` = ?",
+                            "textures.json", "textures"
                     );
-                    connection.createStatement().executeUpdate(
-                            "UPDATE `bluemap_storage_meta`" +
-                                    "SET `key` = '.rstate'" +
-                                    "WHERE `key` = 'render_state'"
+                    executeUpdate(connection,
+                            "UPDATE `bluemap_map_meta` " +
+                                    "SET `key` = ? " +
+                                    "WHERE `key` = ?",
+                            ".rstate", "render_state"
                     );
 
                     // update schemaVersion
