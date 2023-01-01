@@ -25,9 +25,9 @@
 package de.bluecolored.bluemap.sponge;
 
 import com.flowpowered.math.vector.Vector3d;
+import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.serverinterface.Gamemode;
 import de.bluecolored.bluemap.common.serverinterface.Player;
-import de.bluecolored.bluemap.common.plugin.text.Text;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.effect.VanishState;
@@ -36,7 +36,6 @@ import org.spongepowered.api.effect.potion.PotionEffectTypes;
 import org.spongepowered.api.entity.living.player.gamemode.GameMode;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
-import org.spongepowered.api.world.LightTypes;
 
 import java.io.IOException;
 import java.util.*;
@@ -159,8 +158,9 @@ public class SpongePlayer implements Player {
         this.rotation = SpongePlugin.fromSpongePoweredVector(player.rotation());
         this.sneaking = player.get(Keys.IS_SNEAKING).orElse(false);
 
-        this.skyLight = player.world().light(LightTypes.SKY, player.blockPosition());
-        this.blockLight = player.world().light(LightTypes.BLOCK, player.blockPosition());
+        // not implemented in sponge
+        this.skyLight = 15; //player.world().light(LightTypes.SKY, player.blockPosition());
+        this.blockLight = 0; //player.world().light(LightTypes.BLOCK, player.blockPosition());
 
         try {
             var world = SpongePlugin.getInstance().getWorld(player.world());
