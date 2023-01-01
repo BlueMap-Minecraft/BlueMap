@@ -35,6 +35,7 @@ import org.apache.commons.dbcp2.*;
 import org.apache.commons.pool2.ObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
+import org.intellij.lang.annotations.Language;
 
 import javax.sql.DataSource;
 import java.io.*;
@@ -114,7 +115,6 @@ public class SQLStorage extends Storage {
                     }
 
                     executeUpdate(connection,
-                            //language=SQL
                             "REPLACE INTO `bluemap_map_tile` (`map`, `lod`, `x`, `z`, `compression`, `data`) " +
                             "VALUES (?, ?, ?, ?, ?, ?)",
                             mapFK,
@@ -138,7 +138,6 @@ public class SQLStorage extends Storage {
         try {
             byte[] data = recoveringConnection(connection -> {
                     ResultSet result = executeQuery(connection,
-                            //language=SQL
                             "SELECT t.`data` " +
                             "FROM `bluemap_map_tile` t " +
                             " INNER JOIN `bluemap_map` m " +
@@ -179,7 +178,6 @@ public class SQLStorage extends Storage {
         try {
             TileInfo tileInfo = recoveringConnection(connection -> {
                 ResultSet result = executeQuery(connection,
-                        //language=SQL
                         "SELECT t.`changed`, LENGTH(t.`data`) as 'size' " +
                         "FROM `bluemap_map_tile` t " +
                         " INNER JOIN `bluemap_map` m " +
@@ -240,7 +238,6 @@ public class SQLStorage extends Storage {
         try {
             recoveringConnection(connection ->
                 executeUpdate(connection,
-                        //language=SQL
                         "DELETE t " +
                         "FROM `bluemap_map_tile` t " +
                         " INNER JOIN `bluemap_map` m " +
@@ -273,7 +270,6 @@ public class SQLStorage extends Storage {
                     }
 
                     executeUpdate(connection,
-                            //language=SQL
                             "REPLACE INTO `bluemap_map_meta` (`map`, `key`, `value`) " +
                             "VALUES (?, ?, ?)",
                             mapFK,
@@ -292,7 +288,6 @@ public class SQLStorage extends Storage {
         try {
             byte[] data = recoveringConnection(connection -> {
                 ResultSet result = executeQuery(connection,
-                        //language=SQL
                         "SELECT t.`value` " +
                         "FROM `bluemap_map_meta` t " +
                         " INNER JOIN `bluemap_map` m " +
@@ -323,7 +318,6 @@ public class SQLStorage extends Storage {
         try {
             MetaInfo tileInfo = recoveringConnection(connection -> {
                 ResultSet result = executeQuery(connection,
-                        //language=SQL
                         "SELECT LENGTH(t.`value`) as 'size' " +
                                 "FROM `bluemap_map_meta` t " +
                                 " INNER JOIN `bluemap_map` m " +
@@ -366,7 +360,6 @@ public class SQLStorage extends Storage {
         try {
             recoveringConnection(connection ->
                     executeUpdate(connection,
-                            //language=SQL
                             "DELETE t " +
                             "FROM `bluemap_map_meta` t " +
                             " INNER JOIN `bluemap_map` m " +
@@ -386,7 +379,6 @@ public class SQLStorage extends Storage {
         try {
             recoveringConnection(connection -> {
                 executeUpdate(connection,
-                        //language=SQL
                         "DELETE t " +
                         "FROM `bluemap_map_tile` t " +
                         " INNER JOIN `bluemap_map` m " +
@@ -396,7 +388,6 @@ public class SQLStorage extends Storage {
                 );
 
                 executeUpdate(connection,
-                        //language=SQL
                         "DELETE t " +
                         "FROM `bluemap_map_meta` t " +
                         " INNER JOIN `bluemap_map` m " +
@@ -410,6 +401,7 @@ public class SQLStorage extends Storage {
         }
     }
 
+    @SuppressWarnings("UnusedAssignment")
     public void initialize() throws IOException {
         try {
 
@@ -423,7 +415,6 @@ public class SQLStorage extends Storage {
                         ")");
 
                 ResultSet result = executeQuery(connection,
-                        //language=SQL
                         "SELECT `value` FROM `bluemap_storage_meta` " +
                         "WHERE `key` = ?",
                         "schema_version"
@@ -433,7 +424,6 @@ public class SQLStorage extends Storage {
                     return result.getString("value");
                 } else {
                     executeUpdate(connection,
-                            //language=SQL
                             "INSERT INTO `bluemap_storage_meta` (`key`, `value`) " +
                             "VALUES (?, ?)",
                             "schema_version", "0"
@@ -450,7 +440,7 @@ public class SQLStorage extends Storage {
             }
 
             // validate schema version
-            if (schemaVersion < 0 || schemaVersion > 2)
+            if (schemaVersion < 0 || schemaVersion > 3)
                 throw new IOException("Unknown schema-version: " + schemaVersion);
 
             // update schema to current version
@@ -502,20 +492,58 @@ public class SQLStorage extends Storage {
                     );
 
                     executeUpdate(connection,
-                            //language=SQL
                             "UPDATE `bluemap_storage_meta` " +
                             "SET `value` = ? " +
                             "WHERE `key` = ?",
-                            "2", "schema_version"
+                            "3", "schema_version"
                     );
                 }, 2);
 
-                schemaVersion = 2;
+                schemaVersion = 3;
             }
 
             if (schemaVersion == 1)
                 throw new IOException("Outdated database schema: " + schemaVersion +
                         " (Cannot automatically update, reset your database and reload bluemap to fix this)");
+
+            if (schemaVersion == 2) {
+                Logger.global.logInfo("Updating database schema: Renaming bluemap_map_meta keys to new format...");
+                recoveringConnection(connection -> {
+
+                    // delete potential files that are already in the new format to avoid constraint-issues
+                    connection.createStatement().executeUpdate(
+                            "DELETE FROM `bluemap_storage_meta`" +
+                                    "WHERE `key` IN('settings.json', 'textures.json', '.rstate')"
+                    );
+
+                    // rename files
+                    connection.createStatement().executeUpdate(
+                            "UPDATE `bluemap_storage_meta`" +
+                                    "SET `key` = 'settings.json'" +
+                                    "WHERE `key` = 'settings'"
+                    );
+                    connection.createStatement().executeUpdate(
+                            "UPDATE `bluemap_storage_meta`" +
+                                    "SET `key` = 'textures.json'" +
+                                    "WHERE `key` = 'textures'"
+                    );
+                    connection.createStatement().executeUpdate(
+                            "UPDATE `bluemap_storage_meta`" +
+                                    "SET `key` = '.rstate'" +
+                                    "WHERE `key` = 'render_state'"
+                    );
+
+                    // update schemaVersion
+                    executeUpdate(connection,
+                            "UPDATE `bluemap_storage_meta` " +
+                                    "SET `value` = ? " +
+                                    "WHERE `key` = ?",
+                            "3", "schema_version"
+                    );
+                }, 2);
+
+                schemaVersion = 3;
+            }
 
         } catch (SQLException ex) {
             throw new IOException(ex);
@@ -539,7 +567,7 @@ public class SQLStorage extends Storage {
         }
     }
 
-    private ResultSet executeQuery(Connection connection, String sql, Object... parameters) throws SQLException {
+    private ResultSet executeQuery(Connection connection, @Language("sql") String sql, Object... parameters) throws SQLException {
         // we only use this prepared statement once, but the DB-Driver caches those and reuses them
         PreparedStatement statement = connection.prepareStatement(sql);
         for (int i = 0; i < parameters.length; i++) {
@@ -549,7 +577,7 @@ public class SQLStorage extends Storage {
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    private int executeUpdate(Connection connection, String sql, Object... parameters) throws SQLException {
+    private int executeUpdate(Connection connection, @Language("sql") String sql, Object... parameters) throws SQLException {
         // we only use this prepared statement once, but the DB-Driver caches those and reuses them
         PreparedStatement statement = connection.prepareStatement(sql);
         for (int i = 0; i < parameters.length; i++) {
