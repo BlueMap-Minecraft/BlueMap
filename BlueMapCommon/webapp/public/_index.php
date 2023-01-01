@@ -109,7 +109,7 @@ if (startsWith($path, "/maps/")) {
     // determine map-path
     $pathParts = explode("/", substr($path, strlen("/maps/")), 2);
     $mapId = $pathParts[0];
-    $mapPath = $pathParts[1];
+    $mapPath = explode("?", $pathParts[1], 2)[0];
 
     // get sql-connection
     $sql = new mysqli($hostname, $username, $password, $database, $port);
