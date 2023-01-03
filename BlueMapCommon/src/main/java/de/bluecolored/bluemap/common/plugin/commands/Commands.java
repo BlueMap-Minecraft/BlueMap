@@ -96,9 +96,9 @@ public class Commands<S> {
 
         LiteralCommandNode<S> versionCommand =
                 literal("version")
-                        .requires(requirementsUnloaded("bluemap.version"))
-                        .executes(this::versionCommand)
-                        .build();
+                .requires(requirementsUnloaded("bluemap.version"))
+                .executes(this::versionCommand)
+                .build();
 
         LiteralCommandNode<S> helpCommand =
                 literal("help")
@@ -109,7 +109,11 @@ public class Commands<S> {
         LiteralCommandNode<S> reloadCommand =
                 literal("reload")
                 .requires(requirementsUnloaded("bluemap.reload"))
-                .executes(this::reloadCommand)
+                .executes(context -> this.reloadCommand(context, false))
+
+                .then(literal("light")
+                        .executes(context -> this.reloadCommand(context, true)))
+
                 .build();
 
         LiteralCommandNode<S> debugCommand =
@@ -380,14 +384,18 @@ public class Commands<S> {
         return 1;
     }
 
-    public int reloadCommand(CommandContext<S> context) {
+    public int reloadCommand(CommandContext<S> context, boolean light) {
         CommandSource source = commandSourceInterface.apply(context.getSource());
 
         source.sendMessage(Text.of(TextColor.GOLD, "Reloading BlueMap..."));
 
         new Thread(() -> {
             try {
-                plugin.reload();
+                if (light) {
+                    plugin.lightReload();
+                } else {
+                    plugin.reload();
+                }
 
                 if (plugin.isLoaded()) {
                     source.sendMessage(Text.of(TextColor.GREEN, "BlueMap reloaded!"));

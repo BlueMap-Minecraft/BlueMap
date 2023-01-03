@@ -48,6 +48,7 @@ import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.world.World;
 import org.apache.commons.io.FileUtils;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.gson.GsonConfigurationLoader;
@@ -81,6 +82,14 @@ public class BlueMapService implements Closeable {
     private Map<String, BmMap> maps;
 
     private ResourcePack resourcePack;
+
+
+    public BlueMapService(ServerInterface serverInterface, BlueMapConfigProvider configProvider, @Nullable ResourcePack preloadedResourcePack) {
+        this(serverInterface, configProvider);
+
+        if (preloadedResourcePack != null)
+            this.resourcePack = preloadedResourcePack;
+    }
 
     public BlueMapService(ServerInterface serverInterface, BlueMapConfigProvider configProvider) {
         this.serverInterface = serverInterface;
@@ -230,6 +239,7 @@ public class BlueMapService implements Closeable {
         World world = worlds.get(worldId);
         if (world == null) {
             try {
+                Logger.global.logInfo("Loading world '" + worldId + "' (" + worldFolder.toAbsolutePath().normalize() + ")...");
                 world = new MCAWorld(worldFolder, mapConfig.getWorldSkyLight(), mapConfig.isIgnoreMissingLightData());
                 worlds.put(worldId, world);
             } catch (IOException ex) {
@@ -244,6 +254,7 @@ public class BlueMapService implements Closeable {
 
         try {
 
+            Logger.global.logInfo("Loading map '" + name + "'...");
             BmMap map = new BmMap(
                     id,
                     name,
@@ -422,6 +433,10 @@ public class BlueMapService implements Closeable {
         }
 
         return resourcePack;
+    }
+
+    public Optional<ResourcePack> getResourcePackIfLoaded() {
+        return Optional.ofNullable(this.resourcePack);
     }
 
     private Collection<Path> getWorldFolders() {

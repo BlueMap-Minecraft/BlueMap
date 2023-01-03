@@ -45,9 +45,11 @@ import de.bluecolored.bluemap.core.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.metrics.Metrics;
+import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.world.World;
+import org.jetbrains.annotations.Nullable;
 import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 import org.spongepowered.configurate.serialize.SerializationException;
 
@@ -101,15 +103,19 @@ public class Plugin implements ServerEventListener {
     }
 
     public void load() throws IOException {
+        load(null);
+    }
+
+    private void load(@Nullable ResourcePack preloadedResourcePack) throws IOException {
+        loadingLock.lock();
         try {
-            loadingLock.lock();
             synchronized (this) {
 
                 if (loaded) return;
                 unload(); //ensure nothing is left running (from a failed load or something)
 
                 //load configs
-                blueMap = new BlueMapService(serverInterface, new BlueMapConfigs(serverInterface));
+                blueMap = new BlueMapService(serverInterface, new BlueMapConfigs(serverInterface), preloadedResourcePack);
                 CoreConfig coreConfig = getConfigs().getCoreConfig();
                 WebserverConfig webserverConfig = getConfigs().getWebserverConfig();
                 WebappConfig webappConfig = getConfigs().getWebappConfig();
@@ -333,8 +339,8 @@ public class Plugin implements ServerEventListener {
     }
 
     public void unload() {
+        loadingLock.interruptAndLock();
         try {
-            loadingLock.interruptAndLock();
             synchronized (this) {
                 //save
                 save();
@@ -399,6 +405,31 @@ public class Plugin implements ServerEventListener {
     public void reload() throws IOException {
         unload();
         load();
+    }
+
+    /**
+     * {@link #reload()} but without reloading the resourcepack (if it is loaded).
+     */
+    public void lightReload() throws IOException {
+        loadingLock.lock();
+        try {
+            synchronized (this) {
+
+                if (!loaded) {
+                    reload(); // reload normally
+                    return;
+                }
+
+                // hold and reuse loaded resourcepack
+                ResourcePack preloadedResourcePack = this.blueMap.getResourcePackIfLoaded().orElse(null);
+
+                unload();
+                load(preloadedResourcePack);
+
+            }
+        } finally {
+            loadingLock.unlock();
+        }
     }
 
     public synchronized void save() {
