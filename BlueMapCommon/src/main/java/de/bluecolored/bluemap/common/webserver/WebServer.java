@@ -112,6 +112,14 @@ public class WebServer extends Thread {
     }
 
     public synchronized void close(){
+        try {
+            if (server != null && !server.isClosed()){
+                server.close();
+            }
+        } catch (IOException e) {
+            Logger.global.logError("Error while closing WebServer!", e);
+        }
+
         if (connectionThreads != null) {
             connectionThreads.shutdown();
             try {
@@ -121,14 +129,6 @@ public class WebServer extends Thread {
             } catch (InterruptedException ex) {
                 Thread.currentThread().interrupt();
             }
-        }
-
-        try {
-            if (server != null && !server.isClosed()){
-                server.close();
-            }
-        } catch (IOException e) {
-            Logger.global.logError("Error while closing WebServer!", e);
         }
     }
 
