@@ -66,7 +66,7 @@ configurations {
 }
 
 dependencies {
-	minecraft 'net.minecraftforge:forge:1.16.3-34.0.0'
+	minecraft 'net.minecraftforge:forge:1.16.5-36.2.34'
 
 	shadowInclude ("de.bluecolored.bluemap.common:BlueMapCommon") {
 		//exclude dependencies provided by forge
@@ -174,7 +174,7 @@ modrinth {
 	versionNumber = "${project.version}-${project.name}"
 	changelog = "Releasenotes and Changelog:\nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}"
 	uploadFile = shadowJar
-	gameVersions = ["1.16.2", "1.16.3", "1.16.4", "1.16.5"]
+	gameVersions = ["1.16.5"]
 }
 
 curseforge {
@@ -196,9 +196,6 @@ curseforge {
 		addGameVersion "Java 12"
 		addGameVersion "Java 11"
 
-		addGameVersion "1.16.2"
-		addGameVersion "1.16.3"
-		addGameVersion "1.16.4"
 		addGameVersion "1.16.5"
 
 		mainArtifact shadowJar

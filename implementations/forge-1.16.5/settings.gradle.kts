@@ -1,3 +1,3 @@
-rootProject.name = "forge-1.14.4"
+rootProject.name = "forge-1.16.5"
 
 includeBuild("../../BlueMapCommon")

@@ -38,9 +38,12 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.RegistryKey;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.world.dimension.DimensionType;
+import net.minecraft.util.registry.Registry;
+import net.minecraft.world.World;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegisterCommandsEvent;
 import net.minecraftforge.event.TickEvent.ServerTickEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
 import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
@@ -79,7 +82,7 @@ public class ForgeMod implements ServerInterface {
         this.onlinePlayerMap = new ConcurrentHashMap<>();
         this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 
-        this.pluginInstance = new Plugin("forge-1.15.2", this);
+        this.pluginInstance = new Plugin("forge-1.16.5", this);
 
         this.eventForwarder = new ForgeEventForwarder();
         this.worlds = Caffeine.newBuilder()
@@ -97,9 +100,12 @@ public class ForgeMod implements ServerInterface {
     @SubscribeEvent
     public void onServerStarting(FMLServerStartingEvent event) {
         this.serverInstance = event.getServer();
+    }
 
+    @SubscribeEvent
+    public void onRegisterCommands(RegisterCommandsEvent event) {
         //register commands
-        new Commands<>(pluginInstance, event.getServer().getCommandManager().getDispatcher(), forgeSource ->
+        new Commands<>(pluginInstance, event.getDispatcher(), forgeSource ->
                 new ForgeCommandSource(this, pluginInstance, forgeSource)
         );
     }
@@ -135,7 +141,7 @@ public class ForgeMod implements ServerInterface {
 
     @Override
     public MinecraftVersion getMinecraftVersion() {
-        return new MinecraftVersion(1, 15, 2);
+        return new MinecraftVersion(1, 16, 5);
     }
 
     @Override
@@ -157,6 +163,7 @@ public class ForgeMod implements ServerInterface {
         return loadedWorlds;
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     public Optional<ServerWorld> getWorld(Object world) {
         if (world instanceof Path)
@@ -164,20 +171,13 @@ public class ForgeMod implements ServerInterface {
 
         if (world instanceof String) {
             ResourceLocation resourceLocation = ResourceLocation.tryCreate((String) world);
-            DimensionType dimensionType = null;
-            if (resourceLocation != null) dimensionType = DimensionType.byName(resourceLocation);
-            if (dimensionType != null) world = serverInstance.getWorld(dimensionType);
+            if (resourceLocation != null) world = serverInstance.getWorld(RegistryKey.func_240903_a_(Registry.field_239699_ae_, resourceLocation));
         }
 
-        if (world instanceof ResourceLocation) {
-            DimensionType dimensionType = DimensionType.byName((ResourceLocation) world);
-            if (dimensionType != null) world = dimensionType;
-        }
-
-        if (world instanceof DimensionType) {
-            var serverWorld = serverInstance.getWorld((DimensionType) world);
-            //noinspection ConstantConditions
-            if (serverWorld != null) world = serverWorld;
+        if (world instanceof RegistryKey) {
+            try {
+                world = serverInstance.getWorld((RegistryKey<World>) world);
+            } catch (ClassCastException ignored) {}
         }
 
         if (world instanceof net.minecraft.world.server.ServerWorld)
