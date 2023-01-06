@@ -256,9 +256,9 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
 
                         ConfigTemplate template;
                         switch (world.getDimension()) {
-                            case NETHER: template = createNetherMapTemplate(name, worldFolder, i); break;
-                            case END: template = createEndMapTemplate(name, worldFolder, i); break;
-                            default: template = createOverworldMapTemplate(name, worldFolder, i); break;
+                            case NETHER: template = createNetherMapTemplate(name, worldFolder, i - 1); break;
+                            case END: template = createEndMapTemplate(name, worldFolder, i - 1); break;
+                            default: template = createOverworldMapTemplate(name, worldFolder, i - 1); break;
                         }
 
                         Files.writeString(
