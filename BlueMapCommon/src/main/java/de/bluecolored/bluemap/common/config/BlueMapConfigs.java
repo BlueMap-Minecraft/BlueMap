@@ -228,34 +228,37 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
                 if (worlds.isEmpty()) {
                     Files.writeString(
                             mapConfigFolder.resolve("overworld.conf"),
-                            createOverworldMapTemplate("Overworld", Path.of("world")).build(),
+                            createOverworldMapTemplate("Overworld", Path.of("world"), 0).build(),
                             StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                     );
                     Files.writeString(
                             mapConfigFolder.resolve("nether.conf"),
-                            createNetherMapTemplate("Nether", Path.of("world", "DIM-1")).build(),
+                            createNetherMapTemplate("Nether", Path.of("world", "DIM-1"), 0).build(),
                             StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                     );
                     Files.writeString(
                             mapConfigFolder.resolve("end.conf"),
-                            createEndMapTemplate("End", Path.of("world", "DIM1")).build(),
+                            createEndMapTemplate("End", Path.of("world", "DIM1"), 0).build(),
                             StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                     );
                 } else {
                     for (var world : worlds) {
                         String name = world.getName().orElse(world.getDimension().getName());
                         Path worldFolder = world.getSaveFolder();
-                        ConfigTemplate template;
-                        switch (world.getDimension()) {
-                            case NETHER: template = createNetherMapTemplate(name, worldFolder); break;
-                            case END: template = createEndMapTemplate(name, worldFolder); break;
-                            default: template = createOverworldMapTemplate(name, worldFolder); break;
-                        }
 
                         Path configFile = mapConfigFolder.resolve(sanitiseMapId(name.toLowerCase(Locale.ROOT)) + ".conf");
                         int i = 1;
                         while (Files.exists(configFile)) {
-                            configFile = mapConfigFolder.resolve(sanitiseMapId(name.toLowerCase(Locale.ROOT)) + '_' + (i++) + ".conf");
+                            configFile = mapConfigFolder.resolve(sanitiseMapId(name.toLowerCase(Locale.ROOT)) + '_' + (++i) + ".conf");
+                        }
+
+                        if (i > 1) name = name + " " + i;
+
+                        ConfigTemplate template;
+                        switch (world.getDimension()) {
+                            case NETHER: template = createNetherMapTemplate(name, worldFolder, i); break;
+                            case END: template = createEndMapTemplate(name, worldFolder, i); break;
+                            default: template = createOverworldMapTemplate(name, worldFolder, i); break;
                         }
 
                         Files.writeString(
@@ -353,10 +356,10 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
         return id.replaceAll("\\W", "_");
     }
 
-    private ConfigTemplate createOverworldMapTemplate(String name, Path worldFolder) throws IOException {
+    private ConfigTemplate createOverworldMapTemplate(String name, Path worldFolder, int index) throws IOException {
         return configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/maps/map.conf")
                 .setVariable("name", name)
-                .setVariable("sorting", "0")
+                .setVariable("sorting", "" + index)
                 .setVariable("world", formatPath(worldFolder))
                 .setVariable("sky-color", "#7dabff")
                 .setVariable("ambient-light", "0.1")
@@ -366,10 +369,10 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
                 .setVariable("max-y", "100");
     }
 
-    private ConfigTemplate createNetherMapTemplate(String name, Path worldFolder) throws IOException {
+    private ConfigTemplate createNetherMapTemplate(String name, Path worldFolder, int index) throws IOException {
         return configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/maps/map.conf")
                 .setVariable("name", name)
-                .setVariable("sorting", "100")
+                .setVariable("sorting", "" + (100 + index))
                 .setVariable("world", formatPath(worldFolder))
                 .setVariable("sky-color", "#290000")
                 .setVariable("ambient-light", "0.6")
@@ -379,10 +382,10 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
                 .setVariable("max-y", "90");
     }
 
-    private ConfigTemplate createEndMapTemplate(String name, Path worldFolder) throws IOException {
+    private ConfigTemplate createEndMapTemplate(String name, Path worldFolder, int index) throws IOException {
         return configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/maps/map.conf")
                 .setVariable("name", name)
-                .setVariable("sorting", "200")
+                .setVariable("sorting", "" + (200 + index))
                 .setVariable("world", formatPath(worldFolder))
                 .setVariable("sky-color", "#080010")
                 .setVariable("ambient-light", "0.6")
