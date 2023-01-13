@@ -36,7 +36,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
-import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 @DebugDump
@@ -238,7 +237,7 @@ public class ResourcePack {
                         list(root.resolve("assets"))
                                 .map(path -> path.resolve("models"))
                                 .flatMap(ResourcePack::list)
-                                .filter(path -> Pattern.matches("blocks?", path.getFileName().toString()))
+                                .filter(path -> !path.getFileName().toString().equals("item"))
                                 .filter(Files::isDirectory)
                                 .flatMap(ResourcePack::walk)
                                 .filter(path -> path.getFileName().toString().endsWith(".json"))
