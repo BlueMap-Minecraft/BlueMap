@@ -322,7 +322,8 @@ public class Plugin implements ServerEventListener {
                 this.api.register();
 
                 //save webapp settings again (for api-registered scripts and styles)
-                this.getBlueMap().getWebFilesManager().saveSettings();
+                if (webappConfig.isEnabled())
+                    this.getBlueMap().getWebFilesManager().saveSettings();
 
                 //done
                 loaded = true;
