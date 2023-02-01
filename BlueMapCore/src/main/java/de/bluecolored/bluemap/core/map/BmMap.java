@@ -138,7 +138,7 @@ public class BmMap {
 
         // only save texture gallery if not present in storage
         try {
-            if (storage.readMeta(id, META_FILE_TEXTURES).isEmpty())
+            if (storage.readMetaInfo(id, META_FILE_TEXTURES).isEmpty())
                 saveTextureGallery();
         } catch (IOException e) {
             Logger.global.logError("Failed to read texture gallery", e);
