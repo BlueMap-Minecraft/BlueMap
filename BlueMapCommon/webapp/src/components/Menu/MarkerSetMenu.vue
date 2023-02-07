@@ -50,7 +50,8 @@ export default {
       return this.menu.currentPage().markerSet;
     },
     filteredMarkers() {
-      return [...this.thisMarkerSet.markers].filter(marker => {
+      return this.thisMarkerSet.markers.filter(marker => {
+        if (!marker.listed) return false;
         if (!this.filter.search) return true;
         if (marker.id.includesCI(this.filter.search)) return true;
         if (marker.label && marker.label.includesCI(this.filter.search)) return true;
@@ -69,7 +70,7 @@ export default {
     },
     filteredMarkerSets() {
       return this.thisMarkerSet.markerSets.filter(markerSet => {
-        return (markerSet.id !== "bm-popup-set");
+        return markerSet.listed;
       }).sort((a, b) => {
         return (a.sorting || 0) - (b.sorting || 0);
       });

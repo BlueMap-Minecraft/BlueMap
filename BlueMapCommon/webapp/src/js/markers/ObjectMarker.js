@@ -74,6 +74,7 @@ export class ObjectMarker extends Marker {
      *      label: string,
      *      detail: string,
      *      sorting: number,
+     *      listed: boolean,
      *      link: string,
      *      newTab: boolean
      *      }}
@@ -94,6 +95,9 @@ export class ObjectMarker extends Marker {
 
         //update sorting
         this.data.sorting = markerData.sorting || 0;
+
+        //update listed
+        this.data.listed = markerData.listed === undefined ? true : markerData.listed;
 
         // update link
         this.data.link = markerData.link || null;

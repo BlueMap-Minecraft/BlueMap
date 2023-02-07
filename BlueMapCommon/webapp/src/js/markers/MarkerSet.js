@@ -54,6 +54,11 @@ export class MarkerSet extends Scene {
             markerSets: [],
             markers: [],
             visible: this.visible,
+            get listed() {
+                return this.toggleable ||
+                    this.markers.filter(marker => marker.listed).length > 0 ||
+                    this.markerSets.filter(markerSet => markerSet.listed).length > 0
+            }
         });
 
         Object.defineProperty(this, "visible", {

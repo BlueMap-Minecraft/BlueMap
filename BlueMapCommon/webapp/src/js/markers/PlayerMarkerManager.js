@@ -49,7 +49,8 @@ export class PlayerMarkerManager extends MarkerManager {
      * @returns {boolean}
      */
     updateFromData(markerFileData) {
-        let playerMarkerSet = this.getPlayerMarkerSet();
+        let playerMarkerSet = this.getPlayerMarkerSet(Array.isArray(markerFileData.players));
+        if (!playerMarkerSet) return false;
         return playerMarkerSet.updateFromPlayerData(markerFileData);
     }
 
@@ -57,11 +58,11 @@ export class PlayerMarkerManager extends MarkerManager {
      * @private
      * @returns {PlayerMarkerSet}
      */
-    getPlayerMarkerSet() {
+    getPlayerMarkerSet(create = true) {
         /** @type {PlayerMarkerSet} */
         let playerMarkerSet = /** @type {PlayerMarkerSet} */ this.root.markerSets.get(PLAYER_MARKER_SET_ID);
 
-        if (!playerMarkerSet) {
+        if (!playerMarkerSet && create) {
             playerMarkerSet = new PlayerMarkerSet(PLAYER_MARKER_SET_ID, this.playerheadsUrl);
             this.root.add(playerMarkerSet);
         }

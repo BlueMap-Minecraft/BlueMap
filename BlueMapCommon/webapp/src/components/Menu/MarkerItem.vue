@@ -105,17 +105,20 @@ export default {
 
 .side-menu .marker-item {
   display: flex;
+  white-space: nowrap;
+  user-select: none;
+
+  line-height: 1em;
 
   margin: 0.5em 0;
+
   &:first-child {
     margin-top: 0;
   }
+
   &:last-child {
     margin-bottom: 0;
   }
-
-  white-space: nowrap;
-  user-select: none;
 
   &.marker-hidden {
     opacity: 0.5;
@@ -132,27 +135,18 @@ export default {
     }
 
     > .info {
-      position: relative;
       flex-grow: 1;
-      overflow-x: hidden;
       text-overflow: ellipsis;
 
+      padding: 0.5em;
+
       .label {
-        line-height: 2em;
-        overflow-x: hidden;
         text-overflow: ellipsis;
-        margin: 0 0.5em 1.5em 0.5em;
       }
 
       .stats {
         display: flex;
-        margin: 0 0.5em;
-
-        position: absolute;
-        bottom: 0;
-
         font-size: 0.8em;
-        line-height: 2em;
         color: var(--theme-fg-light);
 
         > div {

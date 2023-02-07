@@ -6,17 +6,19 @@
         <SwitchHandle :on="markerSet.visible" v-if="markerSet.toggleable"/>
       </div>
       <div class="stats">
-        <div>
+        <div v-if="markerSet.markers.length > 0">
           {{ markerSet.markers.length }}
           {{ $t('markers.marker', markerSet.markers.length) }}
         </div>
-        <div v-if="filteredMarkerSets.length > 0">
-          {{ filteredMarkerSets.length }}
-          {{ $t('markers.markerSet', filteredMarkerSets.length) }}
+        <div v-if="filteredMarkerSetCount > 0">
+          {{ filteredMarkerSetCount }}
+          {{ $t('markers.markerSet', filteredMarkerSetCount) }}
         </div>
       </div>
     </div>
-    <div class="open-menu-button" @click="$emit('more', $event)">
+    <div class="open-menu-button"
+         :class="{active: active}"
+         @click="more($event)">
       <svg viewBox="0 0 30 30">
         <path d="M25.004,9.294c0,0.806-0.75,1.46-1.676,1.46H6.671c-0.925,0-1.674-0.654-1.674-1.46l0,0
 	c0-0.807,0.749-1.461,1.674-1.461h16.657C24.254,7.833,25.004,8.487,25.004,9.294L25.004,9.294z"/>
@@ -37,14 +39,25 @@ export default {
     markerSet: Object,
   },
   computed: {
-    filteredMarkerSets() {
-      return this.markerSet.markerSets.filter(markerSet => {
-        return (markerSet.id !== "bm-popup-set");
-      });
+    filteredMarkerSetCount() {
+      let count = 0;
+      for (let markerSet of this.markerSet.markerSets) {
+        if (markerSet.listed) count++;
+      }
+      return count;
     },
     label() {
       if (this.markerSet.id === "bm-players") return this.$t("players.title");
       return this.markerSet.label;
+    },
+    active() {
+      for (let marker of this.markerSet.markers) {
+        if (marker.listed) return true;
+      }
+      for (let markerSet of this.markerSet.markerSets) {
+        if (markerSet.listed) return true;
+      }
+      return false;
     }
   },
   methods: {
@@ -52,6 +65,11 @@ export default {
       if (this.markerSet.toggleable) {
         // eslint-disable-next-line vue/no-mutating-props
         this.markerSet.visible = !this.markerSet.visible
+      }
+    },
+    more(event) {
+      if (this.active) {
+        this.$emit('more', event);
       }
     }
   }
@@ -63,7 +81,7 @@ export default {
   display: flex;
   user-select: none;
 
-  line-height: 2em;
+  line-height: 1em;
 
   margin: 0.5em 0;
 
@@ -79,6 +97,8 @@ export default {
     flex-grow: 1;
     cursor: pointer;
 
+    padding: 0.5em;
+
     &:hover {
       background-color: var(--theme-bg-hover);
     }
@@ -87,23 +107,19 @@ export default {
       position: relative;
 
       .label {
-        margin: 0 3em 0 0.5em;
+        margin: 0 2.5em 0 0;
       }
 
       > .switch {
         position: absolute;
-        top: 0.5em;
-        right: 0.5em;
+        top: 0;
+        right: 0;
       }
     }
 
     > .stats {
       display: flex;
-
-      margin: 0 0.5em;
-
       font-size: 0.8em;
-      line-height: 2em;
       color: var(--theme-fg-light);
 
       > div {
@@ -118,36 +134,45 @@ export default {
 
   > .open-menu-button {
     width: 2em;
-    cursor: pointer;
 
-    &:hover {
-      background-color: var(--theme-bg-hover);
-    }
+    &.active {
+      cursor: pointer;
 
-    > svg {
-      position: relative;
-      fill: var(--theme-fg-light);
-
-      top: 50%;
-      transform: translate(0, -50%) scale(0.75);
-
-      path:nth-child(1) {
-        transform-origin: 15px 9px;
-        transform: translate(0, 10px) rotate(-30deg);
+      &:hover {
+        background-color: var(--theme-bg-hover);
       }
-
-      path:nth-child(2) {
-        transform-origin: 15px 21px;
-        transform: translate(0, -10px) rotate(30deg);
-      }
-    }
-
-    &:active {
-      background-color: var(--theme-fg-light);
-      color: var(--theme-bg);
 
       > svg {
-        fill: var(--theme-bg-light);
+        position: relative;
+        fill: var(--theme-fg-light);
+
+        top: 50%;
+        transform: translate(0, -50%) scale(0.75);
+
+        path:nth-child(1) {
+          transform-origin: 15px 9px;
+          transform: translate(0, 10px) rotate(-30deg);
+        }
+
+        path:nth-child(2) {
+          transform-origin: 15px 21px;
+          transform: translate(0, -10px) rotate(30deg);
+        }
+      }
+
+      &:active {
+        background-color: var(--theme-fg-light);
+        color: var(--theme-bg);
+
+        > svg {
+          fill: var(--theme-bg-light);
+        }
+      }
+    }
+
+    &:not(.active) {
+      svg {
+        display: none;
       }
     }
   }

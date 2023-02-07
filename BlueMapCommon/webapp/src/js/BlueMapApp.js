@@ -113,6 +113,7 @@ export class BlueMapApp {
 
         // popup on click
         this.popupMarkerSet = new MarkerSet("bm-popup-set");
+        this.popupMarkerSet.data.toggleable = false;
         this.popupMarker = new PopupMarker("bm-popup", this.appState, this.events);
         this.popupMarkerSet.add(this.popupMarker);
         this.mapViewer.markers.add(this.popupMarkerSet);

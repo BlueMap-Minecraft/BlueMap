@@ -35,6 +35,7 @@ export class PopupMarker extends Marker {
 
         this.data.type = "popup";
         this.data.label = "Last Map Interaction";
+        this.data.listed = false;
 
         this.appState = appState;
         this.events = events;

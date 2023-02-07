@@ -38,6 +38,7 @@ export class Marker extends Object3D {
             id: markerId,
             type: "marker",
             sorting: 0,
+            listed: true,
             position: this.position,
             visible: this.visible
         });

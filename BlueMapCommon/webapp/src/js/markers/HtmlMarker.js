@@ -94,6 +94,7 @@ export class HtmlMarker extends Marker {
      *      position: {x: number, y: number, z: number},
      *      label: string,
      *      sorting: number,
+     *      listed: boolean,
      *      anchor: {x: number, y: number},
      *      html: string,
      *      classes: string[],
@@ -117,6 +118,11 @@ export class HtmlMarker extends Marker {
         //update sorting
         if (this.data.sorting !== markerData.sorting) {
             this.data.sorting = markerData.sorting || 0;
+        }
+
+        //update listed
+        if (this.data.listed !== markerData.listed) {
+            this.data.listed = markerData.listed === undefined ? true : markerData.listed;
         }
 
         // update anchor

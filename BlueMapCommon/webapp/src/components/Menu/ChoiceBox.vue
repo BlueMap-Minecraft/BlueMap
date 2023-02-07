@@ -31,7 +31,7 @@ export default {
   .choice-box {
     display: flex;
 
-    font-size: 0.8rem;
+    font-size: 0.8em;
     text-align: center;
     //margin-bottom: 0.5em;
 
