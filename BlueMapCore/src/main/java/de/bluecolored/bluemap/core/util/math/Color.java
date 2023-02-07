@@ -170,13 +170,14 @@ public class Color {
      * @return The parsed Integer
      * @throws NumberFormatException If the value is not formatted correctly or if there is no value present.
      */
-    public Color parse(String val) {
+    public Color parse(String value) {
+        String val = value;
         if (val.charAt(0) == '#') {
             val = val.substring(1);
             if (val.length() == 3) val = val + "f";
             if (val.length() == 4) val = "" + val.charAt(0) + val.charAt(0) + val.charAt(1) + val.charAt(1) + val.charAt(2) + val.charAt(2) + val.charAt(3) + val.charAt(3);
             if (val.length() == 6) val = val + "ff";
-            if (val.length() != 8) throw new NumberFormatException("Invalid color format: '" + val + "'!");
+            if (val.length() != 8) throw new NumberFormatException("Invalid color format: '" + value + "'!");
             val = val.substring(6, 8) + val.substring(0, 6); // move alpha to front
             return set(Integer.parseUnsignedInt(val, 16));
         }
