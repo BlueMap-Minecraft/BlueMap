@@ -93,6 +93,7 @@ export class HtmlMarker extends Marker {
      * @param markerData {{
      *      position: {x: number, y: number, z: number},
      *      label: string,
+     *      sorting: number,
      *      anchor: {x: number, y: number},
      *      html: string,
      *      classes: string[],
@@ -109,7 +110,14 @@ export class HtmlMarker extends Marker {
         this.position.setZ(pos.z || 0);
 
         // update label
-        this.data.label = markerData.label || null;
+        if (this.data.label !== markerData.label) {
+            this.data.label = markerData.label || null;
+        }
+
+        //update sorting
+        if (this.data.sorting !== markerData.sorting) {
+            this.data.sorting = markerData.sorting || 0;
+        }
 
         // update anchor
         let anch = markerData.anchor || {};

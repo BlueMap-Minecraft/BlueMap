@@ -90,6 +90,7 @@ export class PoiMarker extends HtmlMarker {
      *      iconAnchor: {x: number, y: number},
      *      label: string,
      *      detail: string,
+     *      sorting: number,
      *      icon: string,
      *      classes: string[],
      *      minDistance: number,
@@ -114,6 +115,11 @@ export class PoiMarker extends HtmlMarker {
         // update label
         if (this.data.label !== markerData.label){
             this.data.label = markerData.label || "";
+        }
+
+        //update sorting
+        if (this.data.sorting !== markerData.sorting) {
+            this.data.sorting = markerData.sorting || 0;
         }
 
         // update detail

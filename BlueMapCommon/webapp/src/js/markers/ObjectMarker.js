@@ -73,6 +73,7 @@ export class ObjectMarker extends Marker {
      *      position: {x: number, y: number, z: number},
      *      label: string,
      *      detail: string,
+     *      sorting: number,
      *      link: string,
      *      newTab: boolean
      *      }}
@@ -90,6 +91,9 @@ export class ObjectMarker extends Marker {
 
         //update detail
         this.data.detail = markerData.detail || null;
+
+        //update sorting
+        this.data.sorting = markerData.sorting || 0;
 
         // update link
         this.data.link = markerData.link || null;

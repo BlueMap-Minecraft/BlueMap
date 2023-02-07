@@ -37,6 +37,7 @@ export class Marker extends Object3D {
         this.data = reactive({
             id: markerId,
             type: "marker",
+            sorting: 0,
             position: this.position,
             visible: this.visible
         });
@@ -67,7 +68,7 @@ export class Marker extends Object3D {
 
     /**
      * @param position {Vector3}
-     * @param camera {THREE.Camera}
+     * @param camera {Camera}
      * @param fadeDistanceMax {number}
      * @param fadeDistanceMin {number}
      * @returns {number} - opacity between 0 and 1
@@ -84,7 +85,7 @@ export class Marker extends Object3D {
 
     /**
      * @param position {Vector3}
-     * @param camera {THREE.Camera}
+     * @param camera {Camera}
      * @returns {number}
      */
     static calculateDistanceToCameraPlane (position, camera) {

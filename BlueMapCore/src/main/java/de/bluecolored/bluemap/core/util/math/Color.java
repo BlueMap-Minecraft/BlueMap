@@ -166,7 +166,7 @@ public class Color {
     /**
      * Parses the color from a string and sets it to this Color instance.
      * The value can be an integer in String-Format or a string in hexadecimal format prefixed with # (css-style: e.g. #f16 becomes #ff1166).
-     * @param val The String to parse
+     * @param value The String to parse
      * @return The parsed Integer
      * @throws NumberFormatException If the value is not formatted correctly or if there is no value present.
      */

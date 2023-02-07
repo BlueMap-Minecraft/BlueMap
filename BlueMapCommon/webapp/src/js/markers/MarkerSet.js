@@ -50,6 +50,7 @@ export class MarkerSet extends Scene {
             label: id,
             toggleable: true,
             defaultHide: false,
+            sorting: 0,
             markerSets: [],
             markers: [],
             visible: this.visible,
@@ -66,6 +67,7 @@ export class MarkerSet extends Scene {
         this.data.label = data.label || this.data.id;
         this.data.toggleable = !!data.toggleable;
         this.data.defaultHide = !!data.defaultHidden;
+        this.data.sorting = data.sorting || this.data.sorting;
 
         // update markerSets
         this.updateMarkerSetsFromData(data.markerSets);
