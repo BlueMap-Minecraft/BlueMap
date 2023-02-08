@@ -138,7 +138,7 @@ export class Map {
 			.then(worldSettings => {
 				this.data.name = worldSettings.name ? worldSettings.name : this.data.name;
 
-				this.data.sorting = worldSettings.sorting ? worldSettings.sorting : this.data.sorting;
+				this.data.sorting = Number.isInteger(worldSettings.sorting) ? worldSettings.sorting : this.data.sorting;
 
 				this.data.startPos = {...this.data.startPos, ...vecArrToObj(worldSettings.startPos, true)};
 
