@@ -56,7 +56,7 @@ export class Map {
 
 		this.data = reactive({
 			id: id,
-			sorting: 0,
+			sorting: 1000000,
 			dataUrl: dataUrl,
 			settingsUrl: dataUrl + "settings.json",
 			texturesUrl: dataUrl + "textures.json",
