@@ -1,8 +1,9 @@
 <template>
   <div id="app" :class="{'theme-light': appState.theme === 'light', 'theme-dark': appState.theme === 'dark', 'theme-contrast': appState.theme === 'contrast'}">
-    <FreeFlightMobileControls v-if="appState.controls.state === 'free'" />
-    <ZoomButtons v-if="appState.controls.showZoomButtons && appState.controls.state !== 'free'" />
+    <FreeFlightMobileControls v-if="mapViewer.mapLoaded && appState.controls.state === 'free'" />
+    <ZoomButtons v-if="mapViewer.mapLoaded && appState.controls.showZoomButtons && appState.controls.state !== 'free'" />
     <ControlBar />
+    <div v-if="mapViewer.mapState !== 'loaded'" class="map-state-message">{{ $t("map." + mapViewer.mapState) }}</div>
     <MainMenu :menu="appState.menu" />
   </div>
 </template>
@@ -24,6 +25,7 @@ export default {
   data() {
     return {
       appState: this.$bluemap.appState,
+      mapViewer: this.$bluemap.mapViewer.data
     }
   }
 }
@@ -50,6 +52,16 @@ export default {
     font-size: 1rem;
     @media (max-width: $mobile-break) {
       font-size: 1.5rem;
+    }
+
+    .map-state-message {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: var(--theme-fg-light);
+      line-height: 1em;
+      text-align: center;
     }
   }
 </style>

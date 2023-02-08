@@ -52,6 +52,7 @@ export class MapViewer {
 
 		this.data = reactive({
 			map: null,
+			mapState: "unloaded",
 			camera: null,
 			controlsManager: null,
 			uniforms: {
@@ -366,6 +367,7 @@ export class MapViewer {
 	 */
 	switchMap(map = null) {
 		if (this.map && this.map.isMap) this.map.unload();
+		this.data.mapState = "loading";
 
 		this.map = map;
 
@@ -385,12 +387,16 @@ export class MapViewer {
 
 					setTimeout(this.updateLoadedMapArea);
 
+					this.data.mapState = "loaded";
+
 					dispatchEvent(this.events, "bluemapMapChanged", {
 						map: map
 					});
 				})
 				.catch(error => {
-					alert(this.events, error, "error");
+					this.data.mapState = "errored";
+					this.map = null;
+					throw error;
 				});
 		} else {
 			return Promise.resolve();

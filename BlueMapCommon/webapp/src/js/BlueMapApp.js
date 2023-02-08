@@ -160,9 +160,13 @@ export class BlueMapApp {
         }
 
         // switch to map
-        if (!await this.loadPageAddress()) {
-            if (this.maps.length > 0) await this.switchMap(this.maps[0].data.id);
-            this.resetCamera();
+        try {
+            if (!await this.loadPageAddress()) {
+                if (this.maps.length > 0) await this.switchMap(this.maps[0].data.id);
+                this.resetCamera();
+            }
+        } catch (e) {
+            console.error("Failed to load map!", e);
         }
 
         // map position address
@@ -179,7 +183,6 @@ export class BlueMapApp {
 
         // save user settings
         this.saveUserSettings();
-
 
         // load settings-scripts
         if (this.settings.scripts) for (let scriptUrl of this.settings.scripts) {
