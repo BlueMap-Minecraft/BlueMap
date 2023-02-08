@@ -78,7 +78,7 @@ export class FreeFlightControls {
         this.target.addEventListener("contextmenu", this.onContextMenu);
         this.target.addEventListener("mousedown", this.onMouseDown);
         this.target.addEventListener("mouseup", this.onMouseUp);
-        window.addEventListener("wheel", this.onWheel, {passive: false});
+        this.target.addEventListener("wheel", this.onWheel, {passive: false});
     }
 
     stop() {
@@ -91,7 +91,7 @@ export class FreeFlightControls {
         this.target.removeEventListener("contextmenu", this.onContextMenu);
         this.target.removeEventListener("mousedown", this.onMouseDown);
         this.target.removeEventListener("mouseup", this.onMouseUp);
-        window.removeEventListener("wheel", this.onWheel);
+        this.target.removeEventListener("wheel", this.onWheel);
     }
 
     /**
