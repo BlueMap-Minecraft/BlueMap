@@ -69,6 +69,7 @@ public class TextureGallery {
         TextureGallery gallery = new TextureGallery();
         try (Reader reader = new InputStreamReader(in)) {
             Texture[] textures = ResourcesGson.INSTANCE.fromJson(reader, Texture[].class);
+            if (textures == null) throw new IOException("Texture data is empty!");
             gallery.nextId = textures.length;
             for (int ordinal = 0; ordinal < textures.length; ordinal++) {
                 Texture texture = textures[ordinal];
