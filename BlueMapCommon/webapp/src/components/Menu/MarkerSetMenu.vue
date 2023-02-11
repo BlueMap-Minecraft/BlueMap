@@ -58,8 +58,10 @@ export default {
         return marker.type === "player" && (marker.name.includesCI(this.filter.search) || marker.playerUuid.includesCI(this.filter.search));
       }).sort((a, b) => {
         if (this.filter.order === "label") {
-          if (a.label < b.label) return -1;
-          if (a.label > b.label) return 1;
+          let la = a.type === "player" ? a.name : a.label;
+          let lb = b.type === "player" ? b.name : b.label;
+          if (la < lb) return -1;
+          if (la > lb) return 1;
           return 0;
         }
         if (this.filter.order === "distance") {
