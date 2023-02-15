@@ -51,12 +51,10 @@ public class FileRequestHandler implements HttpRequestHandler {
     @Override
     public HttpResponse handle(HttpRequest request) {
         if (
-            !request.getMethod().equalsIgnoreCase("GET") &&
-            !request.getMethod().equalsIgnoreCase("POST")
-        ) return new HttpResponse(HttpStatusCode.NOT_IMPLEMENTED);
+            !request.getMethod().equalsIgnoreCase("GET")
+        ) return new HttpResponse(HttpStatusCode.BAD_REQUEST);
 
         HttpResponse response = generateResponse(request);
-
 
         return response;
     }
@@ -101,6 +99,11 @@ public class FileRequestHandler implements HttpRequestHandler {
 
         if (!file.exists() || file.isDirectory()) {
             return new HttpResponse(HttpStatusCode.NOT_FOUND);
+        }
+
+        // don't send php files
+        if (file.getName().endsWith(".php")) {
+            return new HttpResponse(HttpStatusCode.FORBIDDEN);
         }
 
         // check if file is still in web-root and is not a directory
