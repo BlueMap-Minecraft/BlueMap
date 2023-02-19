@@ -238,7 +238,6 @@ public class ResourcePack {
                                 .map(path -> path.resolve("models"))
                                 .flatMap(ResourcePack::list)
                                 .filter(path -> !path.getFileName().toString().equals("item"))
-                                .filter(Files::isDirectory)
                                 .flatMap(ResourcePack::walk)
                                 .filter(path -> path.getFileName().toString().endsWith(".json"))
                                 .filter(Files::isRegularFile)
@@ -420,7 +419,6 @@ public class ResourcePack {
     }
 
     private static Stream<Path> walk(Path root) {
-        if (!Files.isDirectory(root)) return Stream.empty();
         try {
             return Files.walk(root);
         } catch (IOException ex) {
