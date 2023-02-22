@@ -37,10 +37,7 @@ import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
-import de.bluecolored.bluemap.common.web.FileRequestHandler;
-import de.bluecolored.bluemap.common.web.MapRequestHandler;
-import de.bluecolored.bluemap.common.web.RoutingRequestHandler;
-import de.bluecolored.bluemap.common.webserver.WebServer;
+import de.bluecolored.bluemap.common.web.*;
 import de.bluecolored.bluemap.core.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
@@ -57,6 +54,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.util.*;
@@ -189,23 +187,26 @@ public class Plugin implements ServerEventListener {
                         routingRequestHandler.register(
                                 "maps/" + Pattern.quote(id) + "/(.*)",
                                 "$1",
-                                mapRequestHandler
+                                new BlueMapResponseModifier(mapRequestHandler)
                         );
                     }
 
+                    webServer = new WebServer(routingRequestHandler);
+                    webServer.start();
+
                     try {
-                        webServer = new WebServer(
+                        webServer.bind(new InetSocketAddress(
                                 webserverConfig.resolveIp(),
-                                webserverConfig.getPort(),
-                                webserverConfig.getMaxConnectionCount(),
-                                routingRequestHandler,
-                                false
-                        );
+                                webserverConfig.getPort()
+                        ));
                     } catch (UnknownHostException ex) {
                         throw new ConfigurationException("BlueMap failed to resolve the ip in your webserver-config.\n" +
                                 "Check if that is correctly configured.", ex);
+                    } catch (IOException ex) {
+                        throw new ConfigurationException("BlueMap failed to initialize the webserver.\n" +
+                                "Check your webserver-config if everything is configured correctly.\n" +
+                                "(Make sure you DON'T use the same port for bluemap that you also use for your minecraft server)", ex);
                     }
-                    webServer.start();
                 }
 
                 //initialize render manager
@@ -376,7 +377,13 @@ public class Plugin implements ServerEventListener {
                 }
                 renderManager = null;
 
-                if (webServer != null) webServer.close();
+                if (webServer != null) {
+                    try {
+                        webServer.close();
+                    } catch (IOException ex) {
+                        Logger.global.logError("Failed to close the webserver!", ex);
+                    }
+                }
                 webServer = null;
 
                 //close bluemap

@@ -24,10 +24,7 @@
  */
 package de.bluecolored.bluemap.common.web;
 
-import de.bluecolored.bluemap.common.webserver.HttpRequest;
-import de.bluecolored.bluemap.common.webserver.HttpRequestHandler;
-import de.bluecolored.bluemap.common.webserver.HttpResponse;
-import de.bluecolored.bluemap.common.webserver.HttpStatusCode;
+import de.bluecolored.bluemap.common.web.http.*;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
 import java.io.File;
@@ -35,7 +32,10 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.Locale;
+import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
 public class FileRequestHandler implements HttpRequestHandler {
@@ -50,13 +50,9 @@ public class FileRequestHandler implements HttpRequestHandler {
 
     @Override
     public HttpResponse handle(HttpRequest request) {
-        if (
-            !request.getMethod().equalsIgnoreCase("GET")
-        ) return new HttpResponse(HttpStatusCode.BAD_REQUEST);
-
-        HttpResponse response = generateResponse(request);
-
-        return response;
+        if (!request.getMethod().equalsIgnoreCase("GET"))
+            return new HttpResponse(HttpStatusCode.BAD_REQUEST);
+        return generateResponse(request);
     }
 
     private HttpResponse generateResponse(HttpRequest request) {
@@ -113,10 +109,10 @@ public class FileRequestHandler implements HttpRequestHandler {
 
         // check modified
         long lastModified = file.lastModified();
-        Set<String> modStringSet = request.getHeader("If-Modified-Since");
-        if (!modStringSet.isEmpty()){
+        HttpHeader modHeader = request.getHeader("If-Modified-Since");
+        if (modHeader != null){
             try {
-                long since = stringToTimestamp(modStringSet.iterator().next());
+                long since = stringToTimestamp(modHeader.getValue());
                 if (since + 1000 >= lastModified){
                     return new HttpResponse(HttpStatusCode.NOT_MODIFIED);
                 }
@@ -125,9 +121,9 @@ public class FileRequestHandler implements HttpRequestHandler {
 
         //check ETag
         String eTag = Long.toHexString(file.length()) + Integer.toHexString(file.hashCode()) + Long.toHexString(lastModified);
-        Set<String> etagStringSet = request.getHeader("If-None-Match");
-        if (!etagStringSet.isEmpty()){
-            if(etagStringSet.iterator().next().equals(eTag)) {
+        HttpHeader etagHeader = request.getHeader("If-None-Match");
+        if (etagHeader != null){
+            if(etagHeader.getValue().equals(eTag)) {
                 return new HttpResponse(HttpStatusCode.NOT_MODIFIED);
             }
         }

@@ -26,13 +26,13 @@ package de.bluecolored.bluemap.common.web;
 
 import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.api.ContentTypeRegistry;
-import de.bluecolored.bluemap.common.webserver.HttpRequest;
-import de.bluecolored.bluemap.common.webserver.HttpRequestHandler;
-import de.bluecolored.bluemap.common.webserver.HttpResponse;
-import de.bluecolored.bluemap.common.webserver.HttpStatusCode;
+import de.bluecolored.bluemap.common.web.http.*;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
-import de.bluecolored.bluemap.core.storage.*;
+import de.bluecolored.bluemap.core.storage.CompressedInputStream;
+import de.bluecolored.bluemap.core.storage.Compression;
+import de.bluecolored.bluemap.core.storage.Storage;
+import de.bluecolored.bluemap.core.storage.TileInfo;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
@@ -82,19 +82,19 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
 
                     // check e-tag
                     String eTag = calculateETag(path, tileInfo);
-                    Set<String> etagStringSet = request.getHeader("If-None-Match");
-                    if (!etagStringSet.isEmpty()){
-                        if(etagStringSet.iterator().next().equals(eTag)) {
+                    HttpHeader etagHeader = request.getHeader("If-None-Match");
+                    if (etagHeader != null){
+                        if(etagHeader.getValue().equals(eTag)) {
                             return new HttpResponse(HttpStatusCode.NOT_MODIFIED);
                         }
                     }
 
                     // check modified-since
                     long lastModified = tileInfo.getLastModified();
-                    Set<String> modStringSet = request.getHeader("If-Modified-Since");
-                    if (!modStringSet.isEmpty()){
+                    HttpHeader modHeader = request.getHeader("If-Modified-Since");
+                    if (modHeader != null){
                         try {
-                            long since = stringToTimestamp(modStringSet.iterator().next());
+                            long since = stringToTimestamp(modHeader.getValue());
                             if (since + 1000 >= lastModified){
                                 return new HttpResponse(HttpStatusCode.NOT_MODIFIED);
                             }
@@ -144,14 +144,14 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
         Compression compression = data.getCompression();
         if (
                 compression != Compression.NONE &&
-                request.getLowercaseHeader("Accept-Encoding").contains(compression.getTypeId())
+                request.hasHeaderValue("Accept-Encoding", compression.getTypeId())
         ) {
             response.addHeader("Content-Encoding", compression.getTypeId());
             response.setData(data);
         } else if (
                 compression != Compression.GZIP &&
-                !response.getHeader("Content-Type").contains("image/png") &&
-                request.getLowercaseHeader("Accept-Encoding").contains(Compression.GZIP.getTypeId())
+                !response.hasHeaderValue("Content-Type", "image/png") &&
+                request.hasHeaderValue("Accept-Encoding", Compression.GZIP.getTypeId())
         ) {
             response.addHeader("Content-Encoding", Compression.GZIP.getTypeId());
             ByteArrayOutputStream byteOut = new ByteArrayOutputStream();

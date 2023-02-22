@@ -38,10 +38,8 @@ import de.bluecolored.bluemap.common.serverinterface.Player;
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
-import de.bluecolored.bluemap.common.web.FileRequestHandler;
-import de.bluecolored.bluemap.common.web.MapRequestHandler;
-import de.bluecolored.bluemap.common.web.RoutingRequestHandler;
-import de.bluecolored.bluemap.common.webserver.WebServer;
+import de.bluecolored.bluemap.common.web.*;
+import de.bluecolored.bluemap.common.web.http.HttpRequestHandler;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.logger.LoggerLogger;
@@ -54,6 +52,7 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -200,13 +199,14 @@ public class BlueMapCLI implements ServerInterface {
             );
         }
 
-        WebServer webServer = new WebServer(
+        HttpRequestHandler handler = new BlueMapResponseModifier(routingRequestHandler);
+        if (verbose) handler = new LoggingRequestHandler(handler);
+
+        WebServer webServer = new WebServer(handler);
+        webServer.bind(new InetSocketAddress(
                 config.resolveIp(),
-                config.getPort(),
-                config.getMaxConnectionCount(),
-                routingRequestHandler,
-                verbose
-        );
+                config.getPort()
+        ));
         webServer.start();
     }
 

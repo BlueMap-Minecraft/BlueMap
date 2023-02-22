@@ -24,10 +24,10 @@
  */
 package de.bluecolored.bluemap.common.web;
 
-import de.bluecolored.bluemap.common.webserver.HttpRequest;
-import de.bluecolored.bluemap.common.webserver.HttpRequestHandler;
-import de.bluecolored.bluemap.common.webserver.HttpResponse;
-import de.bluecolored.bluemap.common.webserver.HttpStatusCode;
+import de.bluecolored.bluemap.common.web.http.HttpRequest;
+import de.bluecolored.bluemap.common.web.http.HttpRequestHandler;
+import de.bluecolored.bluemap.common.web.http.HttpResponse;
+import de.bluecolored.bluemap.common.web.http.HttpStatusCode;
 import de.bluecolored.bluemap.core.BlueMap;
 
 import java.util.function.Supplier;

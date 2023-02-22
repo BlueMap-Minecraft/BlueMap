@@ -24,7 +24,10 @@
  */
 package de.bluecolored.bluemap.common.web;
 
-import de.bluecolored.bluemap.common.webserver.*;
+import de.bluecolored.bluemap.common.web.http.HttpRequest;
+import de.bluecolored.bluemap.common.web.http.HttpRequestHandler;
+import de.bluecolored.bluemap.common.web.http.HttpResponse;
+import de.bluecolored.bluemap.common.web.http.HttpStatusCode;
 import org.intellij.lang.annotations.Language;
 
 import java.util.LinkedList;
@@ -61,14 +64,13 @@ public class RoutingRequestHandler implements HttpRequestHandler {
 
         // normalize path
         if (path.startsWith("/")) path = path.substring(1);
-        if (path.endsWith("/")) path = path.substring(0, path.length() - 1);
+        if (path.isEmpty()) path = "/";
 
         for (Route route : routes) {
             Matcher matcher = route.getRoutePattern().matcher(path);
             if (matcher.matches()) {
-                RewrittenHttpRequest rewrittenRequest = new RewrittenHttpRequest(request);
-                rewrittenRequest.setPath(matcher.replaceFirst(route.getReplacementRoute()));
-                return route.handler.handle(rewrittenRequest);
+                request.setPath(matcher.replaceFirst(route.getReplacementRoute()));
+                return route.getHandler().handle(request);
             }
         }
 

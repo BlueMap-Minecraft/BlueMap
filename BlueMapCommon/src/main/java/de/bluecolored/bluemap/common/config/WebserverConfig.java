@@ -45,8 +45,6 @@ public class WebserverConfig {
 
     private int port = 8100;
 
-    private int maxConnectionCount = 100;
-
     public boolean isEnabled() {
         return enabled;
     }
@@ -71,10 +69,6 @@ public class WebserverConfig {
 
     public int getPort() {
         return port;
-    }
-
-    public int getMaxConnectionCount() {
-        return maxConnectionCount;
     }
 
 }
