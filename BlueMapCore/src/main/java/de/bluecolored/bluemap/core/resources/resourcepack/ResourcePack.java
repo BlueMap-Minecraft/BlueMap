@@ -419,6 +419,8 @@ public class ResourcePack {
     }
 
     private static Stream<Path> walk(Path root) {
+        if (!Files.exists(root)) return Stream.empty();
+        if (Files.isRegularFile(root)) return Stream.of(root);
         try {
             return Files.walk(root);
         } catch (IOException ex) {
