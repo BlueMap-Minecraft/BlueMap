@@ -191,14 +191,13 @@ public class Plugin implements ServerEventListener {
                         );
                     }
 
-                    webServer = new WebServer(routingRequestHandler);
-                    webServer.start();
-
                     try {
+                        webServer = new WebServer(routingRequestHandler);
                         webServer.bind(new InetSocketAddress(
                                 webserverConfig.resolveIp(),
                                 webserverConfig.getPort()
                         ));
+                        webServer.start();
                     } catch (UnknownHostException ex) {
                         throw new ConfigurationException("BlueMap failed to resolve the ip in your webserver-config.\n" +
                                 "Check if that is correctly configured.", ex);
