@@ -28,7 +28,6 @@ import de.bluecolored.bluemap.common.web.http.HttpRequest;
 import de.bluecolored.bluemap.common.web.http.HttpRequestHandler;
 import de.bluecolored.bluemap.common.web.http.HttpResponse;
 import de.bluecolored.bluemap.common.web.http.HttpStatusCode;
-import de.bluecolored.bluemap.core.BlueMap;
 
 import java.util.function.Supplier;
 
@@ -43,7 +42,6 @@ public class JsonDataRequestHandler implements HttpRequestHandler {
     @Override
     public HttpResponse handle(HttpRequest request) {
         HttpResponse response = new HttpResponse(HttpStatusCode.OK);
-        response.addHeader("Server", "BlueMap v" + BlueMap.VERSION);
         response.addHeader("Cache-Control", "no-cache");
         response.addHeader("Content-Type", "application/json");
         response.setData(dataSupplier.get());

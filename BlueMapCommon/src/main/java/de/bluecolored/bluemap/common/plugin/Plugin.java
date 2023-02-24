@@ -38,6 +38,7 @@ import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.common.web.*;
+import de.bluecolored.bluemap.common.web.http.HttpServer;
 import de.bluecolored.bluemap.core.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
@@ -81,7 +82,7 @@ public class Plugin implements ServerEventListener {
     private Map<String, BmMap> maps;
 
     private RenderManager renderManager;
-    private WebServer webServer;
+    private HttpServer webServer;
 
     private BlueMapAPIImpl api;
 
@@ -192,7 +193,7 @@ public class Plugin implements ServerEventListener {
                     }
 
                     try {
-                        webServer = new WebServer(routingRequestHandler);
+                        webServer = new HttpServer(routingRequestHandler);
                         webServer.bind(new InetSocketAddress(
                                 webserverConfig.resolveIp(),
                                 webserverConfig.getPort()
@@ -581,7 +582,7 @@ public class Plugin implements ServerEventListener {
         return renderManager;
     }
 
-    public WebServer getWebServer() {
+    public HttpServer getWebServer() {
         return webServer;
     }
 

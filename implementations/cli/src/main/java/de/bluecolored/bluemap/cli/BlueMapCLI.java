@@ -40,6 +40,7 @@ import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.common.web.*;
 import de.bluecolored.bluemap.common.web.http.HttpRequestHandler;
+import de.bluecolored.bluemap.common.web.http.HttpServer;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.logger.LoggerLogger;
@@ -202,7 +203,7 @@ public class BlueMapCLI implements ServerInterface {
         HttpRequestHandler handler = new BlueMapResponseModifier(routingRequestHandler);
         if (verbose) handler = new LoggingRequestHandler(handler);
 
-        WebServer webServer = new WebServer(handler);
+        HttpServer webServer = new HttpServer(handler);
         webServer.bind(new InetSocketAddress(
                 config.resolveIp(),
                 config.getPort()
