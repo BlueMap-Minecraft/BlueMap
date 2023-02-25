@@ -153,14 +153,6 @@ public class Plugin implements ServerEventListener {
                 worlds = blueMap.getWorlds();
                 maps = blueMap.getMaps();
 
-                //warn if no maps are configured
-                if (maps.isEmpty()) {
-                    Logger.global.logWarning("There are no valid maps configured, please check your map-configs! Disabling BlueMap...");
-
-                    unload();
-                    return;
-                }
-
                 //create and start webserver
                 if (webserverConfig.isEnabled()) {
                     Path webroot = webserverConfig.getWebroot();
@@ -207,6 +199,13 @@ public class Plugin implements ServerEventListener {
                                 "Check your webserver-config if everything is configured correctly.\n" +
                                 "(Make sure you DON'T use the same port for bluemap that you also use for your minecraft server)", ex);
                     }
+                }
+
+                //warn if no maps are configured
+                if (maps.isEmpty()) {
+                    Logger.global.logWarning("There are no valid maps configured, please check your map-configs! Disabling BlueMap...");
+                    unload(true);
+                    return;
                 }
 
                 //initialize render manager
@@ -341,6 +340,9 @@ public class Plugin implements ServerEventListener {
     }
 
     public void unload() {
+        this.unload(false);
+    }
+    public void unload(boolean keepWebserver) {
         loadingLock.interruptAndLock();
         try {
             synchronized (this) {
@@ -377,14 +379,14 @@ public class Plugin implements ServerEventListener {
                 }
                 renderManager = null;
 
-                if (webServer != null) {
+                if (webServer != null && !keepWebserver) {
                     try {
                         webServer.close();
                     } catch (IOException ex) {
                         Logger.global.logError("Failed to close the webserver!", ex);
                     }
+                    webServer = null;
                 }
-                webServer = null;
 
                 //close bluemap
                 if (blueMap != null) {
