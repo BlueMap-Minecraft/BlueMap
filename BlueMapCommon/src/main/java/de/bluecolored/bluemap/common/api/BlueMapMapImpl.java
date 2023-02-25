@@ -111,9 +111,9 @@ public class BlueMapMapImpl implements BlueMapMap {
     public synchronized void setFrozen(boolean frozen) {
         if (frozen != isFrozen()) {
             if (frozen) {
-                unfreeze();
-            } else {
                 freeze();
+            } else {
+                unfreeze();
             }
         }
     }
