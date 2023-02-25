@@ -109,8 +109,13 @@ public class BlueMapMapImpl implements BlueMapMap {
 
     @Override
     public synchronized void setFrozen(boolean frozen) {
-        if (isFrozen()) unfreeze();
-        else freeze();
+        if (frozen != isFrozen()) {
+            if (frozen) {
+                freeze();
+            } else {
+                unfreeze();
+            }
+        }
     }
 
     private synchronized void unfreeze() {
