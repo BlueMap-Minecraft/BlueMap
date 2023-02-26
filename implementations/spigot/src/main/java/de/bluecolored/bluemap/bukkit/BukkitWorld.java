@@ -31,6 +31,7 @@ import org.bukkit.World;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
@@ -42,9 +43,19 @@ public class BukkitWorld implements ServerWorld {
 
     public BukkitWorld(World delegate) {
         this.delegate = new WeakReference<>(delegate);
-        this.saveFolder = delegate.getWorldFolder().toPath()
-                .resolve(getDimension().getDimensionSubPath())
+        Dimension dimension = getDimension();
+        Path saveFolder = delegate.getWorldFolder().toPath()
+                .resolve(dimension.getDimensionSubPath())
                 .toAbsolutePath().normalize();
+
+        // fix for hybrids
+        if (!Files.exists(saveFolder)) {
+            Path direct = delegate.getWorldFolder().toPath();
+            if (Files.exists(direct) && direct.endsWith(dimension.getDimensionSubPath()))
+                saveFolder = direct;
+        }
+
+        this.saveFolder = saveFolder;
     }
 
     @Override
