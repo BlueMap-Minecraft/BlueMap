@@ -39,6 +39,7 @@ import de.bluecolored.bluemap.core.world.Grid;
 import de.bluecolored.bluemap.core.world.World;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -134,6 +135,7 @@ public class BmMap {
         lowresTileManager.save();
         saveRenderState();
         saveMarkerState();
+        savePlayerState();
         saveMapSettings();
 
         // only save texture gallery if not present in storage
@@ -210,6 +212,16 @@ public class BmMap {
                 Writer writer = new OutputStreamWriter(out)
         ) {
             MarkerGson.INSTANCE.toJson(this.markerSets, writer);
+        } catch (Exception ex) {
+            Logger.global.logError("Failed to save markers for map '" + getId() + "'!", ex);
+        }
+    }
+
+    public synchronized void savePlayerState() {
+        try (
+                OutputStream out = storage.writeMeta(id, META_FILE_PLAYERS);
+        ) {
+            out.write("{}".getBytes(StandardCharsets.UTF_8));
         } catch (Exception ex) {
             Logger.global.logError("Failed to save markers for map '" + getId() + "'!", ex);
         }

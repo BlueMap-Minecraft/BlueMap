@@ -30,6 +30,7 @@ public enum HttpStatusCode {
     PROCESSING (102, "Processing"),
 
     OK (200, "OK"),
+    NO_CONTENT (204, "No Content"),
 
     MOVED_PERMANENTLY (301, "Moved Permanently"),
     FOUND (302, "Found"),
