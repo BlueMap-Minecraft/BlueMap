@@ -322,9 +322,8 @@ public class ResourceModelBuilder {
                 faceDirVector.getY(),
                 faceDirVector.getZ()
         );
-        makeRotationRelative(faceRotationVector);
         faceRotationVector.rotateAndScale(element.getRotation().getMatrix());
-        if (variant.isRotated()) faceRotationVector.transform(variant.getRotationMatrix());
+        makeRotationRelative(faceRotationVector);
 
         float a = faceRotationVector.y;
         if (a > 0 && texturePath != null){
@@ -375,7 +374,8 @@ public class ResourceModelBuilder {
     }
 
     private void makeRotationRelative(VectorM3f direction){
-        direction.transform(variant.getRotationMatrix());
+        if (variant.isRotated())
+            direction.transform(variant.getRotationMatrix());
     }
 
     private float testAo(VectorM3f vertex, Direction dir){
