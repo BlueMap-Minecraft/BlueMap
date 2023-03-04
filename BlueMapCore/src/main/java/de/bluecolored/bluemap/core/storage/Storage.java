@@ -30,7 +30,9 @@ import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Collection;
 import java.util.Optional;
+import java.util.function.Function;
 
 public abstract class Storage implements Closeable {
 
@@ -52,7 +54,11 @@ public abstract class Storage implements Closeable {
 
     public abstract void deleteMeta(String mapId, String name) throws IOException;
 
-    public abstract void purgeMap(String mapId) throws IOException;
+    public abstract void purgeMap(String mapId, Function<ProgressInfo, Boolean> onProgress) throws IOException;
+
+    public abstract Collection<String> collectMapIds() throws IOException;
+
+    public abstract long estimateMapSize(String mapId) throws IOException;
 
     public MapStorage mapStorage(final String mapId) {
         return new MapStorage(mapId);
@@ -114,6 +120,20 @@ public abstract class Storage implements Closeable {
 
         public Storage getStorage() {
             return Storage.this;
+        }
+
+    }
+
+    public static class ProgressInfo {
+
+        private final double progress;
+
+        public ProgressInfo(double progress) {
+            this.progress = progress;
+        }
+
+        public double getProgress() {
+            return progress;
         }
 
     }

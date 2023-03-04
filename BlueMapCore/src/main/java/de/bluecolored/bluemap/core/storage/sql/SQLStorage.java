@@ -46,6 +46,7 @@ import java.sql.*;
 import java.time.Duration;
 import java.util.*;
 import java.util.concurrent.CompletionException;
+import java.util.function.Function;
 
 public class SQLStorage extends Storage {
 
@@ -375,7 +376,7 @@ public class SQLStorage extends Storage {
     }
 
     @Override
-    public void purgeMap(String mapId) throws IOException {
+    public void purgeMap(String mapId, Function<ProgressInfo, Boolean> onProgress) throws IOException {
         try {
             recoveringConnection(connection -> {
                 executeUpdate(connection,
@@ -395,10 +396,27 @@ public class SQLStorage extends Storage {
                         "WHERE m.`map_id` = ?",
                         mapId
                 );
+
+                executeUpdate(connection,
+                        "DELETE t " +
+                        "FROM `bluemap_map`" +
+                        "WHERE `map_id` = ?",
+                        mapId
+                );
             }, 2);
         } catch (SQLException ex) {
             throw new IOException(ex);
         }
+    }
+
+    @Override
+    public Collection<String> collectMapIds() throws IOException {
+        return Collections.emptyList(); //TODO
+    }
+
+    @Override
+    public long estimateMapSize(String mapId) throws IOException {
+        return 0; //TODO
     }
 
     @SuppressWarnings("UnusedAssignment")

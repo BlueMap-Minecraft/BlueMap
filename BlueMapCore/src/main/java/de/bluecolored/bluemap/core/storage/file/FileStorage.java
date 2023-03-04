@@ -27,16 +27,18 @@ package de.bluecolored.bluemap.core.storage.file;
 import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.storage.*;
-import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.util.DeletingPathVisitor;
+import de.bluecolored.bluemap.core.util.FileHelper;
+import de.bluecolored.bluemap.core.util.SizeCollectingPathVisitor;
 
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @DebugDump
 public class FileStorage extends Storage {
@@ -188,8 +190,48 @@ public class FileStorage extends Storage {
     }
 
     @Override
-    public void purgeMap(String mapId) throws IOException {
-        Files.walkFileTree(getFilePath(mapId), DeletingPathVisitor.INSTANCE);
+    public void purgeMap(String mapId, Function<ProgressInfo, Boolean> onProgress) throws IOException {
+        final Path directory = getFilePath(mapId);
+        final int subFilesCount;
+        final LinkedList<Path> subFiles;
+
+        // collect sub-files to be able to provide progress-updates
+        try (Stream<Path> pathStream = Files.walk(directory, 3)) {
+            subFiles = pathStream.collect(Collectors.toCollection(LinkedList::new));
+        }
+        subFilesCount = subFiles.size();
+
+        // delete subFiles first to be able to track the progress and cancel
+        while (!subFiles.isEmpty()) {
+            Path subFile = subFiles.getLast();
+            Files.walkFileTree(subFile, DeletingPathVisitor.INSTANCE);
+            subFiles.removeLast();
+
+            if (!onProgress.apply(
+                    new ProgressInfo(1d - (subFiles.size() / (double) subFilesCount))
+            )) return;
+        }
+
+        // make sure everything is deleted
+        if (Files.exists(directory))
+            Files.walkFileTree(directory, DeletingPathVisitor.INSTANCE);
+    }
+
+    @Override
+    public Collection<String> collectMapIds() throws IOException {
+        try (Stream<Path> fileStream = Files.list(root)) {
+                return fileStream
+                        .filter(Files::isDirectory)
+                        .map(path -> path.getFileName().toString())
+                        .collect(Collectors.toList());
+        }
+    }
+
+    @Override
+    public long estimateMapSize(String mapId) throws IOException {
+        SizeCollectingPathVisitor visitor = new SizeCollectingPathVisitor();
+        Files.walkFileTree(getFilePath(mapId), visitor);
+        return visitor.getSize();
     }
 
     public Path getFilePath(String mapId, int lod, Vector2i tile){

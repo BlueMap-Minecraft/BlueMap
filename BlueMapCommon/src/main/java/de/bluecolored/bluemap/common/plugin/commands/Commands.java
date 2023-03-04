@@ -796,7 +796,7 @@ public class Commands<S> {
         new Thread(() -> {
             try {
                 // delete map
-                MapPurgeTask purgeTask = MapPurgeTask.create(map);
+                MapPurgeTask purgeTask = new MapPurgeTask(map);
 
                 plugin.getRenderManager().scheduleRenderTaskNext(purgeTask);
                 source.sendMessage(Text.of(TextColor.GREEN, "Created new Task to purge map '" + map.getId() + "'"));
@@ -817,7 +817,7 @@ public class Commands<S> {
                 }
 
                 source.sendMessage(Text.of(TextColor.GREEN, "Use ", TextColor.GRAY, "/bluemap", TextColor.GREEN, " to see the progress."));
-            } catch (IOException | IllegalArgumentException e) {
+            } catch (IllegalArgumentException e) {
                 source.sendMessage(Text.of(TextColor.RED, "There was an error trying to purge '" + map.getId() + "', see console for details."));
                 Logger.global.logError("Failed to purge map '" + map.getId() + "'!", e);
             }

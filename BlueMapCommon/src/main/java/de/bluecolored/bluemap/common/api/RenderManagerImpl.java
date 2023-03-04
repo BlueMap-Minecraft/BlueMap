@@ -61,7 +61,7 @@ public class RenderManagerImpl implements RenderManager {
     @Override
     public boolean scheduleMapPurgeTask(BlueMapMap map) throws IOException {
         BlueMapMapImpl cmap = castMap(map);
-        return renderManager.scheduleRenderTask(MapPurgeTask.create(cmap.getBmMap()));
+        return renderManager.scheduleRenderTask(new MapPurgeTask(cmap.getBmMap()));
     }
 
     @Override
