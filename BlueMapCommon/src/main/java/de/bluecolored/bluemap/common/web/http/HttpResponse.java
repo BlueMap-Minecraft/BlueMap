@@ -57,7 +57,7 @@ public class HttpResponse implements Closeable {
         this.headers = new HashMap<>();
     }
 
-    public boolean read(WritableByteChannel channel) throws IOException {
+    public synchronized boolean read(WritableByteChannel channel) throws IOException {
         if (complete) return true;
 
         // send headers
