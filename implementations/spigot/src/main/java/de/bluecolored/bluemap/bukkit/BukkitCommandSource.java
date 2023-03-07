@@ -56,7 +56,7 @@ public class BukkitCommandSource implements CommandSource {
                 Player player = (Player) delegate;
 
                 //kinda hacky but works
-                Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "tellraw " + player.getName() + " " + text.toJSONString());
+                Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "minecraft:tellraw " + player.getName() + " " + text.toJSONString());
                 return;
             }
 
