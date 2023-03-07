@@ -326,7 +326,7 @@ public class ResourceModelBuilder {
         makeRotationRelative(faceRotationVector);
 
         float a = faceRotationVector.y;
-        if (a > 0 && texturePath != null){
+        if (a > 0.01 && texturePath != null) {
             Texture texture = texturePath.getResource(resourcePack::getTexture);
             if (texture != null) {
                 mapColor.set(texture.getColorPremultiplied());
