@@ -70,6 +70,7 @@ import java.util.stream.Stream;
  */
 @DebugDump
 public class BlueMapService implements Closeable {
+
     private final ServerInterface serverInterface;
     private final BlueMapConfigProvider configs;
 
@@ -116,7 +117,7 @@ public class BlueMapService implements Closeable {
         id = worldIds.get(worldFolder);
         if (id != null) return id;
 
-        synchronized (this) {
+        synchronized (worldIds) {
             // check again if another thread has already added the world
             id = worldIds.get(worldFolder);
             if (id != null) return id;
