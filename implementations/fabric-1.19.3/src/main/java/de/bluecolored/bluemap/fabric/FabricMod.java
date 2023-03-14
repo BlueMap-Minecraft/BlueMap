@@ -74,7 +74,7 @@ public class FabricMod implements ModInitializer, ServerInterface {
         this.onlinePlayerMap = new ConcurrentHashMap<>();
         this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 
-        pluginInstance = new Plugin("fabric-1.18", this);
+        pluginInstance = new Plugin("fabric-1.19.3", this);
 
         this.eventForwarder = new FabricEventForwarder(this);
         this.worlds = Caffeine.newBuilder()
