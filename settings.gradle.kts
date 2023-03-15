@@ -15,6 +15,7 @@ includeBuild("implementations/forge-1.17.1")
 includeBuild("implementations/forge-1.18.1")
 includeBuild("implementations/forge-1.19.1")
 includeBuild("implementations/forge-1.19.3")
+includeBuild("implementations/forge-1.19.4")
 
 includeBuild("implementations/spigot")
 

@@ -82,7 +82,7 @@ public class ForgeMod implements ServerInterface {
         this.onlinePlayerMap = new ConcurrentHashMap<>();
         this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 
-        this.pluginInstance = new Plugin("forge-1.19.3", this);
+        this.pluginInstance = new Plugin("forge-1.19.4", this);
 
         this.eventForwarder = new ForgeEventForwarder();
         this.worlds = Caffeine.newBuilder()
