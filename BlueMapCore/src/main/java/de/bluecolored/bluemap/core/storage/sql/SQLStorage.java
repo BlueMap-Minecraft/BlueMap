@@ -398,8 +398,8 @@ public class SQLStorage extends Storage {
                 );
 
                 executeUpdate(connection,
-                        "DELETE t " +
-                        "FROM `bluemap_map`" +
+                        "DELETE " +
+                        "FROM `bluemap_map` " +
                         "WHERE `map_id` = ?",
                         mapId
                 );
