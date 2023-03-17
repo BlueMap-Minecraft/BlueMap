@@ -377,35 +377,41 @@ public class SQLStorage extends Storage {
 
     @Override
     public void purgeMap(String mapId, Function<ProgressInfo, Boolean> onProgress) throws IOException {
-        try {
-            recoveringConnection(connection -> {
-                executeUpdate(connection,
-                        "DELETE t " +
-                        "FROM `bluemap_map_tile` t " +
-                        " INNER JOIN `bluemap_map` m " +
-                        "  ON t.`map` = m.`id` " +
-                        "WHERE m.`map_id` = ?",
-                        mapId
-                );
+        synchronized (mapFKs) {
+            try {
+                recoveringConnection(connection -> {
+                    executeUpdate(connection,
+                            "DELETE t " +
+                                    "FROM `bluemap_map_tile` t " +
+                                    " INNER JOIN `bluemap_map` m " +
+                                    "  ON t.`map` = m.`id` " +
+                                    "WHERE m.`map_id` = ?",
+                            mapId
+                    );
 
-                executeUpdate(connection,
-                        "DELETE t " +
-                        "FROM `bluemap_map_meta` t " +
-                        " INNER JOIN `bluemap_map` m " +
-                        "  ON t.`map` = m.`id` " +
-                        "WHERE m.`map_id` = ?",
-                        mapId
-                );
+                    executeUpdate(connection,
+                            "DELETE t " +
+                                    "FROM `bluemap_map_meta` t " +
+                                    " INNER JOIN `bluemap_map` m " +
+                                    "  ON t.`map` = m.`id` " +
+                                    "WHERE m.`map_id` = ?",
+                            mapId
+                    );
 
-                executeUpdate(connection,
-                        "DELETE " +
-                        "FROM `bluemap_map` " +
-                        "WHERE `map_id` = ?",
-                        mapId
-                );
-            }, 2);
-        } catch (SQLException ex) {
-            throw new IOException(ex);
+
+                    executeUpdate(connection,
+                            "DELETE " +
+                                    "FROM `bluemap_map` " +
+                                    "WHERE `map_id` = ?",
+                            mapId
+                    );
+                }, 2);
+
+                mapFKs.invalidate(mapId);
+
+            } catch (SQLException ex) {
+                throw new IOException(ex);
+            }
         }
     }
 
@@ -670,7 +676,9 @@ public class SQLStorage extends Storage {
     }
 
     private int loadMapFK(String mapId) throws SQLException, IOException {
-        return lookupFK("bluemap_map", "id", "map_id", mapId);
+        synchronized (mapFKs) {
+            return lookupFK("bluemap_map", "id", "map_id", mapId);
+        }
     }
 
     private int loadMapTileCompressionFK(Compression compression) throws SQLException, IOException {
