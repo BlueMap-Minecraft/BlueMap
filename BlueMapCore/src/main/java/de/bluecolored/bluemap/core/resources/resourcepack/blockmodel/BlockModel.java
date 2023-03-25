@@ -61,7 +61,7 @@ public class BlockModel {
 
         if (this.elements != null) {
             for (var element : elements) {
-                element.optimize(resourcePack);
+                if (element != null) element.optimize(resourcePack);
             }
         }
     }
@@ -86,6 +86,7 @@ public class BlockModel {
             if (this.elements == null && parent.elements != null) {
                 this.elements = new Element[parent.elements.length];
                 for (int i = 0; i < this.elements.length; i++){
+                    if (parent.elements[i] == null) continue;
                     this.elements[i] = parent.elements[i].copy();
                 }
             }
@@ -101,7 +102,7 @@ public class BlockModel {
     public synchronized void calculateProperties(ResourcePack resourcePack) {
         if (elements == null) return;
         for (Element element : elements) {
-            if (element.isFullCube()) {
+            if (element != null && element.isFullCube()) {
                 occluding = true;
 
                 culling = true;
