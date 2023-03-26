@@ -179,16 +179,19 @@ export class MapViewer {
 
 		if (this.map && this.map.isLoaded){
 			this.camera.updateMatrixWorld()
+			this.raycaster.setFromCamera(normalizedScreenPos, this.camera);
 
+			// check Object3D interactions
+
+			// make sure the scene is at 0,0 (render() might have shifted it)
 			let sPos = this.map.hiresTileManager.scene.position;
 			sPos.x = 0; sPos.z = 0;
 			this.map.hiresTileManager.scene.updateMatrixWorld();
 
-			this.raycaster.setFromCamera(normalizedScreenPos, this.camera);
-
-			// check Object3D interactions
 			const intersectScenes = [this.map.hiresTileManager.scene, this.markers];
 			for (let i = 0; i < this.map.lowresTileManager.length; i++) {
+
+				// make sure the scene is at 0,0 (render() might have shifted it)
 				let sPos = this.map.lowresTileManager[i].scene.position;
 				sPos.x = 0; sPos.z = 0;
 				this.map.lowresTileManager[i].scene.updateMatrixWorld();
