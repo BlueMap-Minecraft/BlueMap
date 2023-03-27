@@ -24,6 +24,7 @@
  */
 
 import {MathUtils, Vector2} from "three";
+import {distance} from "three/addons/nodes/shadernode/ShaderNodeBaseElements";
 
 export class MapHeightControls {
 
@@ -93,7 +94,7 @@ export class MapHeightControls {
         }
 
         // adjust targetHeight by distance
-        this.distanceTagretHeight = Math.max(MathUtils.lerp(this.targetHeight, 0, this.manager.distance / 500), 0);
+        this.distanceTagretHeight = MathUtils.lerp(this.targetHeight, 0, Math.min(this.manager.distance / 500, 1));
     }
 
     getSuggestedHeight() {

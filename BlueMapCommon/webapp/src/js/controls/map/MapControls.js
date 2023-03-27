@@ -145,7 +145,7 @@ export class MapControls {
      * @param map {Map}
      */
     update(delta, map) {
-        this.manager.position.y = 0; // reset target y position
+        this.manager.position.y = -10000; // reset target y position
 
         // move
         MapControls._beforeMoveTemp.copy(this.manager.position);
