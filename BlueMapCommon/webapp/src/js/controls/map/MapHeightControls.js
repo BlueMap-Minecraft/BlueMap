@@ -24,7 +24,6 @@
  */
 
 import {MathUtils, Vector2} from "three";
-import {distance} from "three/addons/nodes/shadernode/ShaderNodeBaseElements";
 
 export class MapHeightControls {
 
