@@ -164,5 +164,5 @@ hangarPublish {
 
 tasks.register("publish") {
 	dependsOn("modrinth")
-	dependsOn("publishPluginPublicationsToHangar")
+	dependsOn("publishPluginPublicationToHangar")
 }
