@@ -147,7 +147,7 @@ hangarPublish {
 		// register platforms
 		platforms {
 			register(io.papermc.hangarpublishplugin.model.Platforms.PAPER) {
-				jar.set(tasks.jar.flatMap { it.archiveFile })
+				jar.set(tasks.shadowJar.flatMap { it.archiveFile })
 				platformVersions.set(listOf(
 					"1.13.2",
 					"1.14", "1.14.1", "1.14.2", "1.14.3", "1.14.4",
