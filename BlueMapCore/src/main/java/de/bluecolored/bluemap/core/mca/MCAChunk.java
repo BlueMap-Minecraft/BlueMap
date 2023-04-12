@@ -54,7 +54,6 @@ public abstract class MCAChunk implements Chunk {
     @Override
     public abstract boolean isGenerated();
 
-    @Override
     public int getDataVersion() {
         return dataVersion;
     }
@@ -98,10 +97,6 @@ public abstract class MCAChunk implements Chunk {
         if (version < 2500) return new ChunkAnvil115(world, chunkTag);
         if (version < 2844) return new ChunkAnvil116(world, chunkTag);
         return new ChunkAnvil118(world, chunkTag);
-    }
-
-    public static MCAChunk empty() {
-        return EmptyChunk.INSTANCE;
     }
 
     @Override

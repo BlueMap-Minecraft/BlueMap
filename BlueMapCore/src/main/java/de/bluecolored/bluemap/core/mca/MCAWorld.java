@@ -32,8 +32,7 @@ import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.util.Vector2iCache;
-import de.bluecolored.bluemap.core.world.Grid;
-import de.bluecolored.bluemap.core.world.World;
+import de.bluecolored.bluemap.core.world.*;
 import net.querz.nbt.CompoundTag;
 import net.querz.nbt.NBTUtil;
 
@@ -64,8 +63,8 @@ public class MCAWorld implements World {
     private final int skyLight;
     private final boolean ignoreMissingLightData;
 
-    private final LoadingCache<Vector2i, MCARegion> regionCache;
-    private final LoadingCache<Vector2i, MCAChunk> chunkCache;
+    private final LoadingCache<Vector2i, Region> regionCache;
+    private final LoadingCache<Vector2i, Chunk> chunkCache;
 
     public MCAWorld(Path worldFolder, int skyLight, boolean ignoreMissingLightData) throws IOException {
         this.worldFolder = worldFolder.toRealPath();
@@ -102,25 +101,25 @@ public class MCAWorld implements World {
     }
 
     @Override
-    public MCAChunk getChunkAtBlock(int x, int y, int z) {
+    public Chunk getChunkAtBlock(int x, int y, int z) {
         return getChunk(x >> 4, z >> 4);
     }
 
     @Override
-    public MCAChunk getChunk(int x, int z) {
+    public Chunk getChunk(int x, int z) {
         return getChunk(VECTOR_2_I_CACHE.get(x, z));
     }
 
-    private MCAChunk getChunk(Vector2i pos) {
+    private Chunk getChunk(Vector2i pos) {
         return chunkCache.get(pos);
     }
 
     @Override
-    public MCARegion getRegion(int x, int z) {
+    public Region getRegion(int x, int z) {
         return getRegion(VECTOR_2_I_CACHE.get(x, z));
     }
 
-    private MCARegion getRegion(Vector2i pos) {
+    private Region getRegion(Vector2i pos) {
         return regionCache.get(pos);
     }
 
@@ -218,20 +217,20 @@ public class MCAWorld implements World {
         return getRegionFolder().resolve("r." + regionX + "." + regionZ + ".mca").toFile();
     }
 
-    private MCARegion loadRegion(Vector2i regionPos) {
+    private Region loadRegion(Vector2i regionPos) {
         return loadRegion(regionPos.getX(), regionPos.getY());
     }
 
-    private MCARegion loadRegion(int x, int z) {
+    Region loadRegion(int x, int z) {
         File regionPath = getMCAFile(x, z);
         return new MCARegion(this, regionPath);
     }
 
-    private MCAChunk loadChunk(Vector2i chunkPos) {
+    private Chunk loadChunk(Vector2i chunkPos) {
         return loadChunk(chunkPos.getX(), chunkPos.getY());
     }
 
-    private MCAChunk loadChunk(int x, int z) {
+    Chunk loadChunk(int x, int z) {
         final int tries = 3;
         final int tryInterval = 1000;
 
@@ -256,7 +255,7 @@ public class MCAWorld implements World {
         }
 
         Logger.global.logDebug("Unexpected exception trying to load chunk (x:" + x + ", z:" + z + "):" + loadException);
-        return MCAChunk.empty();
+        return EmptyChunk.INSTANCE;
     }
 
 

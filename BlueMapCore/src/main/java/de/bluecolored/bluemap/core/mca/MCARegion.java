@@ -26,6 +26,8 @@ package de.bluecolored.bluemap.core.mca;
 
 import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.world.Chunk;
+import de.bluecolored.bluemap.core.world.EmptyChunk;
 import de.bluecolored.bluemap.core.world.Region;
 import net.querz.nbt.CompoundTag;
 import net.querz.nbt.Tag;
@@ -55,8 +57,8 @@ public class MCARegion implements Region {
     }
 
     @Override
-    public MCAChunk loadChunk(int chunkX, int chunkZ, boolean ignoreMissingLightData) throws IOException {
-        if (!regionFile.exists() || regionFile.length() == 0) return MCAChunk.empty();
+    public Chunk loadChunk(int chunkX, int chunkZ, boolean ignoreMissingLightData) throws IOException {
+        if (!regionFile.exists() || regionFile.length() == 0) return EmptyChunk.INSTANCE;
 
         try (RandomAccessFile raf = new RandomAccessFile(regionFile, "r")) {
 
@@ -70,7 +72,7 @@ public class MCARegion implements Region {
 
             int size = raf.readByte() * 4096;
             if (size == 0) {
-                return MCAChunk.empty();
+                return EmptyChunk.INSTANCE;
             }
 
             raf.seek(offset + 4); // +4 skip chunk size
@@ -85,7 +87,7 @@ public class MCARegion implements Region {
             Tag<?> tag = Tag.deserialize(dis, Tag.DEFAULT_MAX_DEPTH);
             if (tag instanceof CompoundTag) {
                 MCAChunk chunk = MCAChunk.create(world, (CompoundTag) tag);
-                if (!chunk.isGenerated()) return MCAChunk.empty();
+                if (!chunk.isGenerated()) return EmptyChunk.INSTANCE;
                 return chunk;
             } else {
                 throw new IOException("Invalid data tag: " + (tag == null ? "null" : tag.getClass().getName()));

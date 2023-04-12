@@ -28,8 +28,6 @@ public interface Chunk {
 
     boolean isGenerated();
 
-    int getDataVersion();
-
     long getInhabitedTime();
 
     BlockState getBlockState(int x, int y, int z);

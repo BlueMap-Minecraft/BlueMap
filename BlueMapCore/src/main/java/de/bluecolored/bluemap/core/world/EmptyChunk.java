@@ -22,15 +22,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.mca;
+package de.bluecolored.bluemap.core.world;
 
-import de.bluecolored.bluemap.core.world.Biome;
-import de.bluecolored.bluemap.core.world.BlockState;
-import de.bluecolored.bluemap.core.world.LightData;
+public class EmptyChunk implements Chunk {
 
-public class EmptyChunk extends MCAChunk {
-
-    public static final MCAChunk INSTANCE = new EmptyChunk();
+    public static final Chunk INSTANCE = new EmptyChunk();
 
     @Override
     public boolean isGenerated() {
@@ -56,5 +52,21 @@ public class EmptyChunk extends MCAChunk {
     public String getBiome(int x, int y, int z) {
         return Biome.DEFAULT.getFormatted();
     }
+
+    @Override
+    public int getMaxY(int x, int z) {
+        return 255;
+    }
+
+    @Override
+    public int getMinY(int x, int z) {
+        return 0;
+    }
+
+    @Override
+    public int getWorldSurfaceY(int x, int z) { return 0; }
+
+    @Override
+    public int getOceanFloorY(int x, int z) { return 0; }
 
 }
