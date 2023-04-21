@@ -41,6 +41,7 @@ import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.common.web.*;
 import de.bluecolored.bluemap.common.web.http.HttpRequestHandler;
 import de.bluecolored.bluemap.common.web.http.HttpServer;
+import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.logger.LoggerLogger;
@@ -272,6 +273,12 @@ public class BlueMapCLI implements ServerInterface {
                 return;
             }
 
+            //version
+            if (cmd.hasOption("v")) {
+                BlueMapCLI.printVersion();
+                return;
+            }
+
             //config folder
             cli.configFolder = Path.of("config");
             if (cmd.hasOption("c")) {
@@ -280,8 +287,8 @@ public class BlueMapCLI implements ServerInterface {
             }
 
             //minecraft version
-            if (cmd.hasOption("v")) {
-                String versionString = cmd.getOptionValue("v");
+            if (cmd.hasOption("m")) {
+                String versionString = cmd.getOptionValue("m");
                 try {
                     cli.minecraftVersion = MinecraftVersion.of(versionString);
                 } catch (IllegalArgumentException e) {
@@ -378,10 +385,10 @@ public class BlueMapCLI implements ServerInterface {
             );
 
         options.addOption(
-                Option.builder("v")
+                Option.builder("m")
                 .longOpt("mc-version")
                 .hasArg()
-                .argName("version")
+                .argName("mc-version")
                 .desc("Sets the minecraft-version, used e.g. to load resource-packs correctly. Defaults to the latest compatible version.")
                 .build()
             );
@@ -406,6 +413,8 @@ public class BlueMapCLI implements ServerInterface {
         options.addOption("f", "force-render", false, "Forces rendering everything, instead of only rendering chunks that have been modified since the last render");
 
         options.addOption("u", "watch", false, "Watches for file-changes after rendering and updates the map");
+
+        options.addOption("v", "version", false, "Print the current BlueMap version");
 
         return options;
     }
@@ -444,5 +453,9 @@ public class BlueMapCLI implements ServerInterface {
         footer.append("Render the configured maps and then keeps watching the world-files and updates the map once something changed.\n\n");
 
         formatter.printHelp(command + " [options]", "\nOptions:", createOptions(), "\n" + footer);
+    }
+
+    private static void printVersion() {
+        System.out.printf("%s\n%s\n", BlueMap.VERSION, BlueMap.GIT_HASH);        
     }
 }
