@@ -274,7 +274,7 @@ public class BlueMapCLI implements ServerInterface {
             }
 
             //version
-            if (cmd.hasOption("v")) {
+            if (cmd.hasOption("V")) {
                 BlueMapCLI.printVersion();
                 return;
             }
@@ -287,8 +287,8 @@ public class BlueMapCLI implements ServerInterface {
             }
 
             //minecraft version
-            if (cmd.hasOption("m")) {
-                String versionString = cmd.getOptionValue("m");
+            if (cmd.hasOption("v")) {
+                String versionString = cmd.getOptionValue("v");
                 try {
                     cli.minecraftVersion = MinecraftVersion.of(versionString);
                 } catch (IllegalArgumentException e) {
@@ -385,7 +385,7 @@ public class BlueMapCLI implements ServerInterface {
             );
 
         options.addOption(
-                Option.builder("m")
+                Option.builder("v")
                 .longOpt("mc-version")
                 .hasArg()
                 .argName("mc-version")
@@ -414,7 +414,7 @@ public class BlueMapCLI implements ServerInterface {
 
         options.addOption("u", "watch", false, "Watches for file-changes after rendering and updates the map");
 
-        options.addOption("v", "version", false, "Print the current BlueMap version");
+        options.addOption("V", "version", false, "Print the current BlueMap version");
 
         return options;
     }
