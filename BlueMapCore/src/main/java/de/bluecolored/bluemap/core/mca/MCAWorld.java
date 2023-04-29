@@ -30,8 +30,8 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.BlueMap;
-import de.bluecolored.bluemap.core.linear.LinearRegion;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.mca.region.RegionType;
 import de.bluecolored.bluemap.core.util.Vector2iCache;
 import de.bluecolored.bluemap.core.world.*;
 import net.querz.nbt.CompoundTag;
@@ -132,7 +132,7 @@ public class MCAWorld implements World {
         List<Vector2i> regions = new ArrayList<>(regionFiles.length);
 
         for (File file : regionFiles) {
-            if (!file.getName().endsWith(".mca") && !file.getName().endsWith(".linear")) continue;
+            if (RegionType.forFileName(file.getName()) == null) continue;
             if (file.length() <= 0) continue;
 
             try {
@@ -214,20 +214,12 @@ public class MCAWorld implements World {
         return ignoreMissingLightData;
     }
 
-    private File getMCAFile(int regionX, int regionZ) {
-        File file = getRegionFolder().resolve("r." + regionX + "." + regionZ + ".mca").toFile();
-        if (!file.exists()) file = getRegionFolder().resolve("r." + regionX + "." + regionZ + ".linear").toFile();
-        return file;
-    }
-
     private Region loadRegion(Vector2i regionPos) {
         return loadRegion(regionPos.getX(), regionPos.getY());
     }
 
     Region loadRegion(int x, int z) {
-        File regionPath = getMCAFile(x, z);
-        if (regionPath.getName().endsWith(".mca")) return new MCARegion(this, regionPath);
-        else return new LinearRegion(this, regionPath);
+        return RegionType.loadRegion(this, getRegionFolder(), x, z);
     }
 
     private Chunk loadChunk(Vector2i chunkPos) {

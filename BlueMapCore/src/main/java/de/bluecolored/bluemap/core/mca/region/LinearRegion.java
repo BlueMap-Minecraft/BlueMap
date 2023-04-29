@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.linear;
+package de.bluecolored.bluemap.core.mca.region;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.github.luben.zstd.ZstdInputStream;
@@ -36,6 +36,8 @@ import net.querz.nbt.CompoundTag;
 import net.querz.nbt.Tag;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -43,21 +45,23 @@ import java.util.List;
 
 public class LinearRegion implements Region {
 
+    public static final String FILE_SUFFIX = ".linear";
+
     private static final long SUPERBLOCK = -4323716122432332390L;
     private static final byte VERSION = 1;
     private static final int HEADER_SIZE = 32;
     private static final int FOOTER_SIZE = 8;
 
     private final MCAWorld world;
-    private final File regionFile;
+    private final Path regionFile;
     private final Vector2i regionPos;
 
 
-    public LinearRegion(MCAWorld world, File regionFile) throws IllegalArgumentException {
+    public LinearRegion(MCAWorld world, Path regionFile) throws IllegalArgumentException {
         this.world = world;
         this.regionFile = regionFile;
 
-        String[] filenameParts = regionFile.getName().split("\\.");
+        String[] filenameParts = regionFile.getFileName().toString().split("\\.");
         int rX = Integer.parseInt(filenameParts[1]);
         int rZ = Integer.parseInt(filenameParts[2]);
 
@@ -66,10 +70,13 @@ public class LinearRegion implements Region {
 
     @Override
     public Chunk loadChunk(int chunkX, int chunkZ, boolean ignoreMissingLightData) throws IOException {
-        if (!regionFile.exists() || regionFile.length() == 0) return EmptyChunk.INSTANCE;
+        if (Files.notExists(regionFile)) return EmptyChunk.INSTANCE;
 
-        try (FileInputStream fileStream = new FileInputStream(regionFile);
-             DataInputStream rawDataStream = new DataInputStream(fileStream)) {
+        long fileLength = Files.size(regionFile);
+        if (fileLength == 0) return EmptyChunk.INSTANCE;
+
+        try (InputStream inputStream = Files.newInputStream(regionFile);
+             DataInputStream rawDataStream = new DataInputStream(inputStream)) {
 
             long superBlock = rawDataStream.readLong();
             if (superBlock != SUPERBLOCK)
@@ -81,7 +88,6 @@ public class LinearRegion implements Region {
 
             rawDataStream.skipBytes(11); // newestTimestamp + compression level + chunk count
 
-            long fileLength = regionFile.length();
             int dataCount = rawDataStream.readInt();
             if (fileLength != HEADER_SIZE + dataCount + FOOTER_SIZE)
                 throw new RuntimeException("File length invalid " + this.regionFile + " " + fileLength + " " + (HEADER_SIZE + dataCount + FOOTER_SIZE));
@@ -128,10 +134,19 @@ public class LinearRegion implements Region {
 
     @Override
     public Collection<Vector2i> listChunks(long modifiedSince) {
-        if (!regionFile.exists() || regionFile.length() == 0) return Collections.emptyList();
+        if (Files.notExists(regionFile)) return Collections.emptyList();
+
+        try {
+            long fileLength = Files.size(regionFile);
+            if (fileLength == 0) return Collections.emptyList();
+        } catch (IOException ex) {
+            Logger.global.logWarning("Failed to read file-size for file: " + regionFile);
+            return Collections.emptyList();
+        }
+
         List<Vector2i> chunks = new ArrayList<>(1024); //1024 = 32 x 32 chunks per region-file
-        try (FileInputStream fileStream = new FileInputStream(regionFile);
-             DataInputStream rawDataStream = new DataInputStream(fileStream)) {
+        try (InputStream inputStream = Files.newInputStream(regionFile);
+             DataInputStream rawDataStream = new DataInputStream(inputStream)) {
 
             long superBlock = rawDataStream.readLong();
             if (superBlock != SUPERBLOCK) throw new RuntimeException("Superblock invalid: " + superBlock + " file " + regionFile);
@@ -150,14 +165,18 @@ public class LinearRegion implements Region {
                 chunks.add(new Vector2i((regionPos.getX() << 5) + (i & 31), (regionPos.getY() << 5) + (i >> 5)));
             return chunks;
         } catch (RuntimeException | IOException ex) {
-            Logger.global.logWarning("Failed to read .linear file: " + regionFile.getAbsolutePath() + " (" + ex + ")");
+            Logger.global.logWarning("Failed to read .linear file: " + regionFile + " (" + ex + ")");
         }
         return chunks;
     }
 
     @Override
-    public File getRegionFile() {
+    public Path getRegionFile() {
         return regionFile;
+    }
+
+    public static String getRegionFileName(int regionX, int regionZ) {
+        return "r." + regionX + "." + regionZ + FILE_SUFFIX;
     }
 
 }

@@ -26,8 +26,8 @@ package de.bluecolored.bluemap.core.world;
 
 import com.flowpowered.math.vector.Vector2i;
 
-import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
 
 public interface Region {
@@ -52,6 +52,6 @@ public interface Region {
 
     Chunk loadChunk(int chunkX, int chunkZ, boolean ignoreMissingLightData) throws IOException;
 
-    File getRegionFile();
+    Path getRegionFile();
 
 }
