@@ -3,6 +3,7 @@ package de.bluecolored.bluemap.core.mca.region;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.world.Region;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,7 +43,7 @@ public enum RegionType {
         return regionFolder.resolve(getRegionFileName(regionX, regionZ));
     }
 
-    @NotNull
+    @Nullable
     public static RegionType forFileName(String fileName) {
         //noinspection ForLoopReplaceableByForEach
         for (int i = 0; i < VALUES.length; i++) {
@@ -50,7 +51,7 @@ public enum RegionType {
             if (fileName.endsWith(regionType.fileSuffix))
                 return regionType;
         }
-        return DEFAULT;
+        return null;
     }
 
     @NotNull
