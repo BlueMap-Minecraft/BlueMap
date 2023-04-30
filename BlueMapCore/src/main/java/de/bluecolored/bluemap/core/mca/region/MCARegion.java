@@ -22,10 +22,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.mca;
+package de.bluecolored.bluemap.core.mca.region;
 
 import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.mca.MCAChunk;
+import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.EmptyChunk;
 import de.bluecolored.bluemap.core.world.Region;
@@ -34,6 +36,8 @@ import net.querz.nbt.Tag;
 import net.querz.nbt.mca.CompressionType;
 
 import java.io.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -41,15 +45,17 @@ import java.util.List;
 
 public class MCARegion implements Region {
 
+    public static final String FILE_SUFFIX = ".mca";
+
     private final MCAWorld world;
-    private final File regionFile;
+    private final Path regionFile;
     private final Vector2i regionPos;
 
-    public MCARegion(MCAWorld world, File regionFile) throws IllegalArgumentException {
+    public MCARegion(MCAWorld world, Path regionFile) throws IllegalArgumentException {
         this.world = world;
         this.regionFile = regionFile;
 
-        String[] filenameParts = regionFile.getName().split("\\.");
+        String[] filenameParts = regionFile.getFileName().toString().split("\\.");
         int rX = Integer.parseInt(filenameParts[1]);
         int rZ = Integer.parseInt(filenameParts[2]);
 
@@ -58,9 +64,12 @@ public class MCARegion implements Region {
 
     @Override
     public Chunk loadChunk(int chunkX, int chunkZ, boolean ignoreMissingLightData) throws IOException {
-        if (!regionFile.exists() || regionFile.length() == 0) return EmptyChunk.INSTANCE;
+        if (Files.notExists(regionFile)) return EmptyChunk.INSTANCE;
 
-        try (RandomAccessFile raf = new RandomAccessFile(regionFile, "r")) {
+        long fileLength = Files.size(regionFile);
+        if (fileLength == 0) return EmptyChunk.INSTANCE;
+
+        try (RandomAccessFile raf = new RandomAccessFile(regionFile.toFile(), "r")) {
 
             int xzChunk = Math.floorMod(chunkZ, 32) * 32 + Math.floorMod(chunkX, 32);
 
@@ -100,11 +109,19 @@ public class MCARegion implements Region {
 
     @Override
     public Collection<Vector2i> listChunks(long modifiedSince) {
-        if (!regionFile.exists() || regionFile.length() == 0) return Collections.emptyList();
+        if (Files.notExists(regionFile)) return Collections.emptyList();
+
+        try {
+            long fileLength = Files.size(regionFile);
+            if (fileLength == 0) return Collections.emptyList();
+        } catch (IOException ex) {
+            Logger.global.logWarning("Failed to read file-size for file: " + regionFile);
+            return Collections.emptyList();
+        }
 
         List<Vector2i> chunks = new ArrayList<>(1024); //1024 = 32 x 32 chunks per region-file
 
-        try (RandomAccessFile raf = new RandomAccessFile(regionFile, "r")) {
+        try (RandomAccessFile raf = new RandomAccessFile(regionFile.toFile(), "r")) {
             for (int x = 0; x < 32; x++) {
                 for (int z = 0; z < 32; z++) {
                     Vector2i chunk = new Vector2i(regionPos.getX() * 32 + x, regionPos.getY() * 32 + z);
@@ -127,15 +144,19 @@ public class MCARegion implements Region {
                 }
             }
         } catch (RuntimeException | IOException ex) {
-            Logger.global.logWarning("Failed to read .mca file: " + regionFile.getAbsolutePath() + " (" + ex + ")");
+            Logger.global.logWarning("Failed to read .mca file: " + regionFile + " (" + ex + ")");
         }
 
         return chunks;
     }
 
     @Override
-    public File getRegionFile() {
+    public Path getRegionFile() {
         return regionFile;
+    }
+
+    public static String getRegionFileName(int regionX, int regionZ) {
+        return "r." + regionX + "." + regionZ + FILE_SUFFIX;
     }
 
 }
