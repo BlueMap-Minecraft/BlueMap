@@ -58,8 +58,6 @@ public abstract class Storage implements Closeable {
 
     public abstract Collection<String> collectMapIds() throws IOException;
 
-    public abstract long estimateMapSize(String mapId) throws IOException;
-
     public MapStorage mapStorage(final String mapId) {
         return new MapStorage(mapId);
     }

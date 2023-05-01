@@ -38,15 +38,13 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import de.bluecolored.bluemap.common.config.ConfigurationException;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.PluginState;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.plugin.text.TextColor;
 import de.bluecolored.bluemap.common.plugin.text.TextFormat;
-import de.bluecolored.bluemap.common.rendermanager.MapPurgeTask;
-import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
-import de.bluecolored.bluemap.common.rendermanager.RenderTask;
-import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
+import de.bluecolored.bluemap.common.rendermanager.*;
 import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
@@ -54,15 +52,13 @@ import de.bluecolored.bluemap.core.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.map.MapRenderState;
+import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.world.Block;
 import de.bluecolored.bluemap.core.world.World;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -88,26 +84,22 @@ public class Commands<S> {
 
     public void init() {
         // commands
-        LiteralCommandNode<S> baseCommand =
-                literal("bluemap")
+        LiteralCommandNode<S> baseCommand = literal("bluemap")
                 .requires(requirementsUnloaded("bluemap.status"))
                 .executes(this::statusCommand)
                 .build();
 
-        LiteralCommandNode<S> versionCommand =
-                literal("version")
+        LiteralCommandNode<S> versionCommand = literal("version")
                 .requires(requirementsUnloaded("bluemap.version"))
                 .executes(this::versionCommand)
                 .build();
 
-        LiteralCommandNode<S> helpCommand =
-                literal("help")
+        LiteralCommandNode<S> helpCommand = literal("help")
                 .requires(requirementsUnloaded("bluemap.help"))
                 .executes(this::helpCommand)
                 .build();
 
-        LiteralCommandNode<S> reloadCommand =
-                literal("reload")
+        LiteralCommandNode<S> reloadCommand = literal("reload")
                 .requires(requirementsUnloaded("bluemap.reload"))
                 .executes(context -> this.reloadCommand(context, false))
 
@@ -116,8 +108,7 @@ public class Commands<S> {
 
                 .build();
 
-        LiteralCommandNode<S> debugCommand =
-                literal("debug")
+        LiteralCommandNode<S> debugCommand = literal("debug")
                 .requires(requirementsUnloaded("bluemap.debug"))
 
                 .then(literal("block")
@@ -147,31 +138,27 @@ public class Commands<S> {
 
                 .build();
 
-        LiteralCommandNode<S> stopCommand =
-                literal("stop")
+        LiteralCommandNode<S> stopCommand = literal("stop")
                 .requires(requirements("bluemap.stop"))
                 .executes(this::stopCommand)
                 .build();
 
-        LiteralCommandNode<S> startCommand =
-                literal("start")
+        LiteralCommandNode<S> startCommand = literal("start")
                 .requires(requirements("bluemap.start"))
                 .executes(this::startCommand)
                 .build();
 
-        LiteralCommandNode<S> freezeCommand =
-                literal("freeze")
+        LiteralCommandNode<S> freezeCommand = literal("freeze")
                 .requires(requirements("bluemap.freeze"))
                 .then(argument("map", StringArgumentType.string()).suggests(new MapSuggestionProvider<>(plugin))
                         .executes(this::freezeCommand))
                         .build();
 
-        LiteralCommandNode<S> unfreezeCommand =
-                literal("unfreeze")
-                        .requires(requirements("bluemap.freeze"))
-                        .then(argument("map", StringArgumentType.string()).suggests(new MapSuggestionProvider<>(plugin))
-                                .executes(this::unfreezeCommand))
-                        .build();
+        LiteralCommandNode<S> unfreezeCommand = literal("unfreeze")
+                .requires(requirements("bluemap.freeze"))
+                .then(argument("map", StringArgumentType.string()).suggests(new MapSuggestionProvider<>(plugin))
+                        .executes(this::unfreezeCommand))
+                .build();
 
         LiteralCommandNode<S> forceUpdateCommand =
                 addRenderArguments(
@@ -187,31 +174,40 @@ public class Commands<S> {
                         this::updateCommand
                 ).build();
 
-        LiteralCommandNode<S> purgeCommand =
-                literal("purge")
-                        .requires(requirements("bluemap.purge"))
-                        .then(argument("map", StringArgumentType.string()).suggests(new MapSuggestionProvider<>(plugin))
-                                .executes(this::purgeCommand))
-                        .build();
+        LiteralCommandNode<S> purgeCommand = literal("purge")
+                .requires(requirements("bluemap.purge"))
+                .then(argument("map", StringArgumentType.string()).suggests(new MapSuggestionProvider<>(plugin))
+                        .executes(this::purgeCommand))
+                .build();
 
-        LiteralCommandNode<S> cancelCommand =
-                literal("cancel")
+        LiteralCommandNode<S> cancelCommand = literal("cancel")
                 .requires(requirements("bluemap.cancel"))
                 .executes(this::cancelCommand)
                 .then(argument("task-ref", StringArgumentType.string()).suggests(new TaskRefSuggestionProvider<>(helper))
                         .executes(this::cancelCommand))
                 .build();
 
-        LiteralCommandNode<S> worldsCommand =
-                literal("worlds")
+        LiteralCommandNode<S> worldsCommand = literal("worlds")
                 .requires(requirements("bluemap.status"))
                 .executes(this::worldsCommand)
                 .build();
 
-        LiteralCommandNode<S> mapsCommand =
-                literal("maps")
+        LiteralCommandNode<S> mapsCommand = literal("maps")
                 .requires(requirements("bluemap.status"))
                 .executes(this::mapsCommand)
+                .build();
+
+        LiteralCommandNode<S> storagesCommand = literal("storages")
+                .requires(requirements("bluemap.status"))
+                .executes(this::storagesCommand)
+
+                .then(argument("storage", StringArgumentType.string()).suggests(new StorageSuggestionProvider<>(plugin))
+                        .executes(this::storagesInfoCommand)
+
+                        .then(literal("delete")
+                                .then(argument("map", StringArgumentType.string())
+                                        .executes(this::storagesDeleteMapCommand))))
+
                 .build();
 
         // command tree
@@ -230,6 +226,7 @@ public class Commands<S> {
         baseCommand.addChild(purgeCommand);
         baseCommand.addChild(worldsCommand);
         baseCommand.addChild(mapsCommand);
+        baseCommand.addChild(storagesCommand);
     }
 
     private <B extends ArgumentBuilder<S, B>> B addRenderArguments(B builder, Command<S> command) {
@@ -858,6 +855,93 @@ public class Commands<S> {
                 ).setHoverText(Text.of(TextColor.WHITE, "World: ", TextColor.GRAY, map.getWorld().getName())));
             }
         }
+
+        return 1;
+    }
+
+    public int storagesCommand(CommandContext<S> context) {
+        CommandSource source = commandSourceInterface.apply(context.getSource());
+
+        source.sendMessage(Text.of(TextColor.BLUE, "Storages loaded by BlueMap:"));
+        for (var entry : plugin.getBlueMap().getConfigs().getStorageConfigs().entrySet()) {
+            source.sendMessage(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, entry.getKey())
+                    .setHoverText(Text.of(entry.getValue().getStorageType().name()))
+                    .setClickAction(Text.ClickAction.RUN_COMMAND, "/bluemap storages " + entry.getKey())
+            );
+        }
+
+        return 1;
+    }
+
+    public int storagesInfoCommand(CommandContext<S> context) {
+        CommandSource source = commandSourceInterface.apply(context.getSource());
+        String storageId = context.getArgument("storage", String.class);
+
+        Storage storage;
+        try {
+            storage = plugin.getBlueMap().getStorage(storageId);
+        } catch (ConfigurationException ex) {
+            source.sendMessage(Text.of(TextColor.RED, ex.getMessage()));
+            return 0;
+        }
+
+        Collection<String> mapIds;
+        try {
+            mapIds = storage.collectMapIds();
+        } catch (IOException ex) {
+            source.sendMessage(Text.of(TextColor.RED, "There was an unexpected exception trying to access this storage. Please check the console for more details..."));
+            Logger.global.logError("Unexpected exception trying to load mapId's from storage '" + storageId + "'!", ex);
+            return 0;
+        }
+
+        source.sendMessage(Text.of(TextColor.BLUE, "Storage '", storageId, "':"));
+        if (mapIds.isEmpty()) {
+            source.sendMessage(Text.of(TextColor.GRAY, " <empty storage>"));
+        } else {
+            for (String mapId : mapIds) {
+                BmMap map = plugin.getMaps().get(mapId);
+                boolean isLoaded = map != null && map.getStorage().equals(storage);
+
+                if (isLoaded) {
+                    source.sendMessage(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, mapId, TextColor.GREEN, TextFormat.ITALIC, " (loaded)"));
+                } else {
+                    source.sendMessage(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, mapId, TextColor.DARK_GRAY, TextFormat.ITALIC, " (unloaded/static/remote)"));
+                }
+            }
+        }
+
+        return 1;
+    }
+
+    public int storagesDeleteMapCommand(CommandContext<S> context) {
+        CommandSource source = commandSourceInterface.apply(context.getSource());
+        String storageId = context.getArgument("storage", String.class);
+        String mapId = context.getArgument("map", String.class);
+
+        Storage storage;
+        try {
+            storage = plugin.getBlueMap().getStorage(storageId);
+        } catch (ConfigurationException ex) {
+            source.sendMessage(Text.of(TextColor.RED, ex.getMessage()));
+            return 0;
+        }
+
+        BmMap map = plugin.getMaps().get(mapId);
+        boolean isLoaded = map != null && map.getStorage().equals(storage);
+        if (isLoaded) {
+            Text purgeCommand = Text.of(TextColor.WHITE, "/bluemap purge " + mapId)
+                            .setClickAction(Text.ClickAction.SUGGEST_COMMAND, "/bluemap purge " + mapId);
+            source.sendMessage(Text.of(TextColor.RED, "Can't delete a loaded map!\n" +
+                    "Unload the map by removing it's config-file first,\n" +
+                    "or use ", purgeCommand, " if you want to purge it."));
+            return 0;
+        }
+
+        // delete map
+        StorageDeleteTask deleteTask = new StorageDeleteTask(storage, mapId);
+
+        plugin.getRenderManager().scheduleRenderTaskNext(deleteTask);
+        source.sendMessage(Text.of(TextColor.GREEN, "Created new Task to delete map '" + mapId + "' from storage '" + storageId + "'"));
 
         return 1;
     }

@@ -24,16 +24,15 @@
  */
 package de.bluecolored.bluemap.common.plugin.commands;
 
-import java.util.Collection;
-import java.util.HashSet;
-
-import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.core.world.World;
 
+import java.util.Collection;
+import java.util.HashSet;
+
 public class WorldOrMapSuggestionProvider<S> extends AbstractSuggestionProvider<S> {
 
-    private Plugin plugin;
+    private final Plugin plugin;
 
     public WorldOrMapSuggestionProvider(Plugin plugin) {
         this.plugin = plugin;

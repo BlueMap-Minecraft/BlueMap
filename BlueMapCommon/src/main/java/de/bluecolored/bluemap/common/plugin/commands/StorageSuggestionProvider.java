@@ -24,19 +24,21 @@
  */
 package de.bluecolored.bluemap.common.plugin.commands;
 
+import de.bluecolored.bluemap.common.plugin.Plugin;
+
 import java.util.Collection;
 
-public class TaskRefSuggestionProvider<S> extends AbstractSuggestionProvider<S> {
+public class StorageSuggestionProvider<S> extends AbstractSuggestionProvider<S> {
 
-    private final CommandHelper helper;
+    private final Plugin plugin;
 
-    public TaskRefSuggestionProvider(CommandHelper helper) {
-        this.helper = helper;
+    public StorageSuggestionProvider(Plugin plugin) {
+        this.plugin = plugin;
     }
 
     @Override
     public Collection<String> getPossibleValues() {
-        return helper.getTaskRefs();
+        return plugin.getBlueMap().getConfigs().getStorageConfigs().keySet();
     }
 
 }

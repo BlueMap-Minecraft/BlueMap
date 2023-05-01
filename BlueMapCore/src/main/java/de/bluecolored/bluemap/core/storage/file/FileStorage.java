@@ -29,7 +29,6 @@ import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.storage.*;
 import de.bluecolored.bluemap.core.util.DeletingPathVisitor;
 import de.bluecolored.bluemap.core.util.FileHelper;
-import de.bluecolored.bluemap.core.util.SizeCollectingPathVisitor;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -225,13 +224,6 @@ public class FileStorage extends Storage {
                         .map(path -> path.getFileName().toString())
                         .collect(Collectors.toList());
         }
-    }
-
-    @Override
-    public long estimateMapSize(String mapId) throws IOException {
-        SizeCollectingPathVisitor visitor = new SizeCollectingPathVisitor();
-        Files.walkFileTree(getFilePath(mapId), visitor);
-        return visitor.getSize();
     }
 
     public Path getFilePath(String mapId, int lod, Vector2i tile){

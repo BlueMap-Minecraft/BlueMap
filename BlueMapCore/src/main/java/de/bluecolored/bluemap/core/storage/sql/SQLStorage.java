@@ -417,12 +417,20 @@ public class SQLStorage extends Storage {
 
     @Override
     public Collection<String> collectMapIds() throws IOException {
-        return Collections.emptyList(); //TODO
-    }
-
-    @Override
-    public long estimateMapSize(String mapId) throws IOException {
-        return 0; //TODO
+        try {
+            return recoveringConnection(connection -> {
+                    ResultSet result = executeQuery(connection,
+                            "SELECT `map_id` FROM `bluemap_map`"
+                    );
+                    Collection<String> mapIds = new ArrayList<>();
+                    while (result.next()) {
+                        mapIds.add(result.getString("map_id"));
+                    }
+                    return mapIds;
+            }, 2);
+        } catch (SQLException ex) {
+            throw new IOException(ex);
+        }
     }
 
     @SuppressWarnings("UnusedAssignment")

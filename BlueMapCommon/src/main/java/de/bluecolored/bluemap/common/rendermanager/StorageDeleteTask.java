@@ -25,20 +25,22 @@
 package de.bluecolored.bluemap.common.rendermanager;
 
 import de.bluecolored.bluemap.api.debug.DebugDump;
-import de.bluecolored.bluemap.core.map.BmMap;
+import de.bluecolored.bluemap.core.storage.Storage;
 
 import java.util.Objects;
 
-public class MapPurgeTask implements RenderTask {
+public class StorageDeleteTask implements RenderTask {
 
-    private final BmMap map;
+    private final Storage storage;
+    private final String mapId;
 
     private volatile double progress;
     private volatile boolean hasMoreWork;
     private volatile boolean cancelled;
 
-    public MapPurgeTask(BmMap map) {
-        this.map = Objects.requireNonNull(map);
+    public StorageDeleteTask(Storage storage, String mapId) {
+        this.storage = Objects.requireNonNull(storage);
+        this.mapId = Objects.requireNonNull(mapId);
         this.progress = 0d;
         this.hasMoreWork = true;
         this.cancelled = false;
@@ -52,22 +54,11 @@ public class MapPurgeTask implements RenderTask {
         }
         if (this.cancelled) return;
 
-        // save lowres-tile-manager to clear/flush any buffered data
-        this.map.getLowresTileManager().save();
-
-        try {
-            // purge the map
-            map.getStorage().purgeMap(map.getId(), progressInfo -> {
-                this.progress = progressInfo.getProgress();
-                return !this.cancelled;
-            });
-
-            // reset texture gallery
-            map.resetTextureGallery();
-        } finally {
-            // reset renderstate
-            map.getRenderState().reset();
-        }
+        // purge the map
+        storage.purgeMap(mapId, progressInfo -> {
+            this.progress = progressInfo.getProgress();
+            return !this.cancelled;
+        });
     }
 
     @Override
@@ -89,8 +80,9 @@ public class MapPurgeTask implements RenderTask {
     @Override
     public boolean contains(RenderTask task) {
         if (task == this) return true;
-        if (task instanceof MapPurgeTask) {
-            return map.equals(((MapPurgeTask) task).map);
+        if (task instanceof StorageDeleteTask) {
+            StorageDeleteTask sTask = (StorageDeleteTask) task;
+            return storage.equals(sTask.storage) && mapId.equals(sTask.mapId);
         }
 
         return false;
@@ -98,7 +90,7 @@ public class MapPurgeTask implements RenderTask {
 
     @Override
     public String getDescription() {
-        return "Purge map " + map.getId();
+        return "Delete map " + mapId;
     }
 
 }
