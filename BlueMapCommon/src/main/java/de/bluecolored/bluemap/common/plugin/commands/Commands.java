@@ -890,7 +890,7 @@ public class Commands<S> {
             mapIds = storage.collectMapIds();
         } catch (IOException ex) {
             source.sendMessage(Text.of(TextColor.RED, "There was an unexpected exception trying to access this storage. Please check the console for more details..."));
-            Logger.global.logError("Unexpected exception trying to load mapId's from storage '" + storageId + "'!", ex);
+            Logger.global.logError("Unexpected exception trying to load mapIds from storage '" + storageId + "'!", ex);
             return 0;
         }
 
@@ -932,7 +932,7 @@ public class Commands<S> {
             Text purgeCommand = Text.of(TextColor.WHITE, "/bluemap purge " + mapId)
                             .setClickAction(Text.ClickAction.SUGGEST_COMMAND, "/bluemap purge " + mapId);
             source.sendMessage(Text.of(TextColor.RED, "Can't delete a loaded map!\n" +
-                    "Unload the map by removing it's config-file first,\n" +
+                    "Unload the map by removing its config-file first,\n" +
                     "or use ", purgeCommand, " if you want to purge it."));
             return 0;
         }
