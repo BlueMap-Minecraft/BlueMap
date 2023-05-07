@@ -69,7 +69,7 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
     private final Map<UUID, Player> onlinePlayerMap;
     private final List<BukkitPlayer> onlinePlayerList;
 
-    private final Collection<WeakReference<ScheduledTask>> scheduledTasks;
+    private final Set<WeakReference<ScheduledTask>> scheduledTasks;
 
     private final LoadingCache<World, ServerWorld> worlds;
 
@@ -91,7 +91,7 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
         this.onlinePlayerMap = new ConcurrentHashMap<>();
         this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 
-        this.scheduledTasks = new ArrayList<>();
+        this.scheduledTasks = ConcurrentHashMap.newKeySet();
 
         this.eventForwarder = new EventForwarder();
         this.pluginInstance = new Plugin("bukkit", this);
