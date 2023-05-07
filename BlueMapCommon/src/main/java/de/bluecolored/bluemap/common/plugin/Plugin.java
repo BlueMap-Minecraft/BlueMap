@@ -220,13 +220,6 @@ public class Plugin implements ServerEventListener {
                     }
                 });
 
-                //start render-manager
-                if (pluginState.isRenderThreadsEnabled()) {
-                    checkPausedByPlayerCount(); // <- this also starts the render-manager if it should start
-                } else {
-                    Logger.global.logInfo("Render-Threads are STOPPED! Use the command 'bluemap start' to start them.");
-                }
-
                 //update webapp and settings
                 if (webappConfig.isEnabled())
                     blueMap.createOrUpdateWebApp(false);
@@ -324,6 +317,13 @@ public class Plugin implements ServerEventListener {
                 //save webapp settings again (for api-registered scripts and styles)
                 if (webappConfig.isEnabled())
                     this.getBlueMap().getWebFilesManager().saveSettings();
+
+                //start render-manager
+                if (pluginState.isRenderThreadsEnabled()) {
+                    checkPausedByPlayerCount(); // <- this also starts the render-manager if it should start
+                } else {
+                    Logger.global.logInfo("Render-Threads are STOPPED! Use the command 'bluemap start' to start them.");
+                }
 
                 //done
                 loaded = true;
