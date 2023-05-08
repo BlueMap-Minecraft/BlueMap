@@ -49,7 +49,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.*;
@@ -69,7 +68,7 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
     private final Map<UUID, Player> onlinePlayerMap;
     private final List<BukkitPlayer> onlinePlayerList;
 
-    private final Collection<WeakReference<ScheduledTask>> scheduledTasks;
+    private final Collection<ScheduledTask> scheduledTasks;
 
     private final LoadingCache<World, ServerWorld> worlds;
 
@@ -91,7 +90,7 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
         this.onlinePlayerMap = new ConcurrentHashMap<>();
         this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 
-        this.scheduledTasks = new ArrayList<>();
+        this.scheduledTasks = Collections.synchronizedCollection(Collections.newSetFromMap(new WeakHashMap<>()));
 
         this.eventForwarder = new EventForwarder();
         this.pluginInstance = new Plugin("bukkit", this);
@@ -156,8 +155,7 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
     @Override
     public void onDisable() {
         Logger.global.logInfo("Stopping...");
-        scheduledTasks.forEach(taskRef -> {
-            ScheduledTask task = taskRef.get();
+        scheduledTasks.forEach(task -> {
             if (task != null) task.cancel();
         });
         scheduledTasks.clear();
@@ -249,9 +247,6 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
         synchronized (onlinePlayerList) {
             onlinePlayerList.removeIf(p -> p.getUuid().equals(playerUUID));
         }
-
-        // tidy up task-references
-        scheduledTasks.removeIf(ref -> ref.get() == null);
     }
 
     @Override
@@ -270,10 +265,11 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
         onlinePlayerList.add(player);
 
         // update player every 20 seconds
-        bukkitPlayer.getScheduler().runAtFixedRate(this, task -> {
-            player.update();
-            scheduledTasks.add(new WeakReference<>(task));
-        }, () -> {}, 20, 20);
+        scheduledTasks.add(
+            bukkitPlayer.getScheduler().runAtFixedRate(this, task -> {
+                player.update();
+            }, () -> {}, 20, 20)
+        );
     }
 
 }
