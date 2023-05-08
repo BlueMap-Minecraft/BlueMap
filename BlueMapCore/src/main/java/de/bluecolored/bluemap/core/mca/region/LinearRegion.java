@@ -38,17 +38,14 @@ import net.querz.nbt.Tag;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 public class LinearRegion implements Region {
 
     public static final String FILE_SUFFIX = ".linear";
 
+    private static final List<Byte> SUPPORTED_VERSIONS = Arrays.asList((byte) 1, (byte) 2);
     private static final long SUPERBLOCK = -4323716122432332390L;
-    private static final byte VERSION = 1;
     private static final int HEADER_SIZE = 32;
     private static final int FOOTER_SIZE = 8;
 
@@ -80,26 +77,28 @@ public class LinearRegion implements Region {
 
             long superBlock = rawDataStream.readLong();
             if (superBlock != SUPERBLOCK)
-                throw new RuntimeException("Superblock invalid: " + superBlock + " file " + regionFile);
+                throw new RuntimeException("Invalid superblock: " + superBlock + " file " + regionFile);
 
             byte version = rawDataStream.readByte();
-            if (version != VERSION)
-                throw new RuntimeException("Version invalid: " + version + " file " + regionFile);
+            if (!SUPPORTED_VERSIONS.contains(version))
+                throw new RuntimeException("Invalid version: " + version + " file " + regionFile);
 
-            rawDataStream.skipBytes(11); // newestTimestamp + compression level + chunk count
+            // Skip newestTimestamp (Long) + Compression level (Byte) + Chunk count (Short): Unused.
+            rawDataStream.skipBytes(11);
 
             int dataCount = rawDataStream.readInt();
             if (fileLength != HEADER_SIZE + dataCount + FOOTER_SIZE)
-                throw new RuntimeException("File length invalid " + this.regionFile + " " + fileLength + " " + (HEADER_SIZE + dataCount + FOOTER_SIZE));
+                throw new RuntimeException("Invalid file length: " + this.regionFile + " " + fileLength + " " + (HEADER_SIZE + dataCount + FOOTER_SIZE));
 
-            rawDataStream.skipBytes(8); // Data Hash
+            // Skip data hash (Long): Unused.
+            rawDataStream.skipBytes(8);
 
             byte[] rawCompressed = new byte[dataCount];
             rawDataStream.readFully(rawCompressed, 0, dataCount);
 
             superBlock = rawDataStream.readLong();
             if (superBlock != SUPERBLOCK)
-                throw new RuntimeException("Footer superblock invalid " + this.regionFile);
+                throw new RuntimeException("Invalid footer superblock: " + this.regionFile);
 
             try (DataInputStream dis = new DataInputStream(new ZstdInputStream(new ByteArrayInputStream(rawCompressed)))) {
                 int x = chunkX - (regionPos.getX() << 5);
@@ -108,8 +107,8 @@ public class LinearRegion implements Region {
                 int skip = 0;
 
                 for (int i = 0; i < pos; i++) {
-                    skip += dis.readInt(); // size of the chunk (bytes) to skip
-                    dis.skipBytes(4); // skip 0 (will be timestamps)
+                    skip += dis.readInt(); // Size of the chunk (bytes) to skip
+                    dis.skipBytes(4); // Skip timestamps
                 }
 
                 int size = dis.readInt();
@@ -136,8 +135,9 @@ public class LinearRegion implements Region {
     public Collection<Vector2i> listChunks(long modifiedSince) {
         if (Files.notExists(regionFile)) return Collections.emptyList();
 
+        long fileLength;
         try {
-            long fileLength = Files.size(regionFile);
+            fileLength = Files.size(regionFile);
             if (fileLength == 0) return Collections.emptyList();
         } catch (IOException ex) {
             Logger.global.logWarning("Failed to read file-size for file: " + regionFile);
@@ -149,21 +149,51 @@ public class LinearRegion implements Region {
              DataInputStream rawDataStream = new DataInputStream(inputStream)) {
 
             long superBlock = rawDataStream.readLong();
-            if (superBlock != SUPERBLOCK) throw new RuntimeException("Superblock invalid: " + superBlock + " file " + regionFile);
+            if (superBlock != SUPERBLOCK)
+                throw new RuntimeException("Invalid superblock: " + superBlock + " file " + regionFile);
 
             byte version = rawDataStream.readByte();
-            if (version != VERSION) throw new RuntimeException("Version invalid: " + version + " file " + regionFile);
+            if (!SUPPORTED_VERSIONS.contains(version))
+                throw new RuntimeException("Invalid version: " + version + " file " + regionFile);
 
-            long newestTimestamp = rawDataStream.readLong();
+            int date = (int) (modifiedSince / 1000);
 
             // If whole region is the same - skip.
-            if (newestTimestamp < modifiedSince / 1000) return Collections.emptyList();
+            long newestTimestamp = rawDataStream.readLong();
+            if (newestTimestamp < date) return Collections.emptyList();
 
-            // Linear files store whole region timestamp, not chunk timestamp. We need to render the while region file.
-            // TODO: Add per-chunk timestamps when .linear add support for per-chunk timestamps (soon)
-            for(int i = 0 ; i < 1024; i++)
-                chunks.add(new Vector2i((regionPos.getX() << 5) + (i & 31), (regionPos.getY() << 5) + (i >> 5)));
-            return chunks;
+            // Linear v1 files store whole region timestamp, not chunk timestamp. We need to render the whole region file.
+            if (version == 1) {
+                for(int i = 0 ; i < 1024; i++)
+                    chunks.add(new Vector2i((regionPos.getX() << 5) + (i & 31), (regionPos.getY() << 5) + (i >> 5)));
+                return chunks;
+            }
+            // Linear v2: Chunk timestamps are here!
+            // Skip Compression level (Byte) + Chunk count (Short): Unused.
+            rawDataStream.skipBytes(3);
+
+            int dataCount = rawDataStream.readInt();
+            if (fileLength != HEADER_SIZE + dataCount + FOOTER_SIZE)
+                throw new RuntimeException("Invalid file length: " + this.regionFile + " " + fileLength + " " + (HEADER_SIZE + dataCount + FOOTER_SIZE));
+
+            // Skip data hash (Long): Unused.
+            rawDataStream.skipBytes(8);
+
+            byte[] rawCompressed = new byte[dataCount];
+            rawDataStream.readFully(rawCompressed, 0, dataCount);
+
+            superBlock = rawDataStream.readLong();
+            if (superBlock != SUPERBLOCK)
+                throw new RuntimeException("Invalid footer SuperBlock: " + this.regionFile);
+
+            try (DataInputStream dis = new DataInputStream(new ZstdInputStream(new ByteArrayInputStream(rawCompressed)))) {
+                for (int i = 0; i < 1024; i++) {
+                    dis.skipBytes(4); // Skip size of the chunk
+                    int timestamp = dis.readInt();
+                    if (timestamp >= date) // Timestamps
+                        chunks.add(new Vector2i((regionPos.getX() << 5) + (i & 31), (regionPos.getY() << 5) + (i >> 5)));
+                }
+            }
         } catch (RuntimeException | IOException ex) {
             Logger.global.logWarning("Failed to read .linear file: " + regionFile + " (" + ex + ")");
         }
