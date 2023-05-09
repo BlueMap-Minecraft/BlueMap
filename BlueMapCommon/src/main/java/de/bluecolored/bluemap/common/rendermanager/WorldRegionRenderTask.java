@@ -91,6 +91,9 @@ public class WorldRegionRenderTask implements RenderTask {
                     tileSet.add(new Vector2l(x, z));
                 }
             }
+
+            // make sure chunk gets re-loaded from disk
+            map.getWorld().invalidateChunkCache(chunk.getX(), chunk.getY());
         }
 
         Predicate<Vector2i> boundsTileFilter = t -> {
