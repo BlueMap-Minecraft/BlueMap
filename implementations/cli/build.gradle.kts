@@ -86,6 +86,7 @@ tasks.shadowJar {
 	relocate ("org.checkerframework", "de.bluecolored.shadow.checkerframework")
 	relocate ("org.codehaus", "de.bluecolored.shadow.codehaus")
 	relocate ("io.leangen.geantyref", "de.bluecolored.shadow.geantyref")
+	relocate ("io.airlift", "de.bluecolored.shadow.airlift")
 	relocate ("org.apache.commons", "de.bluecolored.shadow.apache.commons")
 }
 

@@ -25,17 +25,20 @@
 package de.bluecolored.bluemap.core.mca.region;
 
 import com.flowpowered.math.vector.Vector2i;
-import com.github.luben.zstd.ZstdInputStream;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.MCAChunk;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.EmptyChunk;
 import de.bluecolored.bluemap.core.world.Region;
+import io.airlift.compress.zstd.ZstdInputStream;
 import net.querz.nbt.CompoundTag;
 import net.querz.nbt.Tag;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;

@@ -56,7 +56,6 @@ repositories {
 
 @Suppress("GradlePackageUpdate")
 dependencies {
-    implementation("com.github.luben:zstd-jni:1.5.4-1")
     api ("com.github.ben-manes.caffeine:caffeine:2.8.5")
     api ("org.apache.commons:commons-lang3:3.6")
     api ("commons-io:commons-io:2.5")
@@ -64,6 +63,7 @@ dependencies {
     api ("org.spongepowered:configurate-gson:4.1.2")
     api ("com.github.Querz:NBT:4.0")
     api ("org.apache.commons:commons-dbcp2:2.9.0")
+    api ("io.airlift:aircompressor:0.24")
 
     api ("de.bluecolored.bluemap.api:BlueMapAPI")
 
