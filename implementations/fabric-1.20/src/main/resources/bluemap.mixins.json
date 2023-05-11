@@ -1,0 +1,14 @@
+{
+	"required": true,
+	"minVersion": "0.8",
+	"package": "de.bluecolored.bluemap.fabric.mixin",
+	"compatibilityLevel": "JAVA_8",
+	"mixins": [],
+	"client": [],
+	"server": [
+		"MixinPlayerManager"
+	],
+	"injectors": {
+		"defaultRequire": 1
+	}
+}
