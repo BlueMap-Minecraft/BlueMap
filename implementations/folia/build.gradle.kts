@@ -114,6 +114,18 @@ tasks.register("release") {
 	dependsOn(tasks.shadowJar)
 }
 
-tasks.register("publish") {
+modrinth {
+	token.set(System.getenv("MODRINTH_TOKEN"))
+	projectId.set("swbUV1cr")
+	versionNumber.set("${project.version}-${project.name}")
+	changelog.set("Releasenotes and Changelog:\nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}")
+	uploadFile.set(tasks.findByName("shadowJar"))
+	loaders.addAll("folia")
+	gameVersions.addAll(
+		"1.19.4"
+	)
+}
 
+tasks.register("publish") {
+	dependsOn("modrinth")
 }
