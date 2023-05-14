@@ -32,13 +32,11 @@ import de.bluecolored.bluemap.api.BlueMapWorld;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.world.World;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -77,7 +75,10 @@ public class BlueMapAPIImpl extends BlueMapAPI {
 
     @Override
     public Collection<BlueMapMap> getMaps() {
-        return plugin.getMaps().values().stream()
+        Map<String, BmMap> maps = plugin.getMaps();
+        if (maps == null) return Collections.emptyList();
+
+        return maps.values().stream()
                 .map(map -> {
                     try {
                         return new BlueMapMapImpl(plugin, map);
@@ -92,7 +93,10 @@ public class BlueMapAPIImpl extends BlueMapAPI {
 
     @Override
     public Collection<BlueMapWorld> getWorlds() {
-        return plugin.getWorlds().values().stream()
+        Map<String, World> worlds = plugin.getWorlds();
+        if (worlds == null) return Collections.emptyList();
+
+        return worlds.values().stream()
                 .map(world -> getWorld(world).orElse(null))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toUnmodifiableSet());
@@ -104,14 +108,16 @@ public class BlueMapAPIImpl extends BlueMapAPI {
     }
 
     public Optional<BlueMapWorld> getWorldUncached(Object world) {
+        var worlds = plugin.getWorlds();
+        if (worlds == null) return Optional.empty();
 
         if (world instanceof UUID) {
-            var coreWorld = plugin.getWorlds().get(world.toString());
+            var coreWorld = worlds.get(world.toString());
             if (coreWorld != null) world = coreWorld;
         }
 
         if (world instanceof String) {
-            var coreWorld = plugin.getWorlds().get(world);
+            var coreWorld = worlds.get(world);
             if (coreWorld != null) world = coreWorld;
         }
 
@@ -130,7 +136,7 @@ public class BlueMapAPIImpl extends BlueMapAPI {
 
         try {
             String id = plugin.getBlueMap().getWorldId(serverWorld.getSaveFolder());
-            var coreWorld = plugin.getWorlds().get(id);
+            var coreWorld = worlds.get(id);
             if (coreWorld == null) return Optional.empty();
 
             return Optional.of(new BlueMapWorldImpl(plugin, coreWorld));
@@ -147,7 +153,10 @@ public class BlueMapAPIImpl extends BlueMapAPI {
     }
 
     public Optional<BlueMapMap> getMapUncached(String id) {
-        var map = plugin.getMaps().get(id);
+        var maps = plugin.getMaps();
+        if (maps == null) return Optional.empty();
+
+        var map = maps.get(id);
         if (map == null) return Optional.empty();
 
         var world = getWorld(map.getWorld()).orElse(null);
