@@ -311,7 +311,10 @@ public class Commands<S> {
             return 0;
         }
 
-        source.sendMessages(helper.createStatusMessage());
+        new Thread(() -> {
+            source.sendMessages(helper.createStatusMessage());
+        }, "BlueMap-Plugin-StatusCommand").start();
+
         return 1;
     }
 
