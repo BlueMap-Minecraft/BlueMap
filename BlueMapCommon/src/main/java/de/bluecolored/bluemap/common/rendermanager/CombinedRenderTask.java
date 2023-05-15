@@ -65,11 +65,13 @@ public class CombinedRenderTask<T extends RenderTask> implements RenderTask {
     }
 
     @Override
-    public synchronized double estimateProgress() {
+    public double estimateProgress() {
         if (!hasMoreWork()) return 1;
+        int currentTask = this.currentTaskIndex;
+        if (currentTask >= this.tasks.size()) return 1;
 
-        double total = currentTaskIndex;
-        total += this.tasks.get(this.currentTaskIndex).estimateProgress();
+        double total = currentTask;
+        total += this.tasks.get(currentTask).estimateProgress();
 
         return total / tasks.size();
     }
