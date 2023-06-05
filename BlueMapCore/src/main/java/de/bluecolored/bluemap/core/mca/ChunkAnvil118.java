@@ -55,13 +55,13 @@ public class ChunkAnvil118 extends MCAChunk {
         super(world, chunkTag);
 
         String status = chunkTag.getString("Status");
-        this.isGenerated = status.equals("full");
+        this.isGenerated = status.equals("full") || status.equals("minecraft:full");
         this.hasLight = isGenerated;
 
         this.inhabitedTime = chunkTag.getLong("InhabitedTime");
 
         if (!isGenerated && getWorld().isIgnoreMissingLightData()) {
-            isGenerated = !status.equals("empty");
+            isGenerated = !status.equals("empty") && !status.equals("minecraft:empty");
         }
 
         if (chunkTag.containsKey("Heightmaps")) {
