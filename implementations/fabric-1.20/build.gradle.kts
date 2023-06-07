@@ -58,10 +58,10 @@ dependencies {
 		exclude (group = "com.mojang", module = "brigadier")
 	}
 
-	minecraft ("com.mojang:minecraft:1.20-pre7")
-	mappings ("net.fabricmc:yarn:1.20-pre7+build.2")
+	minecraft ("com.mojang:minecraft:1.20")
+	mappings ("net.fabricmc:yarn:1.20+build.1")
 	modImplementation ("net.fabricmc:fabric-loader:0.14.21")
-	modImplementation ("net.fabricmc.fabric-api:fabric-api:0.82.1+1.20")
+	modImplementation ("net.fabricmc.fabric-api:fabric-api:0.83.0+1.20")
 	modImplementation("me.lucko:fabric-permissions-api:0.1-SNAPSHOT")
 
 	testImplementation ("org.junit.jupiter:junit-jupiter:5.9.0")

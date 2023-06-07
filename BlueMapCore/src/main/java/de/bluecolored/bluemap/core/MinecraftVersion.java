@@ -38,7 +38,7 @@ public class MinecraftVersion implements Comparable<MinecraftVersion> {
 
     private static final Pattern VERSION_REGEX = Pattern.compile("(?<major>\\d+)\\.(?<minor>\\d+)(?:\\.(?<patch>\\d+))?(?:-(?:pre|rc)\\d+)?");
 
-    public static final MinecraftVersion LATEST_SUPPORTED = new MinecraftVersion(1, 19, 4);
+    public static final MinecraftVersion LATEST_SUPPORTED = new MinecraftVersion(1, 20);
     public static final MinecraftVersion EARLIEST_SUPPORTED = new MinecraftVersion(1, 13);
 
     private final int major, minor, patch;
@@ -152,7 +152,7 @@ public class MinecraftVersion implements Comparable<MinecraftVersion> {
         MC_1_18 (new MinecraftVersion(1, 18), "mc1_18", "https://piston-data.mojang.com/v1/objects/020aa79e63a7aab5d6f30e5ec7a6c08baee6b64c/client.jar"),
         MC_1_19 (new MinecraftVersion(1, 19), "mc1_18", "https://piston-data.mojang.com/v1/objects/a45634ab061beb8c878ccbe4a59c3315f9c0266f/client.jar"),
         MC_1_19_4 (new MinecraftVersion(1, 19, 4), "mc1_18", "https://piston-data.mojang.com/v1/objects/958928a560c9167687bea0cefeb7375da1e552a8/client.jar"),
-        MC_1_20 (new MinecraftVersion(1, 20), "mc1_18", "https://piston-data.mojang.com/v1/objects/07dfbe4c383c4bb6d26254e49c0fce5398bab5b5/client.jar");
+        MC_1_20 (new MinecraftVersion(1, 20), "mc1_18", "https://piston-data.mojang.com/v1/objects/e575a48efda46cf88111ba05b624ef90c520eef1/client.jar");
 
         private final MinecraftVersion version;
         private final String resourcePrefix;
