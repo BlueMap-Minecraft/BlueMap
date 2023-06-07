@@ -16,7 +16,7 @@
     "hocon-parser": "^1.0.1"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^4.0.0",
+    "@vitejs/plugin-vue": "^4.0.5",
     "eslint": "~8.22.0",
     "eslint-plugin-vue": "^9.3.0",
     "sass": "^1.57.0",
