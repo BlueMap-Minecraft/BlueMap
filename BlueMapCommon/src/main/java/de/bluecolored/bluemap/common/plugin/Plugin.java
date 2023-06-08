@@ -55,6 +55,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
+import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
@@ -194,6 +195,9 @@ public class Plugin implements ServerEventListener {
                     } catch (UnknownHostException ex) {
                         throw new ConfigurationException("BlueMap failed to resolve the ip in your webserver-config.\n" +
                                 "Check if that is correctly configured.", ex);
+                    } catch (BindException ex) {
+                        throw new ConfigurationException("BlueMap failed to bind to the configured address.\n" +
+                                "This usually happens when the configured port (" + webserverConfig.getPort() + ") is already in use by some other program.", ex);
                     } catch (IOException ex) {
                         throw new ConfigurationException("BlueMap failed to initialize the webserver.\n" +
                                 "Check your webserver-config if everything is configured correctly.\n" +
