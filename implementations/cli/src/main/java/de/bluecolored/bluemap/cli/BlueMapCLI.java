@@ -456,6 +456,6 @@ public class BlueMapCLI implements ServerInterface {
     }
 
     private static void printVersion() {
-        System.out.printf("%s\n%s\n", BlueMap.VERSION, BlueMap.GIT_HASH);        
+        System.out.printf("%s\n%s\n", BlueMap.VERSION, BlueMap.GIT_HASH);
     }
 }
