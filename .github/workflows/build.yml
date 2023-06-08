@@ -31,7 +31,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-bluemap-
       - name: Build with Gradle
-        run: ./gradlew clean test build
+        run: ./gradlew clean spotlessCheck test build
       - uses: actions/upload-artifact@v2
         with:
           name: artifacts
