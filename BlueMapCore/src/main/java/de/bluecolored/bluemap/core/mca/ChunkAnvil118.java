@@ -225,7 +225,7 @@ public class ChunkAnvil118 extends MCAChunk {
             if (skyLight.length < 2048 && skyLight.length > 0) skyLight = Arrays.copyOf(skyLight, 2048);
 
             this.bitsPerBlock = this.blocks.length >> 6; // available longs * 64 (bits per long) / 4096 (blocks per section) (floored result)
-            this.bitsPerBiome = Integer.SIZE - Integer.numberOfLeadingZeros(this.biomePalette.length - 1);
+            this.bitsPerBiome = MCAMath.ceilLog2(this.biomePalette.length);
         }
 
         private BlockState readBlockStatePaletteEntry(CompoundTag paletteEntry) {
@@ -296,6 +296,10 @@ public class ChunkAnvil118 extends MCAChunk {
 
             return biomePalette[(int) value];
         }
+    }
+
+    private static PackedIntArrayAccess heightmap(int worldHeight, long[] data) {
+        return new PackedIntArrayAccess(MCAMath.ceilLog2(worldHeight + 1), data);
     }
 
 }

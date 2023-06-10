@@ -71,4 +71,8 @@ public class MCAMath {
         return value;
     }
 
+    public static int ceilLog2(int n) {
+        return Integer.SIZE - Integer.numberOfLeadingZeros(n - 1);
+    }
+
 }
