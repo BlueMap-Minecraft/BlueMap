@@ -2,7 +2,7 @@ package de.bluecolored.bluemap.core.storage.sql.dialect;
 
 import org.intellij.lang.annotations.Language;
 
-public class MariaDBFactory implements SQLQueryAbstractFactory {
+public class MariaDBFactory implements SQLQueryFactory {
 
     @Override
     @Language("MariaDB")

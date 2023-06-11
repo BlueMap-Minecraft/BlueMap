@@ -2,7 +2,7 @@ package de.bluecolored.bluemap.core.storage.sql.dialect;
 
 import org.intellij.lang.annotations.Language;
 
-public interface SQLQueryAbstractFactory {
+public interface SQLQueryFactory {
     @Language("sql")
     String writeMapTile();
 

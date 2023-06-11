@@ -2,7 +2,7 @@ package de.bluecolored.bluemap.core.storage.sql.dialect;
 
 import org.intellij.lang.annotations.Language;
 
-public class PostgresFactory implements SQLQueryAbstractFactory {
+public class PostgresFactory implements SQLQueryFactory {
     @Override
     @Language("PostgreSQL")
     public String writeMapTile() {

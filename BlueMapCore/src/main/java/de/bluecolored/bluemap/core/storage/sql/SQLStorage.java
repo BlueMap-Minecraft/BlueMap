@@ -52,7 +52,7 @@ import java.util.function.Function;
 
 public class SQLStorage extends Storage {
 
-    private final SQLQueryAbstractFactory concreteSQL;
+    private final SQLQueryFactory dialect;
     private final DataSource dataSource;
     private final Compression hiresCompression;
 
@@ -118,7 +118,7 @@ public class SQLStorage extends Storage {
                         byteOut.writeTo(blobOut);
                     }
 
-                    executeUpdate(connection,this.concreteSQL.writeMapTile(),
+                    executeUpdate(connection,this.dialect.writeMapTile(),
                             mapFK,
                             lod,
                             tile.getX(),
