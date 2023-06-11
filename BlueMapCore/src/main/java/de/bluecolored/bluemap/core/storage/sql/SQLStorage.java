@@ -30,8 +30,7 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.storage.*;
-import de.bluecolored.bluemap.core.storage.sql.dialect.MariaDBFactory;
-import de.bluecolored.bluemap.core.storage.sql.dialect.SQLQueryAbstractFactory;
+import de.bluecolored.bluemap.core.storage.sql.dialect.SQLQueryFactory;
 import de.bluecolored.bluemap.core.util.WrappedOutputStream;
 import org.apache.commons.dbcp2.*;
 import org.apache.commons.pool2.ObjectPool;
@@ -67,7 +66,7 @@ public class SQLStorage extends Storage {
 
     public SQLStorage(SQLStorageSettings config) throws MalformedURLException, SQLDriverException {
         this.closed = false;
-        this.concreteSQL = new MariaDBFactory();
+        this.dialect = config.getDialect().getDialectFactory();
         try {
             if (config.getDriverClass().isPresent()) {
                 if (config.getDriverJar().isPresent()) {
@@ -140,7 +139,7 @@ public class SQLStorage extends Storage {
         try {
             byte[] data = recoveringConnection(connection -> {
                     ResultSet result = executeQuery(connection,
-                            this.concreteSQL.readMapTile(),
+                            this.dialect.readMapTile(),
                             mapId,
                             lod,
                             tile.getX(),
@@ -170,7 +169,7 @@ public class SQLStorage extends Storage {
         try {
             TileInfo tileInfo = recoveringConnection(connection -> {
                 ResultSet result = executeQuery(connection,
-                        this.concreteSQL.readMapTileInfo(),
+                        this.dialect.readMapTileInfo(),
                         mapId,
                         lod,
                         tile.getX(),
@@ -219,7 +218,7 @@ public class SQLStorage extends Storage {
     public void deleteMapTile(String mapId, int lod, Vector2i tile) throws IOException {
         try {
             recoveringConnection(connection ->
-                executeUpdate(connection,this.concreteSQL.deleteMapTile(),
+                executeUpdate(connection,this.dialect.deleteMapTile(),
                         mapId,
                         lod,
                         tile.getX(),
@@ -244,7 +243,7 @@ public class SQLStorage extends Storage {
                     }
 
                     executeUpdate(connection,
-                            this.concreteSQL.writeMeta(),
+                            this.dialect.writeMeta(),
                             mapFK,
                             escapeMetaName(name),
                             dataBlob
@@ -261,7 +260,7 @@ public class SQLStorage extends Storage {
         try {
             byte[] data = recoveringConnection(connection -> {
                 ResultSet result = executeQuery(connection,
-                        this.concreteSQL.readMeta(),
+                        this.dialect.readMeta(),
                         mapId,
                         escapeMetaName(name)
                 );
@@ -286,7 +285,7 @@ public class SQLStorage extends Storage {
         try {
             MetaInfo tileInfo = recoveringConnection(connection -> {
                 ResultSet result = executeQuery(connection,
-                        this.concreteSQL.readMetaSize(),
+                        this.dialect.readMetaSize(),
                         mapId,
                         escapeMetaName(name)
                 );
@@ -323,7 +322,7 @@ public class SQLStorage extends Storage {
         try {
             recoveringConnection(connection ->
                     executeUpdate(connection,
-                            this.concreteSQL.purgeMeta(),
+                            this.dialect.purgeMeta(),
                             mapId,
                             escapeMetaName(name)
                     ), 2);
@@ -338,18 +337,18 @@ public class SQLStorage extends Storage {
             try {
                 recoveringConnection(connection -> {
                     executeUpdate(connection,
-                            this.concreteSQL.purgeMapTile(),
+                            this.dialect.purgeMapTile(),
                             mapId
                     );
 
                     executeUpdate(connection,
-                            this.concreteSQL.purgeMapMeta(),
+                            this.dialect.purgeMapMeta(),
                             mapId
                     );
 
 
                     executeUpdate(connection,
-                            this.concreteSQL.purgeMap(),
+                            this.dialect.purgeMap(),
                             mapId
                     );
                 }, 2);
@@ -367,7 +366,7 @@ public class SQLStorage extends Storage {
         try {
             return recoveringConnection(connection -> {
                     ResultSet result = executeQuery(connection,
-                            this.concreteSQL.selectMapIds()
+                            this.dialect.selectMapIds()
                     );
                     Collection<String> mapIds = new ArrayList<>();
                     while (result.next()) {
@@ -387,10 +386,10 @@ public class SQLStorage extends Storage {
             // initialize and get schema-version
             String schemaVersionString = recoveringConnection(connection -> {
                 connection.createStatement().executeUpdate(
-                        this.concreteSQL.initializeStorageMeta());
+                        this.dialect.initializeStorageMeta());
 
                 ResultSet result = executeQuery(connection,
-                        this.concreteSQL.selectStorageMeta(),
+                        this.dialect.selectStorageMeta(),
                         "schema_version"
                 );
 
@@ -398,7 +397,7 @@ public class SQLStorage extends Storage {
                     return result.getString("value");
                 } else {
                     executeUpdate(connection,
-                            this.concreteSQL.insertStorageMeta(),
+                            this.dialect.insertStorageMeta(),
                             "schema_version", "0"
                     );
                     return "0";
@@ -423,22 +422,22 @@ public class SQLStorage extends Storage {
                 recoveringConnection(connection -> {
 
                     connection.createStatement().executeUpdate(
-                            this.concreteSQL.initializeMap()
+                            this.dialect.initializeMap()
                     );
 
                     connection.createStatement().executeUpdate(
-                            this.concreteSQL.initializeMapTileCompression()
+                            this.dialect.initializeMapTileCompression()
                     );
 
                     connection.createStatement().executeUpdate(
-                            this.concreteSQL.initializeMapMeta());
+                            this.dialect.initializeMapMeta());
 
                     connection.createStatement().executeUpdate(
-                            this.concreteSQL.initializeMapTile()
+                            this.dialect.initializeMapTile()
                     );
 
                     executeUpdate(connection,
-                            this.concreteSQL.updateStorageMeta(),
+                            this.dialect.updateStorageMeta(),
                             "3", "schema_version"
                     );
                 }, 2);
@@ -456,27 +455,27 @@ public class SQLStorage extends Storage {
 
                     // delete potential files that are already in the new format to avoid constraint-issues
                     executeUpdate(connection,
-                            this.concreteSQL.deleteMapMeta(),
+                            this.dialect.deleteMapMeta(),
                     "settings.json", "textures.json", ".rstate"
                     );
 
                     // rename files
                     executeUpdate(connection,
-                            this.concreteSQL.updateMapMeta(),
+                            this.dialect.updateMapMeta(),
                     "settings.json", "settings"
                     );
                     executeUpdate(connection,
-                            this.concreteSQL.updateMapMeta(),
+                            this.dialect.updateMapMeta(),
                             "textures.json", "textures"
                     );
                     executeUpdate(connection,
-                            this.concreteSQL.updateMapMeta(),
+                            this.dialect.updateMapMeta(),
                             ".rstate", "render_state"
                     );
 
                     // update schemaVersion
                     executeUpdate(connection,
-                            this.concreteSQL.updateStorageMeta(),
+                            this.dialect.updateStorageMeta(),
                             "3", "schema_version"
                     );
                 }, 2);
@@ -602,7 +601,7 @@ public class SQLStorage extends Storage {
             int key;
             ResultSet result = executeQuery(connection,
                     //language=SQL
-                    this.concreteSQL.lookupFK(table,idField,valueField),
+                    this.dialect.lookupFK(table,idField,valueField),
                     value
             );
 
@@ -610,7 +609,7 @@ public class SQLStorage extends Storage {
                 key = result.getInt("id");
             } else {
                 PreparedStatement statement = connection.prepareStatement(
-                        this.concreteSQL.insertFK(table,valueField),
+                        this.dialect.insertFK(table,valueField),
                         Statement.RETURN_GENERATED_KEYS
                 );
                 statement.setString(1, value);
