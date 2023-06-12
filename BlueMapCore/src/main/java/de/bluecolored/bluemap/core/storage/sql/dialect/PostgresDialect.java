@@ -2,7 +2,7 @@ package de.bluecolored.bluemap.core.storage.sql.dialect;
 
 import org.intellij.lang.annotations.Language;
 
-public class PostgresDialect implements SQLQueryDialect {
+public class PostgresDialect implements Dialect {
 
     public static final PostgresDialect INSTANCE = new PostgresDialect();
 

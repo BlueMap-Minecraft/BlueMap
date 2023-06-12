@@ -31,7 +31,7 @@ import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.storage.*;
 import de.bluecolored.bluemap.core.storage.sql.dialect.DialectType;
-import de.bluecolored.bluemap.core.storage.sql.dialect.SQLQueryDialect;
+import de.bluecolored.bluemap.core.storage.sql.dialect.Dialect;
 import de.bluecolored.bluemap.core.util.WrappedOutputStream;
 import org.apache.commons.dbcp2.*;
 import org.apache.commons.pool2.ObjectPool;
@@ -54,7 +54,7 @@ public abstract class SQLStorage extends Storage {
 
     private final DataSource dataSource;
 
-    protected final SQLQueryDialect dialect;
+    protected final Dialect dialect;
     protected final Compression hiresCompression;
 
     private final LoadingCache<String, Integer> mapFKs = Caffeine.newBuilder()
@@ -66,7 +66,7 @@ public abstract class SQLStorage extends Storage {
 
     private volatile boolean closed;
 
-    public SQLStorage(SQLQueryDialect dialect, SQLStorageSettings config) throws MalformedURLException, SQLDriverException {
+    public SQLStorage(Dialect dialect, SQLStorageSettings config) throws MalformedURLException, SQLDriverException {
         this.dialect = dialect;
         this.closed = false;
         try {

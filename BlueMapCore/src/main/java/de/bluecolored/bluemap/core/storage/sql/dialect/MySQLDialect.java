@@ -2,7 +2,7 @@ package de.bluecolored.bluemap.core.storage.sql.dialect;
 
 import org.intellij.lang.annotations.Language;
 
-public class MySQLDialect implements SQLQueryDialect {
+public class MySQLDialect implements Dialect {
 
     public static final MySQLDialect INSTANCE = new MySQLDialect();
 
