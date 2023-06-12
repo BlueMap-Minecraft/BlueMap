@@ -678,7 +678,6 @@ public abstract class SQLStorage extends Storage {
     public static SQLStorage create(SQLStorageSettings settings) {
         String dbUrl = settings.getConnectionUrl();
         String provider = dbUrl.strip().split(":")[1];
-        System.out.println("Using SQL-Provider: " + provider);
         return Dialect.getStorage(provider,settings);
     }
 
