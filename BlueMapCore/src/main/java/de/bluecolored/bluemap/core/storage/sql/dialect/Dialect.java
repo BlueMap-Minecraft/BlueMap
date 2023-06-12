@@ -1,12 +1,13 @@
 package de.bluecolored.bluemap.core.storage.sql.dialect;
 
-import de.bluecolored.bluemap.core.storage.sql.MariaDBStorage;
+import de.bluecolored.bluemap.core.storage.sql.MySQLStorage;
 import de.bluecolored.bluemap.core.storage.sql.PostgreSQLStorage;
 import de.bluecolored.bluemap.core.storage.sql.SQLStorage;
 import de.bluecolored.bluemap.core.storage.sql.SQLStorageSettings;
 
 public enum Dialect {
-    MariaDB( MariaDBStorage.class, "mariadb" ),
+    MySQL( MySQLStorage.class, "mysql" ),
+    MariaDB( MySQLStorage.class, "mariadb" ),
     PostgreSQL( PostgreSQLStorage.class,"postgresql");
 
     private final Class<? extends SQLStorage> storageClass;
