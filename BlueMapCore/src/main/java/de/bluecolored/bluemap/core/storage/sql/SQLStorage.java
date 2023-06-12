@@ -30,6 +30,8 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.storage.*;
+import de.bluecolored.bluemap.core.storage.sql.dialect.DialectType;
+import de.bluecolored.bluemap.core.storage.sql.dialect.SQLQueryDialect;
 import de.bluecolored.bluemap.core.util.WrappedOutputStream;
 import org.apache.commons.dbcp2.*;
 import org.apache.commons.pool2.ObjectPool;
@@ -48,10 +50,12 @@ import java.util.*;
 import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 
-public class SQLStorage extends Storage {
+public abstract class SQLStorage extends Storage {
 
     private final DataSource dataSource;
-    private final Compression hiresCompression;
+
+    protected final SQLQueryDialect dialect;
+    protected final Compression hiresCompression;
 
     private final LoadingCache<String, Integer> mapFKs = Caffeine.newBuilder()
             .executor(BlueMap.THREAD_POOL)
@@ -62,9 +66,9 @@ public class SQLStorage extends Storage {
 
     private volatile boolean closed;
 
-    public SQLStorage(SQLStorageSettings config) throws MalformedURLException, SQLDriverException {
+    public SQLStorage(SQLQueryDialect dialect, SQLStorageSettings config) throws MalformedURLException, SQLDriverException {
+        this.dialect = dialect;
         this.closed = false;
-
         try {
             if (config.getDriverClass().isPresent()) {
                 if (config.getDriverJar().isPresent()) {
@@ -115,9 +119,7 @@ public class SQLStorage extends Storage {
                         byteOut.writeTo(blobOut);
                     }
 
-                    executeUpdate(connection,
-                            "REPLACE INTO `bluemap_map_tile` (`map`, `lod`, `x`, `z`, `compression`, `data`) " +
-                            "VALUES (?, ?, ?, ?, ?, ?)",
+                    executeUpdate(connection,this.dialect.writeMapTile(),
                             mapFK,
                             lod,
                             tile.getX(),
@@ -139,17 +141,7 @@ public class SQLStorage extends Storage {
         try {
             byte[] data = recoveringConnection(connection -> {
                     ResultSet result = executeQuery(connection,
-                            "SELECT t.`data` " +
-                            "FROM `bluemap_map_tile` t " +
-                            " INNER JOIN `bluemap_map` m " +
-                            "  ON t.`map` = m.`id` " +
-                            " INNER JOIN `bluemap_map_tile_compression` c " +
-                            "  ON t.`compression` = c.`id` " +
-                            "WHERE m.`map_id` = ? " +
-                            "AND t.`lod` = ? " +
-                            "AND t.`x` = ? " +
-                            "AND t.`z` = ? " +
-                            "AND c.`compression` = ?",
+                            this.dialect.readMapTile(),
                             mapId,
                             lod,
                             tile.getX(),
@@ -179,17 +171,7 @@ public class SQLStorage extends Storage {
         try {
             TileInfo tileInfo = recoveringConnection(connection -> {
                 ResultSet result = executeQuery(connection,
-                        "SELECT t.`changed`, LENGTH(t.`data`) as 'size' " +
-                        "FROM `bluemap_map_tile` t " +
-                        " INNER JOIN `bluemap_map` m " +
-                        "  ON t.`map` = m.`id` " +
-                        " INNER JOIN `bluemap_map_tile_compression` c " +
-                        "  ON t.`compression` = c.`id` " +
-                        "WHERE m.`map_id` = ? " +
-                        "AND t.`lod` = ? " +
-                        "AND t.`x` = ? " +
-                        "AND t.`z` = ? " +
-                        "AND c.`compression` = ?",
+                        this.dialect.readMapTileInfo(),
                         mapId,
                         lod,
                         tile.getX(),
@@ -238,15 +220,7 @@ public class SQLStorage extends Storage {
     public void deleteMapTile(String mapId, int lod, Vector2i tile) throws IOException {
         try {
             recoveringConnection(connection ->
-                executeUpdate(connection,
-                        "DELETE t " +
-                        "FROM `bluemap_map_tile` t " +
-                        " INNER JOIN `bluemap_map` m " +
-                        "  ON t.`map` = m.`id` " +
-                        "WHERE m.`map_id` = ? " +
-                        "AND t.`lod` = ? " +
-                        "AND t.`x` = ? " +
-                        "AND t.`z` = ?",
+                executeUpdate(connection,this.dialect.deleteMapTile(),
                         mapId,
                         lod,
                         tile.getX(),
@@ -271,8 +245,7 @@ public class SQLStorage extends Storage {
                     }
 
                     executeUpdate(connection,
-                            "REPLACE INTO `bluemap_map_meta` (`map`, `key`, `value`) " +
-                            "VALUES (?, ?, ?)",
+                            this.dialect.writeMeta(),
                             mapFK,
                             escapeMetaName(name),
                             dataBlob
@@ -289,12 +262,7 @@ public class SQLStorage extends Storage {
         try {
             byte[] data = recoveringConnection(connection -> {
                 ResultSet result = executeQuery(connection,
-                        "SELECT t.`value` " +
-                        "FROM `bluemap_map_meta` t " +
-                        " INNER JOIN `bluemap_map` m " +
-                        "  ON t.`map` = m.`id` " +
-                        "WHERE m.`map_id` = ? " +
-                        "AND t.`key` = ?",
+                        this.dialect.readMeta(),
                         mapId,
                         escapeMetaName(name)
                 );
@@ -319,12 +287,7 @@ public class SQLStorage extends Storage {
         try {
             MetaInfo tileInfo = recoveringConnection(connection -> {
                 ResultSet result = executeQuery(connection,
-                        "SELECT LENGTH(t.`value`) as 'size' " +
-                                "FROM `bluemap_map_meta` t " +
-                                " INNER JOIN `bluemap_map` m " +
-                                "  ON t.`map` = m.`id` " +
-                                "WHERE m.`map_id` = ? " +
-                                "AND t.`key` = ?",
+                        this.dialect.readMetaSize(),
                         mapId,
                         escapeMetaName(name)
                 );
@@ -361,12 +324,7 @@ public class SQLStorage extends Storage {
         try {
             recoveringConnection(connection ->
                     executeUpdate(connection,
-                            "DELETE t " +
-                            "FROM `bluemap_map_meta` t " +
-                            " INNER JOIN `bluemap_map` m " +
-                            "  ON t.`map` = m.`id` " +
-                            "WHERE m.`map_id` = ? " +
-                            "AND t.`key` = ?",
+                            this.dialect.purgeMeta(),
                             mapId,
                             escapeMetaName(name)
                     ), 2);
@@ -381,28 +339,18 @@ public class SQLStorage extends Storage {
             try {
                 recoveringConnection(connection -> {
                     executeUpdate(connection,
-                            "DELETE t " +
-                                    "FROM `bluemap_map_tile` t " +
-                                    " INNER JOIN `bluemap_map` m " +
-                                    "  ON t.`map` = m.`id` " +
-                                    "WHERE m.`map_id` = ?",
+                            this.dialect.purgeMapTile(),
                             mapId
                     );
 
                     executeUpdate(connection,
-                            "DELETE t " +
-                                    "FROM `bluemap_map_meta` t " +
-                                    " INNER JOIN `bluemap_map` m " +
-                                    "  ON t.`map` = m.`id` " +
-                                    "WHERE m.`map_id` = ?",
+                            this.dialect.purgeMapMeta(),
                             mapId
                     );
 
 
                     executeUpdate(connection,
-                            "DELETE " +
-                                    "FROM `bluemap_map` " +
-                                    "WHERE `map_id` = ?",
+                            this.dialect.purgeMap(),
                             mapId
                     );
                 }, 2);
@@ -420,7 +368,7 @@ public class SQLStorage extends Storage {
         try {
             return recoveringConnection(connection -> {
                     ResultSet result = executeQuery(connection,
-                            "SELECT `map_id` FROM `bluemap_map`"
+                            this.dialect.selectMapIds()
                     );
                     Collection<String> mapIds = new ArrayList<>();
                     while (result.next()) {
@@ -440,15 +388,10 @@ public class SQLStorage extends Storage {
             // initialize and get schema-version
             String schemaVersionString = recoveringConnection(connection -> {
                 connection.createStatement().executeUpdate(
-                        "CREATE TABLE IF NOT EXISTS `bluemap_storage_meta` (" +
-                        "`key` varchar(255) NOT NULL, " +
-                        "`value` varchar(255) DEFAULT NULL, " +
-                        "PRIMARY KEY (`key`)" +
-                        ")");
+                        this.dialect.initializeStorageMeta());
 
                 ResultSet result = executeQuery(connection,
-                        "SELECT `value` FROM `bluemap_storage_meta` " +
-                        "WHERE `key` = ?",
+                        this.dialect.selectStorageMeta(),
                         "schema_version"
                 );
 
@@ -456,8 +399,7 @@ public class SQLStorage extends Storage {
                     return result.getString("value");
                 } else {
                     executeUpdate(connection,
-                            "INSERT INTO `bluemap_storage_meta` (`key`, `value`) " +
-                            "VALUES (?, ?)",
+                            this.dialect.insertStorageMeta(),
                             "schema_version", "0"
                     );
                     return "0";
@@ -482,51 +424,22 @@ public class SQLStorage extends Storage {
                 recoveringConnection(connection -> {
 
                     connection.createStatement().executeUpdate(
-                            "CREATE TABLE `bluemap_map` (" +
-                            "`id` SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT," +
-                            "`map_id` VARCHAR(255) NOT NULL," +
-                            "PRIMARY KEY (`id`)," +
-                            "UNIQUE INDEX `map_id` (`map_id`)" +
-                            ");"
+                            this.dialect.initializeMap()
                     );
 
                     connection.createStatement().executeUpdate(
-                            "CREATE TABLE `bluemap_map_tile_compression` (" +
-                            "`id` SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT," +
-                            "`compression` VARCHAR(255) NOT NULL," +
-                            "PRIMARY KEY (`id`)," +
-                            "UNIQUE INDEX `compression` (`compression`)" +
-                            ");"
+                            this.dialect.initializeMapTileCompression()
                     );
 
                     connection.createStatement().executeUpdate(
-                            "CREATE TABLE `bluemap_map_meta` (" +
-                            "`map` SMALLINT UNSIGNED NOT NULL," +
-                            "`key` varchar(255) NOT NULL," +
-                            "`value` LONGBLOB NOT NULL," +
-                            "PRIMARY KEY (`map`, `key`)," +
-                            "CONSTRAINT `fk_bluemap_map_meta_map` FOREIGN KEY (`map`) REFERENCES `bluemap_map` (`id`) ON UPDATE RESTRICT ON DELETE RESTRICT" +
-                            ")");
+                            this.dialect.initializeMapMeta());
 
                     connection.createStatement().executeUpdate(
-                            "CREATE TABLE `bluemap_map_tile` (" +
-                            "`map` SMALLINT UNSIGNED NOT NULL," +
-                            "`lod` SMALLINT UNSIGNED NOT NULL," +
-                            "`x` INT NOT NULL," +
-                            "`z` INT NOT NULL," +
-                            "`compression` SMALLINT UNSIGNED NOT NULL," +
-                            "`changed` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP," +
-                            "`data` LONGBLOB NOT NULL," +
-                            "PRIMARY KEY (`map`, `lod`, `x`, `z`)," +
-                            "CONSTRAINT `fk_bluemap_map_tile_map` FOREIGN KEY (`map`) REFERENCES `bluemap_map` (`id`) ON UPDATE RESTRICT ON DELETE RESTRICT," +
-                            "CONSTRAINT `fk_bluemap_map_tile_compression` FOREIGN KEY (`compression`) REFERENCES `bluemap_map_tile_compression` (`id`) ON UPDATE RESTRICT ON DELETE RESTRICT" +
-                            ");"
+                            this.dialect.initializeMapTile()
                     );
 
                     executeUpdate(connection,
-                            "UPDATE `bluemap_storage_meta` " +
-                            "SET `value` = ? " +
-                            "WHERE `key` = ?",
+                            this.dialect.updateStorageMeta(),
                             "3", "schema_version"
                     );
                 }, 2);
@@ -544,36 +457,27 @@ public class SQLStorage extends Storage {
 
                     // delete potential files that are already in the new format to avoid constraint-issues
                     executeUpdate(connection,
-                            "DELETE FROM `bluemap_map_meta`" +
-                                    "WHERE `key` IN (?, ?, ?)",
+                            this.dialect.deleteMapMeta(),
                     "settings.json", "textures.json", ".rstate"
                     );
 
                     // rename files
                     executeUpdate(connection,
-                            "UPDATE `bluemap_map_meta` " +
-                                    "SET `key` = ? " +
-                                    "WHERE `key` = ?",
+                            this.dialect.updateMapMeta(),
                     "settings.json", "settings"
                     );
                     executeUpdate(connection,
-                            "UPDATE `bluemap_map_meta` " +
-                                    "SET `key` = ? " +
-                                    "WHERE `key` = ?",
+                            this.dialect.updateMapMeta(),
                             "textures.json", "textures"
                     );
                     executeUpdate(connection,
-                            "UPDATE `bluemap_map_meta` " +
-                                    "SET `key` = ? " +
-                                    "WHERE `key` = ?",
+                            this.dialect.updateMapMeta(),
                             ".rstate", "render_state"
                     );
 
                     // update schemaVersion
                     executeUpdate(connection,
-                            "UPDATE `bluemap_storage_meta` " +
-                                    "SET `value` = ? " +
-                                    "WHERE `key` = ?",
+                            this.dialect.updateStorageMeta(),
                             "3", "schema_version"
                     );
                 }, 2);
@@ -603,7 +507,7 @@ public class SQLStorage extends Storage {
         }
     }
 
-    private ResultSet executeQuery(Connection connection, @Language("sql") String sql, Object... parameters) throws SQLException {
+   protected ResultSet executeQuery(Connection connection, @Language("sql") String sql, Object... parameters) throws SQLException {
         // we only use this prepared statement once, but the DB-Driver caches those and reuses them
         PreparedStatement statement = connection.prepareStatement(sql);
         for (int i = 0; i < parameters.length; i++) {
@@ -613,7 +517,7 @@ public class SQLStorage extends Storage {
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    private int executeUpdate(Connection connection, @Language("sql") String sql, Object... parameters) throws SQLException {
+    protected int executeUpdate(Connection connection, @Language("sql") String sql, Object... parameters) throws SQLException {
         // we only use this prepared statement once, but the DB-Driver caches those and reuses them
         PreparedStatement statement = connection.prepareStatement(sql);
         for (int i = 0; i < parameters.length; i++) {
@@ -623,12 +527,12 @@ public class SQLStorage extends Storage {
     }
 
     @SuppressWarnings("SameParameterValue")
-    private void recoveringConnection(ConnectionConsumer action, int tries) throws SQLException, IOException {
+    protected void recoveringConnection(ConnectionConsumer action, int tries) throws SQLException, IOException {
         recoveringConnection((ConnectionFunction<Void>) action, tries);
     }
 
     @SuppressWarnings("SameParameterValue")
-    private <R> R recoveringConnection(ConnectionFunction<R> action, int tries) throws SQLException, IOException {
+    protected <R> R recoveringConnection(ConnectionFunction<R> action, int tries) throws SQLException, IOException {
         SQLException sqlException = null;
 
         try {
@@ -657,7 +561,7 @@ public class SQLStorage extends Storage {
         throw sqlException;
     }
 
-    private int getMapFK(String mapId) throws SQLException {
+    protected int getMapFK(String mapId) throws SQLException {
         try {
             return Objects.requireNonNull(mapFKs.get(mapId));
         } catch (CompletionException ex) {
@@ -670,7 +574,7 @@ public class SQLStorage extends Storage {
         }
     }
 
-    private int getMapTileCompressionFK(Compression compression) throws SQLException {
+    int getMapTileCompressionFK(Compression compression) throws SQLException {
         try {
             return Objects.requireNonNull(mapTileCompressionFKs.get(compression));
         } catch (CompletionException ex) {
@@ -698,9 +602,7 @@ public class SQLStorage extends Storage {
         return recoveringConnection(connection -> {
             int key;
             ResultSet result = executeQuery(connection,
-                    //language=SQL
-                    "SELECT `" + idField + "` FROM `" + table + "` " +
-                    "WHERE `" + valueField + "` = ?",
+                    this.dialect.lookupFK(table,idField,valueField),
                     value
             );
 
@@ -708,8 +610,7 @@ public class SQLStorage extends Storage {
                 key = result.getInt("id");
             } else {
                 PreparedStatement statement = connection.prepareStatement(
-                        "INSERT INTO `" + table + "` (`" + valueField + "`) " +
-                        "VALUES (?)",
+                        this.dialect.insertFK(table,valueField),
                         Statement.RETURN_GENERATED_KEYS
                 );
                 statement.setString(1, value);
@@ -772,6 +673,12 @@ public class SQLStorage extends Storage {
         poolableConnectionFactory.setPool(connectionPool);
 
         return new PoolingDataSource<>(connectionPool);
+    }
+
+    public static SQLStorage create(SQLStorageSettings settings) throws Exception {
+        String dbUrl = settings.getConnectionUrl();
+        String provider = dbUrl.strip().split(":", 3)[1];
+        return DialectType.getStorage(provider,settings);
     }
 
     @FunctionalInterface
