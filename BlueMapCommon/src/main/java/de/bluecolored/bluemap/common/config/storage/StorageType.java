@@ -31,7 +31,7 @@ import de.bluecolored.bluemap.core.storage.sql.SQLStorage;
 public enum StorageType {
 
     FILE (FileConfig.class, FileStorage::new),
-    SQL (SQLConfig.class, SQLStorage::new);
+    SQL (SQLConfig.class, SQLStorage::create);
 
     private final Class<? extends StorageConfig> configType;
     private final StorageFactory<? extends StorageConfig> storageFactory;

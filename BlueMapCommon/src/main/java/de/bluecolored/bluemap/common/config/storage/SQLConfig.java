@@ -27,7 +27,6 @@ package de.bluecolored.bluemap.common.config.storage;
 import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.storage.Compression;
 import de.bluecolored.bluemap.core.storage.sql.SQLStorageSettings;
-import de.bluecolored.bluemap.core.storage.sql.dialect.Dialect;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import java.net.MalformedURLException;
@@ -46,8 +45,6 @@ public class SQLConfig extends StorageConfig implements SQLStorageSettings {
     private String connectionUrl = "jdbc:mysql://localhost/bluemap?permitMysqlScheme";
 
     private Map<String, String> connectionProperties = new HashMap<>();
-
-    @DebugDump private Dialect dialect = Dialect.MariaDB;
 
     @DebugDump private Compression compression = Compression.GZIP;
 
@@ -69,11 +66,6 @@ public class SQLConfig extends StorageConfig implements SQLStorageSettings {
     @Override
     public Optional<String> getDriverClass() {
         return Optional.ofNullable(driverClass);
-    }
-
-    @Override
-    public Dialect getDialect() {
-        return dialect;
     }
 
     @Override

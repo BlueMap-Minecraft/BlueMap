@@ -30,6 +30,7 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.storage.*;
+import de.bluecolored.bluemap.core.storage.sql.dialect.Dialect;
 import de.bluecolored.bluemap.core.storage.sql.dialect.SQLQueryFactory;
 import de.bluecolored.bluemap.core.util.WrappedOutputStream;
 import org.apache.commons.dbcp2.*;
@@ -49,11 +50,11 @@ import java.util.*;
 import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 
-public class SQLStorage extends Storage {
+public abstract class SQLStorage extends Storage {
 
-    private final SQLQueryFactory dialect;
+    protected final SQLQueryFactory dialect;
     private final DataSource dataSource;
-    private final Compression hiresCompression;
+    protected final Compression hiresCompression;
 
     private final LoadingCache<String, Integer> mapFKs = Caffeine.newBuilder()
             .executor(BlueMap.THREAD_POOL)
@@ -64,9 +65,9 @@ public class SQLStorage extends Storage {
 
     private volatile boolean closed;
 
-    public SQLStorage(SQLStorageSettings config) throws MalformedURLException, SQLDriverException {
+    public SQLStorage(SQLQueryFactory dialect, SQLStorageSettings config) throws MalformedURLException, SQLDriverException {
+        this.dialect = dialect;
         this.closed = false;
-        this.dialect = config.getDialect().getDialectFactory();
         try {
             if (config.getDriverClass().isPresent()) {
                 if (config.getDriverJar().isPresent()) {
@@ -515,7 +516,7 @@ public class SQLStorage extends Storage {
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    private int executeUpdate(Connection connection, @Language("sql") String sql, Object... parameters) throws SQLException {
+    protected int executeUpdate(Connection connection, @Language("sql") String sql, Object... parameters) throws SQLException {
         // we only use this prepared statement once, but the DB-Driver caches those and reuses them
         PreparedStatement statement = connection.prepareStatement(sql);
         for (int i = 0; i < parameters.length; i++) {
@@ -525,7 +526,7 @@ public class SQLStorage extends Storage {
     }
 
     @SuppressWarnings("SameParameterValue")
-    private void recoveringConnection(ConnectionConsumer action, int tries) throws SQLException, IOException {
+    void recoveringConnection(ConnectionConsumer action, int tries) throws SQLException, IOException {
         recoveringConnection((ConnectionFunction<Void>) action, tries);
     }
 
@@ -559,7 +560,7 @@ public class SQLStorage extends Storage {
         throw sqlException;
     }
 
-    private int getMapFK(String mapId) throws SQLException {
+    protected int getMapFK(String mapId) throws SQLException {
         try {
             return Objects.requireNonNull(mapFKs.get(mapId));
         } catch (CompletionException ex) {
@@ -572,7 +573,7 @@ public class SQLStorage extends Storage {
         }
     }
 
-    private int getMapTileCompressionFK(Compression compression) throws SQLException {
+    int getMapTileCompressionFK(Compression compression) throws SQLException {
         try {
             return Objects.requireNonNull(mapTileCompressionFKs.get(compression));
         } catch (CompletionException ex) {
@@ -672,6 +673,13 @@ public class SQLStorage extends Storage {
         poolableConnectionFactory.setPool(connectionPool);
 
         return new PoolingDataSource<>(connectionPool);
+    }
+
+    public static SQLStorage create(SQLStorageSettings settings) {
+        String dbUrl = settings.getConnectionUrl();
+        String provider = dbUrl.strip().split(":")[1];
+        System.out.println("Using SQL-Provider: " + provider);
+        return Dialect.getStorage(provider,settings);
     }
 
     @FunctionalInterface

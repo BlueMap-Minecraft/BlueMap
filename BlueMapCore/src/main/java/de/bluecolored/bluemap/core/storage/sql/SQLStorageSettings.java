@@ -1,7 +1,6 @@
 package de.bluecolored.bluemap.core.storage.sql;
 
 import de.bluecolored.bluemap.core.storage.Compression;
-import de.bluecolored.bluemap.core.storage.sql.dialect.Dialect;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -13,8 +12,6 @@ public interface SQLStorageSettings {
     Optional<URL> getDriverJar() throws MalformedURLException;
 
     Optional<String> getDriverClass();
-
-    Dialect getDialect();
 
     String getConnectionUrl();
 
