@@ -11,6 +11,8 @@ public enum DialectType {
     MARIADB (MySQLStorage::new, "mariadb"),
     POSTGRESQL (PostgreSQLStorage::new,"postgresql");
 
+    private static final DialectType FALLBACK = MYSQL;
+
     private final SQLStorageFactory storageFactory;
     private final String dialectName;
 
@@ -28,7 +30,9 @@ public enum DialectType {
                 return dialect.storageFactory.provide(settings);
             }
         }
-        return null;
+
+        // unknown dialect, use fallback
+        return FALLBACK.storageFactory.provide(settings);
     }
 
     @FunctionalInterface
