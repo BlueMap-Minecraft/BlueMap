@@ -506,7 +506,7 @@ public abstract class SQLStorage extends Storage {
         }
     }
 
-    private ResultSet executeQuery(Connection connection, @Language("sql") String sql, Object... parameters) throws SQLException {
+   protected ResultSet executeQuery(Connection connection, @Language("sql") String sql, Object... parameters) throws SQLException {
         // we only use this prepared statement once, but the DB-Driver caches those and reuses them
         PreparedStatement statement = connection.prepareStatement(sql);
         for (int i = 0; i < parameters.length; i++) {
@@ -526,12 +526,12 @@ public abstract class SQLStorage extends Storage {
     }
 
     @SuppressWarnings("SameParameterValue")
-    void recoveringConnection(ConnectionConsumer action, int tries) throws SQLException, IOException {
+    protected void recoveringConnection(ConnectionConsumer action, int tries) throws SQLException, IOException {
         recoveringConnection((ConnectionFunction<Void>) action, tries);
     }
 
     @SuppressWarnings("SameParameterValue")
-    private <R> R recoveringConnection(ConnectionFunction<R> action, int tries) throws SQLException, IOException {
+    protected <R> R recoveringConnection(ConnectionFunction<R> action, int tries) throws SQLException, IOException {
         SQLException sqlException = null;
 
         try {
