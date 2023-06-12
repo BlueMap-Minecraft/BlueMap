@@ -30,8 +30,8 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.storage.*;
-import de.bluecolored.bluemap.core.storage.sql.dialect.Dialect;
-import de.bluecolored.bluemap.core.storage.sql.dialect.SQLQueryFactory;
+import de.bluecolored.bluemap.core.storage.sql.dialect.DialectType;
+import de.bluecolored.bluemap.core.storage.sql.dialect.SQLQueryDialect;
 import de.bluecolored.bluemap.core.util.WrappedOutputStream;
 import org.apache.commons.dbcp2.*;
 import org.apache.commons.pool2.ObjectPool;
@@ -52,8 +52,9 @@ import java.util.function.Function;
 
 public abstract class SQLStorage extends Storage {
 
-    protected final SQLQueryFactory dialect;
     private final DataSource dataSource;
+
+    protected final SQLQueryDialect dialect;
     protected final Compression hiresCompression;
 
     private final LoadingCache<String, Integer> mapFKs = Caffeine.newBuilder()
@@ -65,7 +66,7 @@ public abstract class SQLStorage extends Storage {
 
     private volatile boolean closed;
 
-    public SQLStorage(SQLQueryFactory dialect, SQLStorageSettings config) throws MalformedURLException, SQLDriverException {
+    public SQLStorage(SQLQueryDialect dialect, SQLStorageSettings config) throws MalformedURLException, SQLDriverException {
         this.dialect = dialect;
         this.closed = false;
         try {
@@ -601,7 +602,6 @@ public abstract class SQLStorage extends Storage {
         return recoveringConnection(connection -> {
             int key;
             ResultSet result = executeQuery(connection,
-                    //language=SQL
                     this.dialect.lookupFK(table,idField,valueField),
                     value
             );
@@ -675,10 +675,10 @@ public abstract class SQLStorage extends Storage {
         return new PoolingDataSource<>(connectionPool);
     }
 
-    public static SQLStorage create(SQLStorageSettings settings) {
+    public static SQLStorage create(SQLStorageSettings settings) throws Exception {
         String dbUrl = settings.getConnectionUrl();
-        String provider = dbUrl.strip().split(":")[1];
-        return Dialect.getStorage(provider,settings);
+        String provider = dbUrl.strip().split(":", 3)[1];
+        return DialectType.getStorage(provider,settings);
     }
 
     @FunctionalInterface

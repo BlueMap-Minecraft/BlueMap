@@ -2,17 +2,21 @@ package de.bluecolored.bluemap.core.storage.sql.dialect;
 
 import org.intellij.lang.annotations.Language;
 
-public class MySQLFactory implements SQLQueryFactory {
+public class MySQLDialect implements SQLQueryDialect {
+
+    public static final MySQLDialect INSTANCE = new MySQLDialect();
+
+    private MySQLDialect() {};
 
     @Override
-    @Language("MariaDB")
+    @Language("MySQL")
     public String writeMapTile() {
         return "REPLACE INTO `bluemap_map_tile` (`map`, `lod`, `x`, `z`, `compression`, `data`) " +
                 "VALUES (?, ?, ?, ?, ?, ?)";
     }
 
     @Override
-    @Language("MariaDB")
+    @Language("MySQL")
     public String readMapTile() {
         return "SELECT t.`data` " +
                 "FROM `bluemap_map_tile` t " +
@@ -28,7 +32,7 @@ public class MySQLFactory implements SQLQueryFactory {
     }
 
     @Override
-    @Language("MariaDB")
+    @Language("MySQL")
     public String readMapTileInfo() {
         return "SELECT t.`changed`, LENGTH(t.`data`) as 'size' " +
                 "FROM `bluemap_map_tile` t " +
@@ -44,7 +48,7 @@ public class MySQLFactory implements SQLQueryFactory {
     }
 
     @Override
-    @Language("MariaDB")
+    @Language("MySQL")
     public String deleteMapTile() {
         return "DELETE t " +
                 "FROM `bluemap_map_tile` t " +
@@ -57,14 +61,14 @@ public class MySQLFactory implements SQLQueryFactory {
     }
 
     @Override
-    @Language("MariaDB")
+    @Language("MySQL")
     public String writeMeta() {
         return "REPLACE INTO `bluemap_map_meta` (`map`, `key`, `value`) " +
                 "VALUES (?, ?, ?)";
     }
 
     @Override
-    @Language("MariaDB")
+    @Language("MySQL")
     public String readMeta() {
         return "SELECT t.`value` " +
                 "FROM `bluemap_map_meta` t " +
@@ -75,7 +79,7 @@ public class MySQLFactory implements SQLQueryFactory {
     }
 
     @Override
-    @Language("MariaDB")
+    @Language("MySQL")
     public String readMetaSize() {
         return "SELECT LENGTH(t.`value`) as 'size' " +
                 "FROM `bluemap_map_meta` t " +
@@ -86,7 +90,7 @@ public class MySQLFactory implements SQLQueryFactory {
     }
 
     @Override
-    @Language("MariaDB")
+    @Language("MySQL")
     public String purgeMeta() {
         return "DELETE t " +
                 "FROM `bluemap_map_meta` t " +
@@ -97,7 +101,7 @@ public class MySQLFactory implements SQLQueryFactory {
     }
 
     @Override
-    @Language("MariaDB")
+    @Language("MySQL")
     public String purgeMapTile() {
         return "DELETE t " +
                 "FROM `bluemap_map_tile` t " +
@@ -107,7 +111,7 @@ public class MySQLFactory implements SQLQueryFactory {
     }
 
     @Override
-    @Language("MariaDB")
+    @Language("MySQL")
     public String purgeMapMeta() {
         return "DELETE t " +
                 "FROM `bluemap_map_meta` t " +
@@ -117,7 +121,7 @@ public class MySQLFactory implements SQLQueryFactory {
     }
 
     @Override
-    @Language("MariaDB")
+    @Language("MySQL")
     public String purgeMap() {
         return "DELETE " +
                 "FROM `bluemap_map` " +
@@ -125,13 +129,13 @@ public class MySQLFactory implements SQLQueryFactory {
     }
 
     @Override
-    @Language("MariaDB")
+    @Language("MySQL")
     public String selectMapIds() {
         return "SELECT `map_id` FROM `bluemap_map`";
     }
 
     @Override
-    @Language("MariaDB")
+    @Language("MySQL")
     public String initializeStorageMeta() {
         return "CREATE TABLE IF NOT EXISTS `bluemap_storage_meta` (" +
                 "`key` varchar(255) NOT NULL, " +
@@ -141,21 +145,21 @@ public class MySQLFactory implements SQLQueryFactory {
     }
 
     @Override
-    @Language("MariaDB")
+    @Language("MySQL")
     public String selectStorageMeta() {
         return "SELECT `value` FROM `bluemap_storage_meta` " +
                 "WHERE `key` = ?";
     }
 
     @Override
-    @Language("MariaDB")
+    @Language("MySQL")
     public String insertStorageMeta() {
         return "INSERT INTO `bluemap_storage_meta` (`key`, `value`) " +
                 "VALUES (?, ?)";
     }
 
     @Override
-    @Language("MariaDB")
+    @Language("MySQL")
     public String initializeMap() {
         return "CREATE TABLE `bluemap_map` (" +
                 "`id` SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT," +
@@ -166,7 +170,7 @@ public class MySQLFactory implements SQLQueryFactory {
     }
 
     @Override
-    @Language("MariaDB")
+    @Language("MySQL")
     public String initializeMapTileCompression() {
         return "CREATE TABLE `bluemap_map_tile_compression` (" +
                 "`id` SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT," +
@@ -177,7 +181,7 @@ public class MySQLFactory implements SQLQueryFactory {
     }
 
     @Override
-    @Language("MariaDB")
+    @Language("MySQL")
     public String initializeMapMeta() {
         return "CREATE TABLE `bluemap_map_meta` (" +
                 "`map` SMALLINT UNSIGNED NOT NULL," +
@@ -189,7 +193,7 @@ public class MySQLFactory implements SQLQueryFactory {
     }
 
     @Override
-    @Language("MariaDB")
+    @Language("MySQL")
     public String initializeMapTile() {
         return "CREATE TABLE `bluemap_map_tile` (" +
                 "`map` SMALLINT UNSIGNED NOT NULL," +
@@ -206,7 +210,7 @@ public class MySQLFactory implements SQLQueryFactory {
     }
 
     @Override
-    @Language("MariaDB")
+    @Language("MySQL")
     public String updateStorageMeta() {
         return "UPDATE `bluemap_storage_meta` " +
                 "SET `value` = ? " +
@@ -214,14 +218,14 @@ public class MySQLFactory implements SQLQueryFactory {
     }
 
     @Override
-    @Language("MariaDB")
+    @Language("MySQL")
     public String deleteMapMeta() {
         return "DELETE FROM `bluemap_map_meta`" +
                 "WHERE `key` IN (?, ?, ?)";
     }
 
     @Override
-    @Language("MariaDB")
+    @Language("MySQL")
     public String updateMapMeta() {
         return "UPDATE `bluemap_map_meta` " +
                 "SET `key` = ? " +
@@ -229,14 +233,14 @@ public class MySQLFactory implements SQLQueryFactory {
     }
 
     @Override
-    @Language("MariaDB")
+    @Language("MySQL")
     public String lookupFK(String table, String idField, String valueField) {
         return "SELECT `" + idField + "` FROM `" + table + "` " +
                 "WHERE `" + valueField + "` = ?";
     }
 
     @Override
-    @Language("MariaDB")
+    @Language("MySQL")
     public String insertFK(String table, String valueField) {
         return "INSERT INTO `" + table + "` (`" + valueField + "`) " +
                 "VALUES (?)";

@@ -3,7 +3,7 @@ package de.bluecolored.bluemap.core.storage.sql;
 import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.core.storage.CompressedInputStream;
 import de.bluecolored.bluemap.core.storage.Compression;
-import de.bluecolored.bluemap.core.storage.sql.dialect.PostgresFactory;
+import de.bluecolored.bluemap.core.storage.sql.dialect.PostgresDialect;
 import de.bluecolored.bluemap.core.util.WrappedOutputStream;
 
 import java.io.*;
@@ -14,8 +14,9 @@ import java.sql.SQLException;
 import java.util.Optional;
 
 public class PostgreSQLStorage extends SQLStorage {
+
     public PostgreSQLStorage(SQLStorageSettings config) throws MalformedURLException, SQLDriverException {
-        super(new PostgresFactory(), config);
+        super(PostgresDialect.INSTANCE, config);
     }
 
     @Override
