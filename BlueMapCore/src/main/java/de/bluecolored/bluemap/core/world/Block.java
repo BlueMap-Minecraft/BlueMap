@@ -136,7 +136,10 @@ public class Block<T extends Block<T>> {
     }
 
     public BlockState getBlockState() {
-        if (blockState == null) blockState = getChunk().getBlockState(x, y, z);
+        if (blockState == null){
+            if (y > getChunk().getNetherCeilingY(x, z)) blockState = BlockState.AIR;
+            else blockState = getChunk().getBlockState(x, y, z);
+        }
         return blockState;
     }
 

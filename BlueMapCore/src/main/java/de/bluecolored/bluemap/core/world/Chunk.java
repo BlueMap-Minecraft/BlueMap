@@ -44,4 +44,6 @@ public interface Chunk {
 
     int getOceanFloorY(int x, int z);
 
+    int getNetherCeilingY(int x, int z);
+    
 }

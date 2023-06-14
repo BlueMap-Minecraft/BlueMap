@@ -69,4 +69,9 @@ public class EmptyChunk implements Chunk {
     @Override
     public int getOceanFloorY(int x, int z) { return 0; }
 
+    @Override
+    public int getNetherCeilingY(int x, int z) {
+        return 0;
+    }
+
 }

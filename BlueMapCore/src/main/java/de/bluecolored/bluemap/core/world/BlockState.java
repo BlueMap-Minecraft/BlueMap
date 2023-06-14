@@ -53,7 +53,7 @@ public class BlockState extends Key {
     private final Map<String, String> properties;
     private final Property[] propertiesArray;
 
-    private final boolean isAir, isWater, isWaterlogged;
+    private final boolean isAir, isWater, isWaterlogged, isNetherCeiling;
     private int liquidLevel = -1, redstonePower = -1;
 
     public BlockState(String value) {
@@ -82,6 +82,17 @@ public class BlockState extends Key {
         this.isWater = "minecraft:water".equals(this.getFormatted());
         this.isWaterlogged = "true".equals(properties.get("waterlogged"));
 
+        this.isNetherCeiling =
+                "minecraft:bedrock".equals(this.getFormatted()) ||
+                "minecraft:netherrack".equals(this.getFormatted()) ||
+                "minecraft:nether_quartz_ore".equals(this.getFormatted()) ||
+                "minecraft:lava".equals(this.getFormatted()) ||
+                "minecraft:soul_sand".equals(this.getFormatted()) ||
+                "minecraft:basalt".equals(this.getFormatted()) ||
+                "minecraft:blackstone".equals(this.getFormatted()) ||
+                "minecraft:soul_soil".equals(this.getFormatted()) ||
+                "minecraft:nether_gold_ore".equals(this.getFormatted()) ||
+                "minecraft:ancient_debris".equals(this.getFormatted());
     }
 
     /**
@@ -107,6 +118,10 @@ public class BlockState extends Key {
 
     public boolean isWaterlogged() {
         return isWaterlogged;
+    }
+
+    public boolean isNetherCeiling() {
+        return isNetherCeiling;
     }
 
     public int getLiquidLevel() {

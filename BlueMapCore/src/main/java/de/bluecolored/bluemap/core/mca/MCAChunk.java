@@ -30,25 +30,33 @@ import de.bluecolored.bluemap.core.world.LightData;
 import net.querz.nbt.CompoundTag;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 public abstract class MCAChunk implements Chunk {
 
     private final MCAWorld world;
     private final int dataVersion;
 
+    private int[] netherCeilingHeights;
+
     protected MCAChunk() {
-        this.world = null;
-        this.dataVersion = -1;
+        this(null, -1);
     }
 
     protected MCAChunk(MCAWorld world) {
-        this.world = world;
-        this.dataVersion = -1;
+        this(world, -1);
     }
 
     protected MCAChunk(MCAWorld world, CompoundTag chunkTag) {
+        this(world, chunkTag.getInt("DataVersion"));
+    }
+
+    private MCAChunk(MCAWorld world, int dataVersion) {
         this.world = world;
-        dataVersion = chunkTag.getInt("DataVersion");
+        this.dataVersion = dataVersion;
+
+        this.netherCeilingHeights = new int[16 * 16];
+        Arrays.fill(this.netherCeilingHeights, Integer.MIN_VALUE);
     }
 
     @Override
@@ -85,6 +93,26 @@ public abstract class MCAChunk implements Chunk {
 
     @Override
     public int getOceanFloorY(int x, int z) { return 0; }
+
+    @Override
+    public int getNetherCeilingY(int x, int z) {
+        int lx = x & 0xF, lz = z & 0xF;
+        int i = lz * 16 + lx;
+        int y = netherCeilingHeights[i];
+
+        if (y == Integer.MIN_VALUE) {
+            int maxY = getMaxY(x, z);
+            int minY = getMinY(x, z);
+
+            for (y = Math.min(maxY, 120); y >= minY; y--){
+                if (!getBlockState(x, y, z).isNetherCeiling()) break;
+            }
+
+            netherCeilingHeights[i] = y;
+        }
+
+        return y;
+    }
 
     protected MCAWorld getWorld() {
         return world;
