@@ -25,6 +25,7 @@
 
 import * as Vue from 'vue';
 import App from './App.vue';
+import * as BlueMap from "./js/BlueMap";
 import {BlueMapApp} from "./js/BlueMapApp";
 import {i18nModule, loadLanguageSettings} from "./i18n";
 
@@ -38,6 +39,7 @@ async function load() {
   try {
     const bluemap = new BlueMapApp(document.getElementById("map-container"));
     window.bluemap = bluemap;
+    window.BlueMap = BlueMap;
 
     // init vue
     const vue = Vue.createApp(App, {
