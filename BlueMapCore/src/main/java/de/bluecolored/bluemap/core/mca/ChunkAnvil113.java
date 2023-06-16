@@ -55,7 +55,9 @@ public class ChunkAnvil113 extends MCAChunk {
         CompoundTag levelData = chunkTag.getCompoundTag("Level");
 
         String status = levelData.getString("Status");
-        this.isGenerated = status.equals("full");
+        this.isGenerated = status.equals("full") ||
+                status.equals("fullchunk") ||
+                status.equals("postprocessed");
         this.hasLight = isGenerated;
 
         this.inhabitedTime = levelData.getLong("InhabitedTime");
