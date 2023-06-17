@@ -66,11 +66,13 @@ export class KeyHeightControls {
 
         window.addEventListener("keydown", this.onKeyDown);
         window.addEventListener("keyup", this.onKeyUp);
+        window.addEventListener("blur", this.onStop)
     }
 
     stop() {
         window.removeEventListener("keydown", this.onKeyDown);
         window.removeEventListener("keyup", this.onKeyUp);
+        window.removeEventListener("blur", this.onStop)
     }
 
     /**
@@ -118,6 +120,11 @@ export class KeyHeightControls {
         if (KeyCombination.oneUp(evt, ...KeyHeightControls.KEYS.DOWN)){
             this.down = false;
         }
+    }
+
+    onStop = evt => {
+        this.up = false;
+        this.down = false;
     }
 
 }

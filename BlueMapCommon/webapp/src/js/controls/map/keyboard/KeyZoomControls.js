@@ -65,11 +65,13 @@ export class KeyZoomControls {
 
         window.addEventListener("keydown", this.onKeyDown);
         window.addEventListener("keyup", this.onKeyUp);
+        window.addEventListener("blur", this.onStop)
     }
 
     stop() {
         window.removeEventListener("keydown", this.onKeyDown);
         window.removeEventListener("keyup", this.onKeyUp);
+        window.removeEventListener("blur", this.onStop)
     }
 
     /**
@@ -117,6 +119,11 @@ export class KeyZoomControls {
         if (KeyCombination.oneUp(evt, ...KeyZoomControls.KEYS.OUT)){
             this.out = false;
         }
+    }
+
+    onStop = evt => {
+        this.in = false;
+        this.out = false;
     }
 
 }
