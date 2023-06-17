@@ -78,4 +78,8 @@ export class PlayerMarkerManager extends MarkerManager {
         return this.getPlayerMarkerSet().getPlayerMarker(playerUuid)
     }
 
+    clear() {
+        this.getPlayerMarkerSet(false).clear();
+    }
+
 }

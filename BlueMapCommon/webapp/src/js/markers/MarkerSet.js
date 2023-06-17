@@ -174,8 +174,8 @@ export class MarkerSet extends Scene {
      * Removes all markers and marker-sets
      */
     clear() {
-        [...this.data.markerSets].forEach(markerSet => this.remove(markerSet));
-        [...this.data.markers].forEach(marker => this.remove(marker));
+        [...this.markerSets.values()].forEach(markerSet => this.remove(markerSet));
+        [...this.markers.values()].forEach(marker => this.remove(marker));
     }
 
     add(...object) {
