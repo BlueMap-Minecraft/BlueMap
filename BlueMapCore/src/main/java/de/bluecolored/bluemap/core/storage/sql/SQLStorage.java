@@ -119,7 +119,7 @@ public abstract class SQLStorage extends Storage {
                         byteOut.writeTo(blobOut);
                     }
 
-                    executeUpdate(connection,this.dialect.writeMapTile(),
+                    executeUpdate(connection, this.dialect.writeMapTile(),
                             mapFK,
                             lod,
                             tile.getX(),
@@ -324,7 +324,7 @@ public abstract class SQLStorage extends Storage {
         try {
             recoveringConnection(connection ->
                     executeUpdate(connection,
-                            this.dialect.purgeMeta(),
+                            this.dialect.deleteMeta(),
                             mapId,
                             escapeMetaName(name)
                     ), 2);
@@ -508,22 +508,21 @@ public abstract class SQLStorage extends Storage {
     }
 
    protected ResultSet executeQuery(Connection connection, @Language("sql") String sql, Object... parameters) throws SQLException {
-        // we only use this prepared statement once, but the DB-Driver caches those and reuses them
-        PreparedStatement statement = connection.prepareStatement(sql);
-        for (int i = 0; i < parameters.length; i++) {
-            statement.setObject(i+1, parameters[i]);
-        }
-        return statement.executeQuery();
+        return prepareStatement(connection, sql, parameters).executeQuery();
     }
 
     @SuppressWarnings("UnusedReturnValue")
     protected int executeUpdate(Connection connection, @Language("sql") String sql, Object... parameters) throws SQLException {
+        return prepareStatement(connection, sql, parameters).executeUpdate();
+    }
+
+    private PreparedStatement prepareStatement(Connection connection, @Language("sql") String sql, Object... parameters) throws SQLException {
         // we only use this prepared statement once, but the DB-Driver caches those and reuses them
         PreparedStatement statement = connection.prepareStatement(sql);
         for (int i = 0; i < parameters.length; i++) {
-            statement.setObject(i+1, parameters[i]);
+            statement.setObject(i + 1, parameters[i]);
         }
-        return statement.executeUpdate();
+        return statement;
     }
 
     @SuppressWarnings("SameParameterValue")

@@ -1,15 +1,13 @@
 package de.bluecolored.bluemap.core.storage.sql.dialect;
 
-import de.bluecolored.bluemap.core.storage.sql.MySQLStorage;
-import de.bluecolored.bluemap.core.storage.sql.PostgreSQLStorage;
-import de.bluecolored.bluemap.core.storage.sql.SQLStorage;
-import de.bluecolored.bluemap.core.storage.sql.SQLStorageSettings;
+import de.bluecolored.bluemap.core.storage.sql.*;
 
 public enum DialectType {
 
     MYSQL (MySQLStorage::new, "mysql"),
     MARIADB (MySQLStorage::new, "mariadb"),
-    POSTGRESQL (PostgreSQLStorage::new,"postgresql");
+    POSTGRESQL (PostgreSQLStorage::new, "postgresql"),
+    SQLITE (SQLiteStorage::new, "sqlite");
 
     private static final DialectType FALLBACK = MYSQL;
 

@@ -92,7 +92,7 @@ public class PostgresDialect implements Dialect {
 
     @Override
     @Language("PostgreSQL")
-    public String purgeMeta() {
+    public String deleteMeta() {
         return "DELETE FROM bluemap_map_meta t " +
                 "USING bluemap_map m " +
                 "WHERE t.map = m.id " +

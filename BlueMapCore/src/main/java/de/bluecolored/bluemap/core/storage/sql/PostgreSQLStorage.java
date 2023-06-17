@@ -3,12 +3,12 @@ package de.bluecolored.bluemap.core.storage.sql;
 import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.core.storage.CompressedInputStream;
 import de.bluecolored.bluemap.core.storage.Compression;
+import de.bluecolored.bluemap.core.storage.sql.dialect.Dialect;
 import de.bluecolored.bluemap.core.storage.sql.dialect.PostgresDialect;
 import de.bluecolored.bluemap.core.util.WrappedOutputStream;
 
 import java.io.*;
 import java.net.MalformedURLException;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Optional;
@@ -17,6 +17,10 @@ public class PostgreSQLStorage extends SQLStorage {
 
     public PostgreSQLStorage(SQLStorageSettings config) throws MalformedURLException, SQLDriverException {
         super(PostgresDialect.INSTANCE, config);
+    }
+
+    public PostgreSQLStorage(Dialect dialect, SQLStorageSettings config) throws MalformedURLException, SQLDriverException {
+        super(dialect, config);
     }
 
     @Override
@@ -28,18 +32,14 @@ public class PostgreSQLStorage extends SQLStorage {
             int tileCompressionFK = getMapTileCompressionFK(compression);
 
             recoveringConnection(connection -> {
-                byte[] byteData = byteOut.toByteArray();
-                ByteArrayInputStream inputStream = new ByteArrayInputStream(byteData);
-
-                PreparedStatement statement = connection.prepareStatement(this.dialect.writeMapTile());
-                statement.setInt(1, mapFK);
-                statement.setInt(2, lod);
-                statement.setInt(3, tile.getX());
-                statement.setInt(4, tile.getY());
-                statement.setInt(5, tileCompressionFK);
-                statement.setBinaryStream(6, inputStream);
-
-                statement.executeUpdate();
+                executeUpdate(connection, this.dialect.writeMapTile(),
+                        mapFK,
+                        lod,
+                        tile.getX(),
+                        tile.getY(),
+                        tileCompressionFK,
+                        byteOut.toByteArray()
+                );
             }, 2);
         });
     }
@@ -50,15 +50,11 @@ public class PostgreSQLStorage extends SQLStorage {
         return new WrappedOutputStream(byteOut, () -> {
             int mapFK = getMapFK(mapId);
             recoveringConnection(connection -> {
-                byte[] byteData = byteOut.toByteArray();
-                ByteArrayInputStream inputStream = new ByteArrayInputStream(byteData);
-
-                PreparedStatement statement = connection.prepareStatement(this.dialect.writeMeta());
-                statement.setInt(1, mapFK);
-                statement.setString(2, name);
-                statement.setBinaryStream(3, inputStream);
-
-                statement.executeUpdate();
+                executeUpdate(connection, this.dialect.writeMeta(),
+                    mapFK,
+                    name,
+                    byteOut.toByteArray()
+                );
             }, 2);
         });
     }
@@ -69,8 +65,7 @@ public class PostgreSQLStorage extends SQLStorage {
 
         try {
             byte[] data = recoveringConnection(connection -> {
-                ResultSet result = executeQuery(connection,
-                        this.dialect.readMapTile(),
+                ResultSet result = executeQuery(connection, this.dialect.readMapTile(),
                         mapId,
                         lod,
                         tile.getX(),
@@ -100,8 +95,7 @@ public class PostgreSQLStorage extends SQLStorage {
     public Optional<InputStream> readMeta(String mapId, String name) throws IOException {
         try {
             byte[] data = recoveringConnection(connection -> {
-                ResultSet result = executeQuery(connection,
-                        this.dialect.readMeta(),
+                ResultSet result = executeQuery(connection, this.dialect.readMeta(),
                         mapId,
                         escapeMetaName(name)
                 );

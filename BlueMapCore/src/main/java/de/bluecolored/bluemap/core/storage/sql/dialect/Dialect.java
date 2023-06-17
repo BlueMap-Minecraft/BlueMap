@@ -25,7 +25,7 @@ public interface Dialect {
     String readMetaSize();
 
     @Language("sql")
-    String purgeMeta();
+    String deleteMeta();
 
     @Language("sql")
     String purgeMapTile();
