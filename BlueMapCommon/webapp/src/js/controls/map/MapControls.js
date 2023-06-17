@@ -50,9 +50,11 @@ export class MapControls {
 
     /**
      * @param rootElement {Element}
+     * @param scrollCaptureElement {Element}
      */
-    constructor(rootElement) {
+    constructor(rootElement, scrollCaptureElement) {
         this.rootElement = rootElement;
+        this.scrollCaptureElement = scrollCaptureElement;
 
         this.data = reactive({
             followingPlayer: null
@@ -68,7 +70,7 @@ export class MapControls {
         this.mouseMove = new MouseMoveControls(this.rootElement, 1.5,0.3);
         this.mouseRotate = new MouseRotateControls(this.rootElement, 6, 0.3);
         this.mouseAngle = new MouseAngleControls(this.rootElement, 3, 0.3);
-        this.mouseZoom = new MouseZoomControls(this.rootElement, 1, 0.2);
+        this.mouseZoom = new MouseZoomControls(this.scrollCaptureElement, 1, 0.2);
 
         this.keyMove = new KeyMoveControls(this.rootElement, 0.025, 0.2);
         this.keyRotate = new KeyRotateControls(this.rootElement, 0.06, 0.15);

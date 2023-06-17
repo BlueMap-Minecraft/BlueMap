@@ -48,7 +48,7 @@ export class BlueMapApp {
 
         this.mapViewer = new MapViewer(rootElement, this.events);
 
-        this.mapControls = new MapControls(this.mapViewer.renderer.domElement);
+        this.mapControls = new MapControls(this.mapViewer.renderer.domElement, rootElement);
         this.freeFlightControls = new FreeFlightControls(this.mapViewer.renderer.domElement);
 
         /** @type {PlayerMarkerManager} */
