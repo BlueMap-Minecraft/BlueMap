@@ -30,6 +30,7 @@ import {LineMarker} from "./LineMarker";
 import {HtmlMarker} from "./HtmlMarker";
 import {PoiMarker} from "./PoiMarker";
 import {reactive} from "vue";
+import {getLocalStorage, setLocalStorage} from "../Utils";
 
 export class MarkerSet extends Scene {
 
@@ -58,6 +59,9 @@ export class MarkerSet extends Scene {
                 return this.toggleable ||
                     this.markers.filter(marker => marker.listed).length > 0 ||
                     this.markerSets.filter(markerSet => markerSet.listed).length > 0
+            },
+            saveState: () => {
+                setLocalStorage("markerset-" + this.data.id + "-visible", this.visible);
             }
         });
 
@@ -65,6 +69,15 @@ export class MarkerSet extends Scene {
             get() { return this.data.visible },
             set(value) { this.data.visible = value }
         });
+
+        if (this.data.toggleable) {
+            let storedVisible = getLocalStorage("markerset-" + this.data.id + "-visible");
+            if (storedVisible !== undefined) {
+                this.visible = !!storedVisible;
+            } else if (this.data.defaultHide) {
+                this.visible = false;
+            }
+        }
     }
 
     updateFromData(data) {
@@ -112,10 +125,6 @@ export class MarkerSet extends Scene {
         if (!markerSet) {
             markerSet = new MarkerSet(markerSetId);
             this.add(markerSet);
-
-            if (data.defaultHidden) {
-                markerSet.visible = false;
-            }
         }
 
         // update
