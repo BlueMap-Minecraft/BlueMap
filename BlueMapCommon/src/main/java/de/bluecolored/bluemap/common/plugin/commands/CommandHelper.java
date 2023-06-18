@@ -42,7 +42,7 @@ import java.util.*;
 public class CommandHelper {
 
     private static final DateTimeFormatter TIME_FORMAT =
-            DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss")
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
                     .withLocale(Locale.ROOT)
                     .withZone(ZoneId.systemDefault());
 
