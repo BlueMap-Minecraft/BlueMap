@@ -838,26 +838,27 @@ public class Commands<S> {
     }
 
     public int mapsCommand(CommandContext<S> context) {
-        CommandSource source = commandSourceInterface.apply(context.getSource());
+        List<Text> lines = new ArrayList<>();
+        lines.add(Text.of(TextColor.BLUE, "Maps loaded by BlueMap:"));
 
-        source.sendMessage(Text.of(TextColor.BLUE, "Maps loaded by BlueMap:"));
         for (BmMap map : plugin.getMaps().values()) {
-            boolean unfrozen = plugin.getPluginState().getMapState(map).isUpdateEnabled();
-            if (unfrozen) {
-                source.sendMessage(Text.of(
-                        TextColor.GRAY, " - ",
-                        TextColor.WHITE, map.getId(),
-                        TextColor.GRAY, " (" + map.getName() + ")"
-                ).setHoverText(Text.of(TextColor.WHITE, "World: ", TextColor.GRAY, map.getWorld().getName())));
-            } else {
-                source.sendMessage(Text.of(
-                        TextColor.GRAY, " - ",
-                        TextColor.WHITE, map.getId(),
-                        TextColor.GRAY, " (" + map.getName() + ") - ",
-                        TextColor.AQUA, TextFormat.ITALIC, "frozen!"
-                ).setHoverText(Text.of(TextColor.WHITE, "World: ", TextColor.GRAY, map.getWorld().getName())));
-            }
+            boolean frozen = !plugin.getPluginState().getMapState(map).isUpdateEnabled();
+
+            lines.add(Text.of(TextColor.GRAY, " - ",
+                    TextColor.WHITE, map.getId(),
+                    TextColor.GRAY, " (" + map.getName() + ")"));
+
+            lines.add(Text.of(TextColor.GRAY, "\u00A0\u00A0\u00A0World: ",
+                    TextColor.DARK_GRAY, map.getWorld().getName()));
+            lines.add(Text.of(TextColor.GRAY, "\u00A0\u00A0\u00A0Last Update: ",
+                    TextColor.DARK_GRAY, helper.formatTime(map.getRenderState().getLatestRenderTime())));
+
+            if (frozen)
+                lines.add(Text.of(TextColor.AQUA, TextFormat.ITALIC, "This map is frozen!"));
         }
+
+        CommandSource source = commandSourceInterface.apply(context.getSource());
+        source.sendMessages(lines);
 
         return 1;
     }

@@ -37,6 +37,7 @@ import java.util.zip.GZIPOutputStream;
 public class MapRenderState {
 
     private final Map<Vector2i, Long> regionRenderTimes;
+    private transient long latestRenderTime = -1;
 
     public MapRenderState() {
         regionRenderTimes = new HashMap<>();
@@ -44,12 +45,32 @@ public class MapRenderState {
 
     public synchronized void setRenderTime(Vector2i regionPos, long renderTime) {
         regionRenderTimes.put(regionPos, renderTime);
+
+        if (latestRenderTime != -1) {
+            if (renderTime > latestRenderTime)
+                latestRenderTime = renderTime;
+            else
+                latestRenderTime = -1;
+        }
     }
 
     public synchronized long getRenderTime(Vector2i regionPos) {
         Long renderTime = regionRenderTimes.get(regionPos);
         if (renderTime == null) return -1;
         else return renderTime;
+    }
+
+    public long getLatestRenderTime() {
+        if (latestRenderTime == -1) {
+            synchronized (this) {
+                latestRenderTime = regionRenderTimes.values().stream()
+                        .mapToLong(Long::longValue)
+                        .max()
+                        .orElse(-1);
+            }
+        }
+
+        return latestRenderTime;
     }
 
     public synchronized void reset() {
