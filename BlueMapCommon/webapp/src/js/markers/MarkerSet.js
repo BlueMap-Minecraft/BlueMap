@@ -61,7 +61,7 @@ export class MarkerSet extends Scene {
                     this.markerSets.filter(markerSet => markerSet.listed).length > 0
             },
             saveState: () => {
-                setLocalStorage("markerset-" + this.data.id + "-visible", this.visible);
+                setLocalStorage(this.localStorageKey("visible"), this.visible);
             }
         });
 
@@ -71,7 +71,7 @@ export class MarkerSet extends Scene {
         });
 
         if (this.data.toggleable) {
-            let storedVisible = getLocalStorage("markerset-" + this.data.id + "-visible");
+            let storedVisible = getLocalStorage(this.localStorageKey("visible"));
             if (storedVisible !== undefined) {
                 this.visible = !!storedVisible;
             } else if (this.data.defaultHide) {
@@ -227,6 +227,10 @@ export class MarkerSet extends Scene {
         this.children.forEach(child => {
             if (child.dispose) child.dispose();
         });
+    }
+
+    localStorageKey(key) {
+        return "bluemap-markerset-" + encodeURIComponent(this.data.id) + "-" + key;
     }
 
 }
