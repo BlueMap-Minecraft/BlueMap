@@ -41,6 +41,10 @@ export class PlayerMarker extends Marker {
         this.data.playerUuid = playerUuid;
         this.data.name = playerUuid;
         this.data.playerHead = playerHead;
+        this.data.rotation = {
+            pitch: 0,
+            yaw: 0
+        };
 
         this.elementObject = new CSS2DObject(htmlToElement(`
 <div id="bm-marker-${this.data.id}" class="bm-marker-${this.data.type}">
@@ -102,24 +106,34 @@ export class PlayerMarker extends Marker {
 
         // animate position update
         let pos = markerData.position || {};
+        let rot = markerData.rotation || {};
         if (!this.position.x && !this.position.y && !this.position.z) {
             this.position.set(
                 pos.x || 0,
                 (pos.y || 0) + 1.8,
                 pos.z || 0
             );
+            this.data.rotation.pitch = rot.pitch || 0;
+            this.data.rotation.yaw = rot.yaw || 0;
         } else {
             let startPos = {
                 x: this.position.x,
                 y: this.position.y,
                 z: this.position.z,
+                pitch: this.data.rotation.pitch,
+                yaw: this.data.rotation.yaw,
             }
             let deltaPos = {
                 x: (pos.x || 0) - startPos.x,
                 y: ((pos.y || 0) + 1.8) - startPos.y,
                 z: (pos.z || 0) - startPos.z,
+                pitch: (rot.pitch || 0) - startPos.pitch,
+                yaw: (rot.yaw || 0) - startPos.yaw
             }
-            if (deltaPos.x || deltaPos.y || deltaPos.z) {
+            while (deltaPos.yaw > 180) deltaPos.yaw -= 360;
+            while (deltaPos.yaw < -180) deltaPos.yaw += 360;
+
+            if (deltaPos.x || deltaPos.y || deltaPos.z || deltaPos.pitch || deltaPos.yaw) {
                 animate(progress => {
                     let ease = EasingFunctions.easeInOutCubic(progress);
                     this.position.set(
@@ -127,7 +141,9 @@ export class PlayerMarker extends Marker {
                         startPos.y + deltaPos.y * ease || 0,
                         startPos.z + deltaPos.z * ease || 0
                     );
-                }, 500);
+                    this.data.rotation.pitch = startPos.pitch + deltaPos.pitch * ease || 0;
+                    this.data.rotation.yaw = startPos.yaw + deltaPos.yaw * ease || 0;
+                }, 1000);
             }
         }
 

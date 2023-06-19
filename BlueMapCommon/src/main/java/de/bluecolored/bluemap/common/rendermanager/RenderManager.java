@@ -38,6 +38,8 @@ public class RenderManager {
     @DebugDump private final int id;
     @DebugDump private volatile boolean running;
 
+    @DebugDump private long lastTimeBusy;
+
     private final AtomicInteger nextWorkerThreadIndex;
     @DebugDump private final Collection<WorkerThread> workerThreads;
     private final AtomicInteger busyCount;
@@ -54,6 +56,8 @@ public class RenderManager {
         this.running = false;
         this.workerThreads = new ConcurrentLinkedDeque<>();
         this.busyCount = new AtomicInteger(0);
+
+        this.lastTimeBusy = -1;
 
         this.progressTracker = null;
         this.newTask = true;
@@ -249,6 +253,10 @@ public class RenderManager {
         return workerThreads.size();
     }
 
+    public long getLastTimeBusy() {
+        return lastTimeBusy;
+    }
+
     private void removeTasksThatAreContainedIn(RenderTask containingTask) {
         synchronized (this.renderTasks) {
             if (renderTasks.size() < 2) return;
@@ -290,13 +298,15 @@ public class RenderManager {
             }
 
             this.busyCount.incrementAndGet();
+            this.lastTimeBusy = System.currentTimeMillis();
         }
 
         try {
             task.doWork();
         } finally {
             synchronized (renderTasks) {
-                this.busyCount.decrementAndGet();
+                int busyCount = this.busyCount.decrementAndGet();
+                if (busyCount > 0) this.lastTimeBusy = System.currentTimeMillis();
                 this.renderTasks.notifyAll();
             }
         }

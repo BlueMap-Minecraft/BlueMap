@@ -83,7 +83,8 @@ export class MarkerManager {
      */
     update() {
         return this.loadMarkerFile()
-            .then(markerFileData => this.updateFromData(markerFileData));
+            .then(markerFileData => this.updateFromData(markerFileData))
+            .catch(() => this.clear());
     }
 
     /**

@@ -30,13 +30,14 @@ import {LineMarker} from "./LineMarker";
 import {HtmlMarker} from "./HtmlMarker";
 import {PoiMarker} from "./PoiMarker";
 import {reactive} from "vue";
+import {getLocalStorage, setLocalStorage} from "../Utils";
 
 export class MarkerSet extends Scene {
 
     /**
      * @param id {string}
      */
-    constructor(id) {
+    constructor(id, data = null) {
         super();
         Object.defineProperty(this, 'isMarkerSet', {value: true});
 
@@ -58,6 +59,9 @@ export class MarkerSet extends Scene {
                 return this.toggleable ||
                     this.markers.filter(marker => marker.listed).length > 0 ||
                     this.markerSets.filter(markerSet => markerSet.listed).length > 0
+            },
+            saveState: () => {
+                setLocalStorage(this.localStorageKey("visible"), this.visible);
             }
         });
 
@@ -65,6 +69,19 @@ export class MarkerSet extends Scene {
             get() { return this.data.visible },
             set(value) { this.data.visible = value }
         });
+
+        if (data) {
+            this.updateFromData(data);
+        }
+
+        if (this.data.toggleable) {
+            let storedVisible = getLocalStorage(this.localStorageKey("visible"));
+            if (storedVisible !== undefined) {
+                this.visible = !!storedVisible;
+            } else if (this.data.defaultHide) {
+                this.visible = false;
+            }
+        }
     }
 
     updateFromData(data) {
@@ -108,18 +125,14 @@ export class MarkerSet extends Scene {
     updateMarkerSetFromData(markerSetId, data) {
         let markerSet = this.markerSets.get(markerSetId);
 
-        // create new if not existent
         if (!markerSet) {
-            markerSet = new MarkerSet(markerSetId);
+            // create new if not existent
+            markerSet = new MarkerSet(markerSetId, data);
             this.add(markerSet);
-
-            if (data.defaultHidden) {
-                markerSet.visible = false;
-            }
+        } else {
+            // update
+            markerSet.updateFromData(data);
         }
-
-        // update
-        markerSet.updateFromData(data);
     }
 
     updateMarkersFromData(data = {}, ignore = []) {
@@ -174,8 +187,8 @@ export class MarkerSet extends Scene {
      * Removes all markers and marker-sets
      */
     clear() {
-        [...this.data.markerSets].forEach(markerSet => this.remove(markerSet));
-        [...this.data.markers].forEach(marker => this.remove(marker));
+        [...this.markerSets.values()].forEach(markerSet => this.remove(markerSet));
+        [...this.markers.values()].forEach(marker => this.remove(marker));
     }
 
     add(...object) {
@@ -218,6 +231,10 @@ export class MarkerSet extends Scene {
         this.children.forEach(child => {
             if (child.dispose) child.dispose();
         });
+    }
+
+    localStorageKey(key) {
+        return "bluemap-markerset-" + encodeURIComponent(this.data.id) + "-" + key;
     }
 
 }

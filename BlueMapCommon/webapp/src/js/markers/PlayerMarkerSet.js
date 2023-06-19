@@ -29,8 +29,8 @@ import {PlayerMarker} from "./PlayerMarker";
 
 export class PlayerMarkerSet extends MarkerSet {
 
-    constructor(id, playerheadsUrl) {
-        super(id);
+    constructor(id, playerheadsUrl, data = null) {
+        super(id, data);
         this.data.label = "Player";
         this.data.toggleable = true;
         this.data.defaultHide = false;

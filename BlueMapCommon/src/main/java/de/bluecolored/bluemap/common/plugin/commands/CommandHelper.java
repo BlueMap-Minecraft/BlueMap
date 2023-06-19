@@ -34,9 +34,17 @@ import de.bluecolored.bluemap.core.world.World;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import java.lang.ref.WeakReference;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class CommandHelper {
+
+    private static final DateTimeFormatter TIME_FORMAT =
+            DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
+                    .withLocale(Locale.ROOT)
+                    .withZone(ZoneId.systemDefault());
 
     private final Plugin plugin;
     private final Map<String, WeakReference<RenderTask>> taskRefMap;
@@ -67,7 +75,9 @@ public class CommandHelper {
 
             lines.add(Text.of(TextColor.WHITE, " Render-Threads are ", status, TextColor.WHITE, "!"));
 
-            if (!tasks.isEmpty()) {
+            if (tasks.isEmpty()) {
+                lines.add(Text.of(TextColor.GRAY, " Last time running: ", TextColor.DARK_GRAY, formatTime(renderer.getLastTimeBusy())));
+            } else {
                 lines.add(Text.of(TextColor.WHITE, " Queued Tasks (" + tasks.size() + "):"));
                 for (int i = 0; i < tasks.size(); i++) {
                     if (i >= 10){
@@ -76,20 +86,18 @@ public class CommandHelper {
                     }
 
                     RenderTask task = tasks.get(i);
-                    lines.add(Text.of(TextColor.GRAY, "  [" + getRefForTask(task) + "] ", TextColor.GOLD, task.getDescription()));
+                    lines.add(Text.of(TextColor.GRAY, "\u00A0\u00A0[" + getRefForTask(task) + "] ", TextColor.GOLD, task.getDescription()));
 
                     if (i == 0) {
-                        String detail = task.getDetail().orElse(null);
-                        if (detail != null) {
-                            lines.add(Text.of(TextColor.GRAY, "   Detail: ", TextColor.WHITE, detail));
-                        }
+                        task.getDetail().ifPresent(detail ->
+                                lines.add(Text.of(TextColor.GRAY, "\u00A0\u00A0\u00A0Detail: ", TextColor.WHITE, detail)));
 
-                        lines.add(Text.of(TextColor.GRAY, "   Progress: ", TextColor.WHITE,
+                        lines.add(Text.of(TextColor.GRAY, "\u00A0\u00A0\u00A0Progress: ", TextColor.WHITE,
                                 (Math.round(task.estimateProgress() * 10000) / 100.0) + "%"));
 
                         long etaMs = renderer.estimateCurrentRenderTaskTimeRemaining();
                         if (etaMs > 0) {
-                            lines.add(Text.of(TextColor.GRAY, "   ETA: ", TextColor.WHITE, DurationFormatUtils.formatDuration(etaMs, "HH:mm:ss")));
+                            lines.add(Text.of(TextColor.GRAY, "\u00A0\u00A0\u00A0ETA: ", TextColor.WHITE, DurationFormatUtils.formatDuration(etaMs, "HH:mm:ss")));
                         }
                     }
                 }
@@ -98,7 +106,7 @@ public class CommandHelper {
             if (plugin.checkPausedByPlayerCount()) {
                 lines.add(Text.of(TextColor.WHITE, " Render-Threads are ",
                         Text.of(TextColor.GOLD, "paused")));
-                lines.add(Text.of(TextColor.GRAY, TextFormat.ITALIC, "   (there are " + plugin.getConfigs().getPluginConfig().getPlayerRenderLimit() + " or more players online)"));
+                lines.add(Text.of(TextColor.GRAY, TextFormat.ITALIC, "\u00A0\u00A0\u00A0(there are " + plugin.getConfigs().getPluginConfig().getPlayerRenderLimit() + " or more players online)"));
             } else {
                 lines.add(Text.of(TextColor.WHITE, " Render-Threads are ",
                         Text.of(TextColor.RED, "stopped")
@@ -174,6 +182,11 @@ public class CommandHelper {
         StringBuilder ref = new StringBuilder(Integer.toString(Math.abs(new Random().nextInt()), 16));
         while (ref.length() < 4) ref.insert(0, "0");
         return ref.subSequence(0, 4).toString();
+    }
+
+    public String formatTime(long timestamp) {
+        if (timestamp < 0) return "-";
+        return TIME_FORMAT.format(Instant.ofEpochMilli(timestamp));
     }
 
 }

@@ -54,7 +54,9 @@ import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.BindException;
 import java.net.InetSocketAddress;
+import java.net.UnknownHostException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -204,12 +206,24 @@ public class BlueMapCLI implements ServerInterface {
         HttpRequestHandler handler = new BlueMapResponseModifier(routingRequestHandler);
         if (verbose) handler = new LoggingRequestHandler(handler);
 
-        HttpServer webServer = new HttpServer(handler);
-        webServer.bind(new InetSocketAddress(
-                config.resolveIp(),
-                config.getPort()
-        ));
-        webServer.start();
+        try {
+            HttpServer webServer = new HttpServer(handler);
+            webServer.bind(new InetSocketAddress(
+                    config.resolveIp(),
+                    config.getPort()
+            ));
+            webServer.start();
+        } catch (UnknownHostException ex) {
+            throw new ConfigurationException("BlueMap failed to resolve the ip in your webserver-config.\n" +
+                    "Check if that is correctly configured.", ex);
+        } catch (BindException ex) {
+            throw new ConfigurationException("BlueMap failed to bind to the configured address.\n" +
+                    "This usually happens when the configured port (" + config.getPort() + ") is already in use by some other program.", ex);
+        } catch (IOException ex) {
+            throw new ConfigurationException("BlueMap failed to initialize the webserver.\n" +
+                    "Check your webserver-config if everything is configured correctly.\n" +
+                    "(Make sure you DON'T use the same port for bluemap that you also use for your minecraft server)", ex);
+        }
     }
 
     @Override

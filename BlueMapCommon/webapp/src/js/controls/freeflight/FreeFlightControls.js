@@ -23,7 +23,7 @@
  * THE SOFTWARE.
  */
 
-import {MathUtils, Vector2} from "three";
+import {MathUtils, Vector2, Vector3} from "three";
 import {Manager, Pan, DIRECTION_ALL} from "hammerjs";
 import {animate, EasingFunctions} from "../../util/Utils";
 import {KeyMoveControls} from "./keyboard/KeyMoveControls";
@@ -32,8 +32,11 @@ import {MouseAngleControls} from "./mouse/MouseAngleControls";
 import {KeyHeightControls} from "./keyboard/KeyHeightControls";
 import {TouchPanControls} from "./touch/TouchPanControls";
 import {reactive} from "vue";
+import {DEG2RAD} from "three/src/math/MathUtils";
 
 export class FreeFlightControls {
+
+    static _beforeMoveTemp = new Vector3();
 
     /**
      * @param target {Element}
@@ -43,7 +46,7 @@ export class FreeFlightControls {
         this.manager = null;
 
         this.data = reactive({
-
+            followingPlayer: null
         });
 
         this.hammer = new Manager(this.target);
@@ -99,11 +102,31 @@ export class FreeFlightControls {
      * @param map {Map}
      */
     update(delta, map) {
+        FreeFlightControls._beforeMoveTemp.copy(this.manager.position);
+        let beforeMoveRot = this.manager.rotation;
+        let beforeMoveAngle = this.manager.angle;
+
         this.keyMove.update(delta, map);
         this.keyHeight.update(delta, map);
         this.mouseRotate.update(delta, map);
         this.mouseAngle.update(delta, map);
         this.touchPan.update(delta, map);
+
+        // if moved, stop following the marker and give back control
+        if (this.data.followingPlayer && (
+            !FreeFlightControls._beforeMoveTemp.equals(this.manager.position) ||
+            beforeMoveRot !== this.manager.rotation ||
+            beforeMoveAngle !== this.manager.angle
+        )) {
+            this.stopFollowingPlayerMarker();
+        }
+
+        // follow player marker
+        if (this.data.followingPlayer) {
+            this.manager.position.copy(this.data.followingPlayer.position);
+            this.manager.rotation = (this.data.followingPlayer.rotation.yaw - 180) * DEG2RAD;
+            this.manager.angle = -(this.data.followingPlayer.rotation.pitch - 90) * DEG2RAD;
+        }
 
         this.manager.angle = MathUtils.clamp(this.manager.angle, 0, Math.PI);
         this.manager.distance = 0;
@@ -131,6 +154,19 @@ export class FreeFlightControls {
             .finally(() => {
                 this.target.requestPointerLock();
             });
+    }
+
+    /**
+     * @param marker {object}
+     */
+    followPlayerMarker(marker) {
+        if (marker.isPlayerMarker) marker = marker.data;
+        this.data.followingPlayer = marker;
+        this.keyMove.deltaPosition.set(0, 0);
+    }
+
+    stopFollowingPlayerMarker() {
+        this.data.followingPlayer = null;
     }
 
     onWheel = evt => {

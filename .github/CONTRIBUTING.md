@@ -19,7 +19,7 @@ So, if something doesn't work because it is not implemented yet, its not a bug.
 If you are not sure, you can briefly ask about it in our [Discord](https://discord.gg/zmkyJa3) before creating an Issue. :)
 - Make sure you tested it well enough to be sure it's not an issue on your end. If something doesn't work for you but for everyone else, its probably **not** a bug!
 
-Also, please make sure noone else has already reported the same or a very similar bug!
+Also, please make sure no one else has already reported the same or a very similar bug!
 If you have additional information for an existing bug-report, you can add a comment to the already existing Issue :)
 
 To report your bug, please open a [new Issue](https://github.com/BlueMap-Minecraft/BlueMap/issues/new?template=bug_report.md) with the `Bug report`-template and follow these guidlines:
@@ -53,7 +53,20 @@ Make sure your Issue is easy to read and not a mess:
 Create a separate Issue for each bug you find! Issues that contain more than one bug will be closed!
 
 ## Suggesting a new feature or change
-**(Todo)**
+Please use our [discord](https://discord.gg/zmkyJa3)s #suggestions channel to pitch new ideas. 
+We will discuss them there and if they are considered, I'll add an issue/note to out [TODO](https://github.com/orgs/BlueMap-Minecraft/projects/2/views/1)-Board!
 
 ## Creating a Pull-Request
-**(Todo)**
+If you want to develop a new PR, please run your Idea by me first in our [discord](https://discord.gg/zmkyJa3)!
+We can discuss details there, since I have a lot of future plans in my head that are not written anywhere, and they might need to be considered
+when implementing your feature!  
+*(Also, I tend to be quite picky about certain implementation styles and details ^^')*
+
+**Please keep in mind that any feature you implement will need to be maintained in the future by me.
+For this reason I will only accept PR's for features that I deem to be useful, maintainable, in-scope of the project and
+worth it's maintenance-workload!**
+
+Ofc the usual "good code quality..." stuff, i think that's common sense.  
+Try to match the existing code-style.  
+Don't add new libraries/dependencies without my ok.  
+Hacky stuff is not allowed =)

@@ -27,6 +27,8 @@
   .bm-marker-html {
     position: relative;
 
+    user-select: none;
+
     .bm-marker-poi-label {
       position: absolute;
       top: 0;

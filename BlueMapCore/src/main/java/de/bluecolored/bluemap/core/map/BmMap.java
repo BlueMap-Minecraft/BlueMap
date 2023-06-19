@@ -219,7 +219,7 @@ public class BmMap {
 
     public synchronized void savePlayerState() {
         try (
-                OutputStream out = storage.writeMeta(id, META_FILE_PLAYERS);
+                OutputStream out = storage.writeMeta(id, META_FILE_PLAYERS)
         ) {
             out.write("{}".getBytes(StandardCharsets.UTF_8));
         } catch (Exception ex) {

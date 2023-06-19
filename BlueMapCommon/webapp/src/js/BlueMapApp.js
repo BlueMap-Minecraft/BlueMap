@@ -48,7 +48,7 @@ export class BlueMapApp {
 
         this.mapViewer = new MapViewer(rootElement, this.events);
 
-        this.mapControls = new MapControls(this.mapViewer.renderer.domElement);
+        this.mapControls = new MapControls(this.mapViewer.renderer.domElement, rootElement);
         this.freeFlightControls = new FreeFlightControls(this.mapViewer.renderer.domElement);
 
         /** @type {PlayerMarkerManager} */
@@ -251,6 +251,9 @@ export class BlueMapApp {
         let map = this.mapsMap.get(mapId);
         if (!map) return Promise.reject(`There is no map with the id "${mapId}" loaded!`);
 
+        if (this.playerMarkerManager) this.playerMarkerManager.dispose();
+        if (this.markerFileManager) this.markerFileManager.dispose();
+
         await this.mapViewer.switchMap(map)
 
         if (resetCamera) this.resetCamera();
@@ -353,10 +356,8 @@ export class BlueMapApp {
     }
 
     initPlayerMarkerManager() {
-        if (this.playerMarkerManager){
-            this.playerMarkerManager.clear();
+        if (this.playerMarkerManager)
             this.playerMarkerManager.dispose()
-        }
 
         const map = this.mapViewer.map;
         if (!map) return;
@@ -369,16 +370,13 @@ export class BlueMapApp {
             })
             .catch(e => {
                 alert(this.events, e, "warning");
-                this.playerMarkerManager.clear();
                 this.playerMarkerManager.dispose();
             });
     }
 
     initMarkerFileManager() {
-        if (this.markerFileManager) {
-            this.markerFileManager.clear();
+        if (this.markerFileManager)
             this.markerFileManager.dispose();
-        }
 
         const map = this.mapViewer.map;
         if (!map) return;
@@ -390,7 +388,6 @@ export class BlueMapApp {
             })
             .catch(e => {
                 alert(this.events, e, "warning");
-                this.markerFileManager.clear();
                 this.markerFileManager.dispose();
             });
     }

@@ -67,11 +67,13 @@ export class KeyRotateControls {
 
         window.addEventListener("keydown", this.onKeyDown);
         window.addEventListener("keyup", this.onKeyUp);
+        window.addEventListener("blur", this.onStop)
     }
 
     stop() {
         window.removeEventListener("keydown", this.onKeyDown);
         window.removeEventListener("keyup", this.onKeyUp);
+        window.removeEventListener("blur", this.onStop)
     }
 
     /**
@@ -119,6 +121,11 @@ export class KeyRotateControls {
         if (KeyCombination.oneUp(evt, ...KeyRotateControls.KEYS.RIGHT)){
             this.right = false;
         }
+    }
+
+    onStop = evt => {
+        this.left = false;
+        this.right = false;
     }
 
 }

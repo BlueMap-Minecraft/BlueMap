@@ -65,6 +65,7 @@ export default {
       if (this.markerSet.toggleable) {
         // eslint-disable-next-line vue/no-mutating-props
         this.markerSet.visible = !this.markerSet.visible
+        this.markerSet.saveState();
       }
     },
     more(event) {

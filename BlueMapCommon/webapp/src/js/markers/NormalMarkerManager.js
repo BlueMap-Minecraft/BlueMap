@@ -48,4 +48,8 @@ export class NormalMarkerManager extends MarkerManager {
         return true;
     }
 
+    clear() {
+        this.root.updateMarkerSetsFromData({}, [PLAYER_MARKER_SET_ID, "bm-popup-set"]);
+    }
+
 }
