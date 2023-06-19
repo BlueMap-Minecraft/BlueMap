@@ -50,7 +50,7 @@ export default {
     width: 100%;
     height: 100%;
 
-    z-index: 100; // put over bluemap markers
+    z-index: 10000; // put over bluemap markers
 
     pointer-events: none;
 
