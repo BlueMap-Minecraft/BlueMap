@@ -37,7 +37,7 @@ export class MarkerSet extends Scene {
     /**
      * @param id {string}
      */
-    constructor(id) {
+    constructor(id, data = null) {
         super();
         Object.defineProperty(this, 'isMarkerSet', {value: true});
 
@@ -69,6 +69,10 @@ export class MarkerSet extends Scene {
             get() { return this.data.visible },
             set(value) { this.data.visible = value }
         });
+
+        if (data) {
+            this.updateFromData(data);
+        }
 
         if (this.data.toggleable) {
             let storedVisible = getLocalStorage(this.localStorageKey("visible"));
@@ -121,14 +125,14 @@ export class MarkerSet extends Scene {
     updateMarkerSetFromData(markerSetId, data) {
         let markerSet = this.markerSets.get(markerSetId);
 
-        // create new if not existent
         if (!markerSet) {
-            markerSet = new MarkerSet(markerSetId);
+            // create new if not existent
+            markerSet = new MarkerSet(markerSetId, data);
             this.add(markerSet);
+        } else {
+            // update
+            markerSet.updateFromData(data);
         }
-
-        // update
-        markerSet.updateFromData(data);
     }
 
     updateMarkersFromData(data = {}, ignore = []) {
