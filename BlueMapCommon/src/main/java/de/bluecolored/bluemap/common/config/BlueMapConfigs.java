@@ -34,10 +34,7 @@ import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.util.Tristate;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
@@ -396,12 +393,28 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
     }
 
     private String formatPath(Path path) {
-        return Path.of("")
+        // normalize path
+        path = Path.of("")
                 .toAbsolutePath()
                 .relativize(path.toAbsolutePath())
-                .normalize()
-                .toString()
-                .replace("\\", "\\\\");
+                .normalize();
+        String pathString = path.toString();
+
+        String formatted = pathString;
+        String separator = FileSystems.getDefault().getSeparator();
+
+        // try to replace separator with standardized forward slash
+        if (!separator.equals("/"))
+            formatted = pathString.replace(separator, "/");
+
+        // sanity check forward slash compatibility
+        if (!Path.of(formatted).equals(path))
+            formatted = pathString;
+
+        // escape all backslashes
+        formatted = formatted.replace("\\", "\\\\");
+
+        return formatted;
     }
 
 }
