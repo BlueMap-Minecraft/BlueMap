@@ -205,6 +205,7 @@ public class Commands<S> {
                         .executes(this::storagesInfoCommand)
 
                         .then(literal("delete")
+                                .requires(requirements("bluemap.delete"))
                                 .then(argument("map", StringArgumentType.string())
                                         .executes(this::storagesDeleteMapCommand))))
 
