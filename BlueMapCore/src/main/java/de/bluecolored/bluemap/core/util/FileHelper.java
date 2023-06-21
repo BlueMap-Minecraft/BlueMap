@@ -62,9 +62,9 @@ public class FileHelper {
             try {
                 Files.move(from, to, StandardCopyOption.REPLACE_EXISTING);
             } catch (FileNotFoundException | NoSuchFileException ignore) {
-            } catch (IOException ex2) {
-                ex2.addSuppressed(ex);
-                throw ex2;
+            } catch (Throwable t) {
+                t.addSuppressed(ex);
+                throw t;
             }
         }
     }
