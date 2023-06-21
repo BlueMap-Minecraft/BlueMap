@@ -61,7 +61,11 @@ public class FileHelper {
         } catch (IOException ex) {
             try {
                 Files.move(from, to, StandardCopyOption.REPLACE_EXISTING);
-            } catch (FileNotFoundException | NoSuchFileException ignore) {}
+            } catch (FileNotFoundException | NoSuchFileException ignore) {
+            } catch (IOException ex2) {
+                ex2.addSuppressed(ex);
+                throw ex2;
+            }
         }
     }
 
