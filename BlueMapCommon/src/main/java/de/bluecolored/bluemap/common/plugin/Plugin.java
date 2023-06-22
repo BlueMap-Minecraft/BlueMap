@@ -229,8 +229,8 @@ public class Plugin implements ServerEventListener {
                     blueMap.createOrUpdateWebApp(false);
 
                 //start skin updater
+                this.skinUpdater = new PlayerSkinUpdater(this);
                 if (pluginConfig.isLivePlayerMarkers()) {
-                    this.skinUpdater = new PlayerSkinUpdater(this);
                     serverInterface.registerListener(skinUpdater);
                 }
 
