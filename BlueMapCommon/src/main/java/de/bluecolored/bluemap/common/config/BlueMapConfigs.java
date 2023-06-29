@@ -65,7 +65,7 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
 
         this.coreConfig = loadCoreConfig(defaultDataFolder);
         this.webappConfig = loadWebappConfig(defaultWebroot);
-        this.webserverConfig = loadWebserverConfig(webappConfig.getWebroot());
+        this.webserverConfig = loadWebserverConfig(webappConfig.getWebroot(), coreConfig.getData());
         this.pluginConfig = usePluginConf ? loadPluginConfig() : new PluginConfig();
         this.storageConfigs = Collections.unmodifiableMap(loadStorageConfigs(webappConfig.getWebroot()));
         this.mapConfigs = Collections.unmodifiableMap(loadMapConfigs());
@@ -144,7 +144,7 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
         return configManager.loadConfig(configFileRaw, CoreConfig.class);
     }
 
-    private synchronized WebserverConfig loadWebserverConfig(Path defaultWebroot) throws ConfigurationException {
+    private synchronized WebserverConfig loadWebserverConfig(Path defaultWebroot, Path dataRoot) throws ConfigurationException {
         Path configFileRaw = Path.of("webserver");
         Path configFile = configManager.findConfigPath(configFileRaw);
         Path configFolder = configFile.getParent();
@@ -156,6 +156,8 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
                         configFolder.resolve("webserver.conf"),
                         configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/webserver.conf")
                                 .setVariable("webroot", formatPath(defaultWebroot))
+                                .setVariable("logfile", formatPath(dataRoot.resolve("logs").resolve("webapp.log")))
+                                .setVariable("logfile-with-time", formatPath(dataRoot.resolve("logs").resolve("webapp_%1$tF_%1$tT.log")))
                                 .build(),
                         StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                 );

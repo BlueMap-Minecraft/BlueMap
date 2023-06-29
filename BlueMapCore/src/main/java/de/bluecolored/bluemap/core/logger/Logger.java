@@ -24,6 +24,14 @@
  */
 package de.bluecolored.bluemap.core.logger;
 
+import org.jetbrains.annotations.Nullable;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.logging.FileHandler;
+import java.util.stream.StreamSupport;
+
 public abstract class Logger {
 
     public static Logger global = stdOut();
@@ -105,6 +113,43 @@ public abstract class Logger {
 
     public static Logger stdOut(){
         return new PrintStreamLogger(System.out, System.err);
+    }
+
+
+    public static Logger file(Path path) throws IOException {
+        return file(path, null);
+    }
+
+    public static Logger file(Path path, boolean append) throws IOException {
+        return file(path, null, append);
+    }
+
+    public static Logger file(Path path, String format) throws IOException {
+        return file(path, format, true);
+    }
+
+    public static Logger file(Path path, @Nullable String format, boolean append) throws IOException {
+        Files.createDirectories(path.getParent());
+
+        FileHandler fileHandler = new FileHandler(path.toString(), append);
+        fileHandler.setFormatter(format == null ? new LogFormatter() : new LogFormatter(format));
+
+        java.util.logging.Logger javaLogger = java.util.logging.Logger.getAnonymousLogger();
+        javaLogger.setUseParentHandlers(false);
+        javaLogger.addHandler(fileHandler);
+
+        return new JavaLogger(javaLogger);
+    }
+
+    public static Logger combine(Iterable<Logger> logger) {
+        return combine(StreamSupport.stream(logger.spliterator(), false)
+                .toArray(Logger[]::new));
+    }
+
+    public static Logger combine(Logger... logger) {
+        if (logger.length == 0) return new VoidLogger();
+        if (logger.length == 1) return logger[0];
+        return new MultiLogger(logger);
     }
 
 }

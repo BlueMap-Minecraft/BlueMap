@@ -59,6 +59,9 @@ import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
@@ -185,8 +188,22 @@ public class Plugin implements ServerEventListener {
                         );
                     }
 
+                    // create web-logger
+                    List<Logger> webLoggerList = new ArrayList<>();
+                    if (webserverConfig.getLog().getFile() != null) {
+                        ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
+                        webLoggerList.add(Logger.file(
+                                Path.of(String.format(webserverConfig.getLog().getFile(), zdt)),
+                                webserverConfig.getLog().isAppend()
+                        ));
+                    }
+
                     try {
-                        webServer = new HttpServer(routingRequestHandler);
+                        webServer = new HttpServer(new LoggingRequestHandler(
+                                routingRequestHandler,
+                                webserverConfig.getLog().getFormat(),
+                                Logger.combine(webLoggerList)
+                        ));
                         webServer.bind(new InetSocketAddress(
                                 webserverConfig.resolveIp(),
                                 webserverConfig.getPort()

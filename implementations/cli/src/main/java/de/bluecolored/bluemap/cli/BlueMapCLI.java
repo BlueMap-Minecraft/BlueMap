@@ -58,6 +58,9 @@ import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -203,10 +206,25 @@ public class BlueMapCLI implements ServerInterface {
             );
         }
 
+        List<Logger> webLoggerList = new ArrayList<>();
+        if (verbose) webLoggerList.add(Logger.global);
+        if (config.getLog().getFile() != null) {
+            ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
+            webLoggerList.add(Logger.file(
+                    Path.of(String.format(config.getLog().getFile(), zdt)),
+                    config.getLog().isAppend()
+            ));
+        }
+
         HttpRequestHandler handler = new BlueMapResponseModifier(routingRequestHandler);
-        if (verbose) handler = new LoggingRequestHandler(handler);
+        handler = new LoggingRequestHandler(
+                handler,
+                config.getLog().getFormat(),
+                Logger.combine(webLoggerList)
+        );
 
         try {
+            //noinspection resource
             HttpServer webServer = new HttpServer(handler);
             webServer.bind(new InetSocketAddress(
                     config.resolveIp(),
