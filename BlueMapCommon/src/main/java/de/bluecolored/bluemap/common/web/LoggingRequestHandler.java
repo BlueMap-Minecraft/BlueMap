@@ -1,5 +1,6 @@
 package de.bluecolored.bluemap.common.web;
 
+import de.bluecolored.bluemap.common.web.http.HttpHeader;
 import de.bluecolored.bluemap.common.web.http.HttpRequest;
 import de.bluecolored.bluemap.common.web.http.HttpRequestHandler;
 import de.bluecolored.bluemap.common.web.http.HttpResponse;
@@ -21,7 +22,14 @@ public class LoggingRequestHandler implements HttpRequestHandler {
 
     @Override
     public HttpResponse handle(HttpRequest request) {
-        String log = request.getSource() + " \""
+        String source = request.getSource().toString();
+
+        HttpHeader xffHeader = request.getHeader("x-forwarded-for");
+        if (xffHeader != null && !xffHeader.getValues().isEmpty()) {
+            source = xffHeader.getValues().get(0);
+        }
+
+        String log = source + " \""
                 + request.getMethod()
                 + " " + request.getAddress()
                 + " " + request.getVersion()
