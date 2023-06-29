@@ -156,8 +156,8 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
                         configFolder.resolve("webserver.conf"),
                         configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/webserver.conf")
                                 .setVariable("webroot", formatPath(defaultWebroot))
-                                .setVariable("logfile", formatPath(dataRoot.resolve("logs").resolve("webapp.log")))
-                                .setVariable("logfile-with-time", formatPath(dataRoot.resolve("logs").resolve("webapp_%1$tF_%1$tT.log")))
+                                .setVariable("logfile", formatPath(dataRoot.resolve("logs").resolve("webserver.log")))
+                                .setVariable("logfile-with-time", formatPath(dataRoot.resolve("logs").resolve("webserver_%1$tF_%1$tT.log")))
                                 .build(),
                         StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                 );
