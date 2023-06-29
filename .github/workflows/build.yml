@@ -22,7 +22,7 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 17
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: |
             ~/.gradle/caches
