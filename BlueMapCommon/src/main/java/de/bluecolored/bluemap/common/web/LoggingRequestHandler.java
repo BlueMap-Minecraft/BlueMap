@@ -24,24 +24,25 @@ public class LoggingRequestHandler implements HttpRequestHandler {
     public HttpResponse handle(HttpRequest request) {
         String source = request.getSource().toString();
 
-        HttpHeader xffHeader = request.getHeader("x-forwarded-for");
+        HttpHeader xffHeader = request.getHeader("X-Forwarded-For");
         if (xffHeader != null && !xffHeader.getValues().isEmpty()) {
             source = xffHeader.getValues().get(0);
         }
 
-        String log = source + " \""
-                + request.getMethod()
-                + " " + request.getAddress()
-                + " " + request.getVersion()
-                + "\" ";
+        StringBuilder log = new StringBuilder()
+                .append(source)
+                .append(" \"").append(request.getMethod())
+                .append(" ").append(request.getAddress())
+                .append(" ").append(request.getVersion())
+                .append("\" ");
 
         HttpResponse response = delegate.handle(request);
 
-        log += response.getStatusCode().toString();
+        log.append(response.getStatusCode());
         if (response.getStatusCode().getCode() < 400) {
-            logger.logInfo(log);
+            logger.logInfo(log.toString());
         } else {
-            logger.logWarning(log);
+            logger.logWarning(log.toString());
         }
 
         return response;
