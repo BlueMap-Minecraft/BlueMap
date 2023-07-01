@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.core.logger;
 
+import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -63,6 +64,12 @@ public class JavaLogger extends AbstractLogger {
     @Override
     public void noFloodDebug(String key, String message) {
         if (out.isLoggable(Level.FINE)) super.noFloodDebug(key, message);
+    }
+
+    @Override
+    public void close() throws Exception {
+        for (Handler handler : out.getHandlers())
+            handler.close();
     }
 
 }

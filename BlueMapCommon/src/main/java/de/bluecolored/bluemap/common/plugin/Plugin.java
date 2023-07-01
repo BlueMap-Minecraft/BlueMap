@@ -73,6 +73,8 @@ public class Plugin implements ServerEventListener {
     public static final String PLUGIN_ID = "bluemap";
     public static final String PLUGIN_NAME = "BlueMap";
 
+    private static final String DEBUG_FILE_LOG_NAME = "file-debug-log";
+
     private final InterruptableReentrantLock loadingLock = new InterruptableReentrantLock();
 
     private final String implementationType;
@@ -87,6 +89,7 @@ public class Plugin implements ServerEventListener {
 
     private RenderManager renderManager;
     private HttpServer webServer;
+    private Logger webLogger;
 
     private BlueMapAPIImpl api;
 
@@ -123,6 +126,17 @@ public class Plugin implements ServerEventListener {
                 WebserverConfig webserverConfig = getConfigs().getWebserverConfig();
                 WebappConfig webappConfig = getConfigs().getWebappConfig();
                 PluginConfig pluginConfig = getConfigs().getPluginConfig();
+
+                //apply new file-logger config
+                if (coreConfig.getLog().getFile() != null) {
+                    ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
+                    Logger.global.put(DEBUG_FILE_LOG_NAME, () -> Logger.file(
+                            Path.of(String.format(coreConfig.getLog().getFile(), zdt)),
+                            coreConfig.getLog().isAppend()
+                    ));
+                } else {
+                    Logger.global.remove(DEBUG_FILE_LOG_NAME);
+                }
 
                 //load plugin state
                 try {
@@ -197,12 +211,13 @@ public class Plugin implements ServerEventListener {
                                 webserverConfig.getLog().isAppend()
                         ));
                     }
+                    webLogger = Logger.combine(webLoggerList);
 
                     try {
                         webServer = new HttpServer(new LoggingRequestHandler(
                                 routingRequestHandler,
                                 webserverConfig.getLog().getFormat(),
-                                Logger.combine(webLoggerList)
+                                webLogger
                         ));
                         webServer.bind(new InetSocketAddress(
                                 webserverConfig.resolveIp(),
@@ -409,6 +424,15 @@ public class Plugin implements ServerEventListener {
                     webServer = null;
                 }
 
+                if (webLogger != null) {
+                    try {
+                        webLogger.close();
+                    } catch (Exception ex) {
+                        Logger.global.logError("Failed to close the webserver-logger!", ex);
+                    }
+                    webLogger = null;
+                }
+
                 //close bluemap
                 if (blueMap != null) {
                     try {
@@ -418,6 +442,9 @@ public class Plugin implements ServerEventListener {
                     }
                 }
                 blueMap = null;
+
+                // remove file-logger
+                Logger.global.remove(DEBUG_FILE_LOG_NAME);
 
                 //clear resources
                 worlds = null;

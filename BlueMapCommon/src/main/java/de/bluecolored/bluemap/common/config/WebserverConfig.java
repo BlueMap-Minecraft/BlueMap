@@ -80,7 +80,7 @@ public class WebserverConfig {
     public static class LogConfig {
 
         private String file = null;
-        private boolean append = true;
+        private boolean append = false;
         private String format = "%1$s \"%3$s %4$s %5$s\" %6$s %7$s";
 
         public String getFile() {

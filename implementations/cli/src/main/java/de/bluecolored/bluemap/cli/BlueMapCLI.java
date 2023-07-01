@@ -29,6 +29,7 @@ import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.MissingResourcesException;
 import de.bluecolored.bluemap.common.config.BlueMapConfigs;
 import de.bluecolored.bluemap.common.config.ConfigurationException;
+import de.bluecolored.bluemap.common.config.CoreConfig;
 import de.bluecolored.bluemap.common.config.WebserverConfig;
 import de.bluecolored.bluemap.common.plugin.RegionFileWatchService;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
@@ -44,7 +45,6 @@ import de.bluecolored.bluemap.common.web.http.HttpServer;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.logger.LoggerLogger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.metrics.Metrics;
 import de.bluecolored.bluemap.core.storage.Storage;
@@ -207,7 +207,7 @@ public class BlueMapCLI implements ServerInterface {
         }
 
         List<Logger> webLoggerList = new ArrayList<>();
-        if (verbose) webLoggerList.add(Logger.global);
+        if (verbose) webLoggerList.add(Logger.stdOut(true));
         if (config.getLog().getFile() != null) {
             ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
             webLoggerList.add(Logger.file(
@@ -294,9 +294,13 @@ public class BlueMapCLI implements ServerInterface {
         try {
             CommandLine cmd = parser.parse(BlueMapCLI.createOptions(), args, false);
 
+            if (cmd.hasOption("b")) {
+                Logger.global.clear();
+                Logger.global.put(Logger.stdOut(true));
+            }
+
             if (cmd.hasOption("l")) {
-                Logger.global = LoggerLogger.getInstance();
-                ((LoggerLogger) Logger.global).addFileHandler(cmd.getOptionValue("l"), cmd.hasOption("a"));
+                Logger.global.put(Logger.file(Path.of(cmd.getOptionValue("l")), cmd.hasOption("a")));
             }
 
             //help
@@ -331,6 +335,17 @@ public class BlueMapCLI implements ServerInterface {
             }
 
             BlueMapConfigs configs = new BlueMapConfigs(cli, Path.of("data"), Path.of("web"), false);
+
+            //apply new file-logger config
+            CoreConfig coreConfig = configs.getCoreConfig();
+            if (coreConfig.getLog().getFile() != null) {
+                ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
+                Logger.global.put(Logger.file(
+                        Path.of(String.format(coreConfig.getLog().getFile(), zdt)),
+                        coreConfig.getLog().isAppend()
+                ));
+            }
+
             blueMap = new BlueMapService(cli, configs);
             boolean noActions = true;
 

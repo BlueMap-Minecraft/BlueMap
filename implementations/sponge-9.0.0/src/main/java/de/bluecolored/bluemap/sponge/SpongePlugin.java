@@ -91,7 +91,9 @@ public class SpongePlugin implements ServerInterface {
 
     @Inject
     public SpongePlugin(org.apache.logging.log4j.Logger logger, PluginContainer pluginContainer/*, Metrics.Factory metricsFactory*/) {
-        Logger.global = new Log4J2Logger(logger);
+        Logger.global.clear();
+        Logger.global.put(new Log4J2Logger(logger));
+
         this.pluginContainer = pluginContainer;
 
         this.onlinePlayerMap = new ConcurrentHashMap<>();

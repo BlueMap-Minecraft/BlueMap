@@ -68,7 +68,8 @@ public class FabricMod implements ModInitializer, ServerInterface {
     private final List<FabricPlayer> onlinePlayerList;
 
     public FabricMod() {
-        Logger.global = new Log4jLogger(LogManager.getLogger(Plugin.PLUGIN_NAME));
+        Logger.global.clear();
+        Logger.global.put(new Log4jLogger(LogManager.getLogger(Plugin.PLUGIN_NAME)));
 
         this.onlinePlayerMap = new ConcurrentHashMap<>();
         this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());

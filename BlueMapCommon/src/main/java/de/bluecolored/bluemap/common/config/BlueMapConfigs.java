@@ -133,6 +133,8 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
                                 .setVariable("data", formatPath(defaultDataFolder))
                                 .setVariable("implementation", "bukkit")
                                 .setVariable("render-thread-count", Integer.toString(presetRenderThreadCount))
+                                .setVariable("logfile", formatPath(defaultDataFolder.resolve("logs").resolve("debug.log")))
+                                .setVariable("logfile-with-time", formatPath(defaultDataFolder.resolve("logs").resolve("debug_%1$tF_%1$tT.log")))
                                 .build(),
                         StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                 );

@@ -24,37 +24,124 @@
  */
 package de.bluecolored.bluemap.core.logger;
 
-@SuppressWarnings("ForLoopReplaceableByForEach")
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 public class MultiLogger extends AbstractLogger {
 
-    private final Logger[] logger;
+    private static final AtomicInteger LOGGER_INDEX = new AtomicInteger(0);
+
+    private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
+    private final Map<String, Logger> logger;
 
     public MultiLogger(Logger... logger) {
-        this.logger = logger;
+        this.logger = new HashMap<>();
+        for (Logger l : logger)
+            put(l);
+    }
+
+    public void put(Logger logger) {
+        put("anonymous-logger-" + LOGGER_INDEX.getAndIncrement(), () -> logger);
+    }
+
+    public void put(String name, LoggerSupplier loggerSupplier) {
+        lock.writeLock().lock();
+        try {
+            remove(name); //remove first so logger is closed
+            this.logger.put(name, loggerSupplier.get());
+        } catch (Exception ex) {
+            logError("Failed to close Logger!", ex);
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    public void remove(String name) {
+        lock.writeLock().lock();
+        try {
+            Logger removed = this.logger.remove(name);
+            if (removed != null) removed.close();
+        } catch (Exception ex) {
+            logError("Failed to close Logger!", ex);
+        } finally {
+            lock.writeLock().unlock();
+        }
+    }
+
+    public void clear() {
+        lock.writeLock().lock();
+        try {
+            String[] loggerNames = this.logger.keySet().toArray(String[]::new);
+            for (String name : loggerNames)
+                remove(name);
+            this.logger.clear();
+        } finally {
+            lock.writeLock().unlock();
+        }
     }
 
     @Override
     public void logError(String message, Throwable throwable) {
-        for (int i = 0; i < logger.length; i++)
-            logger[i].logError(message, throwable);
+        lock.readLock().lock();
+        try {
+            for (Logger l : logger.values())
+                l.logError(message, throwable);
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     @Override
     public void logWarning(String message) {
-        for (int i = 0; i < logger.length; i++)
-            logger[i].logWarning(message);
+        lock.readLock().lock();
+        try {
+            for (Logger l : logger.values())
+                l.logWarning(message);
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     @Override
     public void logInfo(String message) {
-        for (int i = 0; i < logger.length; i++)
-            logger[i].logInfo(message);
+        lock.readLock().lock();
+        try {
+            for (Logger l : logger.values())
+                l.logInfo(message);
+        } finally {
+            lock.readLock().unlock();
+        }
     }
 
     @Override
     public void logDebug(String message) {
-        for (int i = 0; i < logger.length; i++)
-            logger[i].logDebug(message);
+        lock.readLock().lock();
+        try {
+            for (Logger l : logger.values())
+                l.logDebug(message);
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    @Override
+    public void close() throws Exception {
+        lock.readLock().lock();
+        try {
+            for (Logger l : logger.values())
+                l.close();
+        } finally {
+            lock.readLock().unlock();
+        }
+    }
+
+    @FunctionalInterface
+    public interface LoggerSupplier {
+
+        Logger get() throws Exception;
+
     }
 
 }

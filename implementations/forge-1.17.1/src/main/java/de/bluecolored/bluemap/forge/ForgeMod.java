@@ -76,7 +76,8 @@ public class ForgeMod implements ServerInterface {
     private final List<ForgePlayer> onlinePlayerList;
 
     public ForgeMod() {
-        Logger.global = new Log4jLogger(LogManager.getLogger(Plugin.PLUGIN_NAME));
+        Logger.global.clear();
+        Logger.global.put(new Log4jLogger(LogManager.getLogger(Plugin.PLUGIN_NAME)));
 
         this.onlinePlayerMap = new ConcurrentHashMap<>();
         this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());

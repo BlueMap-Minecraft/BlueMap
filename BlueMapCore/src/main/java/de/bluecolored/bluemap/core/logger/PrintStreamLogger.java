@@ -25,17 +25,20 @@
 package de.bluecolored.bluemap.core.logger;
 
 import java.io.PrintStream;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 
 public class PrintStreamLogger extends AbstractLogger {
 
-    private PrintStream out, err;
+    private final PrintStream out, err;
 
     boolean isDebug;
 
     public PrintStreamLogger(PrintStream out, PrintStream err) {
         this.out = out;
         this.err = err;
-        this.isDebug = true;
+        this.isDebug = false;
     }
 
     public PrintStreamLogger(PrintStream out, PrintStream err, boolean debug) {
@@ -54,23 +57,23 @@ public class PrintStreamLogger extends AbstractLogger {
 
     @Override
     public void logError(String message, Throwable throwable) {
-        err.println("[ERROR] " + message);
+        log(err, "ERROR", message);
         throwable.printStackTrace(err);
     }
 
     @Override
     public void logWarning(String message) {
-        out.println("[WARNING] " + message);
+        log(out, "WARNING", message);
     }
 
     @Override
     public void logInfo(String message) {
-        out.println("[INFO] " + message);
+        log(out, "INFO", message);
     }
 
     @Override
     public void logDebug(String message) {
-        if (isDebug) out.println("[DEBUG] " + message);
+        if (isDebug) log(out, "DEBUG", message);
     }
 
     @Override
@@ -81,6 +84,11 @@ public class PrintStreamLogger extends AbstractLogger {
     @Override
     public void noFloodDebug(String message) {
         if (isDebug) super.noFloodDebug(message);
+    }
+
+    private void log(PrintStream stream, String level, String message) {
+        ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
+        stream.printf("[%1$tT %2$s] %3$s%n", zdt, level, message);
     }
 
 }
