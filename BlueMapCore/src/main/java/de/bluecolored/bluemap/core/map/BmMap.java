@@ -195,7 +195,7 @@ public class BmMap {
     private void saveMapSettings() {
         try (
                 OutputStream out = storage.writeMeta(id, META_FILE_SETTINGS);
-                Writer writer = new OutputStreamWriter(out)
+                Writer writer = new OutputStreamWriter(out, StandardCharsets.UTF_8)
         ) {
             ResourcesGson.addAdapter(new GsonBuilder())
                     .registerTypeAdapter(BmMap.class, new MapSettingsSerializer())
@@ -209,7 +209,7 @@ public class BmMap {
     public synchronized void saveMarkerState() {
         try (
                 OutputStream out = storage.writeMeta(id, META_FILE_MARKERS);
-                Writer writer = new OutputStreamWriter(out)
+                Writer writer = new OutputStreamWriter(out, StandardCharsets.UTF_8)
         ) {
             MarkerGson.INSTANCE.toJson(this.markerSets, writer);
         } catch (Exception ex) {

@@ -143,7 +143,7 @@ public class WebFilesManager {
         }
     }
 
-    @SuppressWarnings("all")
+    @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal", "unused", "MismatchedQueryAndUpdateOfCollection"})
     private static class Settings {
 
         private String version = BlueMap.VERSION;
@@ -151,6 +151,7 @@ public class WebFilesManager {
         private boolean useCookies = true;
 
         private boolean enableFreeFlight = true;
+        private boolean defaultToFlatView = false;
 
         private String startLocation = null;
 
@@ -174,6 +175,7 @@ public class WebFilesManager {
         public void setFrom(WebappConfig config) {
             this.useCookies = config.isUseCookies();
             this.enableFreeFlight = config.isEnableFreeFlight();
+            this.defaultToFlatView = config.isDefaultToFlatView();
             this.startLocation = config.getStartLocation().orElse(null);
             this.resolutionDefault = config.getResolutionDefault();
 

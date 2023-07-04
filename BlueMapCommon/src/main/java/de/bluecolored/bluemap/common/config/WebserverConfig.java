@@ -38,12 +38,12 @@ import java.nio.file.Path;
 public class WebserverConfig {
 
     private boolean enabled = true;
-
     private Path webroot = Path.of("bluemap", "web");
 
     private String ip = "0.0.0.0";
-
     private int port = 8100;
+
+    private LogConfig log = new LogConfig();
 
     public boolean isEnabled() {
         return enabled;
@@ -69,6 +69,32 @@ public class WebserverConfig {
 
     public int getPort() {
         return port;
+    }
+
+    public LogConfig getLog() {
+        return log;
+    }
+
+    @DebugDump
+    @ConfigSerializable
+    public static class LogConfig {
+
+        private String file = null;
+        private boolean append = false;
+        private String format = "%1$s \"%3$s %4$s %5$s\" %6$s %7$s";
+
+        public String getFile() {
+            return file;
+        }
+
+        public boolean isAppend() {
+            return append;
+        }
+
+        public String getFormat() {
+            return format;
+        }
+
     }
 
 }

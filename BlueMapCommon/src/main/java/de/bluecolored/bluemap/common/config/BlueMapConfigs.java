@@ -65,7 +65,7 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
 
         this.coreConfig = loadCoreConfig(defaultDataFolder);
         this.webappConfig = loadWebappConfig(defaultWebroot);
-        this.webserverConfig = loadWebserverConfig(webappConfig.getWebroot());
+        this.webserverConfig = loadWebserverConfig(webappConfig.getWebroot(), coreConfig.getData());
         this.pluginConfig = usePluginConf ? loadPluginConfig() : new PluginConfig();
         this.storageConfigs = Collections.unmodifiableMap(loadStorageConfigs(webappConfig.getWebroot()));
         this.mapConfigs = Collections.unmodifiableMap(loadMapConfigs());
@@ -133,6 +133,8 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
                                 .setVariable("data", formatPath(defaultDataFolder))
                                 .setVariable("implementation", "bukkit")
                                 .setVariable("render-thread-count", Integer.toString(presetRenderThreadCount))
+                                .setVariable("logfile", formatPath(defaultDataFolder.resolve("logs").resolve("debug.log")))
+                                .setVariable("logfile-with-time", formatPath(defaultDataFolder.resolve("logs").resolve("debug_%1$tF_%1$tT.log")))
                                 .build(),
                         StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                 );
@@ -144,7 +146,7 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
         return configManager.loadConfig(configFileRaw, CoreConfig.class);
     }
 
-    private synchronized WebserverConfig loadWebserverConfig(Path defaultWebroot) throws ConfigurationException {
+    private synchronized WebserverConfig loadWebserverConfig(Path defaultWebroot, Path dataRoot) throws ConfigurationException {
         Path configFileRaw = Path.of("webserver");
         Path configFile = configManager.findConfigPath(configFileRaw);
         Path configFolder = configFile.getParent();
@@ -156,6 +158,8 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
                         configFolder.resolve("webserver.conf"),
                         configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/webserver.conf")
                                 .setVariable("webroot", formatPath(defaultWebroot))
+                                .setVariable("logfile", formatPath(dataRoot.resolve("logs").resolve("webserver.log")))
+                                .setVariable("logfile-with-time", formatPath(dataRoot.resolve("logs").resolve("webserver_%1$tF_%1$tT.log")))
                                 .build(),
                         StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                 );

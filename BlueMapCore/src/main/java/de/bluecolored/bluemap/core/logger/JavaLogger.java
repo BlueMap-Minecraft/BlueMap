@@ -24,71 +24,52 @@
  */
 package de.bluecolored.bluemap.core.logger;
 
-import java.io.PrintStream;
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
-public class PrintStreamLogger extends AbstractLogger {
+public class JavaLogger extends AbstractLogger {
 
-    private final PrintStream out, err;
+    private final Logger out;
 
-    boolean isDebug;
-
-    public PrintStreamLogger(PrintStream out, PrintStream err) {
+    public JavaLogger(Logger out) {
         this.out = out;
-        this.err = err;
-        this.isDebug = false;
-    }
-
-    public PrintStreamLogger(PrintStream out, PrintStream err, boolean debug) {
-        this.out = out;
-        this.err = err;
-        this.isDebug = debug;
-    }
-
-    public boolean isDebug() {
-        return isDebug;
-    }
-
-    public void setDebug(boolean debug) {
-        this.isDebug = debug;
     }
 
     @Override
     public void logError(String message, Throwable throwable) {
-        log(err, "ERROR", message);
-        throwable.printStackTrace(err);
+        out.log(Level.SEVERE, message, throwable);
     }
 
     @Override
     public void logWarning(String message) {
-        log(out, "WARNING", message);
+        out.log(Level.WARNING, message);
     }
 
     @Override
     public void logInfo(String message) {
-        log(out, "INFO", message);
+        out.log(Level.INFO, message);
     }
 
     @Override
     public void logDebug(String message) {
-        if (isDebug) log(out, "DEBUG", message);
-    }
-
-    @Override
-    public void noFloodDebug(String key, String message) {
-        if (isDebug) super.noFloodDebug(key, message);
+        if (out.isLoggable(Level.FINE)) out.log(Level.FINE, message);
     }
 
     @Override
     public void noFloodDebug(String message) {
-        if (isDebug) super.noFloodDebug(message);
+        if (out.isLoggable(Level.FINE)) super.noFloodDebug(message);
     }
 
-    private void log(PrintStream stream, String level, String message) {
-        ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
-        stream.printf("[%1$tT %2$s] %3$s%n", zdt, level, message);
+    @Override
+    public void noFloodDebug(String key, String message) {
+        if (out.isLoggable(Level.FINE)) super.noFloodDebug(key, message);
+    }
+
+    @Override
+    public void close() throws Exception {
+        for (Handler handler : out.getHandlers())
+            handler.close();
     }
 
 }

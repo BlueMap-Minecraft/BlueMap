@@ -44,6 +44,8 @@ public class CoreConfig {
 
     private boolean scanForModResources = true;
 
+    private LogConfig log = new LogConfig();
+
     public boolean isAcceptDownload() {
         return acceptDownload;
     }
@@ -67,6 +69,27 @@ public class CoreConfig {
 
     public boolean isScanForModResources() {
         return scanForModResources;
+    }
+
+    public LogConfig getLog() {
+        return log;
+    }
+
+    @DebugDump
+    @ConfigSerializable
+    public static class LogConfig {
+
+        private String file = null;
+        private boolean append = false;
+
+        public String getFile() {
+            return file;
+        }
+
+        public boolean isAppend() {
+            return append;
+        }
+
     }
 
 }

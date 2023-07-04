@@ -71,7 +71,8 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
     private final LoadingCache<World, ServerWorld> worlds;
 
     public BukkitPlugin() {
-        Logger.global = new JavaLogger(getLogger());
+        Logger.global.clear();
+        Logger.global.put(new JavaLogger(getLogger()));
 
         //try to get best matching minecraft-version
         MinecraftVersion version = MinecraftVersion.LATEST_SUPPORTED;
