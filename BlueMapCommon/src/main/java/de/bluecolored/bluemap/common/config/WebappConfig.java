@@ -45,6 +45,7 @@ public class WebappConfig {
     private boolean useCookies = true;
 
     private boolean enableFreeFlight = true;
+    private boolean defaultToFlatView = false;
 
     private String startLocation = null;
 
@@ -81,6 +82,10 @@ public class WebappConfig {
 
     public boolean isEnableFreeFlight() {
         return enableFreeFlight;
+    }
+
+    public boolean isDefaultToFlatView() {
+        return defaultToFlatView;
     }
 
     public Optional<String> getStartLocation() {

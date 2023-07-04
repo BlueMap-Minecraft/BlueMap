@@ -60,6 +60,7 @@ export class BlueMapApp {
          *      version: string,
          *      useCookies: boolean,
          *      enableFreeFlight: boolean,
+         *      defaultToFlatView: boolean,
          *      resolutionDefault: number,
          *      minZoomDistance: number,
          *      maxZoomDistance: number,
@@ -280,6 +281,10 @@ export class BlueMapApp {
 
         controls.controls = this.mapControls;
         this.appState.controls.state = "perspective";
+        if (this.settings.defaultToFlatView) {
+            this.setFlatView();
+        }
+
         this.updatePageAddress();
     }
 
