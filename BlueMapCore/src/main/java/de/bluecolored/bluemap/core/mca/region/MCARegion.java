@@ -87,7 +87,9 @@ public class MCARegion implements Region {
             raf.seek(offset + 4); // +4 skip chunk size
 
             byte compressionTypeByte = raf.readByte();
-            CompressionType compressionType = CompressionType.getFromID(compressionTypeByte);
+            CompressionType compressionType = compressionTypeByte == 3 ?
+                            CompressionType.NONE :
+                            CompressionType.getFromID(compressionTypeByte);
             if (compressionType == null) {
                 throw new IOException("Invalid compression type " + compressionTypeByte);
             }
