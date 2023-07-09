@@ -564,7 +564,7 @@ export class BlueMapApp {
         try {
             this.mapViewer.clearTileCache();
             if (this.mapViewer.map) {
-                await this.switchMap(this.mapViewer.map.data.id);
+                await this.switchMap(this.mapViewer.map.data.id, false);
             }
             this.saveUserSettings();
         } catch (e) {
