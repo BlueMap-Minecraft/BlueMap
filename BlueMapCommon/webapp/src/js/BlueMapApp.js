@@ -349,7 +349,7 @@ export class BlueMapApp {
         return new Promise((resolve, reject) => {
             let loader = new FileLoader();
             loader.setResponseType("json");
-            loader.load(map.data.dataUrl + "live/players?" + generateCacheHash(),
+            loader.load(map.data.dataUrl + "live/players.json?" + generateCacheHash(),
                 fileData => {
                     if (!fileData) reject(`Failed to parse '${this.fileUrl}'!`);
                     else resolve(fileData);
