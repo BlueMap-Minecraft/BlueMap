@@ -122,7 +122,7 @@ modrinth {
 	uploadFile.set(tasks.findByName("shadowJar"))
 	loaders.addAll("folia")
 	gameVersions.addAll(
-		"1.19.4"
+		"1.19.4", "1.20", "1.20.1"
 	)
 }
 
