@@ -79,7 +79,7 @@ export class PlayerMarkerManager extends MarkerManager {
     }
 
     clear() {
-        this.getPlayerMarkerSet(false).clear();
+        this.getPlayerMarkerSet(false)?.clear();
     }
 
 }
