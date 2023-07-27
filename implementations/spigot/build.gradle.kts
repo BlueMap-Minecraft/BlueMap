@@ -124,7 +124,7 @@ modrinth {
 	versionNumber.set("${project.version}-${project.name}")
 	changelog.set("Releasenotes and Changelog:  \nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}")
 	uploadFile.set(tasks.findByName("shadowJar"))
-	loaders.addAll("spigot")
+	loaders.addAll("spigot", "paper", "purpur")
 	gameVersions.addAll(
 		"1.13.2",
 		"1.14", "1.14.1", "1.14.2", "1.14.3", "1.14.4",
