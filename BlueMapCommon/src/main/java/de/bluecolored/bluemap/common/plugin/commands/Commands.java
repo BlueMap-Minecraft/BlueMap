@@ -855,7 +855,7 @@ public class Commands<S> {
                     TextColor.DARK_GRAY, helper.formatTime(map.getRenderState().getLatestRenderTime())));
 
             if (frozen)
-                lines.add(Text.of(TextColor.AQUA, TextFormat.ITALIC, "This map is frozen!"));
+                lines.add(Text.of(TextColor.AQUA, TextFormat.ITALIC, "\u00A0\u00A0\u00A0This map is frozen!"));
         }
 
         CommandSource source = commandSourceInterface.apply(context.getSource());
