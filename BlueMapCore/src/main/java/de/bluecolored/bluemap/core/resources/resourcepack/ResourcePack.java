@@ -374,7 +374,7 @@ public class ResourcePack {
                         if (!usedTextures.contains(resourcePath)) return null; // don't load unused textures
 
                         try (InputStream in = Files.newInputStream(file)) {
-                            return Texture.from(resourcePath, ImageIO.read(in));
+                            return Texture.from(resourcePath, ImageIO.read(in), Files.exists(file.resolveSibling(file.getFileName() + ".mcmeta")));
                         }
                     }, textures));
 
