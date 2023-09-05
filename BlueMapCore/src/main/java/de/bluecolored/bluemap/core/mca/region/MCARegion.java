@@ -27,13 +27,13 @@ package de.bluecolored.bluemap.core.mca.region;
 import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.MCAChunk;
+import de.bluecolored.bluemap.core.mca.MCAMath;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
+import de.bluecolored.bluemap.core.mca.data.ChunkData;
+import de.bluecolored.bluemap.core.storage.Compression;
 import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.EmptyChunk;
 import de.bluecolored.bluemap.core.world.Region;
-import net.querz.nbt.CompoundTag;
-import net.querz.nbt.Tag;
-import net.querz.nbt.mca.CompressionType;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -86,25 +86,23 @@ public class MCARegion implements Region {
 
             raf.seek(offset + 4); // +4 skip chunk size
 
-            byte compressionTypeByte = raf.readByte();
-            CompressionType compressionType = compressionTypeByte == 3 ?
-                            CompressionType.NONE :
-                            CompressionType.getFromID(compressionTypeByte);
-            if (compressionType == null) {
-                throw new IOException("Invalid compression type " + compressionTypeByte);
+            byte compressionByte = raf.readByte();
+            Compression compression;
+            switch (compressionByte) {
+                case 0:
+                case 3: compression = Compression.NONE; break;
+                case 1: compression = Compression.GZIP; break;
+                case 2: compression = Compression.DEFLATE; break;
+                default: throw new IOException("Invalid compression type " + compressionByte);
             }
 
-            DataInputStream dis = new DataInputStream(new BufferedInputStream(compressionType.decompress(new FileInputStream(raf.getFD()))));
-            Tag<?> tag = Tag.deserialize(dis, Tag.DEFAULT_MAX_DEPTH);
-            if (tag instanceof CompoundTag) {
-                MCAChunk chunk = MCAChunk.create(world, (CompoundTag) tag);
-                if (!chunk.isGenerated()) return EmptyChunk.INSTANCE;
-                return chunk;
-            } else {
-                throw new IOException("Invalid data tag: " + (tag == null ? "null" : tag.getClass().getName()));
-            }
+            DataInputStream dis = new DataInputStream(new BufferedInputStream(compression.decompress(new FileInputStream(raf.getFD()))));
+            ChunkData chunkData = MCAMath.BLUENBT.read(dis, ChunkData.class);
+            return MCAChunk.create(world, chunkData);
 
         } catch (RuntimeException e) {
+            Logger.global.logError("Failed to load Chunk!", e);
+
             throw new IOException(e);
         }
     }

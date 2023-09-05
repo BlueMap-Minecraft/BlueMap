@@ -61,16 +61,22 @@ dependencies {
     api ("commons-io:commons-io:2.5")
     api ("org.spongepowered:configurate-hocon:4.1.2")
     api ("org.spongepowered:configurate-gson:4.1.2")
-    api ("com.github.Querz:NBT:4.0")
+    //api ("com.github.Querz:NBT:4.0")
+    api ("com.github.BlueMap-Minecraft:BlueNBT:v1.2.0")
     api ("org.apache.commons:commons-dbcp2:2.9.0")
     api ("io.airlift:aircompressor:0.24")
 
     api ("de.bluecolored.bluemap.api:BlueMapAPI")
 
     compileOnly ("org.jetbrains:annotations:23.0.0")
+    compileOnly ("org.projectlombok:lombok:1.18.28")
+
+    annotationProcessor ("org.projectlombok:lombok:1.18.28")
 
     testImplementation ("org.junit.jupiter:junit-jupiter:5.8.2")
     testRuntimeOnly ("org.junit.jupiter:junit-jupiter-engine:5.8.2")
+    testCompileOnly ("org.projectlombok:lombok:1.18.28")
+    testAnnotationProcessor ("org.projectlombok:lombok:1.18.28")
 }
 
 spotless {

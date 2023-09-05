@@ -25,75 +25,70 @@
 package de.bluecolored.bluemap.core.mca;
 
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.mca.data.*;
 import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.LightData;
-import net.querz.nbt.*;
 
-import java.util.*;
-import java.util.Map.Entry;
-
-@SuppressWarnings("FieldMayBeFinal")
 public class ChunkAnvil118 extends MCAChunk {
-    private static final long[] EMPTY_LONG_ARRAY = new long[0];
-    private static final BlockState[] EMPTY_BLOCK_STATE_ARRAY = new BlockState[0];
-    private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
-    private boolean isGenerated;
-    private boolean hasLight;
+    private final boolean isGenerated;
+    private final boolean hasLight;
 
-    private long inhabitedTime;
+    private final long inhabitedTime;
 
-    private int sectionMin, sectionMax;
-    private Section[] sections;
+    private final int sectionMin, sectionMax;
+    private final Section[] sections;
 
-    private long[] oceanFloorHeights = EMPTY_LONG_ARRAY;
-    private long[] worldSurfaceHeights = EMPTY_LONG_ARRAY;
+    private final long[] oceanFloorHeights;
+    private final long[] worldSurfaceHeights;
 
-    @SuppressWarnings("unchecked")
-    public ChunkAnvil118(MCAWorld world, CompoundTag chunkTag) {
-        super(world, chunkTag);
+    public ChunkAnvil118(MCAWorld world, ChunkData chunkData) {
+        super(world, chunkData);
 
-        String status = chunkTag.getString("Status");
-        this.isGenerated = status.equals("full") || status.equals("minecraft:full");
-        this.hasLight = isGenerated;
+        String status = chunkData.getStatus();
+        boolean generated = status.equals("minecraft:full") || status.equals("full");
+        this.hasLight = generated;
+        if (!generated && getWorld().isIgnoreMissingLightData())
+            generated = !status.equals("empty") && !status.equals("minecraft:empty");
+        this.isGenerated = generated;
 
-        this.inhabitedTime = chunkTag.getLong("InhabitedTime");
+        this.inhabitedTime = chunkData.getInhabitedTime();
 
-        if (!isGenerated && getWorld().isIgnoreMissingLightData()) {
-            isGenerated = !status.equals("empty") && !status.equals("minecraft:empty");
-        }
+        HeightmapsData heightmapsData = chunkData.getHeightmaps();
+        this.worldSurfaceHeights = heightmapsData.getWorldSurface();
+        this.oceanFloorHeights = heightmapsData.getOceanFloor();
 
-        if (chunkTag.containsKey("Heightmaps")) {
-            CompoundTag heightmapsTag = chunkTag.getCompoundTag("Heightmaps");
-            this.worldSurfaceHeights = heightmapsTag.getLongArray("WORLD_SURFACE");
-            this.oceanFloorHeights = heightmapsTag.getLongArray("OCEAN_FLOOR");
-        }
+        SectionData[] sectionDatas = chunkData.getSections();
+        if (sectionDatas != null && sectionDatas.length > 0) {
+            int min = Integer.MAX_VALUE;
+            int max = Integer.MIN_VALUE;
 
-        if (chunkTag.containsKey("sections")) {
-            this.sectionMin = Integer.MAX_VALUE;
-            this.sectionMax = Integer.MIN_VALUE;
+            // find section min/max y
+            for (SectionData sectionData : sectionDatas) {
+                int y = sectionData.getY();
+                if (min > y) min = y;
+                if (max < y) max = y;
+            }
 
-            ListTag<CompoundTag> sectionsTag = (ListTag<CompoundTag>) chunkTag.getListTag("sections");
-            ArrayList<Section> sectionList = new ArrayList<>(sectionsTag.size());
-
-            for (CompoundTag sectionTag : sectionsTag) {
-
-                Section section = new Section(sectionTag);
+            // load sections into ordered array
+            this.sections = new Section[1 + max - min];
+            for (SectionData sectionData : sectionDatas) {
+                Section section = new Section(sectionData);
                 int y = section.getSectionY();
 
-                if (sectionMin > y) sectionMin = y;
-                if (sectionMax < y) sectionMax = y;
+                if (min > y) min = y;
+                if (max < y) max = y;
 
-                sectionList.add(section);
+                sections[section.sectionY - min] = section;
             }
 
-            sections = new Section[1 + sectionMax - sectionMin];
-            for (Section section : sectionList) {
-                sections[section.sectionY - sectionMin] = section;
-            }
+            this.sectionMin = min;
+            this.sectionMax = max;
         } else {
-            sections = new Section[0];
+            this.sections = new Section[0];
+            this.sectionMin = 0;
+            this.sectionMax = 0;
         }
     }
 
@@ -172,75 +167,31 @@ public class ChunkAnvil118 extends MCAChunk {
     }
 
     private static class Section {
-        private int sectionY;
-        private byte[] blockLight;
-        private byte[] skyLight;
-        private long[] blocks = EMPTY_LONG_ARRAY;
-        private long[] biomes = EMPTY_LONG_ARRAY;
-        private BlockState[] blockPalette = EMPTY_BLOCK_STATE_ARRAY;
-        private String[] biomePalette = EMPTY_STRING_ARRAY;
+        private final int sectionY;
+        private final byte[] blockLight;
+        private final byte[] skyLight;
+        private final long[] blocks;
+        private final long[] biomes;
+        private final BlockState[] blockPalette;
+        private final String[] biomePalette;
 
-        private int bitsPerBlock, bitsPerBiome;
+        private final int bitsPerBlock, bitsPerBiome;
 
-        @SuppressWarnings("unchecked")
-        public Section(CompoundTag sectionData) {
-            this.sectionY = sectionData.get("Y", NumberTag.class).asInt();
-            this.blockLight = sectionData.getByteArray("BlockLight");
-            this.skyLight = sectionData.getByteArray("SkyLight");
+        public Section(SectionData sectionData) {
+            this.sectionY = sectionData.getY();
+            this.blockLight = sectionData.getBlockLight();
+            this.skyLight = sectionData.getSkyLight();
 
-            // blocks
-            CompoundTag blockStatesTag = sectionData.getCompoundTag("block_states");
-            if (blockStatesTag != null) {
-                // block data
-                this.blocks = blockStatesTag.getLongArray("data");
+            BlockStatesData blockStates = sectionData.getBlockStates();
+            this.blocks = blockStates.getData();
+            this.blockPalette = blockStates.getPalette();
 
-                // block palette
-                ListTag<CompoundTag> paletteTag = (ListTag<CompoundTag>) blockStatesTag.getListTag("palette");
-                if (paletteTag != null) {
-                    this.blockPalette = new BlockState[paletteTag.size()];
-                    for (int i = 0; i < this.blockPalette.length; i++) {
-                        blockPalette[i] = readBlockStatePaletteEntry(paletteTag.get(i));
-                    }
-                }
-            }
-
-            // biomes
-            CompoundTag biomesTag = sectionData.getCompoundTag("biomes");
-            if (biomesTag != null) {
-                // biomes data
-                this.biomes = biomesTag.getLongArray("data");
-
-                // biomes palette
-                ListTag<StringTag> paletteTag = (ListTag<StringTag>) biomesTag.getListTag("palette");
-                if (paletteTag != null) {
-                    this.biomePalette = new String[paletteTag.size()];
-                    for (int i = 0; i < this.biomePalette.length; i++) {
-                        biomePalette[i] = paletteTag.get(i).getValue();
-                    }
-                }
-            }
-
-            if (blocks.length < 256 && blocks.length > 0) blocks = Arrays.copyOf(blocks, 256);
-            if (blockLight.length < 2048 && blockLight.length > 0) blockLight = Arrays.copyOf(blockLight, 2048);
-            if (skyLight.length < 2048 && skyLight.length > 0) skyLight = Arrays.copyOf(skyLight, 2048);
+            BiomesData biomesData = sectionData.getBiomes();
+            this.biomes = biomesData.getData();
+            this.biomePalette = biomesData.getPalette();
 
             this.bitsPerBlock = this.blocks.length >> 6; // available longs * 64 (bits per long) / 4096 (blocks per section) (floored result)
             this.bitsPerBiome = MCAMath.ceilLog2(this.biomePalette.length);
-        }
-
-        private BlockState readBlockStatePaletteEntry(CompoundTag paletteEntry) {
-            String id = paletteEntry.getString("Name");
-            if (BlockState.AIR.getFormatted().equals(id)) return BlockState.AIR; //shortcut to save time and memory
-
-            Map<String, String> properties = new LinkedHashMap<>();
-            if (paletteEntry.containsKey("Properties")) {
-                CompoundTag propertiesTag = paletteEntry.getCompoundTag("Properties");
-                for (Entry<String, Tag<?>> property : propertiesTag) {
-                    properties.put(property.getKey().toLowerCase(), ((StringTag) property.getValue()).getValue().toLowerCase());
-                }
-            }
-
-            return new BlockState(id, properties);
         }
 
         public int getSectionY() {
@@ -251,10 +202,7 @@ public class ChunkAnvil118 extends MCAChunk {
             if (blockPalette.length == 1) return blockPalette[0];
             if (blocks.length == 0) return BlockState.AIR;
 
-            x &= 0xF; y &= 0xF; z &= 0xF; // Math.floorMod(pos.getX(), 16)
-
-            int blockIndex = y * 256 + z * 16 + x;
-
+            int blockIndex = (y & 0xF) << 8 | (z & 0xF) << 4 | x & 0xF;
             long value = MCAMath.getValueFromLongArray(blocks, blockIndex, bitsPerBlock);
             if (value >= blockPalette.length) {
                 Logger.global.noFloodWarning("palettewarning", "Got block-palette value " + value + " but palette has size of " + blockPalette.length + "! (Future occasions of this error will not be logged)");
@@ -267,9 +215,7 @@ public class ChunkAnvil118 extends MCAChunk {
         public LightData getLightData(int x, int y, int z, LightData target) {
             if (blockLight.length == 0 && skyLight.length == 0) return target.set(0, 0);
 
-            x &= 0xF; y &= 0xF; z &= 0xF; // Math.floorMod(pos.getX(), 16)
-
-            int blockByteIndex = y * 256 + z * 16 + x;
+            int blockByteIndex = (y & 0xF) << 8 | (z & 0xF) << 4 | x & 0xF;
             int blockHalfByteIndex = blockByteIndex >> 1; // blockByteIndex / 2
             boolean largeHalf = (blockByteIndex & 0x1) != 0; // (blockByteIndex % 2) == 0
 
@@ -283,11 +229,7 @@ public class ChunkAnvil118 extends MCAChunk {
             if (biomePalette.length == 0) return Biome.DEFAULT.getValue();
             if (biomePalette.length == 1 || biomes.length == 0) return biomePalette[0];
 
-            x = (x & 0xF) / 4; // Math.floorMod(pos.getX(), 16) / 4
-            z = (z & 0xF) / 4;
-            y = (y & 0xF) / 4;
-            int biomeIndex = y * 16 + z * 4 + x;
-
+            int biomeIndex = (y & 0b1100) << 2 | z & 0b1100 | (x & 0b1100) >> 2;
             long value = MCAMath.getValueFromLongArray(biomes, biomeIndex, bitsPerBiome);
             if (value >= biomePalette.length) {
                 Logger.global.noFloodWarning("biomepalettewarning", "Got biome-palette value " + value + " but palette has size of " + biomePalette.length + "! (Future occasions of this error will not be logged)");

@@ -27,13 +27,13 @@ package de.bluecolored.bluemap.core.mca.region;
 import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.mca.MCAChunk;
+import de.bluecolored.bluemap.core.mca.MCAMath;
 import de.bluecolored.bluemap.core.mca.MCAWorld;
+import de.bluecolored.bluemap.core.mca.data.ChunkData;
 import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.EmptyChunk;
 import de.bluecolored.bluemap.core.world.Region;
 import io.airlift.compress.zstd.ZstdInputStream;
-import net.querz.nbt.CompoundTag;
-import net.querz.nbt.Tag;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -120,14 +120,8 @@ public class LinearRegion implements Region {
                 dis.skipBytes(((1024 - pos - 1) << 3) + 4); // Skip current chunk 0 and unneeded other chunks zero/size
                 dis.skipBytes(skip); // Skip unneeded chunks data
 
-                Tag<?> tag = Tag.deserialize(dis, Tag.DEFAULT_MAX_DEPTH);
-                if (tag instanceof CompoundTag) {
-                    MCAChunk chunk = MCAChunk.create(world, (CompoundTag) tag);
-                    if (!chunk.isGenerated()) return EmptyChunk.INSTANCE;
-                    return chunk;
-                } else {
-                    throw new IOException("Invalid data tag: " + (tag == null ? "null" : tag.getClass().getName()));
-                }
+                ChunkData chunkData = MCAMath.BLUENBT.read(dis, ChunkData.class);
+                return MCAChunk.create(world, chunkData);
             }
         } catch (RuntimeException e) {
             throw new IOException(e);

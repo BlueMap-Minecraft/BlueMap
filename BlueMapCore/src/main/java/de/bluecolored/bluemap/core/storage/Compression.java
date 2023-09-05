@@ -31,16 +31,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.NoSuchElementException;
-import java.util.zip.DeflaterInputStream;
-import java.util.zip.DeflaterOutputStream;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
+import java.util.zip.*;
 
 public enum Compression {
 
     NONE("none", "", out -> out, in -> in),
     GZIP("gzip", ".gz", GZIPOutputStream::new, GZIPInputStream::new),
-    DEFLATE("deflate", ".deflate", DeflaterOutputStream::new, DeflaterInputStream::new),
+    DEFLATE("deflate", ".deflate", DeflaterOutputStream::new, InflaterInputStream::new),
     ZSTD("zstd", ".zst", ZstdOutputStream::new, ZstdInputStream::new);
 
     private final String typeId;

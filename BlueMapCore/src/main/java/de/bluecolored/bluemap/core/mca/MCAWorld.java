@@ -31,15 +31,12 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.mca.data.LevelData;
 import de.bluecolored.bluemap.core.mca.region.RegionType;
 import de.bluecolored.bluemap.core.util.Vector2iCache;
 import de.bluecolored.bluemap.core.world.*;
-import net.querz.nbt.CompoundTag;
-import net.querz.nbt.NBTUtil;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -47,6 +44,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.zip.GZIPInputStream;
 
 @DebugDump
 public class MCAWorld implements World {
@@ -84,20 +82,18 @@ public class MCAWorld implements World {
                 .expireAfterWrite(1, TimeUnit.MINUTES)
                 .build(this::loadChunk);
 
-        try {
-            Path levelFile = resolveLevelFile(worldFolder);
-            CompoundTag level = (CompoundTag) NBTUtil.readTag(levelFile.toFile());
-            CompoundTag levelData = level.getCompoundTag("Data");
-
-            this.name = levelData.getString("LevelName");
-
+        Path levelFile = resolveLevelFile(worldFolder);
+        try (InputStream in = new GZIPInputStream(new BufferedInputStream(Files.newInputStream(levelFile)))) {
+            LevelData level = MCAMath.BLUENBT.read(in, LevelData.class);
+            LevelData.Data levelData = level.getData();
+            this.name = levelData.getLevelName();
             this.spawnPoint = new Vector3i(
-                    levelData.getInt("SpawnX"),
-                    levelData.getInt("SpawnY"),
-                    levelData.getInt("SpawnZ")
+                    levelData.getSpawnX(),
+                    levelData.getSpawnY(),
+                    levelData.getSpawnZ()
             );
-        } catch (ClassCastException | NullPointerException ex) {
-            throw new IOException("Invalid level.dat format!", ex);
+        } catch (IOException ex) {
+            throw new IOException("Failed to read level.dat!", ex);
         }
     }
 

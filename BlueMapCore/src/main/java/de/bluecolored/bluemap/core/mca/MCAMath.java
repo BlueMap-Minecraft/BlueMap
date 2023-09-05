@@ -24,7 +24,17 @@
  */
 package de.bluecolored.bluemap.core.mca;
 
+import com.google.gson.reflect.TypeToken;
+import de.bluecolored.bluemap.core.mca.deserializer.BlockStateDeserializer;
+import de.bluecolored.bluemap.core.world.BlockState;
+import de.bluecolored.bluenbt.BlueNBT;
+
 public class MCAMath {
+
+    public static final BlueNBT BLUENBT = new BlueNBT();
+    static {
+        BLUENBT.register(TypeToken.get(BlockState.class), new BlockStateDeserializer());
+    }
 
     /**
      * Having a long array where each long contains as many values as fit in it without overflowing, returning the "valueIndex"-th value when each value has "bitsPerValue" bits.
@@ -34,6 +44,7 @@ public class MCAMath {
         int longIndex = valueIndex / valuesPerLong;
         int bitIndex = (valueIndex % valuesPerLong) * bitsPerValue;
 
+        if (longIndex >= data.length) return 0;
         long value = data[longIndex] >>> bitIndex;
 
         return value & (0xFFFFFFFFFFFFFFFFL >>> -bitsPerValue);
@@ -63,12 +74,8 @@ public class MCAMath {
      * The value is treated as an unsigned byte.
      */
     public static int getByteHalf(int value, boolean largeHalf) {
-        value = value & 0xFF;
-        if (largeHalf) {
-            value = value >> 4;
-        }
-        value = value & 0xF;
-        return value;
+        if (largeHalf) return value >> 4 & 0xF;
+        return value & 0xF;
     }
 
     public static int ceilLog2(int n) {

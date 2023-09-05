@@ -24,20 +24,11 @@
  */
 package de.bluecolored.bluemap.core.mca;
 
-import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.world.Biome;
-import de.bluecolored.bluemap.core.world.BlockState;
-import de.bluecolored.bluemap.core.world.LightData;
-import net.querz.nbt.*;
-
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-
 @SuppressWarnings("FieldMayBeFinal")
-public class ChunkAnvil115 extends MCAChunk {
+public class ChunkAnvil115 /* extends MCAChunk */ {
     private static final long[] EMPTY_LONG_ARRAY = new long[0];
+
+    /*
 
     private boolean isGenerated;
     private boolean hasLight;
@@ -260,5 +251,7 @@ public class ChunkAnvil115 extends MCAChunk {
             );
         }
     }
+
+    */
 
 }

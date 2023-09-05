@@ -24,10 +24,10 @@
  */
 package de.bluecolored.bluemap.core.mca;
 
+import de.bluecolored.bluemap.core.mca.data.ChunkData;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.LightData;
-import net.querz.nbt.CompoundTag;
 
 import java.io.IOException;
 
@@ -46,9 +46,9 @@ public abstract class MCAChunk implements Chunk {
         this.dataVersion = -1;
     }
 
-    protected MCAChunk(MCAWorld world, CompoundTag chunkTag) {
+    protected MCAChunk(MCAWorld world, ChunkData chunkData) {
         this.world = world;
-        dataVersion = chunkTag.getInt("DataVersion");
+        dataVersion = chunkData.getDataVersion();
     }
 
     @Override
@@ -90,13 +90,16 @@ public abstract class MCAChunk implements Chunk {
         return world;
     }
 
-    public static MCAChunk create(MCAWorld world, CompoundTag chunkTag) throws IOException {
-        int version = chunkTag.getInt("DataVersion");
+    public static MCAChunk create(MCAWorld world, ChunkData chunkData) throws IOException {
+        int version = chunkData.getDataVersion();
 
-        if (version < 2200) return new ChunkAnvil113(world, chunkTag);
-        if (version < 2500) return new ChunkAnvil115(world, chunkTag);
-        if (version < 2844) return new ChunkAnvil116(world, chunkTag);
-        return new ChunkAnvil118(world, chunkTag);
+        /*
+        if (version < 2200) return new ChunkAnvil113(world, chunkData);
+        if (version < 2500) return new ChunkAnvil115(world, chunkData);
+        if (version < 2844) return new ChunkAnvil116(world, chunkData);
+        */
+
+        return new ChunkAnvil118(world, chunkData);
     }
 
     @Override
