@@ -120,7 +120,26 @@ public class HttpConnection implements SelectionConsumer {
 
     private void handleIOException(Channel channel, IOException e) {
         request.clear();
-        response = null;
+
+        if (response != null) {
+            try {
+                response.close();
+            } catch (IOException e2) {
+                Logger.global.logWarning("Failed to close response: " + e2);
+            }
+            response = null;
+        }
+
+        if (futureResponse != null) {
+            futureResponse.thenAccept(response -> {
+                try {
+                    response.close();
+                } catch (IOException e2) {
+                    Logger.global.logWarning("Failed to close response: " + e2);
+                }
+            });
+            futureResponse = null;
+        }
 
         Logger.global.logDebug("Failed to process selection: " + e);
         try {
