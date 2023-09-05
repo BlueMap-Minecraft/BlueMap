@@ -31,15 +31,17 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.tree.CommandNode;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.commands.Commands;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.commons.lang3.StringUtils;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.RemoteConsoleCommandSender;
 import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.server.TabCompleteEvent;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -118,7 +120,7 @@ public class BukkitCommands implements Listener {
         }
 
         @Override
-        public boolean execute(CommandSender sender, String commandLabel, String[] args) {
+        public boolean execute(@NotNull CommandSender sender, @NotNull String commandLabel, String[] args) {
             String command = commandLabel;
             if (args.length > 0) {
                 command += " " + StringUtils.join(args, ' ');
@@ -127,10 +129,10 @@ public class BukkitCommands implements Listener {
             try {
                 return dispatcher.execute(command, sender) > 0;
             } catch (CommandSyntaxException ex) {
-                sender.sendMessage(ChatColor.RED + ex.getRawMessage().getString());
+                sender.sendMessage(Component.text(ex.getRawMessage().getString()).color(NamedTextColor.RED));
 
                 String context = ex.getContext();
-                if (context != null) sender.sendMessage(ChatColor.GRAY + context);
+                if (context != null) sender.sendMessage(Component.text(context).color(NamedTextColor.GRAY));
 
                 return false;
             }

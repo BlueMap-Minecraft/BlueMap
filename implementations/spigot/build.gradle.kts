@@ -5,7 +5,6 @@ plugins {
 	id ("com.github.node-gradle.node") version "3.0.1"
 	id ("com.github.johnrengelman.shadow") version "7.1.2"
 	id ("com.modrinth.minotaur") version "2.+"
-	id ("io.papermc.hangar-publish-plugin") version "0.0.4"
 }
 
 group = "de.bluecolored.bluemap.bukkit"
@@ -137,35 +136,6 @@ modrinth {
 	)
 }
 
-hangarPublish {
-	publications.register("plugin") {
-		version.set(project.version as String)
-		namespace("Blue", "BlueMap")
-		channel.set("Release")
-		changelog.set("Releasenotes and Changelog:  \nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}")
-
-		apiKey.set(System.getenv("HANGAR_TOKEN"))
-
-		// register platforms
-		platforms {
-			register(io.papermc.hangarpublishplugin.model.Platforms.PAPER) {
-				jar.set(tasks.shadowJar.flatMap { it.archiveFile })
-				platformVersions.set(listOf(
-					"1.13.2",
-					"1.14", "1.14.1", "1.14.2", "1.14.3", "1.14.4",
-					"1.15", "1.15.1", "1.15.2",
-					"1.16", "1.16.1", "1.16.2", "1.16.3", "1.16.4", "1.16.5",
-					"1.17", "1.17.1",
-					"1.18", "1.18.1", "1.18.2",
-					"1.19", "1.19.1", "1.19.2", "1.19.3", "1.19.4",
-					"1.20", "1.20.1"
-				))
-			}
-		}
-	}
-}
-
 tasks.register("publish") {
 	dependsOn("modrinth")
-	dependsOn("publishPluginPublicationToHangar")
 }

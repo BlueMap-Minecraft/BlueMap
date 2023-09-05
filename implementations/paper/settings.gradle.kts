@@ -1,3 +1,3 @@
-rootProject.name = "folia"
+rootProject.name = "paper"
 
 includeBuild("../../BlueMapCommon")

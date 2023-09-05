@@ -16,7 +16,7 @@ includeBuild("implementations/forge-1.19.4")
 includeBuild("implementations/forge-1.20")
 
 includeBuild("implementations/spigot")
-includeBuild("implementations/folia")
+includeBuild("implementations/paper")
 
 includeBuild("implementations/sponge-8.0.0")
 includeBuild("implementations/sponge-9.0.0")
