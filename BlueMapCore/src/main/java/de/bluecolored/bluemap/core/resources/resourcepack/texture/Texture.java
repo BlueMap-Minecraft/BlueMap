@@ -99,8 +99,12 @@ public class Texture {
     }
 
     public static Texture from(ResourcePath<Texture> resourcePath, BufferedImage image) throws IOException {
+        return from(resourcePath, image, true);
+    }
+
+    public static Texture from(ResourcePath<Texture> resourcePath, BufferedImage image, boolean animated) throws IOException {
         //crop off animation frames
-        if (image.getHeight() > image.getWidth()){
+        if (animated && image.getHeight() > image.getWidth()){
             image = image.getSubimage(0, 0, image.getWidth(), image.getWidth());
         }
 

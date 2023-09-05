@@ -5,6 +5,7 @@ plugins {
 	id ("com.github.node-gradle.node") version "3.0.1"
 	id ("com.github.johnrengelman.shadow") version "7.1.2"
 	id ("com.modrinth.minotaur") version "2.+"
+	id ("io.papermc.hangar-publish-plugin") version "0.1.0"
 }
 
 group = "de.bluecolored.bluemap.bukkit"
@@ -39,7 +40,7 @@ dependencies {
 		exclude( group = "com.google.code.gson", module = "gson" )
 	}
 
-	shadow ("dev.folia:folia-api:1.19.4-R0.1-SNAPSHOT")
+	shadow ("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT")
 	implementation ("org.bstats:bstats-bukkit:2.2.1")
 
 	testImplementation ("org.junit.jupiter:junit-jupiter:5.8.2")
@@ -118,12 +119,33 @@ modrinth {
 	token.set(System.getenv("MODRINTH_TOKEN"))
 	projectId.set("swbUV1cr")
 	versionNumber.set("${project.version}-${project.name}")
-	changelog.set("Releasenotes and Changelog:\nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}")
+	changelog.set("Releasenotes and Changelog:  \nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}")
 	uploadFile.set(tasks.findByName("shadowJar"))
-	loaders.addAll("folia")
+	loaders.addAll("paper","purpur","folia")
 	gameVersions.addAll(
-		"1.19.4"
+		"1.20.1"
 	)
+}
+
+hangarPublish {
+	publications.register("plugin") {
+		version.set(project.version as String)
+		id.set("BlueMap")
+		channel.set("Release")
+		changelog.set("Releasenotes and Changelog:  \nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}")
+
+		apiKey.set(System.getenv("HANGAR_TOKEN"))
+
+		// register platforms
+		platforms {
+			register(io.papermc.hangarpublishplugin.model.Platforms.PAPER) {
+				jar.set(tasks.shadowJar.flatMap { it.archiveFile })
+				platformVersions.set(listOf(
+					"1.20.1"
+				))
+			}
+		}
+	}
 }
 
 tasks.register("publish") {

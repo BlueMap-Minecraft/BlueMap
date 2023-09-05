@@ -24,14 +24,14 @@
  */
 package de.bluecolored.bluemap.bukkit;
 
+import de.bluecolored.bluemap.core.logger.AbstractLogger;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import de.bluecolored.bluemap.core.logger.AbstractLogger;
-
 public class JavaLogger extends AbstractLogger {
 
-    private Logger out;
+    private final Logger out;
 
     public JavaLogger(Logger out) {
         this.out = out;

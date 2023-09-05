@@ -24,12 +24,13 @@
  */
 package de.bluecolored.bluemap.bukkit;
 
-import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.plugin.text.Text;
+import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
+import io.papermc.paper.event.player.AsyncChatEvent;
+import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 
@@ -63,8 +64,8 @@ public class EventForwarder implements Listener {
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-    public synchronized void onPlayerChat(AsyncPlayerChatEvent evt) {
-        String message = String.format(evt.getFormat(), evt.getPlayer().getDisplayName(), evt.getMessage());
+    public synchronized void onPlayerChat(AsyncChatEvent evt) {
+        String message = String.format(PlainTextComponentSerializer.plainText().serialize(evt.message()));
         for (ServerEventListener listener : listeners) listener.onChatMessage(Text.of(message));
     }
 

@@ -40,7 +40,7 @@ public enum Compression {
 
     NONE("none", "", out -> out, in -> in),
     GZIP("gzip", ".gz", GZIPOutputStream::new, GZIPInputStream::new),
-    ZLIB("zlib", ".zlib", DeflaterOutputStream::new, DeflaterInputStream::new),
+    DEFLATE("deflate", ".deflate", DeflaterOutputStream::new, DeflaterInputStream::new),
     ZSTD("zstd", ".zst", ZstdOutputStream::new, ZstdInputStream::new);
 
     private final String typeId;

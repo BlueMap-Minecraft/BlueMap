@@ -28,7 +28,6 @@ import de.bluecolored.bluemap.common.serverinterface.Dimension;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import org.bukkit.World;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -85,7 +84,14 @@ public class BukkitWorld implements ServerWorld {
     }
 
     @Override
-    public boolean persistWorldChanges() throws IOException {
+    public boolean persistWorldChanges() {
+        /* Not supported by folia
+        World world = delegate.get();
+        if (world != null) {
+            world.save();
+            return true;
+        }
+        */
         return false;
     }
 

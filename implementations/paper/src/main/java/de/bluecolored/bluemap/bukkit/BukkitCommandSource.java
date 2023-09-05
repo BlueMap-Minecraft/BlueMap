@@ -34,7 +34,6 @@ import org.bukkit.Location;
 import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
-import org.bukkit.entity.Player;
 
 import java.io.IOException;
 import java.util.Optional;
@@ -51,12 +50,7 @@ public class BukkitCommandSource implements CommandSource {
 
     @Override
     public void sendMessage(Text text) {
-        if (delegate instanceof Player player) {
-            player.sendMessage(GsonComponentSerializer.gson().deserialize(text.toJSONString()));
-            return;
-        }
-
-        delegate.sendMessage(text.toPlainString());
+        delegate.sendMessage(GsonComponentSerializer.gson().deserialize(text.toJSONString()));
     }
 
     @Override
