@@ -28,10 +28,12 @@ import de.bluecolored.bluemap.core.logger.Logger;
 
 import java.io.Closeable;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.channels.*;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Objects;
 
 public abstract class Server extends Thread implements Closeable, Runnable {
 
@@ -52,7 +54,20 @@ public abstract class Server extends Thread implements Closeable, Runnable {
         server.bind(address);
         this.server.add(server);
 
-        Logger.global.logInfo("WebServer bound to: " + server.getLocalAddress());
+        if (checkIfBoundToAllInterfaces(address)) {
+            Logger.global.logInfo("WebServer bound to all network interfaces on port " + ((InetSocketAddress) address).getPort());
+        } else {
+            Logger.global.logInfo("WebServer bound to: " + server.getLocalAddress());
+        }
+    }
+
+    private boolean checkIfBoundToAllInterfaces(SocketAddress address) {
+        if (address instanceof InetSocketAddress) {
+            InetSocketAddress inetAddress = (InetSocketAddress) address;
+            return Objects.equals(inetAddress.getAddress(), new InetSocketAddress(0).getAddress());
+        }
+
+        return false;
     }
 
     @Override
