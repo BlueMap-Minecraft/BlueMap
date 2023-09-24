@@ -122,8 +122,9 @@ void main() {
 	color.rgb *= mix(ambientLight, 1.0, light / 15.0);
 
 	if (!hasVoid) {
+		vec3 adjustedSkyColor = vec3(skyColor * max(sunlightStrength * sunlightStrength, ambientLight)); //calculation from SkyFragmentShader.js
 		//where there's transparency, there is void that needs to be coloured
-		color.rgb = mix(skyColor, color.rgb, color.a);
+		color.rgb = mix(adjustedSkyColor, color.rgb, color.a);
 	}
 	color.a = 1.0; // don't display transparency
 
