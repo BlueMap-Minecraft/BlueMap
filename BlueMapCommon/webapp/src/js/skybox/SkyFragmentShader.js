@@ -26,6 +26,7 @@ export const SKY_FRAGMENT_SHADER = `
 uniform float sunlightStrength;
 uniform float ambientLight;
 uniform vec3 skyColor;
+uniform bool hasVoid;
 
 varying vec3 vPosition;
 
@@ -34,8 +35,10 @@ void main() {
 	float horizonHeight = 0.0;
 	
 	vec4 color = vec4(skyColor * max(sunlightStrength * sunlightStrength, ambientLight), 1.0);
-	float voidMultiplier = (clamp(vPosition.y - horizonHeight, -horizonWidth, horizonWidth) + horizonWidth) / (horizonWidth * 2.0);
-	color.rgb *= voidMultiplier;
+	if (hasVoid) {
+		float voidMultiplier = (clamp(vPosition.y - horizonHeight, -horizonWidth, horizonWidth) + horizonWidth) / (horizonWidth * 2.0);
+		color.rgb *= voidMultiplier;
+	}
 
 	gl_FragColor = color;
 }
