@@ -175,7 +175,7 @@ modrinth {
 	versionNumber = "${project.version}-${project.name}"
 	changelog = "Releasenotes and Changelog:\nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}"
 	uploadFile = shadowJar
-	gameVersions = ["1.20", "1.20.1"]
+	gameVersions = ["1.20", "1.20.1", "1.20.2"]
 }
 
 curseforge {
@@ -193,6 +193,7 @@ curseforge {
 
 		addGameVersion "1.20"
 		addGameVersion "1.20.1"
+		addGameVersion "1.20.2"
 
 		mainArtifact shadowJar
 	}

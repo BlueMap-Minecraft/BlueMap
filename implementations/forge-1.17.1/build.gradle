@@ -83,7 +83,7 @@ dependencies {
 
 spotless {
 	java {
-		target ("src/* /java/**/*.java")
+		target ("src/*/java/**/*.java")
 
 		licenseHeaderFile("../../HEADER")
 		indentWithSpaces()
