@@ -22,26 +22,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.forge;
+package de.bluecolored.bluemap.fabric;
 
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
-import net.minecraftforge.common.MinecraftForge;
-import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
-import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
+import de.bluecolored.bluemap.fabric.events.PlayerJoinCallback;
+import de.bluecolored.bluemap.fabric.events.PlayerLeaveCallback;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.network.ServerPlayerEntity;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
 
-public class ForgeEventForwarder  {
+public class FabricEventForwarder {
 
-    private final Collection<ServerEventListener> eventListeners;
+    private FabricMod mod;
+    private Collection<ServerEventListener> eventListeners;
 
-    public ForgeEventForwarder() {
+    public FabricEventForwarder(FabricMod mod) {
+        this.mod = mod;
         this.eventListeners = new ArrayList<>(1);
 
-        MinecraftForge.EVENT_BUS.register(this);
+        PlayerJoinCallback.EVENT.register(this::onPlayerJoin);
+        PlayerLeaveCallback.EVENT.register(this::onPlayerLeave);
     }
 
     public synchronized void addEventListener(ServerEventListener listener) {
@@ -52,15 +55,17 @@ public class ForgeEventForwarder  {
         this.eventListeners.clear();
     }
 
-    @SubscribeEvent
-    public synchronized void onPlayerJoin(PlayerLoggedInEvent evt) {
-        UUID uuid = evt.getPlayer().getUniqueID();
+    public synchronized void onPlayerJoin(MinecraftServer server, ServerPlayerEntity player) {
+        if (this.mod.getServer() != server) return;
+
+        UUID uuid = player.getUuid();
         for (ServerEventListener listener : eventListeners) listener.onPlayerJoin(uuid);
     }
 
-    @SubscribeEvent
-    public synchronized void onPlayerLeave(PlayerLoggedOutEvent evt) {
-        UUID uuid = evt.getPlayer().getUniqueID();
+    public synchronized void onPlayerLeave(MinecraftServer server, ServerPlayerEntity player) {
+        if (this.mod.getServer() != server) return;
+
+        UUID uuid = player.getUuid();
         for (ServerEventListener listener : eventListeners) listener.onPlayerLeave(uuid);
     }
 
