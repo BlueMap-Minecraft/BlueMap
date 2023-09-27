@@ -61,8 +61,7 @@ dependencies {
     api ("commons-io:commons-io:2.5")
     api ("org.spongepowered:configurate-hocon:4.1.2")
     api ("org.spongepowered:configurate-gson:4.1.2")
-    //api ("com.github.Querz:NBT:4.0")
-    api ("com.github.BlueMap-Minecraft:BlueNBT:v1.2.0")
+    api ("com.github.BlueMap-Minecraft:BlueNBT:v1.2.1")
     api ("org.apache.commons:commons-dbcp2:2.9.0")
     api ("io.airlift:aircompressor:0.24")
 

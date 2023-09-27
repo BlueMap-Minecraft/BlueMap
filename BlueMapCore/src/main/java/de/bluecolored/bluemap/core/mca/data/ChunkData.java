@@ -14,4 +14,7 @@ public class ChunkData {
     private HeightmapsData heightmaps = EMPTY_HEIGHTMAPS_DATA;
     private @Nullable SectionData[] sections = null;
 
+    // <= 1.16
+    private int[] biomes;
+
 }

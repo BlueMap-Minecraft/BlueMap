@@ -24,90 +24,79 @@
  */
 package de.bluecolored.bluemap.core.mca;
 
+import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.mca.data.ChunkData;
+import de.bluecolored.bluemap.core.mca.data.HeightmapsData;
+import de.bluecolored.bluemap.core.mca.data.SectionData;
+import de.bluecolored.bluemap.core.world.Biome;
+import de.bluecolored.bluemap.core.world.BlockState;
+import de.bluecolored.bluemap.core.world.LightData;
+
 @SuppressWarnings("FieldMayBeFinal")
-public class ChunkAnvil116 /* extends MCAChunk */ {
-    private static final long[] EMPTY_LONG_ARRAY = new long[0];
+public class ChunkAnvil116 extends MCAChunk {
 
-    /*
+    private final boolean isGenerated;
+    private final boolean hasLight;
 
-    private boolean isGenerated;
-    private boolean hasLight;
+    private final long inhabitedTime;
 
-    private long inhabitedTime;
+    private final int sectionMin, sectionMax;
+    private final Section[] sections;
 
-    private int sectionMin, sectionMax;
-    private Section[] sections;
+    private final int[] biomes;
 
-    private int[] biomes;
+    private final long[] oceanFloorHeights;
+    private final long[] worldSurfaceHeights;
 
-    private long[] oceanFloorHeights = EMPTY_LONG_ARRAY;
-    private long[] worldSurfaceHeights = EMPTY_LONG_ARRAY;
+    public ChunkAnvil116(MCAWorld world, ChunkData chunkData) {
+        super(world, chunkData);
 
-    @SuppressWarnings("unchecked")
-    public ChunkAnvil116(MCAWorld world, CompoundTag chunkTag) {
-        super(world, chunkTag);
+        String status = chunkData.getStatus();
+        boolean generated = status.equals("full");
+        this.hasLight = generated;
+        if (!generated && getWorld().isIgnoreMissingLightData())
+            generated = !status.equals("empty");
+        this.isGenerated = generated;
 
-        CompoundTag levelData = chunkTag.getCompoundTag("Level");
+        this.inhabitedTime = chunkData.getInhabitedTime();
 
-        String status = levelData.getString("Status");
-        this.isGenerated = status.equals("full");
-        this.hasLight = isGenerated;
+        HeightmapsData heightmapsData = chunkData.getHeightmaps();
+        this.worldSurfaceHeights = heightmapsData.getWorldSurface();
+        this.oceanFloorHeights = heightmapsData.getOceanFloor();
 
-        this.inhabitedTime = levelData.getLong("InhabitedTime");
+        SectionData[] sectionDatas = chunkData.getSections();
+        if (sectionDatas != null && sectionDatas.length > 0) {
+            int min = Integer.MAX_VALUE;
+            int max = Integer.MIN_VALUE;
 
-        if (!isGenerated && getWorld().isIgnoreMissingLightData()) {
-            isGenerated = !status.equals("empty");
-        }
+            // find section min/max y
+            for (SectionData sectionData : sectionDatas) {
+                int y = sectionData.getY();
+                if (min > y) min = y;
+                if (max < y) max = y;
+            }
 
-        if (levelData.containsKey("Heightmaps")) {
-            CompoundTag heightmapsTag = levelData.getCompoundTag("Heightmaps");
-            this.worldSurfaceHeights = heightmapsTag.getLongArray("WORLD_SURFACE");
-            this.oceanFloorHeights = heightmapsTag.getLongArray("OCEAN_FLOOR");
-        }
-
-        if (levelData.containsKey("Sections")) {
-            this.sectionMin = Integer.MAX_VALUE;
-            this.sectionMax = Integer.MIN_VALUE;
-
-            ListTag<CompoundTag> sectionsTag = (ListTag<CompoundTag>) levelData.getListTag("Sections");
-            ArrayList<Section> sectionList = new ArrayList<>(sectionsTag.size());
-
-            for (CompoundTag sectionTag : sectionsTag) {
-                if (sectionTag.getListTag("Palette") == null) continue; // ignore empty sections
-
-                Section section = new Section(sectionTag);
+            // load sections into ordered array
+            this.sections = new Section[1 + max - min];
+            for (SectionData sectionData : sectionDatas) {
+                Section section = new Section(sectionData);
                 int y = section.getSectionY();
 
-                if (sectionMin > y) sectionMin = y;
-                if (sectionMax < y) sectionMax = y;
+                if (min > y) min = y;
+                if (max < y) max = y;
 
-                sectionList.add(section);
+                sections[section.sectionY - min] = section;
             }
 
-            sections = new Section[1 + sectionMax - sectionMin];
-            for (Section section : sectionList) {
-                sections[section.sectionY - sectionMin] = section;
-            }
+            this.sectionMin = min;
+            this.sectionMax = max;
         } else {
-            sections = new Section[0];
+            this.sections = new Section[0];
+            this.sectionMin = 0;
+            this.sectionMax = 0;
         }
 
-        Tag<?> tag = levelData.get("Biomes"); //tag can be byte-array or int-array
-        if (tag instanceof ByteArrayTag) {
-            byte[] bs = ((ByteArrayTag) tag).getValue();
-            this.biomes = new int[bs.length];
-
-            for (int i = 0; i < bs.length; i++) {
-                biomes[i] = bs[i] & 0xFF;
-            }
-        }
-        else if (tag instanceof IntArrayTag) {
-            this.biomes = ((IntArrayTag) tag).getValue();
-        }
-
-        if (biomes == null) {
-            this.biomes = new int[0];
-        }
+        this.biomes = chunkData.getBiomes();
     }
 
     @Override
@@ -191,54 +180,21 @@ public class ChunkAnvil116 /* extends MCAChunk */ {
     }
 
     private static class Section {
-        private static final String AIR_ID = "minecraft:air";
+        private final int sectionY;
+        private final byte[] blockLight;
+        private final byte[] skyLight;
+        private final long[] blocks;
+        private final BlockState[] palette;
 
-        private int sectionY;
-        private byte[] blockLight;
-        private byte[] skyLight;
-        private long[] blocks;
-        private BlockState[] palette;
+        private final int bitsPerBlock;
 
-        private int bitsPerBlock;
+        public Section(SectionData sectionData) {
+            this.sectionY = sectionData.getY();
+            this.blockLight = sectionData.getBlockLight();
+            this.skyLight = sectionData.getSkyLight();
 
-        @SuppressWarnings("unchecked")
-        public Section(CompoundTag sectionData) {
-            this.sectionY = sectionData.get("Y", NumberTag.class).asInt();
-            this.blockLight = sectionData.getByteArray("BlockLight");
-            this.skyLight = sectionData.getByteArray("SkyLight");
-            this.blocks = sectionData.getLongArray("BlockStates");
-
-            if (blocks.length < 256 && blocks.length > 0) blocks = Arrays.copyOf(blocks, 256);
-            if (blockLight.length < 2048 && blockLight.length > 0) blockLight = Arrays.copyOf(blockLight, 2048);
-            if (skyLight.length < 2048 && skyLight.length > 0) skyLight = Arrays.copyOf(skyLight, 2048);
-
-            //read block palette
-            ListTag<CompoundTag> paletteTag = (ListTag<CompoundTag>) sectionData.getListTag("Palette");
-            if (paletteTag != null) {
-                this.palette = new BlockState[paletteTag.size()];
-                for (int i = 0; i < this.palette.length; i++) {
-                    CompoundTag stateTag = paletteTag.get(i);
-
-                    String id = stateTag.getString("Name"); //shortcut to save time and memory
-                    if (id.equals(AIR_ID)) {
-                        palette[i] = BlockState.AIR;
-                        continue;
-                    }
-
-                    Map<String, String> properties = new HashMap<>();
-
-                    if (stateTag.containsKey("Properties")) {
-                        CompoundTag propertiesTag = stateTag.getCompoundTag("Properties");
-                        for (Entry<String, Tag<?>> property : propertiesTag) {
-                            properties.put(property.getKey().toLowerCase(), ((StringTag) property.getValue()).getValue().toLowerCase());
-                        }
-                    }
-
-                    palette[i] = new BlockState(id, properties);
-                }
-            } else {
-                this.palette = new BlockState[0];
-            }
+            this.blocks = sectionData.getBlockStatesData();
+            this.palette = sectionData.getPalette();
 
             this.bitsPerBlock = this.blocks.length >> 6; // available longs * 64 (bits per long) / 4096 (blocks per section) (floored result)
         }
@@ -279,7 +235,5 @@ public class ChunkAnvil116 /* extends MCAChunk */ {
             );
         }
     }
-
-    */
 
 }

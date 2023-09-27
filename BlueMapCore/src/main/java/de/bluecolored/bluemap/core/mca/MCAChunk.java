@@ -96,8 +96,8 @@ public abstract class MCAChunk implements Chunk {
         /*
         if (version < 2200) return new ChunkAnvil113(world, chunkData);
         if (version < 2500) return new ChunkAnvil115(world, chunkData);
-        if (version < 2844) return new ChunkAnvil116(world, chunkData);
         */
+        if (version < 2844) return new ChunkAnvil116(world, chunkData);
 
         return new ChunkAnvil118(world, chunkData);
     }

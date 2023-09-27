@@ -58,6 +58,7 @@ public class MCAMath {
         int firstLong = bitIndex >> 6; // index / 64
         int bitoffset = bitIndex & 0x3F; // Math.floorMod(index, 64)
 
+        if (firstLong >= data.length) return 0;
         long value = data[firstLong] >>> bitoffset;
 
         if (bitoffset > 0 && firstLong + 1 < data.length) {
