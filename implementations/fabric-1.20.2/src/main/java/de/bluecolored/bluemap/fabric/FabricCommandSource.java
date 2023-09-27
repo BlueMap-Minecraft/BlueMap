@@ -22,25 +22,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.forge;
+package de.bluecolored.bluemap.fabric;
 
 import com.flowpowered.math.vector.Vector3d;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.core.world.World;
-import net.minecraft.util.text.ITextComponent;
+import me.lucko.fabric.api.permissions.v0.Permissions;
+import net.minecraft.server.command.ServerCommandSource;
+import net.minecraft.util.math.Vec3d;
 
 import java.io.IOException;
 import java.util.Optional;
 
-public class ForgeCommandSource implements CommandSource {
+public class FabricCommandSource implements CommandSource {
 
-    private final ForgeMod mod;
+    private final FabricMod mod;
     private final Plugin plugin;
-    private final net.minecraft.command.CommandSource delegate;
+    private final ServerCommandSource delegate;
 
-    public ForgeCommandSource(ForgeMod mod, Plugin plugin, net.minecraft.command.CommandSource delegate) {
+    public FabricCommandSource(FabricMod mod, Plugin plugin, ServerCommandSource delegate) {
         this.mod = mod;
         this.plugin = plugin;
         this.delegate = delegate;
@@ -48,19 +50,22 @@ public class ForgeCommandSource implements CommandSource {
 
     @Override
     public void sendMessage(Text text) {
-        var component = ITextComponent.Serializer.func_240644_b_(text.toJSONString());
-        if (component != null)
-            delegate.sendFeedback(component, false);
+        delegate.sendFeedback(() -> net.minecraft.text.Text.Serializer.fromJson(text.toJSONString()), false);
     }
 
     @Override
     public boolean hasPermission(String permission) {
-        return delegate.hasPermissionLevel(1);
+        try {
+            Class.forName("me.lucko.fabric.api.permissions.v0.Permissions");
+            return Permissions.check(delegate, permission, 1);
+        } catch (ClassNotFoundException ex) {
+            return delegate.hasPermissionLevel(1);
+        }
     }
 
     @Override
     public Optional<Vector3d> getPosition() {
-        var pos = delegate.getPos();
+        Vec3d pos = delegate.getPosition();
         if (pos != null) {
             return Optional.of(new Vector3d(pos.x, pos.y, pos.z));
         }

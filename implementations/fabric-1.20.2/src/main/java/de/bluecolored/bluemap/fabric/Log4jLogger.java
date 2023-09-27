@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.forge;
+package de.bluecolored.bluemap.fabric;
 
 import org.apache.logging.log4j.Logger;
 
@@ -30,7 +30,7 @@ import de.bluecolored.bluemap.core.logger.AbstractLogger;
 
 public class Log4jLogger extends AbstractLogger {
 
-    private Logger out;
+    private final Logger out;
 
     public Log4jLogger(Logger out) {
         this.out = out;
