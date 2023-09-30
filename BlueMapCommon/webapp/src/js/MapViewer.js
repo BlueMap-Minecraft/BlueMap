@@ -59,8 +59,8 @@ export class MapViewer {
 				distance: { value: 0 },
 				sunlightStrength: { value: 1 },
 				ambientLight: { value: 0 },
-				hasVoid: { value: true },
 				skyColor: { value: new Color(0, 0, 0) },
+				voidColor: { value: new Color(1, 0, 1) },
 				hiresTileMap: {
 					value: {
 						map: null,

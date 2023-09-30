@@ -50,8 +50,7 @@ uniform vec2 tileSize;
 uniform vec2 textureSize;
 uniform float lod;
 uniform float lodScale;
-uniform bool hasVoid;
-uniform vec3 skyColor;
+uniform vec3 voidColor;
 
 varying vec3 vPosition;
 varying vec3 vWorldPosition;
@@ -78,6 +77,9 @@ vec2 posToMetaUV(vec2 pos) {
 	return vec2(pos.x / textureSize.x, pos.y / textureSize.y + 0.5);
 }
 
+vec3 adjustColor(vec3 color) {
+	return vec3(color * max(sunlightStrength * sunlightStrength, ambientLight));
+}
 
 void main() {
 	//discard if hires tile is loaded at that position
@@ -121,12 +123,10 @@ void main() {
 	float light = mix(blockLight, 15.0, sunlightStrength);
 	color.rgb *= mix(ambientLight, 1.0, light / 15.0);
 
-	if (!hasVoid) {
-		vec3 adjustedSkyColor = vec3(skyColor * max(sunlightStrength * sunlightStrength, ambientLight)); //calculation from SkyFragmentShader.js
-		//where there's transparency, there is void that needs to be coloured
-		color.rgb = mix(adjustedSkyColor, color.rgb, color.a);
-	}
-	color.a = 1.0; // don't display transparency
+	vec3 adjustedVoidColor = adjustColor(voidColor);
+	//where there's transparency, there is void that needs to be coloured
+	color.rgb = mix(adjustedVoidColor, color.rgb, color.a);
+	color.a = 1.0; //but don't actually display the transparency
 
 	gl_FragColor = color;
 	
