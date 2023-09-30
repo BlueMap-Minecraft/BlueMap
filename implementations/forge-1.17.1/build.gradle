@@ -5,7 +5,7 @@ buildscript {
 		mavenCentral()
 	}
 	dependencies {
-		classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '5.1.+', changing: true
+		classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '6.0.+', changing: true
 	}
 }
 
@@ -29,6 +29,10 @@ def javaTarget = 16
 java {
 	sourceCompatibility = JavaVersion.toVersion(javaTarget)
 	targetCompatibility = JavaVersion.toVersion(javaTarget)
+
+	toolchain {
+		languageVersion.set(JavaLanguageVersion.of(17))
+	}
 }
 
 minecraft {
@@ -83,7 +87,7 @@ dependencies {
 
 spotless {
 	java {
-		target ("src/* /java/**/*.java")
+		target ("src/*/java/**/*.java")
 
 		licenseHeaderFile("../../HEADER")
 		indentWithSpaces()

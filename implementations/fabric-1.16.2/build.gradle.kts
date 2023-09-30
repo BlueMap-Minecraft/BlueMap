@@ -10,7 +10,7 @@ plugins {
 	id("com.diffplug.spotless") version "6.1.2"
 	id ("com.github.node-gradle.node") version "3.0.1"
 	id ("com.github.johnrengelman.shadow") version "7.1.2"
-	id ("fabric-loom") version "0.12-SNAPSHOT"
+	id ("fabric-loom") version "1.3-SNAPSHOT"
 	id ("com.modrinth.minotaur") version "2.+"
 	id ("com.matthewprenger.cursegradle") version "1.4.0"
 }

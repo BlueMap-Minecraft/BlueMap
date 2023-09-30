@@ -22,18 +22,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.forge;
+package de.bluecolored.bluemap.fabric;
 
 import com.flowpowered.math.vector.Vector3d;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.serverinterface.Gamemode;
 import de.bluecolored.bluemap.common.serverinterface.Player;
-import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.potion.EffectInstance;
-import net.minecraft.potion.Effects;
+import net.minecraft.entity.effect.StatusEffectInstance;
+import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.GameType;
+import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.util.math.Vec3d;
+import net.minecraft.world.GameMode;
 import net.minecraft.world.LightType;
 
 import java.io.IOException;
@@ -41,15 +41,14 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class ForgePlayer implements Player {
+public class FabricPlayer implements Player {
 
-    private static final Map<GameType, Gamemode> GAMEMODE_MAP = new EnumMap<>(GameType.class);
+    private static final Map<GameMode, Gamemode> GAMEMODE_MAP = new EnumMap<>(GameMode.class);
     static {
-        GAMEMODE_MAP.put(GameType.ADVENTURE, Gamemode.ADVENTURE);
-        GAMEMODE_MAP.put(GameType.SURVIVAL, Gamemode.SURVIVAL);
-        GAMEMODE_MAP.put(GameType.CREATIVE, Gamemode.CREATIVE);
-        GAMEMODE_MAP.put(GameType.SPECTATOR, Gamemode.SPECTATOR);
-        GAMEMODE_MAP.put(GameType.NOT_SET, Gamemode.SURVIVAL);
+        GAMEMODE_MAP.put(GameMode.ADVENTURE, Gamemode.ADVENTURE);
+        GAMEMODE_MAP.put(GameMode.SURVIVAL, Gamemode.SURVIVAL);
+        GAMEMODE_MAP.put(GameMode.CREATIVE, Gamemode.CREATIVE);
+        GAMEMODE_MAP.put(GameMode.SPECTATOR, Gamemode.SPECTATOR);
     }
 
     private final UUID uuid;
@@ -64,9 +63,9 @@ public class ForgePlayer implements Player {
     private boolean invisible;
     private Gamemode gamemode;
 
-    private final ForgeMod mod;
+    private final FabricMod mod;
 
-    public ForgePlayer(UUID playerUuid, ForgeMod mod) {
+    public FabricPlayer(UUID playerUuid, FabricMod mod) {
         this.uuid = playerUuid;
         this.mod = mod;
 
@@ -138,32 +137,32 @@ public class ForgePlayer implements Player {
             return;
         }
 
-        ServerPlayerEntity player = server.getPlayerList().getPlayerByUUID(uuid);
+        ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
         if (player == null) {
             this.online = false;
             return;
         }
 
-        this.gamemode = GAMEMODE_MAP.get(player.interactionManager.getGameType());
+        this.gamemode = GAMEMODE_MAP.get(player.interactionManager.getGameMode());
         if (this.gamemode == null) this.gamemode = Gamemode.SURVIVAL;
 
-        EffectInstance invis = player.getActivePotionEffect(Effects.INVISIBILITY);
+        StatusEffectInstance invis = player.getStatusEffect(StatusEffects.INVISIBILITY);
         this.invisible = invis != null && invis.getDuration() > 0;
 
         this.name = Text.of(player.getName().getString());
         this.online = true;
 
-        var pos = player.getPositionVec();
+        Vec3d pos = player.getPos();
         this.position = new Vector3d(pos.getX(), pos.getY(), pos.getZ());
-        this.rotation = new Vector3d(player.rotationPitch, player.rotationYawHead, 0);
-        this.sneaking = player.isCrouching();
+        this.rotation = new Vector3d(player.getPitch(), player.getHeadYaw(), 0);
+        this.sneaking = player.isSneaking();
 
-        this.skyLight = player.getServerWorld().getChunkProvider().getLightManager().getLightEngine(LightType.SKY).getLightFor(new BlockPos(player.getPositionVec()));
-        this.blockLight = player.getServerWorld().getChunkProvider().getLightManager().getLightEngine(LightType.BLOCK).getLightFor(new BlockPos(player.getPositionVec()));
+        this.skyLight = player.getWorld().getLightingProvider().get(LightType.SKY).getLightLevel(player.getBlockPos());
+        this.blockLight = player.getWorld().getLightingProvider().get(LightType.BLOCK).getLightLevel(player.getBlockPos());
 
         try {
-            var world = mod.getWorld(player.getServerWorld());
-            this.world = mod.getPlugin().getBlueMap().getWorldId(world.getSaveFolder());
+            var world = mod.getWorld(player.getWorld()).orElse(null);
+            this.world = world != null ? mod.getPluginInstance().getBlueMap().getWorldId(world.getSaveFolder()) : "unknown";
         } catch (IOException | NullPointerException e) { // NullPointerException -> the plugin isn't fully loaded
             this.world = "unknown";
         }

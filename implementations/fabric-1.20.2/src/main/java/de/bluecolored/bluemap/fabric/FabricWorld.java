@@ -22,14 +22,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.forge;
+package de.bluecolored.bluemap.fabric;
 
 import de.bluecolored.bluemap.common.serverinterface.Dimension;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.world.DimensionType;
+import net.minecraft.util.WorldSavePath;
 import net.minecraft.world.World;
-import net.minecraft.world.storage.FolderName;
+import net.minecraft.world.dimension.DimensionType;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -38,27 +38,27 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 
-public class ForgeWorld implements ServerWorld {
+public class FabricWorld implements ServerWorld {
 
-    private final WeakReference<net.minecraft.world.server.ServerWorld> delegate;
+    private final WeakReference<net.minecraft.server.world.ServerWorld> delegate;
     private final Path saveFolder;
 
-    public ForgeWorld(net.minecraft.world.server.ServerWorld delegate) {
+    public FabricWorld(net.minecraft.server.world.ServerWorld delegate) {
         this.delegate = new WeakReference<>(delegate);
 
         MinecraftServer server = delegate.getServer();
-        Path worldFolder = delegate.getServer().getDataDirectory().toPath().resolve(server.func_240776_a_(FolderName.field_237253_i_));
-        this.saveFolder = DimensionType.func_236031_a_(delegate.func_234923_W_(), worldFolder.toFile()).toPath()
+        Path worldFolder = delegate.getServer().getRunDirectory().toPath().resolve(server.getSavePath(WorldSavePath.ROOT));
+        this.saveFolder = DimensionType.getSaveDirectory(delegate.getRegistryKey(), worldFolder)
                 .toAbsolutePath().normalize();
     }
 
     @Override
     public Dimension getDimension() {
-        net.minecraft.world.server.ServerWorld world = delegate.get();
+        net.minecraft.server.world.ServerWorld world = delegate.get();
         if (world != null) {
-            if (world.func_234923_W_().equals(World.field_234919_h_)) return Dimension.NETHER;
-            if (world.func_234923_W_().equals(World.field_234920_i_)) return Dimension.END;
-            if (world.func_234923_W_().equals(World.field_234918_g_)) return Dimension.OVERWORLD;
+            if (world.getRegistryKey().equals(World.NETHER)) return Dimension.NETHER;
+            if (world.getRegistryKey().equals(World.END)) return Dimension.END;
+            if (world.getRegistryKey().equals(World.OVERWORLD)) return Dimension.OVERWORLD;
         }
 
         return ServerWorld.super.getDimension();
@@ -66,7 +66,7 @@ public class ForgeWorld implements ServerWorld {
 
     @Override
     public boolean persistWorldChanges() throws IOException {
-        net.minecraft.world.server.ServerWorld world = delegate.get();
+        net.minecraft.server.world.ServerWorld world = delegate.get();
         if (world == null) return false;
 
         var taskResult = CompletableFuture.supplyAsync(() -> {
