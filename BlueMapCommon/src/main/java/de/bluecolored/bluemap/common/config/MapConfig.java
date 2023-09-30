@@ -49,6 +49,7 @@ public class MapConfig implements MapSettings {
     private Vector2i startPos = null;
 
     private String skyColor = "#7dabff";
+    private String voidColor = "#000000";
 
     private float ambientLight = 0;
 
@@ -110,6 +111,11 @@ public class MapConfig implements MapSettings {
     @Override
     public String getSkyColor() {
         return skyColor;
+    }
+
+    @Override
+    public String getVoidColor() {
+        return voidColor;
     }
 
     @Override
