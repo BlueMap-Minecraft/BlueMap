@@ -60,7 +60,7 @@ export class MapViewer {
 				sunlightStrength: { value: 1 },
 				ambientLight: { value: 0 },
 				skyColor: { value: new Color(0, 0, 0) },
-				voidColor: { value: new Color(1, 0, 1) },
+				voidColor: { value: new Color(0, 0, 0) },
 				hiresTileMap: {
 					value: {
 						map: null,
