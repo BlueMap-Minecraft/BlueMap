@@ -70,7 +70,7 @@ public class HiresModelRenderer {
                 maxHeight = 0;
                 topBlockLight = 0f;
 
-                columnColor.set(0, 0, 0, 1, true);
+                columnColor.set(0, 0, 0, 0, true);
 
                 if (renderSettings.isInsideRenderBoundaries(x, z)) {
                     minY = Math.max(min.getY(), world.getMinY(x, z));
