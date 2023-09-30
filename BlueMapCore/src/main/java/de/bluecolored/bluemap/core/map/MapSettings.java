@@ -37,6 +37,8 @@ public interface MapSettings extends RenderSettings {
 
     String getSkyColor();
 
+    String getVoidColor();
+
     long getMinInhabitedTime();
 
     int getMinInhabitedTimeRadius();
