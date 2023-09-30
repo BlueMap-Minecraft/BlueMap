@@ -35,8 +35,7 @@ import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.fabric.events.PlayerJoinCallback;
-import de.bluecolored.bluemap.fabric.events.PlayerLeaveCallback;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -115,8 +114,13 @@ public class FabricMod implements ModInitializer, ServerInterface {
             Logger.global.logInfo("BlueMap unloaded!");
         });
 
-        PlayerJoinCallback.EVENT.register(this::onPlayerJoin);
-        PlayerLeaveCallback.EVENT.register(this::onPlayerLeave);
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            this.onPlayerJoin(server, handler.player);
+        });
+
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            this.onPlayerLeave(server, handler.player);
+        });
 
         ServerTickEvents.END_SERVER_TICK.register((MinecraftServer server) -> {
             if (server == this.serverInstance) this.updateSomePlayers();
