@@ -45,7 +45,6 @@ public class SpongeWorld implements ServerWorld {
     public SpongeWorld(org.spongepowered.api.world.server.ServerWorld delegate) {
         this.delegate = new WeakReference<>(delegate);
         this.saveFolder = delegate.directory()
-                .resolve(getDimension().getDimensionSubPath())
                 .toAbsolutePath().normalize();
     }
 

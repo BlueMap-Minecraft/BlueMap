@@ -1,3 +1,3 @@
-rootProject.name = "sponge-9.0.0"
+rootProject.name = "sponge"
 
 includeBuild("../../BlueMapCommon")

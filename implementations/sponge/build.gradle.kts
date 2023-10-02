@@ -13,7 +13,7 @@ plugins {
 group = "de.bluecolored.bluemap.bukkit"
 version = System.getProperty("bluemap.version") ?: "?" // set by BlueMapCore
 
-val javaTarget = 17
+val javaTarget = 16
 java {
 	sourceCompatibility = JavaVersion.toVersion(javaTarget)
 	targetCompatibility = JavaVersion.toVersion(javaTarget)
@@ -46,7 +46,7 @@ dependencies {
 }
 
 sponge {
-	apiVersion("9.0.0-SNAPSHOT")
+	apiVersion("8.2.0")
 	license("MIT")
 	loader {
 		name(PluginLoaders.JAVA_PLAIN)
@@ -60,7 +60,7 @@ sponge {
 			description("Lead Developer")
 		}
 		dependency("spongeapi") {
-			version("9.0.0-SNAPSHOT")
+			version("8.2.0")
 			optional(false)
 		}
 	}
@@ -137,7 +137,7 @@ modrinth {
 	changelog.set("Releasenotes and Changelog:\nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}")
 	uploadFile.set(tasks.findByName("shadowJar"))
 	loaders.addAll("sponge")
-	gameVersions.addAll("1.18.2")
+	gameVersions.addAll("1.16.5")
 }
 
 tasks.register("publish") {

@@ -106,7 +106,7 @@ public class SpongePlugin implements ServerInterface {
                 versionFromSponge.getIncrementalVersion()
         );
 
-        this.pluginInstance = new Plugin("sponge-8.0.0", this);
+        this.pluginInstance = new Plugin("sponge", this);
         this.commands = new SpongeCommands(pluginInstance);
 
         this.worlds = Caffeine.newBuilder()
@@ -285,11 +285,9 @@ public class SpongePlugin implements ServerInterface {
             }
         }
 
-        return switch (Sponge.metricsConfigManager().globalCollectionState()) {
-            case TRUE -> de.bluecolored.bluemap.core.util.Tristate.TRUE;
-            case FALSE -> de.bluecolored.bluemap.core.util.Tristate.FALSE;
-            default -> de.bluecolored.bluemap.core.util.Tristate.UNDEFINED;
-        };
+        return Sponge.metricsConfigManager().globalCollectionState() == Tristate.TRUE ?
+                de.bluecolored.bluemap.core.util.Tristate.TRUE :
+                de.bluecolored.bluemap.core.util.Tristate.FALSE;
     }
 
     /**
