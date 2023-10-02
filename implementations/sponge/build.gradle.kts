@@ -8,6 +8,7 @@ plugins {
 	id ("com.github.johnrengelman.shadow") version "7.1.2"
 	id ("org.spongepowered.gradle.plugin") version "2.0.0"
 	id ("com.modrinth.minotaur") version "2.+"
+	id("org.spongepowered.gradle.ore") version "2.2.0"
 }
 
 group = "de.bluecolored.bluemap.bukkit"
@@ -142,4 +143,14 @@ modrinth {
 
 tasks.register("publish") {
 	dependsOn("modrinth")
+	dependsOn("publishToOre")
+}
+
+oreDeployment {
+	apiKey(System.getenv("ORE_TOKEN"))
+	defaultPublication {
+		projectId.set("BlueMap")
+		versionBody.set("Releasenotes and Changelog:\nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}")
+		publishArtifacts.setFrom(tasks.findByName("shadowJar"))
+	}
 }
