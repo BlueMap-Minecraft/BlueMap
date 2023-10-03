@@ -8,7 +8,6 @@ includeBuild("implementations/fabric-1.17")
 includeBuild("implementations/fabric-1.18")
 includeBuild("implementations/fabric-1.19.4")
 includeBuild("implementations/fabric-1.20")
-includeBuild("implementations/fabric-1.20.2")
 
 includeBuild("implementations/forge-1.17.1")
 includeBuild("implementations/forge-1.18.1")
