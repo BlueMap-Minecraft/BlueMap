@@ -114,7 +114,7 @@ if (startsWith($path, "/maps/")) {
     try {
         $sql = new PDO("$driver:host=$hostname;dbname=$database", $username, $password);
         $sql->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    } catch (PDOException $e ) { error(500, "$e"); }
+    } catch (PDOException $e ) { error(500, "Failed to connect to database"); }
 
 
     // provide map-tiles
@@ -163,7 +163,7 @@ if (startsWith($path, "/maps/")) {
                 exit;
             }
 
-        } catch (PDOException $e) { error(500, "$e"); }
+        } catch (PDOException $e) { error(500, "Failed to fetch data"); }
 
         // empty json response if nothing found
         header("Content-Type: application/json");
@@ -191,7 +191,7 @@ if (startsWith($path, "/maps/")) {
         fpassthru($line["value"]);
         exit;
         }
-    } catch (PDOException $e) { error(500, "$e"); }
+    } catch (PDOException $e) { error(500, "Failed to fetch data"); }
 
 }
 
