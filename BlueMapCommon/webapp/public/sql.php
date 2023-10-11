@@ -2,10 +2,10 @@
 
 // !!! SET YOUR SQL-CONNECTION SETTINGS HERE: !!!
 
-$driver   = 'pgsql'; //PDO driver name, check the PDO documentation for available drivers at https://www.php.net/manual/en/pdo.drivers.php. Common ones are 'pgsql' or 'mysql'.
+$driver   = 'mysql'; //PDO driver name, check the PDO documentation for available drivers at https://www.php.net/manual/en/pdo.drivers.php. Common ones are 'pgsql' or 'mysql'.
 $hostname = '127.0.0.1';
-$port     = 5432; // Remember to change this value to match your database configuration
-$username = '';
+$port     = 3306; // Remember to change this value to match your database configuration
+$username = 'root';
 $password = '';
 $database = 'bluemap';
 
