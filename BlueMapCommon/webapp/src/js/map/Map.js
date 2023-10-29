@@ -63,6 +63,7 @@ export class Map {
 			name: id,
 			startPos: {x: 0, z: 0},
 			skyColor: new Color(),
+			voidColor: new Color(),
 			ambientLight: 0,
 			hires: {
 				tileSize: {x: 32, z: 32},
@@ -147,6 +148,14 @@ export class Map {
 						worldSettings.skyColor[0],
 						worldSettings.skyColor[1],
 						worldSettings.skyColor[2]
+					);
+				}
+
+				if (worldSettings.voidColor && worldSettings.voidColor.length >= 3) {
+					this.data.voidColor.setRGB(
+						worldSettings.voidColor[0],
+						worldSettings.voidColor[1],
+						worldSettings.voidColor[2]
 					);
 				}
 

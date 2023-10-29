@@ -50,6 +50,7 @@ uniform vec2 tileSize;
 uniform vec2 textureSize;
 uniform float lod;
 uniform float lodScale;
+uniform vec3 voidColor;
 
 varying vec3 vPosition;
 varying vec3 vWorldPosition;
@@ -76,14 +77,16 @@ vec2 posToMetaUV(vec2 pos) {
 	return vec2(pos.x / textureSize.x, pos.y / textureSize.y + 0.5);
 }
 
+vec3 adjustColor(vec3 color) {
+	return vec3(color * max(sunlightStrength * sunlightStrength, ambientLight));
+}
 
 void main() {
 	//discard if hires tile is loaded at that position
 	if (distance < 1000.0 && texture(hiresTileMap.map, ((vWorldPosition.xz - hiresTileMap.translate) / hiresTileMap.scale - hiresTileMap.pos) / hiresTileMap.size + 0.5).r > 0.75) discard;
 	
 	vec4 color = texture(textureImage, posToColorUV(vPosition.xz));
-	color.a = 1.0; // don't use alpha channel 
-	
+
 	vec4 meta = texture(textureImage, posToMetaUV(vPosition.xz));
 	
 	float height = metaToHeight(meta);
@@ -119,7 +122,12 @@ void main() {
 	float blockLight = metaToLight(meta);
 	float light = mix(blockLight, 15.0, sunlightStrength);
 	color.rgb *= mix(ambientLight, 1.0, light / 15.0);
-	
+
+	vec3 adjustedVoidColor = adjustColor(voidColor);
+	//where there's transparency, there is void that needs to be coloured
+	color.rgb = mix(adjustedVoidColor, color.rgb, color.a);
+	color.a = 1.0; //but don't actually display the transparency
+
 	gl_FragColor = color;
 	
 	${ShaderChunk.logdepthbuf_fragment}

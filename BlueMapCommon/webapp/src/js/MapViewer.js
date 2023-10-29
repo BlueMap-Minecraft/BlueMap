@@ -60,6 +60,7 @@ export class MapViewer {
 				sunlightStrength: { value: 1 },
 				ambientLight: { value: 0 },
 				skyColor: { value: new Color(0.5, 0.5, 1) },
+				voidColor: { value: new Color(0, 0, 0) },
 				hiresTileMap: {
 					value: {
 						map: null,
@@ -393,6 +394,7 @@ export class MapViewer {
 
 					this.data.uniforms.distance.value = this.controlsManager.distance;
 					this.data.uniforms.skyColor.value = map.data.skyColor;
+					this.data.uniforms.voidColor.value = map.data.voidColor;
 					this.data.uniforms.ambientLight.value = map.data.ambientLight;
 					this.data.uniforms.hiresTileMap.value.map = map.hiresTileManager.tileMap.texture;
 					this.data.uniforms.hiresTileMap.value.scale.set(map.data.hires.tileSize.x, map.data.hires.tileSize.z);

@@ -1,17 +1,20 @@
+import org.spongepowered.gradle.plugin.config.PluginLoaders
+
 plugins {
 	java
 	`java-library`
 	id("com.diffplug.spotless") version "6.1.2"
 	id ("com.github.node-gradle.node") version "3.0.1"
 	id ("com.github.johnrengelman.shadow") version "7.1.2"
+	id ("org.spongepowered.gradle.plugin") version "2.0.0"
 	id ("com.modrinth.minotaur") version "2.+"
-	id ("io.papermc.hangar-publish-plugin") version "0.1.0"
+	id("org.spongepowered.gradle.ore") version "2.2.0"
 }
 
 group = "de.bluecolored.bluemap.bukkit"
 version = System.getProperty("bluemap.version") ?: "?" // set by BlueMapCore
 
-val javaTarget = 17
+val javaTarget = 16
 java {
 	sourceCompatibility = JavaVersion.toVersion(javaTarget)
 	targetCompatibility = JavaVersion.toVersion(javaTarget)
@@ -25,26 +28,43 @@ repositories {
 	maven {
 		setUrl("https://jitpack.io")
 	}
-	maven {
-		setUrl("https://repo.papermc.io/repository/maven-public/")
-	}
-	maven {
-		setUrl("https://oss.sonatype.org/content/repositories/snapshots")
-	}
 }
 
 dependencies {
-	api ("de.bluecolored.bluemap.common:BlueMapCommon") {
-		//exclude dependencies provided by bukkit
+	api ("de.bluecolored.bluemap.common:BlueMapCommon"){
+		//exclude dependencies provided by sponge
 		exclude( group = "com.google.guava", module = "guava" )
 		exclude( group = "com.google.code.gson", module = "gson" )
+		exclude( group = "org.apache.commons", module = "commons-lang3" )
+		exclude( group = "javax.inject" )
+		exclude( group = "com.google.inject" )
 	}
 
-	shadow ("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT")
-	implementation ("org.bstats:bstats-bukkit:2.2.1")
+	implementation ("org.bstats:bstats-sponge:2.2.1")
 
 	testImplementation ("org.junit.jupiter:junit-jupiter:5.8.2")
 	testRuntimeOnly ("org.junit.jupiter:junit-jupiter-engine:5.8.2")
+}
+
+sponge {
+	apiVersion("8.2.0")
+	license("MIT")
+	loader {
+		name(PluginLoaders.JAVA_PLAIN)
+		version("1.0")
+	}
+	plugin("bluemap") {
+		displayName("bluemap")
+		entrypoint("de.bluecolored.bluemap.sponge.SpongePlugin")
+		description("A 3d-map of your Minecraft worlds view-able in your browser using three.js (WebGL)")
+		contributor("Blue (TBlueF, Lukas Rieger)") {
+			description("Lead Developer")
+		}
+		dependency("spongeapi") {
+			version("8.2.0")
+			optional(false)
+		}
+	}
 }
 
 spotless {
@@ -74,7 +94,7 @@ tasks.test {
 
 tasks.processResources {
 	from("src/main/resources") {
-		include("plugin.yml")
+		include("META-INF/plugins.json")
 		duplicatesStrategy = DuplicatesStrategy.INCLUDE
 
 		expand (
@@ -88,25 +108,21 @@ tasks.shadowJar {
 	archiveFileName.set("BlueMap-${project.version}-${project.name}.jar")
 
 	//relocate ("com.flowpowered.math", "de.bluecolored.shadow.flowpowered.math") //DON"T relocate this, because the API depends on it
-	relocate ("com.typesafe.config", "de.bluecolored.shadow.typesafe.config")
 	relocate ("net.querz.nbt", "de.bluecolored.shadow.querz.nbt")
-	relocate ("org.spongepowered.configurate", "de.bluecolored.shadow.configurate")
-	relocate ("org.bstats", "de.bluecolored.shadow.bstats")
 	relocate ("com.mojang.brigadier", "de.bluecolored.shadow.mojang.brigadier")
 	relocate ("com.github.benmanes.caffeine", "de.bluecolored.shadow.benmanes.caffeine")
+	relocate ("com.google.errorprone", "de.bluecolored.shadow.google.errorprone")
+	relocate ("org.spongepowered.configurate", "de.bluecolored.shadow.configurate")
 	relocate ("org.aopalliance", "de.bluecolored.shadow.aopalliance")
-	relocate ("javax.inject", "de.bluecolored.shadow.javax.inject")
+	relocate ("org.bstats", "de.bluecolored.shadow.bstats")
+	relocate ("com.typesafe.config", "de.bluecolored.shadow.typesafe.config")
 	relocate ("org.checkerframework", "de.bluecolored.shadow.checkerframework")
 	relocate ("org.codehaus", "de.bluecolored.shadow.codehaus")
 	relocate ("io.leangen.geantyref", "de.bluecolored.shadow.geantyref")
 	relocate ("io.airlift", "de.bluecolored.shadow.airlift")
 
-	relocate ("com.google.errorprone", "de.bluecolored.shadow.google.errorprone")
-	relocate ("com.google.inject", "de.bluecolored.shadow.google.inject")
-
 	relocate ("org.apache.commons.dbcp2", "de.bluecolored.shadow.apache.commons.dbcp2")
 	relocate ("org.apache.commons.io", "de.bluecolored.shadow.apache.commons.io")
-	relocate ("org.apache.commons.lang3", "de.bluecolored.shadow.apache.commons.lang3")
 	relocate ("org.apache.commons.logging", "de.bluecolored.shadow.apache.commons.logging")
 	relocate ("org.apache.commons.pool2", "de.bluecolored.shadow.apache.commons.pool2")
 }
@@ -119,36 +135,22 @@ modrinth {
 	token.set(System.getenv("MODRINTH_TOKEN"))
 	projectId.set("swbUV1cr")
 	versionNumber.set("${project.version}-${project.name}")
-	changelog.set("Releasenotes and Changelog:  \nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}")
+	changelog.set("Releasenotes and Changelog:\nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}")
 	uploadFile.set(tasks.findByName("shadowJar"))
-	loaders.addAll("paper","purpur","folia")
-	gameVersions.addAll(
-		"1.20.1", "1.20.2"
-	)
-}
-
-hangarPublish {
-	publications.register("plugin") {
-		version.set(project.version as String)
-		id.set("BlueMap")
-		channel.set("Release")
-		changelog.set("Releasenotes and Changelog:  \nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}")
-
-		apiKey.set(System.getenv("HANGAR_TOKEN"))
-
-		// register platforms
-		platforms {
-			register(io.papermc.hangarpublishplugin.model.Platforms.PAPER) {
-				jar.set(tasks.shadowJar.flatMap { it.archiveFile })
-				platformVersions.set(listOf(
-					"1.20.1", "1.20.2"
-				))
-			}
-		}
-	}
+	loaders.addAll("sponge")
+	gameVersions.addAll("1.16.5")
 }
 
 tasks.register("publish") {
 	dependsOn("modrinth")
-	dependsOn("publishPluginPublicationToHangar")
+	dependsOn("publishToOre")
+}
+
+oreDeployment {
+	apiKey(System.getenv("ORE_TOKEN"))
+	defaultPublication {
+		projectId.set("BlueMap")
+		versionBody.set("Releasenotes and Changelog:\nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}")
+		publishArtifacts.setFrom(tasks.findByName("shadowJar"))
+	}
 }

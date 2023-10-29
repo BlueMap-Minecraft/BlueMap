@@ -25,8 +25,7 @@
 package de.bluecolored.bluemap.fabric;
 
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
-import de.bluecolored.bluemap.fabric.events.PlayerJoinCallback;
-import de.bluecolored.bluemap.fabric.events.PlayerLeaveCallback;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 
@@ -43,8 +42,13 @@ public class FabricEventForwarder {
         this.mod = mod;
         this.eventListeners = new ArrayList<>(1);
 
-        PlayerJoinCallback.EVENT.register(this::onPlayerJoin);
-        PlayerLeaveCallback.EVENT.register(this::onPlayerLeave);
+        ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
+            this.onPlayerJoin(server, handler.player);
+        });
+
+        ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
+            this.onPlayerLeave(server, handler.player);
+        });
     }
 
     public synchronized void addEventListener(ServerEventListener listener) {

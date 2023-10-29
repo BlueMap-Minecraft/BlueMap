@@ -22,9 +22,6 @@
       "de.bluecolored.bluemap.fabric.FabricMod"
     ]
   },
-  "mixins": [
-    "bluemap.mixins.json"
-  ],
 
   "depends": {
     "fabricloader": ">=0.11.3",
