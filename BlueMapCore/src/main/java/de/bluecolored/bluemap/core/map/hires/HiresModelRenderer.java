@@ -30,7 +30,8 @@ import de.bluecolored.bluemap.core.map.TileMetaConsumer;
 import de.bluecolored.bluemap.core.map.hires.blockmodel.BlockStateModelFactory;
 import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.math.Color;
-import de.bluecolored.bluemap.core.world.BlockNeighborhood;
+import de.bluecolored.bluemap.core.world.Chunk;
+import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 import de.bluecolored.bluemap.core.world.World;
 
 public class HiresModelRenderer {
@@ -73,8 +74,9 @@ public class HiresModelRenderer {
                 columnColor.set(0, 0, 0, 0, true);
 
                 if (renderSettings.isInsideRenderBoundaries(x, z)) {
-                    minY = Math.max(min.getY(), world.getMinY(x, z));
-                    maxY = Math.min(max.getY(), world.getMaxY(x, z));
+                    Chunk chunk = world.getChunkAtBlock(x, z);
+                    minY = Math.max(min.getY(), chunk.getMinY(x, z));
+                    maxY = Math.min(max.getY(), chunk.getMaxY(x, z));
 
                     for (y = minY; y <= maxY; y++) {
                         block.set(x, y, z);

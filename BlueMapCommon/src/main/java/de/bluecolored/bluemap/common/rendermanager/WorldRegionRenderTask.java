@@ -27,11 +27,14 @@ package de.bluecolored.bluemap.common.rendermanager;
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector2l;
 import de.bluecolored.bluemap.api.debug.DebugDump;
+import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
+import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.world.Chunk;
-import de.bluecolored.bluemap.core.world.Grid;
+import de.bluecolored.bluemap.core.world.ChunkConsumer;
 import de.bluecolored.bluemap.core.world.Region;
 
+import java.io.IOException;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -71,13 +74,17 @@ public class WorldRegionRenderTask implements RenderTask {
         Set<Vector2l> tileSet = new HashSet<>();
         startTime = System.currentTimeMillis();
 
-        //Logger.global.logInfo("Starting: " + worldRegion);
-
-        long changesSince = 0;
-        if (!force) changesSince = map.getRenderState().getRenderTime(worldRegion);
-
+        // collect chunks
+        long changesSince = force ? 0 : map.getRenderState().getRenderTime(worldRegion);
         Region region = map.getWorld().getRegion(worldRegion.getX(), worldRegion.getY());
-        Collection<Vector2i> chunks = region.listChunks(changesSince);
+        Collection<Vector2i> chunks = new ArrayList<>(1024);
+        try {
+            region.iterateAllChunks((ChunkConsumer.ListOnly) (x, z, timestamp) -> {
+                if (timestamp >= changesSince) chunks.add(new Vector2i(x, z));
+            });
+        } catch (IOException ex) {
+            Logger.global.logWarning("Failed to read region " + worldRegion + " from world " + map.getWorld().getWorldFolder() + " (" + ex + ")");
+        }
 
         Grid tileGrid = map.getHiresModelManager().getTileGrid();
         Grid chunkGrid = map.getWorld().getChunkGrid();
@@ -115,6 +122,10 @@ public class WorldRegionRenderTask implements RenderTask {
                 .collect(Collectors.toCollection(ArrayDeque::new));
 
         if (tiles.isEmpty()) complete();
+        else {
+            // preload chunks
+            map.getWorld().preloadRegionChunks(worldRegion.getX(), worldRegion.getY());
+        }
     }
 
     @Override
@@ -132,7 +143,6 @@ public class WorldRegionRenderTask implements RenderTask {
             this.atWork++;
         }
 
-        //Logger.global.logInfo("Working on " + worldRegion + " - Tile " + tile);
         if (tileRenderPreconditions(tile)) {
             map.renderTile(tile); // <- actual work
         }
@@ -163,6 +173,7 @@ public class WorldRegionRenderTask implements RenderTask {
             for (int z = minChunk.getY(); z <= maxChunk.getY(); z++) {
                 Chunk chunk = map.getWorld().getChunk(x, z);
                 if (!chunk.isGenerated()) return false;
+                if (!chunk.hasLightData() && !map.getMapSettings().isIgnoreMissingLightData()) return false;
                 if (chunk.getInhabitedTime() >= minInhab) isInhabited = true;
             }
         }
@@ -184,8 +195,6 @@ public class WorldRegionRenderTask implements RenderTask {
 
     private void complete() {
         map.getRenderState().setRenderTime(worldRegion, startTime);
-
-        //Logger.global.logInfo("Done with: " + worldRegion);
     }
 
     @Override

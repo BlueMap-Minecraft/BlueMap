@@ -45,9 +45,9 @@ import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.util.math.MatrixM4f;
 import de.bluecolored.bluemap.core.util.math.VectorM2f;
 import de.bluecolored.bluemap.core.util.math.VectorM3f;
-import de.bluecolored.bluemap.core.world.BlockNeighborhood;
+import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 import de.bluecolored.bluemap.core.world.BlockProperties;
-import de.bluecolored.bluemap.core.world.ExtendedBlock;
+import de.bluecolored.bluemap.core.world.block.ExtendedBlock;
 import de.bluecolored.bluemap.core.world.LightData;
 
 /**
@@ -74,7 +74,6 @@ public class ResourceModelBuilder {
     private BlockModelView blockModel;
     private Color blockColor;
     private float blockColorOpacity;
-    private boolean isCave;
 
     public ResourceModelBuilder(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
         this.resourcePack = resourcePack;
@@ -94,10 +93,6 @@ public class ResourceModelBuilder {
         this.blockColorOpacity = 0f;
         this.variant = variant;
         this.modelResource = variant.getModel().getResource();
-
-        this.isCave =
-                this.block.getY() < renderSettings.getRemoveCavesBelowY() &&
-                this.block.getY() < block.getChunk().getOceanFloorY(block.getX(), block.getZ()) + renderSettings.getCaveDetectionOceanFloor();
 
         this.tintColor.set(0, 0, 0, -1, true);
 
@@ -201,7 +196,7 @@ public class ResourceModelBuilder {
         int blockLight = Math.max(blockLightData.getBlockLight(), facedLightData.getBlockLight());
 
         // filter out faces that are in a "cave" that should not be rendered
-        if (isCave && (renderSettings.isCaveDetectionUsesBlockLight() ? Math.max(blockLight, sunLight) : sunLight) == 0f) return;
+        if (block.isCave() && (renderSettings.isCaveDetectionUsesBlockLight() ? Math.max(blockLight, sunLight) : sunLight) == 0f) return;
 
         // initialize the faces
         blockModel.initialize();

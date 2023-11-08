@@ -53,7 +53,7 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.map.MapRenderState;
 import de.bluecolored.bluemap.core.storage.Storage;
-import de.bluecolored.bluemap.core.world.Block;
+import de.bluecolored.bluemap.core.world.block.Block;
 import de.bluecolored.bluemap.core.world.World;
 
 import java.io.IOException;
@@ -714,14 +714,14 @@ public class Commands<S> {
             try {
                 List<BmMap> maps = new ArrayList<>();
                 if (worldToRender != null) {
-                    var world = plugin.getServerInterface().getWorld(worldToRender.getSaveFolder()).orElse(null);
+                    var world = plugin.getServerInterface().getWorld(worldToRender.getWorldFolder()).orElse(null);
                     if (world != null) world.persistWorldChanges();
 
                     for (BmMap map : plugin.getMaps().values()) {
-                        if (map.getWorld().getSaveFolder().equals(worldToRender.getSaveFolder())) maps.add(map);
+                        if (map.getWorld().getWorldFolder().equals(worldToRender.getWorldFolder())) maps.add(map);
                     }
                 } else {
-                    var world = plugin.getServerInterface().getWorld(mapToRender.getWorld().getSaveFolder()).orElse(null);
+                    var world = plugin.getServerInterface().getWorld(mapToRender.getWorld().getWorldFolder()).orElse(null);
                     if (world != null) world.persistWorldChanges();
 
                     maps.add(mapToRender);
@@ -832,7 +832,7 @@ public class Commands<S> {
 
         source.sendMessage(Text.of(TextColor.BLUE, "Worlds loaded by BlueMap:"));
         for (var entry : plugin.getWorlds().entrySet()) {
-            source.sendMessage(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, entry.getValue().getName()).setHoverText(Text.of(entry.getValue().getSaveFolder(), TextColor.GRAY, " (" + entry.getKey() + ")")));
+            source.sendMessage(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, entry.getValue().getName()).setHoverText(Text.of(entry.getValue().getWorldFolder(), TextColor.GRAY, " (" + entry.getKey() + ")")));
         }
 
         return 1;

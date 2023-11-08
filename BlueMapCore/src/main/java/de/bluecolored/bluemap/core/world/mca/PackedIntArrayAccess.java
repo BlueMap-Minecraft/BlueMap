@@ -1,7 +1,9 @@
-package de.bluecolored.bluemap.core.mca;
+package de.bluecolored.bluemap.core.world.mca;
 
 public class PackedIntArrayAccess {
-    private static final int[] INDEX_PARAMETERS = new int[]{
+
+    // magic constants for fast division
+    private static final int[] DIVISION_MAGIC = new int[]{
             -1, -1, 0,
             Integer.MIN_VALUE, 0, 0,
             1431655765, 1431655765, 0,
@@ -71,33 +73,46 @@ public class PackedIntArrayAccess {
     private final int bitsPerElement;
     private final long[] data;
 
-    private final long maxValue;
     private final int elementsPerLong, indexShift;
-    private final long indexScale, indexOffset;
+    private final long maxValue, indexScale, indexOffset;
+
+    public PackedIntArrayAccess(long[] data, int elementCount) {
+        this(Math.max(data.length * Long.SIZE / elementCount, 1), data);
+    }
 
     public PackedIntArrayAccess(int bitsPerElement, long[] data) {
         this.bitsPerElement = bitsPerElement;
         this.data = data;
 
         this.maxValue = (1L << this.bitsPerElement) - 1L;
-        this.elementsPerLong = (char)(64 / this.bitsPerElement);
+        this.elementsPerLong = 64 / this.bitsPerElement;
 
         int i = 3 * (this.elementsPerLong - 1);
-        this.indexScale = Integer.toUnsignedLong(INDEX_PARAMETERS[i]);
-        this.indexOffset = Integer.toUnsignedLong(INDEX_PARAMETERS[i + 1]);
-        this.indexShift = INDEX_PARAMETERS[i + 2];
+        this.indexScale = Integer.toUnsignedLong(DIVISION_MAGIC[i]);
+        this.indexOffset = Integer.toUnsignedLong(DIVISION_MAGIC[i + 1]);
+        this.indexShift = DIVISION_MAGIC[i + 2] + 32;
     }
 
     public int get(int i) {
-        int j = this.storageIndex(i);
-        if (j >= this.data.length) return 0;
-        long l = this.data[j];
-        int k = (i - j * this.elementsPerLong) * this.bitsPerElement;
-        return (int)(l >> k & this.maxValue);
+        int storageIndex = this.storageIndex(i);
+        if (storageIndex >= this.data.length) return 0;
+        long l = this.data[storageIndex];
+        int offset = (i - storageIndex * this.elementsPerLong) * this.bitsPerElement;
+        return (int)(l >> offset & this.maxValue);
     }
 
-    public int storageIndex(int i) {
-        return (int) ((long) i * this.indexScale + this.indexOffset >> 32 >> this.indexShift);
+    private int storageIndex(int i) {
+        // this is the same as doing: floor(i / elementsPerLong)
+        return (int) ((long) i * this.indexScale + this.indexOffset >> this.indexShift);
+    }
+
+    public int getCapacity() {
+        return data.length * elementsPerLong;
+    }
+
+    public boolean isCorrectSize(int expectedSize) {
+        int capacity = getCapacity();
+        return expectedSize <= capacity && expectedSize + elementsPerLong > capacity;
     }
 
 }

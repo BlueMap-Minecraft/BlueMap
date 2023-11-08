@@ -22,7 +22,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.world;
+package de.bluecolored.bluemap.core.world.block;
+
+import de.bluecolored.bluemap.core.world.BlockState;
+import de.bluecolored.bluemap.core.world.Chunk;
+import de.bluecolored.bluemap.core.world.LightData;
+import de.bluecolored.bluemap.core.world.World;
 
 public class Block<T extends Block<T>> {
 
@@ -131,7 +136,7 @@ public class Block<T extends Block<T>> {
     }
 
     public Chunk getChunk() {
-        if (chunk == null) chunk = world.getChunkAtBlock(x, y, z);
+        if (chunk == null) chunk = world.getChunkAtBlock(x, z);
         return chunk;
     }
 

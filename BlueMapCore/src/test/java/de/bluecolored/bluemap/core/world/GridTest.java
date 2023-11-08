@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.core.world;
 
 import com.flowpowered.math.vector.Vector2i;
+import de.bluecolored.bluemap.core.util.Grid;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

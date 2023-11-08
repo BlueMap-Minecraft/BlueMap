@@ -78,6 +78,10 @@ public interface RenderSettings {
         return true;
     }
 
+    default boolean isIgnoreMissingLightData() {
+        return false;
+    }
+
     default boolean isInsideRenderBoundaries(int x, int z) {
         Vector3i min = getMinPos();
         Vector3i max = getMaxPos();

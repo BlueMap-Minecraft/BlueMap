@@ -42,11 +42,12 @@ import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
-import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.FileHelper;
+import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.World;
+import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.configurate.ConfigurateException;
@@ -241,7 +242,7 @@ public class BlueMapService implements Closeable {
         if (world == null) {
             try {
                 Logger.global.logInfo("Loading world '" + worldId + "' (" + worldFolder.toAbsolutePath().normalize() + ")...");
-                world = new MCAWorld(worldFolder, mapConfig.getWorldSkyLight(), mapConfig.isIgnoreMissingLightData());
+                world = MCAWorld.load(worldFolder, new Key("overworld")); //TODO
                 worlds.put(worldId, world);
             } catch (IOException ex) {
                 throw new ConfigurationException(

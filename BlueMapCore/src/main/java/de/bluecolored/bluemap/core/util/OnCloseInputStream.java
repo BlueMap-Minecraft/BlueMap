@@ -24,32 +24,17 @@
  */
 package de.bluecolored.bluemap.core.util;
 
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class WrappedInputStream extends InputStream {
+public class OnCloseInputStream extends FilterInputStream {
 
-    private final InputStream in;
     private final AutoCloseable onClose;
 
-    public WrappedInputStream(InputStream in, AutoCloseable onClose) {
-        this.in = in;
+    public OnCloseInputStream(InputStream in, AutoCloseable onClose) {
+        super(in);
         this.onClose = onClose;
-    }
-
-    @Override
-    public int read() throws IOException {
-        return in.read();
-    }
-
-    @Override
-    public int read(byte[] b) throws IOException {
-        return in.read(b);
-    }
-
-    @Override
-    public int read(byte[] b, int off, int len) throws IOException {
-        return in.read(b, off, len);
     }
 
     @Override

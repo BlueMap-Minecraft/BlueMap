@@ -299,6 +299,7 @@ public class ResourcePack {
                     }, BlueMap.THREAD_POOL),
 
                     // load biome configs
+                    // TODO: move this to datapacks?
                     CompletableFuture.runAsync(() -> {
                         list(root.resolve("assets"))
                                 .map(path -> path.resolve("biomes.json"))

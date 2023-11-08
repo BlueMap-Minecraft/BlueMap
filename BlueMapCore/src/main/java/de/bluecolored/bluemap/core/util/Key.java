@@ -73,7 +73,7 @@ public class Key {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Key that = (Key) o;
-        return getFormatted() == that.getFormatted();
+        return formatted == that.formatted;
     }
 
     @Override

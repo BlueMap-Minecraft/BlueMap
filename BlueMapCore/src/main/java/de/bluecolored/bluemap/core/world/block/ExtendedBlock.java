@@ -22,10 +22,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.world;
+package de.bluecolored.bluemap.core.world.block;
 
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.world.*;
 
 import java.util.Objects;
 
@@ -36,6 +37,7 @@ public class ExtendedBlock<T extends ExtendedBlock<T>> extends Block<T> {
     private Biome biome;
 
     private boolean insideRenderBoundsCalculated, insideRenderBounds;
+    private boolean isCaveCalculated, isCave;
 
     public ExtendedBlock(ResourcePack resourcePack, RenderSettings renderSettings, World world, int x, int y, int z) {
         super(world, x, y, z);
@@ -51,6 +53,7 @@ public class ExtendedBlock<T extends ExtendedBlock<T>> extends Block<T> {
         this.biome = null;
 
         this.insideRenderBoundsCalculated = false;
+        this.isCaveCalculated = false;
     }
 
     @Override
@@ -62,7 +65,7 @@ public class ExtendedBlock<T extends ExtendedBlock<T>> extends Block<T> {
     @Override
     public LightData getLightData() {
         LightData ld = super.getLightData();
-        if (renderSettings.isRenderEdges() && !isInsideRenderBounds()) ld.set(getWorld().getSkyLight(), ld.getBlockLight());
+        if (renderSettings.isRenderEdges() && !isInsideRenderBounds()) ld.set(getWorld().getDimensionType().hasSkylight() ? 16 : 0, ld.getBlockLight());
         return ld;
     }
 
@@ -88,6 +91,18 @@ public class ExtendedBlock<T extends ExtendedBlock<T>> extends Block<T> {
         }
 
         return insideRenderBounds;
+    }
+
+    public boolean isCave() {
+        if (!isCaveCalculated) {
+            isCave = getY() < renderSettings.getRemoveCavesBelowY() &&
+                    !getChunk().hasOceanFloorHeights() ||
+                            getY() < getChunk().getOceanFloorY(getX(), getZ()) +
+                                    renderSettings.getCaveDetectionOceanFloor();
+            isCaveCalculated = true;
+        }
+
+        return isCave;
     }
 
     public ResourcePack getResourcePack() {

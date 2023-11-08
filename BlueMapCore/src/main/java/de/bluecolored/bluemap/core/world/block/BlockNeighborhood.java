@@ -22,10 +22,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.world;
+package de.bluecolored.bluemap.core.world.block;
 
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.world.World;
 
 public class BlockNeighborhood<T extends BlockNeighborhood<T>> extends ExtendedBlock<T> {
 

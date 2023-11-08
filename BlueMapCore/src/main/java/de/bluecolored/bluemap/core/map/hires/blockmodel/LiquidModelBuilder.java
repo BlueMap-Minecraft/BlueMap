@@ -42,9 +42,9 @@ import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.util.math.MatrixM3f;
 import de.bluecolored.bluemap.core.util.math.VectorM2f;
 import de.bluecolored.bluemap.core.util.math.VectorM3f;
-import de.bluecolored.bluemap.core.world.BlockNeighborhood;
+import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 import de.bluecolored.bluemap.core.world.BlockState;
-import de.bluecolored.bluemap.core.world.ExtendedBlock;
+import de.bluecolored.bluemap.core.world.block.ExtendedBlock;
 
 /**
  * A model builder for all liquid blocks
@@ -71,7 +71,6 @@ public class LiquidModelBuilder {
     private BlockModel modelResource;
     private BlockModelView blockModel;
     private Color blockColor;
-    private boolean isCave;
 
     public LiquidModelBuilder(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
         this.resourcePack = resourcePack;
@@ -100,17 +99,13 @@ public class LiquidModelBuilder {
         this.blockModel = blockModel;
         this.blockColor = color;
 
-        this.isCave =
-                this.block.getY() < renderSettings.getRemoveCavesBelowY() &&
-                this.block.getY() < block.getChunk().getOceanFloorY(block.getX(), block.getZ()) + renderSettings.getCaveDetectionOceanFloor();
-
         build();
     }
 
     private final Color tintcolor = new Color();
     private void build() {
         // filter out blocks that are in a "cave" that should not be rendered
-        if (this.isCave && (renderSettings.isCaveDetectionUsesBlockLight() ? block.getBlockLightLevel() : block.getSunLightLevel()) == 0f) return;
+        if (this.block.isCave() && (renderSettings.isCaveDetectionUsesBlockLight() ? block.getBlockLightLevel() : block.getSunLightLevel()) == 0f) return;
 
         int level = blockState.getLiquidLevel();
         if (level < 8 && !(level == 0 && isSameLiquid(block.getNeighborBlock(0, 1, 0)))){

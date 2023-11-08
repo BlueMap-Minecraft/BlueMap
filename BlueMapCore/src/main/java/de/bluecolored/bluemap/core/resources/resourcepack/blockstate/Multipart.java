@@ -27,9 +27,9 @@ package de.bluecolored.bluemap.core.resources.resourcepack.blockstate;
 import com.google.gson.Gson;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
-import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.world.BlockState;
 import org.apache.commons.lang3.StringUtils;
 
@@ -125,13 +125,18 @@ public class Multipart {
                     andConditions.add(
                             BlockStateCondition.and(andArray.toArray(new BlockStateCondition[0])));
                 } else {
-                    String[] values = StringUtils.split(ResourcesGson.nextStringOrBoolean(in), '|');
+                    String[] values = StringUtils.split(nextStringOrBoolean(in), '|');
                     andConditions.add(BlockStateCondition.property(name, values));
                 }
             }
             in.endObject();
 
             return BlockStateCondition.and(andConditions.toArray(new BlockStateCondition[0]));
+        }
+
+        private String nextStringOrBoolean(JsonReader in) throws IOException {
+            if (in.peek() == JsonToken.BOOLEAN) return Boolean.toString(in.nextBoolean());
+            return in.nextString();
         }
 
     }

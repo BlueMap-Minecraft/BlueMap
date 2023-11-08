@@ -24,16 +24,16 @@
  */
 package de.bluecolored.bluemap.core.storage;
 
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class CompressedInputStream extends InputStream {
+public class CompressedInputStream extends FilterInputStream {
 
-    private final InputStream in;
     private final Compression compression;
 
     public CompressedInputStream(InputStream in, Compression compression) {
-        this.in = in;
+        super(in);
         this.compression = compression;
     }
 
@@ -43,31 +43,6 @@ public class CompressedInputStream extends InputStream {
 
     public Compression getCompression() {
         return compression;
-    }
-
-    @Override
-    public int read() throws IOException {
-        return in.read();
-    }
-
-    @Override
-    public int read(byte[] b, int off, int len) throws IOException {
-        return in.read(b, off, len);
-    }
-
-    @Override
-    public void close() throws IOException {
-        in.close();
-    }
-
-    @Override
-    public int available() throws IOException {
-        return in.available();
-    }
-
-    @Override
-    public void reset() throws IOException {
-        in.reset();
     }
 
 }

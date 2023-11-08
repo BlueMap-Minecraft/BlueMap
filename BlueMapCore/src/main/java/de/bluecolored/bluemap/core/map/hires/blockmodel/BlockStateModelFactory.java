@@ -31,7 +31,7 @@ import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.resourcepack.blockmodel.BlockModel;
 import de.bluecolored.bluemap.core.resources.resourcepack.blockstate.Variant;
 import de.bluecolored.bluemap.core.util.math.Color;
-import de.bluecolored.bluemap.core.world.BlockNeighborhood;
+import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 import de.bluecolored.bluemap.core.world.BlockState;
 
 import java.util.ArrayList;

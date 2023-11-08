@@ -22,28 +22,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.resources.biome.datapack;
+package de.bluecolored.bluemap.common.config.typeserializer;
 
-import de.bluecolored.bluemap.core.world.Biome;
-import lombok.Getter;
+import de.bluecolored.bluemap.core.util.Key;
+import org.jetbrains.annotations.Nullable;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.serialize.SerializationException;
+import org.spongepowered.configurate.serialize.TypeSerializer;
 
-@SuppressWarnings("FieldMayBeFinal")
-@Getter
-public class DpBiome {
+import java.lang.reflect.Type;
 
-    private DpBiomeEffects effects = new DpBiomeEffects();
-    private float temperature = Biome.DEFAULT.getTemp();
-    private float downfall = Biome.DEFAULT.getHumidity();
+public class KeyTypeSerializer implements TypeSerializer<Key> {
 
-    public Biome createBiome(String formatted) {
-        return new Biome(
-                formatted,
-                downfall,
-                temperature,
-                effects.getWaterColor(),
-                effects.getFoliageColor(),
-                effects.getGrassColor()
-        );
+    @Override
+    public Key deserialize(Type type, ConfigurationNode node) throws SerializationException {
+        String formatted = node.getString();
+        return formatted != null ? new Key(node.getString()) : null;
+    }
+
+    @Override
+    public void serialize(Type type, @Nullable Key obj, ConfigurationNode node) throws SerializationException {
+        if (obj != null) node.set(obj.getFormatted());
     }
 
 }

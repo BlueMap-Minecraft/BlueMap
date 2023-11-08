@@ -22,18 +22,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.mca;
+package de.bluecolored.bluemap.core.world.mca;
 
 import com.google.gson.reflect.TypeToken;
-import de.bluecolored.bluemap.core.mca.deserializer.BlockStateDeserializer;
+import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.BlockState;
+import de.bluecolored.bluemap.core.world.mca.data.BlockStateDeserializer;
+import de.bluecolored.bluemap.core.world.mca.data.KeyDeserializer;
 import de.bluecolored.bluenbt.BlueNBT;
 
-public class MCAMath {
+public class MCAUtil {
 
     public static final BlueNBT BLUENBT = new BlueNBT();
     static {
         BLUENBT.register(TypeToken.get(BlockState.class), new BlockStateDeserializer());
+        BLUENBT.register(TypeToken.get(Key.class), new KeyDeserializer());
     }
 
     /**
@@ -53,17 +56,18 @@ public class MCAMath {
     /**
      * Treating the long array "data" as a continuous stream of bits, returning the "valueIndex"-th value when each value has "bitsPerValue" bits.
      */
+    @SuppressWarnings("ShiftOutOfRange")
     public static long getValueFromLongStream(long[] data, int valueIndex, int bitsPerValue) {
         int bitIndex = valueIndex * bitsPerValue;
         int firstLong = bitIndex >> 6; // index / 64
-        int bitoffset = bitIndex & 0x3F; // Math.floorMod(index, 64)
+        int bitOffset = bitIndex & 0x3F; // Math.floorMod(index, 64)
 
         if (firstLong >= data.length) return 0;
-        long value = data[firstLong] >>> bitoffset;
+        long value = data[firstLong] >>> bitOffset;
 
-        if (bitoffset > 0 && firstLong + 1 < data.length) {
+        if (bitOffset > 0 && firstLong + 1 < data.length) {
             long value2 = data[firstLong + 1];
-            value2 = value2 << -bitoffset;
+            value2 = value2 << -bitOffset;
             value = value | value2;
         }
 

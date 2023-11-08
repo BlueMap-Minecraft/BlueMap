@@ -27,7 +27,12 @@ fun String.runCommand(): String = ProcessBuilder(split("\\s(?=(?:[^'\"`]*(['\"`]
     }
 
 val gitHash = "git rev-parse --verify HEAD".runCommand()
-val clean = "git status --porcelain".runCommand().isEmpty()
+var clean = false;
+try {
+    clean = "git status --porcelain".runCommand().isEmpty();
+} catch (ex: TimeoutException) {
+    println("Failed to run 'git status --porcelain', assuming dirty version.")
+}
 val lastTag = if ("git tag".runCommand().isEmpty()) "" else "git describe --tags --abbrev=0".runCommand()
 val lastVersion = if (lastTag.isEmpty()) "dev" else lastTag.substring(1) // remove the leading 'v'
 val commits = "git rev-list --count $lastTag..HEAD".runCommand()
@@ -61,7 +66,7 @@ dependencies {
     api ("commons-io:commons-io:2.5")
     api ("org.spongepowered:configurate-hocon:4.1.2")
     api ("org.spongepowered:configurate-gson:4.1.2")
-    api ("com.github.BlueMap-Minecraft:BlueNBT:v1.2.1")
+    api ("com.github.BlueMap-Minecraft:BlueNBT:v1.3.0")
     api ("org.apache.commons:commons-dbcp2:2.9.0")
     api ("io.airlift:aircompressor:0.24")
 

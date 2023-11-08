@@ -29,7 +29,7 @@ import com.google.gson.stream.JsonReader;
 import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.Biome;
-import de.bluecolored.bluemap.core.world.BlockNeighborhood;
+import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 
 import java.awt.image.BufferedImage;
 import java.io.BufferedReader;

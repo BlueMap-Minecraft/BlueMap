@@ -26,10 +26,11 @@ package de.bluecolored.bluemap.core.world;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
+import de.bluecolored.bluemap.core.util.Grid;
+import de.bluecolored.bluemap.core.util.Key;
 
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.UUID;
 
 /**
  * Represents a World on the Server<br>
@@ -38,17 +39,15 @@ import java.util.UUID;
  */
 public interface World {
 
-    Path getSaveFolder();
+    Path getWorldFolder();
+
+    Key getDimension();
 
     String getName();
 
-    int getSkyLight();
-
     Vector3i getSpawnPoint();
 
-    int getMaxY(int x, int z);
-
-    int getMinY(int x, int z);
+    DimensionType getDimensionType();
 
     Grid getChunkGrid();
 
@@ -57,7 +56,7 @@ public interface World {
     /**
      * Returns the {@link Chunk} on the specified block-position
      */
-    Chunk getChunkAtBlock(int x, int y, int z);
+    Chunk getChunkAtBlock(int x, int z);
 
     /**
      * Returns the {@link Chunk} on the specified chunk-position
@@ -74,6 +73,11 @@ public interface World {
      * <i>(Be aware that the collection is not cached and recollected each time from the world-files!)</i>
      */
     Collection<Vector2i> listRegions();
+
+    /**
+     * Loads all chunks from the specified region into the chunk cache (if there is a cache)
+     */
+    void preloadRegionChunks(int x, int z);
 
     /**
      * Invalidates the complete chunk cache (if there is a cache), so that every chunk has to be reloaded from disk
