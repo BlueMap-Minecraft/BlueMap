@@ -29,7 +29,7 @@ import de.bluecolored.bluemap.common.config.storage.StorageConfig;
 
 import java.util.Map;
 
-public interface BlueMapConfigProvider {
+public interface BlueMapConfiguration {
     CoreConfig getCoreConfig();
 
     WebappConfig getWebappConfig();

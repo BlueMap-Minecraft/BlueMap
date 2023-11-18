@@ -25,7 +25,7 @@
 package de.bluecolored.bluemap.common.plugin;
 
 import de.bluecolored.bluemap.api.debug.DebugDump;
-import de.bluecolored.bluemap.common.BlueMapConfigProvider;
+import de.bluecolored.bluemap.common.BlueMapConfiguration;
 import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.InterruptableReentrantLock;
 import de.bluecolored.bluemap.common.MissingResourcesException;
@@ -36,7 +36,7 @@ import de.bluecolored.bluemap.common.plugin.skins.PlayerSkinUpdater;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
-import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.common.serverinterface.Server;
 import de.bluecolored.bluemap.common.web.*;
 import de.bluecolored.bluemap.common.web.http.HttpServer;
 import de.bluecolored.bluemap.core.debug.StateDumper;
@@ -78,14 +78,11 @@ public class Plugin implements ServerEventListener {
     private final InterruptableReentrantLock loadingLock = new InterruptableReentrantLock();
 
     private final String implementationType;
-    private final ServerInterface serverInterface;
+    private final Server serverInterface;
 
     private BlueMapService blueMap;
 
     private PluginState pluginState;
-
-    private Map<String, World> worlds;
-    private Map<String, BmMap> maps;
 
     private RenderManager renderManager;
     private HttpServer webServer;
@@ -101,7 +98,7 @@ public class Plugin implements ServerEventListener {
 
     private boolean loaded = false;
 
-    public Plugin(String implementationType, ServerInterface serverInterface) {
+    public Plugin(String implementationType, Server serverInterface) {
         this.implementationType = implementationType.toLowerCase();
         this.serverInterface = serverInterface;
 
@@ -121,7 +118,7 @@ public class Plugin implements ServerEventListener {
                 unload(); //ensure nothing is left running (from a failed load or something)
 
                 //load configs
-                blueMap = new BlueMapService(serverInterface, new BlueMapConfigs(serverInterface), preloadedResourcePack);
+                blueMap = new BlueMapService(serverInterface, new BlueMapConfigManager(serverInterface), preloadedResourcePack);
                 CoreConfig coreConfig = getConfigs().getCoreConfig();
                 WebserverConfig webserverConfig = getConfigs().getWebserverConfig();
                 WebappConfig webappConfig = getConfigs().getWebappConfig();
@@ -151,14 +148,14 @@ public class Plugin implements ServerEventListener {
 
                 //try load resources
                 try {
-                    blueMap.getResourcePack();
+                    blueMap.loadResourcePack();
                 } catch (MissingResourcesException ex) {
                     Logger.global.logWarning("BlueMap is missing important resources!");
                     Logger.global.logWarning("You must accept the required file download in order for BlueMap to work!");
 
-                    BlueMapConfigProvider configProvider = blueMap.getConfigs();
-                    if (configProvider instanceof BlueMapConfigs) {
-                        Logger.global.logWarning("Please check: " + ((BlueMapConfigs) configProvider).getConfigManager().findConfigPath(Path.of("core")).toAbsolutePath().normalize());
+                    BlueMapConfiguration configProvider = blueMap.getConfig();
+                    if (configProvider instanceof BlueMapConfigManager) {
+                        Logger.global.logWarning("Please check: " + ((BlueMapConfigManager) configProvider).getConfigManager().findConfigPath(Path.of("core")).toAbsolutePath().normalize());
                     }
 
                     Logger.global.logInfo("If you have changed the config you can simply reload the plugin using: /bluemap reload");
@@ -167,9 +164,8 @@ public class Plugin implements ServerEventListener {
                     return;
                 }
 
-                //load worlds and maps
-                worlds = blueMap.getWorlds();
-                maps = blueMap.getMaps();
+                //load maps
+                Map<String, BmMap> maps = blueMap.loadMaps();
 
                 //create and start webserver
                 if (webserverConfig.isEnabled()) {
@@ -447,9 +443,6 @@ public class Plugin implements ServerEventListener {
                 Logger.global.remove(DEBUG_FILE_LOG_NAME);
 
                 //clear resources
-                worlds = null;
-                maps = null;
-
                 pluginState = null;
 
                 //done
@@ -494,7 +487,7 @@ public class Plugin implements ServerEventListener {
         if (pluginState != null) {
             try {
                 GsonConfigurationLoader loader = GsonConfigurationLoader.builder()
-                        .path(blueMap.getConfigs().getCoreConfig().getData().resolve("pluginState.json"))
+                        .path(blueMap.getConfig().getCoreConfig().getData().resolve("pluginState.json"))
                         .build();
                 loader.save(loader.createNode().set(PluginState.class, pluginState));
             } catch (IOException ex) {
@@ -502,6 +495,7 @@ public class Plugin implements ServerEventListener {
             }
         }
 
+        var maps = blueMap.getMaps();
         if (maps != null) {
             for (BmMap map : maps.values()) {
                 map.save();
@@ -510,6 +504,7 @@ public class Plugin implements ServerEventListener {
     }
 
     public void saveMarkerStates() {
+        var maps = blueMap.getMaps();
         if (maps != null) {
             for (BmMap map : maps.values()) {
                 map.saveMarkerState();
@@ -518,6 +513,7 @@ public class Plugin implements ServerEventListener {
     }
 
     public void savePlayerStates() {
+        var maps = blueMap.getMaps();
         if (maps != null) {
             for (BmMap map : maps.values()) {
                 var dataSupplier = new LivePlayersDataSupplier(
@@ -604,7 +600,7 @@ public class Plugin implements ServerEventListener {
         }
     }
 
-    public ServerInterface getServerInterface() {
+    public Server getServerInterface() {
         return serverInterface;
     }
 
@@ -612,20 +608,12 @@ public class Plugin implements ServerEventListener {
         return blueMap;
     }
 
-    public BlueMapConfigProvider getConfigs() {
-        return blueMap.getConfigs();
+    public BlueMapConfigManager getConfigs() {
+        return blueMap.getConfig();
     }
 
     public PluginState getPluginState() {
         return pluginState;
-    }
-
-    public Map<String, World> getWorlds(){
-        return worlds;
-    }
-
-    public Map<String, BmMap> getMaps(){
-        return maps;
     }
 
     public RenderManager getRenderManager() {
@@ -649,9 +637,12 @@ public class Plugin implements ServerEventListener {
     }
 
     private void initFileWatcherTasks() {
-        for (BmMap map : maps.values()) {
-            if (pluginState.getMapState(map).isUpdateEnabled()) {
-                startWatchingMap(map);
+        var maps = blueMap.getMaps();
+        if (maps != null) {
+            for (BmMap map : maps.values()) {
+                if (pluginState.getMapState(map).isUpdateEnabled()) {
+                    startWatchingMap(map);
+                }
             }
         }
     }

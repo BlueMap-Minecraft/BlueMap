@@ -33,6 +33,7 @@ import de.bluecolored.bluemap.core.map.lowres.LowresTileManager;
 import de.bluecolored.bluemap.core.util.math.Color;
 
 import java.lang.reflect.Type;
+import java.util.Optional;
 
 public class MapSettingsSerializer implements JsonSerializer<BmMap> {
 
@@ -66,7 +67,7 @@ public class MapSettingsSerializer implements JsonSerializer<BmMap> {
         root.add("lowres", lowres);
 
         // startPos
-        Vector2i startPos = map.getMapSettings().getStartPos()
+        Vector2i startPos = Optional.ofNullable(map.getMapSettings().getStartPos())
                 .orElse(map.getWorld().getSpawnPoint().toVector2(true));
         root.add("startPos", context.serialize(startPos));
 

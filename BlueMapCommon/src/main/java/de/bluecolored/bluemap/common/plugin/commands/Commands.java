@@ -868,7 +868,7 @@ public class Commands<S> {
         CommandSource source = commandSourceInterface.apply(context.getSource());
 
         source.sendMessage(Text.of(TextColor.BLUE, "Storages loaded by BlueMap:"));
-        for (var entry : plugin.getBlueMap().getConfigs().getStorageConfigs().entrySet()) {
+        for (var entry : plugin.getBlueMap().getConfig().getStorageConfigs().entrySet()) {
             source.sendMessage(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, entry.getKey())
                     .setHoverText(Text.of(entry.getValue().getStorageType().name()))
                     .setClickAction(Text.ClickAction.RUN_COMMAND, "/bluemap storages " + entry.getKey())

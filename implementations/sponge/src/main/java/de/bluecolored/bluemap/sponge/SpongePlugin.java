@@ -33,7 +33,7 @@ import com.google.inject.Inject;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.serverinterface.Player;
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
-import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.common.serverinterface.Server;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
@@ -42,7 +42,6 @@ import de.bluecolored.bluemap.sponge.SpongeCommands.SpongeCommandProxy;
 import org.apache.maven.artifact.versioning.ArtifactVersion;
 import org.spongepowered.api.Platform;
 import org.spongepowered.api.ResourceKey;
-import org.spongepowered.api.Server;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.Command;
 import org.spongepowered.api.config.ConfigDir;
@@ -66,7 +65,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 
 @org.spongepowered.plugin.builtin.jvm.Plugin(Plugin.PLUGIN_ID)
-public class SpongePlugin implements ServerInterface {
+public class SpongePlugin implements Server {
     private static SpongePlugin instance;
 
     private final PluginContainer pluginContainer;
@@ -131,7 +130,7 @@ public class SpongePlugin implements ServerInterface {
     }
 
     @Listener
-    public void onServerStart(StartedEngineEvent<Server> evt) {
+    public void onServerStart(StartedEngineEvent<org.spongepowered.api.Server> evt) {
         asyncExecutor = evt.game().asyncScheduler().executor(pluginContainer);
         syncExecutor = evt.engine().scheduler().executor(pluginContainer);
 
@@ -156,7 +155,7 @@ public class SpongePlugin implements ServerInterface {
     }
 
     @Listener
-    public void onServerStop(StoppingEngineEvent<Server> evt) {
+    public void onServerStop(StoppingEngineEvent<org.spongepowered.api.Server> evt) {
         Logger.global.logInfo("Stopping...");
         evt.engine().scheduler().tasks(pluginContainer).forEach(ScheduledTask::cancel);
         pluginInstance.unload();

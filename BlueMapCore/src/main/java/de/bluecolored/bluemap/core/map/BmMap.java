@@ -64,7 +64,6 @@ public class BmMap {
 
     private final String id;
     private final String name;
-    private final String worldId;
     private final World world;
     private final Storage storage;
     private final MapSettings mapSettings;
@@ -83,10 +82,9 @@ public class BmMap {
     private long renderTimeSumNanos;
     private long tilesRendered;
 
-    public BmMap(String id, String name, String worldId, World world, Storage storage, ResourcePack resourcePack, MapSettings settings) throws IOException {
+    public BmMap(String id, String name, World world, Storage storage, ResourcePack resourcePack, MapSettings settings) throws IOException {
         this.id = Objects.requireNonNull(id);
         this.name = Objects.requireNonNull(name);
-        this.worldId = Objects.requireNonNull(worldId);
         this.world = Objects.requireNonNull(world);
         this.storage = Objects.requireNonNull(storage);
         this.resourcePack = Objects.requireNonNull(resourcePack);
@@ -237,10 +235,6 @@ public class BmMap {
 
     public String getName() {
         return name;
-    }
-
-    public String getWorldId() {
-        return worldId;
     }
 
     public World getWorld() {

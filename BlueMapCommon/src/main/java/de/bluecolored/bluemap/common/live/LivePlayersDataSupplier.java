@@ -27,9 +27,9 @@ package de.bluecolored.bluemap.common.live;
 import com.google.gson.stream.JsonWriter;
 import de.bluecolored.bluemap.common.config.PluginConfig;
 import de.bluecolored.bluemap.common.serverinterface.Player;
-import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.common.serverinterface.Server;
+import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.logger.Logger;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -39,15 +39,15 @@ import java.util.function.Supplier;
 
 public class LivePlayersDataSupplier implements Supplier<String> {
 
-    private final ServerInterface server;
+    private final Server server;
     private final PluginConfig config;
-    @Nullable private final String worldId;
+    private final ServerWorld world;
     private final Predicate<UUID> playerFilter;
 
-    public LivePlayersDataSupplier(ServerInterface server, PluginConfig config, @Nullable String worldId, Predicate<UUID> playerFilter) {
+    public LivePlayersDataSupplier(Server server, PluginConfig config, ServerWorld world, Predicate<UUID> playerFilter) {
         this.server = server;
         this.config = config;
-        this.worldId = worldId;
+        this.world = world;
         this.playerFilter = playerFilter;
     }
 
@@ -61,9 +61,7 @@ public class LivePlayersDataSupplier implements Supplier<String> {
 
             if (config.isLivePlayerMarkers()) {
                 for (Player player : this.server.getOnlinePlayers()) {
-                    if (!player.isOnline()) continue;
-
-                    boolean isCorrectWorld = player.getWorld().equals(this.worldId);
+                    boolean isCorrectWorld = player.getWorld().equals(this.world);
 
                     if (config.isHideInvisible() && player.isInvisible()) continue;
                     if (config.isHideVanished() && player.isVanished()) continue;

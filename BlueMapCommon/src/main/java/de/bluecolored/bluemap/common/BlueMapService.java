@@ -36,8 +36,6 @@ import de.bluecolored.bluemap.common.config.ConfigurationException;
 import de.bluecolored.bluemap.common.config.MapConfig;
 import de.bluecolored.bluemap.common.config.storage.StorageConfig;
 import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
-import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -48,6 +46,7 @@ import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.World;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
+import lombok.EqualsAndHashCode;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.configurate.ConfigurateException;
@@ -61,7 +60,6 @@ import java.lang.reflect.Type;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
@@ -72,85 +70,25 @@ import java.util.stream.Stream;
 @DebugDump
 public class BlueMapService implements Closeable {
 
-    private final ServerInterface serverInterface;
-    private final BlueMapConfigProvider configs;
+    private final BlueMapConfiguration config;
+    private final WebFilesManager webFilesManager;
 
-    private final Map<Path, String> worldIds;
+    private final Map<WorldKey, World> worlds;
+    private final Map<String, BmMap> maps;
     private final Map<String, Storage> storages;
 
-    private volatile WebFilesManager webFilesManager;
+    public BlueMapService(BlueMapConfiguration configuration) {
+        this.config = configuration;
+        this.webFilesManager = new WebFilesManager(config.getWebappConfig().getWebroot());
 
-    private Map<String, World> worlds;
-    private Map<String, BmMap> maps;
-
-    private ResourcePack resourcePack;
-
-
-    public BlueMapService(ServerInterface serverInterface, BlueMapConfigProvider configProvider, @Nullable ResourcePack preloadedResourcePack) {
-        this(serverInterface, configProvider);
-
-        if (preloadedResourcePack != null)
-            this.resourcePack = preloadedResourcePack;
-    }
-
-    public BlueMapService(ServerInterface serverInterface, BlueMapConfigProvider configProvider) {
-        this.serverInterface = serverInterface;
-        this.configs = configProvider;
-
-        this.worldIds = new ConcurrentHashMap<>();
-        this.storages = new HashMap<>();
+        this.worlds = new ConcurrentHashMap<>();
+        this.maps = new ConcurrentHashMap<>();
+        this.storages = new ConcurrentHashMap<>();
 
         StateDumper.global().register(this);
     }
 
-    public String getWorldId(Path worldFolder) throws IOException {
-        // fast-path
-        String id = worldIds.get(worldFolder);
-        if (id != null) return id;
-
-        // second try with normalized absolute path
-        worldFolder = worldFolder.toAbsolutePath().normalize();
-        id = worldIds.get(worldFolder);
-        if (id != null) return id;
-
-        // secure (slower) query with real path
-        worldFolder = worldFolder.toRealPath();
-        id = worldIds.get(worldFolder);
-        if (id != null) return id;
-
-        synchronized (worldIds) {
-            // check again if another thread has already added the world
-            id = worldIds.get(worldFolder);
-            if (id != null) return id;
-
-            Logger.global.logDebug("Loading world id for '" + worldFolder + "'...");
-
-            // now we can be sure it wasn't loaded yet .. load
-            Path idFile = worldFolder.resolve("bluemap.id");
-            if (!Files.exists(idFile)) {
-                id = this.serverInterface.getWorld(worldFolder)
-                        .flatMap(ServerWorld::getId)
-                        .orElse(UUID.randomUUID().toString());
-                Files.writeString(idFile, id, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-
-                worldIds.put(worldFolder, id);
-                return id;
-            }
-
-            id = Files.readString(idFile);
-            worldIds.put(worldFolder, id);
-            return id;
-        }
-    }
-
     public WebFilesManager getWebFilesManager() {
-        if (webFilesManager == null) {
-            synchronized (this) {
-                if (webFilesManager == null)
-                    webFilesManager = new WebFilesManager(configs.getWebappConfig().getWebroot());
-            }
-        }
-
         return webFilesManager;
     }
 
@@ -164,13 +102,13 @@ public class BlueMapService implements Closeable {
             }
 
             // update settings.json
-            if (!configs.getWebappConfig().isUpdateSettingsFile()) {
+            if (!config.getWebappConfig().isUpdateSettingsFile()) {
                 webFilesManager.loadSettings();
-                webFilesManager.addFrom(configs.getWebappConfig());
+                webFilesManager.addFrom(config.getWebappConfig());
             } else {
-                webFilesManager.setFrom(configs.getWebappConfig());
+                webFilesManager.setFrom(config.getWebappConfig());
             }
-            for (String mapId : configs.getMapConfigs().keySet()) {
+            for (String mapId : config.getMapConfigs().keySet()) {
                 webFilesManager.addMap(mapId);
             }
             webFilesManager.saveSettings();
@@ -180,21 +118,21 @@ public class BlueMapService implements Closeable {
         }
     }
 
-    public synchronized Map<String, World> getWorlds() throws InterruptedException {
-        if (worlds == null) loadWorldsAndMaps();
-        return worlds;
+    public @Nullable Collection<World> getWorlds() {
+        return worlds.values();
     }
 
-    public synchronized Map<String, BmMap> getMaps() throws InterruptedException {
-        if (maps == null) loadWorldsAndMaps();
+    public @Nullable Map<String, BmMap> getMaps() {
+        return maps;
+    }
+
+    public Map<String, BmMap> loadMaps() throws InterruptedException {
+        loadWorldsAndMaps();
         return maps;
     }
 
     private synchronized void loadWorldsAndMaps() throws InterruptedException {
-        maps = new HashMap<>();
-        worlds = new HashMap<>();
-
-        for (var entry : configs.getMapConfigs().entrySet()) {
+        for (var entry : config.getMapConfigs().entrySet()) {
             try {
                 loadMapConfig(entry.getKey(), entry.getValue());
             } catch (ConfigurationException ex) {
@@ -205,9 +143,6 @@ public class BlueMapService implements Closeable {
                 }
             }
         }
-
-        worlds = Collections.unmodifiableMap(worlds);
-        maps = Collections.unmodifiableMap(maps);
     }
 
     private synchronized void loadMapConfig(String id, MapConfig mapConfig) throws ConfigurationException, InterruptedException {
@@ -215,6 +150,7 @@ public class BlueMapService implements Closeable {
         if (name == null) name = id;
 
         Path worldFolder = mapConfig.getWorld();
+        Key dimension = mapConfig.getDimension();
 
         // if there is no world configured, we assume the map is static, or supplied from a different server
         if (worldFolder == null) {
@@ -228,25 +164,16 @@ public class BlueMapService implements Closeable {
                     "Check if the 'world' setting in the config-file for that map is correct, or remove the entire config-file if you don't want that map.");
         }
 
-        String worldId;
-        try {
-            worldId = getWorldId(worldFolder);
-        } catch (IOException ex) {
-            throw new ConfigurationException(
-                    "Could not load the ID for the world (" + worldFolder.toAbsolutePath().normalize() + ")!\n" +
-                    "Make sure BlueMap has read and write access/permissions to the world-files for this map.",
-                    ex);
-        }
-
-        World world = worlds.get(worldId);
+        WorldKey worldKey = new WorldKey(worldFolder, dimension);
+        World world = worlds.get(worldKey);
         if (world == null) {
             try {
-                Logger.global.logInfo("Loading world '" + worldId + "' (" + worldFolder.toAbsolutePath().normalize() + ")...");
-                world = MCAWorld.load(worldFolder, new Key("overworld")); //TODO
-                worlds.put(worldId, world);
+                Logger.global.logInfo("Loading world " + worldKey + " ...");
+                world = MCAWorld.load(worldFolder, dimension);
+                worlds.put(worldKey, world);
             } catch (IOException ex) {
                 throw new ConfigurationException(
-                        "Failed to load world '" + worldId + "' (" + worldFolder.toAbsolutePath().normalize() + ")!\n" +
+                        "Failed to load world " + worldKey + "!\n" +
                         "Is the level.dat of that world present and not corrupted?",
                         ex);
             }
@@ -260,10 +187,9 @@ public class BlueMapService implements Closeable {
             BmMap map = new BmMap(
                     id,
                     name,
-                    worldId,
                     world,
                     storage,
-                    getResourcePack(),
+                    loadResourcePack(),
                     mapConfig
             );
             maps.put(id, map);
@@ -299,7 +225,7 @@ public class BlueMapService implements Closeable {
 
         if (storage == null) {
             try {
-                StorageConfig storageConfig = getConfigs().getStorageConfigs().get(storageId);
+                StorageConfig storageConfig = getConfig().getStorageConfigs().get(storageId);
                 if (storageConfig == null) {
                     throw new ConfigurationException("There is no storage-configuration for '" + storageId + "'!\n" +
                             "You will either need to define that storage, or change the map-config to use a storage-config that exists.");
@@ -332,12 +258,12 @@ public class BlueMapService implements Closeable {
         return storage;
     }
 
-    public synchronized ResourcePack getResourcePack() throws ConfigurationException, InterruptedException {
+    public synchronized ResourcePack loadResourcePack() throws ConfigurationException, InterruptedException {
         if (resourcePack == null) {
             MinecraftVersion minecraftVersion = serverInterface.getMinecraftVersion();
 
-            Path defaultResourceFile = configs.getCoreConfig().getData().resolve("minecraft-client-" + minecraftVersion.getResource().getVersion().getVersionString() + ".jar");
-            Path resourceExtensionsFile = configs.getCoreConfig().getData().resolve("resourceExtensions.zip");
+            Path defaultResourceFile = config.getCoreConfig().getData().resolve("minecraft-client-" + minecraftVersion.getResource().getVersion().getVersionString() + ".jar");
+            Path resourceExtensionsFile = config.getCoreConfig().getData().resolve("resourceExtensions.zip");
 
             Path resourcePackFolder = serverInterface.getConfigFolder().resolve("resourcepacks");
 
@@ -352,7 +278,7 @@ public class BlueMapService implements Closeable {
             }
 
             if (!Files.exists(defaultResourceFile)) {
-                if (configs.getCoreConfig().isAcceptDownload()) {
+                if (config.getCoreConfig().isAcceptDownload()) {
                     //download file
                     try {
                         Logger.global.logInfo("Downloading " + minecraftVersion.getResource().getClientUrl() + " to " + defaultResourceFile + " ...");
@@ -398,7 +324,7 @@ public class BlueMapService implements Closeable {
                             .forEach(resourcePackRoots::add);
                 }
 
-                if (configs.getCoreConfig().isScanForModResources()) {
+                if (config.getCoreConfig().isScanForModResources()) {
 
                     // load from mods folder
                     Path modsFolder = serverInterface.getModsFolder().orElse(null);
@@ -443,7 +369,7 @@ public class BlueMapService implements Closeable {
 
     private Collection<Path> getWorldFolders() {
         Set<Path> folders = new HashSet<>();
-        for (MapConfig mapConfig : configs.getMapConfigs().values()) {
+        for (MapConfig mapConfig : config.getMapConfigs().values()) {
             Path folder = mapConfig.getWorld();
             if (folder == null) continue;
             folder = folder.toAbsolutePath().normalize();
@@ -454,8 +380,8 @@ public class BlueMapService implements Closeable {
         return folders;
     }
 
-    public BlueMapConfigProvider getConfigs() {
-        return configs;
+    public BlueMapConfiguration getConfig() {
+        return config;
     }
 
     @Override
@@ -475,6 +401,23 @@ public class BlueMapService implements Closeable {
 
         if (exception != null)
             throw exception;
+    }
+
+    @EqualsAndHashCode
+    private static class WorldKey {
+
+        private final Path worldFolder;
+        private final Key dimension;
+
+        public WorldKey(Path worldFolder, Key dimension) {
+            this.worldFolder = worldFolder;
+            this.dimension = dimension;
+        }
+
+        @Override
+        public String toString() {
+            return worldFolder + "[" + dimension + "]";
+        }
     }
 
 }

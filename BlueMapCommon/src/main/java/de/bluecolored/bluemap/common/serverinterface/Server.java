@@ -24,43 +24,19 @@
  */
 package de.bluecolored.bluemap.common.serverinterface;
 
-import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.api.debug.DebugDump;
+import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.util.Tristate;
+import de.bluecolored.bluemap.core.world.World;
 
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.UUID;
 
-public interface ServerInterface {
+public interface Server {
 
     @DebugDump
     MinecraftVersion getMinecraftVersion();
-
-    /**
-     * Registers a ServerEventListener, every method of this interface should be called on the specified events
-     */
-    void registerListener(ServerEventListener listener);
-
-    /**
-     * Removes all registered listeners
-     */
-    void unregisterAllListeners();
-
-    default Optional<ServerWorld> getWorld(Path worldFolder) {
-        Path normalizedWorldFolder = worldFolder.toAbsolutePath().normalize();
-        return getLoadedWorlds().stream()
-                .filter(world -> world.getSaveFolder().toAbsolutePath().normalize().equals(normalizedWorldFolder))
-                .findAny();
-    }
-
-    default Optional<ServerWorld> getWorld(Object world) {
-        return Optional.empty();
-    }
-
-    @DebugDump
-    Collection<ServerWorld> getLoadedWorlds();
 
     /**
      * Returns the Folder containing the configurations for the plugin
@@ -83,15 +59,41 @@ public interface ServerInterface {
     }
 
     /**
+     * Returns the correct {@link ServerWorld} for a {@link World} if there is any.
+     */
+    Optional<ServerWorld> getWorld(World world);
+
+    /**
+     * Returns the correct {@link ServerWorld} for any Object if there is any, this should return the correct ServerWorld
+     * for any implementation-specific object that represent or identify a world in any way.<br>
+     * Used for the API implementation.
+     */
+    default Optional<ServerWorld> getWorld(Object world) {
+        if (world instanceof World)
+            return getWorld((World) world);
+        return Optional.empty();
+    }
+
+    /**
+     * Returns all loaded worlds of this server.
+     */
+    @DebugDump
+    Collection<ServerWorld> getLoadedWorlds();
+
+    /**
      * Returns a collection of the states of players that are currently online
      */
     @DebugDump
     Collection<Player> getOnlinePlayers();
 
     /**
-     * Returns the state of the player with that UUID if present<br>
-     * this method is only guaranteed to return a {@link Player} if the player is currently online.
+     * Registers a ServerEventListener, every method of this interface should be called on the specified events
      */
-    Optional<Player> getPlayer(UUID uuid);
+    void registerListener(ServerEventListener listener);
+
+    /**
+     * Removes all registered listeners
+     */
+    void unregisterAllListeners();
 
 }

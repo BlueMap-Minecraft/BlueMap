@@ -83,7 +83,7 @@ public class WorldRegionRenderTask implements RenderTask {
                 if (timestamp >= changesSince) chunks.add(new Vector2i(x, z));
             });
         } catch (IOException ex) {
-            Logger.global.logWarning("Failed to read region " + worldRegion + " from world " + map.getWorld().getWorldFolder() + " (" + ex + ")");
+            Logger.global.logWarning("Failed to read region " + worldRegion + " from world " + map.getWorld().getName() + " (" + ex + ")");
         }
 
         Grid tileGrid = map.getHiresModelManager().getTileGrid();

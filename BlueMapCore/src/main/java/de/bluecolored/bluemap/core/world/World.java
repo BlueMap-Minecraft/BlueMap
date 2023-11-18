@@ -27,21 +27,16 @@ package de.bluecolored.bluemap.core.world;
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.util.Grid;
-import de.bluecolored.bluemap.core.util.Key;
 
-import java.nio.file.Path;
 import java.util.Collection;
 
 /**
- * Represents a World on the Server<br>
+ * Represents a World on the Server.<br>
+ * This is usually one of the dimensions of a level.<br>
  * <br>
  * <i>The implementation of this class has to be thread-save!</i><br>
  */
 public interface World {
-
-    Path getWorldFolder();
-
-    Key getDimension();
 
     String getName();
 

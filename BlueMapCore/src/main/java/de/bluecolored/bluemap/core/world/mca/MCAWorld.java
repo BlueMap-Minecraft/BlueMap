@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -37,6 +38,7 @@ public class MCAWorld implements World {
 
     private static final Vector2iCache VECTOR_2_I_CACHE = new Vector2iCache();
 
+    private final String id;
     private final Path worldFolder;
     private final Key dimension;
     private final LevelData levelData;
@@ -59,7 +61,8 @@ public class MCAWorld implements World {
             .expireAfterWrite(10, TimeUnit.MINUTES)
             .build(this::loadChunk);
 
-    public MCAWorld(Path worldFolder, Key dimension, LevelData levelData, DataPack dataPack) {
+    public MCAWorld(String id, Path worldFolder, Key dimension, LevelData levelData, DataPack dataPack) {
+        this.id = id;
         this.worldFolder = worldFolder;
         this.dimension = dimension;
         this.levelData = levelData;
@@ -217,6 +220,16 @@ public class MCAWorld implements World {
     }
 
     public static MCAWorld load(Path worldFolder, Key dimension) throws IOException {
+        // load or create bluemap.id
+        Path idFile = worldFolder.resolve("bluemap.id");
+        String id;
+        if (!Files.exists(idFile)) {
+            id = UUID.randomUUID().toString();
+            Files.writeString(idFile, id, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+        } else {
+            id = Files.readString(idFile);
+        }
+        id += "-" + dimension.getFormatted();
 
         // load level.dat
         Path levelFile = worldFolder.resolve("level.dat");
@@ -240,7 +253,7 @@ public class MCAWorld implements World {
         dataPack.bake();
 
         // create world
-        return new MCAWorld(worldFolder, dimension, levelData, dataPack);
+        return new MCAWorld(id, worldFolder, dimension, levelData, dataPack);
     }
 
     private static Path resolveDimensionFolder(Path worldFolder, Key dimension) {

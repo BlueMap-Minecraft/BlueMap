@@ -28,6 +28,7 @@ import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.BlueMapWorld;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.core.world.World;
+import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -40,11 +41,11 @@ public class BlueMapWorldImpl implements BlueMapWorld {
 
     private final WeakReference<Plugin> plugin;
     private final String id;
-    private final WeakReference<World> world;
+    private final WeakReference<MCAWorld> world;
 
-    public BlueMapWorldImpl(Plugin plugin, World world) throws IOException {
+    public BlueMapWorldImpl(Plugin plugin, MCAWorld world) throws IOException {
         this.plugin = new WeakReference<>(plugin);
-        this.id = plugin.getBlueMap().getWorldId(world.getSaveFolder());
+        this.id = plugin.getBlueMap().getWorldId(world.getDimensionFolder());
         this.world = new WeakReference<>(world);
     }
 
@@ -59,7 +60,7 @@ public class BlueMapWorldImpl implements BlueMapWorld {
 
     @Override
     public Path getSaveFolder() {
-        return unpack(world).getSaveFolder();
+        return unpack(world).getDimensionFolder();
     }
 
     @Override
