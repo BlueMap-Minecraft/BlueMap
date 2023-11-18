@@ -2,9 +2,9 @@
 
 // !!! SET YOUR SQL-CONNECTION SETTINGS HERE: !!!
 
-$driver   = 'mysql'; //PDO driver name, check the PDO documentation for available drivers at https://www.php.net/manual/en/pdo.drivers.php. Common ones are 'pgsql' or 'mysql'.
+$driver   = 'mysql'; // 'mysql' (MySQL) or 'pgsql' (PostgreSQL)
 $hostname = '127.0.0.1';
-$port     = 3306; // Remember to change this value to match your database configuration
+$port     = 3306;
 $username = 'root';
 $password = '';
 $database = 'bluemap';
@@ -14,6 +14,11 @@ $hiresCompression = 'gzip';
 
 
 // !!! END - DONT CHANGE ANYTHING AFTER THIS LINE !!!
+
+
+
+
+
 
 
 // some helper functions
@@ -82,6 +87,14 @@ function getMimeType($path) {
         return $mimeTypes[$suffix];
 
     return $mimeDefault;
+}
+
+function send($data) {
+    if (is_resource($data)) {
+        fpassthru($data);
+    } else {
+        echo $data;
+    }
 }
 
 // determine relative request-path
@@ -159,7 +172,7 @@ if (startsWith($path, "/maps/")) {
                 } else {
                     header("Content-Type: image/png");
                 }
-                fpassthru($line["data"]);
+                send($line["data"]);
                 exit;
             }
 
@@ -187,9 +200,9 @@ if (startsWith($path, "/maps/")) {
         $statement->execute();
 
         if ($line = $statement->fetch()) {
-        header("Content-Type: ".getMimeType($mapPath));
-        fpassthru($line["value"]);
-        exit;
+            header("Content-Type: ".getMimeType($mapPath));
+            send($line["value"]);
+            exit;
         }
     } catch (PDOException $e) { error(500, "Failed to fetch data"); }
 
