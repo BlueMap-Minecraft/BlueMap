@@ -12,10 +12,7 @@ $database = 'bluemap';
 // set this to "none" if you disabled compression on your maps
 $hiresCompression = 'gzip';
 
-
 // !!! END - DONT CHANGE ANYTHING AFTER THIS LINE !!!
-
-
 
 
 
