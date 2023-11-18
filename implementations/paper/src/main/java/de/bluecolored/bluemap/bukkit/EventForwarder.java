@@ -65,7 +65,7 @@ public class EventForwarder implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public synchronized void onPlayerChat(AsyncChatEvent evt) {
-        String message = String.format(PlainTextComponentSerializer.plainText().serialize(evt.message()));
+        String message = PlainTextComponentSerializer.plainText().serialize(evt.message());
         for (ServerEventListener listener : listeners) listener.onChatMessage(Text.of(message));
     }
 

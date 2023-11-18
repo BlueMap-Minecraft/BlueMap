@@ -75,7 +75,7 @@ public class BlockPropertiesConfig {
                 BlockStateMapping<BlockProperties> mapping = new BlockStateMapping<>(bsKey, bsValueBuilder.build());
 
                 // don't overwrite already present values, higher priority resources are loaded first
-                mappings.computeIfAbsent(bsKey.getFormatted(), k -> new LinkedList<>()).add(0, mapping);
+                mappings.computeIfAbsent(bsKey.getFormatted(), k -> new LinkedList<>()).add(mapping);
             }
             json.endObject();
         }
