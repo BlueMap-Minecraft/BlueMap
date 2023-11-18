@@ -165,7 +165,7 @@ public class MySQLDialect implements Dialect {
                 "`key` varchar(255) NOT NULL, " +
                 "`value` varchar(255) DEFAULT NULL, " +
                 "PRIMARY KEY (`key`)" +
-                ")";
+                ") COLLATE 'utf8mb4_bin'";
     }
 
     @Override
@@ -190,7 +190,7 @@ public class MySQLDialect implements Dialect {
                 "`map_id` VARCHAR(255) NOT NULL," +
                 "PRIMARY KEY (`id`)," +
                 "UNIQUE INDEX `map_id` (`map_id`)" +
-                ");";
+                ") COLLATE 'utf8mb4_bin';";
     }
 
     @Override
@@ -201,7 +201,7 @@ public class MySQLDialect implements Dialect {
                 "`compression` VARCHAR(255) NOT NULL," +
                 "PRIMARY KEY (`id`)," +
                 "UNIQUE INDEX `compression` (`compression`)" +
-                ");";
+                ") COLLATE 'utf8mb4_bin';";
     }
 
     @Override
@@ -213,7 +213,7 @@ public class MySQLDialect implements Dialect {
                 "`value` LONGBLOB NOT NULL," +
                 "PRIMARY KEY (`map`, `key`)," +
                 "CONSTRAINT `fk_bluemap_map_meta_map` FOREIGN KEY (`map`) REFERENCES `bluemap_map` (`id`) ON UPDATE RESTRICT ON DELETE RESTRICT" +
-                ")";
+                ") COLLATE 'utf8mb4_bin'";
     }
 
     @Override
@@ -230,7 +230,7 @@ public class MySQLDialect implements Dialect {
                 "PRIMARY KEY (`map`, `lod`, `x`, `z`)," +
                 "CONSTRAINT `fk_bluemap_map_tile_map` FOREIGN KEY (`map`) REFERENCES `bluemap_map` (`id`) ON UPDATE RESTRICT ON DELETE RESTRICT," +
                 "CONSTRAINT `fk_bluemap_map_tile_compression` FOREIGN KEY (`compression`) REFERENCES `bluemap_map_tile_compression` (`id`) ON UPDATE RESTRICT ON DELETE RESTRICT" +
-                ");";
+                ") COLLATE 'utf8mb4_bin';";
     }
 
     @Override
