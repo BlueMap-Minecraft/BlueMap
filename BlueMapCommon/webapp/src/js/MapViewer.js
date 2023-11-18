@@ -113,6 +113,9 @@ export class MapViewer {
 		this.markers = new MarkerSet("bm-root");
 
 		this.lastFrame = 0;
+		this.lastRedrawChange = 0;
+		events.addEventListener("bluemapCameraMoved", () => this.lastRedrawChange = Date.now())
+		events.addEventListener("bluemapTileLoaded", () => this.lastRedrawChange = Date.now())
 
 		// initialize
 		this.initializeRootElement();
@@ -272,7 +275,6 @@ export class MapViewer {
 		// calculate delta time
 		if (this.lastFrame <= 0) this.lastFrame = now;
 		let delta = now - this.lastFrame;
-		this.lastFrame = now;
 
 		// update stats
 		this.stats.begin();
@@ -283,7 +285,10 @@ export class MapViewer {
 		}
 
 		// render
-		this.render(delta);
+		if (delta >= 1000 || Date.now() - this.lastRedrawChange < 1000) {
+			this.lastFrame = now;
+			this.render(delta);
+		}
 
 		// update stats
 		this.stats.update();

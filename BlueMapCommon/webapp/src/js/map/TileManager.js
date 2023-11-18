@@ -24,7 +24,7 @@
  */
 import { Vector2, Scene, Group } from 'three';
 import  { Tile } from './Tile.js';
-import {alert, hashTile} from '../util/Utils.js';
+import {alert, dispatchEvent, hashTile} from '../util/Utils.js';
 import {TileMap} from "./TileMap";
 
 export class TileManager {
@@ -194,6 +194,11 @@ export class TileManager {
         this.tiles.set(tileHash, tile);
         tile.load(this.tileLoader)
             .then(() => {
+                dispatchEvent(this.events, "bluemapTileLoaded", {
+                    tileManager: this,
+                    tile: tile
+                });
+
                 if (this.loadTimeout) clearTimeout(this.loadTimeout);
                 this.loadTimeout = setTimeout(this.loadCloseTiles, 0);
             })
