@@ -135,7 +135,9 @@ modrinth {
 	token.set(System.getenv("MODRINTH_TOKEN"))
 	projectId.set("swbUV1cr")
 	versionNumber.set("${project.version}-${project.name}")
-	changelog.set("Releasenotes and Changelog:\nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}")
+	changelog.set(file("../../release.md")
+		.readText()
+		.replace("{version}", project.version.toString()))
 	uploadFile.set(tasks.findByName("shadowJar"))
 	loaders.addAll("sponge")
 	gameVersions.addAll("1.16.5")
@@ -150,7 +152,10 @@ oreDeployment {
 	apiKey(System.getenv("ORE_TOKEN"))
 	defaultPublication {
 		projectId.set("BlueMap")
-		versionBody.set("Releasenotes and Changelog:\nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}")
+		createForumPost.set(true)
+		versionBody.set(file("../../release.md")
+			.readText()
+			.replace("{version}", project.version.toString()))
 		publishArtifacts.setFrom(tasks.findByName("shadowJar"))
 	}
 }
