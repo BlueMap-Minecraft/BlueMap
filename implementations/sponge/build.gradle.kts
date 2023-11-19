@@ -151,7 +151,7 @@ tasks.register("publish") {
 oreDeployment {
 	apiKey(System.getenv("ORE_TOKEN"))
 	defaultPublication {
-		projectId.set("BlueMap")
+		projectId.set("bluemap")
 		createForumPost.set(true)
 		versionBody.set(file("../../release.md")
 			.readText()
