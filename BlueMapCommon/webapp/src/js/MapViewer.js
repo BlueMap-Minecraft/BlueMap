@@ -114,8 +114,8 @@ export class MapViewer {
 
 		this.lastFrame = 0;
 		this.lastRedrawChange = 0;
-		events.addEventListener("bluemapCameraMoved", () => this.lastRedrawChange = Date.now())
-		events.addEventListener("bluemapTileLoaded", () => this.lastRedrawChange = Date.now())
+		events.addEventListener("bluemapCameraMoved", this.redraw)
+		events.addEventListener("bluemapTileLoaded", this.redraw)
 
 		// initialize
 		this.initializeRootElement();
@@ -163,6 +163,8 @@ export class MapViewer {
 
 		this.camera.aspect = this.rootElement.clientWidth / this.rootElement.clientHeight;
 		this.camera.updateProjectionMatrix();
+
+		this.redraw();
 	};
 
 	/**
@@ -262,6 +264,13 @@ export class MapViewer {
 				ray: this.raycaster.ray
 			});
 		}
+	}
+
+	/**
+	 * Call to wake up the render-loop and render on high-fps for a while
+	 */
+	redraw = () => {
+		this.lastRedrawChange = Date.now();
 	}
 
 	/**

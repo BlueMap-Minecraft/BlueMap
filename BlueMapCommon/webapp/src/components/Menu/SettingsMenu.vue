@@ -8,15 +8,15 @@
 
     <Group :title="$t('lighting.title')">
       <Slider :value="mapViewer.uniforms.sunlightStrength.value" :min="0" :max="1" :step="0.01"
-              @update="mapViewer.uniforms.sunlightStrength.value = $event">{{$t('lighting.sunlight')}}</Slider>
+              @update="mapViewer.uniforms.sunlightStrength.value = $event; $bluemap.mapViewer.redraw()">{{$t('lighting.sunlight')}}</Slider>
       <Slider :value="mapViewer.uniforms.ambientLight.value" :min="0" :max="1" :step="0.01"
-              @update="mapViewer.uniforms.ambientLight.value = $event">{{$t('lighting.ambientLight')}}</Slider>
+              @update="mapViewer.uniforms.ambientLight.value = $event; $bluemap.mapViewer.redraw()">{{$t('lighting.ambientLight')}}</Slider>
     </Group>
 
     <Group :title="$t('resolution.title')">
       <SimpleButton v-for="stage of qualityStages" :key="stage.name"
                     :active="mapViewer.superSampling === stage.value"
-                    @action="$bluemap.mapViewer.superSampling = stage.value; $bluemap.saveUserSettings();"
+                    @action="$bluemap.mapViewer.superSampling = stage.value; $bluemap.saveUserSettings(); $bluemap.mapViewer.redraw()"
       >{{stage.name}}</SimpleButton>
     </Group>
 
