@@ -1,5 +1,10 @@
 rootProject.name = "BlueMap"
 
+// setup workspace
+val releaseNotesFile = file("release.md")
+if (!releaseNotesFile.exists()) releaseNotesFile.createNewFile();
+
+// implementations
 includeBuild("implementations/cli")
 
 includeBuild("implementations/fabric-1.15.2")
