@@ -30,10 +30,12 @@ import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.resourcepack.texture.Texture;
+import de.bluecolored.bluemap.core.util.Key;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -66,7 +68,10 @@ public class TextureGallery {
     }
 
     public synchronized void put(ResourcePack resourcePack) {
-        resourcePack.getTextures().keySet().forEach(this::put);
+        resourcePack.getTextures().keySet()
+                .stream()
+                .sorted(Comparator.comparing(Key::getFormatted))
+                .forEach(this::put);
     }
 
     public void writeTexturesFile(ResourcePack resourcePack, OutputStream out) throws IOException {
@@ -98,7 +103,7 @@ public class TextureGallery {
             for (int ordinal = 0; ordinal < textures.length; ordinal++) {
                 Texture texture = textures[ordinal];
                 if (texture != null) {
-                    gallery.ordinalMap.put(textures[ordinal].getResourcePath(), ordinal);
+                    gallery.ordinalMap.put(texture.getResourcePath(), ordinal);
                 }
             }
         } catch (JsonIOException ex) {

@@ -6,6 +6,7 @@
 	"minecraft:bubble_column": { "alwaysWaterlogged": true },
 
 	"minecraft:grass": { "randomOffset": true },
+	"minecraft:short_grass": { "randomOffset": true },
 	"minecraft:tall_grass": { "randomOffset": true },
 	"minecraft:fern": { "randomOffset": true },
 	"minecraft:dandelion": { "randomOffset": true },

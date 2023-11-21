@@ -7,6 +7,7 @@
 	"minecraft:lava_cauldron": "#ffffff",
 	"minecraft:grass_block": "@grass",
 	"minecraft:grass": "@grass",
+	"minecraft:short_grass": "@grass",
 	"minecraft:tall_grass": "@grass",
 	"minecraft:fern": "@grass",
 	"minecraft:large_fern": "@grass",
