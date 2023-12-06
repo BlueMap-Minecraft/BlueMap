@@ -125,7 +125,7 @@ modrinth {
 	uploadFile.set(tasks.findByName("shadowJar"))
 	loaders.addAll("paper","purpur","folia")
 	gameVersions.addAll(
-		"1.20.1", "1.20.2"
+		"1.20.1", "1.20.2", "1.20.3"
 	)
 }
 
