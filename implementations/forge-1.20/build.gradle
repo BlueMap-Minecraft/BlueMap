@@ -177,7 +177,7 @@ modrinth {
 			.getText()
 			.replace("{version}", project.version.toString())
 	uploadFile = shadowJar
-	gameVersions = ["1.20", "1.20.1", "1.20.2"]
+	gameVersions = ["1.20", "1.20.1", "1.20.2", "1.20.3", "1.20.4"]
 }
 
 curseforge {
@@ -198,6 +198,8 @@ curseforge {
 		addGameVersion "1.20"
 		addGameVersion "1.20.1"
 		addGameVersion "1.20.2"
+		addGameVersion "1.20.3"
+		addGameVersion "1.20.4"
 
 		mainArtifact shadowJar
 	}
