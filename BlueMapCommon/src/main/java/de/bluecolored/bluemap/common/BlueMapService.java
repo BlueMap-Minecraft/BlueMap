@@ -346,7 +346,7 @@ public class BlueMapService implements Closeable {
                 throw new ConfigurationException(
                         "BlueMap failed to create this folder:\n" +
                         resourcePackFolder + "\n" +
-                        "Does BlueMap has sufficient permissions?",
+                        "Does BlueMap have sufficient permissions?",
                         ex);
             }
 
