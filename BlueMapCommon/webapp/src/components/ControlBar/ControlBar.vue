@@ -2,13 +2,13 @@
   <div class="control-bar">
     <MenuButton :close="appState.menu.isOpen" :back="false" @action="appState.menu.reOpenPage()" :title="$t('menu.tooltip')" />
     <div class="space thin-hide"></div>
-    <SvgButton v-if="appState.maps.length > 0" class="thin-hide" :title="$t('maps.tooltip')"
+    <SvgButton v-if="appState.maps.length > 1" class="thin-hide" :title="$t('maps.tooltip')"
                @action="appState.menu.openPage('maps', $t('maps.title'))">
       <svg viewBox="0 0 30 30">
         <polygon points="26.708,22.841 19.049,25.186 11.311,20.718 3.292,22.841 7.725,5.96 13.475,4.814 19.314,7.409 25.018,6.037 "/>
       </svg>
     </SvgButton>
-    <SvgButton v-if="showMapMenu && (markers.markerSets.length > 0 || markers.markers.length > 0)" class="thin-hide" :title="$t('markers.tooltip')"
+    <SvgButton v-if="showMapMenu && showMarkerMenu" class="thin-hide" :title="$t('markers.tooltip')"
                @action="appState.menu.openPage('markers', $t('markers.title'), {markerSet: markers})">
       <svg viewBox="0 0 30 30">
         <path d="M15,3.563c-4.459,0-8.073,3.615-8.073,8.073c0,6.483,8.196,14.802,8.196,14.802s7.951-8.013,7.951-14.802
@@ -101,12 +101,24 @@
       },
       showMapMenu() {
         return this.mapViewer.mapState === "loading" || this.mapViewer.mapState === "loaded";
+      },
+      showMarkerMenu() {
+        return this.hasMarkers(this.markers)
       }
     },
     methods: {
       openPlayerList() {
         let playerList = this.playerMarkerSet;
         this.appState.menu.openPage('markers', this.$t("players.title"), {markerSet: playerList});
+      },
+      hasMarkers(markerSet) {
+        if (markerSet.markers.length > 0) return true;
+        for (let set of markerSet.markerSets) {
+          if (set.id !== "bm-players" && set.id !== "bm-popup-set") {
+            if (this.hasMarkers(set)) return true;
+          }
+        }
+        return false;
       }
     }
   }

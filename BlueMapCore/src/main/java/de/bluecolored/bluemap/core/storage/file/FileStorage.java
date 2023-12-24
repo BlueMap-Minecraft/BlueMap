@@ -191,6 +191,8 @@ public class FileStorage extends Storage {
     @Override
     public void purgeMap(String mapId, Function<ProgressInfo, Boolean> onProgress) throws IOException {
         final Path directory = getFilePath(mapId);
+        if (!Files.exists(directory)) return;
+
         final int subFilesCount;
         final LinkedList<Path> subFiles;
 

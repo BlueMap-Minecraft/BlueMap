@@ -121,7 +121,9 @@ modrinth {
 	token.set(System.getenv("MODRINTH_TOKEN"))
 	projectId.set("swbUV1cr")
 	versionNumber.set("${project.version}-${project.name}")
-	changelog.set("Releasenotes and Changelog:  \nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}")
+	changelog.set(file("../../release.md")
+		.readText()
+		.replace("{version}", project.version.toString()))
 	uploadFile.set(tasks.findByName("shadowJar"))
 	loaders.addAll("spigot", "paper", "purpur")
 	gameVersions.addAll(
@@ -132,7 +134,7 @@ modrinth {
 		"1.17", "1.17.1",
 		"1.18", "1.18.1", "1.18.2",
 		"1.19", "1.19.1", "1.19.2", "1.19.3", "1.19.4",
-		"1.20", "1.20.1", "1.20.2"
+		"1.20", "1.20.1", "1.20.2", "1.20.3", "1.20.4"
 	)
 }
 

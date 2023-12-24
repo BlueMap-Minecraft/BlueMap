@@ -1,6 +1,9 @@
 
 tasks.register("clean") {
     gradle.includedBuilds.forEach {
+        // workaround for https://github.com/neoforged/NeoGradle/issues/18
+        if (it.name == "neoforge-1.20.2") return@forEach
+
         dependsOn(it.task(":clean"))
     }
 

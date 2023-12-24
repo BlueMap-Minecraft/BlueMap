@@ -708,6 +708,12 @@ export class BlueMapApp {
             }
         }
 
+        switch (values[9]) {
+            case "flat" : this.setFlatView(0); break;
+            case "free" : this.setFreeFlight(0, controls.position.y); break;
+            default : this.setPerspectiveView(0); break;
+        }
+
         controls.position.x = parseFloat(values[1]);
         controls.position.y = parseFloat(values[2]);
         controls.position.z = parseFloat(values[3]);
@@ -717,11 +723,7 @@ export class BlueMapApp {
         controls.tilt = parseFloat(values[7]);
         controls.ortho = parseFloat(values[8]);
 
-        switch (values[9]) {
-            case "flat" : this.setFlatView(0); break;
-            case "free" : this.setFreeFlight(0, controls.position.y); break;
-            default : this.setPerspectiveView(0); break;
-        }
+        this.updatePageAddress();
 
         return true;
     }

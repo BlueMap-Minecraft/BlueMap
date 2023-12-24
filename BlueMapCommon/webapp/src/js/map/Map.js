@@ -63,7 +63,7 @@ export class Map {
 			name: id,
 			startPos: {x: 0, z: 0},
 			skyColor: new Color(),
-			voidColor: new Color(),
+			voidColor: new Color(0, 0, 0),
 			ambientLight: 0,
 			hires: {
 				tileSize: {x: 32, z: 32},

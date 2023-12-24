@@ -119,11 +119,13 @@ modrinth {
 	token.set(System.getenv("MODRINTH_TOKEN"))
 	projectId.set("swbUV1cr")
 	versionNumber.set("${project.version}-${project.name}")
-	changelog.set("Releasenotes and Changelog:  \nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}")
+	changelog.set(file("../../release.md")
+		.readText()
+		.replace("{version}", project.version.toString()))
 	uploadFile.set(tasks.findByName("shadowJar"))
 	loaders.addAll("paper","purpur","folia")
 	gameVersions.addAll(
-		"1.20.1", "1.20.2"
+		"1.20.1", "1.20.2", "1.20.3", "1.20.4"
 	)
 }
 
@@ -132,7 +134,9 @@ hangarPublish {
 		version.set(project.version as String)
 		id.set("BlueMap")
 		channel.set("Release")
-		changelog.set("Releasenotes and Changelog:  \nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}")
+		changelog.set(file("../../release.md")
+			.readText()
+			.replace("{version}", project.version.toString()))
 
 		apiKey.set(System.getenv("HANGAR_TOKEN"))
 
@@ -141,7 +145,7 @@ hangarPublish {
 			register(io.papermc.hangarpublishplugin.model.Platforms.PAPER) {
 				jar.set(tasks.shadowJar.flatMap { it.archiveFile })
 				platformVersions.set(listOf(
-					"1.20.1", "1.20.2"
+					"1.20.1", "1.20.2", "1.20.3", "1.20.4"
 				))
 			}
 		}

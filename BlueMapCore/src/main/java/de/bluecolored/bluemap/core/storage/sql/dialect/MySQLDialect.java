@@ -162,10 +162,10 @@ public class MySQLDialect implements Dialect {
     @Language("MySQL")
     public String initializeStorageMeta() {
         return "CREATE TABLE IF NOT EXISTS `bluemap_storage_meta` (" +
-                "`key` varchar(255) NOT NULL, " +
+                "`key` varchar(190) NOT NULL, " +
                 "`value` varchar(255) DEFAULT NULL, " +
                 "PRIMARY KEY (`key`)" +
-                ")";
+                ") COLLATE 'utf8mb4_bin'";
     }
 
     @Override
@@ -187,10 +187,10 @@ public class MySQLDialect implements Dialect {
     public String initializeMap() {
         return "CREATE TABLE `bluemap_map` (" +
                 "`id` SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT," +
-                "`map_id` VARCHAR(255) NOT NULL," +
+                "`map_id` VARCHAR(190) NOT NULL," +
                 "PRIMARY KEY (`id`)," +
                 "UNIQUE INDEX `map_id` (`map_id`)" +
-                ");";
+                ") COLLATE 'utf8mb4_bin';";
     }
 
     @Override
@@ -198,10 +198,10 @@ public class MySQLDialect implements Dialect {
     public String initializeMapTileCompression() {
         return "CREATE TABLE `bluemap_map_tile_compression` (" +
                 "`id` SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT," +
-                "`compression` VARCHAR(255) NOT NULL," +
+                "`compression` VARCHAR(190) NOT NULL," +
                 "PRIMARY KEY (`id`)," +
                 "UNIQUE INDEX `compression` (`compression`)" +
-                ");";
+                ") COLLATE 'utf8mb4_bin';";
     }
 
     @Override
@@ -209,11 +209,11 @@ public class MySQLDialect implements Dialect {
     public String initializeMapMeta() {
         return "CREATE TABLE `bluemap_map_meta` (" +
                 "`map` SMALLINT UNSIGNED NOT NULL," +
-                "`key` varchar(255) NOT NULL," +
+                "`key` varchar(190) NOT NULL," +
                 "`value` LONGBLOB NOT NULL," +
                 "PRIMARY KEY (`map`, `key`)," +
                 "CONSTRAINT `fk_bluemap_map_meta_map` FOREIGN KEY (`map`) REFERENCES `bluemap_map` (`id`) ON UPDATE RESTRICT ON DELETE RESTRICT" +
-                ")";
+                ") COLLATE 'utf8mb4_bin'";
     }
 
     @Override
@@ -230,7 +230,7 @@ public class MySQLDialect implements Dialect {
                 "PRIMARY KEY (`map`, `lod`, `x`, `z`)," +
                 "CONSTRAINT `fk_bluemap_map_tile_map` FOREIGN KEY (`map`) REFERENCES `bluemap_map` (`id`) ON UPDATE RESTRICT ON DELETE RESTRICT," +
                 "CONSTRAINT `fk_bluemap_map_tile_compression` FOREIGN KEY (`compression`) REFERENCES `bluemap_map_tile_compression` (`id`) ON UPDATE RESTRICT ON DELETE RESTRICT" +
-                ");";
+                ") COLLATE 'utf8mb4_bin';";
     }
 
     @Override

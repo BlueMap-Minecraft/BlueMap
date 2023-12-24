@@ -33,10 +33,12 @@ import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.resourcepack.texture.Texture;
+import de.bluecolored.bluemap.core.util.Key;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,46 +49,53 @@ public class TextureGallery {
             .setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)
             .create();
 
-    private final Map<ResourcePath<Texture>, Integer> ordinalMap;
+    private final Map<ResourcePath<Texture>, TextureMapping> textureMappings;
     private int nextId;
 
     public TextureGallery() {
-        this.ordinalMap = new HashMap<>();
+        this.textureMappings = new HashMap<>();
         this.nextId = 0;
     }
 
     public void clear() {
-        this.ordinalMap.clear();
+        this.textureMappings.clear();
         this.nextId = 0;
     }
 
     public int get(@Nullable ResourcePath<Texture> textureResourcePath) {
         if (textureResourcePath == null) textureResourcePath = ResourcePack.MISSING_TEXTURE;
-        Integer ordinal = ordinalMap.get(textureResourcePath);
-        return ordinal != null ? ordinal : 0;
+        TextureMapping mapping = textureMappings.get(textureResourcePath);
+        return mapping != null ? mapping.getId() : 0;
     }
 
-    public synchronized int put(ResourcePath<Texture> textureResourcePath) {
-        Integer ordinal = ordinalMap.putIfAbsent(textureResourcePath, nextId);
-        if (ordinal == null) return nextId++;
-        return ordinal;
+    public synchronized void put(ResourcePath<Texture> textureResourcePath) {
+        textureMappings.compute(textureResourcePath, (r, mapping) -> {
+            if (mapping == null)
+                return new TextureMapping(nextId++, textureResourcePath.getResource());
+
+            Texture texture = textureResourcePath.getResource();
+            if (texture != null) mapping.setTexture(texture);
+            return mapping;
+        });
     }
 
     public synchronized void put(ResourcePack resourcePack) {
-        resourcePack.getTextures().keySet().forEach(this::put);
+        this.put(ResourcePack.MISSING_TEXTURE); // put this first
+        resourcePack.getTextures().keySet()
+                .stream()
+                .sorted(Comparator.comparing(Key::getFormatted))
+                .forEach(this::put);
     }
 
-    public void writeTexturesFile(ResourcePack resourcePack, OutputStream out) throws IOException {
+    public void writeTexturesFile(OutputStream out) throws IOException {
         Texture[] textures = new Texture[nextId];
         Arrays.fill(textures, Texture.MISSING);
 
-        ordinalMap.forEach((textureResourcePath, ordinal) -> {
-            Texture texture = textureResourcePath.getResource(resourcePack::getTexture);
-            if (texture != null) textures[ordinal] = texture;
-
-            // make sure the resource-path doesn't get lost
-            if (textures[ordinal].getResourcePath().equals(ResourcePack.MISSING_TEXTURE))
-                textures[ordinal] = Texture.missing(textureResourcePath);
+        this.textureMappings.forEach((textureResourcePath, mapping) -> {
+            int ordinal = mapping.getId();
+            Texture texture = mapping.getTexture();
+            if (texture == null) texture = Texture.missing(textureResourcePath);
+            textures[ordinal] = texture;
         });
 
         try (Writer writer = new OutputStreamWriter(out)) {
@@ -105,13 +114,36 @@ public class TextureGallery {
             for (int ordinal = 0; ordinal < textures.length; ordinal++) {
                 Texture texture = textures[ordinal];
                 if (texture != null) {
-                    gallery.ordinalMap.put(textures[ordinal].getResourcePath(), ordinal);
+                    gallery.textureMappings.put(texture.getResourcePath(), new TextureMapping(ordinal, texture));
                 }
             }
         } catch (JsonIOException ex) {
             throw new IOException(ex);
         }
         return gallery;
+    }
+
+    static class TextureMapping {
+        private final int id;
+        private @Nullable Texture texture;
+
+        public TextureMapping(int id, @Nullable Texture texture) {
+            this.id = id;
+            this.texture = texture;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public @Nullable Texture getTexture() {
+            return texture;
+        }
+
+        public void setTexture(@Nullable Texture texture) {
+            this.texture = texture;
+        }
+
     }
 
 }

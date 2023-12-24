@@ -123,7 +123,7 @@ tasks.processResources {
 
 //resource Extensions
 val resourceIds: Array<String> = arrayOf(
-    "1_13", "1_15", "1_16", "1_18"
+    "1_13", "1_15", "1_16", "1_18", "1_20_3"
 )
 
 tasks.register("zipResourceExtensions") {

@@ -204,7 +204,11 @@ export const animate = function (animationFrame, durationMs = 1000, postAnimatio
         }
     };
 
-    window.requestAnimationFrame(time => animation.frame(time));
+    if (durationMs !== 0) {
+        window.requestAnimationFrame(time => animation.frame(time));
+    } else {
+        animation.frame(0);
+    }
 
     return animation;
 }

@@ -2,6 +2,7 @@
 
 // !!! SET YOUR SQL-CONNECTION SETTINGS HERE: !!!
 
+$driver   = 'mysql'; // 'mysql' (MySQL) or 'pgsql' (PostgreSQL)
 $hostname = '127.0.0.1';
 $port     = 3306;
 $username = 'root';
@@ -85,6 +86,14 @@ function getMimeType($path) {
     return $mimeDefault;
 }
 
+function send($data) {
+    if (is_resource($data)) {
+        fpassthru($data);
+    } else {
+        echo $data;
+    }
+}
+
 // determine relative request-path
 $root = dirname($_SERVER['PHP_SELF']);
 if ($root === "/" || $root === "\\") $root = "";
@@ -111,9 +120,12 @@ if (startsWith($path, "/maps/")) {
     $mapId = $pathParts[0];
     $mapPath = explode("?", $pathParts[1], 2)[0];
 
-    // get sql-connection
-    $sql = new mysqli($hostname, $username, $password, $database, $port);
-    if ($sql->errno) error(500, "Failed to connect to Database!");
+    // Initialize PDO
+    try {
+        $sql = new PDO("$driver:host=$hostname;dbname=$database", $username, $password);
+        $sql->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    } catch (PDOException $e ) { error(500, "Failed to connect to database"); }
+
 
     // provide map-tiles
     if (startsWith($mapPath, "tiles/")) {
@@ -126,65 +138,70 @@ if (startsWith($path, "/maps/")) {
         $compression = $lod === 0 ? $hiresCompression : "none";
 
         // query for tile
-        $statement = $sql->prepare("
-            SELECT t.`data`
-            FROM `bluemap_map_tile` t
-             INNER JOIN `bluemap_map` m
-              ON t.`map` = m.`id`
-             INNER JOIN `bluemap_map_tile_compression` c
-              ON t.`compression` = c.`id`
-            WHERE m.`map_id` = ?
-            AND t.`lod` = ?
-            AND t.`x` = ?
-            AND t.`z` = ?
-            AND c.`compression` = ?
-        ");
-        $statement->bind_param("siiis", $mapId, $lod, $tileX, $tileZ, $compression);
-        $statement->execute();
-        if ($statement->errno) error(500, "Database query failed!");
+        try {
+            $statement = $sql->prepare("
+                SELECT t.data
+                FROM bluemap_map_tile t
+                INNER JOIN bluemap_map m
+                ON t.map = m.id
+                INNER JOIN bluemap_map_tile_compression c
+                ON t.compression = c.id
+                WHERE m.map_id = :map_id
+                AND t.lod = :lod
+                AND t.x = :x
+                AND t.z = :z
+                AND c.compression = :compression
+            ");
+            $statement->bindParam( ':map_id', $mapId, PDO::PARAM_STR );
+            $statement->bindParam( ':lod', $lod, PDO::PARAM_INT );
+            $statement->bindParam( ':x', $tileX, PDO::PARAM_INT );
+            $statement->bindParam( ':z', $tileZ, PDO::PARAM_INT );
+            $statement->bindParam( ':compression', $compression, PDO::PARAM_STR);
+            $statement->setFetchMode(PDO::FETCH_ASSOC);
+            $statement->execute();
 
-        // return result
-        $result = $statement->get_result();
-        if ($result && $line = $result->fetch_assoc()) {
-            if ($compression !== "none")
-                header("Content-Encoding: $compression");
-
-            if ($lod === 0) {
-                header("Content-Type: application/json");
-            } else {
-                header("Content-Type: image/png");
+            // return result
+            if ($line = $statement->fetch()) {
+                if ($compression !== "none")
+                    header("Content-Encoding: $compression");
+                if ($lod === 0) {
+                    header("Content-Type: application/json");
+                } else {
+                    header("Content-Type: image/png");
+                }
+                send($line["data"]);
+                exit;
             }
 
-            echo $line["data"];
-            exit;
-        }
+        } catch (PDOException $e) { error(500, "Failed to fetch data"); }
 
         // empty json response if nothing found
         header("Content-Type: application/json");
         echo "{}";
         exit;
-
     }
 
     // provide meta-files
-    $statement = $sql->prepare("
-        SELECT t.`value`
-        FROM `bluemap_map_meta` t
-         INNER JOIN `bluemap_map` m
-          ON t.`map` = m.`id`
-        WHERE m.`map_id` = ?
-        AND t.`key` = ?
-    ");
-    $statement->bind_param("ss", $mapId, $mapPath);
-    $statement->execute();
-    if ($statement->errno) error(500, "Database query failed!");
+    try {
+        $statement = $sql->prepare("
+            SELECT t.value
+            FROM bluemap_map_meta t
+            INNER JOIN bluemap_map m
+            ON t.map = m.id
+            WHERE m.map_id = :map_id
+            AND t.key = :map_path
+        ");
+        $statement->bindParam( ':map_id', $mapId, PDO::PARAM_STR );
+        $statement->bindParam( ':map_path', $mapPath, PDO::PARAM_STR );
+        $statement->setFetchMode(PDO::FETCH_ASSOC);
+        $statement->execute();
 
-    $result = $statement->get_result();
-    if ($result && $line = $result->fetch_assoc()) {
-        header("Content-Type: ".getMimeType($mapPath));
-        echo $line["value"];
-        exit;
-    }
+        if ($line = $statement->fetch()) {
+            header("Content-Type: ".getMimeType($mapPath));
+            send($line["value"]);
+            exit;
+        }
+    } catch (PDOException $e) { error(500, "Failed to fetch data"); }
 
 }
 

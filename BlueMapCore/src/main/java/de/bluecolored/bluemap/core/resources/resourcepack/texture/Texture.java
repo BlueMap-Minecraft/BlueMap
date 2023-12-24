@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.core.resources.resourcepack.texture;
 
 import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
+import de.bluecolored.bluemap.core.util.BufferedImageUtil;
 import de.bluecolored.bluemap.core.util.math.Color;
 
 import javax.imageio.ImageIO;
@@ -112,7 +113,7 @@ public class Texture {
         boolean halfTransparent = checkHalfTransparent(image);
 
         //calculate color
-        Color color = calculateColor(image);
+        Color color = BufferedImageUtil.averageColor(image);
 
         //write to Base64
         ByteArrayOutputStream os = new ByteArrayOutputStream();
@@ -134,36 +135,6 @@ public class Texture {
         }
 
         return false;
-    }
-
-    private static Color calculateColor(BufferedImage image){
-        float alpha = 0f, red = 0f, green = 0f, blue = 0f;
-        int count = 0;
-
-        for (int x = 0; x < image.getWidth(); x++){
-            for (int y = 0; y < image.getHeight(); y++){
-                int pixel = image.getRGB(x, y);
-                float pixelAlpha = ((pixel >> 24) & 0xff) / 255f;
-                float pixelRed = ((pixel >> 16) & 0xff) / 255f;
-                float pixelGreen = ((pixel >> 8) & 0xff) / 255f;
-                float pixelBlue = (pixel & 0xff) / 255f;
-
-                count++;
-                alpha += pixelAlpha;
-                red += pixelRed * pixelAlpha;
-                green += pixelGreen * pixelAlpha;
-                blue += pixelBlue * pixelAlpha;
-            }
-        }
-
-        if (count == 0 || alpha == 0) return new Color();
-
-        red /= alpha;
-        green /= alpha;
-        blue /= alpha;
-        alpha /= count;
-
-        return new Color().set(red, green, blue, alpha, false);
     }
 
     public static Texture missing(ResourcePath<Texture> resourcePath) {

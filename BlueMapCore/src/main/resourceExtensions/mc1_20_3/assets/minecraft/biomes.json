@@ -1,0 +1,324 @@
+{
+    "minecraft:the_void": {
+        "humidity": 0.5,
+        "temperature": 0.5,
+        "watercolor": 4159204
+    },
+    "minecraft:plains": {
+        "humidity": 0.4,
+        "temperature": 0.8,
+        "watercolor": 4159204
+    },
+    "minecraft:sunflower_plains": {
+        "humidity": 0.4,
+        "temperature": 0.8,
+        "watercolor": 4159204
+    },
+    "minecraft:snowy_plains": {
+        "humidity": 0.5,
+        "temperature": 0.0,
+        "watercolor": 4159204
+    },
+    "minecraft:ice_spikes": {
+        "humidity": 0.5,
+        "temperature": 0.0,
+        "watercolor": 4159204
+    },
+    "minecraft:desert": {
+        "humidity": 0.0,
+        "temperature": 2.0,
+        "watercolor": 4159204
+    },
+    "minecraft:swamp": {
+        "humidity": 0.9,
+        "temperature": 0.8,
+        "watercolor": 6388580,
+        "grasscolor": "#6A7039",
+        "foliagecolor": 6975545
+    },
+    "minecraft:mangrove_swamp": {
+        "humidity": 0.9,
+        "temperature": 0.8,
+        "watercolor": "#3A7A6A",
+        "grasscolor": "#6A7039",
+        "foliagecolor": "#8DB127"
+    },
+    "minecraft:forest": {
+        "humidity": 0.8,
+        "temperature": 0.7,
+        "watercolor": 4159204
+    },
+    "minecraft:flower_forest": {
+        "humidity": 0.8,
+        "temperature": 0.7,
+        "watercolor": 4159204
+    },
+    "minecraft:birch_forest": {
+        "humidity": 0.6,
+        "temperature": 0.6,
+        "watercolor": 4159204
+    },
+    "minecraft:dark_forest": {
+        "humidity": 0.8,
+        "temperature": 0.7,
+        "watercolor": 4159204,
+        "foliagecolor": "#28340a55",
+        "grasscolor": "#28340a88"
+    },
+    "minecraft:old_growth_birch_forest": {
+        "humidity": 0.6,
+        "temperature": 0.6,
+        "watercolor": 4159204
+    },
+    "minecraft:old_growth_pine_taiga": {
+        "humidity": 0.8,
+        "temperature": 0.3,
+        "watercolor": 4159204
+    },
+    "minecraft:old_growth_spruce_taiga": {
+        "humidity": 0.8,
+        "temperature": 0.25,
+        "watercolor": 4159204
+    },
+    "minecraft:taiga": {
+        "humidity": 0.8,
+        "temperature": 0.25,
+        "watercolor": 4159204
+    },
+    "minecraft:snowy_taiga": {
+        "humidity": 0.4,
+        "temperature": -0.5,
+        "watercolor": 4020182
+    },
+    "minecraft:savanna": {
+        "humidity": 0.0,
+        "temperature": 1.2,
+        "watercolor": 4159204
+    },
+    "minecraft:savanna_plateau": {
+        "humidity": 0.0,
+        "temperature": 1.0,
+        "watercolor": 4159204
+    },
+    "minecraft:windswept_hills": {
+        "humidity": 0.3,
+        "temperature": 0.2,
+        "watercolor": 4159204
+    },
+    "minecraft:windswept_gravelly_hills": {
+        "humidity": 0.3,
+        "temperature": 0.2,
+        "watercolor": 4159204
+    },
+    "minecraft:windswept_forest": {
+        "humidity": 0.3,
+        "temperature": 0.2,
+        "watercolor": 4159204
+    },
+    "minecraft:windswept_savanna": {
+        "humidity": 0.0,
+        "temperature": 1.1,
+        "watercolor": 4159204
+    },
+    "minecraft:jungle": {
+        "humidity": 0.9,
+        "temperature": 0.95,
+        "watercolor": 4159204
+    },
+    "minecraft:sparse_jungle": {
+        "humidity": 0.8,
+        "temperature": 0.95,
+        "watercolor": 4159204
+    },
+    "minecraft:bamboo_jungle": {
+        "humidity": 0.9,
+        "temperature": 0.95,
+        "watercolor": 4159204
+    },
+    "minecraft:badlands": {
+        "humidity": 0.0,
+        "temperature": 2.0,
+        "watercolor": 4159204,
+        "foliagecolor": 10387789,
+        "grasscolor": 9470285
+    },
+    "minecraft:eroded_badlands": {
+        "humidity": 0.0,
+        "temperature": 2.0,
+        "watercolor": 4159204,
+        "foliagecolor": 10387789,
+        "grasscolor": 9470285
+    },
+    "minecraft:wooded_badlands": {
+        "humidity": 0.0,
+        "temperature": 2.0,
+        "watercolor": 4159204,
+        "foliagecolor": 10387789,
+        "grasscolor": 9470285
+    },
+    "minecraft:meadow": {
+        "humidity": 0.8,
+        "temperature": 0.5,
+        "watercolor": 937679
+    },
+    "minecraft:grove": {
+        "humidity": 0.8,
+        "temperature": -0.2,
+        "watercolor": 4159204
+    },
+    "minecraft:snowy_slopes": {
+        "humidity": 0.9,
+        "temperature": -0.3,
+        "watercolor": 4159204
+    },
+    "minecraft:frozen_peaks": {
+        "humidity": 0.9,
+        "temperature": -0.7,
+        "watercolor": 4159204
+    },
+    "minecraft:jagged_peaks": {
+        "humidity": 0.9,
+        "temperature": -0.7,
+        "watercolor": 4159204
+    },
+    "minecraft:stony_peaks": {
+        "humidity": 0.3,
+        "temperature": 1.0,
+        "watercolor": 4159204
+    },
+    "minecraft:river": {
+        "humidity": 0.5,
+        "temperature": 0.5,
+        "watercolor": 4159204
+    },
+    "minecraft:frozen_river": {
+        "humidity": 0.5,
+        "temperature": 0.0,
+        "watercolor": 3750089
+    },
+    "minecraft:beach": {
+        "humidity": 0.4,
+        "temperature": 0.8,
+        "watercolor": 4159204
+    },
+    "minecraft:snowy_beach": {
+        "humidity": 0.3,
+        "temperature": 0.05,
+        "watercolor": 4020182
+    },
+    "minecraft:stony_shore": {
+        "humidity": 0.3,
+        "temperature": 0.2,
+        "watercolor": 4159204
+    },
+    "minecraft:warm_ocean": {
+        "humidity": 0.5,
+        "temperature": 0.5,
+        "watercolor": 4445678
+    },
+    "minecraft:lukewarm_ocean": {
+        "humidity": 0.5,
+        "temperature": 0.5,
+        "watercolor": 4566514
+    },
+    "minecraft:deep_lukewarm_ocean": {
+        "humidity": 0.5,
+        "temperature": 0.5,
+        "watercolor": 4566514
+    },
+    "minecraft:ocean": {
+        "humidity": 0.5,
+        "temperature": 0.5,
+        "watercolor": 4159204
+    },
+    "minecraft:deep_ocean": {
+        "humidity": 0.5,
+        "temperature": 0.5,
+        "watercolor": 4159204
+    },
+    "minecraft:cold_ocean": {
+        "humidity": 0.5,
+        "temperature": 0.5,
+        "watercolor": 4020182
+    },
+    "minecraft:deep_cold_ocean": {
+        "humidity": 0.5,
+        "temperature": 0.5,
+        "watercolor": 4020182
+    },
+    "minecraft:frozen_ocean": {
+        "humidity": 0.5,
+        "temperature": 0.0,
+        "watercolor": 3750089
+    },
+    "minecraft:deep_frozen_ocean": {
+        "humidity": 0.5,
+        "temperature": 0.5,
+        "watercolor": 3750089
+    },
+    "minecraft:mushroom_fields": {
+        "humidity": 1.0,
+        "temperature": 0.9,
+        "watercolor": 4159204
+    },
+    "minecraft:dripstone_caves": {
+        "humidity": 0.4,
+        "temperature": 0.8,
+        "watercolor": 4159204
+    },
+    "minecraft:lush_caves": {
+        "humidity": 0.5,
+        "temperature": 0.5,
+        "watercolor": 4159204
+    },
+    "minecraft:nether_wastes": {
+        "humidity": 0.0,
+        "temperature": 2.0,
+        "watercolor": 4159204
+    },
+    "minecraft:warped_forest": {
+        "humidity": 0.0,
+        "temperature": 2.0,
+        "watercolor": 4159204
+    },
+    "minecraft:crimson_forest": {
+        "humidity": 0.0,
+        "temperature": 2.0,
+        "watercolor": 4159204
+    },
+    "minecraft:soul_sand_valley": {
+        "humidity": 0.0,
+        "temperature": 2.0,
+        "watercolor": 4159204
+    },
+    "minecraft:basalt_deltas": {
+        "humidity": 0.0,
+        "temperature": 2.0,
+        "watercolor": 4159204
+    },
+    "minecraft:the_end": {
+        "humidity": 0.5,
+        "temperature": 0.5,
+        "watercolor": 4159204
+    },
+    "minecraft:end_highlands": {
+        "humidity": 0.5,
+        "temperature": 0.5,
+        "watercolor": 4159204
+    },
+    "minecraft:end_midlands": {
+        "humidity": 0.5,
+        "temperature": 0.5,
+        "watercolor": 4159204
+    },
+    "minecraft:small_end_islands": {
+        "humidity": 0.5,
+        "temperature": 0.5,
+        "watercolor": 4159204
+    },
+    "minecraft:end_barrens": {
+        "humidity": 0.5,
+        "temperature": 0.5,
+        "watercolor": 4159204
+    }
+}

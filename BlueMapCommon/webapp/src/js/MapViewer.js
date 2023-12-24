@@ -113,6 +113,9 @@ export class MapViewer {
 		this.markers = new MarkerSet("bm-root");
 
 		this.lastFrame = 0;
+		this.lastRedrawChange = 0;
+		events.addEventListener("bluemapCameraMoved", this.redraw)
+		events.addEventListener("bluemapTileLoaded", this.redraw)
 
 		// initialize
 		this.initializeRootElement();
@@ -160,6 +163,8 @@ export class MapViewer {
 
 		this.camera.aspect = this.rootElement.clientWidth / this.rootElement.clientHeight;
 		this.camera.updateProjectionMatrix();
+
+		this.redraw();
 	};
 
 	/**
@@ -262,6 +267,13 @@ export class MapViewer {
 	}
 
 	/**
+	 * Call to wake up the render-loop and render on high-fps for a while
+	 */
+	redraw = () => {
+		this.lastRedrawChange = Date.now();
+	}
+
+	/**
 	 * @private
 	 * The render-loop to update and possibly render a new frame.
 	 * @param now {number} the current time in milliseconds
@@ -272,7 +284,6 @@ export class MapViewer {
 		// calculate delta time
 		if (this.lastFrame <= 0) this.lastFrame = now;
 		let delta = now - this.lastFrame;
-		this.lastFrame = now;
 
 		// update stats
 		this.stats.begin();
@@ -283,7 +294,10 @@ export class MapViewer {
 		}
 
 		// render
-		this.render(delta);
+		if (delta >= 1000 || Date.now() - this.lastRedrawChange < 1000) {
+			this.lastFrame = now;
+			this.render(delta);
+		}
 
 		// update stats
 		this.stats.update();

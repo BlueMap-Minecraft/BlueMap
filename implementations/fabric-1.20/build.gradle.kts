@@ -140,9 +140,11 @@ modrinth {
 	token.set(System.getenv("MODRINTH_TOKEN"))
 	projectId.set("swbUV1cr")
 	versionNumber.set("${project.version}-${project.name}")
-	changelog.set("Releasenotes and Changelog:\nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}")
+	changelog.set(file("../../release.md")
+		.readText()
+		.replace("{version}", project.version.toString()))
 	uploadFile.set(tasks.findByName("remappedShadowJar"))
-	gameVersions.addAll("1.20", "1.20.1", "1.20.2")
+	gameVersions.addAll("1.20", "1.20.1", "1.20.2", "1.20.3", "1.20.4")
 	dependencies {
 		required.project("P7dR8mSH") // Fabric API
 	}
@@ -153,7 +155,9 @@ curseforge {
 	project(closureOf<CurseProject> {
 		id = "406463"
 		changelogType = "markdown"
-		changelog = "**Releasenotes and Changelog:**\n\nhttps://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${project.version}"
+		changelog = file("../../release.md")
+			.readText()
+			.replace("{version}", project.version.toString())
 		releaseType = "release"
 
 		addGameVersion("Fabric")
@@ -164,6 +168,8 @@ curseforge {
 		addGameVersion("1.20")
 		addGameVersion("1.20.1")
 		addGameVersion("1.20.2")
+		addGameVersion("1.20.3")
+		addGameVersion("1.20.4")
 
 		mainArtifact(tasks.findByName("remappedShadowJar"), closureOf<CurseArtifact> {
 			relations(closureOf<CurseRelation> {
