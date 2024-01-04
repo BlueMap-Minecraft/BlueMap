@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.core.map;
 
 import com.google.gson.JsonIOException;
+import com.google.gson.JsonParseException;
 import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
@@ -110,7 +111,7 @@ public class TextureGallery {
                     gallery.textureMappings.put(texture.getResourcePath(), new TextureMapping(ordinal, texture));
                 }
             }
-        } catch (JsonIOException ex) {
+        } catch (JsonParseException ex) {
             throw new IOException(ex);
         }
         return gallery;
