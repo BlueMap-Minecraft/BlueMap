@@ -6,9 +6,9 @@
         <SwitchHandle :on="markerSet.visible" v-if="markerSet.toggleable"/>
       </div>
       <div class="stats">
-        <div v-if="markerSet.markers.length > 0">
-          {{ markerSet.markers.length }}
-          {{ $t('markers.marker', markerSet.markers.length) }}
+        <div v-if="filteredMarkerCount > 0">
+          {{ filteredMarkerCount }}
+          {{ $t('markers.marker', filteredMarkerCount) }}
         </div>
         <div v-if="filteredMarkerSetCount > 0">
           {{ filteredMarkerSetCount }}
@@ -43,6 +43,13 @@ export default {
       let count = 0;
       for (let markerSet of this.markerSet.markerSets) {
         if (markerSet.listed) count++;
+      }
+      return count;
+    },
+    filteredMarkerCount() {
+      let count = 0;
+      for (let marker of this.markerSet.markers) {
+        if (marker.listed) count++;
       }
       return count;
     },
