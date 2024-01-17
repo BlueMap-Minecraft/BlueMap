@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.common;
 
-import com.google.gson.GsonBuilder;
 import de.bluecolored.bluemap.common.config.WebappConfig;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -40,7 +39,9 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -68,10 +69,7 @@ public class WebFilesManager {
         FileHelper.createDirectories(getSettingsFile().getParent());
         try (BufferedWriter writer = Files.newBufferedWriter(getSettingsFile(),
                 StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-            ResourcesGson.addAdapter(new GsonBuilder())
-                    .setPrettyPrinting() // enable pretty printing for easy editing
-                    .create()
-                    .toJson(this.settings, writer);
+            ResourcesGson.INSTANCE.toJson(this.settings, writer);
         }
     }
 
