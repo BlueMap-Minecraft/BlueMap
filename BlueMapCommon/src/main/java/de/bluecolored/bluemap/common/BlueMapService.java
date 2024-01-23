@@ -63,6 +63,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -180,20 +181,29 @@ public class BlueMapService implements Closeable {
     }
 
     public synchronized Map<String, World> getWorlds() throws InterruptedException {
-        if (worlds == null) loadWorldsAndMaps();
+        return getWorlds(mapId -> true);
+    }
+
+    public synchronized Map<String, World> getWorlds(Predicate<String> mapFilter) throws InterruptedException {
+        if (worlds == null) loadWorldsAndMaps(mapFilter);
         return worlds;
     }
 
     public synchronized Map<String, BmMap> getMaps() throws InterruptedException {
-        if (maps == null) loadWorldsAndMaps();
+        return getMaps(mapId -> true);
+    }
+
+    public synchronized Map<String, BmMap> getMaps(Predicate<String> mapFilter) throws InterruptedException {
+        if (maps == null) loadWorldsAndMaps(mapFilter);
         return maps;
     }
 
-    private synchronized void loadWorldsAndMaps() throws InterruptedException {
+    private synchronized void loadWorldsAndMaps(Predicate<String> mapFilter) throws InterruptedException {
         maps = new HashMap<>();
         worlds = new HashMap<>();
 
         for (var entry : configs.getMapConfigs().entrySet()) {
+            if (!mapFilter.test(entry.getKey())) continue;
             try {
                 loadMapConfig(entry.getKey(), entry.getValue());
             } catch (ConfigurationException ex) {

@@ -51,6 +51,7 @@ import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.FileHelper;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.time.DurationFormatUtils;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,6 +64,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 public class BlueMapCLI implements ServerInterface {
@@ -70,7 +72,8 @@ public class BlueMapCLI implements ServerInterface {
     private MinecraftVersion minecraftVersion = MinecraftVersion.LATEST_SUPPORTED;
     private Path configFolder;
 
-    public void renderMaps(BlueMapService blueMap, boolean watch, boolean forceRender, boolean forceGenerateWebapp) throws ConfigurationException, IOException, InterruptedException {
+    public void renderMaps(BlueMapService blueMap, boolean watch, boolean forceRender, boolean forceGenerateWebapp,
+                           @Nullable String mapsToRender) throws ConfigurationException, IOException, InterruptedException {
 
         //metrics report
         if (blueMap.getConfigs().getCoreConfig().isMetrics()) Metrics.sendReportAsync("cli");
@@ -85,7 +88,12 @@ public class BlueMapCLI implements ServerInterface {
         RenderManager renderManager = new RenderManager();
 
         //load maps
-        Map<String, BmMap> maps = blueMap.getMaps();
+        Predicate<String> mapFilter = mapId -> true;
+        if (mapsToRender != null) {
+            Set<String> mapsToRenderSet = Set.of(mapsToRender.split(","));
+            mapFilter = mapsToRenderSet::contains;
+        }
+        Map<String, BmMap> maps = blueMap.getMaps(mapFilter);
 
         //watcher
         List<RegionFileWatchService> regionFileWatchServices = new ArrayList<>();
@@ -362,7 +370,8 @@ public class BlueMapCLI implements ServerInterface {
                 boolean watch = cmd.hasOption("u");
                 boolean force = cmd.hasOption("f");
                 boolean generateWebappFiles = cmd.hasOption("g");
-                cli.renderMaps(blueMap, watch, force, generateWebappFiles);
+                String mapsToRender = cmd.getOptionValue("m", null);
+                cli.renderMaps(blueMap, watch, force, generateWebappFiles, mapsToRender);
             } else {
                 if (cmd.hasOption("g")) {
                     noActions = false;
@@ -458,6 +467,7 @@ public class BlueMapCLI implements ServerInterface {
 
         options.addOption("r", "render", false, "Renders the maps configured in the 'render.conf' file");
         options.addOption("f", "force-render", false, "Forces rendering everything, instead of only rendering chunks that have been modified since the last render");
+        options.addOption("m", "maps", true, "A comma-separated list of map-id's that should be rendered. Example: 'world,nether'");
 
         options.addOption("u", "watch", false, "Watches for file-changes after rendering and updates the map");
 
