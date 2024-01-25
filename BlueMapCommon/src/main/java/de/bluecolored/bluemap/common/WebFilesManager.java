@@ -42,7 +42,9 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -50,7 +52,7 @@ public class WebFilesManager {
 
     private static final Gson GSON = ResourcesGson.addAdapter(new GsonBuilder())
             .setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)
-            .setPrettyPrinting() // enable pretty printing for easy editing
+            //.setPrettyPrinting() // enable pretty printing for easy editing
             .create();
 
     private final Path webRoot;

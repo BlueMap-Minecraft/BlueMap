@@ -62,6 +62,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -127,12 +128,18 @@ public class BlueMapService implements Closeable {
     }
 
     public Map<String, BmMap> loadMaps() throws InterruptedException {
-        loadWorldsAndMaps();
+        loadWorldsAndMaps(mapId -> true);
         return maps;
     }
 
-    private synchronized void loadWorldsAndMaps() throws InterruptedException {
+    public Map<String, BmMap> loadMaps(Predicate<String> mapFilter) throws InterruptedException {
+        loadWorldsAndMaps(mapFilter);
+        return maps;
+    }
+
+    private synchronized void loadWorldsAndMaps(Predicate<String> mapFilter) throws InterruptedException {
         for (var entry : config.getMapConfigs().entrySet()) {
+            if (!mapFilter.test(entry.getKey())) continue;
             try {
                 loadMapConfig(entry.getKey(), entry.getValue());
             } catch (ConfigurationException ex) {
@@ -273,7 +280,7 @@ public class BlueMapService implements Closeable {
                 throw new ConfigurationException(
                         "BlueMap failed to create this folder:\n" +
                         resourcePackFolder + "\n" +
-                        "Does BlueMap has sufficient permissions?",
+                        "Does BlueMap have sufficient permissions?",
                         ex);
             }
 
