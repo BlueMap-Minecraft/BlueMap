@@ -179,8 +179,8 @@ export class MapViewer {
 	handleMapInteraction(screenPosition, data = {}) {
 		let rootOffset = elementOffset(this.rootElement);
 		let normalizedScreenPos = new Vector2(
-			((screenPosition.x - rootOffset.top) / this.rootElement.clientWidth) * 2 - 1,
-			-((screenPosition.y - rootOffset.left) / this.rootElement.clientHeight) * 2 + 1
+			((screenPosition.x - rootOffset.left) / this.rootElement.clientWidth) * 2 - 1,
+			-((screenPosition.y - rootOffset.top) / this.rootElement.clientHeight) * 2 + 1
 		);
 
 		if (this.map && this.map.isLoaded){
