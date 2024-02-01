@@ -4,13 +4,17 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.datapack.DataPack;
 import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.Vector2iCache;
-import de.bluecolored.bluemap.core.world.*;
+import de.bluecolored.bluemap.core.world.Chunk;
+import de.bluecolored.bluemap.core.world.DimensionType;
+import de.bluecolored.bluemap.core.world.Region;
+import de.bluecolored.bluemap.core.world.World;
 import de.bluecolored.bluemap.core.world.mca.chunk.ChunkLoader;
 import de.bluecolored.bluemap.core.world.mca.data.LevelData;
 import de.bluecolored.bluemap.core.world.mca.region.RegionType;
@@ -23,7 +27,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -31,6 +34,7 @@ import java.util.zip.GZIPInputStream;
 
 @Getter
 @ToString
+@DebugDump
 public class MCAWorld implements World {
 
     private static final Grid CHUNK_GRID = new Grid(16);
@@ -61,8 +65,8 @@ public class MCAWorld implements World {
             .expireAfterWrite(10, TimeUnit.MINUTES)
             .build(this::loadChunk);
 
-    public MCAWorld(String id, Path worldFolder, Key dimension, LevelData levelData, DataPack dataPack) {
-        this.id = id;
+    private MCAWorld(Path worldFolder, Key dimension, LevelData levelData, DataPack dataPack) {
+        this.id = id(worldFolder, dimension);
         this.worldFolder = worldFolder;
         this.dimension = dimension;
         this.levelData = levelData;
@@ -88,7 +92,7 @@ public class MCAWorld implements World {
                 levelData.getData().getSpawnZ()
         );
         this.dimensionFolder = resolveDimensionFolder(worldFolder, dimension);
-        this.regionFolder = getWorldFolder().resolve("region");
+        this.regionFolder = dimensionFolder.resolve("region");
     }
 
     @Override
@@ -219,18 +223,7 @@ public class MCAWorld implements World {
         return Chunk.EMPTY_CHUNK;
     }
 
-    public static MCAWorld load(Path worldFolder, Key dimension) throws IOException {
-        // load or create bluemap.id
-        Path idFile = worldFolder.resolve("bluemap.id");
-        String id;
-        if (!Files.exists(idFile)) {
-            id = UUID.randomUUID().toString();
-            Files.writeString(idFile, id, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        } else {
-            id = Files.readString(idFile);
-        }
-        id += "-" + dimension.getFormatted();
-
+    public static MCAWorld load(Path worldFolder, Key dimension) throws IOException, InterruptedException {
         // load level.dat
         Path levelFile = worldFolder.resolve("level.dat");
         InputStream levelFileIn = new GZIPInputStream(new BufferedInputStream(Files.newInputStream(levelFile)));
@@ -253,10 +246,20 @@ public class MCAWorld implements World {
         dataPack.bake();
 
         // create world
-        return new MCAWorld(id, worldFolder, dimension, levelData, dataPack);
+        return new MCAWorld(worldFolder, dimension, levelData, dataPack);
     }
 
-    private static Path resolveDimensionFolder(Path worldFolder, Key dimension) {
+    public static String id(Path worldFolder, Key dimension) {
+        worldFolder = worldFolder.toAbsolutePath().normalize();
+
+        Path workingDir = Path.of("").toAbsolutePath().normalize();
+        if (worldFolder.startsWith(workingDir))
+            worldFolder = workingDir.relativize(worldFolder);
+
+        return "MCA#" + worldFolder + "#" + dimension.getFormatted();
+    }
+
+    public static Path resolveDimensionFolder(Path worldFolder, Key dimension) {
         if (DataPack.DIMENSION_OVERWORLD.equals(dimension)) return worldFolder;
         if (DataPack.DIMENSION_THE_NETHER.equals(dimension)) return worldFolder.resolve("DIM-1");
         if (DataPack.DIMENSION_THE_END.equals(dimension)) return worldFolder.resolve("DIM1");

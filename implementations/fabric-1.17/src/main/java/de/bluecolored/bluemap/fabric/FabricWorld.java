@@ -24,12 +24,11 @@
  */
 package de.bluecolored.bluemap.fabric;
 
-import de.bluecolored.bluemap.common.serverinterface.Dimension;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
+import de.bluecolored.bluemap.core.util.Key;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.util.Identifier;
 import net.minecraft.util.WorldSavePath;
-import net.minecraft.world.World;
-import net.minecraft.world.dimension.DimensionType;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -41,27 +40,18 @@ import java.util.concurrent.ExecutionException;
 public class FabricWorld implements ServerWorld {
 
     private final WeakReference<net.minecraft.server.world.ServerWorld> delegate;
-    private final Path saveFolder;
+    private final Path worldFolder;
+    private final Key dimension;
 
     public FabricWorld(net.minecraft.server.world.ServerWorld delegate) {
         this.delegate = new WeakReference<>(delegate);
 
         MinecraftServer server = delegate.getServer();
-        Path worldFolder = delegate.getServer().getRunDirectory().toPath().resolve(server.getSavePath(WorldSavePath.ROOT));
-        this.saveFolder = DimensionType.getSaveDirectory(delegate.getRegistryKey(), worldFolder.toFile()).toPath()
-                .toAbsolutePath().normalize();
-    }
+        this.worldFolder = delegate.getServer().getRunDirectory().toPath()
+                .resolve(server.getSavePath(WorldSavePath.ROOT));
 
-    @Override
-    public Dimension getDimension() {
-        net.minecraft.server.world.ServerWorld world = delegate.get();
-        if (world != null) {
-            if (world.getRegistryKey().equals(World.NETHER)) return Dimension.NETHER;
-            if (world.getRegistryKey().equals(World.END)) return Dimension.END;
-            if (world.getRegistryKey().equals(World.OVERWORLD)) return Dimension.OVERWORLD;
-        }
-
-        return ServerWorld.super.getDimension();
+        Identifier id = delegate.getRegistryKey().getValue();
+        this.dimension = new Key(id.getNamespace(), id.getPath());
     }
 
     @Override
@@ -92,8 +82,13 @@ public class FabricWorld implements ServerWorld {
     }
 
     @Override
-    public Path getSaveFolder() {
-        return this.saveFolder;
+    public Path getWorldFolder() {
+        return worldFolder;
+    }
+
+    @Override
+    public Key getDimension() {
+        return dimension;
     }
 
 }

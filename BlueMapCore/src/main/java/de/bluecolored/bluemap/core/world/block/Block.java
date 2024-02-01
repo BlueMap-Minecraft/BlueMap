@@ -103,22 +103,6 @@ public class Block<T extends Block<T>> {
         return self();
     }
 
-    /**
-     * copy with offset
-     */
-    public T copy(Block<?> source, int dx, int dy, int dz) {
-        this.world = source.world;
-        this.x = source.x + dx;
-        this.y = source.y + dy;
-        this.z = source.z + dz;
-
-        this.chunk = null;
-
-        reset();
-
-        return self();
-    }
-
     public World getWorld() {
         return world;
     }

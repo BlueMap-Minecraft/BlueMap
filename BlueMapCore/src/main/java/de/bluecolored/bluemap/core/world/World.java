@@ -38,6 +38,8 @@ import java.util.Collection;
  */
 public interface World {
 
+    String getId();
+
     String getName();
 
     Vector3i getSpawnPoint();

@@ -83,7 +83,7 @@ public class PlayerSkinUpdater implements ServerEventListener {
                 return;
             }
 
-            Map<String, BmMap> maps = plugin.getMaps();
+            Map<String, BmMap> maps = plugin.getBlueMap().getMaps();
             if (maps == null) {
                 Logger.global.logDebug("Could not update skin, since the plugin seems not to be ready.");
                 return;

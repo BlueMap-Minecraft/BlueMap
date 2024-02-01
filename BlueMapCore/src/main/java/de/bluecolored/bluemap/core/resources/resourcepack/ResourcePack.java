@@ -183,19 +183,25 @@ public class ResourcePack {
         return props.build();
     }
 
-    public synchronized void loadResources(Iterable<Path> roots) throws IOException {
+    public synchronized void loadResources(Iterable<Path> roots) throws IOException, InterruptedException {
         Logger.global.logInfo("Loading resources...");
 
         for (Path root : roots) {
+            if (Thread.interrupted()) throw new InterruptedException();
+
             Logger.global.logDebug("Loading resources from: " + root + " ...");
             loadResourcePath(root, this::loadResources);
         }
 
         Logger.global.logInfo("Loading textures...");
         for (Path root : roots) {
+            if (Thread.interrupted()) throw new InterruptedException();
+
             Logger.global.logDebug("Loading textures from: " + root + " ...");
             loadResourcePath(root, this::loadTextures);
         }
+
+        if (Thread.interrupted()) throw new InterruptedException();
 
         Logger.global.logInfo("Baking resources...");
         bake();
@@ -204,7 +210,8 @@ public class ResourcePack {
         Logger.global.logInfo("Resources loaded.");
     }
 
-    private void loadResourcePath(Path root, PathLoader resourceLoader) throws IOException {
+    private void loadResourcePath(Path root, PathLoader resourceLoader) throws IOException, InterruptedException {
+        if (Thread.interrupted()) throw new InterruptedException();
         if (!Files.isDirectory(root)) {
             try (FileSystem fileSystem = FileSystems.newFileSystem(root, (ClassLoader) null)) {
                 for (Path fsRoot : fileSystem.getRootDirectories()) {
@@ -387,7 +394,7 @@ public class ResourcePack {
         }
     }
 
-    private void bake() throws IOException {
+    private void bake() throws IOException, InterruptedException {
 
         // fill path maps
         blockStates.keySet().forEach(path -> blockStatePaths.put(path.getFormatted(), path));
@@ -399,10 +406,14 @@ public class ResourcePack {
             model.optimize(this);
         }
 
+        if (Thread.interrupted()) throw new InterruptedException();
+
         // apply model parents
         for (BlockModel model : blockModels.values()) {
             model.applyParent(this);
         }
+
+        if (Thread.interrupted()) throw new InterruptedException();
 
         // calculate model properties
         for (BlockModel model : blockModels.values()) {

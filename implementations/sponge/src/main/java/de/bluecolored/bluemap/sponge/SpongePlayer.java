@@ -28,6 +28,7 @@ import com.flowpowered.math.vector.Vector3d;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.serverinterface.Gamemode;
 import de.bluecolored.bluemap.common.serverinterface.Player;
+import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.data.Keys;
 import org.spongepowered.api.effect.VanishState;
@@ -37,7 +38,6 @@ import org.spongepowered.api.entity.living.player.gamemode.GameMode;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 
-import java.io.IOException;
 import java.util.*;
 
 public class SpongePlayer implements Player {
@@ -53,12 +53,11 @@ public class SpongePlayer implements Player {
 
     private final UUID uuid;
     private Text name;
-    private String world;
+    private ServerWorld world;
     private Vector3d position;
     private Vector3d rotation;
     private int skyLight;
     private int blockLight;
-    private boolean online;
     private boolean sneaking;
     private boolean invisible;
     private boolean vanished;
@@ -80,7 +79,7 @@ public class SpongePlayer implements Player {
     }
 
     @Override
-    public String getWorld() {
+    public ServerWorld getWorld() {
         return this.world;
     }
 
@@ -102,11 +101,6 @@ public class SpongePlayer implements Player {
     @Override
     public int getBlockLight() {
         return blockLight;
-    }
-
-    @Override
-    public boolean isOnline() {
-        return this.online;
     }
 
     @Override
@@ -134,10 +128,7 @@ public class SpongePlayer implements Player {
      */
     public void update() {
         ServerPlayer player = Sponge.server().player(uuid).orElse(null);
-        if (player == null) {
-            this.online = false;
-            return;
-        }
+        if (player == null) return;
 
         this.gamemode = GAMEMODE_MAP.get(player.get(Keys.GAME_MODE).orElse(GameModes.NOT_SET.get()));
         if (this.gamemode == null) this.gamemode = Gamemode.SURVIVAL;
@@ -154,7 +145,6 @@ public class SpongePlayer implements Player {
         this.vanished = player.get(Keys.VANISH_STATE).orElse(VanishState.unvanished()).invisible();
 
         this.name = Text.of(player.name());
-        this.online = player.isOnline();
         this.position = SpongePlugin.fromSpongePoweredVector(player.position());
         this.rotation = SpongePlugin.fromSpongePoweredVector(player.rotation());
         this.sneaking = player.get(Keys.IS_SNEAKING).orElse(false);
@@ -163,12 +153,7 @@ public class SpongePlayer implements Player {
         this.skyLight = 15; //player.world().light(LightTypes.SKY, player.blockPosition());
         this.blockLight = 0; //player.world().light(LightTypes.BLOCK, player.blockPosition());
 
-        try {
-            var world = SpongePlugin.getInstance().getWorld(player.world());
-            this.world = SpongePlugin.getInstance().getPlugin().getBlueMap().getWorldId(world.getSaveFolder());
-        } catch (IOException | NullPointerException e) { // NullPointerException -> the plugin isn't fully loaded
-            this.world = "unknown";
-        }
+        this.world = SpongePlugin.getInstance().getServerWorld(player.world());
     }
 
 }

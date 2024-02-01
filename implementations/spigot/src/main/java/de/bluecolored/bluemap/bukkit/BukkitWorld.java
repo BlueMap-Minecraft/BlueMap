@@ -24,8 +24,10 @@
  */
 package de.bluecolored.bluemap.bukkit;
 
-import de.bluecolored.bluemap.common.serverinterface.Dimension;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
+import de.bluecolored.bluemap.core.resources.datapack.DataPack;
+import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 
@@ -33,57 +35,35 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 
 public class BukkitWorld implements ServerWorld {
 
     private final WeakReference<World> delegate;
-    private final Path saveFolder;
+    private final Path worldFolder;
+    private final Key dimension;
 
     public BukkitWorld(World delegate) {
         this.delegate = new WeakReference<>(delegate);
-        Dimension dimension = getDimension();
-        Path saveFolder = delegate.getWorldFolder().toPath()
-                .resolve(dimension.getDimensionSubPath())
-                .toAbsolutePath().normalize();
+        this.dimension = resolveDimension(delegate);
+        Path worldFolder = delegate.getWorldFolder().toPath();
 
         // fix for hybrids
-        if (!Files.exists(saveFolder)) {
-            Path direct = delegate.getWorldFolder().toPath();
-            if (Files.exists(direct) && direct.endsWith(dimension.getDimensionSubPath()))
-                saveFolder = direct;
+        Path dimensionFolder = MCAWorld.resolveDimensionFolder(worldFolder, dimension);
+        if (!Files.exists(worldFolder)) {
+            Path dimensionSubPath = worldFolder.relativize(dimensionFolder);
+
+            if (Files.exists(worldFolder) && worldFolder.endsWith(dimensionSubPath))
+                worldFolder = worldFolder.subpath(0, worldFolder.getNameCount() - dimensionSubPath.getNameCount());
         }
 
-        this.saveFolder = saveFolder;
+        this.worldFolder = worldFolder;
     }
 
-    @Override
-    public Dimension getDimension() {
-        World world = delegate.get();
-        if (world != null) {
-            if (world.getEnvironment().equals(World.Environment.NETHER)) return Dimension.NETHER;
-            if (world.getEnvironment().equals(World.Environment.THE_END)) return Dimension.END;
-        }
-        return Dimension.OVERWORLD;
-    }
-
-    @Override
-    public Optional<String> getId() {
-        World world = delegate.get();
-        if (world != null) {
-            return Optional.of(world.getUID().toString());
-        }
-        return Optional.empty();
-    }
-
-    @Override
-    public Optional<String> getName() {
-        World world = delegate.get();
-        if (world != null) {
-            return Optional.of(world.getName());
-        }
-        return Optional.empty();
+    private Key resolveDimension(World world) {
+        if (world.getEnvironment().equals(World.Environment.NETHER)) return DataPack.DIMENSION_THE_NETHER;
+        if (world.getEnvironment().equals(World.Environment.THE_END)) return DataPack.DIMENSION_THE_END;
+        return DataPack.DIMENSION_OVERWORLD;
     }
 
     @Override
@@ -108,8 +88,13 @@ public class BukkitWorld implements ServerWorld {
     }
 
     @Override
-    public Path getSaveFolder() {
-        return this.saveFolder;
+    public Path getWorldFolder() {
+        return worldFolder;
+    }
+
+    @Override
+    public Key getDimension() {
+        return dimension;
     }
 
 }

@@ -26,10 +26,15 @@ package de.bluecolored.bluemap.core.util;
 
 import de.bluecolored.bluemap.api.debug.DebugDump;
 
-@DebugDump
-public class Key {
+import java.util.concurrent.ConcurrentHashMap;
 
-    private static final String MINECRAFT_NAMESPACE = "minecraft";
+@DebugDump
+public class Key implements Keyed {
+
+    private static final ConcurrentHashMap<String, String> STRING_INTERN_POOL = new ConcurrentHashMap<>();
+
+    public static final String MINECRAFT_NAMESPACE = "minecraft";
+    public static final String BLUEMAP_NAMESPACE = "bluemap";
 
     private final String namespace;
     private final String value;
@@ -44,15 +49,15 @@ public class Key {
             value = formatted.substring(namespaceSeparator + 1);
         }
 
-        this.namespace = namespace.intern();
-        this.value = value.intern();
-        this.formatted = (this.namespace + ":" + this.value).intern();
+        this.namespace = intern(namespace);
+        this.value = intern(value);
+        this.formatted = intern(this.namespace + ":" + this.value);
     }
 
     public Key(String namespace, String value) {
-        this.namespace = namespace.intern();
-        this.value = value.intern();
-        this.formatted = (this.namespace + ":" + this.value).intern();
+        this.namespace = intern(namespace);
+        this.value = intern(value);
+        this.formatted = intern(this.namespace + ":" + this.value);
     }
 
     public String getNamespace() {
@@ -67,6 +72,11 @@ public class Key {
         return formatted;
     }
 
+    @Override
+    public Key getKey() {
+        return this;
+    }
+
     @SuppressWarnings("StringEquality")
     @Override
     public boolean equals(Object o) {
@@ -78,11 +88,36 @@ public class Key {
 
     @Override
     public int hashCode() {
-        return getFormatted().hashCode();
+        return formatted.hashCode();
     }
 
     @Override
     public String toString() {
         return formatted;
     }
+
+    public static Key parse(String formatted) {
+        return new Key(formatted);
+    }
+
+    public static Key parse(String formatted, String defaultNamespace) {
+        String namespace = defaultNamespace;
+        String value = formatted;
+        int namespaceSeparator = formatted.indexOf(':');
+        if (namespaceSeparator > 0) {
+            namespace = formatted.substring(0, namespaceSeparator);
+            value = formatted.substring(namespaceSeparator + 1);
+        }
+
+        return new Key(namespace, value);
+    }
+
+    /**
+     * Using our own function instead of {@link String#intern()} since the ConcurrentHashMap is much faster.
+     */
+    private static String intern(String string) {
+        String interned = STRING_INTERN_POOL.putIfAbsent(string, string);
+        return interned != null ? interned : string;
+    }
+
 }

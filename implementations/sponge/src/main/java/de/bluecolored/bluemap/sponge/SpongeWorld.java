@@ -24,15 +24,14 @@
  */
 package de.bluecolored.bluemap.sponge;
 
-import de.bluecolored.bluemap.common.serverinterface.Dimension;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
+import de.bluecolored.bluemap.core.resources.datapack.DataPack;
+import de.bluecolored.bluemap.core.util.Key;
 import org.spongepowered.api.world.WorldTypes;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.nio.file.Path;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
@@ -40,41 +39,15 @@ import java.util.concurrent.ExecutionException;
 public class SpongeWorld implements ServerWorld {
 
     private final WeakReference<org.spongepowered.api.world.server.ServerWorld> delegate;
-    private final Path saveFolder;
+    private final Path worldFolder;
+    private final Key dimension;
 
     public SpongeWorld(org.spongepowered.api.world.server.ServerWorld delegate) {
         this.delegate = new WeakReference<>(delegate);
-        this.saveFolder = delegate.directory()
-                .toAbsolutePath().normalize();
-    }
-
-    @Override
-    public Dimension getDimension() {
-        var world = delegate.get();
-        if (world != null) {
-            if (world.worldType().equals(WorldTypes.THE_NETHER.get())) return Dimension.NETHER;
-            if (world.worldType().equals(WorldTypes.THE_END.get())) return Dimension.END;
-        }
-        return Dimension.OVERWORLD;
-    }
-
-    @Override
-    public Optional<String> getId() {
-        var world = delegate.get();
-        if (world != null) {
-            return Optional.of(world.uniqueId().toString());
-        }
-        return Optional.empty();
-    }
-
-    @Override
-    public Optional<String> getName() {
-        var world = delegate.get();
-        if (world != null) {
-            return world.properties().displayName()
-                    .map(PlainTextComponentSerializer.plainText()::serialize);
-        }
-        return Optional.empty();
+        this.worldFolder = delegate.directory();
+        this.dimension = WorldTypes.registry().findValueKey(delegate.worldType())
+                .map(k -> new Key(k.namespace(), k.value()))
+                .orElse(DataPack.DIMENSION_OVERWORLD);
     }
 
     @Override
@@ -102,8 +75,13 @@ public class SpongeWorld implements ServerWorld {
     }
 
     @Override
-    public Path getSaveFolder() {
-        return this.saveFolder;
+    public Path getWorldFolder() {
+        return worldFolder;
+    }
+
+    @Override
+    public Key getDimension() {
+        return dimension;
     }
 
 }

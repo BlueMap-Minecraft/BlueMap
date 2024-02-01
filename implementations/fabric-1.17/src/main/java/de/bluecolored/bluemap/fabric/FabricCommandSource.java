@@ -26,14 +26,14 @@ package de.bluecolored.bluemap.fabric;
 
 import com.flowpowered.math.vector.Vector3d;
 import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.plugin.text.Text;
+import de.bluecolored.bluemap.common.serverinterface.CommandSource;
+import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.world.World;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.util.math.Vec3d;
 
-import java.io.IOException;
 import java.util.Optional;
 
 public class FabricCommandSource implements CommandSource {
@@ -75,13 +75,8 @@ public class FabricCommandSource implements CommandSource {
 
     @Override
     public Optional<World> getWorld() {
-        try {
-            var serverWorld = mod.getWorld(delegate.getWorld());
-            String worldId = plugin.getBlueMap().getWorldId(serverWorld.getSaveFolder());
-            return Optional.ofNullable(plugin.getWorlds().get(worldId));
-        } catch (IOException ignore) {}
-
-        return Optional.empty();
+        ServerWorld serverWorld = mod.getServerWorld(delegate.getWorld());
+        return Optional.ofNullable(plugin.getWorld(serverWorld));
     }
 
 }

@@ -28,6 +28,7 @@ import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.util.Tristate;
 import de.bluecolored.bluemap.core.world.World;
+import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -61,16 +62,28 @@ public interface Server {
     /**
      * Returns the correct {@link ServerWorld} for a {@link World} if there is any.
      */
-    Optional<ServerWorld> getWorld(World world);
+    default Optional<ServerWorld> getServerWorld(World world) {
+        if (world instanceof MCAWorld) {
+            MCAWorld mcaWorld = (MCAWorld) world;
+            return getLoadedServerWorlds().stream()
+                    .filter(serverWorld ->
+                            serverWorld.getWorldFolder().toAbsolutePath().normalize()
+                                    .equals(mcaWorld.getWorldFolder().toAbsolutePath().normalize()) &&
+                            serverWorld.getDimension().equals(mcaWorld.getDimension())
+                    )
+                    .findAny();
+        }
+        return Optional.empty();
+    }
 
     /**
      * Returns the correct {@link ServerWorld} for any Object if there is any, this should return the correct ServerWorld
      * for any implementation-specific object that represent or identify a world in any way.<br>
      * Used for the API implementation.
      */
-    default Optional<ServerWorld> getWorld(Object world) {
+    default Optional<ServerWorld> getServerWorld(Object world) {
         if (world instanceof World)
-            return getWorld((World) world);
+            return getServerWorld((World) world);
         return Optional.empty();
     }
 
@@ -78,7 +91,7 @@ public interface Server {
      * Returns all loaded worlds of this server.
      */
     @DebugDump
-    Collection<ServerWorld> getLoadedWorlds();
+    Collection<ServerWorld> getLoadedServerWorlds();
 
     /**
      * Returns a collection of the states of players that are currently online

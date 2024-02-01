@@ -32,8 +32,8 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.inject.Inject;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.serverinterface.Player;
-import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.Server;
+import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
@@ -220,7 +220,7 @@ public class SpongePlugin implements Server {
     }
 
     @Override
-    public Collection<ServerWorld> getLoadedWorlds() {
+    public Collection<ServerWorld> getLoadedServerWorlds() {
         Collection<ServerWorld> loadedWorlds = new ArrayList<>(3);
         for (var world : Sponge.server().worldManager().worlds()) {
             loadedWorlds.add(worlds.get(world));
@@ -229,9 +229,7 @@ public class SpongePlugin implements Server {
     }
 
     @Override
-    public Optional<ServerWorld> getWorld(Object world) {
-        if (world instanceof Path)
-            return getWorld((Path) world);
+    public Optional<ServerWorld> getServerWorld(Object world) {
 
         if (world instanceof String) {
             ResourceKey resourceKey = ResourceKey.resolve((String) world);
@@ -245,12 +243,12 @@ public class SpongePlugin implements Server {
         }
 
         if (world instanceof org.spongepowered.api.world.server.ServerWorld)
-            return Optional.of(getWorld((org.spongepowered.api.world.server.ServerWorld) world));
+            return Optional.of(getServerWorld((org.spongepowered.api.world.server.ServerWorld) world));
 
         return Optional.empty();
     }
 
-    public ServerWorld getWorld(org.spongepowered.api.world.server.ServerWorld world) {
+    public ServerWorld getServerWorld(org.spongepowered.api.world.server.ServerWorld world) {
         return worlds.get(world);
     }
 
@@ -267,11 +265,6 @@ public class SpongePlugin implements Server {
     @Override
     public Collection<Player> getOnlinePlayers() {
         return onlinePlayerMap.values();
-    }
-
-    @Override
-    public Optional<Player> getPlayer(UUID uuid) {
-        return Optional.ofNullable(onlinePlayerMap.get(uuid));
     }
 
     @Override

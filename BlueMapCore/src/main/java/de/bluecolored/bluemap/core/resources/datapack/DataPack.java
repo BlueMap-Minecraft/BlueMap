@@ -32,12 +32,13 @@ public class DataPack {
         return dimensionTypes.get(key);
     }
 
-    public void load(Path root) {
+    public void load(Path root) throws InterruptedException {
         Logger.global.logDebug("Loading datapack from: " + root + " ...");
         loadPath(root);
     }
 
-    private void loadPath(Path root) {
+    private void loadPath(Path root) throws InterruptedException {
+        if (Thread.interrupted()) throw new InterruptedException();
         if (!Files.isDirectory(root)) {
             try (FileSystem fileSystem = FileSystems.newFileSystem(root, (ClassLoader) null)) {
                 for (Path fsRoot : fileSystem.getRootDirectories()) {

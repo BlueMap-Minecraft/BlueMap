@@ -148,7 +148,7 @@ public class FabricMod implements ModInitializer, Server {
     }
 
     @Override
-    public Collection<ServerWorld> getLoadedWorlds() {
+    public Collection<ServerWorld> getLoadedServerWorlds() {
         Collection<ServerWorld> loadedWorlds = new ArrayList<>(3);
         for (net.minecraft.server.world.ServerWorld serverWorld : serverInstance.getWorlds()) {
             loadedWorlds.add(worlds.get(serverWorld));
@@ -158,9 +158,7 @@ public class FabricMod implements ModInitializer, Server {
 
     @SuppressWarnings("unchecked")
     @Override
-    public Optional<ServerWorld> getWorld(Object world) {
-        if (world instanceof Path)
-            return getWorld((Path) world);
+    public Optional<ServerWorld> getServerWorld(Object world) {
 
         if (world instanceof String) {
             Identifier identifier = Identifier.tryParse((String) world);
@@ -174,12 +172,12 @@ public class FabricMod implements ModInitializer, Server {
         }
 
         if (world instanceof net.minecraft.server.world.ServerWorld)
-            return Optional.of(getWorld((net.minecraft.server.world.ServerWorld) world));
+            return Optional.of(getServerWorld((net.minecraft.server.world.ServerWorld) world));
 
         return Optional.empty();
     }
 
-    public ServerWorld getWorld(net.minecraft.server.world.ServerWorld serverWorld) {
+    public ServerWorld getServerWorld(net.minecraft.server.world.ServerWorld serverWorld) {
         return worlds.get(serverWorld);
     }
 
@@ -222,11 +220,6 @@ public class FabricMod implements ModInitializer, Server {
     @Override
     public Collection<Player> getOnlinePlayers() {
         return onlinePlayerMap.values();
-    }
-
-    @Override
-    public Optional<Player> getPlayer(UUID uuid) {
-        return Optional.ofNullable(onlinePlayerMap.get(uuid));
     }
 
     /**

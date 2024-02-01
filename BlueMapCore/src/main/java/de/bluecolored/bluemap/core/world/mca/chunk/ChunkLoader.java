@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,13 +29,18 @@ public class ChunkLoader {
 
         // try last used version
         ChunkVersionLoader<?> usedLoader = lastUsedLoader;
-        MCAChunk chunk = usedLoader.load(region, compression.decompress(in));
+        MCAChunk chunk;
+        try (InputStream decompressedIn = new BufferedInputStream(compression.decompress(in))) {
+            chunk = usedLoader.load(region, decompressedIn);
+        }
 
         // check version and reload chunk if the wrong loader has been used and a better one has been found
         ChunkVersionLoader<?> actualLoader = findBestLoaderForVersion(chunk.getDataVersion());
         if (actualLoader != null && usedLoader != actualLoader) {
             in.reset(); // reset read position
-            chunk = actualLoader.load(region, compression.decompress(in));
+            try (InputStream decompressedIn = new BufferedInputStream(compression.decompress(in))) {
+                chunk = actualLoader.load(region, decompressedIn);
+            }
             lastUsedLoader = actualLoader;
         }
 

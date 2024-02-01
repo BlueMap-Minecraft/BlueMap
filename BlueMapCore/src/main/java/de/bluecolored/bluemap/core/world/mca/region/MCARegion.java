@@ -91,7 +91,13 @@ public class MCARegion implements Region {
             int size = header[3] * 4096;
 
             if (size == 0) return Chunk.EMPTY_CHUNK;
-            return loadChunk(channel, offset, size, new byte[size]);
+
+            byte[] chunkDataBuffer = new byte[size];
+
+            channel.position(offset);
+            readFully(channel, chunkDataBuffer, 0, size);
+
+            return loadChunk(chunkDataBuffer, size);
         }
     }
 
@@ -140,7 +146,10 @@ public class MCARegion implements Region {
                         if (chunkDataBuffer == null || chunkDataBuffer.length < size)
                             chunkDataBuffer = new byte[size];
 
-                        MCAChunk chunk = loadChunk(channel, offset, size, chunkDataBuffer);
+                        channel.position(offset);
+                        readFully(channel, chunkDataBuffer, 0, size);
+
+                        MCAChunk chunk = loadChunk(chunkDataBuffer, size);
                         consumer.accept(chunkX, chunkZ, chunk);
                     }
                 }
@@ -148,21 +157,19 @@ public class MCARegion implements Region {
         }
     }
 
-    private MCAChunk loadChunk(FileChannel channel, int offset, int size, byte[] dataBuffer) throws IOException {
-        channel.position(offset);
-        readFully(channel, dataBuffer, 0, size);
-
-        int compressionTypeId = dataBuffer[4];
+    private MCAChunk loadChunk(byte[] data, int size) throws IOException {
+        int compressionTypeId = data[4];
         Compression compression;
         switch (compressionTypeId) {
             case 0 :
             case 3 : compression = Compression.NONE; break;
             case 1 : compression = Compression.GZIP; break;
             case 2 : compression = Compression.DEFLATE; break;
+            case 4 : compression = Compression.LZ4; break;
             default: throw new IOException("Unknown chunk compression-id: " + compressionTypeId);
         }
 
-        return world.getChunkLoader().load(this, dataBuffer, 5, size - 5, compression);
+        return world.getChunkLoader().load(this, data, 5, size - 5, compression);
     }
 
     public static String getRegionFileName(int regionX, int regionZ) {
@@ -175,14 +182,16 @@ public class MCARegion implements Region {
     }
 
     private static void readFully(ReadableByteChannel src, ByteBuffer bb, int off, int len) throws IOException {
-        int n = 0;
-        while (n < len) {
-            bb.limit(Math.min(off + len, bb.capacity()));
-            bb.position(off);
-            int count = src.read(bb);
-            if (count < 0) throw new EOFException();
-            n += count;
-        }
+        int limit = off + len;
+        if (limit > bb.capacity()) throw new IllegalArgumentException("buffer too small");
+
+        bb.limit(limit);
+        bb.position(off);
+
+        do {
+            int read = src.read(bb);
+            if (read < 0) throw new EOFException();
+        } while (bb.remaining() > 0);
     }
 
 }

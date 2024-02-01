@@ -35,7 +35,7 @@ import java.lang.reflect.Type;
 public class KeyTypeSerializer implements TypeSerializer<Key> {
 
     @Override
-    public Key deserialize(Type type, ConfigurationNode node) throws SerializationException {
+    public Key deserialize(Type type, ConfigurationNode node) {
         String formatted = node.getString();
         return formatted != null ? new Key(node.getString()) : null;
     }

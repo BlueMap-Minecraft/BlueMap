@@ -35,10 +35,6 @@ import de.bluecolored.bluemap.common.plugin.RegionFileWatchService;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.rendermanager.RenderTask;
-import de.bluecolored.bluemap.common.serverinterface.Player;
-import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
-import de.bluecolored.bluemap.common.serverinterface.Server;
-import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.common.web.*;
 import de.bluecolored.bluemap.common.web.http.HttpRequestHandler;
 import de.bluecolored.bluemap.common.web.http.HttpServer;
@@ -67,10 +63,10 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-public class BlueMapCLI implements Server {
+public class BlueMapCLI {
 
     private MinecraftVersion minecraftVersion = MinecraftVersion.LATEST_SUPPORTED;
-    private Path configFolder;
+    private Path configFolder = Path.of("config");
 
     public void renderMaps(BlueMapService blueMap, boolean watch, boolean forceRender, boolean forceGenerateWebapp,
                            @Nullable String mapsToRender) throws ConfigurationException, IOException, InterruptedException {
@@ -82,7 +78,7 @@ public class BlueMapCLI implements Server {
             blueMap.createOrUpdateWebApp(forceGenerateWebapp);
 
         //try load resources
-        blueMap.loadResourcePack();
+        blueMap.getOrLoadResourcePack();
 
         //create renderManager
         RenderManager renderManager = new RenderManager();
@@ -93,7 +89,7 @@ public class BlueMapCLI implements Server {
             Set<String> mapsToRenderSet = Set.of(mapsToRender.split(","));
             mapFilter = mapsToRenderSet::contains;
         }
-        Map<String, BmMap> maps = blueMap.getMaps(mapFilter);
+        Map<String, BmMap> maps = blueMap.getOrLoadMaps(mapFilter);
 
         //watcher
         List<RegionFileWatchService> regionFileWatchServices = new ArrayList<>();
@@ -205,7 +201,7 @@ public class BlueMapCLI implements Server {
 
         // map route
         for (var mapConfigEntry : blueMap.getConfig().getMapConfigs().entrySet()) {
-            Storage storage = blueMap.getStorage(mapConfigEntry.getValue().getStorage());
+            Storage storage = blueMap.getOrLoadStorage(mapConfigEntry.getValue().getStorage());
 
             routingRequestHandler.register(
                     "maps/" + Pattern.quote(mapConfigEntry.getKey()) + "/(.*)",
@@ -252,47 +248,6 @@ public class BlueMapCLI implements Server {
         }
     }
 
-    @Override
-    public MinecraftVersion getMinecraftVersion() {
-        return minecraftVersion;
-    }
-
-    @Override
-    public void registerListener(ServerEventListener listener) {}
-
-    @Override
-    public void unregisterAllListeners() {}
-
-    @Override
-    public Optional<ServerWorld> getWorld(Path worldFolder) {
-        return Optional.empty();
-    }
-
-    @Override
-    public Collection<ServerWorld> getLoadedWorlds() {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public Path getConfigFolder() {
-        return configFolder;
-    }
-
-    @Override
-    public Optional<Path> getModsFolder() {
-        return Optional.empty();
-    }
-
-    @Override
-    public Collection<Player> getOnlinePlayers() {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public Optional<Player> getPlayer(UUID uuid) {
-        return Optional.empty();
-    }
-
     public static void main(String[] args) {
         CommandLineParser parser = new DefaultParser();
 
@@ -324,7 +279,6 @@ public class BlueMapCLI implements Server {
             }
 
             //config folder
-            cli.configFolder = Path.of("config");
             if (cmd.hasOption("c")) {
                 cli.configFolder = Path.of(cmd.getOptionValue("c"));
                 FileHelper.createDirectories(cli.configFolder);
@@ -342,7 +296,13 @@ public class BlueMapCLI implements Server {
                 }
             }
 
-            BlueMapConfigManager configs = new BlueMapConfigManager(cli, Path.of("data"), Path.of("web"), false);
+            BlueMapConfigManager configs = BlueMapConfigManager.builder()
+                    .minecraftVersion(cli.minecraftVersion)
+                    .configRoot(cli.configFolder)
+                    .usePluginConfig(false)
+                    .defaultDataFolder(Path.of("data"))
+                    .defaultWebroot(Path.of("web"))
+                    .build();
 
             //apply new file-logger config
             CoreConfig coreConfig = configs.getCoreConfig();
@@ -354,7 +314,7 @@ public class BlueMapCLI implements Server {
                 ));
             }
 
-            blueMap = new BlueMapService(cli, configs);
+            blueMap = new BlueMapService(configs);
             boolean noActions = true;
 
             if (cmd.hasOption("w")) {
@@ -479,6 +439,24 @@ public class BlueMapCLI implements Server {
     private static void printHelp() {
         HelpFormatter formatter = new HelpFormatter();
 
+        String command = getCliCommand();
+
+        @SuppressWarnings("StringBufferReplaceableByString")
+        StringBuilder footer = new StringBuilder();
+        footer.append("Examples:\n\n");
+        footer.append(command).append(" -c './config/'\n");
+        footer.append("Generates the default/example configurations in a folder named 'config' if they are not already present\n\n");
+        footer.append(command).append(" -r\n");
+        footer.append("Render the configured maps\n\n");
+        footer.append(command).append(" -w\n");
+        footer.append("Start only the webserver without doing anything else\n\n");
+        footer.append(command).append(" -ru\n");
+        footer.append("Render the configured maps and then keeps watching the world-files and updates the map once something changed.\n\n");
+
+        formatter.printHelp(command + " [options]", "\nOptions:", createOptions(), "\n" + footer);
+    }
+
+    private static String getCliCommand() {
         String filename = "bluemap-cli.jar";
         try {
             File file = new File(BlueMapCLI.class.getProtectionDomain()
@@ -494,22 +472,7 @@ public class BlueMapCLI implements Server {
                 }
             }
         } catch (IOException ignore) {}
-
-        String command = "java -jar " + filename;
-
-        @SuppressWarnings("StringBufferReplaceableByString")
-        StringBuilder footer = new StringBuilder();
-        footer.append("Examples:\n\n");
-        footer.append(command).append(" -c './config/'\n");
-        footer.append("Generates the default/example configurations in a folder named 'config' if they are not already present\n\n");
-        footer.append(command).append(" -r\n");
-        footer.append("Render the configured maps\n\n");
-        footer.append(command).append(" -w\n");
-        footer.append("Start only the webserver without doing anything else\n\n");
-        footer.append(command).append(" -ru\n");
-        footer.append("Render the configured maps and then keeps watching the world-files and updates the map once something changed.\n\n");
-
-        formatter.printHelp(command + " [options]", "\nOptions:", createOptions(), "\n" + footer);
+        return "java -jar " + filename;
     }
 
     private static void printVersion() {

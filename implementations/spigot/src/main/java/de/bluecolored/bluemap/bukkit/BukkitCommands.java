@@ -80,7 +80,7 @@ public class BukkitCommands implements Listener {
     public void onTabComplete(TabCompleteEvent evt) {
         try {
             String input = evt.getBuffer();
-            if (input.length() > 0 && input.charAt(0) == '/') {
+            if (!input.isEmpty() && input.charAt(0) == '/') {
                 input = input.substring(1);
             }
 

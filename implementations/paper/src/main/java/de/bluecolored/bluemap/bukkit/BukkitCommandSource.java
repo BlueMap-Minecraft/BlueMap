@@ -28,6 +28,7 @@ import com.flowpowered.math.vector.Vector3d;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.serverinterface.CommandSource;
+import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.world.World;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.bukkit.Location;
@@ -35,7 +36,6 @@ import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 
-import java.io.IOException;
 import java.util.Optional;
 
 public class BukkitCommandSource implements CommandSource {
@@ -74,11 +74,8 @@ public class BukkitCommandSource implements CommandSource {
         Location location = getLocation();
 
         if (location != null) {
-            try {
-                var serverWorld = BukkitPlugin.getInstance().getWorld(location.getWorld());
-                String worldId = plugin.getBlueMap().getWorldId(serverWorld.getSaveFolder());
-                return Optional.ofNullable(plugin.getWorlds().get(worldId));
-            } catch (IOException ignore) {}
+            ServerWorld serverWorld = BukkitPlugin.getInstance().getServerWorld(location.getWorld());
+            return Optional.ofNullable(plugin.getWorld(serverWorld));
         }
 
         return Optional.empty();

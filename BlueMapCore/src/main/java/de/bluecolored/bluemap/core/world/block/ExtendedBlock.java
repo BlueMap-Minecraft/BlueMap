@@ -33,6 +33,7 @@ import java.util.Objects;
 public class ExtendedBlock<T extends ExtendedBlock<T>> extends Block<T> {
     private final ResourcePack resourcePack;
     private final RenderSettings renderSettings;
+
     private BlockProperties properties;
     private Biome biome;
 
@@ -54,6 +55,21 @@ public class ExtendedBlock<T extends ExtendedBlock<T>> extends Block<T> {
 
         this.insideRenderBoundsCalculated = false;
         this.isCaveCalculated = false;
+    }
+
+    public T copy(ExtendedBlock<?> source) {
+        super.copy(source);
+
+        this.properties = source.properties;
+        this.biome = source.biome;
+
+        this.insideRenderBoundsCalculated = source.insideRenderBoundsCalculated;
+        this.insideRenderBounds = source.insideRenderBounds;
+
+        this.isCaveCalculated = source.isCaveCalculated;
+        this.isCave = source.isCave;
+
+        return self();
     }
 
     @Override

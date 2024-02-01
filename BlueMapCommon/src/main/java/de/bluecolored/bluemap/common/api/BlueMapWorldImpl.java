@@ -30,7 +30,6 @@ import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.core.world.World;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -39,13 +38,13 @@ import java.util.stream.Collectors;
 
 public class BlueMapWorldImpl implements BlueMapWorld {
 
-    private final WeakReference<Plugin> plugin;
     private final String id;
-    private final WeakReference<MCAWorld> world;
+    private final WeakReference<Plugin> plugin;
+    private final WeakReference<World> world;
 
-    public BlueMapWorldImpl(Plugin plugin, MCAWorld world) throws IOException {
+    public BlueMapWorldImpl(Plugin plugin, World world) {
+        this.id = world.getId();
         this.plugin = new WeakReference<>(plugin);
-        this.id = plugin.getBlueMap().getWorldId(world.getDimensionFolder());
         this.world = new WeakReference<>(world);
     }
 
@@ -59,13 +58,19 @@ public class BlueMapWorldImpl implements BlueMapWorld {
     }
 
     @Override
+    @Deprecated
     public Path getSaveFolder() {
-        return unpack(world).getDimensionFolder();
+        World world = unpack(this.world);
+        if (world instanceof MCAWorld) {
+            return ((MCAWorld) world).getDimensionFolder();
+        } else {
+            throw new UnsupportedOperationException("This world-type has no save-folder.");
+        }
     }
 
     @Override
     public Collection<BlueMapMap> getMaps() {
-        return unpack(plugin).getMaps().values().stream()
+        return unpack(plugin).getBlueMap().getMaps().values().stream()
                 .filter(map -> map.getWorld().equals(unpack(world)))
                 .map(map -> new BlueMapMapImpl(unpack(plugin), map, this))
                 .collect(Collectors.toUnmodifiableSet());

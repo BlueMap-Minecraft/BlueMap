@@ -25,16 +25,16 @@
 package de.bluecolored.bluemap.bukkit;
 
 import com.flowpowered.math.vector.Vector3d;
+import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.serverinterface.Gamemode;
 import de.bluecolored.bluemap.common.serverinterface.Player;
-import de.bluecolored.bluemap.common.plugin.text.Text;
+import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.potion.PotionEffectType;
 
-import java.io.IOException;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.UUID;
@@ -51,12 +51,11 @@ public class BukkitPlayer implements Player {
 
     private final UUID uuid;
     private Text name;
-    private String world;
+    private ServerWorld world;
     private Vector3d position;
     private Vector3d rotation;
     private int skyLight;
     private int blockLight;
-    private boolean online;
     private boolean sneaking;
     private boolean invisible;
     private boolean vanished;
@@ -78,7 +77,7 @@ public class BukkitPlayer implements Player {
     }
 
     @Override
-    public String getWorld() {
+    public ServerWorld getWorld() {
         return this.world;
     }
 
@@ -100,11 +99,6 @@ public class BukkitPlayer implements Player {
     @Override
     public int getBlockLight() {
         return blockLight;
-    }
-
-    @Override
-    public boolean isOnline() {
-        return this.online;
     }
 
     @Override
@@ -132,10 +126,7 @@ public class BukkitPlayer implements Player {
      */
     public void update() {
         org.bukkit.entity.Player player = Bukkit.getPlayer(uuid);
-        if (player == null) {
-            this.online = false;
-            return;
-        }
+        if (player == null) return;
 
         this.gamemode = GAMEMODE_MAP.get(player.getGameMode());
         if (this.gamemode == null) this.gamemode = Gamemode.SURVIVAL;
@@ -150,7 +141,6 @@ public class BukkitPlayer implements Player {
         this.vanished = vanished;
 
         this.name = Text.of(player.getName());
-        this.online = player.isOnline();
 
         Location location = player.getLocation();
         this.position = new Vector3d(location.getX(), location.getY(), location.getZ());
@@ -160,12 +150,7 @@ public class BukkitPlayer implements Player {
         this.skyLight = player.getLocation().getBlock().getLightFromSky();
         this.blockLight = player.getLocation().getBlock().getLightFromBlocks();
 
-        try {
-            var world = BukkitPlugin.getInstance().getWorld(player.getWorld());
-            this.world = BukkitPlugin.getInstance().getPlugin().getBlueMap().getWorldId(world.getSaveFolder());
-        } catch (IOException | NullPointerException e) { // NullPointerException -> the plugin isn't fully loaded
-            this.world = "unknown";
-        }
+        this.world = BukkitPlugin.getInstance().getServerWorld(player.getWorld());
     }
 
 }

@@ -37,6 +37,7 @@ import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.Server;
+import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.common.web.*;
 import de.bluecolored.bluemap.common.web.http.HttpServer;
 import de.bluecolored.bluemap.core.debug.StateDumper;
@@ -46,7 +47,9 @@ import de.bluecolored.bluemap.core.metrics.Metrics;
 import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.FileHelper;
+import de.bluecolored.bluemap.core.util.Tristate;
 import de.bluecolored.bluemap.core.world.World;
+import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 import org.spongepowered.configurate.serialize.SerializationException;
@@ -118,11 +121,18 @@ public class Plugin implements ServerEventListener {
                 unload(); //ensure nothing is left running (from a failed load or something)
 
                 //load configs
-                blueMap = new BlueMapService(serverInterface, new BlueMapConfigManager(serverInterface), preloadedResourcePack);
-                CoreConfig coreConfig = getConfigs().getCoreConfig();
-                WebserverConfig webserverConfig = getConfigs().getWebserverConfig();
-                WebappConfig webappConfig = getConfigs().getWebappConfig();
-                PluginConfig pluginConfig = getConfigs().getPluginConfig();
+                BlueMapConfigManager configManager = BlueMapConfigManager.builder()
+                        .minecraftVersion(serverInterface.getMinecraftVersion())
+                        .configRoot(serverInterface.getConfigFolder())
+                        .resourcePacksFolder(serverInterface.getConfigFolder().resolve("resourcepacks"))
+                        .modsFolder(serverInterface.getModsFolder().orElse(null))
+                        .useMetricsConfig(serverInterface.isMetricsEnabled() == Tristate.UNDEFINED)
+                        .autoConfigWorlds(serverInterface.getLoadedServerWorlds())
+                        .build();
+                CoreConfig coreConfig = configManager.getCoreConfig();
+                WebserverConfig webserverConfig = configManager.getWebserverConfig();
+                WebappConfig webappConfig = configManager.getWebappConfig();
+                PluginConfig pluginConfig = configManager.getPluginConfig();
 
                 //apply new file-logger config
                 if (coreConfig.getLog().getFile() != null) {
@@ -146,9 +156,12 @@ public class Plugin implements ServerEventListener {
                     pluginState = new PluginState();
                 }
 
+                //create bluemap-service
+                blueMap = new BlueMapService(configManager, preloadedResourcePack);
+
                 //try load resources
                 try {
-                    blueMap.loadResourcePack();
+                    blueMap.getOrLoadResourcePack();
                 } catch (MissingResourcesException ex) {
                     Logger.global.logWarning("BlueMap is missing important resources!");
                     Logger.global.logWarning("You must accept the required file download in order for BlueMap to work!");
@@ -165,7 +178,7 @@ public class Plugin implements ServerEventListener {
                 }
 
                 //load maps
-                Map<String, BmMap> maps = blueMap.loadMaps();
+                Map<String, BmMap> maps = blueMap.getOrLoadMaps();
 
                 //create and start webserver
                 if (webserverConfig.isEnabled()) {
@@ -178,7 +191,7 @@ public class Plugin implements ServerEventListener {
                     routingRequestHandler.register(".*", new FileRequestHandler(webroot));
 
                     // map route
-                    for (var mapConfigEntry : getConfigs().getMapConfigs().entrySet()) {
+                    for (var mapConfigEntry : configManager.getMapConfigs().entrySet()) {
                         String id = mapConfigEntry.getKey();
                         MapConfig mapConfig = mapConfigEntry.getValue();
 
@@ -187,7 +200,7 @@ public class Plugin implements ServerEventListener {
                         if (map != null) {
                             mapRequestHandler = new MapRequestHandler(map, serverInterface, pluginConfig, Predicate.not(pluginState::isPlayerHidden));
                         } else {
-                            Storage storage = blueMap.getStorage(mapConfig.getStorage());
+                            Storage storage = blueMap.getOrLoadStorage(mapConfig.getStorage());
                             mapRequestHandler = new MapRequestHandler(id, storage);
                         }
 
@@ -472,7 +485,7 @@ public class Plugin implements ServerEventListener {
                 }
 
                 // hold and reuse loaded resourcepack
-                ResourcePack preloadedResourcePack = this.blueMap.getResourcePackIfLoaded().orElse(null);
+                ResourcePack preloadedResourcePack = this.blueMap.getResourcePack();
 
                 unload();
                 load(preloadedResourcePack);
@@ -484,6 +497,8 @@ public class Plugin implements ServerEventListener {
     }
 
     public synchronized void save() {
+        if (blueMap == null) return;
+
         if (pluginState != null) {
             try {
                 GsonConfigurationLoader loader = GsonConfigurationLoader.builder()
@@ -496,40 +511,40 @@ public class Plugin implements ServerEventListener {
         }
 
         var maps = blueMap.getMaps();
-        if (maps != null) {
-            for (BmMap map : maps.values()) {
-                map.save();
-            }
+        for (BmMap map : maps.values()) {
+            map.save();
         }
     }
 
     public void saveMarkerStates() {
+        if (blueMap == null) return;
+
         var maps = blueMap.getMaps();
-        if (maps != null) {
-            for (BmMap map : maps.values()) {
-                map.saveMarkerState();
-            }
+        for (BmMap map : maps.values()) {
+            map.saveMarkerState();
         }
     }
 
     public void savePlayerStates() {
+        if (blueMap == null) return;
+
         var maps = blueMap.getMaps();
-        if (maps != null) {
-            for (BmMap map : maps.values()) {
-                var dataSupplier = new LivePlayersDataSupplier(
-                        serverInterface,
-                        getConfigs().getPluginConfig(),
-                        map.getWorldId(),
-                        Predicate.not(pluginState::isPlayerHidden)
-                );
-                try (
-                        OutputStream out = map.getStorage().writeMeta(map.getId(), BmMap.META_FILE_PLAYERS);
-                        Writer writer = new OutputStreamWriter(out)
-                ) {
-                    writer.write(dataSupplier.get());
-                } catch (Exception ex) {
-                    Logger.global.logError("Failed to save players for map '" + map.getId() + "'!", ex);
-                }
+        for (BmMap map : maps.values()) {
+            var serverWorld = serverInterface.getServerWorld(map.getWorld()).orElse(null);
+            if (serverWorld == null) continue;
+            var dataSupplier = new LivePlayersDataSupplier(
+                    serverInterface,
+                    getBlueMap().getConfig().getPluginConfig(),
+                    serverWorld,
+                    Predicate.not(pluginState::isPlayerHidden)
+            );
+            try (
+                    OutputStream out = map.getStorage().writeMeta(map.getId(), BmMap.META_FILE_PLAYERS);
+                    Writer writer = new OutputStreamWriter(out)
+            ) {
+                writer.write(dataSupplier.get());
+            } catch (Exception ex) {
+                Logger.global.logError("Failed to save players for map '" + map.getId() + "'!", ex);
             }
         }
     }
@@ -554,7 +569,7 @@ public class Plugin implements ServerEventListener {
     }
 
     public boolean flushWorldUpdates(World world) throws IOException {
-        var implWorld = serverInterface.getWorld(world.getSaveFolder()).orElse(null);
+        var implWorld = serverInterface.getServerWorld(world).orElse(null);
         if (implWorld != null) return implWorld.persistWorldChanges();
         return false;
     }
@@ -584,8 +599,8 @@ public class Plugin implements ServerEventListener {
     }
 
     public boolean checkPausedByPlayerCount() {
-        CoreConfig coreConfig = getConfigs().getCoreConfig();
-        PluginConfig pluginConfig = getConfigs().getPluginConfig();
+        CoreConfig coreConfig = getBlueMap().getConfig().getCoreConfig();
+        PluginConfig pluginConfig = getBlueMap().getConfig().getPluginConfig();
 
         if (
                 pluginConfig.getPlayerRenderLimit() > 0 &&
@@ -600,16 +615,17 @@ public class Plugin implements ServerEventListener {
         }
     }
 
+    public @Nullable World getWorld(ServerWorld serverWorld) {
+        String id = MCAWorld.id(serverWorld.getWorldFolder(), serverWorld.getDimension());
+        return getBlueMap().getWorlds().get(id);
+    }
+
     public Server getServerInterface() {
         return serverInterface;
     }
 
     public BlueMapService getBlueMap() {
         return blueMap;
-    }
-
-    public BlueMapConfigManager getConfigs() {
-        return blueMap.getConfig();
     }
 
     public PluginState getPluginState() {

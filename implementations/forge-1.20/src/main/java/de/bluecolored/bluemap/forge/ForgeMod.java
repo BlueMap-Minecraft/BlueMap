@@ -160,7 +160,7 @@ public class ForgeMod implements Server {
     }
 
     @Override
-    public Collection<ServerWorld> getLoadedWorlds() {
+    public Collection<ServerWorld> getLoadedServerWorlds() {
         Collection<ServerWorld> loadedWorlds = new ArrayList<>(3);
         for (ServerLevel serverWorld : serverInstance.getAllLevels()) {
             loadedWorlds.add(worlds.get(serverWorld));
@@ -170,9 +170,7 @@ public class ForgeMod implements Server {
 
     @SuppressWarnings("unchecked")
     @Override
-    public Optional<ServerWorld> getWorld(Object world) {
-        if (world instanceof Path)
-            return getWorld((Path) world);
+    public Optional<ServerWorld> getServerWorld(Object world) {
 
         if (world instanceof String) {
             ResourceLocation resourceLocation = ResourceLocation.tryParse((String) world);
@@ -186,12 +184,12 @@ public class ForgeMod implements Server {
         }
 
         if (world instanceof ServerLevel)
-            return Optional.of(getWorld((ServerLevel) world));
+            return Optional.of(getServerWorld((ServerLevel) world));
 
         return Optional.empty();
     }
 
-    public ServerWorld getWorld(ServerLevel world) {
+    public ServerWorld getServerWorld(ServerLevel world) {
         return worlds.get(world);
     }
 
@@ -238,11 +236,6 @@ public class ForgeMod implements Server {
     @Override
     public Collection<Player> getOnlinePlayers() {
         return onlinePlayerMap.values();
-    }
-
-    @Override
-    public Optional<Player> getPlayer(UUID uuid) {
-        return Optional.ofNullable(onlinePlayerMap.get(uuid));
     }
 
     /**

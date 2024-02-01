@@ -29,6 +29,7 @@ import de.bluecolored.bluemap.common.BlueMapConfiguration;
 import de.bluecolored.bluemap.common.config.storage.StorageConfig;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
+import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.util.Key;
@@ -49,21 +50,27 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
 
     private final ConfigManager configManager;
 
+    private final MinecraftVersion minecraftVersion;
     private final CoreConfig coreConfig;
     private final WebserverConfig webserverConfig;
     private final WebappConfig webappConfig;
     private final PluginConfig pluginConfig;
     private final Map<String, MapConfig> mapConfigs;
     private final Map<String, StorageConfig> storageConfigs;
+    private final Path resourcePacksFolder;
+    private final @Nullable Path modsFolder;
 
-    @Builder(buildMethodName = "")
+    @Builder
     private BlueMapConfigManager(
+            @NonNull MinecraftVersion minecraftVersion,
             @NonNull Path configRoot,
             @Nullable Path defaultDataFolder,
             @Nullable Path defaultWebroot,
             @Nullable Collection<ServerWorld> autoConfigWorlds,
             @Nullable Boolean usePluginConfig,
-            @Nullable Boolean useMetricsConfig
+            @Nullable Boolean useMetricsConfig,
+            @Nullable Path resourcePacksFolder,
+            @Nullable Path modsFolder
     ) throws ConfigurationException {
         // set defaults
         if (defaultDataFolder == null) defaultDataFolder = Path.of("bluemap");
@@ -71,8 +78,10 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
         if (autoConfigWorlds == null) autoConfigWorlds = Collections.emptyList();
         if (usePluginConfig == null) usePluginConfig = true;
         if (useMetricsConfig == null) useMetricsConfig = true;
+        if (resourcePacksFolder == null) resourcePacksFolder = configRoot.resolve("resourcepacks");
 
         // load
+        this.minecraftVersion = minecraftVersion;
         this.configManager = new ConfigManager(configRoot);
         this.coreConfig = loadCoreConfig(defaultDataFolder, useMetricsConfig);
         this.webappConfig = loadWebappConfig(defaultWebroot);
@@ -80,9 +89,11 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
         this.pluginConfig = usePluginConfig ? loadPluginConfig() : new PluginConfig();
         this.storageConfigs = Collections.unmodifiableMap(loadStorageConfigs(webappConfig.getWebroot()));
         this.mapConfigs = Collections.unmodifiableMap(loadMapConfigs(autoConfigWorlds));
+        this.resourcePacksFolder = resourcePacksFolder;
+        this.modsFolder = modsFolder;
     }
 
-    private synchronized CoreConfig loadCoreConfig(Path defaultDataFolder, boolean useMetricsConfig) throws ConfigurationException {
+    private CoreConfig loadCoreConfig(Path defaultDataFolder, boolean useMetricsConfig) throws ConfigurationException {
         Path configFileRaw = Path.of("core");
         Path configFile = configManager.findConfigPath(configFileRaw);
         Path configFolder = configFile.getParent();
@@ -127,7 +138,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
         return presetRenderThreadCount;
     }
 
-    private synchronized WebserverConfig loadWebserverConfig(Path defaultWebroot, Path dataRoot) throws ConfigurationException {
+    private WebserverConfig loadWebserverConfig(Path defaultWebroot, Path dataRoot) throws ConfigurationException {
         Path configFileRaw = Path.of("webserver");
         Path configFile = configManager.findConfigPath(configFileRaw);
         Path configFolder = configFile.getParent();
@@ -152,7 +163,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
         return configManager.loadConfig(configFileRaw, WebserverConfig.class);
     }
 
-    private synchronized WebappConfig loadWebappConfig(Path defaultWebroot) throws ConfigurationException {
+    private WebappConfig loadWebappConfig(Path defaultWebroot) throws ConfigurationException {
         Path configFileRaw = Path.of("webapp");
         Path configFile = configManager.findConfigPath(configFileRaw);
         Path configFolder = configFile.getParent();
@@ -175,7 +186,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
         return configManager.loadConfig(configFileRaw, WebappConfig.class);
     }
 
-    private synchronized PluginConfig loadPluginConfig() throws ConfigurationException {
+    private PluginConfig loadPluginConfig() throws ConfigurationException {
         Path configFileRaw = Path.of("plugin");
         Path configFile = configManager.findConfigPath(configFileRaw);
         Path configFolder = configFile.getParent();
@@ -197,7 +208,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
         return configManager.loadConfig(configFileRaw, PluginConfig.class);
     }
 
-    private synchronized Map<String, MapConfig> loadMapConfigs(Collection<ServerWorld> autoConfigWorlds) throws ConfigurationException {
+    private Map<String, MapConfig> loadMapConfigs(Collection<ServerWorld> autoConfigWorlds) throws ConfigurationException {
         Map<String, MapConfig> mapConfigs = new HashMap<>();
 
         Path mapFolder = Paths.get("maps");
@@ -207,22 +218,23 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
             try {
                 FileHelper.createDirectories(mapConfigFolder);
                 if (autoConfigWorlds.isEmpty()) {
+                    Path worldFolder = Path.of("world");
                     Files.writeString(
                             mapConfigFolder.resolve("overworld.conf"),
-                            createOverworldMapTemplate("Overworld", Path.of("world"),
+                            createOverworldMapTemplate("Overworld", worldFolder,
                                     new Key("minecraft", "overworld"), 0).build(),
                             StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                     );
                     Files.writeString(
                             mapConfigFolder.resolve("nether.conf"),
-                            createNetherMapTemplate("Nether", Path.of("world", "DIM-1"),
-                                    new Key("minecraft", "overworld"), 0).build(),
+                            createNetherMapTemplate("Nether", worldFolder,
+                                    new Key("minecraft", "the_nether"), 0).build(),
                             StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                     );
                     Files.writeString(
                             mapConfigFolder.resolve("end.conf"),
-                            createEndMapTemplate("End", Path.of("world", "DIM1"),
-                                    new Key("minecraft", "overworld"), 0).build(),
+                            createEndMapTemplate("End", worldFolder,
+                                    new Key("minecraft", "the_end"), 0).build(),
                             StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                     );
                 } else {
@@ -296,7 +308,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
         return mapConfigs;
     }
 
-    private synchronized Map<String, StorageConfig> loadStorageConfigs(Path defaultWebroot) throws ConfigurationException {
+    private Map<String, StorageConfig> loadStorageConfigs(Path defaultWebroot) throws ConfigurationException {
         Map<String, StorageConfig> storageConfigs = new HashMap<>();
 
         Path storageFolder = Paths.get("storages");

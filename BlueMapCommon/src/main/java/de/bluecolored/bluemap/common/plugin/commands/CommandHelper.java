@@ -30,7 +30,6 @@ import de.bluecolored.bluemap.common.plugin.text.TextColor;
 import de.bluecolored.bluemap.common.plugin.text.TextFormat;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.rendermanager.RenderTask;
-import de.bluecolored.bluemap.core.world.World;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import java.lang.ref.WeakReference;
@@ -106,7 +105,7 @@ public class CommandHelper {
             if (plugin.checkPausedByPlayerCount()) {
                 lines.add(Text.of(TextColor.WHITE, " Render-Threads are ",
                         Text.of(TextColor.GOLD, "paused")));
-                lines.add(Text.of(TextColor.GRAY, TextFormat.ITALIC, "\u00A0\u00A0\u00A0(there are " + plugin.getConfigs().getPluginConfig().getPlayerRenderLimit() + " or more players online)"));
+                lines.add(Text.of(TextColor.GRAY, TextFormat.ITALIC, "\u00A0\u00A0\u00A0(there are " + plugin.getBlueMap().getConfig().getPluginConfig().getPlayerRenderLimit() + " or more players online)"));
             } else {
                 lines.add(Text.of(TextColor.WHITE, " Render-Threads are ",
                         Text.of(TextColor.RED, "stopped")
@@ -134,20 +133,22 @@ public class CommandHelper {
 
     public Text worldHelperHover() {
         StringJoiner joiner = new StringJoiner("\n");
-        for (World world : plugin.getWorlds().values()) {
-            joiner.add(world.getName());
+        for (String worldId : plugin.getBlueMap().getWorlds().keySet()) {
+            joiner.add(worldId);
         }
 
-        return Text.of("world").setHoverText(Text.of(TextColor.WHITE, "Available worlds: \n", TextColor.GRAY, joiner.toString()));
+        return Text.of(TextFormat.UNDERLINED, "world")
+                .setHoverText(Text.of(TextColor.WHITE, "Available worlds: \n", TextColor.GRAY, joiner.toString()));
     }
 
     public Text mapHelperHover() {
         StringJoiner joiner = new StringJoiner("\n");
-        for (String mapId : plugin.getMaps().keySet()) {
+        for (String mapId : plugin.getBlueMap().getMaps().keySet()) {
             joiner.add(mapId);
         }
 
-        return Text.of("map").setHoverText(Text.of(TextColor.WHITE, "Available maps: \n", TextColor.GRAY, joiner.toString()));
+        return Text.of(TextFormat.UNDERLINED, "map")
+                .setHoverText(Text.of(TextColor.WHITE, "Available maps: \n", TextColor.GRAY, joiner.toString()));
     }
 
     public synchronized Optional<RenderTask> getTaskForRef(String ref) {

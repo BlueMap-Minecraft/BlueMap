@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.common.serverinterface;
 
+import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.util.Key;
 
 import java.io.IOException;
@@ -31,8 +32,10 @@ import java.nio.file.Path;
 
 public interface ServerWorld {
 
+    @DebugDump
     Path getWorldFolder();
 
+    @DebugDump
     Key getDimension();
 
     /**

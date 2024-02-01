@@ -180,7 +180,7 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
     }
 
     @Override
-    public Collection<ServerWorld> getLoadedWorlds() {
+    public Collection<ServerWorld> getLoadedServerWorlds() {
         Collection<ServerWorld> loadedWorlds = new ArrayList<>(3);
         for (World world : Bukkit.getWorlds()) {
             loadedWorlds.add(worlds.get(world));
@@ -189,9 +189,7 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
     }
 
     @Override
-    public Optional<ServerWorld> getWorld(Object world) {
-        if (world instanceof Path)
-            return getWorld((Path) world);
+    public Optional<ServerWorld> getServerWorld(Object world) {
 
         if (world instanceof String) {
             var serverWorld = Bukkit.getWorld((String) world);
@@ -209,12 +207,12 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
         }
 
         if (world instanceof World)
-            return Optional.of(getWorld((World) world));
+            return Optional.of(getServerWorld((World) world));
 
         return Optional.empty();
     }
 
-    public ServerWorld getWorld(World world) {
+    public ServerWorld getServerWorld(World world) {
         return worlds.get(world);
     }
 
@@ -253,11 +251,6 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
     @Override
     public Collection<Player> getOnlinePlayers() {
         return onlinePlayerMap.values();
-    }
-
-    @Override
-    public Optional<Player> getPlayer(UUID uuid) {
-        return Optional.ofNullable(onlinePlayerMap.get(uuid));
     }
 
     private void initPlayer(org.bukkit.entity.Player bukkitPlayer) {

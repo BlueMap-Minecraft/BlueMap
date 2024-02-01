@@ -25,12 +25,14 @@
 package de.bluecolored.bluemap.common.plugin;
 
 import com.flowpowered.math.vector.Vector2i;
+import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.util.FileHelper;
+import de.bluecolored.bluemap.core.world.World;
+import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -45,7 +47,7 @@ public class RegionFileWatchService extends Thread {
     private final RenderManager renderManager;
     private final WatchService watchService;
 
-    private boolean verbose;
+    private final boolean verbose;
     private volatile boolean closed;
 
     private Timer delayTimer;
@@ -60,7 +62,9 @@ public class RegionFileWatchService extends Thread {
         this.closed = false;
         this.scheduledUpdates = new HashMap<>();
 
-        Path folder = map.getWorld().getSaveFolder().resolve("region");
+        World world = map.getWorld();
+        if (!(world instanceof MCAWorld)) throw new UnsupportedOperationException("world-type is not supported");
+        Path folder = ((MCAWorld) world).getRegionFolder();
         FileHelper.createDirectories(folder);
 
         this.watchService = folder.getFileSystem().newWatchService();
