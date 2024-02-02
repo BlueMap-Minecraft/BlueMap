@@ -104,8 +104,14 @@ public class LiquidModelBuilder {
 
     private final Color tintcolor = new Color();
     private void build() {
+        int blockLight = block.getBlockLightLevel();
+        int sunLight = block.getSunLightLevel();
+
         // filter out blocks that are in a "cave" that should not be rendered
-        if (this.block.isCave() && (renderSettings.isCaveDetectionUsesBlockLight() ? block.getBlockLightLevel() : block.getSunLightLevel()) == 0f) return;
+        if (
+                this.block.isRemoveIfCave() &&
+                (renderSettings.isCaveDetectionUsesBlockLight() ? Math.max(blockLight, sunLight) : sunLight) == 0f
+        ) return;
 
         int level = blockState.getLiquidLevel();
         if (level < 8 && !(level == 0 && isSameLiquid(block.getNeighborBlock(0, 1, 0)))){
@@ -160,7 +166,7 @@ public class LiquidModelBuilder {
                 blockColor.multiply(tintcolor);
 
                 // apply light
-                float combinedLight = Math.max(block.getSunLightLevel() / 15f, block.getBlockLightLevel() / 15f);
+                float combinedLight = Math.max(sunLight, blockLight) / 15f;
                 combinedLight = (renderSettings.getAmbientLight() + combinedLight) / (renderSettings.getAmbientLight() + 1f);
                 blockColor.r *= combinedLight;
                 blockColor.g *= combinedLight;

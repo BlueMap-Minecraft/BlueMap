@@ -109,12 +109,14 @@ public class ExtendedBlock<T extends ExtendedBlock<T>> extends Block<T> {
         return insideRenderBounds;
     }
 
-    public boolean isCave() {
+    public boolean isRemoveIfCave() {
         if (!isCaveCalculated) {
             isCave = getY() < renderSettings.getRemoveCavesBelowY() &&
-                    !getChunk().hasOceanFloorHeights() ||
+                    (
+                            !getChunk().hasOceanFloorHeights() ||
                             getY() < getChunk().getOceanFloorY(getX(), getZ()) +
-                                    renderSettings.getCaveDetectionOceanFloor();
+                                    renderSettings.getCaveDetectionOceanFloor()
+                    );
             isCaveCalculated = true;
         }
 

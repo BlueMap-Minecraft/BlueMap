@@ -31,6 +31,7 @@ import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.resources.datapack.DataPack;
 import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.util.Key;
 import lombok.Builder;
@@ -222,19 +223,19 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
                     Files.writeString(
                             mapConfigFolder.resolve("overworld.conf"),
                             createOverworldMapTemplate("Overworld", worldFolder,
-                                    new Key("minecraft", "overworld"), 0).build(),
+                                    DataPack.DIMENSION_OVERWORLD, 0).build(),
                             StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                     );
                     Files.writeString(
                             mapConfigFolder.resolve("nether.conf"),
                             createNetherMapTemplate("Nether", worldFolder,
-                                    new Key("minecraft", "the_nether"), 0).build(),
+                                    DataPack.DIMENSION_THE_NETHER, 0).build(),
                             StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                     );
                     Files.writeString(
                             mapConfigFolder.resolve("end.conf"),
                             createEndMapTemplate("End", worldFolder,
-                                    new Key("minecraft", "the_end"), 0).build(),
+                                    DataPack.DIMENSION_THE_END, 0).build(),
                             StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                     );
                 } else {
@@ -252,7 +253,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
                             configFile = mapConfigFolder.resolve(id + '_' + (++i) + ".conf");
                         }
 
-                        String name = worldFolder.getFileName() + " - " + dimensionName;
+                        String name = worldFolder.getFileName() + " (" + dimensionName + ")";
                         if (i > 1) name = name + " (" + i + ")";
 
                         ConfigTemplate template;
