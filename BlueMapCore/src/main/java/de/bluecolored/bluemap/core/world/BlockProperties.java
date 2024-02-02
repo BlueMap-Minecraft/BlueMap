@@ -57,11 +57,11 @@ public class BlockProperties {
     }
 
     public boolean isCulling() {
-        return culling.getOr(true);
+        return culling.getOr(false);
     }
 
     public boolean isOccluding() {
-        return occluding.getOr(true);
+        return occluding.getOr(false);
     }
 
     public boolean isAlwaysWaterlogged() {
