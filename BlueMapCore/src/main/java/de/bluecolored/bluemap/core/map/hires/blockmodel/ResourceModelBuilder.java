@@ -198,7 +198,7 @@ public class ResourceModelBuilder {
         // filter out faces that are in a "cave" that should not be rendered
         if (
                 block.isRemoveIfCave() &&
-                (renderSettings.isCaveDetectionUsesBlockLight() ? Math.max(blockLight, sunLight) : sunLight) == 0f
+                (renderSettings.isCaveDetectionUsesBlockLight() ? Math.max(blockLight, sunLight) : sunLight) == 0
         ) return;
 
         // initialize the faces

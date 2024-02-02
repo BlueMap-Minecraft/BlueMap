@@ -69,7 +69,7 @@ public class HiresModelRenderer {
             for (z = min.getZ(); z <= max.getZ(); z++){
 
                 maxHeight = 0;
-                topBlockLight = 0f;
+                topBlockLight = 0;
 
                 columnColor.set(0, 0, 0, 0, true);
 

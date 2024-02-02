@@ -40,6 +40,7 @@ import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
+import de.bluecolored.bluemap.core.resources.datapack.DataPack;
 import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.FileHelper;
@@ -186,6 +187,31 @@ public class BlueMapService implements Closeable {
         if (worldFolder == null) {
             Logger.global.logInfo("The map '" + name + "' has no world configured. The map will be displayed, but not updated!");
             return;
+        }
+
+        // if there is no dimension configured, we assume world-folder is actually the dimension-folder and convert (backwards compatibility)
+        if (dimension == null) {
+            worldFolder = worldFolder.normalize();
+            if (worldFolder.endsWith("DIM-1")) {
+                worldFolder = worldFolder.getParent();
+                dimension = DataPack.DIMENSION_THE_NETHER;
+            } else if (worldFolder.endsWith("DIM1")) {
+                worldFolder = worldFolder.getParent();
+                dimension = DataPack.DIMENSION_THE_END;
+            } else if (
+                    worldFolder.getNameCount() > 3 &&
+                    worldFolder.getName(worldFolder.getNameCount() - 3).equals(Path.of("dimensions"))
+            ) {
+                String namespace = worldFolder.getName(worldFolder.getNameCount() - 2).toString();
+                String value = worldFolder.getName(worldFolder.getNameCount() - 1).toString();
+                worldFolder = worldFolder.subpath(0, worldFolder.getNameCount() - 3);
+                dimension = new Key(namespace, value);
+            } else {
+                dimension = DataPack.DIMENSION_OVERWORLD;
+            }
+
+            Logger.global.logInfo("The map '" + name + "' has no dimension configured.\n" +
+                    "Assuming world: '" + worldFolder + "' and dimension: '" + dimension + "'.");
         }
 
         if (!Files.isDirectory(worldFolder)) {

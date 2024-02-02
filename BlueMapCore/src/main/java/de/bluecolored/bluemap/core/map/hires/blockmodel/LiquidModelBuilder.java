@@ -110,7 +110,7 @@ public class LiquidModelBuilder {
         // filter out blocks that are in a "cave" that should not be rendered
         if (
                 this.block.isRemoveIfCave() &&
-                (renderSettings.isCaveDetectionUsesBlockLight() ? Math.max(blockLight, sunLight) : sunLight) == 0f
+                (renderSettings.isCaveDetectionUsesBlockLight() ? Math.max(blockLight, sunLight) : sunLight) == 0
         ) return;
 
         int level = blockState.getLiquidLevel();
