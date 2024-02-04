@@ -15,6 +15,7 @@ public abstract class MCAChunk implements Chunk {
     protected static final int VALUES_PER_HEIGHTMAP = 16 * 16;
 
     protected static final byte[] EMPTY_BYTE_ARRAY = new byte[0];
+    protected static final int[] EMPTY_INT_ARRAY = new int[0];
     protected static final long[] EMPTY_LONG_ARRAY = new long[0];
     protected static final String[] EMPTY_STRING_ARRAY = new String[0];
     protected static final BlockState[] EMPTY_BLOCKSTATE_ARRAY = new BlockState[0];

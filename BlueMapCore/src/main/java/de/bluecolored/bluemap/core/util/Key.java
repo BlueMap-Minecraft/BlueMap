@@ -115,7 +115,7 @@ public class Key implements Keyed {
     /**
      * Using our own function instead of {@link String#intern()} since the ConcurrentHashMap is much faster.
      */
-    private static String intern(String string) {
+    protected static String intern(String string) {
         String interned = STRING_INTERN_POOL.putIfAbsent(string, string);
         return interned != null ? interned : string;
     }

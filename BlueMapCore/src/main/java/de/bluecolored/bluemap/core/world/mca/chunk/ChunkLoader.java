@@ -18,7 +18,10 @@ public class ChunkLoader {
 
     // sorted list of chunk-versions, loaders at the start of the list are preferred over loaders at the end
     private static final List<ChunkVersionLoader<?>> CHUNK_VERSION_LOADERS = List.of(
-            new ChunkVersionLoader<>(Chunk_1_18.Data.class, Chunk_1_18::new, 0)
+            //new ChunkVersionLoader<>(Chunk_1_13.Data.class, Chunk_1_13::new, 0),
+            //new ChunkVersionLoader<>(Chunk_1_15.Data.class, Chunk_1_15::new, 2200),
+            new ChunkVersionLoader<>(Chunk_1_16.Data.class, Chunk_1_16::new, 2500),
+            new ChunkVersionLoader<>(Chunk_1_18.Data.class, Chunk_1_18::new, 2844)
     );
 
     private ChunkVersionLoader<?> lastUsedLoader = CHUNK_VERSION_LOADERS.get(0);

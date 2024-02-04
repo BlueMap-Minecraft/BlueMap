@@ -13,10 +13,9 @@ import de.bluecolored.bluenbt.NBTName;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 
-public class Chunk_1_18 extends MCAChunk {
+public class Chunk_1_16 extends MCAChunk {
 
-    private static final BlockStatesData EMPTY_BLOCKSTATESDATA = new BlockStatesData();
-    private static final BiomesData EMPTY_BIOMESDATA = new BiomesData();
+    private static final Level EMPTY_LEVEL = new Level();
     private static final HeightmapsData EMPTY_HEIGHTMAPS_DATA = new HeightmapsData();
 
     private static final Key STATUS_EMPTY = new Key("minecraft", "empty");
@@ -27,7 +26,6 @@ public class Chunk_1_18 extends MCAChunk {
     private final long inhabitedTime;
 
     private final int skyLight;
-    private final int worldMinY;
 
     private final boolean hasWorldSurfaceHeights;
     private final PackedIntArrayAccess worldSurfaceHeights;
@@ -37,27 +35,32 @@ public class Chunk_1_18 extends MCAChunk {
     private final Section[] sections;
     private final int sectionMin, sectionMax;
 
-    public Chunk_1_18(MCARegion region, Data data) {
+    private final int[] biomes;
+
+    public Chunk_1_16(MCARegion region, Data data) {
         super(region, data);
 
-        this.generated = !STATUS_EMPTY.equals(data.status);
-        this.hasLightData = STATUS_FULL.equals(data.status);
-        this.inhabitedTime = data.inhabitedTime;
+        Level level = data.level;
+
+        this.generated = !STATUS_EMPTY.equals(level.status);
+        this.hasLightData = STATUS_FULL.equals(level.status);
+        this.inhabitedTime = level.inhabitedTime;
 
         DimensionType dimensionType = getRegion().getWorld().getDimensionType();
-        this.worldMinY = dimensionType.getMinY();
         this.skyLight = dimensionType.hasSkylight() ? 16 : 0;
 
         int worldHeight = dimensionType.getHeight();
         int bitsPerHeightmapElement = MCAUtil.ceilLog2(worldHeight + 1);
 
-        this.worldSurfaceHeights = new PackedIntArrayAccess(bitsPerHeightmapElement, data.heightmaps.worldSurface);
-        this.oceanFloorHeights = new PackedIntArrayAccess(bitsPerHeightmapElement, data.heightmaps.oceanFloor);
+        this.worldSurfaceHeights = new PackedIntArrayAccess(bitsPerHeightmapElement, level.heightmaps.worldSurface);
+        this.oceanFloorHeights = new PackedIntArrayAccess(bitsPerHeightmapElement, level.heightmaps.oceanFloor);
 
         this.hasWorldSurfaceHeights = this.worldSurfaceHeights.isCorrectSize(VALUES_PER_HEIGHTMAP);
         this.hasOceanFloorHeights = this.oceanFloorHeights.isCorrectSize(VALUES_PER_HEIGHTMAP);
 
-        SectionData[] sectionsData = data.sections;
+        this.biomes = level.biomes;
+
+        SectionData[] sectionsData = level.sections;
         if (sectionsData != null && sectionsData.length > 0) {
             int min = Integer.MAX_VALUE;
             int max = Integer.MIN_VALUE;
@@ -115,10 +118,15 @@ public class Chunk_1_18 extends MCAChunk {
 
     @Override
     public String getBiome(int x, int y, int z) {
-        Section section = getSection(y >> 4);
-        if (section == null) return Biome.DEFAULT.getFormatted();
+        if (this.biomes.length < 16) return Biome.DEFAULT.getFormatted();
 
-        return section.getBiome(x, y, z);
+        int biomeIntIndex = (y & 0b1100) << 2 | z & 0b1100 | (x & 0b1100) >> 2;
+
+        // shift y up/down if not in range
+        if (biomeIntIndex >= biomes.length) biomeIntIndex -= (((biomeIntIndex - biomes.length) >> 4) + 1) * 16;
+        if (biomeIntIndex < 0) biomeIntIndex -= (biomeIntIndex >> 4) * 16;
+
+        return LegacyBiomes.idFor(biomes[biomeIntIndex]);
     }
 
     @Override
@@ -149,7 +157,7 @@ public class Chunk_1_18 extends MCAChunk {
 
     @Override
     public int getWorldSurfaceY(int x, int z) {
-        return worldSurfaceHeights.get((z & 0xF) << 4 | x & 0xF) + worldMinY;
+        return worldSurfaceHeights.get((z & 0xF) << 4 | x & 0xF);
     }
 
     @Override
@@ -159,7 +167,7 @@ public class Chunk_1_18 extends MCAChunk {
 
     @Override
     public int getOceanFloorY(int x, int z) {
-        return oceanFloorHeights.get((z & 0xF) << 4 | x & 0xF) + worldMinY;
+        return oceanFloorHeights.get((z & 0xF) << 4 | x & 0xF);
     }
 
     private @Nullable Section getSection(int y) {
@@ -172,23 +180,18 @@ public class Chunk_1_18 extends MCAChunk {
 
         private final int sectionY;
         private final BlockState[] blockPalette;
-        private final String[] biomePalette;
         private final PackedIntArrayAccess blocks;
-        private final PackedIntArrayAccess biomes;
         private final byte[] blockLight;
         private final byte[] skyLight;
 
         public Section(SectionData sectionData) {
             this.sectionY = sectionData.y;
 
-            this.blockPalette = sectionData.blockStates.palette;
-            this.biomePalette = sectionData.biomes.palette;
+            this.blockPalette = sectionData.palette;
+            this.blocks = new PackedIntArrayAccess(sectionData.blockStates, BLOCKS_PER_SECTION);
 
-            this.blocks = new PackedIntArrayAccess(sectionData.blockStates.data, BLOCKS_PER_SECTION);
-            this.biomes = new PackedIntArrayAccess(sectionData.biomes.data, BIOMES_PER_SECTION);
-
-            this.blockLight = sectionData.blockLight;
-            this.skyLight = sectionData.skyLight;
+            this.blockLight = sectionData.getBlockLight();
+            this.skyLight = sectionData.getSkyLight();
         }
 
         public BlockState getBlockState(int x, int y, int z) {
@@ -202,19 +205,6 @@ public class Chunk_1_18 extends MCAChunk {
             }
 
             return blockPalette[id];
-        }
-
-        public String getBiome(int x, int y, int z) {
-            if (biomePalette.length == 1) return biomePalette[0];
-            if (biomePalette.length == 0) return Biome.DEFAULT.getValue();
-
-            int id = biomes.get((y & 0b1100) << 2 | z & 0b1100 | (x & 0b1100) >> 2);
-            if (id >= biomePalette.length) {
-                Logger.global.noFloodWarning("biome-palette-warning", "Got biome-palette id " + id + " but palette has size of " + biomePalette.length + "! (Future occasions of this error will not be logged)");
-                return Biome.DEFAULT.getValue();
-            }
-
-            return biomePalette[id];
         }
 
         public LightData getLightData(int x, int y, int z, LightData target) {
@@ -239,10 +229,17 @@ public class Chunk_1_18 extends MCAChunk {
     @Getter
     @SuppressWarnings("FieldMayBeFinal")
     public static class Data extends MCAChunk.Data {
+        private Level level = EMPTY_LEVEL;
+    }
+
+    @Getter
+    @SuppressWarnings("FieldMayBeFinal")
+    public static class Level {
         private Key status = STATUS_EMPTY;
         private long inhabitedTime = 0;
         private HeightmapsData heightmaps = EMPTY_HEIGHTMAPS_DATA;
         private SectionData @Nullable [] sections = null;
+        private int[] biomes = EMPTY_INT_ARRAY;
     }
 
     @Getter
@@ -258,22 +255,8 @@ public class Chunk_1_18 extends MCAChunk {
         private int y = 0;
         private byte[] blockLight = EMPTY_BYTE_ARRAY;
         private byte[] skyLight = EMPTY_BYTE_ARRAY;
-        @NBTName("block_states") private BlockStatesData blockStates = EMPTY_BLOCKSTATESDATA;
-        private BiomesData biomes = EMPTY_BIOMESDATA;
-    }
-
-    @Getter
-    @SuppressWarnings("FieldMayBeFinal")
-    protected static class BlockStatesData {
         private BlockState[] palette = EMPTY_BLOCKSTATE_ARRAY;
-        private long[] data = EMPTY_LONG_ARRAY;
-    }
-
-    @Getter
-    @SuppressWarnings("FieldMayBeFinal")
-    protected static class BiomesData {
-        private String[] palette = EMPTY_STRING_ARRAY;
-        private long[] data = EMPTY_LONG_ARRAY;
+        private long[] blockStates = EMPTY_LONG_ARRAY;
     }
 
 }
