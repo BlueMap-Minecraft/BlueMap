@@ -239,20 +239,33 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
                             StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                     );
                 } else {
-                    for (var world : autoConfigWorlds) {
-                        Path worldFolder = world.getWorldFolder();
+                    // make sure overworld-dimensions come first, so they are the ones where the
+                    // dimension-key is omitted in the generated map-id
+                    List<ServerWorld> overworldFirstAutoConfigWorlds = new ArrayList<>(autoConfigWorlds.size());
+                    overworldFirstAutoConfigWorlds.addAll(autoConfigWorlds);
+                    overworldFirstAutoConfigWorlds.sort(Comparator.comparingInt(w ->
+                            DataPack.DIMENSION_OVERWORLD.equals(w.getDimension()) ? 0 : 1
+                    ));
+
+                    Set<String> mapIds = new HashSet<>();
+                    for (var world : overworldFirstAutoConfigWorlds) {
+                        Path worldFolder = world.getWorldFolder().normalize();
                         Key dimension = world.getDimension();
 
                         String dimensionName = dimension.getNamespace().equals("minecraft") ?
                                 dimension.getValue() : dimension.getFormatted();
-                        String id = sanitiseMapId(worldFolder.getFileName() + "_" + dimensionName).toLowerCase(Locale.ROOT);
 
-                        Path configFile = mapConfigFolder.resolve(id + ".conf");
+                        // find unique map id
+                        String id = sanitiseMapId(worldFolder.getFileName().toString()).toLowerCase(Locale.ROOT);
+                        if (mapIds.contains(id))
+                            id = sanitiseMapId(worldFolder.getFileName() + "_" + dimensionName).toLowerCase(Locale.ROOT);
                         int i = 1;
-                        while (Files.exists(configFile)) {
-                            configFile = mapConfigFolder.resolve(id + '_' + (++i) + ".conf");
-                        }
+                        String uniqueId = id;
+                        while (mapIds.contains(uniqueId))
+                            uniqueId = id + "_" + (++i);
+                        mapIds.add(uniqueId);
 
+                        Path configFile = mapConfigFolder.resolve(uniqueId + ".conf");
                         String name = worldFolder.getFileName() + " (" + dimensionName + ")";
                         if (i > 1) name = name + " (" + i + ")";
 
