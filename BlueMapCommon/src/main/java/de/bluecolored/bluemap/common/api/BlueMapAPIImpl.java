@@ -35,10 +35,10 @@ import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.world.World;
-import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 
-import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -78,25 +78,20 @@ public class BlueMapAPIImpl extends BlueMapAPI {
     @Override
     public Collection<BlueMapMap> getMaps() {
         Map<String, BmMap> maps = plugin.getBlueMap().getMaps();
-        return maps.values().stream()
-                .map(map -> {
-                    try {
-                        return new BlueMapMapImpl(plugin, map);
-                    } catch (IOException e) {
-                        Logger.global.logError("[API] Failed to create BlueMapMap for map " + map.getId(), e);
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
+        return maps.keySet().stream()
+                .map(this::getMap)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
     public Collection<BlueMapWorld> getWorlds() {
         Map<String, World> worlds = plugin.getBlueMap().getWorlds();
-        return worlds.values().stream()
-                .map(world -> getWorld(world).orElse(null))
-                .filter(Objects::nonNull)
+        return worlds.keySet().stream()
+                .map(this::getWorld)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
@@ -107,8 +102,13 @@ public class BlueMapAPIImpl extends BlueMapAPI {
 
     public Optional<BlueMapWorld> getWorldUncached(Object world) {
 
-        if (world instanceof MCAWorld) {
-            var coreWorld = (MCAWorld) world;
+        if (world instanceof String) {
+            var coreWorld = plugin.getBlueMap().getWorlds().get(world);
+            if (coreWorld != null) world = coreWorld;
+        }
+
+        if (world instanceof World) {
+            var coreWorld = (World) world;
             return Optional.of(new BlueMapWorldImpl(plugin, coreWorld));
         }
 

@@ -70,9 +70,11 @@ public class BlueMapWorldImpl implements BlueMapWorld {
 
     @Override
     public Collection<BlueMapMap> getMaps() {
-        return unpack(plugin).getBlueMap().getMaps().values().stream()
-                .filter(map -> map.getWorld().equals(unpack(world)))
-                .map(map -> new BlueMapMapImpl(unpack(plugin), map, this))
+        Plugin plugin = unpack(this.plugin);
+        World world = unpack(this.world);
+        return plugin.getBlueMap().getMaps().values().stream()
+                .filter(map -> map.getWorld().equals(world))
+                .map(map -> new BlueMapMapImpl(plugin, map, this))
                 .collect(Collectors.toUnmodifiableSet());
     }
 
