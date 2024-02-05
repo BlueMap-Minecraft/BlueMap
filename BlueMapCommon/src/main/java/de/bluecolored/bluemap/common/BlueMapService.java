@@ -239,7 +239,7 @@ public class BlueMapService implements Closeable {
 
         try {
 
-            Logger.global.logInfo("Loading map '" + name + "'...");
+            Logger.global.logInfo("Loading map '" + id + "'...");
             BmMap map = new BmMap(
                     id,
                     name,

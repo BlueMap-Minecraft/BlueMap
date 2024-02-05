@@ -1,7 +1,9 @@
 package de.bluecolored.bluemap.core.world.mca.data;
 
 import de.bluecolored.bluemap.api.debug.DebugDump;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,6 +30,8 @@ public class LevelData {
     }
 
     @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
     @DebugDump
     public static class Dimension {
         private String type = "minecraft:overworld";

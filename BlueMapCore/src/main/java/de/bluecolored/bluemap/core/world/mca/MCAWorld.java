@@ -61,7 +61,7 @@ public class MCAWorld implements World {
             .build(this::loadRegion);
     private final LoadingCache<Vector2i, Chunk> chunkCache = Caffeine.newBuilder()
             .executor(BlueMap.THREAD_POOL)
-            .maximumSize(2048) // 2 regions worth of chunks
+            .maximumSize(10240) // 10 regions worth of chunks
             .expireAfterWrite(10, TimeUnit.MINUTES)
             .build(this::loadChunk);
 
@@ -72,16 +72,22 @@ public class MCAWorld implements World {
         this.levelData = levelData;
         this.dataPack = dataPack;
 
-        LevelData.Dimension dim = levelData.getData().getWorldGenSettings().getDimensions().get(dimension.getFormatted());
-        if (dim == null) {
-            Logger.global.logWarning("The level-data does not contain any dimension with the id '" + dimension +
-                    "', using fallback.");
-            dim = new LevelData.Dimension();
+        LevelData.Dimension dimensionData = levelData.getData().getWorldGenSettings().getDimensions().get(dimension.getFormatted());
+        if (dimensionData == null) {
+            if (DataPack.DIMENSION_OVERWORLD.equals(dimension)) dimensionData = new LevelData.Dimension(DataPack.DIMENSION_TYPE_OVERWORLD.getFormatted());
+            else if (DataPack.DIMENSION_THE_NETHER.equals(dimension)) dimensionData = new LevelData.Dimension(DataPack.DIMENSION_TYPE_THE_NETHER.getFormatted());
+            else if (DataPack.DIMENSION_THE_END.equals(dimension)) dimensionData = new LevelData.Dimension(DataPack.DIMENSION_TYPE_THE_END.getFormatted());
+            else {
+                Logger.global.logWarning("The level-data does not contain any dimension with the id '" + dimension +
+                        "', using fallback.");
+                dimensionData = new LevelData.Dimension();
+            }
         }
-        DimensionType dimensionType = dataPack.getDimensionType(new Key(dim.getType()));
+
+        DimensionType dimensionType = dataPack.getDimensionType(new Key(dimensionData.getType()));
         if (dimensionType == null) {
             Logger.global.logWarning("The data-pack for world '" + worldFolder +
-                    "' does not contain any dimension-type with the id '" + dim.getType() + "', using fallback.");
+                    "' does not contain any dimension-type with the id '" + dimensionData.getType() + "', using fallback.");
             dimensionType = DimensionType.OVERWORLD;
         }
 

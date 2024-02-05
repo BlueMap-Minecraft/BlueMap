@@ -42,6 +42,14 @@ import java.util.Map;
 @DebugDump
 public class BlockColorCalculatorFactory {
 
+    private static final int
+            AVERAGE_MIN_X = - 2,
+            AVERAGE_MAX_X =   2,
+            AVERAGE_MIN_Y = - 1,
+            AVERAGE_MAX_Y =   1,
+            AVERAGE_MIN_Z = - 2,
+            AVERAGE_MAX_Z =   2;
+
     private final int[] foliageMap = new int[65536];
     private final int[] grassMap = new int[65536];
 
@@ -133,18 +141,12 @@ public class BlockColorCalculatorFactory {
         public Color getWaterAverageColor(BlockNeighborhood<?> block, Color target) {
             target.set(0, 0, 0, 0, true);
 
-            int x, y, z,
-                    minX = - 2,
-                    maxX =   2,
-                    minY = - 1,
-                    maxY =   1,
-                    minZ = - 2,
-                    maxZ =   2;
+            int x, y, z;
 
             Biome biome;
-            for (x = minX; x <= maxX; x++) {
-                for (y = minY; y <= maxY; y++) {
-                    for (z = minZ; z <= maxZ; z++) {
+            for (y = AVERAGE_MIN_Y; y <= AVERAGE_MAX_Y; y++) {
+                for (x = AVERAGE_MIN_X; x <= AVERAGE_MAX_X; x++) {
+                    for (z = AVERAGE_MIN_Z; z <= AVERAGE_MAX_Z; z++) {
                         biome = block.getNeighborBlock(x, y, z).getBiome();
                         target.add(biome.getWaterColor());
                     }
@@ -157,18 +159,12 @@ public class BlockColorCalculatorFactory {
         public Color getFoliageAverageColor(BlockNeighborhood<?> block, Color target) {
             target.set(0, 0, 0, 0, true);
 
-            int x, y, z,
-                    minX = - 2,
-                    maxX =   2,
-                    minY = - 1,
-                    maxY =   1,
-                    minZ = - 2,
-                    maxZ =   2;
+            int x, y, z;
 
             Biome biome;
-            for (y = minY; y <= maxY; y++) {
-                for (x = minX; x <= maxX; x++) {
-                    for (z = minZ; z <= maxZ; z++) {
+            for (y = AVERAGE_MIN_Y; y <= AVERAGE_MAX_Y; y++) {
+                for (x = AVERAGE_MIN_X; x <= AVERAGE_MAX_X; x++) {
+                    for (z = AVERAGE_MIN_Z; z <= AVERAGE_MAX_Z; z++) {
                         biome = block.getNeighborBlock(x, y, z).getBiome();
                         target.add(getFoliageColor(biome, tempColor));
                     }
@@ -186,18 +182,12 @@ public class BlockColorCalculatorFactory {
         public Color getGrassAverageColor(BlockNeighborhood<?> block, Color target) {
             target.set(0, 0, 0, 0, true);
 
-            int x, y, z,
-                    minX = - 2,
-                    maxX =   2,
-                    minY = - 1,
-                    maxY =   1,
-                    minZ = - 2,
-                    maxZ =   2;
+            int x, y, z;
 
             Biome biome;
-            for (y = minY; y <= maxY; y++) {
-                for (x = minX; x <= maxX; x++) {
-                    for (z = minZ; z <= maxZ; z++) {
+            for (y = AVERAGE_MIN_Y; y <= AVERAGE_MAX_Y; y++) {
+                for (x = AVERAGE_MIN_X; x <= AVERAGE_MAX_X; x++) {
+                    for (z = AVERAGE_MIN_Z; z <= AVERAGE_MAX_Z; z++) {
                         biome = block.getNeighborBlock(x, y, z).getBiome();
                         target.add(getGrassColor(biome, tempColor));
                     }

@@ -25,6 +25,11 @@ public class DataPack {
     public static final Key DIMENSION_THE_NETHER = new Key("minecraft", "the_nether");
     public static final Key DIMENSION_THE_END = new Key("minecraft", "the_end");
 
+    public static final Key DIMENSION_TYPE_OVERWORLD = new Key("minecraft", "overworld");
+    public static final Key DIMENSION_TYPE_OVERWORLD_CAVES = new Key("minecraft", "overworld_caves");
+    public static final Key DIMENSION_TYPE_THE_NETHER = new Key("minecraft", "the_nether");
+    public static final Key DIMENSION_TYPE_THE_END = new Key("minecraft", "the_end");
+
     private final Map<Key, DimensionType> dimensionTypes = new HashMap<>();
 
     @Nullable
@@ -80,10 +85,10 @@ public class DataPack {
     }
 
     public void bake() {
-        dimensionTypes.putIfAbsent(new Key("minecraft", "overworld"), DimensionType.OVERWORLD);
-        dimensionTypes.putIfAbsent(new Key("minecraft", "overworld_caves"), DimensionType.OVERWORLD_CAVES);
-        dimensionTypes.putIfAbsent(new Key("minecraft", "the_nether"), DimensionType.NETHER);
-        dimensionTypes.putIfAbsent(new Key("minecraft", "the_end"), DimensionType.END);
+        dimensionTypes.putIfAbsent(DIMENSION_TYPE_OVERWORLD, DimensionType.OVERWORLD);
+        dimensionTypes.putIfAbsent(DIMENSION_TYPE_OVERWORLD_CAVES, DimensionType.OVERWORLD_CAVES);
+        dimensionTypes.putIfAbsent(DIMENSION_TYPE_THE_NETHER, DimensionType.NETHER);
+        dimensionTypes.putIfAbsent(DIMENSION_TYPE_THE_END, DimensionType.END);
     }
 
     private static Stream<Path> list(Path root) {
