@@ -29,17 +29,18 @@ import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 import org.bukkit.World;
 
+import java.lang.ref.WeakReference;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class BukkitWorld implements ServerWorld {
 
-    //private final WeakReference<World> delegate;
+    private final WeakReference<World> delegate;
     private final Path worldFolder;
     private final Key dimension;
 
     public BukkitWorld(World delegate) {
-        //this.delegate = new WeakReference<>(delegate);
+        this.delegate = new WeakReference<>(delegate);
         Path worldFolder = delegate.getWorldFolder().toPath();
 
         var id = delegate.key();
@@ -77,6 +78,22 @@ public class BukkitWorld implements ServerWorld {
     @Override
     public Key getDimension() {
         return dimension;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        BukkitWorld that = (BukkitWorld) o;
+        var world = delegate.get();
+        return world != null && world.equals(that.delegate.get());
+    }
+
+    @Override
+    public int hashCode() {
+        var world = delegate.get();
+        return world != null ? world.hashCode() : 0;
     }
 
 }

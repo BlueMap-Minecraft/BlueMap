@@ -92,4 +92,20 @@ public class ForgeWorld implements ServerWorld {
         return dimension;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ForgeWorld that = (ForgeWorld) o;
+        var world = delegate.get();
+        return world != null && world.equals(that.delegate.get());
+    }
+
+    @Override
+    public int hashCode() {
+        var world = delegate.get();
+        return world != null ? world.hashCode() : 0;
+    }
+
 }

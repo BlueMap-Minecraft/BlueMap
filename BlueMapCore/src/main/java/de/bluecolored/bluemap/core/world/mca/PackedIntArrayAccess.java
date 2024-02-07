@@ -4,6 +4,7 @@ public class PackedIntArrayAccess {
 
     // magic constants for fast division
     private static final int[] DIVISION_MAGIC = new int[]{
+            // <editor-fold defaultstate="collapsed" desc="Division-Magic Constants">
             -1, -1, 0,
             Integer.MIN_VALUE, 0, 0,
             1431655765, 1431655765, 0,
@@ -68,6 +69,7 @@ public class PackedIntArrayAccess {
             69273666, 69273666, 0,
             68174084, 68174084, 0,
             Integer.MIN_VALUE, 0, 5
+            // </editor-fold>
     };
 
     private final int bitsPerElement;
