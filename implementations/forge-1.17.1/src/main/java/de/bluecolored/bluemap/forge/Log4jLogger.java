@@ -24,13 +24,12 @@
  */
 package de.bluecolored.bluemap.forge;
 
-import org.apache.logging.log4j.Logger;
-
 import de.bluecolored.bluemap.core.logger.AbstractLogger;
+import org.apache.logging.log4j.Logger;
 
 public class Log4jLogger extends AbstractLogger {
 
-    private Logger out;
+    private final Logger out;
 
     public Log4jLogger(Logger out) {
         this.out = out;

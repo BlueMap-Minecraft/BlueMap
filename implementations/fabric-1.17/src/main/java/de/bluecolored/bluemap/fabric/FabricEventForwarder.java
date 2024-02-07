@@ -35,8 +35,8 @@ import java.util.UUID;
 
 public class FabricEventForwarder {
 
-    private FabricMod mod;
-    private Collection<ServerEventListener> eventListeners;
+    private final FabricMod mod;
+    private final Collection<ServerEventListener> eventListeners;
 
     public FabricEventForwarder(FabricMod mod) {
         this.mod = mod;

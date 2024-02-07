@@ -26,15 +26,15 @@ package de.bluecolored.bluemap.sponge;
 
 import com.flowpowered.math.vector.Vector3d;
 import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.plugin.text.Text;
+import de.bluecolored.bluemap.common.serverinterface.CommandSource;
+import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.world.World;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import org.spongepowered.api.service.permission.Subject;
 import org.spongepowered.api.world.Locatable;
 
-import java.io.IOException;
 import java.util.Optional;
 
 public class SpongeCommandSource implements CommandSource {
@@ -71,11 +71,8 @@ public class SpongeCommandSource implements CommandSource {
     @Override
     public Optional<World> getWorld() {
         if (audience instanceof Locatable locatable) {
-            try {
-                var serverWorld = SpongePlugin.getInstance().getWorld(locatable.serverLocation().world());
-                String worldId = plugin.getBlueMap().getWorldId(serverWorld.getSaveFolder());
-                return Optional.ofNullable(plugin.getWorlds().get(worldId));
-            } catch (IOException ignore) {}
+            ServerWorld serverWorld = SpongePlugin.getInstance().getServerWorld(locatable.serverLocation().world());
+            return Optional.ofNullable(plugin.getWorld(serverWorld));
         }
 
         return Optional.empty();

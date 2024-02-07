@@ -22,51 +22,46 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.world;
+package de.bluecolored.bluemap.core.util;
 
-public class EmptyChunk implements Chunk {
+import java.io.FilterOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 
-    public static final Chunk INSTANCE = new EmptyChunk();
+public class OnCloseOutputStream extends FilterOutputStream {
 
-    @Override
-    public boolean isGenerated() {
-        return false;
+    private final AutoCloseable onClose;
+
+    public OnCloseOutputStream(OutputStream out, AutoCloseable onClose) {
+        super(out);
+        this.onClose = onClose;
     }
 
     @Override
-    public long getInhabitedTime() {
-        return 0;
+    public void close() throws IOException {
+        IOException ioExcetion = null;
+
+        try {
+            out.close();
+        } catch (IOException ex) {
+            ioExcetion = ex;
+        }
+
+        try {
+            onClose.close();
+        } catch (Exception ex) {
+            if (ioExcetion == null) {
+                if (ex instanceof IOException) {
+                    ioExcetion = (IOException) ex;
+                } else {
+                    ioExcetion = new IOException(ex);
+                }
+            } else {
+                ioExcetion.addSuppressed(ex);
+            }
+        }
+
+        if (ioExcetion != null) throw ioExcetion;
     }
-
-    @Override
-    public BlockState getBlockState(int x, int y, int z) {
-        return BlockState.AIR;
-    }
-
-    @Override
-    public LightData getLightData(int x, int y, int z, LightData target) {
-        return target.set(0, 0);
-    }
-
-    @Override
-    public String getBiome(int x, int y, int z) {
-        return Biome.DEFAULT.getFormatted();
-    }
-
-    @Override
-    public int getMaxY(int x, int z) {
-        return 255;
-    }
-
-    @Override
-    public int getMinY(int x, int z) {
-        return 0;
-    }
-
-    @Override
-    public int getWorldSurfaceY(int x, int z) { return 0; }
-
-    @Override
-    public int getOceanFloorY(int x, int z) { return 0; }
 
 }

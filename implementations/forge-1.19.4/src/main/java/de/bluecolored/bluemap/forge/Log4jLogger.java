@@ -30,7 +30,7 @@ import de.bluecolored.bluemap.core.logger.AbstractLogger;
 
 public class Log4jLogger extends AbstractLogger {
 
-    private Logger out;
+    private final Logger out;
 
     public Log4jLogger(Logger out) {
         this.out = out;

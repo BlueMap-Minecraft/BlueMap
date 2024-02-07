@@ -26,22 +26,50 @@ package de.bluecolored.bluemap.core.world;
 
 public interface Chunk {
 
-    boolean isGenerated();
+    Chunk EMPTY_CHUNK = new Chunk() {};
 
-    long getInhabitedTime();
+    default boolean isGenerated() {
+        return false;
+    }
 
-    BlockState getBlockState(int x, int y, int z);
+    default boolean hasLightData() {
+        return false;
+    }
 
-    LightData getLightData(int x, int y, int z, LightData target);
+    default long getInhabitedTime() {
+        return 0;
+    }
 
-    String getBiome(int x, int y, int z);
+    default BlockState getBlockState(int x, int y, int z) {
+        return BlockState.AIR;
+    }
 
-    int getMaxY(int x, int z);
+    default LightData getLightData(int x, int y, int z, LightData target) {
+        return target.set(0, 0);
+    }
 
-    int getMinY(int x, int z);
+    default String getBiome(int x, int y, int z) {
+        return Biome.DEFAULT.getFormatted();
+    }
 
-    int getWorldSurfaceY(int x, int z);
+    default int getMaxY(int x, int z) {
+        return 255;
+    }
 
-    int getOceanFloorY(int x, int z);
+    default int getMinY(int x, int z) {
+        return 0;
+    }
+
+    default boolean hasWorldSurfaceHeights() {
+        return false;
+    }
+
+    default int getWorldSurfaceY(int x, int z) { return 0; }
+
+    default boolean hasOceanFloorHeights() {
+        return false;
+    }
+
+    default int getOceanFloorY(int x, int z) { return 0; }
 
 }

@@ -35,7 +35,7 @@ public interface Player {
 
     Text getName();
 
-    String getWorld();
+    ServerWorld getWorld();
 
     Vector3d getPosition();
 
@@ -47,8 +47,6 @@ public interface Player {
     int getSkyLight();
 
     int getBlockLight();
-
-    boolean isOnline();
 
     /**
      * Return <code>true</code> if the player is sneaking.

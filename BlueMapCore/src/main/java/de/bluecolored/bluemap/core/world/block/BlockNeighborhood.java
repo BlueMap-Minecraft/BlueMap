@@ -22,10 +22,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.world;
+package de.bluecolored.bluemap.core.world.block;
 
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.world.World;
 
 public class BlockNeighborhood<T extends BlockNeighborhood<T>> extends ExtendedBlock<T> {
 
@@ -53,6 +54,19 @@ public class BlockNeighborhood<T extends BlockNeighborhood<T>> extends ExtendedB
     }
 
     @Override
+    public T set(int x, int y, int z) {
+        return copy(getBlock(x, y, z));
+    }
+
+    @Override
+    public T set(World world, int x, int y, int z) {
+        if (getWorld() == world)
+            return copy(getBlock(x, y, z));
+        else
+            return super.set(world, x, y, z);
+    }
+
+    @Override
     protected void reset() {
         super.reset();
 
@@ -67,25 +81,28 @@ public class BlockNeighborhood<T extends BlockNeighborhood<T>> extends ExtendedB
     }
 
     public ExtendedBlock<?> getNeighborBlock(int dx, int dy, int dz) {
-        int i = neighborIndex(dx, dy, dz);
-        if (i == thisIndex()) return this;
-        return neighborhood[i].set(
-                getWorld(),
+        return getBlock(
                 getX() + dx,
                 getY() + dy,
                 getZ() + dz
         );
     }
 
+    private ExtendedBlock<?> getBlock(int x, int y, int z) {
+        int i = index(x, y, z);
+        if (i == thisIndex()) return this;
+        return neighborhood[i].set(getWorld(), x, y, z);
+    }
+
     private int thisIndex() {
-        if (thisIndex == -1) thisIndex = neighborIndex(0, 0, 0);
+        if (thisIndex == -1) thisIndex = index(getX(), getY(), getZ());
         return thisIndex;
     }
 
-    private int neighborIndex(int dx, int dy, int dz) {
-        return ((getX() + dx) & DIAMETER_MASK) * DIAMETER_SQUARED +
-               ((getY() + dy) & DIAMETER_MASK) * DIAMETER +
-               ((getZ() + dz) & DIAMETER_MASK);
+    private int index(int x, int y, int z) {
+        return (x & DIAMETER_MASK) * DIAMETER_SQUARED +
+               (y & DIAMETER_MASK) * DIAMETER +
+               (z & DIAMETER_MASK);
     }
 
 }

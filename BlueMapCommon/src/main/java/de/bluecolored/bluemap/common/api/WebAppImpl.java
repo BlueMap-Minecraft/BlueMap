@@ -49,7 +49,7 @@ public class WebAppImpl implements WebApp {
 
     @Override
     public Path getWebRoot() {
-        return plugin.getConfigs().getWebappConfig().getWebroot();
+        return plugin.getBlueMap().getConfig().getWebappConfig().getWebroot();
     }
 
     @Override
@@ -98,6 +98,7 @@ public class WebAppImpl implements WebApp {
     }
 
     @Override
+    @Deprecated(forRemoval = true)
     public Map<String, String> availableImages() throws IOException {
         Path webRoot = getWebRoot().toAbsolutePath();
         String separator = webRoot.getFileSystem().getSeparator();

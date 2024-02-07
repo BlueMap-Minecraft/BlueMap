@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.mca;
+package de.bluecolored.bluemap.core.world.mca.chunk;
 
 import java.util.Arrays;
 

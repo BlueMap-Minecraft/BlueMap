@@ -28,6 +28,7 @@ import com.flowpowered.math.vector.Vector3d;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.serverinterface.Gamemode;
 import de.bluecolored.bluemap.common.serverinterface.Player;
+import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerPlayer;
@@ -37,7 +38,6 @@ import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.phys.Vec3;
 
-import java.io.IOException;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.UUID;
@@ -54,12 +54,11 @@ public class ForgePlayer implements Player {
 
     private final UUID uuid;
     private Text name;
-    private String world;
+    private ServerWorld world;
     private Vector3d position;
     private Vector3d rotation;
     private int skyLight;
     private int blockLight;
-    private boolean online;
     private boolean sneaking;
     private boolean invisible;
     private Gamemode gamemode;
@@ -84,7 +83,7 @@ public class ForgePlayer implements Player {
     }
 
     @Override
-    public String getWorld() {
+    public ServerWorld getWorld() {
         return this.world;
     }
 
@@ -109,11 +108,6 @@ public class ForgePlayer implements Player {
     }
 
     @Override
-    public boolean isOnline() {
-        return this.online;
-    }
-
-    @Override
     public boolean isSneaking() {
         return this.sneaking;
     }
@@ -133,16 +127,10 @@ public class ForgePlayer implements Player {
      */
     public void update() {
         MinecraftServer server = mod.getServer();
-        if (server == null) {
-            this.online = false;
-            return;
-        }
+        if (server == null) return;
 
         ServerPlayer player = server.getPlayerList().getPlayer(uuid);
-        if (player == null) {
-            this.online = false;
-            return;
-        }
+        if (player == null) return;
 
         this.gamemode = GAMEMODE_MAP.getOrDefault(player.gameMode.getGameModeForPlayer(), Gamemode.SURVIVAL);
         if (this.gamemode == null) this.gamemode = Gamemode.SURVIVAL;
@@ -151,7 +139,6 @@ public class ForgePlayer implements Player {
         this.invisible = invis != null && invis.getDuration() > 0;
 
         this.name = Text.of(player.getName().getString());
-        this.online = true;
 
         Vec3 pos = player.getPosition(1f);
         this.position = new Vector3d(pos.x(), pos.y(), pos.z());
@@ -161,12 +148,7 @@ public class ForgePlayer implements Player {
         this.skyLight = player.getLevel().getChunkSource().getLightEngine().getLayerListener(LightLayer.SKY).getLightValue(new BlockPos(player.getBlockX(), player.getBlockY(), player.getBlockZ()));
         this.blockLight = player.getLevel().getChunkSource().getLightEngine().getLayerListener(LightLayer.BLOCK).getLightValue(new BlockPos(player.getBlockX(), player.getBlockY(), player.getBlockZ()));
 
-        try {
-            var world = mod.getWorld(player.getLevel());
-            this.world = mod.getPlugin().getBlueMap().getWorldId(world.getSaveFolder());
-        } catch (IOException | NullPointerException e) { // NullPointerException -> the plugin isn't fully loaded
-            this.world = "unknown";
-        }
+        this.world = mod.getServerWorld(player.getLevel());
     }
 
 }

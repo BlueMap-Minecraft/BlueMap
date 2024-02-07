@@ -25,7 +25,6 @@
 package de.bluecolored.bluemap.common.plugin.commands;
 
 import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.core.map.BmMap;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -40,7 +39,7 @@ public class MapSuggestionProvider<S> extends AbstractSuggestionProvider<S> {
 
     @Override
     public Collection<String> getPossibleValues() {
-        return new HashSet<>(plugin.getMaps().keySet());
+        return new HashSet<>(plugin.getBlueMap().getMaps().keySet());
     }
 
 }

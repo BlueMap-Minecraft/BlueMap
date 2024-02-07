@@ -24,8 +24,11 @@
  */
 package de.bluecolored.bluemap.common.web.http;
 
+import de.bluecolored.bluemap.api.debug.DebugDump;
+
 import java.io.IOException;
 
+@DebugDump
 public class HttpServer extends Server {
 
     private final HttpRequestHandler requestHandler;

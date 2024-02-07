@@ -25,114 +25,92 @@
 package de.bluecolored.bluemap.common.config;
 
 import de.bluecolored.bluemap.api.debug.DebugDump;
-import de.bluecolored.bluemap.common.BlueMapConfigProvider;
+import de.bluecolored.bluemap.common.BlueMapConfiguration;
 import de.bluecolored.bluemap.common.config.storage.StorageConfig;
-import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
+import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.resources.datapack.DataPack;
 import de.bluecolored.bluemap.core.util.FileHelper;
-import de.bluecolored.bluemap.core.util.Tristate;
+import de.bluecolored.bluemap.core.util.Key;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NonNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.nio.file.*;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Stream;
 
 @DebugDump
-public class BlueMapConfigs implements BlueMapConfigProvider {
+@Getter
+public class BlueMapConfigManager implements BlueMapConfiguration {
 
-    private final ServerInterface serverInterface;
     private final ConfigManager configManager;
 
+    private final MinecraftVersion minecraftVersion;
     private final CoreConfig coreConfig;
     private final WebserverConfig webserverConfig;
     private final WebappConfig webappConfig;
     private final PluginConfig pluginConfig;
     private final Map<String, MapConfig> mapConfigs;
     private final Map<String, StorageConfig> storageConfigs;
+    private final Path resourcePacksFolder;
+    private final @Nullable Path modsFolder;
 
-    public BlueMapConfigs(ServerInterface serverInterface) throws ConfigurationException {
-        this(serverInterface, Path.of("bluemap"), Path.of("bluemap", "web"), true);
-    }
+    @Builder
+    private BlueMapConfigManager(
+            @NonNull MinecraftVersion minecraftVersion,
+            @NonNull Path configRoot,
+            @Nullable Path defaultDataFolder,
+            @Nullable Path defaultWebroot,
+            @Nullable Collection<ServerWorld> autoConfigWorlds,
+            @Nullable Boolean usePluginConfig,
+            @Nullable Boolean useMetricsConfig,
+            @Nullable Path resourcePacksFolder,
+            @Nullable Path modsFolder
+    ) throws ConfigurationException {
+        // set defaults
+        if (defaultDataFolder == null) defaultDataFolder = Path.of("bluemap");
+        if (defaultWebroot == null) defaultWebroot = Path.of("bluemap", "web");
+        if (autoConfigWorlds == null) autoConfigWorlds = Collections.emptyList();
+        if (usePluginConfig == null) usePluginConfig = true;
+        if (useMetricsConfig == null) useMetricsConfig = true;
+        if (resourcePacksFolder == null) resourcePacksFolder = configRoot.resolve("resourcepacks");
 
-    public BlueMapConfigs(ServerInterface serverInterface, Path defaultDataFolder, Path defaultWebroot, boolean usePluginConf) throws ConfigurationException {
-        this.serverInterface = serverInterface;
-        this.configManager = new ConfigManager(serverInterface.getConfigFolder());
-
-        this.coreConfig = loadCoreConfig(defaultDataFolder);
+        // load
+        this.minecraftVersion = minecraftVersion;
+        this.configManager = new ConfigManager(configRoot);
+        this.coreConfig = loadCoreConfig(defaultDataFolder, useMetricsConfig);
         this.webappConfig = loadWebappConfig(defaultWebroot);
         this.webserverConfig = loadWebserverConfig(webappConfig.getWebroot(), coreConfig.getData());
-        this.pluginConfig = usePluginConf ? loadPluginConfig() : new PluginConfig();
+        this.pluginConfig = usePluginConfig ? loadPluginConfig() : new PluginConfig();
         this.storageConfigs = Collections.unmodifiableMap(loadStorageConfigs(webappConfig.getWebroot()));
-        this.mapConfigs = Collections.unmodifiableMap(loadMapConfigs());
+        this.mapConfigs = Collections.unmodifiableMap(loadMapConfigs(autoConfigWorlds));
+        this.resourcePacksFolder = resourcePacksFolder;
+        this.modsFolder = modsFolder;
     }
 
-    public ConfigManager getConfigManager() {
-        return configManager;
-    }
-
-    @Override
-    public CoreConfig getCoreConfig() {
-        return coreConfig;
-    }
-
-    @Override
-    public WebappConfig getWebappConfig() {
-        return webappConfig;
-    }
-
-    @Override
-    public WebserverConfig getWebserverConfig() {
-        return webserverConfig;
-    }
-
-    @Override
-    public PluginConfig getPluginConfig() {
-        return pluginConfig;
-    }
-
-    @Override
-    public Map<String, MapConfig> getMapConfigs() {
-        return mapConfigs;
-    }
-
-    @Override
-    public Map<String, StorageConfig> getStorageConfigs() {
-        return storageConfigs;
-    }
-
-    private synchronized CoreConfig loadCoreConfig(Path defaultDataFolder) throws ConfigurationException {
+    private CoreConfig loadCoreConfig(Path defaultDataFolder, boolean useMetricsConfig) throws ConfigurationException {
         Path configFileRaw = Path.of("core");
         Path configFile = configManager.findConfigPath(configFileRaw);
         Path configFolder = configFile.getParent();
 
         if (!Files.exists(configFile)) {
-
-            // determine render-thread preset (very pessimistic, rather let people increase it themselves)
-            Runtime runtime = Runtime.getRuntime();
-            int availableCores = runtime.availableProcessors();
-            long availableMemoryMiB = runtime.maxMemory() / 1024L / 1024L;
-            int presetRenderThreadCount = 1;
-            if (availableCores >= 6 && availableMemoryMiB >= 4096)
-                presetRenderThreadCount = 2;
-            if (availableCores >= 10 && availableMemoryMiB >= 8192)
-                presetRenderThreadCount = 3;
-
             try {
                 FileHelper.createDirectories(configFolder);
                 Files.writeString(
                         configFolder.resolve("core.conf"),
                         configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/core.conf")
-                                .setConditional("metrics", serverInterface.isMetricsEnabled() == Tristate.UNDEFINED)
+                                .setConditional("metrics", useMetricsConfig)
                                 .setVariable("timestamp", LocalDateTime.now().withNano(0).toString())
                                 .setVariable("version", BlueMap.VERSION)
                                 .setVariable("data", formatPath(defaultDataFolder))
                                 .setVariable("implementation", "bukkit")
-                                .setVariable("render-thread-count", Integer.toString(presetRenderThreadCount))
+                                .setVariable("render-thread-count", Integer.toString(suggestRenderThreadCount()))
                                 .setVariable("logfile", formatPath(defaultDataFolder.resolve("logs").resolve("debug.log")))
                                 .setVariable("logfile-with-time", formatPath(defaultDataFolder.resolve("logs").resolve("debug_%1$tF_%1$tT.log")))
                                 .build(),
@@ -146,7 +124,22 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
         return configManager.loadConfig(configFileRaw, CoreConfig.class);
     }
 
-    private synchronized WebserverConfig loadWebserverConfig(Path defaultWebroot, Path dataRoot) throws ConfigurationException {
+    /**
+     * determine render-thread preset (very pessimistic, rather let people increase it themselves)
+     */
+    private int suggestRenderThreadCount() {
+        Runtime runtime = Runtime.getRuntime();
+        int availableCores = runtime.availableProcessors();
+        long availableMemoryMiB = runtime.maxMemory() / 1024L / 1024L;
+        int presetRenderThreadCount = 1;
+        if (availableCores >= 6 && availableMemoryMiB >= 4096)
+            presetRenderThreadCount = 2;
+        if (availableCores >= 10 && availableMemoryMiB >= 8192)
+            presetRenderThreadCount = 3;
+        return presetRenderThreadCount;
+    }
+
+    private WebserverConfig loadWebserverConfig(Path defaultWebroot, Path dataRoot) throws ConfigurationException {
         Path configFileRaw = Path.of("webserver");
         Path configFile = configManager.findConfigPath(configFileRaw);
         Path configFolder = configFile.getParent();
@@ -171,7 +164,7 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
         return configManager.loadConfig(configFileRaw, WebserverConfig.class);
     }
 
-    private synchronized WebappConfig loadWebappConfig(Path defaultWebroot) throws ConfigurationException {
+    private WebappConfig loadWebappConfig(Path defaultWebroot) throws ConfigurationException {
         Path configFileRaw = Path.of("webapp");
         Path configFile = configManager.findConfigPath(configFileRaw);
         Path configFolder = configFile.getParent();
@@ -194,7 +187,7 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
         return configManager.loadConfig(configFileRaw, WebappConfig.class);
     }
 
-    private synchronized PluginConfig loadPluginConfig() throws ConfigurationException {
+    private PluginConfig loadPluginConfig() throws ConfigurationException {
         Path configFileRaw = Path.of("plugin");
         Path configFile = configManager.findConfigPath(configFileRaw);
         Path configFolder = configFile.getParent();
@@ -216,7 +209,7 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
         return configManager.loadConfig(configFileRaw, PluginConfig.class);
     }
 
-    private synchronized Map<String, MapConfig> loadMapConfigs() throws ConfigurationException {
+    private Map<String, MapConfig> loadMapConfigs(Collection<ServerWorld> autoConfigWorlds) throws ConfigurationException {
         Map<String, MapConfig> mapConfigs = new HashMap<>();
 
         Path mapFolder = Paths.get("maps");
@@ -225,41 +218,68 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
         if (!Files.exists(mapConfigFolder)){
             try {
                 FileHelper.createDirectories(mapConfigFolder);
-                var worlds = serverInterface.getLoadedWorlds();
-                if (worlds.isEmpty()) {
+                if (autoConfigWorlds.isEmpty()) {
+                    Path worldFolder = Path.of("world");
                     Files.writeString(
                             mapConfigFolder.resolve("overworld.conf"),
-                            createOverworldMapTemplate("Overworld", Path.of("world"), 0).build(),
+                            createOverworldMapTemplate("Overworld", worldFolder,
+                                    DataPack.DIMENSION_OVERWORLD, 0).build(),
                             StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                     );
                     Files.writeString(
                             mapConfigFolder.resolve("nether.conf"),
-                            createNetherMapTemplate("Nether", Path.of("world", "DIM-1"), 0).build(),
+                            createNetherMapTemplate("Nether", worldFolder,
+                                    DataPack.DIMENSION_THE_NETHER, 0).build(),
                             StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                     );
                     Files.writeString(
                             mapConfigFolder.resolve("end.conf"),
-                            createEndMapTemplate("End", Path.of("world", "DIM1"), 0).build(),
+                            createEndMapTemplate("End", worldFolder,
+                                    DataPack.DIMENSION_THE_END, 0).build(),
                             StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                     );
                 } else {
-                    for (var world : worlds) {
-                        String name = world.getName().orElse(world.getDimension().getName());
-                        Path worldFolder = world.getSaveFolder();
+                    // make sure overworld-dimensions come first, so they are the ones where the
+                    // dimension-key is omitted in the generated map-id
+                    List<ServerWorld> overworldFirstAutoConfigWorlds = new ArrayList<>(autoConfigWorlds.size());
+                    overworldFirstAutoConfigWorlds.addAll(autoConfigWorlds);
+                    overworldFirstAutoConfigWorlds.sort(Comparator.comparingInt(w ->
+                            DataPack.DIMENSION_OVERWORLD.equals(w.getDimension()) ? 0 : 1
+                    ));
 
-                        Path configFile = mapConfigFolder.resolve(sanitiseMapId(name.toLowerCase(Locale.ROOT)) + ".conf");
+                    Set<String> mapIds = new HashSet<>();
+                    for (var world : overworldFirstAutoConfigWorlds) {
+                        Path worldFolder = world.getWorldFolder().normalize();
+                        Key dimension = world.getDimension();
+
+                        String dimensionName = dimension.getNamespace().equals("minecraft") ?
+                                dimension.getValue() : dimension.getFormatted();
+
+                        // find unique map id
+                        String id = sanitiseMapId(worldFolder.getFileName().toString()).toLowerCase(Locale.ROOT);
+                        if (mapIds.contains(id))
+                            id = sanitiseMapId(worldFolder.getFileName() + "_" + dimensionName).toLowerCase(Locale.ROOT);
                         int i = 1;
-                        while (Files.exists(configFile)) {
-                            configFile = mapConfigFolder.resolve(sanitiseMapId(name.toLowerCase(Locale.ROOT)) + '_' + (++i) + ".conf");
-                        }
+                        String uniqueId = id;
+                        while (mapIds.contains(uniqueId))
+                            uniqueId = id + "_" + (++i);
+                        mapIds.add(uniqueId);
 
-                        if (i > 1) name = name + " " + i;
+                        Path configFile = mapConfigFolder.resolve(uniqueId + ".conf");
+                        String name = worldFolder.getFileName() + " (" + dimensionName + ")";
+                        if (i > 1) name = name + " (" + i + ")";
 
                         ConfigTemplate template;
-                        switch (world.getDimension()) {
-                            case NETHER: template = createNetherMapTemplate(name, worldFolder, i - 1); break;
-                            case END: template = createEndMapTemplate(name, worldFolder, i - 1); break;
-                            default: template = createOverworldMapTemplate(name, worldFolder, i - 1); break;
+                        switch (world.getDimension().getFormatted()) {
+                            case "minecraft:the_nether":
+                                template = createNetherMapTemplate(name, worldFolder, dimension, i - 1);
+                                break;
+                            case "minecraft:the_end":
+                                template = createEndMapTemplate(name, worldFolder, dimension, i - 1);
+                                break;
+                            default:
+                                template = createOverworldMapTemplate(name, worldFolder, dimension, i - 1);
+                                break;
                         }
 
                         Files.writeString(
@@ -302,7 +322,7 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
         return mapConfigs;
     }
 
-    private synchronized Map<String, StorageConfig> loadStorageConfigs(Path defaultWebroot) throws ConfigurationException {
+    private Map<String, StorageConfig> loadStorageConfigs(Path defaultWebroot) throws ConfigurationException {
         Map<String, StorageConfig> storageConfigs = new HashMap<>();
 
         Path storageFolder = Paths.get("storages");
@@ -357,43 +377,43 @@ public class BlueMapConfigs implements BlueMapConfigProvider {
         return id.replaceAll("\\W", "_");
     }
 
-    private ConfigTemplate createOverworldMapTemplate(String name, Path worldFolder, int index) throws IOException {
+    private ConfigTemplate createOverworldMapTemplate(String name, Path worldFolder, Key dimension, int index) throws IOException {
         return configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/maps/map.conf")
                 .setVariable("name", name)
                 .setVariable("sorting", "" + index)
                 .setVariable("world", formatPath(worldFolder))
+                .setVariable("dimension", dimension.getFormatted())
                 .setVariable("sky-color", "#7dabff")
                 .setVariable("void-color", "#000000")
                 .setVariable("ambient-light", "0.1")
-                .setVariable("world-sky-light", "15")
                 .setVariable("remove-caves-below-y", "55")
                 .setConditional("max-y-comment", true)
                 .setVariable("max-y", "100");
     }
 
-    private ConfigTemplate createNetherMapTemplate(String name, Path worldFolder, int index) throws IOException {
+    private ConfigTemplate createNetherMapTemplate(String name, Path worldFolder, Key dimension, int index) throws IOException {
         return configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/maps/map.conf")
                 .setVariable("name", name)
                 .setVariable("sorting", "" + (100 + index))
                 .setVariable("world", formatPath(worldFolder))
+                .setVariable("dimension", dimension.getFormatted())
                 .setVariable("sky-color", "#290000")
                 .setVariable("void-color", "#150000")
                 .setVariable("ambient-light", "0.6")
-                .setVariable("world-sky-light", "0")
                 .setVariable("remove-caves-below-y", "-10000")
                 .setConditional("max-y-comment", false)
                 .setVariable("max-y", "90");
     }
 
-    private ConfigTemplate createEndMapTemplate(String name, Path worldFolder, int index) throws IOException {
+    private ConfigTemplate createEndMapTemplate(String name, Path worldFolder, Key dimension, int index) throws IOException {
         return configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/maps/map.conf")
                 .setVariable("name", name)
                 .setVariable("sorting", "" + (200 + index))
                 .setVariable("world", formatPath(worldFolder))
+                .setVariable("dimension", dimension.getFormatted())
                 .setVariable("sky-color", "#080010")
                 .setVariable("void-color", "#080010")
                 .setVariable("ambient-light", "0.6")
-                .setVariable("world-sky-light", "0")
                 .setVariable("remove-caves-below-y", "-10000")
                 .setConditional("max-y-comment", true)
                 .setVariable("max-y", "100");

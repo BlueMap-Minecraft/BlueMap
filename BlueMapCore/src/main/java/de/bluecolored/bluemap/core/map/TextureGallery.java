@@ -24,6 +24,9 @@
  */
 package de.bluecolored.bluemap.core.map;
 
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonParseException;
 import de.bluecolored.bluemap.api.debug.DebugDump;
@@ -42,6 +45,10 @@ import java.util.Map;
 
 @DebugDump
 public class TextureGallery {
+
+    private static final Gson GSON = ResourcesGson.addAdapter(new GsonBuilder())
+            .setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)
+            .create();
 
     private final Map<ResourcePath<Texture>, TextureMapping> textureMappings;
     private int nextId;
@@ -93,7 +100,7 @@ public class TextureGallery {
         });
 
         try (Writer writer = new OutputStreamWriter(out)) {
-            ResourcesGson.INSTANCE.toJson(textures, Texture[].class, writer);
+            GSON.toJson(textures, Texture[].class, writer);
         } catch (JsonIOException ex) {
             throw new IOException(ex);
         }
@@ -102,7 +109,7 @@ public class TextureGallery {
     public static TextureGallery readTexturesFile(InputStream in) throws IOException {
         TextureGallery gallery = new TextureGallery();
         try (Reader reader = new InputStreamReader(in)) {
-            Texture[] textures = ResourcesGson.INSTANCE.fromJson(reader, Texture[].class);
+            Texture[] textures = GSON.fromJson(reader, Texture[].class);
             if (textures == null) throw new IOException("Texture data is empty!");
             gallery.nextId = textures.length;
             for (int ordinal = 0; ordinal < textures.length; ordinal++) {

@@ -22,9 +22,22 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.mca;
+package de.bluecolored.bluemap.core.world.mca;
 
-public class MCAMath {
+import com.google.gson.reflect.TypeToken;
+import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluemap.core.world.BlockState;
+import de.bluecolored.bluemap.core.world.mca.data.BlockStateDeserializer;
+import de.bluecolored.bluemap.core.world.mca.data.KeyDeserializer;
+import de.bluecolored.bluenbt.BlueNBT;
+
+public class MCAUtil {
+
+    public static final BlueNBT BLUENBT = new BlueNBT();
+    static {
+        BLUENBT.register(TypeToken.get(BlockState.class), new BlockStateDeserializer());
+        BLUENBT.register(TypeToken.get(Key.class), new KeyDeserializer());
+    }
 
     /**
      * Having a long array where each long contains as many values as fit in it without overflowing, returning the "valueIndex"-th value when each value has "bitsPerValue" bits.
@@ -34,6 +47,7 @@ public class MCAMath {
         int longIndex = valueIndex / valuesPerLong;
         int bitIndex = (valueIndex % valuesPerLong) * bitsPerValue;
 
+        if (longIndex >= data.length) return 0;
         long value = data[longIndex] >>> bitIndex;
 
         return value & (0xFFFFFFFFFFFFFFFFL >>> -bitsPerValue);
@@ -42,16 +56,18 @@ public class MCAMath {
     /**
      * Treating the long array "data" as a continuous stream of bits, returning the "valueIndex"-th value when each value has "bitsPerValue" bits.
      */
+    @SuppressWarnings("ShiftOutOfRange")
     public static long getValueFromLongStream(long[] data, int valueIndex, int bitsPerValue) {
         int bitIndex = valueIndex * bitsPerValue;
         int firstLong = bitIndex >> 6; // index / 64
-        int bitoffset = bitIndex & 0x3F; // Math.floorMod(index, 64)
+        int bitOffset = bitIndex & 0x3F; // Math.floorMod(index, 64)
 
-        long value = data[firstLong] >>> bitoffset;
+        if (firstLong >= data.length) return 0;
+        long value = data[firstLong] >>> bitOffset;
 
-        if (bitoffset > 0 && firstLong + 1 < data.length) {
+        if (bitOffset > 0 && firstLong + 1 < data.length) {
             long value2 = data[firstLong + 1];
-            value2 = value2 << -bitoffset;
+            value2 = value2 << -bitOffset;
             value = value | value2;
         }
 
@@ -63,12 +79,12 @@ public class MCAMath {
      * The value is treated as an unsigned byte.
      */
     public static int getByteHalf(int value, boolean largeHalf) {
-        value = value & 0xFF;
-        if (largeHalf) {
-            value = value >> 4;
-        }
-        value = value & 0xF;
-        return value;
+        if (largeHalf) return value >> 4 & 0xF;
+        return value & 0xF;
+    }
+
+    public static int ceilLog2(int n) {
+        return Integer.SIZE - Integer.numberOfLeadingZeros(n - 1);
     }
 
 }

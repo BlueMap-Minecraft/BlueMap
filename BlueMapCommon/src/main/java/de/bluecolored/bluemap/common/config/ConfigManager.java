@@ -25,8 +25,10 @@
 package de.bluecolored.bluemap.common.config;
 
 import com.flowpowered.math.vector.Vector2i;
+import de.bluecolored.bluemap.common.config.typeserializer.KeyTypeSerializer;
 import de.bluecolored.bluemap.common.config.typeserializer.Vector2iTypeSerializer;
 import de.bluecolored.bluemap.core.BlueMap;
+import de.bluecolored.bluemap.core.util.Key;
 import org.apache.commons.io.IOUtils;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.ConfigurationNode;
@@ -165,6 +167,7 @@ public class ConfigManager {
                 .path(path)
                 .defaultOptions(o -> o.serializers(b -> {
                     b.register(Vector2i.class, new Vector2iTypeSerializer());
+                    b.register(Key.class, new KeyTypeSerializer());
                 }))
                 .build();
     }

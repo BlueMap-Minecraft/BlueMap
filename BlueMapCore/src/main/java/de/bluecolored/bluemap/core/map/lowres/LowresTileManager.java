@@ -27,7 +27,7 @@ package de.bluecolored.bluemap.core.map.lowres;
 import de.bluecolored.bluemap.core.map.TileMetaConsumer;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.math.Color;
-import de.bluecolored.bluemap.core.world.Grid;
+import de.bluecolored.bluemap.core.util.Grid;
 
 public class LowresTileManager implements TileMetaConsumer {
 

@@ -32,7 +32,7 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.storage.*;
 import de.bluecolored.bluemap.core.storage.sql.dialect.DialectType;
 import de.bluecolored.bluemap.core.storage.sql.dialect.Dialect;
-import de.bluecolored.bluemap.core.util.WrappedOutputStream;
+import de.bluecolored.bluemap.core.util.OnCloseOutputStream;
 import org.apache.commons.dbcp2.*;
 import org.apache.commons.pool2.ObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPool;
@@ -108,7 +108,7 @@ public abstract class SQLStorage extends Storage {
         Compression compression = lod == 0 ? this.hiresCompression : Compression.NONE;
 
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-        return new WrappedOutputStream(compression.compress(byteOut), () -> {
+        return new OnCloseOutputStream(compression.compress(byteOut), () -> {
             int mapFK = getMapFK(mapId);
             int tileCompressionFK = getMapTileCompressionFK(compression);
 
@@ -234,7 +234,7 @@ public abstract class SQLStorage extends Storage {
     @Override
     public OutputStream writeMeta(String mapId, String name) {
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-        return new WrappedOutputStream(byteOut, () -> {
+        return new OnCloseOutputStream(byteOut, () -> {
             int mapFK = getMapFK(mapId);
 
             recoveringConnection(connection -> {

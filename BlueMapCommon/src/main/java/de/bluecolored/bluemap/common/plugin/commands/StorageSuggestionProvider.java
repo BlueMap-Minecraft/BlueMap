@@ -38,7 +38,7 @@ public class StorageSuggestionProvider<S> extends AbstractSuggestionProvider<S> 
 
     @Override
     public Collection<String> getPossibleValues() {
-        return plugin.getBlueMap().getConfigs().getStorageConfigs().keySet();
+        return plugin.getBlueMap().getConfig().getStorageConfigs().keySet();
     }
 
 }

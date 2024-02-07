@@ -22,10 +22,10 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.mca.region;
+package de.bluecolored.bluemap.core.world.mca.region;
 
-import de.bluecolored.bluemap.core.mca.MCAWorld;
 import de.bluecolored.bluemap.core.world.Region;
+import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -34,8 +34,8 @@ import java.nio.file.Path;
 
 public enum RegionType {
 
-    MCA (MCARegion::new, MCARegion.FILE_SUFFIX, MCARegion::getRegionFileName),
-    LINEAR (LinearRegion::new, LinearRegion.FILE_SUFFIX, LinearRegion::getRegionFileName);
+    MCA (MCARegion::new, MCARegion.FILE_SUFFIX, MCARegion::getRegionFileName);
+    //LINEAR (LinearRegion::new, LinearRegion.FILE_SUFFIX, LinearRegion::getRegionFileName);
 
     // we do this to improve performance, as calling values() creates a new array each time
     private final static RegionType[] VALUES = values();

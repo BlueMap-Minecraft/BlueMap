@@ -30,7 +30,7 @@ import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.commands.Commands;
 import de.bluecolored.bluemap.common.serverinterface.Player;
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
-import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.common.serverinterface.Server;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
@@ -63,7 +63,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 @Mod(Plugin.PLUGIN_ID)
-public class ForgeMod implements ServerInterface {
+public class ForgeMod implements Server {
 
     private final Plugin pluginInstance;
     private MinecraftServer serverInstance = null;
@@ -155,7 +155,7 @@ public class ForgeMod implements ServerInterface {
     }
 
     @Override
-    public Collection<ServerWorld> getLoadedWorlds() {
+    public Collection<ServerWorld> getLoadedServerWorlds() {
         Collection<ServerWorld> loadedWorlds = new ArrayList<>(3);
         for (ServerLevel serverWorld : serverInstance.getAllLevels()) {
             loadedWorlds.add(worlds.get(serverWorld));
@@ -165,9 +165,7 @@ public class ForgeMod implements ServerInterface {
 
     @SuppressWarnings("unchecked")
     @Override
-    public Optional<ServerWorld> getWorld(Object world) {
-        if (world instanceof Path)
-            return getWorld((Path) world);
+    public Optional<ServerWorld> getServerWorld(Object world) {
 
         if (world instanceof String) {
             ResourceLocation resourceLocation = ResourceLocation.tryParse((String) world);
@@ -181,12 +179,12 @@ public class ForgeMod implements ServerInterface {
         }
 
         if (world instanceof ServerLevel)
-            return Optional.of(getWorld((ServerLevel) world));
+            return Optional.of(getServerWorld((ServerLevel) world));
 
         return Optional.empty();
     }
 
-    public ServerWorld getWorld(ServerLevel world) {
+    public ServerWorld getServerWorld(ServerLevel world) {
         return worlds.get(world);
     }
 
@@ -233,11 +231,6 @@ public class ForgeMod implements ServerInterface {
     @Override
     public Collection<Player> getOnlinePlayers() {
         return onlinePlayerMap.values();
-    }
-
-    @Override
-    public Optional<Player> getPlayer(UUID uuid) {
-        return Optional.ofNullable(onlinePlayerMap.get(uuid));
     }
 
     /**

@@ -25,22 +25,21 @@
 package de.bluecolored.bluemap.core.resources.adapter;
 
 import com.flowpowered.math.vector.*;
+import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
 import de.bluecolored.bluemap.core.resources.resourcepack.blockmodel.Face;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.util.math.Axis;
 import de.bluecolored.bluemap.core.util.math.Color;
 
-import java.io.IOException;
 import java.util.EnumMap;
 
 public class ResourcesGson {
 
     public static final Gson INSTANCE = addAdapter(new GsonBuilder())
+            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .setLenient()
             .create();
 
@@ -58,11 +57,6 @@ public class ResourcesGson {
                         new TypeToken<EnumMap<Direction, Face>>(){}.getType(),
                         new EnumMapInstanceCreator<Direction, Face>(Direction.class)
                 );
-    }
-
-    public static String nextStringOrBoolean(JsonReader in) throws IOException {
-        if (in.peek() == JsonToken.BOOLEAN) return Boolean.toString(in.nextBoolean());
-        return in.nextString();
     }
 
 }

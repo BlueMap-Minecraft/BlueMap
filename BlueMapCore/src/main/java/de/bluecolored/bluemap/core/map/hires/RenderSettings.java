@@ -66,16 +66,15 @@ public interface RenderSettings {
     float getAmbientLight();
 
     /**
-     * The sky-light level of this world (0-15)
-     */
-    int getWorldSkyLight();
-
-    /**
      * The same as the maximum height, but blocks that are above this value are treated as AIR.<br>
      * This leads to the top-faces being rendered instead of them being culled.
      */
     default boolean isRenderEdges() {
         return true;
+    }
+
+    default boolean isIgnoreMissingLightData() {
+        return false;
     }
 
     default boolean isInsideRenderBoundaries(int x, int z) {

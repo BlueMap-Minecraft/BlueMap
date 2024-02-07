@@ -25,7 +25,6 @@
 package de.bluecolored.bluemap.common.plugin.commands;
 
 import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.core.world.World;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -41,13 +40,8 @@ public class WorldOrMapSuggestionProvider<S> extends AbstractSuggestionProvider<
     @Override
     public Collection<String> getPossibleValues() {
         Collection<String> values = new HashSet<>();
-
-        for (World world : plugin.getWorlds().values()) {
-            values.add(world.getName());
-        }
-
-        values.addAll(plugin.getMaps().keySet());
-
+        values.addAll(plugin.getBlueMap().getWorlds().keySet());
+        values.addAll(plugin.getBlueMap().getMaps().keySet());
         return values;
     }
 

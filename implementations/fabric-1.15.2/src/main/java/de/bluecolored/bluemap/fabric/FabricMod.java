@@ -29,17 +29,17 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.commands.Commands;
 import de.bluecolored.bluemap.common.serverinterface.Player;
+import de.bluecolored.bluemap.common.serverinterface.Server;
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
-import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
-import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
+import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
@@ -51,7 +51,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class FabricMod implements ModInitializer, ServerInterface {
+public class FabricMod implements ModInitializer, Server {
 
     private final Plugin pluginInstance;
     private MinecraftServer serverInstance = null;
@@ -141,7 +141,7 @@ public class FabricMod implements ModInitializer, ServerInterface {
     }
 
     @Override
-    public Collection<ServerWorld> getLoadedWorlds() {
+    public Collection<ServerWorld> getLoadedServerWorlds() {
         Collection<ServerWorld> loadedWorlds = new ArrayList<>(3);
         for (net.minecraft.server.world.ServerWorld serverWorld : serverInstance.getWorlds()) {
             loadedWorlds.add(worlds.get(serverWorld));
@@ -150,9 +150,7 @@ public class FabricMod implements ModInitializer, ServerInterface {
     }
 
     @Override
-    public Optional<ServerWorld> getWorld(Object world) {
-        if (world instanceof Path)
-            return getWorld((Path) world);
+    public Optional<ServerWorld> getServerWorld(Object world) {
 
         if (world instanceof String) {
             Identifier identifier = Identifier.tryParse((String) world);
@@ -170,12 +168,12 @@ public class FabricMod implements ModInitializer, ServerInterface {
         }
 
         if (world instanceof net.minecraft.server.world.ServerWorld)
-            return Optional.of(getWorld((net.minecraft.server.world.ServerWorld) world));
+            return Optional.of(getServerWorld((net.minecraft.server.world.ServerWorld) world));
 
         return Optional.empty();
     }
 
-    public ServerWorld getWorld(net.minecraft.server.world.ServerWorld serverWorld) {
+    public ServerWorld getServerWorld(net.minecraft.server.world.ServerWorld serverWorld) {
         return worlds.get(serverWorld);
     }
 
@@ -218,11 +216,6 @@ public class FabricMod implements ModInitializer, ServerInterface {
     @Override
     public Collection<Player> getOnlinePlayers() {
         return onlinePlayerMap.values();
-    }
-
-    @Override
-    public Optional<Player> getPlayer(UUID uuid) {
-        return Optional.ofNullable(onlinePlayerMap.get(uuid));
     }
 
     /**

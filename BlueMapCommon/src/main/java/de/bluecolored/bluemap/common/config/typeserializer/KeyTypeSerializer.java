@@ -22,30 +22,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.serverinterface;
+package de.bluecolored.bluemap.common.config.typeserializer;
 
-import java.nio.file.Path;
+import de.bluecolored.bluemap.core.util.Key;
+import org.jetbrains.annotations.Nullable;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.serialize.SerializationException;
+import org.spongepowered.configurate.serialize.TypeSerializer;
 
-public enum Dimension {
+import java.lang.reflect.Type;
 
-    OVERWORLD ("Overworld", Path.of("")),
-    NETHER ("Nether", Path.of("DIM-1")),
-    END ("End", Path.of("DIM1"));
+public class KeyTypeSerializer implements TypeSerializer<Key> {
 
-    private final String name;
-    private final Path dimensionSubPath;
-
-    Dimension(String name, Path dimensionSubPath) {
-        this.name = name;
-        this.dimensionSubPath = dimensionSubPath;
+    @Override
+    public Key deserialize(Type type, ConfigurationNode node) {
+        String formatted = node.getString();
+        return formatted != null ? new Key(node.getString()) : null;
     }
 
-    public String getName() {
-        return name;
-    }
-
-    public Path getDimensionSubPath() {
-        return dimensionSubPath;
+    @Override
+    public void serialize(Type type, @Nullable Key obj, ConfigurationNode node) throws SerializationException {
+        if (obj != null) node.set(obj.getFormatted());
     }
 
 }

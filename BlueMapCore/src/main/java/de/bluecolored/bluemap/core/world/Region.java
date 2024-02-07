@@ -24,34 +24,41 @@
  */
 package de.bluecolored.bluemap.core.world;
 
-import com.flowpowered.math.vector.Vector2i;
-
 import java.io.IOException;
-import java.nio.file.Path;
-import java.util.Collection;
 
 public interface Region {
 
     /**
-     * Returns a collection of all generated chunks.<br>
-     * <i>(Be aware that the collection is not cached and recollected each time from the world-files!)</i>
+     * Directly loads and returns the specified chunk.<br>
+     * (implementations should consider overriding this method for a faster implementation)
      */
-    default Collection<Vector2i> listChunks(){
-        return listChunks(0);
+    default Chunk loadChunk(int chunkX, int chunkZ) throws IOException {
+        class SingleChunkConsumer implements ChunkConsumer {
+            private Chunk foundChunk = Chunk.EMPTY_CHUNK;
+
+            @Override
+            public boolean filter(int x, int z, long lastModified) {
+                return x == chunkX && z == chunkZ;
+            }
+
+            @Override
+            public void accept(int chunkX, int chunkZ, Chunk chunk) {
+                this.foundChunk = chunk;
+            }
+        }
+
+        SingleChunkConsumer singleChunkConsumer = new SingleChunkConsumer();
+        iterateAllChunks(singleChunkConsumer);
+        return singleChunkConsumer.foundChunk;
     }
 
     /**
-     * Returns a collection of all chunks that have been modified at or after the specified timestamp.<br>
-     * <i>(Be aware that the collection is not cached and recollected each time from the world-files!)</i>
+     * Iterates over all chunks in this region and first calls {@link ChunkConsumer#filter(int, int, long)}.<br>
+     * And if (any only if) that method returned <code>true</code>, the chunk will be loaded and {@link ChunkConsumer#accept(int, int, Chunk)}
+     * will be called with the loaded chunk.
+     * @param consumer the consumer choosing which chunks to load and accepting them
+     * @throws IOException if an IOException occurred trying to read the region
      */
-    Collection<Vector2i> listChunks(long modifiedSince);
-
-    default Chunk loadChunk(int chunkX, int chunkZ) throws IOException {
-        return loadChunk(chunkX, chunkZ, false);
-    }
-
-    Chunk loadChunk(int chunkX, int chunkZ, boolean ignoreMissingLightData) throws IOException;
-
-    Path getRegionFile();
+    void iterateAllChunks(ChunkConsumer consumer) throws IOException;
 
 }

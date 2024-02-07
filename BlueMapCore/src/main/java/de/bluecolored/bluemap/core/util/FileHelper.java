@@ -40,7 +40,7 @@ public class FileHelper {
         final Path partFile = getPartFile(file);
         FileHelper.createDirectories(partFile.getParent());
         OutputStream os = Files.newOutputStream(partFile, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
-        return new WrappedOutputStream(os, () -> {
+        return new OnCloseOutputStream(os, () -> {
             if (!Files.exists(partFile)) return;
             FileHelper.createDirectories(file.getParent());
             FileHelper.move(partFile, file);

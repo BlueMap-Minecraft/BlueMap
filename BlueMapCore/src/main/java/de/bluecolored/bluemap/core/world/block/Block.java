@@ -22,7 +22,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.world;
+package de.bluecolored.bluemap.core.world.block;
+
+import de.bluecolored.bluemap.core.world.BlockState;
+import de.bluecolored.bluemap.core.world.Chunk;
+import de.bluecolored.bluemap.core.world.LightData;
+import de.bluecolored.bluemap.core.world.World;
 
 public class Block<T extends Block<T>> {
 
@@ -98,22 +103,6 @@ public class Block<T extends Block<T>> {
         return self();
     }
 
-    /**
-     * copy with offset
-     */
-    public T copy(Block<?> source, int dx, int dy, int dz) {
-        this.world = source.world;
-        this.x = source.x + dx;
-        this.y = source.y + dy;
-        this.z = source.z + dz;
-
-        this.chunk = null;
-
-        reset();
-
-        return self();
-    }
-
     public World getWorld() {
         return world;
     }
@@ -131,7 +120,7 @@ public class Block<T extends Block<T>> {
     }
 
     public Chunk getChunk() {
-        if (chunk == null) chunk = world.getChunkAtBlock(x, y, z);
+        if (chunk == null) chunk = world.getChunkAtBlock(x, z);
         return chunk;
     }
 

@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.common.web;
 
 import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.api.ContentTypeRegistry;
+import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.common.web.http.*;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
@@ -41,6 +42,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@DebugDump
 public class MapStorageRequestHandler implements HttpRequestHandler {
 
     private static final Pattern TILE_PATTERN = Pattern.compile("tiles/([\\d/]+)/x(-?[\\d/]+)z(-?[\\d/]+).*");

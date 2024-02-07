@@ -29,7 +29,7 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.serverinterface.Player;
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
-import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.common.serverinterface.Server;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.MinecraftVersion;
@@ -56,7 +56,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listener {
+public class BukkitPlugin extends JavaPlugin implements Server, Listener {
 
     private static BukkitPlugin instance;
 
@@ -180,7 +180,7 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
     }
 
     @Override
-    public Collection<ServerWorld> getLoadedWorlds() {
+    public Collection<ServerWorld> getLoadedServerWorlds() {
         Collection<ServerWorld> loadedWorlds = new ArrayList<>(3);
         for (World world : Bukkit.getWorlds()) {
             loadedWorlds.add(worlds.get(world));
@@ -189,9 +189,7 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
     }
 
     @Override
-    public Optional<ServerWorld> getWorld(Object world) {
-        if (world instanceof Path)
-            return getWorld((Path) world);
+    public Optional<ServerWorld> getServerWorld(Object world) {
 
         if (world instanceof String) {
             var serverWorld = Bukkit.getWorld((String) world);
@@ -209,12 +207,12 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
         }
 
         if (world instanceof World)
-            return Optional.of(getWorld((World) world));
+            return Optional.of(getServerWorld((World) world));
 
         return Optional.empty();
     }
 
-    public ServerWorld getWorld(World world) {
+    public ServerWorld getServerWorld(World world) {
         return worlds.get(world);
     }
 
@@ -253,11 +251,6 @@ public class BukkitPlugin extends JavaPlugin implements ServerInterface, Listene
     @Override
     public Collection<Player> getOnlinePlayers() {
         return onlinePlayerMap.values();
-    }
-
-    @Override
-    public Optional<Player> getPlayer(UUID uuid) {
-        return Optional.ofNullable(onlinePlayerMap.get(uuid));
     }
 
     private void initPlayer(org.bukkit.entity.Player bukkitPlayer) {

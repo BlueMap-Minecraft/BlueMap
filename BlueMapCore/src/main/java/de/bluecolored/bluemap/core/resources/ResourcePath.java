@@ -77,9 +77,6 @@ public class ResourcePath<T> extends Key {
         if (filePath.getNameCount() < 4)
             throw new IllegalArgumentException("The provided filePath has less than 4 segments!");
 
-        if (!filePath.getName(0).toString().equalsIgnoreCase("assets"))
-            throw new IllegalArgumentException("The provided filePath doesn't start with 'assets'!");
-
         String namespace = filePath.getName(1).toString();
         String path = filePath.subpath(3, filePath.getNameCount()).toString().replace(filePath.getFileSystem().getSeparator(), "/");
 

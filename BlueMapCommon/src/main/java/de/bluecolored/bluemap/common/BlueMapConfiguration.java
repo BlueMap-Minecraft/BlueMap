@@ -26,10 +26,16 @@ package de.bluecolored.bluemap.common;
 
 import de.bluecolored.bluemap.common.config.*;
 import de.bluecolored.bluemap.common.config.storage.StorageConfig;
+import de.bluecolored.bluemap.core.MinecraftVersion;
+import org.jetbrains.annotations.Nullable;
 
+import java.nio.file.Path;
 import java.util.Map;
 
-public interface BlueMapConfigProvider {
+public interface BlueMapConfiguration {
+
+    MinecraftVersion getMinecraftVersion();
+
     CoreConfig getCoreConfig();
 
     WebappConfig getWebappConfig();
@@ -41,5 +47,9 @@ public interface BlueMapConfigProvider {
     Map<String, MapConfig> getMapConfigs();
 
     Map<String, StorageConfig> getStorageConfigs();
+
+    @Nullable Path getResourcePacksFolder();
+
+    @Nullable Path getModsFolder();
 
 }

@@ -25,6 +25,8 @@
 package de.bluecolored.bluemap.core.map;
 
 import com.flowpowered.math.vector.Vector2i;
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.api.gson.MarkerGson;
@@ -35,7 +37,7 @@ import de.bluecolored.bluemap.core.map.lowres.LowresTileManager;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.storage.Storage;
-import de.bluecolored.bluemap.core.world.Grid;
+import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.world.World;
 
 import java.io.*;
@@ -55,9 +57,13 @@ public class BmMap {
     public static final String META_FILE_MARKERS = "live/markers.json";
     public static final String META_FILE_PLAYERS = "live/players.json";
 
+    private static final Gson GSON = ResourcesGson.addAdapter(new GsonBuilder())
+            .setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)
+            .registerTypeAdapter(BmMap.class, new MapSettingsSerializer())
+            .create();
+
     private final String id;
     private final String name;
-    private final String worldId;
     private final World world;
     private final Storage storage;
     private final MapSettings mapSettings;
@@ -76,10 +82,9 @@ public class BmMap {
     private long renderTimeSumNanos;
     private long tilesRendered;
 
-    public BmMap(String id, String name, String worldId, World world, Storage storage, ResourcePack resourcePack, MapSettings settings) throws IOException {
+    public BmMap(String id, String name, World world, Storage storage, ResourcePack resourcePack, MapSettings settings) throws IOException {
         this.id = Objects.requireNonNull(id);
         this.name = Objects.requireNonNull(name);
-        this.worldId = Objects.requireNonNull(worldId);
         this.world = Objects.requireNonNull(world);
         this.storage = Objects.requireNonNull(storage);
         this.resourcePack = Objects.requireNonNull(resourcePack);
@@ -197,10 +202,7 @@ public class BmMap {
                 OutputStream out = storage.writeMeta(id, META_FILE_SETTINGS);
                 Writer writer = new OutputStreamWriter(out, StandardCharsets.UTF_8)
         ) {
-            ResourcesGson.addAdapter(new GsonBuilder())
-                    .registerTypeAdapter(BmMap.class, new MapSettingsSerializer())
-                    .create()
-                    .toJson(this, writer);
+            GSON.toJson(this, writer);
         } catch (Exception ex) {
             Logger.global.logError("Failed to save settings for map '" + getId() + "'!", ex);
         }
@@ -233,10 +235,6 @@ public class BmMap {
 
     public String getName() {
         return name;
-    }
-
-    public String getWorldId() {
-        return worldId;
     }
 
     public World getWorld() {

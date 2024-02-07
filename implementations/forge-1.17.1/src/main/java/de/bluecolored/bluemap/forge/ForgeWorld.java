@@ -24,12 +24,11 @@
  */
 package de.bluecolored.bluemap.forge;
 
-import de.bluecolored.bluemap.common.serverinterface.Dimension;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
+import de.bluecolored.bluemap.core.util.Key;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
-import net.minecraft.world.level.Level;
-import net.minecraft.world.level.dimension.DimensionType;
 import net.minecraft.world.level.storage.LevelResource;
 
 import java.io.IOException;
@@ -42,27 +41,18 @@ import java.util.concurrent.ExecutionException;
 public class ForgeWorld implements ServerWorld {
 
     private final WeakReference<ServerLevel> delegate;
-    private final Path saveFolder;
+    private final Path worldFolder;
+    private final Key dimension;
 
     public ForgeWorld(ServerLevel delegate) {
         this.delegate = new WeakReference<>(delegate);
 
         MinecraftServer server = delegate.getServer();
-        Path worldFolder = delegate.getServer().getServerDirectory().toPath().resolve(server.getWorldPath(LevelResource.ROOT));
-        this.saveFolder = DimensionType.getStorageFolder(delegate.dimension(), worldFolder.toFile()).toPath()
-                .toAbsolutePath().normalize();
-    }
+        this.worldFolder = delegate.getServer().getServerDirectory().toPath()
+                .resolve(server.getWorldPath(LevelResource.ROOT));
 
-    @Override
-    public Dimension getDimension() {
-        ServerLevel world = delegate.get();
-        if (world != null) {
-            if (world.dimension().equals(Level.NETHER)) return Dimension.NETHER;
-            if (world.dimension().equals(Level.END)) return Dimension.END;
-            if (world.dimension().equals(Level.OVERWORLD)) return Dimension.OVERWORLD;
-        }
-
-        return ServerWorld.super.getDimension();
+        ResourceLocation id = delegate.dimension().location();
+        this.dimension = new Key(id.getNamespace(), id.getPath());
     }
 
     @Override
@@ -93,8 +83,29 @@ public class ForgeWorld implements ServerWorld {
     }
 
     @Override
-    public Path getSaveFolder() {
-        return this.saveFolder;
+    public Path getWorldFolder() {
+        return worldFolder;
+    }
+
+    @Override
+    public Key getDimension() {
+        return dimension;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ForgeWorld that = (ForgeWorld) o;
+        Object world = delegate.get();
+        return world != null && world.equals(that.delegate.get());
+    }
+
+    @Override
+    public int hashCode() {
+        Object world = delegate.get();
+        return world != null ? world.hashCode() : 0;
     }
 
 }

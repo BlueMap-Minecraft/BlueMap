@@ -53,7 +53,7 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.map.MapRenderState;
 import de.bluecolored.bluemap.core.storage.Storage;
-import de.bluecolored.bluemap.core.world.Block;
+import de.bluecolored.bluemap.core.world.block.Block;
 import de.bluecolored.bluemap.core.world.World;
 
 import java.io.IOException;
@@ -281,10 +281,10 @@ public class Commands<S> {
         }
     }
 
-    private Optional<World> parseWorld(String worldName) {
-        for (World world : plugin.getWorlds().values()) {
-            if (world.getName().equalsIgnoreCase(worldName)) {
-                return Optional.of(world);
+    private Optional<World> parseWorld(String worldId) {
+        for (var entry : plugin.getBlueMap().getWorlds().entrySet()) {
+            if (entry.getKey().equals(worldId)) {
+                return Optional.of(entry.getValue());
             }
         }
 
@@ -292,8 +292,8 @@ public class Commands<S> {
     }
 
     private Optional<BmMap> parseMap(String mapId) {
-        for (BmMap map : plugin.getMaps().values()) {
-            if (map.getId().equalsIgnoreCase(mapId)) {
+        for (BmMap map : plugin.getBlueMap().getMaps().values()) {
+            if (map.getId().equals(mapId)) {
                 return Optional.of(map);
             }
         }
@@ -416,7 +416,7 @@ public class Commands<S> {
     public int debugClearCacheCommand(CommandContext<S> context) {
         CommandSource source = commandSourceInterface.apply(context.getSource());
 
-        for (World world : plugin.getWorlds().values()) {
+        for (World world : plugin.getBlueMap().getWorlds().values()) {
             world.invalidateChunkCache();
         }
 
@@ -436,7 +436,7 @@ public class Commands<S> {
             world = parseWorld(worldName.get()).orElse(null);
 
             if (world == null) {
-                source.sendMessage(Text.of(TextColor.RED, "There is no ", helper.worldHelperHover(), " with this name: ", TextColor.WHITE, worldName.get()));
+                source.sendMessage(Text.of(TextColor.RED, "There is no ", helper.worldHelperHover(), " with this id: ", TextColor.WHITE, worldName.get()));
                 return 0;
             }
         } else {
@@ -482,7 +482,7 @@ public class Commands<S> {
             position = new Vector3d(x.get(), y.get(), z.get());
 
             if (world == null) {
-                source.sendMessage(Text.of(TextColor.RED, "There is no ", helper.worldHelperHover(), " with this name: ", TextColor.WHITE, worldName.get()));
+                source.sendMessage(Text.of(TextColor.RED, "There is no ", helper.worldHelperHover(), " with this id: ", TextColor.WHITE, worldName.get()));
                 return 0;
             }
         } else {
@@ -499,7 +499,7 @@ public class Commands<S> {
             // collect and output debug info
             Vector3i blockPos = position.floor().toInt();
             Block<?> block = new Block<>(world, blockPos.getX(), blockPos.getY(), blockPos.getZ());
-            Block<?> blockBelow = new Block<>(null, 0, 0, 0).copy(block, 0, -1, 0);
+            Block<?> blockBelow = new Block<>(world, blockPos.getX(), blockPos.getY() - 1, blockPos.getZ());
 
             // populate lazy-loaded values
             block.getBlockState();
@@ -523,7 +523,7 @@ public class Commands<S> {
         final CommandSource source = commandSourceInterface.apply(context.getSource());
 
         try {
-            Path file = plugin.getConfigs().getCoreConfig().getData().resolve("dump.json");
+            Path file = plugin.getBlueMap().getConfig().getCoreConfig().getData().resolve("dump.json");
             StateDumper.global().dump(file);
 
             source.sendMessage(Text.of(TextColor.GREEN, "Dump created at: " + file));
@@ -562,7 +562,7 @@ public class Commands<S> {
             new Thread(() -> {
                 plugin.getPluginState().setRenderThreadsEnabled(true);
 
-                plugin.getRenderManager().start(plugin.getConfigs().getCoreConfig().resolveRenderThreadCount());
+                plugin.getRenderManager().start(plugin.getBlueMap().getConfig().getCoreConfig().resolveRenderThreadCount());
                 source.sendMessage(Text.of(TextColor.GREEN, "Render-Threads started!"));
 
                 plugin.save();
@@ -583,7 +583,7 @@ public class Commands<S> {
         BmMap map = parseMap(mapString).orElse(null);
 
         if (map == null) {
-            source.sendMessage(Text.of(TextColor.RED, "There is no ", helper.mapHelperHover(), " with this name: ", TextColor.WHITE, mapString));
+            source.sendMessage(Text.of(TextColor.RED, "There is no ", helper.mapHelperHover(), " with this id: ", TextColor.WHITE, mapString));
             return 0;
         }
 
@@ -624,7 +624,7 @@ public class Commands<S> {
         BmMap map = parseMap(mapString).orElse(null);
 
         if (map == null) {
-            source.sendMessage(Text.of(TextColor.RED, "There is no ", helper.mapHelperHover(), " with this name: ", TextColor.WHITE, mapString));
+            source.sendMessage(Text.of(TextColor.RED, "There is no ", helper.mapHelperHover(), " with this id: ", TextColor.WHITE, mapString));
             return 0;
         }
 
@@ -671,7 +671,8 @@ public class Commands<S> {
                 mapToRender = parseMap(worldOrMap.get()).orElse(null);
 
                 if (mapToRender == null) {
-                    source.sendMessage(Text.of(TextColor.RED, "There is no ", helper.worldHelperHover(), " or ", helper.mapHelperHover(), " with this name: ", TextColor.WHITE, worldOrMap.get()));
+                    source.sendMessage(Text.of(TextColor.RED, "There is no ", helper.worldHelperHover(), " or ",
+                            helper.mapHelperHover(), " with this id: ", TextColor.WHITE, worldOrMap.get()));
                     return 0;
                 }
             } else {
@@ -682,7 +683,8 @@ public class Commands<S> {
             mapToRender = null;
 
             if (worldToRender == null) {
-                source.sendMessage(Text.of(TextColor.RED, "Can't detect a world from this command-source, you'll have to define a world or a map to update!").setHoverText(Text.of(TextColor.GRAY, "/bluemap " + (force ? "force-update" : "update") + " <world|map>")));
+                source.sendMessage(Text.of(TextColor.RED, "Can't detect a world from this command-source, you'll have to define a world or a map to update!")
+                        .setHoverText(Text.of(TextColor.GRAY, "/bluemap " + (force ? "force-update" : "update") + " <world|map>")));
                 return 0;
             }
         }
@@ -699,7 +701,8 @@ public class Commands<S> {
             } else {
                 Vector3d position = source.getPosition().orElse(null);
                 if (position == null) {
-                    source.sendMessage(Text.of(TextColor.RED, "Can't detect a position from this command-source, you'll have to define x,z coordinates to update with a radius!").setHoverText(Text.of(TextColor.GRAY, "/bluemap " + (force ? "force-update" : "update") + " <x> <z> " + radius)));
+                    source.sendMessage(Text.of(TextColor.RED, "Can't detect a position from this command-source, you'll have to define x,z coordinates to update with a radius!")
+                            .setHoverText(Text.of(TextColor.GRAY, "/bluemap " + (force ? "force-update" : "update") + " <x> <z> " + radius)));
                     return 0;
                 }
 
@@ -714,16 +717,12 @@ public class Commands<S> {
             try {
                 List<BmMap> maps = new ArrayList<>();
                 if (worldToRender != null) {
-                    var world = plugin.getServerInterface().getWorld(worldToRender.getSaveFolder()).orElse(null);
-                    if (world != null) world.persistWorldChanges();
-
-                    for (BmMap map : plugin.getMaps().values()) {
-                        if (map.getWorld().getSaveFolder().equals(worldToRender.getSaveFolder())) maps.add(map);
+                    plugin.flushWorldUpdates(worldToRender);
+                    for (BmMap map : plugin.getBlueMap().getMaps().values()) {
+                        if (map.getWorld().equals(worldToRender)) maps.add(map);
                     }
                 } else {
-                    var world = plugin.getServerInterface().getWorld(mapToRender.getWorld().getSaveFolder()).orElse(null);
-                    if (world != null) world.persistWorldChanges();
-
+                    plugin.flushWorldUpdates(mapToRender.getWorld());
                     maps.add(mapToRender);
                 }
 
@@ -741,7 +740,8 @@ public class Commands<S> {
                         updateTask.getRegions().forEach(region -> state.setRenderTime(region, -1));
                     }
 
-                    source.sendMessage(Text.of(TextColor.GREEN, "Created new Update-Task for map '" + map.getId() + "' ", TextColor.GRAY, "(" + updateTask.getRegions().size() + " regions, ~" + updateTask.getRegions().size() * 1024L + " chunks)"));
+                    source.sendMessage(Text.of(TextColor.GREEN, "Created new Update-Task for map '" + map.getId() + "' ",
+                            TextColor.GRAY, "(" + updateTask.getRegions().size() + " regions, ~" + updateTask.getRegions().size() * 1024L + " chunks)"));
                 }
                 source.sendMessage(Text.of(TextColor.GREEN, "Use ", TextColor.GRAY, "/bluemap", TextColor.GREEN, " to see the progress."));
 
@@ -790,7 +790,7 @@ public class Commands<S> {
         BmMap map = parseMap(mapString).orElse(null);
 
         if (map == null) {
-            source.sendMessage(Text.of(TextColor.RED, "There is no ", helper.mapHelperHover(), " with this name: ", TextColor.WHITE, mapString));
+            source.sendMessage(Text.of(TextColor.RED, "There is no ", helper.mapHelperHover(), " with this id: ", TextColor.WHITE, mapString));
             return 0;
         }
 
@@ -831,8 +831,8 @@ public class Commands<S> {
         CommandSource source = commandSourceInterface.apply(context.getSource());
 
         source.sendMessage(Text.of(TextColor.BLUE, "Worlds loaded by BlueMap:"));
-        for (var entry : plugin.getWorlds().entrySet()) {
-            source.sendMessage(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, entry.getValue().getName()).setHoverText(Text.of(entry.getValue().getSaveFolder(), TextColor.GRAY, " (" + entry.getKey() + ")")));
+        for (var entry : plugin.getBlueMap().getWorlds().entrySet()) {
+            source.sendMessage(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, entry.getKey()));
         }
 
         return 1;
@@ -842,7 +842,7 @@ public class Commands<S> {
         List<Text> lines = new ArrayList<>();
         lines.add(Text.of(TextColor.BLUE, "Maps loaded by BlueMap:"));
 
-        for (BmMap map : plugin.getMaps().values()) {
+        for (BmMap map : plugin.getBlueMap().getMaps().values()) {
             boolean frozen = !plugin.getPluginState().getMapState(map).isUpdateEnabled();
 
             lines.add(Text.of(TextColor.GRAY, " - ",
@@ -850,7 +850,7 @@ public class Commands<S> {
                     TextColor.GRAY, " (" + map.getName() + ")"));
 
             lines.add(Text.of(TextColor.GRAY, "\u00A0\u00A0\u00A0World: ",
-                    TextColor.DARK_GRAY, map.getWorld().getName()));
+                    TextColor.DARK_GRAY, map.getWorld().getId()));
             lines.add(Text.of(TextColor.GRAY, "\u00A0\u00A0\u00A0Last Update: ",
                     TextColor.DARK_GRAY, helper.formatTime(map.getRenderState().getLatestRenderTime())));
 
@@ -868,7 +868,7 @@ public class Commands<S> {
         CommandSource source = commandSourceInterface.apply(context.getSource());
 
         source.sendMessage(Text.of(TextColor.BLUE, "Storages loaded by BlueMap:"));
-        for (var entry : plugin.getBlueMap().getConfigs().getStorageConfigs().entrySet()) {
+        for (var entry : plugin.getBlueMap().getConfig().getStorageConfigs().entrySet()) {
             source.sendMessage(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, entry.getKey())
                     .setHoverText(Text.of(entry.getValue().getStorageType().name()))
                     .setClickAction(Text.ClickAction.RUN_COMMAND, "/bluemap storages " + entry.getKey())
@@ -884,9 +884,10 @@ public class Commands<S> {
 
         Storage storage;
         try {
-            storage = plugin.getBlueMap().getStorage(storageId);
-        } catch (ConfigurationException ex) {
-            source.sendMessage(Text.of(TextColor.RED, ex.getMessage()));
+            storage = plugin.getBlueMap().getOrLoadStorage(storageId);
+        } catch (ConfigurationException | InterruptedException ex) {
+            Logger.global.logError("Unexpected exception trying to load storage '" + storageId + "'!", ex);
+            source.sendMessage(Text.of(TextColor.RED, "There was an unexpected exception trying to load this storage. Please check the console for more details..."));
             return 0;
         }
 
@@ -894,8 +895,8 @@ public class Commands<S> {
         try {
             mapIds = storage.collectMapIds();
         } catch (IOException ex) {
-            source.sendMessage(Text.of(TextColor.RED, "There was an unexpected exception trying to access this storage. Please check the console for more details..."));
             Logger.global.logError("Unexpected exception trying to load mapIds from storage '" + storageId + "'!", ex);
+            source.sendMessage(Text.of(TextColor.RED, "There was an unexpected exception trying to access this storage. Please check the console for more details..."));
             return 0;
         }
 
@@ -904,7 +905,7 @@ public class Commands<S> {
             source.sendMessage(Text.of(TextColor.GRAY, " <empty storage>"));
         } else {
             for (String mapId : mapIds) {
-                BmMap map = plugin.getMaps().get(mapId);
+                BmMap map = plugin.getBlueMap().getMaps().get(mapId);
                 boolean isLoaded = map != null && map.getStorage().equals(storage);
 
                 if (isLoaded) {
@@ -925,13 +926,14 @@ public class Commands<S> {
 
         Storage storage;
         try {
-            storage = plugin.getBlueMap().getStorage(storageId);
-        } catch (ConfigurationException ex) {
-            source.sendMessage(Text.of(TextColor.RED, ex.getMessage()));
+            storage = plugin.getBlueMap().getOrLoadStorage(storageId);
+        } catch (ConfigurationException | InterruptedException ex) {
+            Logger.global.logError("Unexpected exception trying to load storage '" + storageId + "'!", ex);
+            source.sendMessage(Text.of(TextColor.RED, "There was an unexpected exception trying to load this storage. Please check the console for more details..."));
             return 0;
         }
 
-        BmMap map = plugin.getMaps().get(mapId);
+        BmMap map = plugin.getBlueMap().getMaps().get(mapId);
         boolean isLoaded = map != null && map.getStorage().equals(storage);
         if (isLoaded) {
             Text purgeCommand = Text.of(TextColor.WHITE, "/bluemap purge " + mapId)

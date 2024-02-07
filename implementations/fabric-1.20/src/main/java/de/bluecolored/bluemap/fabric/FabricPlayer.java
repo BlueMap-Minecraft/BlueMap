@@ -28,6 +28,7 @@ import com.flowpowered.math.vector.Vector3d;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.serverinterface.Gamemode;
 import de.bluecolored.bluemap.common.serverinterface.Player;
+import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import net.minecraft.entity.effect.StatusEffectInstance;
 import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.server.MinecraftServer;
@@ -36,7 +37,6 @@ import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameMode;
 import net.minecraft.world.LightType;
 
-import java.io.IOException;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.UUID;
@@ -53,12 +53,11 @@ public class FabricPlayer implements Player {
 
     private final UUID uuid;
     private Text name;
-    private String world;
+    private ServerWorld world;
     private Vector3d position;
     private Vector3d rotation;
     private int skyLight;
     private int blockLight;
-    private boolean online;
     private boolean sneaking;
     private boolean invisible;
     private Gamemode gamemode;
@@ -83,7 +82,7 @@ public class FabricPlayer implements Player {
     }
 
     @Override
-    public String getWorld() {
+    public ServerWorld getWorld() {
         return this.world;
     }
 
@@ -108,11 +107,6 @@ public class FabricPlayer implements Player {
     }
 
     @Override
-    public boolean isOnline() {
-        return this.online;
-    }
-
-    @Override
     public boolean isSneaking() {
         return this.sneaking;
     }
@@ -132,16 +126,10 @@ public class FabricPlayer implements Player {
      */
     public void update() {
         MinecraftServer server = mod.getServer();
-        if (server == null) {
-            this.online = false;
-            return;
-        }
+        if (server == null) return;
 
         ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
-        if (player == null) {
-            this.online = false;
-            return;
-        }
+        if (player == null) return;
 
         this.gamemode = GAMEMODE_MAP.get(player.interactionManager.getGameMode());
         if (this.gamemode == null) this.gamemode = Gamemode.SURVIVAL;
@@ -150,7 +138,6 @@ public class FabricPlayer implements Player {
         this.invisible = invis != null && invis.getDuration() > 0;
 
         this.name = Text.of(player.getName().getString());
-        this.online = true;
 
         Vec3d pos = player.getPos();
         this.position = new Vector3d(pos.getX(), pos.getY(), pos.getZ());
@@ -160,12 +147,7 @@ public class FabricPlayer implements Player {
         this.skyLight = player.getWorld().getLightingProvider().get(LightType.SKY).getLightLevel(player.getBlockPos());
         this.blockLight = player.getWorld().getLightingProvider().get(LightType.BLOCK).getLightLevel(player.getBlockPos());
 
-        try {
-            var world = mod.getWorld(player.getWorld()).orElse(null);
-            this.world = world != null ? mod.getPluginInstance().getBlueMap().getWorldId(world.getSaveFolder()) : "unknown";
-        } catch (IOException | NullPointerException e) { // NullPointerException -> the plugin isn't fully loaded
-            this.world = "unknown";
-        }
+        this.world = mod.getServerWorld(player.getServerWorld());
     }
 
 }

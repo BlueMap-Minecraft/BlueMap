@@ -27,7 +27,8 @@ package de.bluecolored.bluemap.common.web;
 import de.bluecolored.bluemap.common.config.PluginConfig;
 import de.bluecolored.bluemap.common.live.LiveMarkersDataSupplier;
 import de.bluecolored.bluemap.common.live.LivePlayersDataSupplier;
-import de.bluecolored.bluemap.common.serverinterface.ServerInterface;
+import de.bluecolored.bluemap.common.serverinterface.Server;
+import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.storage.Storage;
 import org.jetbrains.annotations.Nullable;
@@ -38,9 +39,9 @@ import java.util.function.Supplier;
 
 public class MapRequestHandler extends RoutingRequestHandler {
 
-    public MapRequestHandler(BmMap map, ServerInterface serverInterface, PluginConfig pluginConfig, Predicate<UUID> playerFilter) {
+    public MapRequestHandler(BmMap map, Server serverInterface, PluginConfig pluginConfig, Predicate<UUID> playerFilter) {
         this(map.getId(), map.getStorage(),
-                new LivePlayersDataSupplier(serverInterface, pluginConfig, map.getWorldId(), playerFilter),
+                createPlayersDataSupplier(map, serverInterface, pluginConfig, playerFilter),
                 new LiveMarkersDataSupplier(map.getMarkerSets()));
     }
 
@@ -65,6 +66,12 @@ public class MapRequestHandler extends RoutingRequestHandler {
                     new CachedRateLimitDataSupplier(liveMarkerDataSupplier,10000)
             ));
         }
+    }
+
+    private static @Nullable LivePlayersDataSupplier createPlayersDataSupplier(BmMap map, Server serverInterface, PluginConfig pluginConfig, Predicate<UUID> playerFilter) {
+        ServerWorld world = serverInterface.getServerWorld(map.getWorld()).orElse(null);
+        if (world == null) return null;
+        return new LivePlayersDataSupplier(serverInterface, pluginConfig, world, playerFilter);
     }
 
 }

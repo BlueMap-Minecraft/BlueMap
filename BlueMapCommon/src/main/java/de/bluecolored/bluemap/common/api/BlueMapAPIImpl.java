@@ -30,13 +30,15 @@ import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.BlueMapWorld;
 import de.bluecolored.bluemap.common.plugin.Plugin;
+import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.world.World;
 
-import java.io.IOException;
-import java.util.*;
+import java.util.Collection;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
@@ -75,30 +77,21 @@ public class BlueMapAPIImpl extends BlueMapAPI {
 
     @Override
     public Collection<BlueMapMap> getMaps() {
-        Map<String, BmMap> maps = plugin.getMaps();
-        if (maps == null) return Collections.emptyList();
-
-        return maps.values().stream()
-                .map(map -> {
-                    try {
-                        return new BlueMapMapImpl(plugin, map);
-                    } catch (IOException e) {
-                        Logger.global.logError("[API] Failed to create BlueMapMap for map " + map.getId(), e);
-                        return null;
-                    }
-                })
-                .filter(Objects::nonNull)
+        Map<String, BmMap> maps = plugin.getBlueMap().getMaps();
+        return maps.keySet().stream()
+                .map(this::getMap)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
     @Override
     public Collection<BlueMapWorld> getWorlds() {
-        Map<String, World> worlds = plugin.getWorlds();
-        if (worlds == null) return Collections.emptyList();
-
-        return worlds.values().stream()
-                .map(world -> getWorld(world).orElse(null))
-                .filter(Objects::nonNull)
+        Map<String, World> worlds = plugin.getBlueMap().getWorlds();
+        return worlds.keySet().stream()
+                .map(this::getWorld)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
                 .collect(Collectors.toUnmodifiableSet());
     }
 
@@ -108,43 +101,24 @@ public class BlueMapAPIImpl extends BlueMapAPI {
     }
 
     public Optional<BlueMapWorld> getWorldUncached(Object world) {
-        var worlds = plugin.getWorlds();
-        if (worlds == null) return Optional.empty();
-
-        if (world instanceof UUID) {
-            var coreWorld = worlds.get(world.toString());
-            if (coreWorld != null) world = coreWorld;
-        }
 
         if (world instanceof String) {
-            var coreWorld = worlds.get(world);
+            var coreWorld = plugin.getBlueMap().getWorlds().get(world);
             if (coreWorld != null) world = coreWorld;
         }
 
         if (world instanceof World) {
             var coreWorld = (World) world;
-            try {
-                return Optional.of(new BlueMapWorldImpl(plugin, coreWorld));
-            } catch (IOException e) {
-                Logger.global.logError("[API] Failed to create BlueMapWorld for world " + coreWorld.getSaveFolder(), e);
-            }
-            return Optional.empty();
+            return Optional.of(new BlueMapWorldImpl(plugin, coreWorld));
         }
 
-        var serverWorld = plugin.getServerInterface().getWorld(world).orElse(null);
+        ServerWorld serverWorld = plugin.getServerInterface().getServerWorld(world).orElse(null);
         if (serverWorld == null) return Optional.empty();
 
-        try {
-            String id = plugin.getBlueMap().getWorldId(serverWorld.getSaveFolder());
-            var coreWorld = worlds.get(id);
-            if (coreWorld == null) return Optional.empty();
+        World coreWorld = plugin.getWorld(serverWorld);
+        if (coreWorld == null) return Optional.empty();
 
-            return Optional.of(new BlueMapWorldImpl(plugin, coreWorld));
-        } catch (IOException e) {
-            Logger.global.logError("[API] Failed to create BlueMapWorld for world " + serverWorld.getSaveFolder(), e);
-            return Optional.empty();
-        }
-
+        return Optional.of(new BlueMapWorldImpl(plugin, coreWorld));
     }
 
     @Override
@@ -153,8 +127,7 @@ public class BlueMapAPIImpl extends BlueMapAPI {
     }
 
     public Optional<BlueMapMap> getMapUncached(String id) {
-        var maps = plugin.getMaps();
-        if (maps == null) return Optional.empty();
+        var maps = plugin.getBlueMap().getMaps();
 
         var map = maps.get(id);
         if (map == null) return Optional.empty();

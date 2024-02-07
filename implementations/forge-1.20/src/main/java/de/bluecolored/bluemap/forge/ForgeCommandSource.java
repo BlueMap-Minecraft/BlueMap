@@ -28,11 +28,11 @@ import com.flowpowered.math.vector.Vector3d;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.serverinterface.CommandSource;
+import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.world.World;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.Component;
 
-import java.io.IOException;
 import java.util.Optional;
 
 public class ForgeCommandSource implements CommandSource {
@@ -67,13 +67,8 @@ public class ForgeCommandSource implements CommandSource {
 
     @Override
     public Optional<World> getWorld() {
-        try {
-            var serverWorld = mod.getWorld(delegate.getLevel());
-            String worldId = plugin.getBlueMap().getWorldId(serverWorld.getSaveFolder());
-            return Optional.ofNullable(plugin.getWorlds().get(worldId));
-        } catch (IOException ignore) {}
-
-        return Optional.empty();
+        ServerWorld serverWorld = mod.getServerWorld(delegate.getLevel());
+        return Optional.ofNullable(plugin.getWorld(serverWorld));
     }
 
 }

@@ -197,8 +197,8 @@ public class BlockState extends Key {
         private final String key, value;
 
         public Property(String key, String value) {
-            this.key = key.intern();
-            this.value = value.intern();
+            this.key = intern(key);
+            this.value = intern(value);
         }
 
         @SuppressWarnings("StringEquality")
