@@ -90,13 +90,13 @@ public class SpongeWorld implements ServerWorld {
         if (o == null || getClass() != o.getClass()) return false;
 
         SpongeWorld that = (SpongeWorld) o;
-        var world = delegate.get();
+        Object world = delegate.get();
         return world != null && world.equals(that.delegate.get());
     }
 
     @Override
     public int hashCode() {
-        var world = delegate.get();
+        Object world = delegate.get();
         return world != null ? world.hashCode() : 0;
     }
 
