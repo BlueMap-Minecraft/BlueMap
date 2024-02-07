@@ -120,6 +120,7 @@ tasks.shadowJar {
 	relocate ("org.codehaus", "de.bluecolored.shadow.codehaus")
 	relocate ("io.leangen.geantyref", "de.bluecolored.shadow.geantyref")
 	relocate ("io.airlift", "de.bluecolored.shadow.airlift")
+	relocate ("net.jpountz", "de.bluecolored.shadow.jpountz")
 
 	relocate ("org.apache.commons.dbcp2", "de.bluecolored.shadow.apache.commons.dbcp2")
 	relocate ("org.apache.commons.io", "de.bluecolored.shadow.apache.commons.io")

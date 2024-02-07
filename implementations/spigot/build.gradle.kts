@@ -102,6 +102,7 @@ tasks.shadowJar {
 	relocate ("org.codehaus", "de.bluecolored.shadow.codehaus")
 	relocate ("io.leangen.geantyref", "de.bluecolored.shadow.geantyref")
 	relocate ("io.airlift", "de.bluecolored.shadow.airlift")
+	relocate ("net.jpountz", "de.bluecolored.shadow.jpountz")
 
 	relocate ("com.google.errorprone", "de.bluecolored.shadow.google.errorprone")
 	relocate ("com.google.inject", "de.bluecolored.shadow.google.inject")

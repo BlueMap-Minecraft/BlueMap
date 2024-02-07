@@ -88,6 +88,7 @@ tasks.shadowJar {
 	relocate ("io.leangen.geantyref", "de.bluecolored.shadow.geantyref")
 	relocate ("io.airlift", "de.bluecolored.shadow.airlift")
 	relocate ("org.apache.commons", "de.bluecolored.shadow.apache.commons")
+	relocate ("net.jpountz", "de.bluecolored.shadow.jpountz")
 }
 
 tasks.register("release") {

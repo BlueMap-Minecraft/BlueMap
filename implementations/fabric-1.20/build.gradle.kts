@@ -10,7 +10,7 @@ plugins {
 	id("com.diffplug.spotless") version "6.1.2"
 	id ("com.github.node-gradle.node") version "3.0.1"
 	id ("com.github.johnrengelman.shadow") version "7.1.2"
-	id ("fabric-loom") version "1.3-SNAPSHOT"
+	id ("fabric-loom") version "1.5-SNAPSHOT"
 	id ("com.modrinth.minotaur") version "2.+"
 	id ("com.matthewprenger.cursegradle") version "1.4.0"
 }
@@ -115,6 +115,7 @@ tasks.shadowJar {
 	relocate ("org.codehaus", "de.bluecolored.shadow.codehaus")
 	relocate ("io.leangen.geantyref", "de.bluecolored.shadow.geantyref")
 	relocate ("io.airlift", "de.bluecolored.shadow.airlift")
+	relocate ("net.jpountz", "de.bluecolored.shadow.jpountz")
 
 	relocate ("com.google.errorprone", "de.bluecolored.shadow.google.errorprone")
 	relocate ("com.google.inject", "de.bluecolored.shadow.google.inject")

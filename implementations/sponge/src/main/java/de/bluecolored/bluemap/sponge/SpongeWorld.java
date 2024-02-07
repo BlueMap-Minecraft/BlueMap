@@ -44,10 +44,19 @@ public class SpongeWorld implements ServerWorld {
 
     public SpongeWorld(org.spongepowered.api.world.server.ServerWorld delegate) {
         this.delegate = new WeakReference<>(delegate);
-        this.worldFolder = delegate.directory();
+
+        Path dimensionFolder = delegate.directory().normalize();
         this.dimension = WorldTypes.registry().findValueKey(delegate.worldType())
                 .map(k -> new Key(k.namespace(), k.value()))
                 .orElse(DataPack.DIMENSION_OVERWORLD);
+
+        // resolve root world-folder from dimension-folder
+        if (DataPack.DIMENSION_OVERWORLD.equals(dimension))
+            this.worldFolder = dimensionFolder;
+        else if (DataPack.DIMENSION_THE_NETHER.equals(dimension) || DataPack.DIMENSION_THE_END.equals(dimension))
+            this.worldFolder = dimensionFolder.getParent();
+        else
+            this.worldFolder = dimensionFolder.getParent().getParent().getParent();
     }
 
     @Override
