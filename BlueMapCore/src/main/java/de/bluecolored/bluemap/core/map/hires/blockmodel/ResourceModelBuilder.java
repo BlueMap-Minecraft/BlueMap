@@ -45,10 +45,10 @@ import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.util.math.MatrixM4f;
 import de.bluecolored.bluemap.core.util.math.VectorM2f;
 import de.bluecolored.bluemap.core.util.math.VectorM3f;
-import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 import de.bluecolored.bluemap.core.world.BlockProperties;
-import de.bluecolored.bluemap.core.world.block.ExtendedBlock;
 import de.bluecolored.bluemap.core.world.LightData;
+import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
+import de.bluecolored.bluemap.core.world.block.ExtendedBlock;
 
 /**
  * This model builder creates a BlockStateModel using the information from parsed resource-pack json files.
@@ -179,14 +179,6 @@ public class ResourceModelBuilder {
 
         Vector3i faceDirVector = faceDir.toVector();
 
-        // face culling
-        if (face.getCullface() != null) {
-            ExtendedBlock<?> b = getRotationRelativeBlock(face.getCullface());
-            BlockProperties p = b.getProperties();
-            if (p.isCulling()) return;
-            if (p.getCullingIdentical() && b.getBlockState().equals(block.getBlockState())) return;
-        }
-
         // light calculation
         ExtendedBlock<?> facedBlockNeighbor = getRotationRelativeBlock(faceDir);
         LightData blockLightData = block.getLightData();
@@ -200,6 +192,14 @@ public class ResourceModelBuilder {
                 block.isRemoveIfCave() &&
                 (renderSettings.isCaveDetectionUsesBlockLight() ? Math.max(blockLight, sunLight) : sunLight) == 0
         ) return;
+
+        // face culling
+        if (face.getCullface() != null) {
+            ExtendedBlock<?> b = getRotationRelativeBlock(face.getCullface());
+            BlockProperties p = b.getProperties();
+            if (p.isCulling()) return;
+            if (p.getCullingIdentical() && b.getBlockState().equals(block.getBlockState())) return;
+        }
 
         // initialize the faces
         blockModel.initialize();
