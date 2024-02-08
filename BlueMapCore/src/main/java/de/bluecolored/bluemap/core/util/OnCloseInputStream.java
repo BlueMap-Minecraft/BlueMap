@@ -24,11 +24,10 @@
  */
 package de.bluecolored.bluemap.core.util;
 
-import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
-public class OnCloseInputStream extends FilterInputStream {
+public class OnCloseInputStream extends DelegateInputStream {
 
     private final AutoCloseable onClose;
 
@@ -42,7 +41,7 @@ public class OnCloseInputStream extends FilterInputStream {
         IOException ioExcetion = null;
 
         try {
-            in.close();
+            super.close();
         } catch (IOException ex) {
             ioExcetion = ex;
         }

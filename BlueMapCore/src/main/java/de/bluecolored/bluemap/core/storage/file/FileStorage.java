@@ -72,10 +72,8 @@ public class FileStorage extends Storage {
         Path file = getFilePath(mapId, lod, tile);
 
         OutputStream os = FileHelper.createFilepartOutputStream(file);
-        os = new BufferedOutputStream(os);
-
         try {
-            os = compression.compress(os);
+            os = new BufferedOutputStream(compression.compress(os));
         } catch (IOException ex) {
             os.close();
             throw ex;
@@ -92,8 +90,6 @@ public class FileStorage extends Storage {
         if (!Files.exists(file)) return Optional.empty();
 
         InputStream is = Files.newInputStream(file, StandardOpenOption.READ);
-        is = new BufferedInputStream(is);
-
         return Optional.of(new CompressedInputStream(is, compression));
     }
 
@@ -142,9 +138,7 @@ public class FileStorage extends Storage {
         Path file = getMetaFilePath(mapId, name);
 
         OutputStream os = FileHelper.createFilepartOutputStream(file);
-        os = new BufferedOutputStream(os);
-
-        return os;
+        return new BufferedOutputStream(os);
     }
 
     @Override
@@ -154,9 +148,7 @@ public class FileStorage extends Storage {
         if (!Files.exists(file)) return Optional.empty();
 
         InputStream is = Files.newInputStream(file, StandardOpenOption.READ);
-        is = new BufferedInputStream(is);
-
-        return Optional.of(is);
+        return Optional.of(new BufferedInputStream(is));
     }
 
     @Override

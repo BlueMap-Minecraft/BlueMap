@@ -172,7 +172,7 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
             byte[] compressedData = byteOut.toByteArray();
             response.setData(new ByteArrayInputStream(compressedData));
         } else {
-            response.setData(data.decompress());
+            response.setData(new BufferedInputStream(data.decompress()));
         }
     }
 

@@ -24,11 +24,12 @@
  */
 package de.bluecolored.bluemap.core.storage;
 
-import java.io.FilterInputStream;
+import de.bluecolored.bluemap.core.util.DelegateInputStream;
+
 import java.io.IOException;
 import java.io.InputStream;
 
-public class CompressedInputStream extends FilterInputStream {
+public class CompressedInputStream extends DelegateInputStream {
 
     private final Compression compression;
 

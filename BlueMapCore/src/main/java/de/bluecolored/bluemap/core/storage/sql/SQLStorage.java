@@ -108,7 +108,7 @@ public abstract class SQLStorage extends Storage {
         Compression compression = lod == 0 ? this.hiresCompression : Compression.NONE;
 
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-        return new OnCloseOutputStream(compression.compress(byteOut), () -> {
+        return new OnCloseOutputStream(new BufferedOutputStream(compression.compress(byteOut)), () -> {
             int mapFK = getMapFK(mapId);
             int tileCompressionFK = getMapTileCompressionFK(compression);
 

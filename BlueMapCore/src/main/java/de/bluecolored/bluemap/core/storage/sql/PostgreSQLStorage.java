@@ -51,7 +51,7 @@ public class PostgreSQLStorage extends SQLStorage {
     public OutputStream writeMapTile(String mapId, int lod, Vector2i tile) throws IOException {
         Compression compression = lod == 0 ? this.hiresCompression : Compression.NONE;
         ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-        return new OnCloseOutputStream(compression.compress(byteOut), () -> {
+        return new OnCloseOutputStream(new BufferedOutputStream(compression.compress(byteOut)), () -> {
             int mapFK = getMapFK(mapId);
             int tileCompressionFK = getMapTileCompressionFK(compression);
 
