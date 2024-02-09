@@ -90,12 +90,12 @@ public class BlockModelView {
         return this;
     }
 
-    public BlockModelView scale(double sx, double sy, double sz) {
+    public BlockModelView scale(float sx, float sy, float sz) {
         hiresTile.scale(start, size, sx, sy, sz);
         return this;
     }
 
-    public BlockModelView translate(double dx, double dy, double dz) {
+    public BlockModelView translate(float dx, float dy, float dz) {
         hiresTile.translate(start, size, dx, dy, dz);
         return this;
     }

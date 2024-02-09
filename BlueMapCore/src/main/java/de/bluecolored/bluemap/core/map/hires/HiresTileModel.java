@@ -62,7 +62,7 @@ public class HiresTileModel {
     private int capacity;
     private int size;
 
-    private double[] position;
+    private float[] position;
     private float[] color, uv, ao;
     private byte[] sunlight, blocklight;
     private int[] materialIndex, materialIndexSort, materialIndexSortSupport;
@@ -86,9 +86,9 @@ public class HiresTileModel {
 
     public HiresTileModel setPositions(
             int face,
-            double x1, double y1, double z1,
-            double x2, double y2, double z2,
-            double x3, double y3, double z3
+            float x1, float y1, float z1,
+            float x2, float y2, float z2,
+            float x3, float y3, float z3
     ){
         int index = face * FI_POSITION;
 
@@ -247,9 +247,9 @@ public class HiresTileModel {
                 pz = qw * z + qx * y - qy * x;
                 pw = -qx * x - qy * y - qz * z;
 
-                position[index] = pw * -qx + px * qw - py * qz + pz * qy;
-                position[index + 1] = pw * -qy + py * qw - pz * qx + px * qz;
-                position[index + 2] = pw * -qz + pz * qw - px * qy + py * qx;
+                position[index] = (float) (pw * -qx + px * qw - py * qz + pz * qy);
+                position[index + 1] = (float) (pw * -qy + py * qw - pz * qx + px * qz);
+                position[index + 2] = (float) (pw * -qz + pz * qw - px * qy + py * qx);
             }
         }
 
@@ -258,7 +258,7 @@ public class HiresTileModel {
 
     public HiresTileModel scale(
             int start, int count,
-            double sx, double sy, double sz
+            float sx, float sy, float sz
     ) {
         int end = start + count, index;
         for (int face = start; face < end; face++) {
@@ -275,7 +275,7 @@ public class HiresTileModel {
 
     public HiresTileModel translate(
             int start, int count,
-            double dx, double dy, double dz
+            float dx, float dy, float dz
     ) {
         int end = start + count, index;
         for (int face = start; face < end; face++) {
@@ -329,7 +329,7 @@ public class HiresTileModel {
             float m30, float m31, float m32, float m33
     ) {
         int end = start + count, index;
-        double x, y, z;
+        float x, y, z;
         for (int face = start; face < end; face++) {
             for (int i = 0; i < 3; i++) {
                 index = face * FI_POSITION + i * 3;
@@ -358,7 +358,7 @@ public class HiresTileModel {
 
     private void ensureCapacity(int count) {
         if (size + count > capacity){
-            double[] _position = position;
+            float[] _position = position;
             float[] _color = color, _uv = uv, _ao = ao;
             byte[] _sunlight = sunlight, _blocklight = blocklight;
             int[] _materialIndex = materialIndex;
@@ -381,7 +381,7 @@ public class HiresTileModel {
         this.capacity = capacity;
 
         // attributes                capacity * per-vertex * per-face
-        position =      new double  [capacity * FI_POSITION];
+        position =      new float   [capacity * FI_POSITION];
         uv =            new float   [capacity * FI_UV];
         ao =            new float   [capacity * FI_AO];
 
@@ -645,7 +645,6 @@ public class HiresTileModel {
 
     private void swap(int face1, int face2) {
         int i, if1, if2, vi;
-        double vd;
         float vf;
         byte vb;
 
@@ -653,9 +652,9 @@ public class HiresTileModel {
         if1 = face1 * FI_POSITION;
         if2 = face2 * FI_POSITION;
         for (i = 0; i < FI_POSITION; i++){
-            vd = position[if1 + i];
+            vf = position[if1 + i];
             position[if1 + i] = position[if2 + i];
-            position[if2 + i] = vd;
+            position[if2 + i] = vf;
         }
 
         //swap uv

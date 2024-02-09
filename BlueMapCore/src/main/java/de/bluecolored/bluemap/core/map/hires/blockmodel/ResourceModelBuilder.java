@@ -259,7 +259,7 @@ public class ResourceModelBuilder {
 
         // rotate uv's
         if (uvRotation != 0){
-            uvRotation *= TrigMath.DEG_TO_RAD;
+            uvRotation = (float)(uvRotation * TrigMath.DEG_TO_RAD);
             float cx = TrigMath.cos(uvRotation), cy = TrigMath.sin(uvRotation);
             for (VectorM2f uv : uvs) {
                 uv.translate(-0.5f, -0.5f);
