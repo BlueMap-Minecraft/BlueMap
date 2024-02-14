@@ -146,6 +146,7 @@ export class BlueMapApp {
             let styleElement = document.createElement("link");
             styleElement.rel = "stylesheet";
             styleElement.href = styleUrl;
+            alert(this.events, "Loading style: " + styleUrl, "fine");
             document.head.appendChild(styleElement);
         }
 
@@ -189,6 +190,7 @@ export class BlueMapApp {
         if (this.settings.scripts) for (let scriptUrl of this.settings.scripts) {
             let scriptElement = document.createElement("script");
             scriptElement.src = scriptUrl;
+            alert(this.events, "Loading script: " + scriptUrl, "fine");
             document.body.appendChild(scriptElement);
         }
     }

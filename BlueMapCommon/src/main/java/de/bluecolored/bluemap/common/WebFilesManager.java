@@ -203,8 +203,17 @@ public class WebFilesManager {
         }
 
         public void addFrom(WebappConfig config) {
-            this.scripts.addAll(config.getScripts());
-            this.styles.addAll(config.getStyles());
+            Set<String> scripts = config.getScripts();
+            for (String script : scripts) {
+                this.scripts.add(script);
+                Logger.global.logDebug("Registering script from Webapp Config: " + script);
+            }
+
+            Set<String> styles = config.getStyles();
+            for (String style : styles) {
+                this.styles.add(style);
+                Logger.global.logDebug("Registering style from Webapp Config: " + style);
+            }
         }
 
     }

@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.common.api;
 
 import de.bluecolored.bluemap.api.WebApp;
 import de.bluecolored.bluemap.common.plugin.Plugin;
+import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.util.FileHelper;
 
 import javax.imageio.ImageIO;
@@ -68,11 +69,13 @@ public class WebAppImpl implements WebApp {
 
     @Override
     public void registerScript(String url) {
+        Logger.global.logDebug("Registering script from API: " + url);
         plugin.getBlueMap().getWebFilesManager().getScripts().add(url);
     }
 
     @Override
     public void registerStyle(String url) {
+        Logger.global.logDebug("Registering style from API: " + url);
         plugin.getBlueMap().getWebFilesManager().getStyles().add(url);
     }
 
