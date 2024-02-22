@@ -56,7 +56,7 @@ public class MCAWorld implements World {
     private final ChunkLoader chunkLoader = new ChunkLoader(this);
     private final LoadingCache<Vector2i, Region> regionCache = Caffeine.newBuilder()
             .executor(BlueMap.THREAD_POOL)
-            .maximumSize(64)
+            .maximumSize(32)
             .expireAfterWrite(10, TimeUnit.MINUTES)
             .build(this::loadRegion);
     private final LoadingCache<Vector2i, Chunk> chunkCache = Caffeine.newBuilder()
@@ -176,11 +176,13 @@ public class MCAWorld implements World {
 
     @Override
     public void invalidateChunkCache() {
+        regionCache.invalidateAll();
         chunkCache.invalidateAll();
     }
 
     @Override
     public void invalidateChunkCache(int x, int z) {
+        regionCache.invalidate(VECTOR_2_I_CACHE.get(x >> 5, z >> 5));
         chunkCache.invalidate(VECTOR_2_I_CACHE.get(x, z));
     }
 

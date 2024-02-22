@@ -69,6 +69,16 @@ public class LinearRegion implements Region {
     private final Path regionFile;
     private final Vector2i regionPos;
 
+    private boolean initialized = false;
+
+    private byte version;
+    private long newestTimestamp;
+    private byte compressionLevel;
+    private short chunkCount;
+    private int dataLength;
+    private long dataHash;
+    private byte[] compressedData;
+
     public LinearRegion(MCAWorld world, Path regionFile) throws IllegalArgumentException {
         this.world = world;
         this.regionFile = regionFile;
@@ -86,25 +96,13 @@ public class LinearRegion implements Region {
         this.regionFile = world.getRegionFolder().resolve(getRegionFileName(regionPos.getX(), regionPos.getY()));
     }
 
-    @Override
-    public void iterateAllChunks(ChunkConsumer consumer) throws IOException {
+    private synchronized void init() throws IOException {
+        if (initialized) return;
+
         if (Files.notExists(regionFile)) return;
 
         long fileLength = Files.size(regionFile);
         if (fileLength == 0) return;
-
-        int chunkStartX = regionPos.getX() * 32;
-        int chunkStartZ = regionPos.getY() * 32;
-
-        byte[] chunkDataBuffer = null;
-        byte[] compressedData;
-
-        byte version;
-        long newestTimestamp;
-        byte compressionLevel;
-        short chunkCount;
-        int dataLength;
-        long dataHash;
 
         try (
                 InputStream in = Files.newInputStream(regionFile, StandardOpenOption.READ);
@@ -135,6 +133,18 @@ public class LinearRegion implements Region {
                 throw new IOException("Linear region-file format: invalid footer magic");
 
         }
+
+        initialized = true;
+    }
+
+    @Override
+    public void iterateAllChunks(ChunkConsumer consumer) throws IOException {
+        if (!initialized) init();
+
+        int chunkStartX = regionPos.getX() * 32;
+        int chunkStartZ = regionPos.getY() * 32;
+
+        byte[] chunkDataBuffer = null;
 
         try (
                 InputStream in = new ZstdInputStream(new ByteArrayInputStream(compressedData));
