@@ -7,8 +7,8 @@ import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.DimensionType;
 import de.bluecolored.bluemap.core.world.LightData;
 import de.bluecolored.bluemap.core.world.mca.MCAUtil;
+import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 import de.bluecolored.bluemap.core.world.mca.PackedIntArrayAccess;
-import de.bluecolored.bluemap.core.world.mca.region.MCARegion;
 import de.bluecolored.bluenbt.NBTName;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
@@ -37,14 +37,14 @@ public class Chunk_1_18 extends MCAChunk {
     private final Section[] sections;
     private final int sectionMin, sectionMax;
 
-    public Chunk_1_18(MCARegion region, Data data) {
-        super(region, data);
+    public Chunk_1_18(MCAWorld world, Data data) {
+        super(world, data);
 
         this.generated = !STATUS_EMPTY.equals(data.status);
         this.hasLightData = STATUS_FULL.equals(data.status);
         this.inhabitedTime = data.inhabitedTime;
 
-        DimensionType dimensionType = getRegion().getWorld().getDimensionType();
+        DimensionType dimensionType = getWorld().getDimensionType();
         this.worldMinY = dimensionType.getMinY();
         this.skyLight = dimensionType.hasSkylight() ? 16 : 0;
 

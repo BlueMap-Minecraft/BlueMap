@@ -1,12 +1,12 @@
 package de.bluecolored.bluemap.core.world.mca.chunk;
 
 import de.bluecolored.bluemap.core.world.Biome;
-import de.bluecolored.bluemap.core.world.mca.region.MCARegion;
+import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 
 public class Chunk_1_15 extends Chunk_1_13 {
 
-    public Chunk_1_15(MCARegion region, Data data) {
-        super(region, data);
+    public Chunk_1_15(MCAWorld world, Data data) {
+        super(world, data);
     }
 
     @Override

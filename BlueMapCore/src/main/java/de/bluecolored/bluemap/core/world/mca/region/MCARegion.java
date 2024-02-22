@@ -168,7 +168,7 @@ public class MCARegion implements Region {
             default: throw new IOException("Unknown chunk compression-id: " + compressionTypeId);
         }
 
-        return world.getChunkLoader().load(this, data, 5, size - 5, compression);
+        return world.getChunkLoader().load(data, 5, size - 5, compression);
     }
 
     public static String getRegionFileName(int regionX, int regionZ) {

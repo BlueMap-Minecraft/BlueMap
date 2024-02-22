@@ -34,8 +34,8 @@ import java.nio.file.Path;
 
 public enum RegionType {
 
-    MCA (MCARegion::new, MCARegion.FILE_SUFFIX, MCARegion::getRegionFileName);
-    //LINEAR (LinearRegion::new, LinearRegion.FILE_SUFFIX, LinearRegion::getRegionFileName);
+    MCA (MCARegion::new, MCARegion.FILE_SUFFIX, MCARegion::getRegionFileName),
+    LINEAR (LinearRegion::new, LinearRegion.FILE_SUFFIX, LinearRegion::getRegionFileName);
 
     // we do this to improve performance, as calling values() creates a new array each time
     private final static RegionType[] VALUES = values();

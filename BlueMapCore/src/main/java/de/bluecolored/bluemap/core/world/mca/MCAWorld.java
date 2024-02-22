@@ -53,7 +53,7 @@ public class MCAWorld implements World {
     private final Path dimensionFolder;
     private final Path regionFolder;
 
-    private final ChunkLoader chunkLoader = new ChunkLoader();
+    private final ChunkLoader chunkLoader = new ChunkLoader(this);
     private final LoadingCache<Vector2i, Region> regionCache = Caffeine.newBuilder()
             .executor(BlueMap.THREAD_POOL)
             .maximumSize(64)

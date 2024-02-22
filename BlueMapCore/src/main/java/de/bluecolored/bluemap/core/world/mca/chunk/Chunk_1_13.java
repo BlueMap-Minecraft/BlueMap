@@ -7,7 +7,7 @@ import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.DimensionType;
 import de.bluecolored.bluemap.core.world.LightData;
 import de.bluecolored.bluemap.core.world.mca.MCAUtil;
-import de.bluecolored.bluemap.core.world.mca.region.MCARegion;
+import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 import de.bluecolored.bluenbt.NBTName;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
@@ -38,8 +38,8 @@ public class Chunk_1_13 extends MCAChunk {
 
     final int[] biomes;
 
-    public Chunk_1_13(MCARegion region, Data data) {
-        super(region, data);
+    public Chunk_1_13(MCAWorld world, Data data) {
+        super(world, data);
 
         Level level = data.level;
 
@@ -50,7 +50,7 @@ public class Chunk_1_13 extends MCAChunk {
                 STATUS_POSTPROCESSED.equals(level.status);
         this.inhabitedTime = level.inhabitedTime;
 
-        DimensionType dimensionType = getRegion().getWorld().getDimensionType();
+        DimensionType dimensionType = getWorld().getDimensionType();
         this.skyLight = dimensionType.hasSkylight() ? 16 : 0;
 
         this.worldSurfaceHeights = level.heightmaps.worldSurface;

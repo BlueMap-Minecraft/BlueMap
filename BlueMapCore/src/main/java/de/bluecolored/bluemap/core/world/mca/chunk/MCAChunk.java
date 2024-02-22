@@ -2,7 +2,7 @@ package de.bluecolored.bluemap.core.world.mca.chunk;
 
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.Chunk;
-import de.bluecolored.bluemap.core.world.mca.region.MCARegion;
+import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -20,11 +20,11 @@ public abstract class MCAChunk implements Chunk {
     protected static final String[] EMPTY_STRING_ARRAY = new String[0];
     protected static final BlockState[] EMPTY_BLOCKSTATE_ARRAY = new BlockState[0];
 
-    private final MCARegion region;
+    private final MCAWorld world;
     private final int dataVersion;
 
-    public MCAChunk(MCARegion region, Data chunkData) {
-        this.region = region;
+    public MCAChunk(MCAWorld world, Data chunkData) {
+        this.world = world;
         this.dataVersion = chunkData.getDataVersion();
     }
 
