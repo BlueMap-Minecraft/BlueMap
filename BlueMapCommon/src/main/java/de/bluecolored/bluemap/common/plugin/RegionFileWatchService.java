@@ -47,7 +47,6 @@ public class RegionFileWatchService extends Thread {
     private final RenderManager renderManager;
     private final WatchService watchService;
 
-    private final boolean verbose;
     private volatile boolean closed;
 
     private Timer delayTimer;
@@ -55,10 +54,9 @@ public class RegionFileWatchService extends Thread {
     @DebugDump
     private final Map<Vector2i, TimerTask> scheduledUpdates;
 
-    public RegionFileWatchService(RenderManager renderManager, BmMap map, boolean verbose) throws IOException {
+    public RegionFileWatchService(RenderManager renderManager, BmMap map) throws IOException {
         this.renderManager = renderManager;
         this.map = map;
-        this.verbose = verbose;
         this.closed = false;
         this.scheduledUpdates = new HashMap<>();
 
@@ -68,13 +66,16 @@ public class RegionFileWatchService extends Thread {
         FileHelper.createDirectories(folder);
 
         this.watchService = folder.getFileSystem().newWatchService();
-
         folder.register(this.watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY);
+
+        Logger.global.logDebug("Created region-file watch-service for map '" + map.getId() + "' at '" + folder + "'.");
     }
 
     @Override
     public void run() {
         if (delayTimer == null) delayTimer = new Timer("BlueMap-RegionFileWatchService-DelayTimer", true);
+
+        Logger.global.logDebug("Started watching map '" + map.getId() + "' for updates...");
 
         try {
             while (!closed) {
@@ -95,14 +96,15 @@ public class RegionFileWatchService extends Thread {
 
                 if (!key.reset()) return;
             }
-        } catch ( ClosedWatchServiceException ignore) {
+        } catch (ClosedWatchServiceException ignore) {
         } catch (InterruptedException iex) {
             Thread.currentThread().interrupt();
-        }
-
-        if (!closed) {
-            Logger.global.logWarning("Region-file watch-service for map '" + map.getId() +
-                                     "' stopped unexpectedly! (This map might not update automatically from now on)");
+        } finally {
+            Logger.global.logDebug("Stopped watching map '" + map.getId() + "' for updates.");
+            if (!closed) {
+                Logger.global.logWarning("Region-file watch-service for map '" + map.getId() +
+                        "' stopped unexpectedly! (This map might not update automatically from now on)");
+            }
         }
     }
 
@@ -118,7 +120,7 @@ public class RegionFileWatchService extends Thread {
             int rZ = Integer.parseInt(filenameParts[2]);
             Vector2i regionPos = new Vector2i(rX, rZ);
 
-            // we only want to start the render when there were no changes on a file for 10 seconds
+            // we only want to start the render when there were no changes on a file for 5 seconds
             TimerTask task = scheduledUpdates.remove(regionPos);
             if (task != null) task.cancel();
 
@@ -130,12 +132,12 @@ public class RegionFileWatchService extends Thread {
                         scheduledUpdates.remove(regionPos);
                         renderManager.scheduleRenderTask(task);
 
-                        if (verbose) Logger.global.logInfo("Scheduled update for region-file: " + regionPos + " (Map: " + map.getId() + ")");
+                        Logger.global.logDebug("Scheduled update for region-file: " + regionPos + " (Map: " + map.getId() + ")");
                     }
                 }
             };
             scheduledUpdates.put(regionPos, task);
-            delayTimer.schedule(task, 10000);
+            delayTimer.schedule(task, 5000);
         } catch (NumberFormatException ignore) {}
     }
 

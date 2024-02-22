@@ -553,7 +553,7 @@ public class Plugin implements ServerEventListener {
         stopWatchingMap(map);
 
         try {
-            RegionFileWatchService watcher = new RegionFileWatchService(renderManager, map, false);
+            RegionFileWatchService watcher = new RegionFileWatchService(renderManager, map);
             watcher.start();
             regionFileWatchServices.put(map.getId(), watcher);
         } catch (IOException ex) {

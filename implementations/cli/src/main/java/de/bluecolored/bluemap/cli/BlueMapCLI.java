@@ -96,7 +96,7 @@ public class BlueMapCLI {
         if (watch) {
             for (BmMap map : maps.values()) {
                 try {
-                    RegionFileWatchService watcher = new RegionFileWatchService(renderManager, map, true);
+                    RegionFileWatchService watcher = new RegionFileWatchService(renderManager, map);
                     watcher.start();
                     regionFileWatchServices.add(watcher);
                 } catch (IOException ex) {

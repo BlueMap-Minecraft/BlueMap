@@ -106,16 +106,7 @@ public class MapUpdateTask extends CombinedRenderTask<RenderTask> {
     private static List<Vector2i> getRegions(BmMap map, Vector2i center, int radius) {
         World world = map.getWorld();
         Grid regionGrid = world.getRegionGrid();
-
-        Predicate<Vector2i> regionFilter = r -> {
-            Vector2i cellMin = regionGrid.getCellMin(r);
-            if (cellMin.getX() > map.getMapSettings().getMaxPos().getX()) return false;
-            if (cellMin.getY() > map.getMapSettings().getMaxPos().getZ()) return false;
-
-            Vector2i cellMax = regionGrid.getCellMax(r);
-            if (cellMax.getX() < map.getMapSettings().getMinPos().getX()) return false;
-            return cellMax.getY() >= map.getMapSettings().getMinPos().getZ();
-        };
+        Predicate<Vector2i> regionFilter = map.getMapSettings().getRenderBoundariesCellFilter(regionGrid);
 
         if (center == null || radius < 0) {
             return world.listRegions().stream()

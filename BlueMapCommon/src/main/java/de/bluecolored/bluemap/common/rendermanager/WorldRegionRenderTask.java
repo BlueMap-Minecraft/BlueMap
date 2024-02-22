@@ -88,6 +88,7 @@ public class WorldRegionRenderTask implements RenderTask {
 
         Grid tileGrid = map.getHiresModelManager().getTileGrid();
         Grid chunkGrid = map.getWorld().getChunkGrid();
+        Predicate<Vector2i> boundsTileFilter = map.getMapSettings().getRenderBoundariesCellFilter(tileGrid);
 
         for (Vector2i chunk : chunks) {
             Vector2i tileMin = chunkGrid.getCellMin(chunk, tileGrid);
@@ -102,16 +103,6 @@ public class WorldRegionRenderTask implements RenderTask {
             // make sure chunk gets re-loaded from disk
             map.getWorld().invalidateChunkCache(chunk.getX(), chunk.getY());
         }
-
-        Predicate<Vector2i> boundsTileFilter = t -> {
-            Vector2i cellMin = tileGrid.getCellMin(t);
-            if (cellMin.getX() > map.getMapSettings().getMaxPos().getX()) return false;
-            if (cellMin.getY() > map.getMapSettings().getMaxPos().getZ()) return false;
-
-            Vector2i cellMax = tileGrid.getCellMax(t);
-            if (cellMax.getX() < map.getMapSettings().getMinPos().getX()) return false;
-            return cellMax.getY() >= map.getMapSettings().getMinPos().getZ();
-        };
 
         this.tileCount = tileSet.size();
         this.tiles = tileSet.stream()

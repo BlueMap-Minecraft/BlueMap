@@ -53,14 +53,16 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.map.MapRenderState;
 import de.bluecolored.bluemap.core.storage.Storage;
-import de.bluecolored.bluemap.core.world.block.Block;
+import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.World;
+import de.bluecolored.bluemap.core.world.block.Block;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public class Commands<S> {
 
@@ -501,22 +503,37 @@ public class Commands<S> {
             Block<?> block = new Block<>(world, blockPos.getX(), blockPos.getY(), blockPos.getZ());
             Block<?> blockBelow = new Block<>(world, blockPos.getX(), blockPos.getY() - 1, blockPos.getZ());
 
-            // populate lazy-loaded values
-            block.getBlockState();
-            block.getBiomeId();
-            block.getLightData();
-
-            blockBelow.getBlockState();
-            blockBelow.getBiomeId();
-            blockBelow.getLightData();
-
             source.sendMessages(Arrays.asList(
-                    Text.of(TextColor.GOLD, "Block at you: ", TextColor.WHITE, block),
-                    Text.of(TextColor.GOLD, "Block below you: ", TextColor.WHITE, blockBelow)
+                    Text.of(TextColor.GOLD, "Block at you: \n", formatBlock(block)),
+                    Text.of(TextColor.GOLD, "Block below you: \n", formatBlock(blockBelow))
                 ));
         }, "BlueMap-Plugin-DebugBlockCommand").start();
 
         return 1;
+    }
+
+    private Text formatBlock(Block<?> block) {
+        World world = block.getWorld();
+        Chunk chunk = block.getChunk();
+
+        Map<String, Object> lines = new LinkedHashMap<>();
+        lines.put("world-id", world.getId());
+        lines.put("world-name", world.getName());
+        lines.put("chunk-is-generated", chunk.isGenerated());
+        lines.put("chunk-has-lightdata", chunk.hasLightData());
+        lines.put("chunk-inhabited-time", chunk.getInhabitedTime());
+        lines.put("block-state", block.getBlockState());
+        lines.put("biome", block.getBiomeId());
+        lines.put("position", block.getX() + " | " + block.getY() + " | " + block.getZ());
+        lines.put("block-light", block.getBlockLightLevel());
+        lines.put("sun-light", block.getSunLightLevel());
+
+        Object[] textElements = lines.entrySet().stream()
+                .flatMap(e -> Stream.of(TextColor.GRAY, e.getKey(), ": ", TextColor.WHITE, e.getValue(), "\n"))
+                .toArray(Object[]::new);
+        textElements[textElements.length - 1] = "";
+
+        return Text.of(textElements);
     }
 
     public int debugDumpCommand(CommandContext<S> context) {

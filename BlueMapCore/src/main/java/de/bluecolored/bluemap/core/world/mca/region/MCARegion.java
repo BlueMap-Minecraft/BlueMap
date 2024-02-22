@@ -34,7 +34,6 @@ import de.bluecolored.bluemap.core.world.mca.chunk.MCAChunk;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
@@ -121,7 +120,7 @@ public class MCARegion implements Region {
             // iterate over all chunks
             for (int x = 0; x < 32; x++) {
                 for (int z = 0; z < 32; z++) {
-                    int xzChunk = z * 32 + x;
+                    int xzChunk = (z & 0b11111) << 5 | (x & 0b11111);
 
                     int size = header[xzChunk * 4 + 3] * 4096;
                     if (size == 0) continue;
@@ -136,7 +135,7 @@ public class MCARegion implements Region {
                     timestamp |= header[i] & 0xFF;
 
                     // load chunk only if consumers filter returns true
-                    if (consumer.filter(chunkX, chunkZ, timestamp)) {
+                    if (consumer.filter(chunkX, chunkZ, timestamp * 1000L)) {
                         i = xzChunk * 4;
                         int offset = header[i++] << 16;
                         offset |= (header[i++] & 0xFF) << 8;
@@ -190,7 +189,10 @@ public class MCARegion implements Region {
 
         do {
             int read = src.read(bb);
-            if (read < 0) throw new EOFException();
+            if (read < 0)
+                // zero out all the remaining data from the buffer
+                while (bb.remaining() > 0)
+                    bb.put((byte) 0);
         } while (bb.remaining() > 0);
     }
 
