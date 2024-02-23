@@ -71,6 +71,9 @@ dependencies {
     api ("io.airlift:aircompressor:0.24")
     api ("org.lz4:lz4-java:1.8.0")
 
+    api ("com.backblaze.b2:b2-sdk-core:6.1.1")
+    api ("com.backblaze.b2:b2-sdk-httpclient:6.1.1")
+
     api ("de.bluecolored.bluemap.api:BlueMapAPI")
 
     compileOnly ("org.jetbrains:annotations:23.0.0")

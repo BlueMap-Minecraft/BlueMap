@@ -25,13 +25,15 @@
 package de.bluecolored.bluemap.common.config.storage;
 
 import de.bluecolored.bluemap.core.storage.Storage;
+import de.bluecolored.bluemap.core.storage.b2.B2Storage;
 import de.bluecolored.bluemap.core.storage.file.FileStorage;
 import de.bluecolored.bluemap.core.storage.sql.SQLStorage;
 
 public enum StorageType {
 
     FILE (FileConfig.class, FileStorage::new),
-    SQL (SQLConfig.class, SQLStorage::create);
+    SQL (SQLConfig.class, SQLStorage::create),
+    B2 (B2Config.class, B2Storage::new);
 
     private final Class<? extends StorageConfig> configType;
     private final StorageFactory<? extends StorageConfig> storageFactory;
