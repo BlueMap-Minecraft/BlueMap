@@ -269,8 +269,8 @@ public class S3Storage extends Storage {
                             .build()
             );
             List<String> ids = new ArrayList<>();
-            for (var file: files.contents()) {
-                String id = file.key().split("/")[0];
+            for (var file: files.commonPrefixes()) {
+                String id = file.prefix().split("/")[0];
                 if (!ids.contains(id)) {
                     ids.add(id);
                 }
