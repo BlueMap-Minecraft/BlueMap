@@ -112,6 +112,14 @@ public class Key implements Keyed {
         return new Key(namespace, value);
     }
 
+    public static Key minecraft(String value) {
+        return new Key(MINECRAFT_NAMESPACE, value);
+    }
+
+    public static Key bluemap(String value) {
+        return new Key(BLUEMAP_NAMESPACE, value);
+    }
+
     /**
      * Using our own function instead of {@link String#intern()} since the ConcurrentHashMap is much faster.
      */

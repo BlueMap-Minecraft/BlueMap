@@ -23,13 +23,14 @@
  * THE SOFTWARE.
  */
 import {pathFromCoords} from "../util/Utils";
-import {BufferGeometryLoader, FileLoader, Mesh} from "three";
+import {BufferGeometryLoader, FileLoader, Mesh, Material} from "three";
+import {PRBMLoader} from "./hires/PRBMLoader";
 
 export class TileLoader {
 
     /**
      * @param tilePath {string}
-     * @param material {THREE.Material | THREE.Material[]}
+     * @param material {Material | Material[]}
      * @param tileSettings {{
      *      tileSize: {x: number, z: number},
      *	    scale: {x: number, z: number},
@@ -50,23 +51,17 @@ export class TileLoader {
         this.loadBlocker = loadBlocker;
 
         this.fileLoader = new FileLoader();
-        this.fileLoader.setResponseType('json');
+        this.fileLoader.setResponseType('arraybuffer');
 
-        this.bufferGeometryLoader = new BufferGeometryLoader();
+        this.bufferGeometryLoader = new PRBMLoader();
     }
 
     load = (tileX, tileZ, cancelCheck = () => false) => {
-        let tileUrl = this.tilePath + pathFromCoords(tileX, tileZ) + '.json';
+        let tileUrl = this.tilePath + pathFromCoords(tileX, tileZ) + '.prbm';
 
-        //await this.loadBlocker();
         return new Promise((resolve, reject) => {
             this.fileLoader.load(tileUrl + '?' + this.tileCacheHash,
-                async json => {
-                    let geometryJson = json.tileGeometry || {};
-                    if (!geometryJson.type || geometryJson.type !== 'BufferGeometry'){
-                        reject({status: "empty"});
-                        return;
-                    }
+                async data => {
 
                     await this.loadBlocker();
                     if (cancelCheck()){
@@ -74,7 +69,7 @@ export class TileLoader {
                         return;
                     }
 
-                    let geometry = this.bufferGeometryLoader.parse(geometryJson);
+                    let geometry = this.bufferGeometryLoader.parse(data);
 
                     let object = new Mesh(geometry, this.material);
 

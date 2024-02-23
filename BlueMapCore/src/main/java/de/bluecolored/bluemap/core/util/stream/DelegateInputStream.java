@@ -1,4 +1,4 @@
-package de.bluecolored.bluemap.core.util;
+package de.bluecolored.bluemap.core.util.stream;
 
 import org.jetbrains.annotations.NotNull;
 

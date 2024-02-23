@@ -72,14 +72,7 @@ public class FileStorage extends Storage {
         Path file = getFilePath(mapId, lod, tile);
 
         OutputStream os = FileHelper.createFilepartOutputStream(file);
-        try {
-            os = new BufferedOutputStream(compression.compress(os));
-        } catch (IOException ex) {
-            os.close();
-            throw ex;
-        }
-
-        return os;
+        return new BufferedOutputStream(compression.compress(os));
     }
 
     @Override
@@ -240,7 +233,7 @@ public class FileStorage extends Storage {
         }
 
         if (lod == 0) {
-            return p.resolve(fileName + ".json" + hiresCompression.getFileSuffix());
+            return p.resolve(fileName + ".prbm" + hiresCompression.getFileSuffix());
         } else {
             return p.resolve(fileName + ".png");
         }

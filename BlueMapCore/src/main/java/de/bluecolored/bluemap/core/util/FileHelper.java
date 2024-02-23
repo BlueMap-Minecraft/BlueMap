@@ -24,6 +24,8 @@
  */
 package de.bluecolored.bluemap.core.util;
 
+import de.bluecolored.bluemap.core.util.stream.OnCloseOutputStream;
+
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.OutputStream;

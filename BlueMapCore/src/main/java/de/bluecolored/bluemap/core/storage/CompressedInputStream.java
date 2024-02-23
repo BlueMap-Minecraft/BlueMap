@@ -24,7 +24,7 @@
  */
 package de.bluecolored.bluemap.core.storage;
 
-import de.bluecolored.bluemap.core.util.DelegateInputStream;
+import de.bluecolored.bluemap.core.util.stream.DelegateInputStream;
 
 import java.io.IOException;
 import java.io.InputStream;

@@ -32,7 +32,7 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.storage.*;
 import de.bluecolored.bluemap.core.storage.sql.dialect.DialectType;
 import de.bluecolored.bluemap.core.storage.sql.dialect.Dialect;
-import de.bluecolored.bluemap.core.util.OnCloseOutputStream;
+import de.bluecolored.bluemap.core.util.stream.OnCloseOutputStream;
 import org.apache.commons.dbcp2.*;
 import org.apache.commons.pool2.ObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPool;

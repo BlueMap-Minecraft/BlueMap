@@ -22,17 +22,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.util;
+package de.bluecolored.bluemap.core.util.stream;
 
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.InputStream;
 
-public class OnCloseOutputStream extends DelegateOutputStream {
+public class OnCloseInputStream extends DelegateInputStream {
 
     private final AutoCloseable onClose;
 
-    public OnCloseOutputStream(OutputStream out, AutoCloseable onClose) {
-        super(out);
+    public OnCloseInputStream(InputStream in, AutoCloseable onClose) {
+        super(in);
         this.onClose = onClose;
     }
 

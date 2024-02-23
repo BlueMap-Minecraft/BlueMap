@@ -16,6 +16,13 @@ public class Registry<T extends Keyed> {
         this.entries = new ConcurrentHashMap<>();
     }
 
+    @SafeVarargs
+    public Registry(T... defaultEntires) {
+        this();
+        for (T entry : defaultEntires)
+            register(entry);
+    }
+
     /**
      * Registers a new entry, only if there is no entry with the same key registered already.
      * Does nothing otherwise.

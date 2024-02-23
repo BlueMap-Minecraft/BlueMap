@@ -133,18 +133,7 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
             return new HttpResponse(HttpStatusCode.INTERNAL_SERVER_ERROR);
         }
 
-        if (path.endsWith(".png")) {
-            return new HttpResponse(HttpStatusCode.NO_CONTENT);
-        }
-
-        if (path.endsWith(".json")) {
-            HttpResponse response = new HttpResponse(HttpStatusCode.OK);
-            response.addHeader("Content-Type", "application/json");
-            response.setData("{}");
-            return response;
-        }
-
-        return new HttpResponse(HttpStatusCode.NOT_FOUND);
+        return new HttpResponse(HttpStatusCode.NO_CONTENT);
     }
 
     private String calculateETag(String path, TileInfo tileInfo) {

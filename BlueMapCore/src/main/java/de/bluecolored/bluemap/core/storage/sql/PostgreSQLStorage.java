@@ -29,7 +29,7 @@ import de.bluecolored.bluemap.core.storage.CompressedInputStream;
 import de.bluecolored.bluemap.core.storage.Compression;
 import de.bluecolored.bluemap.core.storage.sql.dialect.Dialect;
 import de.bluecolored.bluemap.core.storage.sql.dialect.PostgresDialect;
-import de.bluecolored.bluemap.core.util.OnCloseOutputStream;
+import de.bluecolored.bluemap.core.util.stream.OnCloseOutputStream;
 
 import java.io.*;
 import java.net.MalformedURLException;

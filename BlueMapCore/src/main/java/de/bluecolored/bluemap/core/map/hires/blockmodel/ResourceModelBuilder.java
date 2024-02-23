@@ -30,7 +30,7 @@ import com.flowpowered.math.vector.Vector3i;
 import com.flowpowered.math.vector.Vector4f;
 import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.hires.BlockModelView;
-import de.bluecolored.bluemap.core.map.hires.HiresTileModel;
+import de.bluecolored.bluemap.core.map.hires.TileModel;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.resources.BlockColorCalculatorFactory;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
@@ -205,7 +205,7 @@ public class ResourceModelBuilder {
         blockModel.initialize();
         blockModel.add(2);
 
-        HiresTileModel tileModel = blockModel.getHiresTile();
+        TileModel tileModel = blockModel.getHiresTile();
         int face1 = blockModel.getStart();
         int face2 = face1 + 1;
 

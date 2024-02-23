@@ -46,11 +46,11 @@ public class HiresModelRenderer {
         this.renderSettings = renderSettings;
     }
 
-    public void render(World world, Vector3i modelMin, Vector3i modelMax, HiresTileModel model) {
+    public void render(World world, Vector3i modelMin, Vector3i modelMax, TileModel model) {
         render(world, modelMin, modelMax, model, (x, z, c, h, l) -> {});
     }
 
-    public void render(World world, Vector3i modelMin, Vector3i modelMax, HiresTileModel model, TileMetaConsumer tileMetaConsumer) {
+    public void render(World world, Vector3i modelMin, Vector3i modelMax, TileModel model, TileMetaConsumer tileMetaConsumer) {
         Vector3i min = modelMin.max(renderSettings.getMinPos());
         Vector3i max = modelMax.min(renderSettings.getMaxPos());
         Vector3i modelAnchor = new Vector3i(modelMin.getX(), 0, modelMin.getZ());

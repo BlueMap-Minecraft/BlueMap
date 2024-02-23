@@ -29,14 +29,14 @@ import de.bluecolored.bluemap.core.util.math.MatrixM4f;
 
 public class BlockModelView {
 
-    private HiresTileModel hiresTile;
+    private TileModel hiresTile;
     private int start, size;
 
-    public BlockModelView(HiresTileModel hiresTile) {
+    public BlockModelView(TileModel hiresTile) {
         initialize(hiresTile);
     }
 
-    public BlockModelView initialize(HiresTileModel hiresTile, int start) {
+    public BlockModelView initialize(TileModel hiresTile, int start) {
         this.hiresTile = hiresTile;
         this.start = start;
         this.size = hiresTile.size() - start;
@@ -44,7 +44,7 @@ public class BlockModelView {
         return this;
     }
 
-    public BlockModelView initialize(HiresTileModel hiresTile) {
+    public BlockModelView initialize(TileModel hiresTile) {
         this.hiresTile = hiresTile;
         this.start = hiresTile.size();
         this.size = 0;
@@ -138,7 +138,7 @@ public class BlockModelView {
         return this;
     }
 
-    public HiresTileModel getHiresTile() {
+    public TileModel getHiresTile() {
         return hiresTile;
     }
 

@@ -33,6 +33,7 @@ import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.world.World;
+import lombok.Getter;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -41,6 +42,8 @@ public class HiresModelManager {
 
     private final Storage.TileStorage storage;
     private final HiresModelRenderer renderer;
+
+    @Getter
     private final Grid tileGrid;
 
     public HiresModelManager(Storage.TileStorage storage, ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings, Grid tileGrid) {
@@ -64,7 +67,7 @@ public class HiresModelManager {
         Vector3i modelMin = new Vector3i(tileMin.getX(), Integer.MIN_VALUE, tileMin.getY());
         Vector3i modelMax = new Vector3i(tileMax.getX(), Integer.MAX_VALUE, tileMax.getY());
 
-        HiresTileModel model = HiresTileModel.instancePool().claimInstance();
+        TileModel model = TileModel.instancePool().claimInstance();
 
         renderer.render(world, modelMin, modelMax, model, tileMetaConsumer);
 
@@ -73,22 +76,18 @@ public class HiresModelManager {
             save(model, tile);
         }
 
-        HiresTileModel.instancePool().recycleInstance(model);
+        TileModel.instancePool().recycleInstance(model);
     }
 
-    private void save(final HiresTileModel model, Vector2i tile) {
-        try (OutputStream os = storage.write(tile)) {
-            model.writeBufferGeometryJson(os);
+    private void save(final TileModel model, Vector2i tile) {
+        try (
+                OutputStream out = storage.write(tile);
+                PRBMWriter modelWriter = new PRBMWriter(out)
+        ) {
+            modelWriter.write(model);
         } catch (IOException e){
             Logger.global.logError("Failed to save hires model: " + tile, e);
         }
-    }
-
-    /**
-     * Returns the tile-grid
-     */
-    public Grid getTileGrid() {
-        return tileGrid;
     }
 
 }
