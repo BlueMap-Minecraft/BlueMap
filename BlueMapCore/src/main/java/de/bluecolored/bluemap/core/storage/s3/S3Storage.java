@@ -5,6 +5,7 @@ import de.bluecolored.bluemap.core.storage.*;
 import de.bluecolored.bluemap.core.util.OnCloseOutputStream;
 import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -62,10 +63,9 @@ public class S3Storage extends Storage {
                             .build()
             );
             return Optional.of(new CompressedInputStream(is, compression));
-        } catch (Exception e) {
-            if (e instanceof NoSuchKeyException) {
-                return Optional.empty();
-            }
+        } catch (NoSuchKeyException e) {
+            return Optional.empty();
+        } catch (SdkException e) {
             throw new IOException(e);
         }
     }
@@ -104,10 +104,9 @@ public class S3Storage extends Storage {
                     return info.lastModified().getEpochSecond();
                 }
             });
-        } catch (Exception e) {
-            if (e instanceof NoSuchKeyException) {
-                return Optional.empty();
-            }
+        } catch (NoSuchKeyException e) {
+            return Optional.empty();
+        } catch (SdkException e) {
             throw new IOException(e);
         }
     }
@@ -123,10 +122,8 @@ public class S3Storage extends Storage {
                             .key(path)
                             .build()
             );
-        } catch (Exception e) {
-            if (e instanceof NoSuchKeyException) {
-                return;
-            }
+        } catch (NoSuchKeyException ignored) {
+        } catch (SdkException e) {
             throw new IOException(e);
         }
     }
@@ -166,10 +163,9 @@ public class S3Storage extends Storage {
                             .build()
             );
             return Optional.of(is);
-        } catch (Exception e) {
-            if (e instanceof NoSuchKeyException) {
-                return Optional.empty();
-            }
+        } catch (NoSuchKeyException e) {
+            return Optional.empty();
+        } catch (SdkException e) {
             throw new IOException(e);
         }
     }
@@ -197,10 +193,9 @@ public class S3Storage extends Storage {
                     return info.contentLength();
                 }
             });
-        } catch (Exception e) {
-            if (e instanceof NoSuchKeyException) {
-                return Optional.empty();
-            }
+        } catch (NoSuchKeyException e) {
+            return Optional.empty();
+        } catch (SdkException e) {
             throw new IOException(e);
         }
     }
@@ -216,10 +211,8 @@ public class S3Storage extends Storage {
                             .key(path)
                             .build()
             );
-        } catch (Exception e) {
-            if (e instanceof NoSuchKeyException) {
-                return;
-            }
+        } catch (NoSuchKeyException ignored) {
+        } catch (SdkException e) {
             throw new IOException(e);
         }
     }
@@ -238,22 +231,21 @@ public class S3Storage extends Storage {
             var filesList = files.contents().stream().collect(Collectors.toList());
             for (int i = 0; i < filesList.size(); i++) {
                 var file = filesList.get(i);
-                client.deleteObject(
-                        DeleteObjectRequest
-                                .builder()
-                                .bucket(bucket)
-                                .key(file.key())
-                                .build()
-                );
+                try {
+                    client.deleteObject(
+                            DeleteObjectRequest
+                                    .builder()
+                                    .bucket(bucket)
+                                    .key(file.key())
+                                    .build()
+                    );
+                } catch (NoSuchKeyException ignored) {}
 
                 if (!onProgress.apply(
                         new ProgressInfo((double) (i + 1) / filesList.size())
                 )) return;
             }
-        } catch (Exception e) {
-            if (e instanceof NoSuchKeyException) {
-                return;
-            }
+        } catch (SdkException e) {
             throw new IOException(e);
         }
     }

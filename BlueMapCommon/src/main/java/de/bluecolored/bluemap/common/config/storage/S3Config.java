@@ -8,15 +8,14 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import java.util.Optional;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
-@DebugDump
 @ConfigSerializable
 public class S3Config extends StorageConfig implements S3StorageSettings {
-    private String endpoint = null;
-    private String region = "";
-    private String accessKey = "";
+    @DebugDump private String endpoint = null;
+    @DebugDump private String region = "";
+    @DebugDump private String accessKey = "";
     private String secretKey = "";
-    private String bucket = "";
-    private Compression compression = Compression.GZIP;
+    @DebugDump private String bucket = "";
+    @DebugDump private Compression compression = Compression.GZIP;
 
     @Override
     public Optional<String> getEndpoint() {
