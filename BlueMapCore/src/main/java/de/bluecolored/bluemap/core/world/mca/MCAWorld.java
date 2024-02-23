@@ -237,7 +237,9 @@ public class MCAWorld implements World {
                 return getRegion(x >> 5, z >> 5)
                         .loadChunk(x, z);
             } catch (IOException | RuntimeException e) {
-                if (loadException != null) e.addSuppressed(loadException);
+                if (loadException != null && loadException != e)
+                    e.addSuppressed(loadException);
+
                 loadException = e;
 
                 if (i + 1 < tries) {
