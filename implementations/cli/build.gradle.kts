@@ -76,7 +76,7 @@ tasks.shadowJar {
 	//relocate ("com.flowpowered.math", "de.bluecolored.shadow.flowpowered.math") //DON"T relocate this, because the API depends on it
 	relocate ("com.google", "de.bluecolored.shadow.google")
 	relocate ("com.typesafe", "de.bluecolored.shadow.typesafe")
-	relocate ("net.querz.nbt", "de.bluecolored.shadow.querz.nbt")
+	relocate ("de.bluecolored.bluenbt", "de.bluecolored.shadow.bluenbt")
 	relocate ("org.spongepowered.configurate", "de.bluecolored.shadow.configurate")
 	relocate ("com.github.benmanes.caffeine", "de.bluecolored.shadow.benmanes.caffeine")
 	relocate ("org.aopalliance", "de.bluecolored.shadow.aopalliance")

@@ -106,7 +106,7 @@ tasks.shadowJar {
 
 	//relocate ("com.flowpowered.math", "de.bluecolored.shadow.flowpowered.math") //DON"T relocate this, because the API depends on it
 	relocate ("com.typesafe.config", "de.bluecolored.shadow.typesafe.config")
-	relocate ("de.bluecolored.bluenbt", "de.bluecolored.shadow.bluecolored.bluenbt")
+	relocate ("de.bluecolored.bluenbt", "de.bluecolored.shadow.bluenbt")
 	relocate ("org.spongepowered.configurate", "de.bluecolored.shadow.configurate")
 	relocate ("com.github.benmanes.caffeine", "de.bluecolored.shadow.benmanes.caffeine")
 	relocate ("org.aopalliance", "de.bluecolored.shadow.aopalliance")

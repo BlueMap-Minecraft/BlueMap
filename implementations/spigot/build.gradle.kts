@@ -91,7 +91,7 @@ tasks.shadowJar {
 
 	//relocate ("com.flowpowered.math", "de.bluecolored.shadow.flowpowered.math") //DON"T relocate this, because the API depends on it
 	relocate ("com.typesafe.config", "de.bluecolored.shadow.typesafe.config")
-	relocate ("net.querz.nbt", "de.bluecolored.shadow.querz.nbt")
+	relocate ("de.bluecolored.bluenbt", "de.bluecolored.shadow.bluenbt")
 	relocate ("org.spongepowered.configurate", "de.bluecolored.shadow.configurate")
 	relocate ("org.bstats", "de.bluecolored.shadow.bstats")
 	relocate ("com.mojang.brigadier", "de.bluecolored.shadow.mojang.brigadier")

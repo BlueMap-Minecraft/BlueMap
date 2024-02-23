@@ -108,7 +108,7 @@ tasks.shadowJar {
 	archiveFileName.set("BlueMap-${project.version}-${project.name}.jar")
 
 	//relocate ("com.flowpowered.math", "de.bluecolored.shadow.flowpowered.math") //DON"T relocate this, because the API depends on it
-	relocate ("net.querz.nbt", "de.bluecolored.shadow.querz.nbt")
+	relocate ("de.bluecolored.bluenbt", "de.bluecolored.shadow.bluenbt")
 	relocate ("com.mojang.brigadier", "de.bluecolored.shadow.mojang.brigadier")
 	relocate ("com.github.benmanes.caffeine", "de.bluecolored.shadow.benmanes.caffeine")
 	relocate ("com.google.errorprone", "de.bluecolored.shadow.google.errorprone")
