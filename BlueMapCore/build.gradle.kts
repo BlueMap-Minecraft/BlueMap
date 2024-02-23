@@ -70,6 +70,7 @@ dependencies {
     api ("org.apache.commons:commons-dbcp2:2.9.0")
     api ("io.airlift:aircompressor:0.24")
     api ("org.lz4:lz4-java:1.8.0")
+    api ("software.amazon.awssdk:s3:2.24.9")
 
     api ("de.bluecolored.bluemap.api:BlueMapAPI")
 
