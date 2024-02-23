@@ -24,12 +24,11 @@
  */
 package de.bluecolored.bluemap.core.logger;
 
-import java.util.concurrent.TimeUnit;
-
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
-
 import de.bluecolored.bluemap.core.BlueMap;
+
+import java.util.concurrent.TimeUnit;
 
 public abstract class AbstractLogger extends Logger {
 
@@ -40,7 +39,7 @@ public abstract class AbstractLogger extends Logger {
     public AbstractLogger() {
         noFloodCache = Caffeine.newBuilder()
             .executor(BlueMap.THREAD_POOL)
-            .expireAfterWrite(1, TimeUnit.HOURS)
+            .expireAfterWrite(10, TimeUnit.MINUTES)
             .maximumSize(10000)
             .build();
     }

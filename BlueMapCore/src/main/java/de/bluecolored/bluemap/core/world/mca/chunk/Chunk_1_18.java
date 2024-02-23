@@ -221,7 +221,7 @@ public class Chunk_1_18 extends MCAChunk {
 
             int id = blocks.get((y & 0xF) << 8 | (z & 0xF) << 4 | x & 0xF);
             if (id >= blockPalette.length) {
-                Logger.global.noFloodWarning("palette-warning", "Got block-palette id " + id + " but palette has size of " + blockPalette.length + "! (Future occasions of this error will not be logged)");
+                Logger.global.noFloodWarning("palette-warning", "Got block-palette id " + id + " but palette has size of " + blockPalette.length + ". (Chunk");
                 return BlockState.MISSING;
             }
 
@@ -234,7 +234,7 @@ public class Chunk_1_18 extends MCAChunk {
 
             int id = biomes.get((y & 0b1100) << 2 | z & 0b1100 | (x & 0b1100) >> 2);
             if (id >= biomePalette.length) {
-                Logger.global.noFloodWarning("biome-palette-warning", "Got biome-palette id " + id + " but palette has size of " + biomePalette.length + "! (Future occasions of this error will not be logged)");
+                Logger.global.noFloodWarning("biome-palette-warning", "Got biome-palette id " + id + " but palette has size of " + biomePalette.length + ".");
                 return Biome.DEFAULT.getValue();
             }
 
@@ -271,14 +271,14 @@ public class Chunk_1_18 extends MCAChunk {
 
     @Getter
     @SuppressWarnings("FieldMayBeFinal")
-    protected static class HeightmapsData {
+    public static class HeightmapsData {
         @NBTName("WORLD_SURFACE") private long[] worldSurface = EMPTY_LONG_ARRAY;
         @NBTName("OCEAN_FLOOR") private long[] oceanFloor = EMPTY_LONG_ARRAY;
     }
 
     @Getter
     @SuppressWarnings("FieldMayBeFinal")
-    protected static class SectionData {
+    public static class SectionData {
         private int y = 0;
         private byte[] blockLight = EMPTY_BYTE_ARRAY;
         private byte[] skyLight = EMPTY_BYTE_ARRAY;
@@ -288,14 +288,14 @@ public class Chunk_1_18 extends MCAChunk {
 
     @Getter
     @SuppressWarnings("FieldMayBeFinal")
-    protected static class BlockStatesData {
+    public static class BlockStatesData {
         private BlockState[] palette = EMPTY_BLOCKSTATE_ARRAY;
         private long[] data = EMPTY_LONG_ARRAY;
     }
 
     @Getter
     @SuppressWarnings("FieldMayBeFinal")
-    protected static class BiomesData {
+    public static class BiomesData {
         private String[] palette = EMPTY_STRING_ARRAY;
         private long[] data = EMPTY_LONG_ARRAY;
     }

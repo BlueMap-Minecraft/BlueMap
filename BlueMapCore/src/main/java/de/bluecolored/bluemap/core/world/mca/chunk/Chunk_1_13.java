@@ -280,14 +280,14 @@ public class Chunk_1_13 extends MCAChunk {
 
     @Getter
     @SuppressWarnings("FieldMayBeFinal")
-    protected static class HeightmapsData {
+    public static class HeightmapsData {
         @NBTName("WORLD_SURFACE") private long[] worldSurface = EMPTY_LONG_ARRAY;
         @NBTName("OCEAN_FLOOR") private long[] oceanFloor = EMPTY_LONG_ARRAY;
     }
 
     @Getter
     @SuppressWarnings("FieldMayBeFinal")
-    protected static class SectionData {
+    public static class SectionData {
         private int y = 0;
         private byte[] blockLight = EMPTY_BYTE_ARRAY;
         private byte[] skyLight = EMPTY_BYTE_ARRAY;
