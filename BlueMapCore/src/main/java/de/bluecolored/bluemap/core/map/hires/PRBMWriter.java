@@ -87,9 +87,9 @@ public class PRBMWriter implements Closeable {
         writeString("normal");
         out.write(
                 ATTRIBUTE_TYPE_FLOAT |
-                ATTRIBUTE_NOT_NORMALIZED |
+                ATTRIBUTE_NORMALIZED |
                 ATTRIBUTE_CARDINALITY_3D_VEC |
-                ATTRIBUTE_ENCODING_SIGNED_32BIT_FLOAT
+                ATTRIBUTE_ENCODING_SIGNED_8BIT_INT
         );
 
         writePadding();
@@ -105,9 +105,9 @@ public class PRBMWriter implements Closeable {
             );
 
             for (j = 0; j < 3; j++) { // all 3 points
-                writeFloat(normal.x);
-                writeFloat(normal.y);
-                writeFloat(normal.z);
+                writeNormalizedSignedByteValue(normal.x);
+                writeNormalizedSignedByteValue(normal.y);
+                writeNormalizedSignedByteValue(normal.z);
             }
         }
     }
@@ -281,6 +281,11 @@ public class PRBMWriter implements Closeable {
 
     private void writeFloat(float value) throws IOException {
         write4byteValue(Float.floatToIntBits(value));
+    }
+
+    private void writeNormalizedSignedByteValue(float value) throws IOException {
+        byte normalized = (byte) (value * 0x80 - 0.5);
+        out.write(normalized & 0xFF);
     }
 
     private void writeNormalizedUnsignedByteValue(float value) throws IOException {
