@@ -90,7 +90,7 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
         this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 
         this.eventForwarder = new EventForwarder();
-        this.pluginInstance = new Plugin("bukkit", this);
+        this.pluginInstance = new Plugin("spigot", this);
         this.commands = new BukkitCommands(this.pluginInstance);
 
         this.worlds = Caffeine.newBuilder()

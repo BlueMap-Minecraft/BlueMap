@@ -94,7 +94,7 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
         this.scheduledTasks = Collections.synchronizedCollection(Collections.newSetFromMap(new WeakHashMap<>()));
 
         this.eventForwarder = new EventForwarder();
-        this.pluginInstance = new Plugin("bukkit", this);
+        this.pluginInstance = new Plugin("paper", this);
         this.commands = new BukkitCommands(this.pluginInstance);
 
         this.worlds = Caffeine.newBuilder()
