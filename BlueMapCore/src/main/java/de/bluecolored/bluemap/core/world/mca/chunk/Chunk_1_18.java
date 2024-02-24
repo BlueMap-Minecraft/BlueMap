@@ -209,7 +209,7 @@ public class Chunk_1_18 extends MCAChunk {
             this.biomePalette = sectionData.biomes.palette;
 
             this.blocks = new PackedIntArrayAccess(sectionData.blockStates.data, BLOCKS_PER_SECTION);
-            this.biomes = new PackedIntArrayAccess(sectionData.biomes.data, BIOMES_PER_SECTION);
+            this.biomes = new PackedIntArrayAccess(Math.max(MCAUtil.ceilLog2(this.biomePalette.length), 1), sectionData.biomes.data);
 
             this.blockLight = sectionData.blockLight;
             this.skyLight = sectionData.skyLight;
