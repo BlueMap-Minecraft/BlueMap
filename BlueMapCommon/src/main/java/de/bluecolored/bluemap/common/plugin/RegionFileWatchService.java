@@ -33,6 +33,7 @@ import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.world.World;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
+import de.bluecolored.bluemap.core.world.mca.region.RegionType;
 
 import java.io.IOException;
 import java.nio.file.*;
@@ -109,8 +110,7 @@ public class RegionFileWatchService extends Thread {
     }
 
     private synchronized void updateRegion(String regionFileName) {
-        if (!regionFileName.endsWith(".mca")) return;
-        if (!regionFileName.startsWith("r.")) return;
+        if (RegionType.forFileName(regionFileName) == null) return;
 
         try {
             String[] filenameParts = regionFileName.split("\\.");
