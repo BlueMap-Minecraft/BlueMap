@@ -1,0 +1,25 @@
+name: Check translations
+
+on:
+  push:
+    paths:
+      - "BlueMapCommon/webapp/public/lang/**"
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install deps
+        working-directory: .github/translation-checker
+        run: npm ci
+      - name: Run Translation Checker
+        working-directory: .github/translation-checker
+        run: npm start
