@@ -38,9 +38,6 @@ import org.jetbrains.annotations.Nullable;
 
 public class Chunk_1_13 extends MCAChunk {
 
-    private static final Level EMPTY_LEVEL = new Level();
-    private static final HeightmapsData EMPTY_HEIGHTMAPS_DATA = new HeightmapsData();
-
     private static final Key STATUS_EMPTY = new Key("minecraft", "empty");
     private static final Key STATUS_FULL = new Key("minecraft", "full");
     private static final Key STATUS_FULLCHUNK = new Key("minecraft", "fullchunk");
@@ -265,7 +262,7 @@ public class Chunk_1_13 extends MCAChunk {
     @Getter
     @SuppressWarnings("FieldMayBeFinal")
     public static class Data extends MCAChunk.Data {
-        private Level level = EMPTY_LEVEL;
+        private Level level = new Level();
     }
 
     @Getter
@@ -273,7 +270,7 @@ public class Chunk_1_13 extends MCAChunk {
     public static class Level {
         private Key status = STATUS_EMPTY;
         private long inhabitedTime = 0;
-        private HeightmapsData heightmaps = EMPTY_HEIGHTMAPS_DATA;
+        private HeightmapsData heightmaps = new HeightmapsData();
         private SectionData @Nullable [] sections = null;
         private int[] biomes = EMPTY_INT_ARRAY;
     }
