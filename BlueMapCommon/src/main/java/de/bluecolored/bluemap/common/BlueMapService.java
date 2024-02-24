@@ -287,7 +287,7 @@ public class BlueMapService implements Closeable {
                             "You will either need to define that storage, or change the map-config to use a storage-config that exists.");
                 }
 
-                Logger.global.logInfo("Initializing Storage: '" + storageId + "' (Type: " + storageConfig.getStorageType() + ")");
+                Logger.global.logInfo("Initializing Storage: '" + storageId + "' (Type: '" + storageConfig.getStorageType().getKey() + "')");
 
                 storage = storageConfig.createStorage();
                 storage.initialize();

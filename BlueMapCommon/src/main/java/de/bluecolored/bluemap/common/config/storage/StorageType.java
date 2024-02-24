@@ -27,18 +27,33 @@ package de.bluecolored.bluemap.common.config.storage;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.storage.file.FileStorage;
 import de.bluecolored.bluemap.core.storage.sql.SQLStorage;
+import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluemap.core.util.Keyed;
+import de.bluecolored.bluemap.core.util.Registry;
 
-public enum StorageType {
+public class StorageType implements Keyed {
 
-    FILE (FileConfig.class, FileStorage::new),
-    SQL (SQLConfig.class, SQLStorage::create);
+    public static final StorageType FILE = new StorageType( Key.bluemap("file"), FileConfig.class, FileStorage::new );
+    public static final StorageType SQL = new StorageType( Key.bluemap("sql"), SQLConfig.class, SQLStorage::create );
 
+    public static final Registry<StorageType> REGISTRY = new Registry<>(
+            FILE,
+            SQL
+    );
+
+    private final Key key;
     private final Class<? extends StorageConfig> configType;
     private final StorageFactory<? extends StorageConfig> storageFactory;
 
-    <C extends StorageConfig> StorageType(Class<C> configType, StorageFactory<C> storageFactory) {
+    public <C extends StorageConfig> StorageType(Key key, Class<C> configType, StorageFactory<C> storageFactory) {
+        this.key = key;
         this.configType = configType;
         this.storageFactory = storageFactory;
+    }
+
+    @Override
+    public Key getKey() {
+        return key;
     }
 
     public Class<? extends StorageConfig> getConfigType() {

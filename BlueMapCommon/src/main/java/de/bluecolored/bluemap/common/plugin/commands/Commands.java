@@ -887,7 +887,7 @@ public class Commands<S> {
         source.sendMessage(Text.of(TextColor.BLUE, "Storages loaded by BlueMap:"));
         for (var entry : plugin.getBlueMap().getConfig().getStorageConfigs().entrySet()) {
             source.sendMessage(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, entry.getKey())
-                    .setHoverText(Text.of(entry.getValue().getStorageType().name()))
+                    .setHoverText(Text.of(entry.getValue().getStorageTypeKey().getFormatted()))
                     .setClickAction(Text.ClickAction.RUN_COMMAND, "/bluemap storages " + entry.getKey())
             );
         }

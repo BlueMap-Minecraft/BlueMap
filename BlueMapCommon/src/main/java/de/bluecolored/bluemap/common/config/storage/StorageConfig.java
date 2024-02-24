@@ -25,25 +25,44 @@
 package de.bluecolored.bluemap.common.config.storage;
 
 import de.bluecolored.bluemap.api.debug.DebugDump;
+import de.bluecolored.bluemap.common.config.ConfigurationException;
 import de.bluecolored.bluemap.core.storage.Storage;
+import de.bluecolored.bluemap.core.util.Key;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
+
+import java.util.Locale;
 
 @SuppressWarnings("FieldMayBeFinal")
 @DebugDump
 @ConfigSerializable
 public class StorageConfig {
 
-    private StorageType storageType = StorageType.FILE;
+    private Key storageType = StorageType.FILE.getKey();
 
-    public StorageType getStorageType() {
+    public Key getStorageTypeKey() {
         return storageType;
+    }
+
+    public StorageType getStorageType() throws ConfigurationException {
+        StorageType type = StorageType.REGISTRY.get(storageType);
+
+        if (type == null) {
+            // try legacy config format
+            Key legacyFormatKey = Key.bluemap(storageType.getValue().toLowerCase(Locale.ROOT));
+            type = StorageType.REGISTRY.get(legacyFormatKey);
+        }
+
+        if (type == null)
+            throw new ConfigurationException("No storage-type found for key: " + storageType + "!");
+
+        return type;
     }
 
     public Storage createStorage() throws Exception {
         if (this.getClass().equals(StorageConfig.class))
             throw new UnsupportedOperationException("Can not create a Storage from the StorageConfig superclass.");
 
-        return storageType.getStorageFactory(this.getClass()).provide(this);
+        return getStorageType().getStorageFactory(this.getClass()).provide(this);
     }
 
 }
