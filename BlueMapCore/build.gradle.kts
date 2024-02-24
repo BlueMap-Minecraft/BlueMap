@@ -70,6 +70,8 @@ dependencies {
     api ("org.apache.commons:commons-dbcp2:2.9.0")
     api ("io.airlift:aircompressor:0.24")
     api ("org.lz4:lz4-java:1.8.0")
+    api ("com.github.vgskye.s3-lite:core:4a9e099bf8")
+    api ("com.github.vgskye.s3-lite:http-client-url-connection:4a9e099bf8")
 
     api ("de.bluecolored.bluemap.api:BlueMapAPI")
 
