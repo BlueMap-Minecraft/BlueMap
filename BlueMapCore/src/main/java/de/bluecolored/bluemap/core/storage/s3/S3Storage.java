@@ -3,22 +3,27 @@ package de.bluecolored.bluemap.core.storage.s3;
 import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.core.storage.*;
 import de.bluecolored.bluemap.core.util.OnCloseOutputStream;
-import software.amazon.awssdk.auth.credentials.AwsSessionCredentials;
-import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
-import software.amazon.awssdk.core.exception.SdkException;
-import software.amazon.awssdk.core.sync.RequestBody;
-import software.amazon.awssdk.regions.Region;
-import software.amazon.awssdk.services.s3.S3Client;
-import software.amazon.awssdk.services.s3.model.*;
+import io.github.linktosriram.s3lite.api.client.S3Client;
+import io.github.linktosriram.s3lite.api.exception.NoSuchKeyException;
+import io.github.linktosriram.s3lite.api.exception.S3Exception;
+import io.github.linktosriram.s3lite.api.region.Region;
+import io.github.linktosriram.s3lite.api.request.DeleteObjectRequest;
+import io.github.linktosriram.s3lite.api.request.GetObjectRequest;
+import io.github.linktosriram.s3lite.api.request.ListObjectsV2Request;
+import io.github.linktosriram.s3lite.api.request.PutObjectRequest;
+import io.github.linktosriram.s3lite.api.response.CommonPrefix;
+import io.github.linktosriram.s3lite.api.response.ListObjectsV2ResponsePager;
+import io.github.linktosriram.s3lite.core.auth.AwsBasicCredentials;
+import io.github.linktosriram.s3lite.core.client.DefaultS3ClientBuilder;
+import io.github.linktosriram.s3lite.http.spi.request.RequestBody;
+import io.github.linktosriram.s3lite.http.urlconnection.URLConnectionSdkHttpClient;
 
 import java.io.*;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public class S3Storage extends Storage {
     private boolean closed = false;
@@ -26,15 +31,14 @@ public class S3Storage extends Storage {
     private final Compression hiresCompression;
     private final String bucket;
     public S3Storage(S3StorageSettings settings) {
-        AwsSessionCredentials awsCreds = AwsSessionCredentials.create(settings.getAccessKey(), settings.getSecretKey(), "");
-        var builder = S3Client
-                .builder()
-                .credentialsProvider(StaticCredentialsProvider.create(awsCreds))
-                .region(Region.of(settings.getRegion()));
-        if (settings.getEndpoint().isPresent()) {
-            builder = builder.endpointOverride(URI.create(settings.getEndpoint().get()));
-        }
-        this.client = builder.build();
+        String endpoint = settings.getEndpoint().orElse(
+                String.format("https://s3.%s.amazonaws.com", settings.getRegion())
+        );
+        this.client = new DefaultS3ClientBuilder()
+                .credentialsProvider(() -> AwsBasicCredentials.create(settings.getAccessKey(), settings.getSecretKey()))
+                .region(Region.of(settings.getRegion(), URI.create(endpoint)))
+                .httpClient(URLConnectionSdkHttpClient.create()) // Or use URLConnectionSdkHttpClient
+                .build();
         this.hiresCompression = settings.getCompression();
         this.bucket = settings.getBucket();
     }
@@ -58,14 +62,14 @@ public class S3Storage extends Storage {
             InputStream is = client.getObject(
                     GetObjectRequest
                             .builder()
-                            .bucket(bucket)
+                            .bucketName(bucket)
                             .key(path)
                             .build()
             );
             return Optional.of(new CompressedInputStream(is, compression));
         } catch (NoSuchKeyException e) {
             return Optional.empty();
-        } catch (SdkException e) {
+        } catch (S3Exception e) {
             throw new IOException(e);
         }
     }
@@ -76,9 +80,9 @@ public class S3Storage extends Storage {
         String path = getFilePath(mapId, lod, tile);
         try {
             var info = client.headObject(
-                    HeadObjectRequest
+                    GetObjectRequest
                             .builder()
-                            .bucket(bucket)
+                            .bucketName(bucket)
                             .key(path)
                             .build()
             );
@@ -96,17 +100,17 @@ public class S3Storage extends Storage {
 
                 @Override
                 public long getSize() {
-                    return info.contentLength();
+                    return info.getContentLength();
                 }
 
                 @Override
                 public long getLastModified() {
-                    return info.lastModified().getEpochSecond();
+                    return info.getLastModified().getEpochSecond();
                 }
             });
         } catch (NoSuchKeyException e) {
             return Optional.empty();
-        } catch (SdkException e) {
+        } catch (S3Exception e) {
             throw new IOException(e);
         }
     }
@@ -118,12 +122,12 @@ public class S3Storage extends Storage {
             client.deleteObject(
                     DeleteObjectRequest
                             .builder()
-                            .bucket(bucket)
+                            .bucketName(bucket)
                             .key(path)
                             .build()
             );
         } catch (NoSuchKeyException ignored) {
-        } catch (SdkException e) {
+        } catch (S3Exception e) {
             throw new IOException(e);
         }
     }
@@ -142,9 +146,10 @@ public class S3Storage extends Storage {
                 client.putObject(
                         PutObjectRequest
                                 .builder()
-                                .bucket(bucket)
+                                .bucketName(bucket)
                                 .key(path)
                                 .contentType(FileMime)
+                                .contentLength((long) byteOut.toByteArray().length)
                                 .build(),
                         RequestBody.fromBytes(byteOut.toByteArray())
                 )
@@ -158,14 +163,14 @@ public class S3Storage extends Storage {
             InputStream is = client.getObject(
                     GetObjectRequest
                             .builder()
-                            .bucket(bucket)
+                            .bucketName(bucket)
                             .key(path)
                             .build()
             );
             return Optional.of(is);
         } catch (NoSuchKeyException e) {
             return Optional.empty();
-        } catch (SdkException e) {
+        } catch (S3Exception e) {
             throw new IOException(e);
         }
     }
@@ -175,9 +180,9 @@ public class S3Storage extends Storage {
         String path = getMetaFilePath(mapId, name);
         try {
             var info = client.headObject(
-                    HeadObjectRequest
+                    GetObjectRequest
                             .builder()
-                            .bucket(bucket)
+                            .bucketName(bucket)
                             .key(path)
                             .build()
             );
@@ -190,12 +195,12 @@ public class S3Storage extends Storage {
 
                 @Override
                 public long getSize() {
-                    return info.contentLength();
+                    return info.getContentLength();
                 }
             });
         } catch (NoSuchKeyException e) {
             return Optional.empty();
-        } catch (SdkException e) {
+        } catch (S3Exception e) {
             throw new IOException(e);
         }
     }
@@ -207,12 +212,12 @@ public class S3Storage extends Storage {
             client.deleteObject(
                     DeleteObjectRequest
                             .builder()
-                            .bucket(bucket)
+                            .bucketName(bucket)
                             .key(path)
                             .build()
             );
         } catch (NoSuchKeyException ignored) {
-        } catch (SdkException e) {
+        } catch (S3Exception e) {
             throw new IOException(e);
         }
     }
@@ -221,22 +226,26 @@ public class S3Storage extends Storage {
     public void purgeMap(String mapId, Function<ProgressInfo, Boolean> onProgress) throws IOException {
         String directory = getFilePath(mapId);
         try {
-            var files = client.listObjectsV2Paginator(
+            var files = new ListObjectsV2ResponsePager(client,
                     ListObjectsV2Request
                             .builder()
-                            .bucket(bucket)
+                            .bucketName(bucket)
                             .prefix(directory + "/")
-                            .build()
             );
-            var filesList = files.contents().stream().collect(Collectors.toList());
+            var filesList = StreamSupport
+                    .stream(
+                            Spliterators.spliteratorUnknownSize(
+                                    files.getContents(), 0),
+                            false
+                    ).collect(Collectors.toList());
             for (int i = 0; i < filesList.size(); i++) {
                 var file = filesList.get(i);
                 try {
                     client.deleteObject(
                             DeleteObjectRequest
                                     .builder()
-                                    .bucket(bucket)
-                                    .key(file.key())
+                                    .bucketName(bucket)
+                                    .key(file.getKey())
                                     .build()
                     );
                 } catch (NoSuchKeyException ignored) {}
@@ -245,7 +254,7 @@ public class S3Storage extends Storage {
                         new ProgressInfo((double) (i + 1) / filesList.size())
                 )) return;
             }
-        } catch (SdkException e) {
+        } catch (S3Exception e) {
             throw new IOException(e);
         }
     }
@@ -253,16 +262,16 @@ public class S3Storage extends Storage {
     @Override
     public Collection<String> collectMapIds() throws IOException {
         try {
-            var files = client.listObjectsV2Paginator(
+            var files = new ListObjectsV2ResponsePager(client,
                     ListObjectsV2Request
                             .builder()
-                            .bucket(bucket)
+                            .bucketName(bucket)
                             .delimiter("/")
-                            .build()
             );
             List<String> ids = new ArrayList<>();
-            for (var file: files.commonPrefixes()) {
-                String id = file.prefix().split("/")[0];
+            for (Iterator<CommonPrefix> it = files.getCommonPrefixes(); it.hasNext(); ) {
+                var file = it.next();
+                String id = file.getPrefix().split("/")[0];
                 if (!ids.contains(id)) {
                     ids.add(id);
                 }
