@@ -221,7 +221,7 @@ public class Chunk_1_18 extends MCAChunk {
 
             int id = blocks.get((y & 0xF) << 8 | (z & 0xF) << 4 | x & 0xF);
             if (id >= blockPalette.length) {
-                Logger.global.noFloodWarning("palette-warning", "Got block-palette id " + id + " but palette has size of " + blockPalette.length + ". (Chunk");
+                Logger.global.noFloodWarning("palette-warning", "Got block-palette id " + id + " but palette has size of " + blockPalette.length + ".");
                 return BlockState.MISSING;
             }
 

@@ -109,7 +109,7 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
                     if (lastModified > 0)
                         response.addHeader("Last-Modified", timestampToString(lastModified));
 
-                    if (lod == 0) response.addHeader("Content-Type", "application/json");
+                    if (lod == 0) response.addHeader("Content-Type", "application/octet-stream");
                     else response.addHeader("Content-Type", "image/png");
 
                     writeToResponse(compressedIn, response, request);
