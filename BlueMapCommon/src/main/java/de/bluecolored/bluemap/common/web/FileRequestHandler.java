@@ -43,11 +43,9 @@ import java.util.concurrent.TimeUnit;
 public class FileRequestHandler implements HttpRequestHandler {
 
     private final Path webRoot;
-    private final File emptyTileFile;
 
     public FileRequestHandler(Path webRoot) {
         this.webRoot = webRoot.normalize();
-        this.emptyTileFile = webRoot.resolve("assets").resolve("emptyTile.json").toFile();
     }
 
     @Override
@@ -90,11 +88,6 @@ public class FileRequestHandler implements HttpRequestHandler {
             file = new File(filePath + "/index.html");
         }
 
-        // send empty tile-file if tile not exists
-        if (!file.exists() && file.toPath().startsWith(webRoot.resolve("maps"))){
-            file = emptyTileFile;
-        }
-
         if (!file.exists() || file.isDirectory()) {
             return new HttpResponse(HttpStatusCode.NOT_FOUND);
         }
@@ -135,7 +128,7 @@ public class FileRequestHandler implements HttpRequestHandler {
         response.addHeader("ETag", eTag);
         if (lastModified > 0) response.addHeader("Last-Modified", timestampToString(lastModified));
         response.addHeader("Cache-Control", "public");
-        response.addHeader("Cache-Control", "max-age=" + TimeUnit.HOURS.toSeconds(1));
+        response.addHeader("Cache-Control", "max-age=" + TimeUnit.DAYS.toSeconds(1));
 
         //add content type header
         String filetype = file.getName();

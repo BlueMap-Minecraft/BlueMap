@@ -39,6 +39,7 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -109,6 +110,9 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
                     if (lastModified > 0)
                         response.addHeader("Last-Modified", timestampToString(lastModified));
 
+                    response.addHeader("Cache-Control", "public");
+                    response.addHeader("Cache-Control", "max-age=" + TimeUnit.DAYS.toSeconds(1));
+
                     if (lod == 0) response.addHeader("Content-Type", "application/octet-stream");
                     else response.addHeader("Content-Type", "image/png");
 
@@ -122,6 +126,8 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
             if (optIn.isPresent()) {
                 CompressedInputStream compressedIn = new CompressedInputStream(optIn.get(), Compression.NONE);
                 HttpResponse response = new HttpResponse(HttpStatusCode.OK);
+                response.addHeader("Cache-Control", "public");
+                response.addHeader("Cache-Control", "max-age=" + TimeUnit.DAYS.toSeconds(1));
                 response.addHeader("Content-Type", ContentTypeRegistry.fromFileName(path));
                 writeToResponse(compressedIn, response, request);
                 return response;
