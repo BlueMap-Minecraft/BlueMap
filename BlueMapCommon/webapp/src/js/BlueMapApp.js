@@ -726,6 +726,7 @@ export class BlueMapApp {
         controls.ortho = parseFloat(values[8]);
 
         this.updatePageAddress();
+        this.mapViewer.updateLoadedMapArea();
 
         return true;
     }
