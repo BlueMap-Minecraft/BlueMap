@@ -193,7 +193,17 @@ public class ResourceModelBuilder {
                 (renderSettings.isCaveDetectionUsesBlockLight() ? Math.max(blockLight, sunLight) : sunLight) == 0
         ) return;
 
+        // calculate faceRotationVector
+        faceRotationVector.set(
+                faceDirVector.getX(),
+                faceDirVector.getY(),
+                faceDirVector.getZ()
+        );
+        faceRotationVector.rotateAndScale(element.getRotation().getMatrix());
+        makeRotationRelative(faceRotationVector);
+
         // face culling
+        //if (faceRotationVector.y < 0.01) return;
         if (face.getCullface() != null) {
             ExtendedBlock<?> b = getRotationRelativeBlock(face.getCullface());
             BlockProperties p = b.getProperties();
@@ -315,14 +325,6 @@ public class ResourceModelBuilder {
         tileModel.setAOs(face2, ao0, ao2, ao3);
 
         //if is top face set model-color
-        faceRotationVector.set(
-                faceDirVector.getX(),
-                faceDirVector.getY(),
-                faceDirVector.getZ()
-        );
-        faceRotationVector.rotateAndScale(element.getRotation().getMatrix());
-        makeRotationRelative(faceRotationVector);
-
         float a = faceRotationVector.y;
         if (a > 0.01 && texturePath != null) {
             Texture texture = texturePath.getResource(resourcePack::getTexture);

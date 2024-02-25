@@ -125,6 +125,20 @@ public class Color {
         return this;
     }
 
+    public Color underlay(Color color) {
+        if (color.a < 1f && !color.premultiplied) throw new IllegalArgumentException("Can only underlay premultiplied colors with alpha!");
+
+        premultiplied();
+
+        float p = 1 - a;
+        this.a = p * color.a + this.a;
+        this.r = p * color.r + this.r;
+        this.g = p * color.g + this.g;
+        this.b = p * color.b + this.b;
+
+        return this;
+    }
+
     public Color flatten() {
         if (this.a == 1f) return this;
 

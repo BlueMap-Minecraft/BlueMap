@@ -78,7 +78,7 @@ public class HiresModelRenderer {
                     minY = Math.max(min.getY(), chunk.getMinY(x, z));
                     maxY = Math.min(max.getY(), chunk.getMaxY(x, z));
 
-                    for (y = minY; y <= maxY; y++) {
+                    for (y = maxY; y >= minY; y--) {
                         block.set(x, y, z);
                         if (!block.isInsideRenderBounds()) continue;
 
@@ -87,17 +87,7 @@ public class HiresModelRenderer {
                         modelFactory.render(block, blockModel, blockColor);
 
                         //update topBlockLight
-                        if (
-                                y >= renderSettings.getRemoveCavesBelowY() ||
-                                (renderSettings.isCaveDetectionUsesBlockLight() ? block.getBlockLightLevel() : block.getSunLightLevel()) > 0
-                        ) {
-                            if (blockColor.a > 0) {
-                                topBlockLight = Math.floor(topBlockLight * (1 - blockColor.a));
-                            }
-                            topBlockLight = Math.max(topBlockLight, block.getBlockLightLevel());
-                        } else {
-                            topBlockLight = 0;
-                        }
+                        topBlockLight = Math.max(topBlockLight, block.getBlockLightLevel() * (1 - columnColor.a));
 
                         // skip empty blocks
                         if (blockModel.getSize() <= 0) continue;
@@ -107,9 +97,11 @@ public class HiresModelRenderer {
 
                         //update color and height (only if not 100% translucent)
                         if (blockColor.a > 0) {
-                            maxHeight = y;
-                            columnColor.overlay(blockColor.premultiplied());
+                            if (maxHeight < y) maxHeight = y;
+                            columnColor.underlay(blockColor.premultiplied());
                         }
+
+                        //if (blockColor.a > 0.999 && block.getProperties().isCulling()) break;
                     }
                 }
 
