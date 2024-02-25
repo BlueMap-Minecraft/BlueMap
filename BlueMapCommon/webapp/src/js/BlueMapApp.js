@@ -154,6 +154,9 @@ export class BlueMapApp {
         await this.mapViewer.switchMap(null);
         oldMaps.forEach(map => map.dispose());
 
+        // load user settings
+        await this.loadUserSettings();
+
         // load maps
         this.maps = await this.loadMaps();
         for (let map of this.maps) {
@@ -179,9 +182,6 @@ export class BlueMapApp {
         // start app update loop
         if(this.updateLoop) clearTimeout(this.updateLoop);
         this.updateLoop = setTimeout(this.update, 1000);
-
-        // load user settings
-        await this.loadUserSettings();
 
         // save user settings
         this.saveUserSettings();
@@ -303,7 +303,7 @@ export class BlueMapApp {
                 let map = new BlueMapMap(mapId, this.dataUrl + mapId + "/", this.loadBlocker, this.mapViewer.events);
                 maps.push(map);
 
-                await map.loadSettings()
+                await map.loadSettings(this.mapViewer.tileCacheHash)
                     .catch(error => {
                         alert(this.events, `Failed to load settings for map '${map.data.id}':` + error, "warning");
                     });
