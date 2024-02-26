@@ -34,6 +34,10 @@ ${ShaderChunk.logdepthbuf_pars_fragment}
 uniform sampler2D textureImage;
 uniform float sunlightStrength;
 uniform float ambientLight;
+uniform float animationFrameHeight;
+uniform float animationFrameIndex;
+uniform float animationInterpolationFrameIndex;
+uniform float animationInterpolation;
 
 varying vec3 vPosition;
 //varying vec3 vWorldPosition;
@@ -46,7 +50,12 @@ varying float vBlocklight;
 //varying float vDistance;
 
 void main() {
-	vec4 color = texture(textureImage, vUv);
+
+	vec4 color = texture(textureImage, vec2(vUv.x, animationFrameHeight * (vUv.y + animationFrameIndex)));
+	if (animationInterpolation > 0.0) {
+		color = mix(color, texture(textureImage, vec2(vUv.x, animationFrameHeight * (vUv.y + animationInterpolationFrameIndex))), animationInterpolation);
+	}
+	
 	if (color.a <= 0.01) discard;
 	
 	//apply vertex-color

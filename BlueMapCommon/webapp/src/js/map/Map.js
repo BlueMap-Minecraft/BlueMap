@@ -39,6 +39,7 @@ import {TileManager} from "./TileManager";
 import {TileLoader} from "./TileLoader";
 import {LowresTileLoader} from "./LowresTileLoader";
 import {reactive} from "vue";
+import {TextureAnimation} from "@/js/map/TextureAnimation";
 
 export class Map {
 
@@ -85,6 +86,9 @@ export class Map {
 		this.lowresMaterial = null;
 		/** @type {Texture[]} */
 		this.loadedTextures = [];
+
+		/** @type {TextureAnimation[]} */
+		this.animations = [];
 
 		/** @type {TileManager} */
 		this.hiresTileManager = null;
@@ -264,7 +268,8 @@ export class Map {
 	 *     resourcePath: string,
 	 *     color: number[],
 	 *     halfTransparent: boolean,
-	 *     texture: string
+	 *     texture: string,
+	 *     animation: any | undefined
 	 * }[]} the textures-data
 	 * @returns {ShaderMaterial[]} the hires Material (array because its a multi-material)
 	 */
@@ -293,7 +298,24 @@ export class Map {
 			texture.wrapT = ClampToEdgeWrapping;
 			texture.flipY = false;
 			texture.flatShading = true;
-			texture.image.addEventListener("load", () => texture.needsUpdate = true);
+
+			let animationUniforms = {
+				animationFrameHeight: { value: 1 },
+				animationFrameIndex: { value: 0 },
+				animationInterpolationFrameIndex: { value: 0 },
+				animationInterpolation: { value: 0 }
+			};
+
+			let animation = null;
+			if (textureSettings.animation) {
+				animation = new TextureAnimation(animationUniforms, textureSettings.animation);
+				this.animations.push(animation);
+			}
+
+			texture.image.addEventListener("load", () => {
+				texture.needsUpdate = true
+				if (animation) animation.init(texture.image.naturalWidth, texture.image.naturalHeight)
+			});
 
 			this.loadedTextures.push(texture);
 
@@ -304,7 +326,8 @@ export class Map {
 						type: 't',
 						value: texture
 					},
-					transparent: { value: transparent }
+					transparent: { value: transparent },
+					...animationUniforms
 				},
 				vertexShader: vertexShader,
 				fragmentShader: fragmentShader,
@@ -363,6 +386,8 @@ export class Map {
 
 		this.loadedTextures.forEach(texture => texture.dispose());
 		this.loadedTextures = [];
+
+		this.animations = [];
 	}
 
 	/**

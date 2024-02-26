@@ -33,7 +33,7 @@ export const VEC3_Z = new Vector3(0, 0, 1);
 /**
  * Converts a url-encoded image string to an actual image-element
  * @param string {string}
- * @returns {HTMLElement}
+ * @returns {HTMLImageElement}
  */
 export const stringToImage = string => {
     let image = document.createElementNS('http://www.w3.org/1999/xhtml', 'img');

@@ -28,6 +28,7 @@ import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.util.BufferedImageUtil;
 import de.bluecolored.bluemap.core.util.math.Color;
+import org.jetbrains.annotations.Nullable;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -42,24 +43,27 @@ public class Texture {
             new ResourcePath<>("bluemap", "missing"),
             new Color().set(0.5f, 0f, 0.5f, 1.0f, false),
             false,
-            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAPklEQVR4Xu3MsQkAMAwDQe2/tFPnBB4gpLhG8MpkZpNkZ6AKZKAKZKAKZKAKZKAKZKAKZKAKWg0XD/UPnjg4MbX+EDdeTUwAAAAASUVORK5CYII\u003d"
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAPklEQVR4Xu3MsQkAMAwDQe2/tFPnBB4gpLhG8MpkZpNkZ6AKZKAKZKAKZKAKZKAKZKAKZKAKWg0XD/UPnjg4MbX+EDdeTUwAAAAASUVORK5CYII\u003d",
+            null
     );
 
     private ResourcePath<Texture> resourcePath;
     private Color color;
     private boolean halfTransparent;
     private String texture;
+    @Nullable private AnimationMeta animation;
 
     private transient Color colorPremultiplied;
 
     @SuppressWarnings("unused")
     private Texture() {}
 
-    private Texture(ResourcePath<Texture> resourcePath, Color color, boolean halfTransparent, String texture) {
+    private Texture(ResourcePath<Texture> resourcePath, Color color, boolean halfTransparent, String texture, @Nullable AnimationMeta animation) {
         this.resourcePath = resourcePath;
         this.color = color.straight();
         this.halfTransparent = halfTransparent;
         this.texture = texture;
+        this.animation = animation;
     }
 
     private Texture(ResourcePath<Texture> resourcePath) {
@@ -67,6 +71,7 @@ public class Texture {
         this.color = MISSING.color;
         this.halfTransparent = MISSING.halfTransparent;
         this.texture = MISSING.texture;
+        this.animation = null;
     }
 
     public ResourcePath<Texture> getResourcePath() {
@@ -95,19 +100,7 @@ public class Texture {
         return texture;
     }
 
-    public void unloadImageData() {
-        texture = null;
-    }
-
-    public static Texture from(ResourcePath<Texture> resourcePath, BufferedImage image) throws IOException {
-        return from(resourcePath, image, true);
-    }
-
-    public static Texture from(ResourcePath<Texture> resourcePath, BufferedImage image, boolean animated) throws IOException {
-        //crop off animation frames
-        if (animated && image.getHeight() > image.getWidth()){
-            image = image.getSubimage(0, 0, image.getWidth(), image.getWidth());
-        }
+    public static Texture from(ResourcePath<Texture> resourcePath, BufferedImage image, @Nullable AnimationMeta animation) throws IOException {
 
         //check halfTransparency
         boolean halfTransparent = checkHalfTransparent(image);
@@ -120,7 +113,7 @@ public class Texture {
         ImageIO.write(image, "png", os);
         String base64 = "data:image/png;base64," + Base64.getEncoder().encodeToString(os.toByteArray());
 
-        return new Texture(resourcePath, color, halfTransparent, base64);
+        return new Texture(resourcePath, color, halfTransparent, base64, animation);
     }
 
     private static boolean checkHalfTransparent(BufferedImage image){

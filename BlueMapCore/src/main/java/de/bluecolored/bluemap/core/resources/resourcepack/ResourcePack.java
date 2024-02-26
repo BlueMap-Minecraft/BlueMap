@@ -39,6 +39,7 @@ import de.bluecolored.bluemap.core.resources.biome.BiomeConfig;
 import de.bluecolored.bluemap.core.resources.resourcepack.blockmodel.BlockModel;
 import de.bluecolored.bluemap.core.resources.resourcepack.blockmodel.TextureVariable;
 import de.bluecolored.bluemap.core.resources.resourcepack.blockstate.BlockState;
+import de.bluecolored.bluemap.core.resources.resourcepack.texture.AnimationMeta;
 import de.bluecolored.bluemap.core.resources.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Tristate;
 import de.bluecolored.bluemap.core.world.Biome;
@@ -50,6 +51,8 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -381,9 +384,23 @@ public class ResourcePack {
                         ResourcePath<Texture> resourcePath = new ResourcePath<>(root.relativize(file));
                         if (!usedTextures.contains(resourcePath)) return null; // don't load unused textures
 
+                        // load image
+                        BufferedImage image;
                         try (InputStream in = Files.newInputStream(file)) {
-                            return Texture.from(resourcePath, ImageIO.read(in), Files.exists(file.resolveSibling(file.getFileName() + ".mcmeta")));
+                            image = ImageIO.read(in);
                         }
+
+                        // load animation
+                        AnimationMeta animation = null;
+                        Path animationPathFile = file.resolveSibling(file.getFileName() + ".mcmeta");
+                        if (Files.exists(animationPathFile)) {
+                            try (Reader in = Files.newBufferedReader(animationPathFile, StandardCharsets.UTF_8)) {
+                                animation = ResourcesGson.INSTANCE.fromJson(in, AnimationMeta.class);
+                            }
+                        }
+
+                        return Texture.from(resourcePath, image, animation);
+
                     }, textures));
 
         } catch (RuntimeException ex) {
