@@ -15,6 +15,9 @@ tasks.register("clean") {
 
 tasks.register("build") {
     gradle.includedBuilds.forEach {
+        if (it.name == "BlueMapCore") return@forEach
+        if (it.name == "BlueMapCommon") return@forEach
+
         dependsOn(it.task(":release"))
     }
 }
@@ -39,6 +42,9 @@ tasks.register("spotlessCheck") {
 
 tasks.register("publish") {
     gradle.includedBuilds.forEach {
+        if (it.name == "BlueMapCore") return@forEach
+        if (it.name == "BlueMapCommon") return@forEach
+
         dependsOn(it.task(":publish"))
     }
 }

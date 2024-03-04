@@ -4,6 +4,10 @@ rootProject.name = "BlueMap"
 val releaseNotesFile = file("release.md")
 if (!releaseNotesFile.exists()) releaseNotesFile.createNewFile();
 
+// bluemap
+includeBuild("BlueMapCore")
+includeBuild("BlueMapCommon")
+
 // implementations
 includeBuild("implementations/cli")
 
