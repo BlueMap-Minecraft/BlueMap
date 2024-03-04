@@ -109,6 +109,14 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
     @Override
     public void onEnable() {
 
+        //save world so the level.dat is present on new worlds
+        if (!FoliaSupport.IS_FOLIA) {
+            Logger.global.logInfo("Saving all worlds once, to make sure the level.dat is present...");
+            for (World world : getServer().getWorlds()) {
+                world.save();
+            }
+        }
+
         //register events
         getServer().getPluginManager().registerEvents(this, this);
         getServer().getPluginManager().registerEvents(eventForwarder, this);

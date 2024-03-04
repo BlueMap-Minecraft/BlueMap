@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.bukkit;
 
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
+import de.bluecolored.bluemap.core.resources.datapack.DataPack;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 import org.bukkit.World;
@@ -43,8 +44,15 @@ public class BukkitWorld implements ServerWorld {
         this.delegate = new WeakReference<>(delegate);
         Path worldFolder = delegate.getWorldFolder().toPath();
 
-        var id = delegate.key();
-        this.dimension = new Key(id.namespace(), id.value());
+        this.dimension = switch (delegate.getEnvironment()) {
+            case NORMAL -> DataPack.DIMENSION_OVERWORLD;
+            case NETHER -> DataPack.DIMENSION_THE_NETHER;
+            case THE_END -> DataPack.DIMENSION_THE_END;
+            case CUSTOM -> {
+                var id = delegate.key();
+                yield new Key(id.namespace(), id.value());
+            }
+        };
 
         // fix for hybrids
         Path dimensionFolder = MCAWorld.resolveDimensionFolder(worldFolder, dimension);
@@ -58,17 +66,18 @@ public class BukkitWorld implements ServerWorld {
         this.worldFolder = worldFolder;
     }
 
-    /* Not supported by folia
     @Override
     public boolean persistWorldChanges() {
-        World world = delegate.get();
-        if (world != null) {
-            world.save();
-            return true;
+        if (!FoliaSupport.IS_FOLIA) {
+            World world = delegate.get();
+            if (world != null) {
+                world.save();
+                return true;
+            }
         }
+
         return false;
     }
-    */
 
     @Override
     public Path getWorldFolder() {
