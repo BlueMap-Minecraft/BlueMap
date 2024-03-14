@@ -28,11 +28,14 @@ import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.resources.datapack.DataPack;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
+import org.bukkit.Bukkit;
 import org.bukkit.World;
 
 import java.lang.ref.WeakReference;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 public class BukkitWorld implements ServerWorld {
 
@@ -71,7 +74,10 @@ public class BukkitWorld implements ServerWorld {
         if (!FoliaSupport.IS_FOLIA) {
             World world = delegate.get();
             if (world != null) {
-                world.save();
+                Executor mainThread = Bukkit.getScheduler().getMainThreadExecutor(BukkitPlugin.getInstance());
+                CompletableFuture
+                        .runAsync(world::save, mainThread)
+                        .join();
                 return true;
             }
         }
