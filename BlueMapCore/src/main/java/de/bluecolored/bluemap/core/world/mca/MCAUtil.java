@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.core.world.mca;
 import com.google.gson.reflect.TypeToken;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.BlockState;
+import de.bluecolored.bluemap.core.world.block.entity.BlockEntity;
 import de.bluecolored.bluemap.core.world.mca.data.BlockStateDeserializer;
 import de.bluecolored.bluemap.core.world.mca.data.KeyDeserializer;
 import de.bluecolored.bluenbt.BlueNBT;
@@ -37,6 +38,7 @@ public class MCAUtil {
     static {
         BLUENBT.register(TypeToken.get(BlockState.class), new BlockStateDeserializer());
         BLUENBT.register(TypeToken.get(Key.class), new KeyDeserializer());
+        BLUENBT.register(TypeToken.get(BlockEntity.class), new BlockEntity.BlockEntityDeserializer());
     }
 
     /**

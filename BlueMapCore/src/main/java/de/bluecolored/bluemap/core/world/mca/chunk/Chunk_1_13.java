@@ -30,11 +30,16 @@ import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.DimensionType;
 import de.bluecolored.bluemap.core.world.LightData;
+import de.bluecolored.bluemap.core.world.block.entity.BlockEntity;
 import de.bluecolored.bluemap.core.world.mca.MCAUtil;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 import de.bluecolored.bluenbt.NBTName;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Chunk_1_13 extends MCAChunk {
 
@@ -58,6 +63,7 @@ public class Chunk_1_13 extends MCAChunk {
     private final int sectionMin, sectionMax;
 
     final int[] biomes;
+    private final Map<Long, BlockEntity> blockEntities;
 
     public Chunk_1_13(MCAWorld world, Data data) {
         super(world, data);
@@ -113,6 +119,10 @@ public class Chunk_1_13 extends MCAChunk {
             this.sectionMin = 0;
             this.sectionMax = 0;
         }
+
+        this.blockEntities = level.blockEntities.stream().collect(Collectors.toMap(
+                it -> (long) it.getY() << 40 | (it.getX() & 0xF) << 4 | it.getZ() & 0xF, it -> it
+        ));
     }
 
     @Override
@@ -195,6 +205,11 @@ public class Chunk_1_13 extends MCAChunk {
         );
     }
 
+    @Override
+    public @Nullable BlockEntity getBlockEntity(int x, int y, int z) {
+        return blockEntities.get((long) y << 40 | (x & 0xF) << 4 | z & 0xF);
+    }
+
     private @Nullable Section getSection(int y) {
         y -= sectionMin;
         if (y < 0 || y >= this.sections.length) return null;
@@ -273,6 +288,7 @@ public class Chunk_1_13 extends MCAChunk {
         private HeightmapsData heightmaps = new HeightmapsData();
         private SectionData @Nullable [] sections = null;
         private int[] biomes = EMPTY_INT_ARRAY;
+        @NBTName("TileEntities") private List<BlockEntity> blockEntities = List.of();
     }
 
     @Getter
