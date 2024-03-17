@@ -4,6 +4,7 @@
 *.bat text eol=crlf
 gradlew text eol=lf
 *.sh text eol=lf
+*.conf text eol=lf
 
 *.java text
 *.java diff=java
