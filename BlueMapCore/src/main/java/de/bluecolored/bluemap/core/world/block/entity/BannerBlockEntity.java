@@ -7,7 +7,7 @@ import java.util.Map;
 public class BannerBlockEntity extends BlockEntity {
     private final List<Pattern> patterns = new ArrayList<>();
 
-    private BannerBlockEntity(Map<String, Object> data) {
+    protected BannerBlockEntity(Map<String, Object> data) {
         super(data);
 
         @SuppressWarnings("unchecked")

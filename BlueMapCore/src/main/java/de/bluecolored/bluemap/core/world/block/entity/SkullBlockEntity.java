@@ -12,7 +12,7 @@ public class SkullBlockEntity extends BlockEntity {
     private final @Nullable String extraType;
     private final @Nullable SkullOwner skullOwner;
 
-    private SkullBlockEntity(Map<String, Object> data) {
+    protected SkullBlockEntity(Map<String, Object> data) {
         super(data);
 
         this.noteBlockSound = (String) data.get("note_block_sound");

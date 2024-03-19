@@ -8,7 +8,7 @@ public class SignBlockEntity extends BlockEntity {
     private final TextData backText;
 
     @SuppressWarnings("unchecked")
-    private SignBlockEntity(Map<String, Object> data) {
+    protected SignBlockEntity(Map<String, Object> data) {
         super(data);
 
         // Versions before 1.20 used a different format

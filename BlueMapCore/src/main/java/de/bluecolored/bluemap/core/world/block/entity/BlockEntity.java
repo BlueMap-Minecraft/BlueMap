@@ -13,15 +13,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.StringJoiner;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @NBTDeserializer(BlockEntity.BlockEntityDeserializer.class)
 public class BlockEntity {
     private static final BlueNBT BLUENBT = new BlueNBT();
-    private static final Map<String, Class<? extends BlockEntity>> ID_MAPPING = Map.of(
-            "minecraft:sign", SignBlockEntity.class,
-            "minecraft:skull", SkullBlockEntity.class,
-            "minecraft:banner", BannerBlockEntity.class
+    private static final Map<String, Function<Map<String, Object>, ? extends BlockEntity>> ID_MAPPING = Map.of(
+            "minecraft:sign", SignBlockEntity::new,
+            "minecraft:skull", SkullBlockEntity::new,
+            "minecraft:banner", BannerBlockEntity::new
     );
 
     protected final String id;
@@ -91,16 +92,10 @@ public class BlockEntity {
                 return null;
             }
 
-            Class<? extends BlockEntity> dataClass = ID_MAPPING.getOrDefault(id, BlockEntity.class);
+            Function<Map<String, Object>, ? extends BlockEntity> instance = ID_MAPPING.getOrDefault(id, BlockEntity::new);
 
             try {
-                Constructor<? extends BlockEntity> constructor = dataClass.getDeclaredConstructor(Map.class);
-                if (constructor.trySetAccessible()) {
-                    return constructor.newInstance(data);
-                }
-            } catch (NoSuchMethodException e) {
-                Logger.global.logError(
-                        String.format("No constructor in %s that takes a Map!", dataClass.getCanonicalName()), e);
+                return instance.apply(data);
             } catch (Exception e) {
                 Logger.global.logError("Failed to instantiate BlockEntity instance!", e);
             }
