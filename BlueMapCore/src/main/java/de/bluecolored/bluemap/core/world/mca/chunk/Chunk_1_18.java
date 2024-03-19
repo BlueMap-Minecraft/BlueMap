@@ -117,7 +117,7 @@ public class Chunk_1_18 extends MCAChunk {
         }
 
         this.blockEntities = data.blockEntities.stream().collect(Collectors.toMap(
-            it -> (long) it.getY() << 40 | (it.getX() & 0xF) << 4 | it.getZ() & 0xF, it -> it
+            it -> (long) it.getY() << 8 | (it.getX() & 0xF) << 4 | it.getZ() & 0xF, it -> it
         ));
     }
 
@@ -195,7 +195,7 @@ public class Chunk_1_18 extends MCAChunk {
 
     @Override
     public @Nullable BlockEntity getBlockEntity(int x, int y, int z) {
-        return blockEntities.get((long) y << 40 | (x & 0xF) << 4 | z & 0xF);
+        return blockEntities.get((long) y << 8 | (x & 0xF) << 4 | z & 0xF);
     }
 
     private @Nullable Section getSection(int y) {
