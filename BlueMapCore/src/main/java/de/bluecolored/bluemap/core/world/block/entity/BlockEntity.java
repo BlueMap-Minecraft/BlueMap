@@ -19,7 +19,14 @@ import java.util.stream.Collectors;
 @NBTDeserializer(BlockEntity.BlockEntityDeserializer.class)
 public class BlockEntity {
     private static final BlueNBT BLUENBT = new BlueNBT();
-    private static final Map<String, Function<Map<String, Object>, ? extends BlockEntity>> ID_MAPPING = Map.of(
+
+    @FunctionalInterface
+    private interface BlockEntityInitializer {
+        BlockEntity create(Map<String, Object> data);
+    }
+
+    @SuppressWarnings("StaticInitializerReferencesSubClass")
+    private static final Map<String, BlockEntityInitializer> ID_MAPPING = Map.of(
             "minecraft:sign", SignBlockEntity::new,
             "minecraft:skull", SkullBlockEntity::new,
             "minecraft:banner", BannerBlockEntity::new
@@ -92,10 +99,10 @@ public class BlockEntity {
                 return null;
             }
 
-            Function<Map<String, Object>, ? extends BlockEntity> instance = ID_MAPPING.getOrDefault(id, BlockEntity::new);
+            BlockEntityInitializer instance = ID_MAPPING.getOrDefault(id, BlockEntity::new);
 
             try {
-                return instance.apply(data);
+                return instance.create(data);
             } catch (Exception e) {
                 Logger.global.logError("Failed to instantiate BlockEntity instance!", e);
             }
