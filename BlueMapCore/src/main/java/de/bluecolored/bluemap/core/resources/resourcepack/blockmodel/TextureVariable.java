@@ -140,13 +140,16 @@ public class TextureVariable {
         public TextureVariable read(JsonReader in) throws IOException {
             String value = in.nextString();
             if (value.isEmpty()) throw new IOException("Can't parse an empty String into a TextureVariable");
+
             if (value.charAt(0) == '#') {
                 return new TextureVariable(value.substring(1));
             } else {
+                if (!(value.contains(":") || value.contains("/"))) {
+                    return new TextureVariable(value);
+                }
+
                 return new TextureVariable(new ResourcePath<>(value));
             }
         }
-
     }
-
 }
