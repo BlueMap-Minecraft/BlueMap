@@ -28,6 +28,8 @@ import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.LightData;
 import de.bluecolored.bluemap.core.world.World;
+import de.bluecolored.bluemap.core.world.block.entity.BlockEntity;
+import org.jetbrains.annotations.Nullable;
 
 public class Block<T extends Block<T>> {
 
@@ -147,6 +149,10 @@ public class Block<T extends Block<T>> {
         return getLightData().getBlockLight();
     }
 
+    public @Nullable BlockEntity getBlockEntity() {
+        return getChunk().getBlockEntity(x, y, z);
+    }
+
     @Override
     public String toString() {
         if (world != null) {
@@ -174,5 +180,4 @@ public class Block<T extends Block<T>> {
     protected T self() {
         return (T) this;
     }
-
 }

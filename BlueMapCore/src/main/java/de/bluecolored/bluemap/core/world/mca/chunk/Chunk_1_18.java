@@ -30,12 +30,17 @@ import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.DimensionType;
 import de.bluecolored.bluemap.core.world.LightData;
+import de.bluecolored.bluemap.core.world.block.entity.BlockEntity;
 import de.bluecolored.bluemap.core.world.mca.MCAUtil;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 import de.bluecolored.bluemap.core.world.mca.PackedIntArrayAccess;
 import de.bluecolored.bluenbt.NBTName;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class Chunk_1_18 extends MCAChunk {
 
@@ -56,6 +61,8 @@ public class Chunk_1_18 extends MCAChunk {
 
     private final Section[] sections;
     private final int sectionMin, sectionMax;
+
+    private final Map<Long, BlockEntity> blockEntities;
 
     public Chunk_1_18(MCAWorld world, Data data) {
         super(world, data);
@@ -108,6 +115,10 @@ public class Chunk_1_18 extends MCAChunk {
             this.sectionMin = 0;
             this.sectionMax = 0;
         }
+
+        this.blockEntities = data.blockEntities.stream().collect(Collectors.toMap(
+            it -> (long) it.getY() << 8 | (it.getX() & 0xF) << 4 | it.getZ() & 0xF, it -> it
+        ));
     }
 
     @Override
@@ -180,6 +191,11 @@ public class Chunk_1_18 extends MCAChunk {
     @Override
     public int getOceanFloorY(int x, int z) {
         return oceanFloorHeights.get((z & 0xF) << 4 | x & 0xF) + worldMinY;
+    }
+
+    @Override
+    public @Nullable BlockEntity getBlockEntity(int x, int y, int z) {
+        return blockEntities.get((long) y << 8 | (x & 0xF) << 4 | z & 0xF);
     }
 
     private @Nullable Section getSection(int y) {
@@ -263,6 +279,7 @@ public class Chunk_1_18 extends MCAChunk {
         private long inhabitedTime = 0;
         private HeightmapsData heightmaps = new HeightmapsData();
         private SectionData @Nullable [] sections = null;
+        @NBTName("block_entities") private List<BlockEntity> blockEntities = List.of();
     }
 
     @Getter

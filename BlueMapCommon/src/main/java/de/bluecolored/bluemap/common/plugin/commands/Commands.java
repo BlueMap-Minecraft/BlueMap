@@ -56,6 +56,7 @@ import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.World;
 import de.bluecolored.bluemap.core.world.block.Block;
+import de.bluecolored.bluemap.core.world.block.entity.BlockEntity;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -527,6 +528,11 @@ public class Commands<S> {
         lines.put("position", block.getX() + " | " + block.getY() + " | " + block.getZ());
         lines.put("block-light", block.getBlockLightLevel());
         lines.put("sun-light", block.getSunLightLevel());
+
+        BlockEntity blockEntity = block.getBlockEntity();
+        if (blockEntity != null) {
+            lines.put("block-entity", blockEntity);
+        }
 
         Object[] textElements = lines.entrySet().stream()
                 .flatMap(e -> Stream.of(TextColor.GRAY, e.getKey(), ": ", TextColor.WHITE, e.getValue(), "\n"))
