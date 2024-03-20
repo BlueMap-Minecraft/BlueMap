@@ -82,9 +82,13 @@ export default {
     openMore(markerSet) {
       this.menu.openPage(
           this.menu.currentPage().id,
-          this.menu.currentPage().title + " > " + markerSet.label,
+          this.menu.currentPage().title + " > " + this.labelOf(markerSet),
           {markerSet: markerSet}
       )
+    },
+    labelOf(markerSet) {
+      if (markerSet.id === "bm-players") return this.$t("players.title");
+      return markerSet.label;
     }
   }
 }
