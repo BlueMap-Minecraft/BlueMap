@@ -44,8 +44,10 @@ export class TextureAnimation {
         this.frameImages = height / width;
         this.uniforms.animationFrameHeight.value = 1 / this.frameImages;
         this.frames = this.frameImages;
-        if (this.data.frames) {
+        if (this.data.frames && this.data.frames.length > 0) {
             this.frames = this.data.frames.length;
+        } else {
+            this.data.frames = null;
         }
     }
 

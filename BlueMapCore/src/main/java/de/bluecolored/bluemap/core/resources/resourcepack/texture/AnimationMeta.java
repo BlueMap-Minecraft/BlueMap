@@ -101,7 +101,7 @@ public class AnimationMeta {
         }
 
         private void readFramesList(JsonReader in, AnimationMeta animationMeta) throws IOException {
-            animationMeta.frames = new ArrayList<>();
+            List<FrameMeta> frames = new ArrayList<>();
 
             in.beginArray();
             while (in.hasNext()) {
@@ -122,9 +122,12 @@ public class AnimationMeta {
                     in.endObject();
                 }
 
-                animationMeta.frames.add(new FrameMeta(index, time));
+                frames.add(new FrameMeta(index, time));
             }
             in.endArray();
+
+            if (!frames.isEmpty())
+                animationMeta.frames = frames;
         }
 
         @Override
