@@ -78,6 +78,21 @@ public class BlueMapWorldImpl implements BlueMapWorld {
                 .collect(Collectors.toUnmodifiableSet());
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        BlueMapWorldImpl that = (BlueMapWorldImpl) o;
+
+        return id.equals(that.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return id.hashCode();
+    }
+
     private <T> T unpack(WeakReference<T> ref) {
         return Objects.requireNonNull(ref.get(), "Reference lost to delegate object. Most likely BlueMap got reloaded and this instance is no longer valid.");
     }

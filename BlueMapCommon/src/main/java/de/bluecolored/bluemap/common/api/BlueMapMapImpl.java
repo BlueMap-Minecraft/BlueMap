@@ -45,17 +45,20 @@ public class BlueMapMapImpl implements BlueMapMap {
     private final WeakReference<Plugin> plugin;
     private final WeakReference<BmMap> map;
     private final BlueMapWorldImpl world;
+    private final String mapId;
 
     public BlueMapMapImpl(Plugin plugin, BmMap map) throws IOException {
         this.plugin = new WeakReference<>(plugin);
         this.map = new WeakReference<>(map);
         this.world = new BlueMapWorldImpl(plugin, map.getWorld());
+        this.mapId = map.getId();
     }
 
     public BlueMapMapImpl(Plugin plugin, BmMap map, BlueMapWorldImpl world) {
         this.plugin = new WeakReference<>(plugin);
         this.map = new WeakReference<>(map);
         this.world = world;
+        this.mapId = map.getId();
     }
 
     public BmMap getBmMap() {
@@ -64,7 +67,7 @@ public class BlueMapMapImpl implements BlueMapMap {
 
     @Override
     public String getId() {
-        return unpack(map).getId();
+        return mapId;
     }
 
     @Override
@@ -145,6 +148,21 @@ public class BlueMapMapImpl implements BlueMapMap {
     @Override
     public boolean isFrozen() {
         return !unpack(plugin).getPluginState().getMapState(unpack(map)).isUpdateEnabled();
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        BlueMapMapImpl that = (BlueMapMapImpl) o;
+
+        return mapId.equals(that.mapId);
+    }
+
+    @Override
+    public int hashCode() {
+        return mapId.hashCode();
     }
 
     private <T> T unpack(WeakReference<T> ref) {
