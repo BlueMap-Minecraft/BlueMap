@@ -12,7 +12,7 @@ plugins {
 group = "de.bluecolored.bluemap.common"
 version = "0.0.0"
 
-val javaTarget = 11
+val javaTarget = 16
 java {
     sourceCompatibility = JavaVersion.toVersion(javaTarget)
     targetCompatibility = JavaVersion.toVersion(javaTarget)

@@ -10,7 +10,7 @@ plugins {
 group = "de.bluecolored.bluemap.bukkit"
 version = System.getProperty("bluemap.version") ?: "?" // set by BlueMapCore
 
-val javaTarget = 11
+val javaTarget = 16
 java {
 	sourceCompatibility = JavaVersion.toVersion(javaTarget)
 	targetCompatibility = JavaVersion.toVersion(javaTarget)
@@ -42,7 +42,7 @@ dependencies {
 		exclude( group = "com.google.code.gson", module = "gson" )
 	}
 
-	shadow ("org.spigotmc:spigot-api:1.13-R0.1-SNAPSHOT")
+	shadow ("org.spigotmc:spigot-api:1.16.5-R0.1-SNAPSHOT")
 	implementation ("org.bstats:bstats-bukkit:2.2.1")
 
 	testImplementation ("org.junit.jupiter:junit-jupiter:5.8.2")
@@ -128,10 +128,7 @@ modrinth {
 	uploadFile.set(tasks.findByName("shadowJar"))
 	loaders.addAll("spigot", "paper", "purpur")
 	gameVersions.addAll(
-		"1.13.2",
-		"1.14", "1.14.1", "1.14.2", "1.14.3", "1.14.4",
-		"1.15", "1.15.1", "1.15.2",
-		"1.16", "1.16.1", "1.16.2", "1.16.3", "1.16.4", "1.16.5",
+		"1.16.5",
 		"1.17", "1.17.1",
 		"1.18", "1.18.1", "1.18.2",
 		"1.19", "1.19.1", "1.19.2", "1.19.3", "1.19.4",
