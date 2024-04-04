@@ -38,12 +38,13 @@ val lastVersion = if (lastTag.isEmpty()) "dev" else lastTag.substring(1) // remo
 val commits = "git rev-list --count $lastTag..HEAD".runCommand()
 println("Git hash: $gitHash" + if (clean) "" else " (dirty)")
 
-group = "de.bluecolored.bluemap.core"
+group = "de.bluecolored.bluemap"
 version = lastVersion +
         (if (commits == "0") "" else "-$commits") +
         (if (clean) "" else "-dirty")
 
 System.setProperty("bluemap.version", version.toString())
+System.setProperty("bluemap.lastVersion", lastVersion)
 println("Version: $version")
 
 val javaTarget = 16
@@ -54,9 +55,7 @@ java {
 
 repositories {
     mavenCentral()
-    maven {
-        setUrl("https://jitpack.io")
-    }
+    maven ("https://repo.bluecolored.de/releases")
 }
 
 @Suppress("GradlePackageUpdate")
@@ -66,12 +65,12 @@ dependencies {
     api ("commons-io:commons-io:2.5")
     api ("org.spongepowered:configurate-hocon:4.1.2")
     api ("org.spongepowered:configurate-gson:4.1.2")
-    api ("com.github.BlueMap-Minecraft:BlueNBT:v1.3.0")
+    api ("de.bluecolored.bluenbt:BlueNBT:2.2.1")
     api ("org.apache.commons:commons-dbcp2:2.9.0")
     api ("io.airlift:aircompressor:0.24")
     api ("org.lz4:lz4-java:1.8.0")
 
-    api ("de.bluecolored.bluemap.api:BlueMapAPI")
+    api ("de.bluecolored.bluemap:BlueMapAPI")
 
     compileOnly ("org.jetbrains:annotations:23.0.0")
     compileOnly ("org.projectlombok:lombok:1.18.30")
@@ -152,6 +151,20 @@ tasks.processResources {
 }
 
 publishing {
+    repositories {
+        maven {
+            name = "bluecolored"
+
+            val releasesRepoUrl = "https://repo.bluecolored.de/releases"
+            val snapshotsRepoUrl = "https://repo.bluecolored.de/snapshots"
+            url = uri(if (version == lastVersion) releasesRepoUrl else snapshotsRepoUrl)
+
+            credentials {
+                username = project.findProperty("bluecoloredUsername") as String? ?: System.getenv("BLUECOLORED_USERNAME")
+                password = project.findProperty("bluecoloredPassword") as String? ?: System.getenv("BLUECOLORED_PASSWORD")
+            }
+        }
+    }
     publications {
         create<MavenPublication>("maven") {
             groupId = project.group.toString()
@@ -159,6 +172,12 @@ publishing {
             version = project.version.toString()
 
             from(components["java"])
+
+            versionMapping {
+                usage("java-api") {
+                    fromResolutionOf("runtimeClasspath")
+                }
+            }
         }
     }
 }

@@ -7,7 +7,7 @@ plugins {
 	id ("com.modrinth.minotaur") version "2.+"
 }
 
-group = "de.bluecolored.bluemap.bukkit"
+group = "de.bluecolored.bluemap"
 version = System.getProperty("bluemap.version") ?: "?" // set by BlueMapCore
 
 val javaTarget = 16
@@ -18,25 +18,18 @@ java {
 
 repositories {
 	mavenCentral()
-	maven {
-		setUrl("https://libraries.minecraft.net")
-	}
-	maven {
-		setUrl("https://jitpack.io")
-	}
-	maven {
-		setUrl("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
+	maven ("https://libraries.minecraft.net")
+	maven ("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") {
 		content {
 			includeGroup ("org.spigotmc")
 		}
 	}
-	maven {
-		setUrl("https://oss.sonatype.org/content/repositories/snapshots")
-	}
+	maven ("https://oss.sonatype.org/content/repositories/snapshots")
+	maven ("https://repo.bluecolored.de/releases")
 }
 
 dependencies {
-	api ("de.bluecolored.bluemap.common:BlueMapCommon") {
+	api ("de.bluecolored.bluemap:BlueMapCommon") {
 		//exclude dependencies provided by bukkit
 		exclude( group = "com.google.guava", module = "guava" )
 		exclude( group = "com.google.code.gson", module = "gson" )

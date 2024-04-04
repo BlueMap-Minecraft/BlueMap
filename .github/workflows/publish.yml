@@ -1,10 +1,13 @@
-name: Publish
+name: Build
 
 on:
   workflow_dispatch:
+  push:
+    tags:
+      - "**"
 
 jobs:
-  publish:
+  build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -16,12 +19,11 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: |
-            11
             16
             17
           cache: 'gradle'
       - name: Build with Gradle
+        run: ./gradlew clean :BlueMapCore:publish :BlueMapCommon:publish
         env:
-          MODRINTH_TOKEN: ${{ secrets.MODRINTH_TOKEN }}
-          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
-        run: ./gradlew publish
+          BLUECOLORED_USERNAME: ${{ secrets.BLUECOLORED_USERNAME }}
+          BLUECOLORED_PASSWORD: ${{ secrets.BLUECOLORED_PASSWORD }}

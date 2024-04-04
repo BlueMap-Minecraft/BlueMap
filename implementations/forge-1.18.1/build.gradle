@@ -21,7 +21,7 @@ plugins {
 
 apply plugin: "net.minecraftforge.gradle"
 
-group = "de.bluecolored.bluemap.forge"
+group = "de.bluecolored.bluemap"
 version = System.getProperty("bluemap.version") ?: "?" // set by BlueMapCore
 archivesBaseName = 'bluemap'
 
@@ -53,12 +53,8 @@ sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 repositories {
 	mavenCentral()
-	maven {
-		setUrl("https://libraries.minecraft.net")
-	}
-	maven {
-		setUrl("https://jitpack.io")
-	}
+	maven { url = "https://libraries.minecraft.net" }
+	maven { url = "https://repo.bluecolored.de/releases" }
 }
 
 configurations {
@@ -68,7 +64,7 @@ configurations {
 dependencies {
 	minecraft 'net.minecraftforge:forge:1.18.1-39.0.19'
 
-	shadowInclude ("de.bluecolored.bluemap.common:BlueMapCommon") {
+	shadowInclude ("de.bluecolored.bluemap:BlueMapCommon") {
 		//exclude dependencies provided by forge
 		exclude (group: "com.google.guava", module: "guava")
 		exclude (group: "com.google.code.gson", module: "gson")

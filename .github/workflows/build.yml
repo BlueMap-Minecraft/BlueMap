@@ -24,7 +24,6 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: |
-            11
             16
             17
           cache: 'gradle'

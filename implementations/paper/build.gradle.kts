@@ -8,7 +8,7 @@ plugins {
 	id ("io.papermc.hangar-publish-plugin") version "0.1.0"
 }
 
-group = "de.bluecolored.bluemap.bukkit"
+group = "de.bluecolored.bluemap"
 version = System.getProperty("bluemap.version") ?: "?" // set by BlueMapCore
 
 val javaTarget = 17
@@ -19,22 +19,14 @@ java {
 
 repositories {
 	mavenCentral()
-	maven {
-		setUrl("https://libraries.minecraft.net")
-	}
-	maven {
-		setUrl("https://jitpack.io")
-	}
-	maven {
-		setUrl("https://repo.papermc.io/repository/maven-public/")
-	}
-	maven {
-		setUrl("https://oss.sonatype.org/content/repositories/snapshots")
-	}
+	maven ("https://libraries.minecraft.net")
+	maven ("https://repo.papermc.io/repository/maven-public/")
+	maven ("https://oss.sonatype.org/content/repositories/snapshots")
+	maven ("https://repo.bluecolored.de/releases")
 }
 
 dependencies {
-	api ("de.bluecolored.bluemap.common:BlueMapCommon") {
+	api ("de.bluecolored.bluemap:BlueMapCommon") {
 		//exclude dependencies provided by bukkit
 		exclude( group = "com.google.guava", module = "guava" )
 		exclude( group = "com.google.code.gson", module = "gson" )

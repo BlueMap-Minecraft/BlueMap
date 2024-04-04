@@ -6,7 +6,7 @@ plugins {
 	id ("com.github.johnrengelman.shadow") version "7.1.2"
 }
 
-group = "de.bluecolored.bluemap.cli"
+group = "de.bluecolored.bluemap"
 version = System.getProperty("bluemap.version") ?: "?" // set by BlueMapCore
 
 val javaTarget = 16
@@ -17,16 +17,12 @@ java {
 
 repositories {
 	mavenCentral()
-	maven {
-		setUrl("https://libraries.minecraft.net")
-	}
-	maven {
-		setUrl("https://jitpack.io")
-	}
+	maven ("https://libraries.minecraft.net")
+	maven ("https://repo.bluecolored.de/releases")
 }
 
 dependencies {
-	api ("de.bluecolored.bluemap.common:BlueMapCommon")
+	api ("de.bluecolored.bluemap:BlueMapCommon")
 
 	@Suppress("GradlePackageUpdate")
 	implementation ("commons-cli:commons-cli:1.5.0")

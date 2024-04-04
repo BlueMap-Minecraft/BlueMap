@@ -11,7 +11,7 @@ plugins {
 	id("org.spongepowered.gradle.ore") version "2.2.0"
 }
 
-group = "de.bluecolored.bluemap.bukkit"
+group = "de.bluecolored.bluemap"
 version = System.getProperty("bluemap.version") ?: "?" // set by BlueMapCore
 
 val javaTarget = 16
@@ -22,16 +22,12 @@ java {
 
 repositories {
 	mavenCentral()
-	maven {
-		setUrl("https://libraries.minecraft.net")
-	}
-	maven {
-		setUrl("https://jitpack.io")
-	}
+	maven ("https://libraries.minecraft.net")
+	maven ("https://repo.bluecolored.de/releases")
 }
 
 dependencies {
-	api ("de.bluecolored.bluemap.common:BlueMapCommon"){
+	api ("de.bluecolored.bluemap:BlueMapCommon"){
 		//exclude dependencies provided by sponge
 		exclude( group = "com.google.guava", module = "guava" )
 		exclude( group = "com.google.code.gson", module = "gson" )
