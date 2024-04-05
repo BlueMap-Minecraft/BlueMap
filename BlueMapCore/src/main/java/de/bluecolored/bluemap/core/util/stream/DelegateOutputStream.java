@@ -29,7 +29,12 @@ import org.jetbrains.annotations.NotNull;
 import java.io.IOException;
 import java.io.OutputStream;
 
-public class DelegateOutputStream extends OutputStream {
+/**
+ * An {@link OutputStream} implementation delegating all methods to another OutputStream.
+ * Can be used as a base-class for other OutputStream implementations that wrap around an existing stream and only want
+ * to modify certain methods.
+ */
+public abstract class DelegateOutputStream extends OutputStream {
 
     protected final OutputStream out;
 

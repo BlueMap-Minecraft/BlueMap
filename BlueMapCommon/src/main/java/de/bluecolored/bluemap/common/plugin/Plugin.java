@@ -35,8 +35,8 @@ import de.bluecolored.bluemap.common.live.LivePlayersDataSupplier;
 import de.bluecolored.bluemap.common.plugin.skins.PlayerSkinUpdater;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
-import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.Server;
+import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.common.web.*;
 import de.bluecolored.bluemap.common.web.http.HttpServer;
@@ -201,7 +201,7 @@ public class Plugin implements ServerEventListener {
                             mapRequestHandler = new MapRequestHandler(map, serverInterface, pluginConfig, Predicate.not(pluginState::isPlayerHidden));
                         } else {
                             Storage storage = blueMap.getOrLoadStorage(mapConfig.getStorage());
-                            mapRequestHandler = new MapRequestHandler(id, storage);
+                            mapRequestHandler = new MapRequestHandler(storage.map(id));
                         }
 
                         routingRequestHandler.register(
@@ -240,9 +240,11 @@ public class Plugin implements ServerEventListener {
                         throw new ConfigurationException("BlueMap failed to bind to the configured address.\n" +
                                 "This usually happens when the configured port (" + webserverConfig.getPort() + ") is already in use by some other program.", ex);
                     } catch (IOException ex) {
-                        throw new ConfigurationException("BlueMap failed to initialize the webserver.\n" +
-                                "Check your webserver-config if everything is configured correctly.\n" +
-                                "(Make sure you DON'T use the same port for bluemap that you also use for your minecraft server)", ex);
+                        throw new ConfigurationException("""
+                                BlueMap failed to initialize the webserver.
+                                Check your webserver-config if everything is configured correctly.
+                                (Make sure you DON'T use the same port for bluemap that you also use for your minecraft server)
+                                """.strip(), ex);
                     }
                 }
 
@@ -342,8 +344,8 @@ public class Plugin implements ServerEventListener {
                 TimerTask metricsTask = new TimerTask() {
                     @Override
                     public void run() {
-                        if (Plugin.this.serverInterface.isMetricsEnabled().getOr(coreConfig::isMetrics))
-                            Metrics.sendReport(Plugin.this.implementationType);
+                        if (serverInterface.isMetricsEnabled().getOr(coreConfig::isMetrics))
+                            Metrics.sendReport(implementationType, configManager.getMinecraftVersion().getVersionString());
                     }
                 };
                 daemonTimer.scheduleAtFixedRate(metricsTask, TimeUnit.MINUTES.toMillis(1), TimeUnit.MINUTES.toMillis(30));
@@ -539,7 +541,7 @@ public class Plugin implements ServerEventListener {
                     Predicate.not(pluginState::isPlayerHidden)
             );
             try (
-                    OutputStream out = map.getStorage().writeMeta(map.getId(), BmMap.META_FILE_PLAYERS);
+                    OutputStream out = map.getStorage().players().write();
                     Writer writer = new OutputStreamWriter(out)
             ) {
                 writer.write(dataSupplier.get());

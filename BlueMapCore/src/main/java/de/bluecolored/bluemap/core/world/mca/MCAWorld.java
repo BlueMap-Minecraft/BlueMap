@@ -32,6 +32,7 @@ import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.datapack.DataPack;
+import de.bluecolored.bluemap.core.storage.compression.Compression;
 import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.Vector2iCache;
@@ -45,7 +46,6 @@ import de.bluecolored.bluemap.core.world.mca.region.RegionType;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,7 +54,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import java.util.zip.GZIPInputStream;
 
 @Getter
 @ToString
@@ -260,7 +259,7 @@ public class MCAWorld implements World {
     public static MCAWorld load(Path worldFolder, Key dimension) throws IOException, InterruptedException {
         // load level.dat
         Path levelFile = worldFolder.resolve("level.dat");
-        InputStream levelFileIn = new GZIPInputStream(new BufferedInputStream(Files.newInputStream(levelFile)));
+        InputStream levelFileIn = Compression.GZIP.decompress(Files.newInputStream(levelFile));
         LevelData levelData = MCAUtil.BLUENBT.read(levelFileIn, LevelData.class);
 
         // load datapacks

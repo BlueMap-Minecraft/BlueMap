@@ -25,12 +25,11 @@
 package de.bluecolored.bluemap.core.world.mca.region;
 
 import com.flowpowered.math.vector.Vector2i;
-import de.bluecolored.bluemap.core.storage.Compression;
+import de.bluecolored.bluemap.core.storage.compression.Compression;
 import de.bluecolored.bluemap.core.world.ChunkConsumer;
 import de.bluecolored.bluemap.core.world.Region;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 import de.bluecolored.bluemap.core.world.mca.chunk.MCAChunk;
-import io.airlift.compress.zstd.ZstdInputStream;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -147,9 +146,8 @@ public class LinearRegion implements Region {
         byte[] chunkDataBuffer = null;
 
         try (
-                InputStream in = new ZstdInputStream(new ByteArrayInputStream(compressedData));
-                BufferedInputStream bIn = new BufferedInputStream(in);
-                DataInputStream dIn = new DataInputStream(bIn)
+                InputStream in = Compression.ZSTD.decompress(new ByteArrayInputStream(compressedData));
+                DataInputStream dIn = new DataInputStream(in)
         ) {
             int[] chunkDataLengths = new int[1024];
             int[] chunkTimestamps = new int[1024];

@@ -22,24 +22,42 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.storage.sql;
+package de.bluecolored.bluemap.core.storage.compression;
 
-public class SQLDriverException extends Exception {
+import de.bluecolored.bluemap.core.util.stream.DelegateInputStream;
 
-    public SQLDriverException() {
-        super();
+import java.io.IOException;
+import java.io.InputStream;
+
+/**
+ * An InputStream that is aware of the {@link Compression} that it's data is compressed with.
+ */
+public class CompressedInputStream extends DelegateInputStream {
+
+    private final Compression compression;
+
+    /**
+     * Creates a new CompressedInputStream from an <b>already compressed</b> {@link InputStream} and the {@link Compression}
+     * it is compressed with.
+     * This does <b>not</b> compress the provided InputStream.
+     */
+    public CompressedInputStream(InputStream in, Compression compression) {
+        super(in);
+        this.compression = compression;
     }
 
-    public SQLDriverException(String message) {
-        super(message);
+    /**
+     * Returns the decompressed {@link InputStream}
+     */
+    public InputStream decompress() throws IOException {
+        return compression.decompress(in);
     }
 
-    public SQLDriverException(Throwable cause) {
-        super(cause);
-    }
-
-    public SQLDriverException(String message, Throwable cause) {
-        super(message, cause);
+    /**
+     * Returns the {@link Compression} this InputStream's data is compressed with
+     */
+    public Compression getCompression() {
+        return compression;
     }
 
 }

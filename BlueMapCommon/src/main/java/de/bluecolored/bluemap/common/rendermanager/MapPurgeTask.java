@@ -57,8 +57,8 @@ public class MapPurgeTask implements RenderTask {
 
         try {
             // purge the map
-            map.getStorage().purgeMap(map.getId(), progressInfo -> {
-                this.progress = progressInfo.getProgress();
+            map.getStorage().delete(progress -> {
+                this.progress = progress;
                 return !this.cancelled;
             });
 

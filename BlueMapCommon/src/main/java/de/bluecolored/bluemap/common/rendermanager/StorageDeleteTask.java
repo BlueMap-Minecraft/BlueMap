@@ -25,20 +25,20 @@
 package de.bluecolored.bluemap.common.rendermanager;
 
 import de.bluecolored.bluemap.api.debug.DebugDump;
-import de.bluecolored.bluemap.core.storage.Storage;
+import de.bluecolored.bluemap.core.storage.MapStorage;
 
 import java.util.Objects;
 
 public class StorageDeleteTask implements RenderTask {
 
-    private final Storage storage;
+    private final MapStorage storage;
     private final String mapId;
 
     private volatile double progress;
     private volatile boolean hasMoreWork;
     private volatile boolean cancelled;
 
-    public StorageDeleteTask(Storage storage, String mapId) {
+    public StorageDeleteTask(MapStorage storage, String mapId) {
         this.storage = Objects.requireNonNull(storage);
         this.mapId = Objects.requireNonNull(mapId);
         this.progress = 0d;
@@ -55,8 +55,8 @@ public class StorageDeleteTask implements RenderTask {
         if (this.cancelled) return;
 
         // purge the map
-        storage.purgeMap(mapId, progressInfo -> {
-            this.progress = progressInfo.getProgress();
+        storage.delete(progress -> {
+            this.progress = progress;
             return !this.cancelled;
         });
     }

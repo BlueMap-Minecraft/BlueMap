@@ -25,7 +25,7 @@
 package de.bluecolored.bluemap.core.world.mca.region;
 
 import com.flowpowered.math.vector.Vector2i;
-import de.bluecolored.bluemap.core.storage.Compression;
+import de.bluecolored.bluemap.core.storage.compression.Compression;
 import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.ChunkConsumer;
 import de.bluecolored.bluemap.core.world.Region;

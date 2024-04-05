@@ -81,6 +81,7 @@ public class WebAppImpl implements WebApp {
 
     @Override
     @Deprecated(forRemoval = true)
+    @SuppressWarnings("removal")
     public String createImage(BufferedImage image, String path) throws IOException {
         path = path.replaceAll("[^a-zA-Z0-9_.\\-/]", "_");
 
@@ -102,6 +103,7 @@ public class WebAppImpl implements WebApp {
 
     @Override
     @Deprecated(forRemoval = true)
+    @SuppressWarnings("removal")
     public Map<String, String> availableImages() throws IOException {
         Path webRoot = getWebRoot().toAbsolutePath();
         String separator = webRoot.getFileSystem().getSeparator();

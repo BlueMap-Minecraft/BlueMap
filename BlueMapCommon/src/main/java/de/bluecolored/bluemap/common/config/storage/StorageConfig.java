@@ -28,6 +28,8 @@ import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.common.config.ConfigurationException;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluemap.core.util.Keyed;
+import de.bluecolored.bluemap.core.util.Registry;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import java.util.Locale;
@@ -35,34 +37,39 @@ import java.util.Locale;
 @SuppressWarnings("FieldMayBeFinal")
 @DebugDump
 @ConfigSerializable
-public class StorageConfig {
+public abstract class StorageConfig {
 
-    private Key storageType = StorageType.FILE.getKey();
-
-    public Key getStorageTypeKey() {
-        return storageType;
-    }
+    private String storageType = StorageType.FILE.getKey().getFormatted();
 
     public StorageType getStorageType() throws ConfigurationException {
-        StorageType type = StorageType.REGISTRY.get(storageType);
+        return parseKey(StorageType.REGISTRY, storageType, "storage-type");
+    }
+
+    public abstract Storage createStorage() throws ConfigurationException;
+
+    static <T extends Keyed> T parseKey(Registry<T> registry, String key, String typeName) throws ConfigurationException {
+        T type = registry.get(Key.parse(key, Key.BLUEMAP_NAMESPACE));
 
         if (type == null) {
             // try legacy config format
-            Key legacyFormatKey = Key.bluemap(storageType.getValue().toLowerCase(Locale.ROOT));
-            type = StorageType.REGISTRY.get(legacyFormatKey);
+            Key legacyFormatKey = Key.bluemap(key.toLowerCase(Locale.ROOT));
+            type = registry.get(legacyFormatKey);
         }
 
         if (type == null)
-            throw new ConfigurationException("No storage-type found for key: " + storageType + "!");
+            throw new ConfigurationException("No " + typeName + " found for key: " + key + "!");
 
         return type;
     }
 
-    public Storage createStorage() throws Exception {
-        if (this.getClass().equals(StorageConfig.class))
-            throw new UnsupportedOperationException("Can not create a Storage from the StorageConfig superclass.");
+    @ConfigSerializable
+    public static class Base extends StorageConfig {
 
-        return getStorageType().getStorageFactory(this.getClass()).provide(this);
+        @Override
+        public Storage createStorage() {
+            throw new UnsupportedOperationException();
+        }
+
     }
 
 }

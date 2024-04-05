@@ -244,7 +244,7 @@ public class BlueMapService implements Closeable {
                     id,
                     name,
                     world,
-                    storage,
+                    storage.map(id),
                     getOrLoadResourcePack(),
                     mapConfig
             );

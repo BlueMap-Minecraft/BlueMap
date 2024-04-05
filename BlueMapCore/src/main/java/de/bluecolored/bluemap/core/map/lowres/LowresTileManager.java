@@ -25,9 +25,9 @@
 package de.bluecolored.bluemap.core.map.lowres;
 
 import de.bluecolored.bluemap.core.map.TileMetaConsumer;
-import de.bluecolored.bluemap.core.storage.Storage;
-import de.bluecolored.bluemap.core.util.math.Color;
+import de.bluecolored.bluemap.core.storage.MapStorage;
 import de.bluecolored.bluemap.core.util.Grid;
+import de.bluecolored.bluemap.core.util.math.Color;
 
 public class LowresTileManager implements TileMetaConsumer {
 
@@ -36,14 +36,14 @@ public class LowresTileManager implements TileMetaConsumer {
 
     private final LowresLayer[] layers;
 
-    public LowresTileManager(Storage.MapStorage mapStorage, Grid tileGrid, int lodCount, int lodFactor) {
+    public LowresTileManager(MapStorage storage, Grid tileGrid, int lodCount, int lodFactor) {
         this.tileGrid = tileGrid;
         this.lodFactor = lodFactor;
         this.lodCount = lodCount;
 
         this.layers = new LowresLayer[lodCount];
         for (int i = lodCount - 1; i >= 0; i--) {
-            this.layers[i] = new LowresLayer(mapStorage, tileGrid, lodCount, lodFactor, i + 1,
+            this.layers[i] = new LowresLayer(storage.lowresTiles(i + 1), tileGrid, lodFactor, i + 1,
                     (i == lodCount - 1) ? null : layers[i + 1]);
         }
     }

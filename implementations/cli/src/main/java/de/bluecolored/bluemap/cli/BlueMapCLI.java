@@ -43,7 +43,7 @@ import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.metrics.Metrics;
-import de.bluecolored.bluemap.core.storage.Storage;
+import de.bluecolored.bluemap.core.storage.MapStorage;
 import de.bluecolored.bluemap.core.util.FileHelper;
 import org.apache.commons.cli.*;
 import org.apache.commons.lang3.time.DurationFormatUtils;
@@ -72,7 +72,10 @@ public class BlueMapCLI {
                            @Nullable String mapsToRender) throws ConfigurationException, IOException, InterruptedException {
 
         //metrics report
-        if (blueMap.getConfig().getCoreConfig().isMetrics()) Metrics.sendReportAsync("cli");
+        if (blueMap.getConfig().getCoreConfig().isMetrics()) Metrics.sendReportAsync(
+                "cli",
+                blueMap.getConfig().getMinecraftVersion().getVersionString()
+        );
 
         if (blueMap.getConfig().getWebappConfig().isEnabled())
             blueMap.createOrUpdateWebApp(forceGenerateWebapp);
@@ -201,12 +204,13 @@ public class BlueMapCLI {
 
         // map route
         for (var mapConfigEntry : blueMap.getConfig().getMapConfigs().entrySet()) {
-            Storage storage = blueMap.getOrLoadStorage(mapConfigEntry.getValue().getStorage());
+            MapStorage storage = blueMap.getOrLoadStorage(mapConfigEntry.getValue().getStorage())
+                    .map(mapConfigEntry.getKey());
 
             routingRequestHandler.register(
                     "maps/" + Pattern.quote(mapConfigEntry.getKey()) + "/(.*)",
                     "$1",
-                    new MapRequestHandler(mapConfigEntry.getKey(), storage)
+                    new MapRequestHandler(storage)
             );
         }
 
@@ -242,9 +246,10 @@ public class BlueMapCLI {
             throw new ConfigurationException("BlueMap failed to bind to the configured address.\n" +
                     "This usually happens when the configured port (" + config.getPort() + ") is already in use by some other program.", ex);
         } catch (IOException ex) {
-            throw new ConfigurationException("BlueMap failed to initialize the webserver.\n" +
-                    "Check your webserver-config if everything is configured correctly.\n" +
-                    "(Make sure you DON'T use the same port for bluemap that you also use for your minecraft server)", ex);
+            throw new ConfigurationException("""
+                    BlueMap failed to initialize the webserver.
+                    Check your webserver-config if everything is configured correctly.
+                    (Make sure you DON'T use the same port for bluemap that you also use for your minecraft server)""", ex);
         }
     }
 

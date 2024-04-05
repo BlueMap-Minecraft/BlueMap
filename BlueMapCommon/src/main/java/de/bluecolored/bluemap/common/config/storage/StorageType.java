@@ -24,56 +24,31 @@
  */
 package de.bluecolored.bluemap.common.config.storage;
 
-import de.bluecolored.bluemap.core.storage.Storage;
-import de.bluecolored.bluemap.core.storage.file.FileStorage;
-import de.bluecolored.bluemap.core.storage.sql.SQLStorage;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.Keyed;
 import de.bluecolored.bluemap.core.util.Registry;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-public class StorageType implements Keyed {
+public interface StorageType extends Keyed {
 
-    public static final StorageType FILE = new StorageType( Key.bluemap("file"), FileConfig.class, FileStorage::new );
-    public static final StorageType SQL = new StorageType( Key.bluemap("sql"), SQLConfig.class, SQLStorage::create );
+    StorageType FILE = new Impl(Key.bluemap("file"), FileConfig.class);
+    StorageType SQL = new Impl(Key.bluemap("sql"), SQLConfig.class);
 
-    public static final Registry<StorageType> REGISTRY = new Registry<>(
+    Registry<StorageType> REGISTRY = new Registry<>(
             FILE,
             SQL
     );
 
-    private final Key key;
-    private final Class<? extends StorageConfig> configType;
-    private final StorageFactory<? extends StorageConfig> storageFactory;
+    Class<? extends StorageConfig> getConfigType();
 
-    public <C extends StorageConfig> StorageType(Key key, Class<C> configType, StorageFactory<C> storageFactory) {
-        this.key = key;
-        this.configType = configType;
-        this.storageFactory = storageFactory;
-    }
+    @RequiredArgsConstructor
+    @Getter
+    class Impl implements StorageType {
 
-    @Override
-    public Key getKey() {
-        return key;
-    }
+        private final Key key;
+        private final Class<? extends StorageConfig> configType;
 
-    public Class<? extends StorageConfig> getConfigType() {
-        return configType;
-    }
-
-    @SuppressWarnings("unchecked")
-    public <C extends StorageConfig> StorageFactory<C> getStorageFactory(Class<C> configType) {
-        if (!configType.isAssignableFrom(this.configType)) throw new ClassCastException(this.configType + " can not be cast to " + configType);
-        return (StorageFactory<C>) storageFactory;
-    }
-
-    @FunctionalInterface
-    public interface StorageFactory<C extends StorageConfig> {
-        Storage provideRaw(C config) throws Exception;
-
-        @SuppressWarnings("unchecked")
-        default Storage provide(StorageConfig config) throws Exception {
-            return provideRaw((C) config);
-        }
     }
 
 }

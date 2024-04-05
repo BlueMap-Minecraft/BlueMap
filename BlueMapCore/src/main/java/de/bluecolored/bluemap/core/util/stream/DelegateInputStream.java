@@ -30,7 +30,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-public class DelegateInputStream extends InputStream {
+/**
+ * An {@link InputStream} implementation delegating all methods to another InputStream.
+ * Can be used as a base-class for other InputStream implementations that wrap around an existing stream and only want
+ * to modify certain methods.
+ */
+public abstract class DelegateInputStream extends InputStream {
 
     protected final InputStream in;
 

@@ -52,6 +52,7 @@ import de.bluecolored.bluemap.core.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.map.MapRenderState;
+import de.bluecolored.bluemap.core.storage.MapStorage;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.World;
@@ -66,8 +67,6 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public class Commands<S> {
-
-    public static final String DEFAULT_MARKER_SET_ID = "markers";
 
     private final Plugin plugin;
     private final CommandDispatcher<S> dispatcher;
@@ -892,8 +891,13 @@ public class Commands<S> {
 
         source.sendMessage(Text.of(TextColor.BLUE, "Storages loaded by BlueMap:"));
         for (var entry : plugin.getBlueMap().getConfig().getStorageConfigs().entrySet()) {
+            String storageTypeKey = "?";
+            try {
+                storageTypeKey = entry.getValue().getStorageType().getKey().getFormatted();
+            } catch (ConfigurationException ignore) {} // should never happen
+
             source.sendMessage(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, entry.getKey())
-                    .setHoverText(Text.of(entry.getValue().getStorageTypeKey().getFormatted()))
+                    .setHoverText(Text.of(storageTypeKey))
                     .setClickAction(Text.ClickAction.RUN_COMMAND, "/bluemap storages " + entry.getKey())
             );
         }
@@ -916,7 +920,7 @@ public class Commands<S> {
 
         Collection<String> mapIds;
         try {
-            mapIds = storage.collectMapIds();
+            mapIds = storage.mapIds().toList();
         } catch (IOException ex) {
             Logger.global.logError("Unexpected exception trying to load mapIds from storage '" + storageId + "'!", ex);
             source.sendMessage(Text.of(TextColor.RED, "There was an unexpected exception trying to access this storage. Please check the console for more details..."));
@@ -929,7 +933,7 @@ public class Commands<S> {
         } else {
             for (String mapId : mapIds) {
                 BmMap map = plugin.getBlueMap().getMaps().get(mapId);
-                boolean isLoaded = map != null && map.getStorage().equals(storage);
+                boolean isLoaded = map != null && map.getStorage().equals(storage.map(mapId));
 
                 if (isLoaded) {
                     source.sendMessage(Text.of(TextColor.GRAY, " - ", TextColor.WHITE, mapId, TextColor.GREEN, TextFormat.ITALIC, " (loaded)"));
@@ -947,9 +951,9 @@ public class Commands<S> {
         String storageId = context.getArgument("storage", String.class);
         String mapId = context.getArgument("map", String.class);
 
-        Storage storage;
+        MapStorage storage;
         try {
-            storage = plugin.getBlueMap().getOrLoadStorage(storageId);
+            storage = plugin.getBlueMap().getOrLoadStorage(storageId).map(mapId);
         } catch (ConfigurationException | InterruptedException ex) {
             Logger.global.logError("Unexpected exception trying to load storage '" + storageId + "'!", ex);
             source.sendMessage(Text.of(TextColor.RED, "There was an unexpected exception trying to load this storage. Please check the console for more details..."));

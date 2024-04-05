@@ -24,7 +24,8 @@
  */
 package de.bluecolored.bluemap.core.metrics;
 
-import com.google.gson.JsonObject;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 
@@ -39,18 +40,22 @@ import java.nio.charset.StandardCharsets;
 public class Metrics {
 
     private static final String METRICS_REPORT_URL = "https://metrics.bluecolored.de/bluemap/";
+    private static final Gson GSON = new GsonBuilder()
+            .create();
 
-    public static void sendReportAsync(String implementation) {
-        new Thread(() -> sendReport(implementation), "BlueMap-Plugin-SendMetricsReport").start();
+    public static void sendReportAsync(String implementation, String mcVersion) {
+        new Thread(() -> sendReport(implementation, mcVersion), "BlueMap-Plugin-SendMetricsReport").start();
     }
 
-    public static void sendReport(String implementation) {
-        JsonObject data = new JsonObject();
-        data.addProperty("implementation", implementation);
-        data.addProperty("version", BlueMap.VERSION);
+    public static void sendReport(String implementation, String mcVersion) {
+        Report report = new Report(
+                implementation,
+                BlueMap.VERSION,
+                mcVersion
+        );
 
         try {
-            sendData(data.toString());
+            sendData(GSON.toJson(report));
         } catch (IOException | RuntimeException ex) {
             Logger.global.logDebug("Failed to send Metrics-Report: " + ex);
         }
@@ -85,5 +90,11 @@ public class Metrics {
         }
 
     }
+
+    record Report (
+            String implementation,
+            String version,
+            String mcVersion
+    ) {}
 
 }

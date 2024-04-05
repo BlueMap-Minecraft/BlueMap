@@ -24,44 +24,38 @@
  */
 package de.bluecolored.bluemap.common.web;
 
-import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.api.ContentTypeRegistry;
 import de.bluecolored.bluemap.api.debug.DebugDump;
-import de.bluecolored.bluemap.common.web.http.*;
+import de.bluecolored.bluemap.common.web.http.HttpRequest;
+import de.bluecolored.bluemap.common.web.http.HttpRequestHandler;
+import de.bluecolored.bluemap.common.web.http.HttpResponse;
+import de.bluecolored.bluemap.common.web.http.HttpStatusCode;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.map.BmMap;
-import de.bluecolored.bluemap.core.storage.CompressedInputStream;
-import de.bluecolored.bluemap.core.storage.Compression;
-import de.bluecolored.bluemap.core.storage.Storage;
-import de.bluecolored.bluemap.core.storage.TileInfo;
+import de.bluecolored.bluemap.core.storage.GridStorage;
+import de.bluecolored.bluemap.core.storage.MapStorage;
+import de.bluecolored.bluemap.core.storage.compression.CompressedInputStream;
+import de.bluecolored.bluemap.core.storage.compression.Compression;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang3.time.DateFormatUtils;
 
-import java.io.*;
-import java.util.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DebugDump
+@RequiredArgsConstructor
 public class MapStorageRequestHandler implements HttpRequestHandler {
 
     private static final Pattern TILE_PATTERN = Pattern.compile("tiles/([\\d/]+)/x(-?[\\d/]+)z(-?[\\d/]+).*");
 
-    private final String mapId;
-    private final Storage mapStorage;
+    private final MapStorage mapStorage;
 
-
-    public MapStorageRequestHandler(BmMap map) {
-        this.mapId = map.getId();
-        this.mapStorage = map.getStorage();
-    }
-
-    public MapStorageRequestHandler(String mapId, Storage mapStorage) {
-        this.mapId = mapId;
-        this.mapStorage = mapStorage;
-    }
-
+    @SuppressWarnings("resource")
     @Override
     public HttpResponse handle(HttpRequest request) {
         String path = request.getPath();
@@ -78,58 +72,36 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
                 int lod = Integer.parseInt(tileMatcher.group(1));
                 int x = Integer.parseInt(tileMatcher.group(2).replace("/", ""));
                 int z = Integer.parseInt(tileMatcher.group(3).replace("/", ""));
-                Optional<TileInfo> optTileInfo = mapStorage.readMapTileInfo(mapId, lod, new Vector2i(x, z));
 
-                if (optTileInfo.isPresent()) {
-                    TileInfo tileInfo = optTileInfo.get();
+                GridStorage gridStorage = lod == 0 ? mapStorage.hiresTiles() : mapStorage.lowresTiles(lod);
+                CompressedInputStream in = gridStorage.read(x, z);
+                if (in == null) return new HttpResponse(HttpStatusCode.NO_CONTENT);
 
-                    // check e-tag
-                    String eTag = calculateETag(path, tileInfo);
-                    HttpHeader etagHeader = request.getHeader("If-None-Match");
-                    if (etagHeader != null){
-                        if(etagHeader.getValue().equals(eTag)) {
-                            return new HttpResponse(HttpStatusCode.NOT_MODIFIED);
-                        }
-                    }
+                HttpResponse response = new HttpResponse(HttpStatusCode.OK);
+                response.addHeader("Cache-Control", "public");
+                response.addHeader("Cache-Control", "max-age=" + TimeUnit.DAYS.toSeconds(1));
 
-                    // check modified-since
-                    long lastModified = tileInfo.getLastModified();
-                    HttpHeader modHeader = request.getHeader("If-Modified-Since");
-                    if (modHeader != null){
-                        try {
-                            long since = stringToTimestamp(modHeader.getValue());
-                            if (since + 1000 >= lastModified){
-                                return new HttpResponse(HttpStatusCode.NOT_MODIFIED);
-                            }
-                        } catch (IllegalArgumentException ignored){}
-                    }
+                if (lod == 0) response.addHeader("Content-Type", "application/octet-stream");
+                else response.addHeader("Content-Type", "image/png");
 
-                    CompressedInputStream compressedIn = tileInfo.readMapTile();
-                    HttpResponse response = new HttpResponse(HttpStatusCode.OK);
-                    response.addHeader("ETag", eTag);
-                    if (lastModified > 0)
-                        response.addHeader("Last-Modified", timestampToString(lastModified));
-
-                    response.addHeader("Cache-Control", "public");
-                    response.addHeader("Cache-Control", "max-age=" + TimeUnit.DAYS.toSeconds(1));
-
-                    if (lod == 0) response.addHeader("Content-Type", "application/octet-stream");
-                    else response.addHeader("Content-Type", "image/png");
-
-                    writeToResponse(compressedIn, response, request);
-                    return response;
-                }
+                writeToResponse(in, response, request);
+                return response;
             }
 
             // provide meta-data
-            Optional<InputStream> optIn = mapStorage.readMeta(mapId, path);
-            if (optIn.isPresent()) {
-                CompressedInputStream compressedIn = new CompressedInputStream(optIn.get(), Compression.NONE);
+            CompressedInputStream in = switch (path) {
+                case "settings.json" -> mapStorage.settings().read();
+                case "textures.json" -> mapStorage.textures().read();
+                case "live/markers.json" -> mapStorage.markers().read();
+                case "live/players.json" -> mapStorage.players().read();
+                default -> null;
+            };
+            if (in != null){
                 HttpResponse response = new HttpResponse(HttpStatusCode.OK);
                 response.addHeader("Cache-Control", "public");
                 response.addHeader("Cache-Control", "max-age=" + TimeUnit.DAYS.toSeconds(1));
                 response.addHeader("Content-Type", ContentTypeRegistry.fromFileName(path));
-                writeToResponse(compressedIn, response, request);
+                writeToResponse(in, response, request);
                 return response;
             }
 
@@ -139,27 +111,23 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
             return new HttpResponse(HttpStatusCode.INTERNAL_SERVER_ERROR);
         }
 
-        return new HttpResponse(HttpStatusCode.NO_CONTENT);
-    }
-
-    private String calculateETag(String path, TileInfo tileInfo) {
-        return Long.toHexString(tileInfo.getSize()) + Integer.toHexString(path.hashCode()) + Long.toHexString(tileInfo.getLastModified());
+        return new HttpResponse(HttpStatusCode.NOT_FOUND);
     }
 
     private void writeToResponse(CompressedInputStream data, HttpResponse response, HttpRequest request) throws IOException {
         Compression compression = data.getCompression();
         if (
                 compression != Compression.NONE &&
-                request.hasHeaderValue("Accept-Encoding", compression.getTypeId())
+                request.hasHeaderValue("Accept-Encoding", compression.getId())
         ) {
-            response.addHeader("Content-Encoding", compression.getTypeId());
+            response.addHeader("Content-Encoding", compression.getId());
             response.setData(data);
         } else if (
                 compression != Compression.GZIP &&
                 !response.hasHeaderValue("Content-Type", "image/png") &&
-                request.hasHeaderValue("Accept-Encoding", Compression.GZIP.getTypeId())
+                request.hasHeaderValue("Accept-Encoding", Compression.GZIP.getId())
         ) {
-            response.addHeader("Content-Encoding", Compression.GZIP.getTypeId());
+            response.addHeader("Content-Encoding", Compression.GZIP.getId());
             ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
             try (OutputStream os = Compression.GZIP.compress(byteOut)) {
                 IOUtils.copyLarge(data.decompress(), os);
@@ -167,41 +135,7 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
             byte[] compressedData = byteOut.toByteArray();
             response.setData(new ByteArrayInputStream(compressedData));
         } else {
-            response.setData(new BufferedInputStream(data.decompress()));
-        }
-    }
-
-    private static String timestampToString(long time){
-        return DateFormatUtils.format(time, "EEE, dd MMM yyy HH:mm:ss 'GMT'", TimeZone.getTimeZone("GMT"), Locale.ENGLISH);
-    }
-
-    private static long stringToTimestamp(String timeString) throws IllegalArgumentException {
-        try {
-            int day = Integer.parseInt(timeString.substring(5, 7));
-
-            int month = Calendar.JANUARY;
-            switch (timeString.substring(8, 11)){
-                case "Feb" : month = Calendar.FEBRUARY;  break;
-                case "Mar" : month = Calendar.MARCH;  break;
-                case "Apr" : month = Calendar.APRIL;  break;
-                case "May" : month = Calendar.MAY;  break;
-                case "Jun" : month = Calendar.JUNE;  break;
-                case "Jul" : month = Calendar.JULY;  break;
-                case "Aug" : month = Calendar.AUGUST;  break;
-                case "Sep" : month = Calendar.SEPTEMBER;  break;
-                case "Oct" : month = Calendar.OCTOBER; break;
-                case "Nov" : month = Calendar.NOVEMBER; break;
-                case "Dec" : month = Calendar.DECEMBER; break;
-            }
-            int year = Integer.parseInt(timeString.substring(12, 16));
-            int hour = Integer.parseInt(timeString.substring(17, 19));
-            int min = Integer.parseInt(timeString.substring(20, 22));
-            int sec = Integer.parseInt(timeString.substring(23, 25));
-            GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
-            cal.set(year, month, day, hour, min, sec);
-            return cal.getTimeInMillis();
-        } catch (NumberFormatException | IndexOutOfBoundsException e){
-            throw new IllegalArgumentException(e);
+            response.setData(data.decompress());
         }
     }
 

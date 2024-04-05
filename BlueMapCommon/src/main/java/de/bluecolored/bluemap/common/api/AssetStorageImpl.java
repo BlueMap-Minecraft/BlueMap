@@ -25,7 +25,8 @@
 package de.bluecolored.bluemap.common.api;
 
 import de.bluecolored.bluemap.api.AssetStorage;
-import de.bluecolored.bluemap.core.storage.Storage;
+import de.bluecolored.bluemap.core.storage.MapStorage;
+import de.bluecolored.bluemap.core.storage.compression.CompressedInputStream;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -34,39 +35,39 @@ import java.util.Optional;
 
 public class AssetStorageImpl implements AssetStorage {
 
-    private static final String ASSET_PATH = "assets/";
-
-    private final Storage storage;
+    private final MapStorage storage;
     private final String mapId;
 
-    public AssetStorageImpl(Storage storage, String mapId) {
+    public AssetStorageImpl(MapStorage storage, String mapId) {
         this.storage = storage;
         this.mapId = mapId;
     }
 
     @Override
     public OutputStream writeAsset(String name) throws IOException {
-        return storage.writeMeta(mapId, ASSET_PATH + name);
+        return storage.asset(name).write();
     }
 
     @Override
     public Optional<InputStream> readAsset(String name) throws IOException {
-        return storage.readMeta(mapId, ASSET_PATH + name);
+        CompressedInputStream in = storage.asset(name).read();
+        if (in == null) return Optional.empty();
+        return Optional.of(in.decompress());
     }
 
     @Override
     public boolean assetExists(String name) throws IOException {
-        return storage.readMetaInfo(mapId, ASSET_PATH + name).isPresent();
+        return storage.asset(name).exists();
     }
 
     @Override
     public String getAssetUrl(String name) {
-        return "maps/" + mapId + "/" + Storage.escapeMetaName(ASSET_PATH + name);
+        return "maps/" + mapId + "/assets/" + MapStorage.escapeAssetName(name);
     }
 
     @Override
     public void deleteAsset(String name) throws IOException {
-        storage.deleteMeta(mapId, ASSET_PATH + name);
+        storage.asset(name).delete();
     }
 
 }

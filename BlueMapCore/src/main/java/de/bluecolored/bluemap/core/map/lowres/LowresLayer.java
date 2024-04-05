@@ -28,10 +28,10 @@ import com.flowpowered.math.vector.Vector2i;
 import com.github.benmanes.caffeine.cache.*;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.storage.Storage;
+import de.bluecolored.bluemap.core.storage.GridStorage;
+import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.util.Vector2iCache;
 import de.bluecolored.bluemap.core.util.math.Color;
-import de.bluecolored.bluemap.core.util.Grid;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -44,7 +44,7 @@ public class LowresLayer {
 
     private static final Vector2iCache VECTOR_2_I_CACHE = new Vector2iCache();
 
-    private final Storage.MapStorage mapStorage;
+    private final GridStorage storage;
 
     private final Grid tileGrid;
     private final int lodFactor;
@@ -54,10 +54,10 @@ public class LowresLayer {
     @Nullable private final LowresLayer nextLayer;
 
     public LowresLayer(
-            Storage.MapStorage mapStorage, Grid tileGrid, int lodCount, int lodFactor,
+            GridStorage storage, Grid tileGrid, int lodFactor,
             int lod, @Nullable LowresLayer nextLayer
     ) {
-        this.mapStorage = mapStorage;
+        this.storage = storage;
 
         this.tileGrid = tileGrid;
         this.lodFactor = lodFactor;
@@ -83,7 +83,7 @@ public class LowresLayer {
 
                     @Override
                     public void delete(@NonNull Vector2i key, @Nullable LowresTile value, @NonNull RemovalCause cause) {
-                        saveTile(key, value, cause);
+                        saveTile(key, value);
                     }
                 })
                 .build(tileWeakInstanceCache::get);
@@ -95,7 +95,7 @@ public class LowresLayer {
     }
 
     private LowresTile createTile(Vector2i tilePos) {
-        try (InputStream in = mapStorage.read(lod, tilePos).orElse(null)) {
+        try (InputStream in = storage.read(tilePos.getX(), tilePos.getY())) {
             if (in != null) return new LowresTile(tileGrid.getGridSize(), in);
         } catch (IOException e) {
             Logger.global.logError("Failed to load tile " + tilePos + " (lod: " + lod + ")", e);
@@ -105,17 +105,17 @@ public class LowresLayer {
         return new LowresTile(tileGrid.getGridSize());
     }
 
-    private void saveTile(Vector2i tilePos, @Nullable LowresTile tile, RemovalCause removalCause) {
+    private void saveTile(Vector2i tilePos, @Nullable LowresTile tile) {
         if (tile == null) return;
 
         // check if storage is closed
-        if (mapStorage.getStorage().isClosed()){
+        if (storage.isClosed()){
             Logger.global.logDebug("Tried to save tile " + tilePos + " (lod: " + lod + ") but storage is already closed.");
             return;
         }
 
         // save the tile
-        try (OutputStream out = mapStorage.write(lod, tilePos)) {
+        try (OutputStream out = storage.write(tilePos.getX(), tilePos.getY())) {
             tile.save(out);
         } catch (IOException e) {
             Logger.global.logError("Failed to save tile " + tilePos + " (lod: " + lod + ")", e);

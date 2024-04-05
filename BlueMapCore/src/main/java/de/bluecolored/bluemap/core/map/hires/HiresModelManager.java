@@ -30,7 +30,7 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.TileMetaConsumer;
 import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.storage.Storage;
+import de.bluecolored.bluemap.core.storage.GridStorage;
 import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.world.World;
 import lombok.Getter;
@@ -40,17 +40,17 @@ import java.io.OutputStream;
 
 public class HiresModelManager {
 
-    private final Storage.TileStorage storage;
+    private final GridStorage storage;
     private final HiresModelRenderer renderer;
 
     @Getter
     private final Grid tileGrid;
 
-    public HiresModelManager(Storage.TileStorage storage, ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings, Grid tileGrid) {
+    public HiresModelManager(GridStorage storage, ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings, Grid tileGrid) {
         this(storage, new HiresModelRenderer(resourcePack, textureGallery, renderSettings), tileGrid);
     }
 
-    public HiresModelManager(Storage.TileStorage storage, HiresModelRenderer renderer, Grid tileGrid) {
+    public HiresModelManager(GridStorage storage, HiresModelRenderer renderer, Grid tileGrid) {
         this.storage = storage;
         this.renderer = renderer;
 
@@ -81,7 +81,7 @@ public class HiresModelManager {
 
     private void save(final TileModel model, Vector2i tile) {
         try (
-                OutputStream out = storage.write(tile);
+                OutputStream out = storage.write(tile.getX(), tile.getY());
                 PRBMWriter modelWriter = new PRBMWriter(out)
         ) {
             modelWriter.write(model);

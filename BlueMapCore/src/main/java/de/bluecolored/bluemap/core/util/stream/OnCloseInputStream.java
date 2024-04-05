@@ -27,6 +27,9 @@ package de.bluecolored.bluemap.core.util.stream;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * An {@link InputStream} implementation that performs an additional action right <b>after</b> the base stream got closed.
+ */
 public class OnCloseInputStream extends DelegateInputStream {
 
     private final AutoCloseable onClose;

@@ -269,18 +269,11 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
                         String name = worldFolder.getFileName() + " (" + dimensionName + ")";
                         if (i > 1) name = name + " (" + i + ")";
 
-                        ConfigTemplate template;
-                        switch (world.getDimension().getFormatted()) {
-                            case "minecraft:the_nether":
-                                template = createNetherMapTemplate(name, worldFolder, dimension, i - 1);
-                                break;
-                            case "minecraft:the_end":
-                                template = createEndMapTemplate(name, worldFolder, dimension, i - 1);
-                                break;
-                            default:
-                                template = createOverworldMapTemplate(name, worldFolder, dimension, i - 1);
-                                break;
-                        }
+                        ConfigTemplate template = switch (world.getDimension().getFormatted()) {
+                            case "minecraft:the_nether" -> createNetherMapTemplate(name, worldFolder, dimension, i - 1);
+                            case "minecraft:the_end" -> createEndMapTemplate(name, worldFolder, dimension, i - 1);
+                            default -> createOverworldMapTemplate(name, worldFolder, dimension, i - 1);
+                        };
 
                         Files.writeString(
                                 configFile,
@@ -358,7 +351,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
                 Path rawConfig = configManager.getRaw(configFile);
                 String id = rawConfig.getFileName().toString();
 
-                StorageConfig storageConfig = configManager.loadConfig(rawConfig, StorageConfig.class); // load superclass
+                StorageConfig storageConfig = configManager.loadConfig(rawConfig, StorageConfig.Base.class); // load superclass
                 storageConfig = configManager.loadConfig(rawConfig, storageConfig.getStorageType().getConfigType()); // load actual config type
 
                 storageConfigs.put(id, storageConfig);

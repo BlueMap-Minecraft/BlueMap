@@ -30,6 +30,7 @@ import de.bluecolored.bluemap.common.live.LivePlayersDataSupplier;
 import de.bluecolored.bluemap.common.serverinterface.Server;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.map.BmMap;
+import de.bluecolored.bluemap.core.storage.MapStorage;
 import de.bluecolored.bluemap.core.storage.Storage;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,20 +41,20 @@ import java.util.function.Supplier;
 public class MapRequestHandler extends RoutingRequestHandler {
 
     public MapRequestHandler(BmMap map, Server serverInterface, PluginConfig pluginConfig, Predicate<UUID> playerFilter) {
-        this(map.getId(), map.getStorage(),
+        this(map.getStorage(),
                 createPlayersDataSupplier(map, serverInterface, pluginConfig, playerFilter),
                 new LiveMarkersDataSupplier(map.getMarkerSets()));
     }
 
-    public MapRequestHandler(String mapId, Storage mapStorage) {
-        this(mapId, mapStorage, null, null);
+    public MapRequestHandler(MapStorage mapStorage) {
+        this(mapStorage, null, null);
     }
 
-    public MapRequestHandler(String mapId, Storage mapStorage,
+    public MapRequestHandler(MapStorage mapStorage,
                              @Nullable Supplier<String> livePlayersDataSupplier,
                              @Nullable Supplier<String> liveMarkerDataSupplier) {
 
-        register(".*", new MapStorageRequestHandler(mapId, mapStorage));
+        register(".*", new MapStorageRequestHandler(mapStorage));
 
         if (livePlayersDataSupplier != null) {
             register("live/players\\.json", "", new JsonDataRequestHandler(

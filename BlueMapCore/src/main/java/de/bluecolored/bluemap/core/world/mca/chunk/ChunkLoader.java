@@ -24,14 +24,13 @@
  */
 package de.bluecolored.bluemap.core.world.mca.chunk;
 
-import de.bluecolored.bluemap.core.storage.Compression;
+import de.bluecolored.bluemap.core.storage.compression.Compression;
 import de.bluecolored.bluemap.core.world.mca.MCAUtil;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,7 +62,7 @@ public class ChunkLoader {
         // try last used version
         ChunkVersionLoader<?> usedLoader = lastUsedLoader;
         MCAChunk chunk;
-        try (InputStream decompressedIn = new BufferedInputStream(compression.decompress(in))) {
+        try (InputStream decompressedIn = compression.decompress(in)) {
             chunk = usedLoader.load(world, decompressedIn);
         }
 
@@ -71,7 +70,7 @@ public class ChunkLoader {
         ChunkVersionLoader<?> actualLoader = findBestLoaderForVersion(chunk.getDataVersion());
         if (actualLoader != null && usedLoader != actualLoader) {
             in.reset(); // reset read position
-            try (InputStream decompressedIn = new BufferedInputStream(compression.decompress(in))) {
+            try (InputStream decompressedIn = compression.decompress(in)) {
                 chunk = actualLoader.load(world, decompressedIn);
             }
             lastUsedLoader = actualLoader;
