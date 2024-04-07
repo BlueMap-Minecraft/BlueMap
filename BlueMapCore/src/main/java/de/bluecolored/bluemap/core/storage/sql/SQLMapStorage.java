@@ -136,7 +136,7 @@ public class SQLMapStorage implements MapStorage {
                 deleted = sql.purgeMapTiles(mapId, 1000);
                 totalDeleted += deleted;
 
-                if (onProgress.test((double) totalDeleted / tileCount))
+                if (!onProgress.test((double) totalDeleted / tileCount))
                     return;
 
             } while (deleted > 0 && totalDeleted < tileCount);

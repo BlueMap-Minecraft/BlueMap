@@ -38,7 +38,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String createMapTableStatement() {
         return """
         CREATE TABLE IF NOT EXISTS `bluemap_map` (
-         `id` INTEGER UNSIGNED PRIMARY KEY AUTOINCREMENT,
+         `id` INTEGER PRIMARY KEY AUTOINCREMENT,
          `map_id` TEXT UNIQUE NOT NULL
         ) STRICT
         """;
@@ -49,7 +49,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String createCompressionTableStatement() {
         return """
         CREATE TABLE IF NOT EXISTS `bluemap_map_tile_compression` (
-         `id` INTEGER UNSIGNED PRIMARY KEY AUTOINCREMENT,
+         `id` INTEGER PRIMARY KEY AUTOINCREMENT,
          `compression` TEXT UNIQUE NOT NULL
         ) STRICT
         """;
@@ -60,7 +60,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String createMapMetaTableStatement() {
         return """
         CREATE TABLE IF NOT EXISTS `bluemap_map_meta` (
-         `map` INTEGER UNSIGNED NOT NULL,
+         `map` INTEGER NOT NULL,
          `key` TEXT NOT NULL,
          `value` BLOB NOT NULL,
          PRIMARY KEY (`map`, `key`),
@@ -78,11 +78,11 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String createMapTileTableStatement() {
         return """
         CREATE TABLE IF NOT EXISTS `bluemap_map_tile` (
-         `map` INTEGER UNSIGNED NOT NULL,
-         `lod` INTEGER UNSIGNED NOT NULL,
+         `map` INTEGER NOT NULL,
+         `lod` INTEGER NOT NULL,
          `x` INTEGER NOT NULL,
          `z` INTEGER NOT NULL,
-         `compression` INTEGER UNSIGNED NOT NULL,
+         `compression` INTEGER NOT NULL,
          `data` BLOB NOT NULL,
          PRIMARY KEY (`map`, `lod`, `x`, `z`),
          CONSTRAINT `fk_bluemap_map_tile_map`
@@ -104,7 +104,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String fixLegacyCompressionIdsStatement() {
         return """
         UPDATE `bluemap_map_tile_compression`
-        SET `compression` = CONCAT('bluemap:', `compression`)
+        SET `compression` = 'bluemap:' || `compression`
         WHERE NOT `compression` LIKE '%:%'
         """;
     }

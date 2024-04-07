@@ -36,7 +36,6 @@ import java.io.IOException;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @SuppressWarnings("SqlSourceToSinkFlow")
 @RequiredArgsConstructor
@@ -45,9 +44,9 @@ public abstract class AbstractCommandSet implements CommandSet {
     private final Database db;
 
     final LoadingCache<String, Integer> mapKeys = Caffeine.newBuilder()
-            .build(this::mapKey);
+            .build(this::findOrCreateMapKey);
     final LoadingCache<Compression, Integer> compressionKeys = Caffeine.newBuilder()
-            .build(this::compressionKey);
+            .build(this::findOrCreateCompressionKey);
 
     @Language("sql")
     public abstract String createMapTableStatement();
@@ -83,8 +82,8 @@ public abstract class AbstractCommandSet implements CommandSet {
             String mapId, int lod, int x, int z, Compression compression,
             byte[] bytes
     ) throws IOException {
-        int mapKey = Objects.requireNonNull(mapKeys.get(mapId));
-        int compressionKey = Objects.requireNonNull(compressionKeys.get(compression));
+        int mapKey = mapKey(mapId);
+        int compressionKey = compressionKey(compression);
         return db.run(connection -> {
             return executeUpdate(connection,
                     writeMapTileStatement(),
@@ -201,7 +200,7 @@ public abstract class AbstractCommandSet implements CommandSet {
 
     @Override
     public int writeMapMeta(String mapId, String itemName, byte[] bytes) throws IOException {
-        int mapKey = Objects.requireNonNull(mapKeys.get(mapId));
+        int mapKey = mapKey(mapId);
         return db.run(connection -> {
             return executeUpdate(connection,
                     writeMapMetaStatement(),
@@ -265,24 +264,28 @@ public abstract class AbstractCommandSet implements CommandSet {
 
     @Override
     public void purgeMap(String mapId) throws IOException {
-        db.run(connection -> {
+        synchronized (mapKeys) {
+            db.run(connection -> {
 
-            executeUpdate(connection,
-                    purgeMapTileTableStatement(),
-                    mapId
-            );
+                executeUpdate(connection,
+                        purgeMapTileTableStatement(),
+                        mapId
+                );
 
-            executeUpdate(connection,
-                    purgeMapMetaTableStatement(),
-                    mapId
-            );
+                executeUpdate(connection,
+                        purgeMapMetaTableStatement(),
+                        mapId
+                );
 
-            executeUpdate(connection,
-                    deleteMapStatement(),
-                    mapId
-            );
+                executeUpdate(connection,
+                        deleteMapStatement(),
+                        mapId
+                );
 
-        });
+            });
+
+            mapKeys.invalidate(mapId);
+        }
     }
 
     @Language("sql")
@@ -324,7 +327,14 @@ public abstract class AbstractCommandSet implements CommandSet {
     @Language("sql")
     public abstract String createMapKeyStatement();
 
-    public int mapKey(String mapId) throws IOException {
+    public int mapKey(String mapId) {
+        synchronized (mapKeys) {
+            //noinspection DataFlowIssue
+            return mapKeys.get(mapId);
+        }
+    }
+
+    public int findOrCreateMapKey(String mapId) throws IOException {
         return db.run(connection -> {
             ResultSet result = executeQuery(connection,
                     findMapKeyStatement(),
@@ -353,7 +363,14 @@ public abstract class AbstractCommandSet implements CommandSet {
     @Language("sql")
     public abstract String createCompressionKeyStatement();
 
-    public int compressionKey(Compression compression) throws IOException {
+    public int compressionKey(Compression compression) {
+        synchronized (compressionKeys) {
+            //noinspection DataFlowIssue
+            return compressionKeys.get(compression);
+        }
+    }
+
+    public int findOrCreateCompressionKey(Compression compression) throws IOException {
         return db.run(connection -> {
             ResultSet result = executeQuery(connection,
                     findCompressionKeyStatement(),

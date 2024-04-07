@@ -54,7 +54,7 @@ import java.util.regex.Pattern;
 @Getter
 public class SQLConfig extends StorageConfig {
 
-    private static final Pattern URL_DIALECT_PATTERN = Pattern.compile("jdbc:([^:]*)://.*");
+    private static final Pattern URL_DIALECT_PATTERN = Pattern.compile("jdbc:([^:]*):.*");
 
     private String connectionUrl = "jdbc:mysql://localhost/bluemap?permitMysqlScheme";
     private Map<String, String> connectionProperties = new HashMap<>();
@@ -102,7 +102,12 @@ public class SQLConfig extends StorageConfig {
         // default from connection-url
         if (key == null) {
             Matcher matcher = URL_DIALECT_PATTERN.matcher(connectionUrl);
-            if (!matcher.find()) return Dialect.MYSQL;
+            if (!matcher.find()) {
+                throw new ConfigurationException("""
+                Failed to parse the provided connection-url!
+                Please check your 'connection-url' setting in your configuration and make sure it is in the correct format.
+                """.strip());
+            }
             key = Key.bluemap(matcher.group(1)).getFormatted();
         }
 
