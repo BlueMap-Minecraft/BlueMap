@@ -208,7 +208,8 @@ var CSS2DRenderer = function (events = null) {
 
         for ( var i = 0, l = sorted.length; i < l; i ++ ) {
 
-            sorted[ i ].element.style.zIndex = zMax - i;
+            let o = sorted[ i ];
+            o.element.style.zIndex = o.disableDepthTest ? zMax + 1 : zMax - i;
 
         }
 

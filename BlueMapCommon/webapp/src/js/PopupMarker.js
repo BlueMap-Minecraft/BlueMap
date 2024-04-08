@@ -43,6 +43,7 @@ export class PopupMarker extends Marker {
 
         this.elementObject = new CSS2DObject(htmlToElement(`<div id="bm-marker-${this.data.id}" class="bm-marker-${this.data.type}">Test</div>`));
         this.elementObject.position.set(0.5, 1, 0.5);
+        this.elementObject.disableDepthTest = true;
         this.addEventListener( 'removed', () => {
             if (this.element.parentNode) this.element.parentNode.removeChild(this.element);
         });
