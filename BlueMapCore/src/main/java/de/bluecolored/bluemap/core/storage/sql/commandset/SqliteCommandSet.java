@@ -196,7 +196,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
         DELETE
         FROM bluemap_map_tile
         WHERE ROWID IN (
-         SELECT ROWID
+         SELECT t.ROWID
          FROM bluemap_map_tile t
           INNER JOIN bluemap_map m
            ON t.map = m.id
