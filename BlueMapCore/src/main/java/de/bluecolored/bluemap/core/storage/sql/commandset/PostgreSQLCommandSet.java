@@ -141,19 +141,11 @@ public class PostgreSQLCommandSet extends AbstractCommandSet {
         return """
         DELETE
         FROM bluemap_map_tile
-        WHERE map IN (
-         SELECT m.id
-         FROM bluemap_map m
-         WHERE m.map_id = ?
-        )
+        WHERE map = ?
         AND lod = ?
         AND x = ?
         AND z = ?
-        AND compression IN (
-         SELECT c.id
-         FROM bluemap_map_tile_compression c
-         WHERE c.compression = ?
-        )
+        AND compression = ?
         """;
     }
 
@@ -196,9 +188,7 @@ public class PostgreSQLCommandSet extends AbstractCommandSet {
         WHERE CTID IN (
          SELECT CTID
          FROM bluemap_map_tile t
-          INNER JOIN bluemap_map m
-           ON t.map = m.id
-         WHERE m.map_id = ?
+         WHERE t.map = ?
          LIMIT ?
         )
         """;
@@ -253,11 +243,7 @@ public class PostgreSQLCommandSet extends AbstractCommandSet {
         return """
         DELETE
         FROM bluemap_map_meta
-        WHERE map IN (
-         SELECT id
-         FROM bluemap_map
-         WHERE map_id = ?
-        )
+        WHERE map = ?
         AND key = ?
         """;
     }
@@ -281,11 +267,7 @@ public class PostgreSQLCommandSet extends AbstractCommandSet {
         return """
         DELETE
         FROM bluemap_map_tile
-        WHERE map IN (
-         SELECT m.id
-         FROM bluemap_map m
-         WHERE m.map_id = ?
-        )
+        WHERE map = ?
         """;
     }
 
@@ -295,11 +277,7 @@ public class PostgreSQLCommandSet extends AbstractCommandSet {
         return """
         DELETE
         FROM bluemap_map_meta
-        WHERE map IN (
-         SELECT m.id
-         FROM bluemap_map m
-         WHERE m.map_id = ?
-        )
+        WHERE map = ?
         """;
     }
 
@@ -309,7 +287,7 @@ public class PostgreSQLCommandSet extends AbstractCommandSet {
         return """
         DELETE
         FROM bluemap_map
-        WHERE map_id = ?
+        WHERE map = ?
         """;
     }
 

@@ -113,10 +113,12 @@ public abstract class AbstractCommandSet implements CommandSet {
 
     @Override
     public int deleteMapTile(String mapId, int lod, int x, int z, Compression compression) throws IOException {
+        int mapKey = mapKey(mapId);
+        int compressionKey = compressionKey(compression);
         return db.run(connection -> {
             return executeUpdate(connection,
                     deleteMapTileStatement(),
-                    mapId, lod, x, z, compression.getKey().getFormatted()
+                    mapKey, lod, x, z, compressionKey
             );
         });
     }
@@ -156,10 +158,11 @@ public abstract class AbstractCommandSet implements CommandSet {
 
     @Override
     public int purgeMapTiles(String mapId, int limit) throws IOException {
+        int mapKey = mapKey(mapId);
         return db.run(connection -> {
             return executeUpdate(connection,
                     purgeMapTilesStatement(),
-                    mapId, limit
+                    mapKey, limit
             );
         });
     }
@@ -230,10 +233,11 @@ public abstract class AbstractCommandSet implements CommandSet {
 
     @Override
     public int deleteMapMeta(String mapId, String itemName) throws IOException {
+        int mapKey = mapKey(mapId);
         return db.run(connection -> {
             return executeUpdate(connection,
                     deleteMapMetaStatement(),
-                    mapId, itemName
+                    mapKey, itemName
             );
         });
     }
@@ -265,21 +269,22 @@ public abstract class AbstractCommandSet implements CommandSet {
     @Override
     public void purgeMap(String mapId) throws IOException {
         synchronized (mapKeys) {
+            int mapKey = mapKey(mapId);
             db.run(connection -> {
 
                 executeUpdate(connection,
                         purgeMapTileTableStatement(),
-                        mapId
+                        mapKey
                 );
 
                 executeUpdate(connection,
                         purgeMapMetaTableStatement(),
-                        mapId
+                        mapKey
                 );
 
                 executeUpdate(connection,
                         deleteMapStatement(),
-                        mapId
+                        mapKey
                 );
 
             });
