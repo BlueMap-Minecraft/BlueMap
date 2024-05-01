@@ -27,6 +27,7 @@ jobs:
             11
             16
             17
+            21
           cache: 'gradle'
       - name: Build with Gradle
         run: ./gradlew clean spotlessCheck test build
