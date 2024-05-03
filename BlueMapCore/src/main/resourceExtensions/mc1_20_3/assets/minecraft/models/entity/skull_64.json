@@ -1,0 +1,32 @@
+{
+	"credit": "Made with Blockbench by TyBraniff for Bluemaps support.",
+	"texture_size": [64, 64],
+	"elements": [
+		{
+			"name": "Skull",
+			"from": [4.1, 0, 4.1],
+			"to": [11.9, 7.9, 11.9],
+			"faces": {
+				"north": {"uv": [5.5, 2, 7.5, 4], "texture": "#entity"},
+				"east": {"uv": [3.75, 2, 5.75, 4], "texture": "#entity"},
+				"south": {"uv": [2, 2, 4, 4], "texture": "#entity"},
+				"west": {"uv": [0, 2, 2, 4], "texture": "#entity"},
+				"up": {"uv": [4, 2, 2, 0], "rotation": 180, "texture": "#entity"},
+				"down": {"uv": [6, 0, 4, 2], "rotation": 180, "texture": "#entity"}
+			}
+		},
+		{
+			"name": "Overlay",
+			"from": [4, 0, 4],
+			"to": [12, 8, 12],
+			"faces": {
+				"north": {"uv": [14, 2, 16, 4], "texture": "#entity"},
+				"east": {"uv": [12, 2, 14, 4], "texture": "#entity"},
+				"south": {"uv": [10, 2, 12, 4], "texture": "#entity"},
+				"west": {"uv": [8, 2, 10, 4], "texture": "#entity"},
+				"up": {"uv": [12, 2, 10, 0], "rotation": 180, "texture": "#entity"},
+				"down": {"uv": [14, 0, 12, 2], "rotation": 180, "texture": "#entity"}
+			}
+		}
+	]
+}
