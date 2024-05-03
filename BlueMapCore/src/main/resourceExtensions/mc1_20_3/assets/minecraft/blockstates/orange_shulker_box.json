@@ -1,0 +1,30 @@
+{
+  "variants": {
+    "facing=up": {
+      "model": "minecraft:entity/dyed_shulker_box"
+    },
+    "facing=down": {
+      "x": 180,
+      "model": "minecraft:entity/dyed_shulker_box"
+    },
+    "facing=north": {
+      "x": 90,
+      "model": "minecraft:entity/dyed_shulker_box"
+    },
+    "facing=east": {
+      "y": 90,
+      "x": 90,
+      "model": "minecraft:entity/dyed_shulker_box"
+    },
+    "facing=south": {
+      "y": 180,
+      "x": 90,
+      "model": "minecraft:entity/dyed_shulker_box"
+    },
+    "facing=west": {
+      "y": 270,
+      "x": 90,
+      "model": "minecraft:entity/dyed_shulker_box"
+    }
+  }
+}
