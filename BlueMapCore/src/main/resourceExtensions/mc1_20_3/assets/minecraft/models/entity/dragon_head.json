@@ -1,5 +1,5 @@
 {
-	"parent": "Made with Blockbench by TyBraniff for Bluemaps support.",
+	"credit": "Made with Blockbench by TyBraniff for Bluemaps support.",
 	"texture_size": [256, 256],
 	"textures": {
 		"0": "entity/enderdragon/dragon"
