@@ -34,7 +34,7 @@ public class KeyDeserializer implements TypeDeserializer<Key> {
 
     @Override
     public Key read(NBTReader reader) throws IOException {
-        return new Key(reader.nextString());
+        return Key.parse(reader.nextString(), Key.MINECRAFT_NAMESPACE);
     }
 
 }

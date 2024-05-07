@@ -25,7 +25,7 @@
 package de.bluecolored.bluemap.core.world.block;
 
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
-import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.world.World;
 
 public class BlockNeighborhood<T extends BlockNeighborhood<T>> extends ExtendedBlock<T> {

@@ -24,93 +24,105 @@
  */
 package de.bluecolored.bluemap.core.world.mca.chunk;
 
-import java.util.Arrays;
+import de.bluecolored.bluemap.core.resources.pack.datapack.DataPack;
+import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluemap.core.world.Biome;
+import org.jetbrains.annotations.Nullable;
 
 public class LegacyBiomes {
 
-    private static final String[] BIOME_IDS = new String[170];
+    private static final @Nullable Key [] BIOME_KEYS = new Key[170];
     static {
-        Arrays.fill(BIOME_IDS, "minecraft:ocean");
-        BIOME_IDS[0] = "minecraft:ocean";
-        BIOME_IDS[1] = "minecraft:plains";
-        BIOME_IDS[2] = "minecraft:desert";
-        BIOME_IDS[3] = "minecraft:mountains";
-        BIOME_IDS[4] = "minecraft:forest";
-        BIOME_IDS[5] = "minecraft:taiga";
-        BIOME_IDS[6] = "minecraft:swamp";
-        BIOME_IDS[7] = "minecraft:river";
-        BIOME_IDS[8] = "minecraft:nether";
-        BIOME_IDS[9] = "minecraft:the_end";
-        BIOME_IDS[10] = "minecraft:frozen_ocean";
-        BIOME_IDS[11] = "minecraft:frozen_river";
-        BIOME_IDS[12] = "minecraft:snowy_tundra";
-        BIOME_IDS[13] = "minecraft:snowy_mountains";
-        BIOME_IDS[14] = "minecraft:mushroom_fields";
-        BIOME_IDS[15] = "minecraft:mushroom_field_shore";
-        BIOME_IDS[16] = "minecraft:beach";
-        BIOME_IDS[17] = "minecraft:desert_hills";
-        BIOME_IDS[18] = "minecraft:wooded_hills";
-        BIOME_IDS[19] = "minecraft:taiga_hills";
-        BIOME_IDS[20] = "minecraft:mountain_edge";
-        BIOME_IDS[21] = "minecraft:jungle";
-        BIOME_IDS[22] = "minecraft:jungle_hills";
-        BIOME_IDS[23] = "minecraft:jungle_edge";
-        BIOME_IDS[24] = "minecraft:deep_ocean";
-        BIOME_IDS[25] = "minecraft:stone_shore";
-        BIOME_IDS[26] = "minecraft:snowy_beach";
-        BIOME_IDS[27] = "minecraft:birch_forest";
-        BIOME_IDS[28] = "minecraft:birch_forest_hills";
-        BIOME_IDS[29] = "minecraft:dark_forest";
-        BIOME_IDS[30] = "minecraft:snowy_taiga";
-        BIOME_IDS[31] = "minecraft:snowy_taiga_hills";
-        BIOME_IDS[32] = "minecraft:giant_tree_taiga";
-        BIOME_IDS[33] = "minecraft:giant_tree_taiga_hills";
-        BIOME_IDS[34] = "minecraft:wooded_mountains";
-        BIOME_IDS[35] = "minecraft:savanna";
-        BIOME_IDS[36] = "minecraft:savanna_plateau";
-        BIOME_IDS[37] = "minecraft:badlands";
-        BIOME_IDS[38] = "minecraft:wooded_badlands_plateau";
-        BIOME_IDS[39] = "minecraft:badlands_plateau";
-        BIOME_IDS[40] = "minecraft:small_end_islands";
-        BIOME_IDS[41] = "minecraft:end_midlands";
-        BIOME_IDS[42] = "minecraft:end_highlands";
-        BIOME_IDS[43] = "minecraft:end_barrens";
-        BIOME_IDS[44] = "minecraft:warm_ocean";
-        BIOME_IDS[45] = "minecraft:lukewarm_ocean";
-        BIOME_IDS[46] = "minecraft:cold_ocean";
-        BIOME_IDS[47] = "minecraft:deep_warm_ocean";
-        BIOME_IDS[48] = "minecraft:deep_lukewarm_ocean";
-        BIOME_IDS[49] = "minecraft:deep_cold_ocean";
-        BIOME_IDS[50] = "minecraft:deep_frozen_ocean";
-        BIOME_IDS[127] = "minecraft:the_void";
-        BIOME_IDS[129] = "minecraft:sunflower_plains";
-        BIOME_IDS[130] = "minecraft:desert_lakes";
-        BIOME_IDS[131] = "minecraft:gravelly_mountains";
-        BIOME_IDS[132] = "minecraft:flower_forest";
-        BIOME_IDS[133] = "minecraft:taiga_mountains";
-        BIOME_IDS[134] = "minecraft:swamp_hills";
-        BIOME_IDS[140] = "minecraft:ice_spikes";
-        BIOME_IDS[149] = "minecraft:modified_jungle";
-        BIOME_IDS[151] = "minecraft:modified_jungle_edge";
-        BIOME_IDS[155] = "minecraft:tall_birch_forest";
-        BIOME_IDS[156] = "minecraft:tall_birch_hills";
-        BIOME_IDS[157] = "minecraft:dark_forest_hills";
-        BIOME_IDS[158] = "minecraft:snowy_taiga_mountains";
-        BIOME_IDS[160] = "minecraft:giant_spruce_taiga";
-        BIOME_IDS[161] = "minecraft:giant_spruce_taiga_hills";
-        BIOME_IDS[162] = "minecraft:modified_gravelly_mountains";
-        BIOME_IDS[163] = "minecraft:shattered_savanna";
-        BIOME_IDS[164] = "minecraft:shattered_savanna_plateau";
-        BIOME_IDS[165] = "minecraft:eroded_badlands";
-        BIOME_IDS[166] = "minecraft:modified_wooded_badlands_plateau";
-        BIOME_IDS[167] = "minecraft:modified_badlands_plateau";
-        BIOME_IDS[168] = "minecraft:bamboo_jungle";
-        BIOME_IDS[169] = "minecraft:bamboo_jungle_hills";
+        BIOME_KEYS[  0] = Key.minecraft("ocean");
+        BIOME_KEYS[  1] = Key.minecraft("plains");
+        BIOME_KEYS[  2] = Key.minecraft("desert");
+        BIOME_KEYS[  3] = Key.minecraft("mountains");
+        BIOME_KEYS[  4] = Key.minecraft("forest");
+        BIOME_KEYS[  5] = Key.minecraft("taiga");
+        BIOME_KEYS[  6] = Key.minecraft("swamp");
+        BIOME_KEYS[  7] = Key.minecraft("river");
+        BIOME_KEYS[  8] = Key.minecraft("nether");
+        BIOME_KEYS[  9] = Key.minecraft("the_end");
+        BIOME_KEYS[ 10] = Key.minecraft("frozen_ocean");
+        BIOME_KEYS[ 11] = Key.minecraft("frozen_river");
+        BIOME_KEYS[ 12] = Key.minecraft("snowy_tundra");
+        BIOME_KEYS[ 13] = Key.minecraft("snowy_mountains");
+        BIOME_KEYS[ 14] = Key.minecraft("mushroom_fields");
+        BIOME_KEYS[ 15] = Key.minecraft("mushroom_field_shore");
+        BIOME_KEYS[ 16] = Key.minecraft("beach");
+        BIOME_KEYS[ 17] = Key.minecraft("desert_hills");
+        BIOME_KEYS[ 18] = Key.minecraft("wooded_hills");
+        BIOME_KEYS[ 19] = Key.minecraft("taiga_hills");
+        BIOME_KEYS[ 20] = Key.minecraft("mountain_edge");
+        BIOME_KEYS[ 21] = Key.minecraft("jungle");
+        BIOME_KEYS[ 22] = Key.minecraft("jungle_hills");
+        BIOME_KEYS[ 23] = Key.minecraft("jungle_edge");
+        BIOME_KEYS[ 24] = Key.minecraft("deep_ocean");
+        BIOME_KEYS[ 25] = Key.minecraft("stone_shore");
+        BIOME_KEYS[ 26] = Key.minecraft("snowy_beach");
+        BIOME_KEYS[ 27] = Key.minecraft("birch_forest");
+        BIOME_KEYS[ 28] = Key.minecraft("birch_forest_hills");
+        BIOME_KEYS[ 29] = Key.minecraft("dark_forest");
+        BIOME_KEYS[ 30] = Key.minecraft("snowy_taiga");
+        BIOME_KEYS[ 31] = Key.minecraft("snowy_taiga_hills");
+        BIOME_KEYS[ 32] = Key.minecraft("giant_tree_taiga");
+        BIOME_KEYS[ 33] = Key.minecraft("giant_tree_taiga_hills");
+        BIOME_KEYS[ 34] = Key.minecraft("wooded_mountains");
+        BIOME_KEYS[ 35] = Key.minecraft("savanna");
+        BIOME_KEYS[ 36] = Key.minecraft("savanna_plateau");
+        BIOME_KEYS[ 37] = Key.minecraft("badlands");
+        BIOME_KEYS[ 38] = Key.minecraft("wooded_badlands_plateau");
+        BIOME_KEYS[ 39] = Key.minecraft("badlands_plateau");
+        BIOME_KEYS[ 40] = Key.minecraft("small_end_islands");
+        BIOME_KEYS[ 41] = Key.minecraft("end_midlands");
+        BIOME_KEYS[ 42] = Key.minecraft("end_highlands");
+        BIOME_KEYS[ 43] = Key.minecraft("end_barrens");
+        BIOME_KEYS[ 44] = Key.minecraft("warm_ocean");
+        BIOME_KEYS[ 45] = Key.minecraft("lukewarm_ocean");
+        BIOME_KEYS[ 46] = Key.minecraft("cold_ocean");
+        BIOME_KEYS[ 47] = Key.minecraft("deep_warm_ocean");
+        BIOME_KEYS[ 48] = Key.minecraft("deep_lukewarm_ocean");
+        BIOME_KEYS[ 49] = Key.minecraft("deep_cold_ocean");
+        BIOME_KEYS[ 50] = Key.minecraft("deep_frozen_ocean");
+        BIOME_KEYS[127] = Key.minecraft("the_void");
+        BIOME_KEYS[129] = Key.minecraft("sunflower_plains");
+        BIOME_KEYS[130] = Key.minecraft("desert_lakes");
+        BIOME_KEYS[131] = Key.minecraft("gravelly_mountains");
+        BIOME_KEYS[132] = Key.minecraft("flower_forest");
+        BIOME_KEYS[133] = Key.minecraft("taiga_mountains");
+        BIOME_KEYS[134] = Key.minecraft("swamp_hills");
+        BIOME_KEYS[140] = Key.minecraft("ice_spikes");
+        BIOME_KEYS[149] = Key.minecraft("modified_jungle");
+        BIOME_KEYS[151] = Key.minecraft("modified_jungle_edge");
+        BIOME_KEYS[155] = Key.minecraft("tall_birch_forest");
+        BIOME_KEYS[156] = Key.minecraft("tall_birch_hills");
+        BIOME_KEYS[157] = Key.minecraft("dark_forest_hills");
+        BIOME_KEYS[158] = Key.minecraft("snowy_taiga_mountains");
+        BIOME_KEYS[160] = Key.minecraft("giant_spruce_taiga");
+        BIOME_KEYS[161] = Key.minecraft("giant_spruce_taiga_hills");
+        BIOME_KEYS[162] = Key.minecraft("modified_gravelly_mountains");
+        BIOME_KEYS[163] = Key.minecraft("shattered_savanna");
+        BIOME_KEYS[164] = Key.minecraft("shattered_savanna_plateau");
+        BIOME_KEYS[165] = Key.minecraft("eroded_badlands");
+        BIOME_KEYS[166] = Key.minecraft("modified_wooded_badlands_plateau");
+        BIOME_KEYS[167] = Key.minecraft("modified_badlands_plateau");
+        BIOME_KEYS[168] = Key.minecraft("bamboo_jungle");
+        BIOME_KEYS[169] = Key.minecraft("bamboo_jungle_hills");
     }
 
-    public static String idFor(int legacyId) {
-        if (legacyId < 0 || legacyId >= BIOME_IDS.length) legacyId = 0;
-        return BIOME_IDS[legacyId];
+    private final @Nullable Biome [] biomes = new Biome[BIOME_KEYS.length];
+
+    public LegacyBiomes(DataPack dataPack) {
+        for (int i = 0; i < biomes.length; i++) {
+            Key key = BIOME_KEYS[i];
+            if (key != null)
+                biomes[i] = dataPack.getBiome(key);
+        }
+    }
+
+    public @Nullable Biome forId(int legacyId) {
+        if (legacyId < 0 || legacyId >= biomes.length) return null;
+        return biomes[legacyId];
     }
 
 }

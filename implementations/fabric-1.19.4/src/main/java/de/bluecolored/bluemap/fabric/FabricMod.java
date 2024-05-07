@@ -29,11 +29,10 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.commands.Commands;
 import de.bluecolored.bluemap.common.serverinterface.Player;
-import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.Server;
+import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
-import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
@@ -129,12 +128,8 @@ public class FabricMod implements ModInitializer, Server {
     }
 
     @Override
-    public MinecraftVersion getMinecraftVersion() {
-        try {
-            return MinecraftVersion.of(SharedConstants.getGameVersion().getId());
-        } catch (IllegalArgumentException ex) {
-            return MinecraftVersion.LATEST_SUPPORTED;
-        }
+    public String getMinecraftVersion() {
+        return SharedConstants.getGameVersion().getId();
     }
 
     @Override

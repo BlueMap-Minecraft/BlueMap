@@ -30,6 +30,7 @@ import de.bluecolored.bluemap.core.world.ChunkConsumer;
 import de.bluecolored.bluemap.core.world.Region;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 import de.bluecolored.bluemap.core.world.mca.chunk.MCAChunk;
+import lombok.Getter;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -58,6 +59,7 @@ import java.nio.file.StandardOpenOption;
  *
  */
 
+@Getter
 public class LinearRegion implements Region {
 
     public static final String FILE_SUFFIX = ".linear";
@@ -164,7 +166,7 @@ public class LinearRegion implements Region {
                     if (length > 0) {
                         int chunkX = chunkStartX + x;
                         int chunkZ = chunkStartZ + z;
-                        long timestamp = version == 2 ? chunkTimestamps[i] : newestTimestamp;
+                        int timestamp = version == 2 ? chunkTimestamps[i] : (int) newestTimestamp; //TODO: check if in seconds or milliseconds
 
                         if (consumer.filter(chunkX, chunkZ, timestamp)) {
                             if (toBeSkipped > 0) skipNBytes(dIn, toBeSkipped);

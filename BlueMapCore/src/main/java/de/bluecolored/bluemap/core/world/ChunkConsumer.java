@@ -27,7 +27,7 @@ package de.bluecolored.bluemap.core.world;
 @FunctionalInterface
 public interface ChunkConsumer {
 
-    default boolean filter(int chunkX, int chunkZ, long lastModified) {
+    default boolean filter(int chunkX, int chunkZ, int lastModified) {
         return true;
     }
 
@@ -36,10 +36,10 @@ public interface ChunkConsumer {
     @FunctionalInterface
     interface ListOnly extends ChunkConsumer {
 
-        void accept(int chunkX, int chunkZ, long lastModified);
+        void accept(int chunkX, int chunkZ, int lastModified);
 
         @Override
-        default boolean filter(int chunkX, int chunkZ, long lastModified) {
+        default boolean filter(int chunkX, int chunkZ, int lastModified) {
             accept(chunkX, chunkZ, lastModified);
             return false;
         }

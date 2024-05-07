@@ -29,6 +29,10 @@ import de.bluecolored.bluemap.common.web.http.HttpRequest;
 import de.bluecolored.bluemap.common.web.http.HttpRequestHandler;
 import de.bluecolored.bluemap.common.web.http.HttpResponse;
 import de.bluecolored.bluemap.common.web.http.HttpStatusCode;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.Setter;
 import org.intellij.lang.annotations.Language;
 
 import java.util.LinkedList;
@@ -38,7 +42,7 @@ import java.util.regex.Pattern;
 @DebugDump
 public class RoutingRequestHandler implements HttpRequestHandler {
 
-    public LinkedList<Route> routes;
+    public final LinkedList<Route> routes;
 
     public RoutingRequestHandler() {
         this.routes = new LinkedList<>();
@@ -80,34 +84,18 @@ public class RoutingRequestHandler implements HttpRequestHandler {
     }
 
     @DebugDump
-    private static class Route {
+    @AllArgsConstructor
+    @Getter @Setter
+    public static class Route {
 
-        private final Pattern routePattern;
-        private final HttpRequestHandler handler;
-        private final String replacementRoute;
+        private @NonNull Pattern routePattern;
+        private @NonNull String replacementRoute;
+        private @NonNull HttpRequestHandler handler;
 
-        public Route(Pattern routePattern, HttpRequestHandler handler) {
+        public Route(@NonNull Pattern routePattern, @NonNull HttpRequestHandler handler) {
             this.routePattern = routePattern;
             this.replacementRoute = "$0";
             this.handler = handler;
-        }
-
-        public Route(Pattern routePattern, String replacementRoute, HttpRequestHandler handler) {
-            this.routePattern = routePattern;
-            this.replacementRoute = replacementRoute;
-            this.handler = handler;
-        }
-
-        public Pattern getRoutePattern() {
-            return routePattern;
-        }
-
-        public HttpRequestHandler getHandler() {
-            return handler;
-        }
-
-        public String getReplacementRoute() {
-            return replacementRoute;
         }
 
     }

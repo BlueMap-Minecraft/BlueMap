@@ -24,6 +24,9 @@
  */
 package de.bluecolored.bluemap.common.web.http;
 
+import lombok.RequiredArgsConstructor;
+
+@RequiredArgsConstructor
 public enum HttpStatusCode {
 
     CONTINUE (100, "Continue"),
@@ -47,13 +50,8 @@ public enum HttpStatusCode {
     SERVICE_UNAVAILABLE (503, "Service Unavailable"),
     HTTP_VERSION_NOT_SUPPORTED (505, "HTTP Version not supported");
 
-    private int code;
-    private String message;
-
-    private HttpStatusCode(int code, String message) {
-        this.code = code;
-        this.message = message;
-    }
+    private final int code;
+    private final String message;
 
     public int getCode(){
         return code;

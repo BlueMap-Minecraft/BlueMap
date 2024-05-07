@@ -25,10 +25,10 @@
 package de.bluecolored.bluemap.common.serverinterface;
 
 import de.bluecolored.bluemap.api.debug.DebugDump;
-import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.util.Tristate;
 import de.bluecolored.bluemap.core.world.World;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
+import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.util.Collection;
@@ -37,7 +37,7 @@ import java.util.Optional;
 public interface Server {
 
     @DebugDump
-    MinecraftVersion getMinecraftVersion();
+    @Nullable String getMinecraftVersion();
 
     /**
      * Returns the Folder containing the configurations for the plugin

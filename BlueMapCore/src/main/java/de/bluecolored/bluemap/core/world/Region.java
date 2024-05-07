@@ -37,7 +37,7 @@ public interface Region {
             private Chunk foundChunk = Chunk.EMPTY_CHUNK;
 
             @Override
-            public boolean filter(int x, int z, long lastModified) {
+            public boolean filter(int x, int z, int lastModified) {
                 return x == chunkX && z == chunkZ;
             }
 
@@ -53,7 +53,7 @@ public interface Region {
     }
 
     /**
-     * Iterates over all chunks in this region and first calls {@link ChunkConsumer#filter(int, int, long)}.<br>
+     * Iterates over all chunks in this region and first calls {@link ChunkConsumer#filter(int, int, int)}.<br>
      * And if (any only if) that method returned <code>true</code>, the chunk will be loaded and {@link ChunkConsumer#accept(int, int, Chunk)}
      * will be called with the loaded chunk.
      * @param consumer the consumer choosing which chunks to load and accepting them

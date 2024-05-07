@@ -78,6 +78,7 @@ public class Database implements Closeable {
         SQLException sqlException = null;
 
         try {
+            // try the action 2 times if a "recoverable" exception is thrown
             for (int i = 0; i < 2; i++) {
                 try (Connection connection = dataSource.getConnection()) {
                     try {

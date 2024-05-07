@@ -105,20 +105,22 @@ public interface RenderSettings {
                 y <= max.getY();
     }
 
+    default boolean isInsideRenderBoundaries(Vector2i cell, Grid grid, boolean allowPartiallyIncludedCells) {
+        Vector2i cellMin = allowPartiallyIncludedCells ? grid.getCellMin(cell) : grid.getCellMax(cell);
+        if (cellMin.getX() > getMaxPos().getX()) return false;
+        if (cellMin.getY() > getMaxPos().getZ()) return false;
+
+        Vector2i cellMax = allowPartiallyIncludedCells ? grid.getCellMax(cell) : grid.getCellMin(cell);
+        if (cellMax.getX() < getMinPos().getX()) return false;
+        return cellMax.getY() >= getMinPos().getZ();
+    }
+
     /**
      * Returns a predicate which is filtering out all cells of a {@link Grid}
-     * that are completely outside the render boundaries.
+     * that are outside the render boundaries.
      */
-    default Predicate<Vector2i> getRenderBoundariesCellFilter(Grid grid) {
-        return t -> {
-            Vector2i cellMin = grid.getCellMin(t);
-            if (cellMin.getX() > getMaxPos().getX()) return false;
-            if (cellMin.getY() > getMaxPos().getZ()) return false;
-
-            Vector2i cellMax = grid.getCellMax(t);
-            if (cellMax.getX() < getMinPos().getX()) return false;
-            return cellMax.getY() >= getMinPos().getZ();
-        };
+    default Predicate<Vector2i> getCellRenderBoundariesFilter(Grid grid, boolean allowPartiallyIncludedCells) {
+        return cell -> isInsideRenderBoundaries(cell, grid, allowPartiallyIncludedCells);
     }
 
     boolean isSaveHiresLayer();

@@ -149,11 +149,13 @@ public class Chunk_1_13 extends MCAChunk {
     }
 
     @Override
-    public String getBiome(int x, int y, int z) {
-        if (this.biomes.length < 256) return Biome.DEFAULT.getFormatted();
+    public Biome getBiome(int x, int y, int z) {
+        if (this.biomes.length < 256) return Biome.DEFAULT;
 
         int biomeIntIndex = (z & 0xF) << 4 | x & 0xF;
-        return LegacyBiomes.idFor(biomes[biomeIntIndex]);
+
+        Biome biome = getWorld().getDataPack().getBiome(biomes[biomeIntIndex]);
+        return biome != null ? biome : Biome.DEFAULT;
     }
 
     @Override

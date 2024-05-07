@@ -24,69 +24,73 @@
  */
 package de.bluecolored.bluemap.core.world.mca.region;
 
+import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluemap.core.util.Keyed;
+import de.bluecolored.bluemap.core.util.Registry;
 import de.bluecolored.bluemap.core.world.Region;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-public enum RegionType {
+public interface RegionType extends Keyed {
 
-    MCA (MCARegion::new, MCARegion.FILE_SUFFIX, MCARegion::getRegionFileName),
-    LINEAR (LinearRegion::new, LinearRegion.FILE_SUFFIX, LinearRegion::getRegionFileName);
+    RegionType MCA = new Impl(Key.bluemap("mca"), MCARegion.FILE_SUFFIX, MCARegion::new, MCARegion::getRegionFileName);
+    RegionType LINEAR = new Impl(Key.bluemap("linear"), LinearRegion.FILE_SUFFIX, LinearRegion::new, LinearRegion::getRegionFileName);
 
-    // we do this to improve performance, as calling values() creates a new array each time
-    private final static RegionType[] VALUES = values();
-    private final static RegionType DEFAULT = MCA;
+    RegionType DEFAULT = MCA;
+    Registry<RegionType> REGISTRY = new Registry<>(
+            MCA,
+            LINEAR
+    );
 
-    private final String fileSuffix;
-    private final RegionFactory regionFactory;
-    private final RegionFileNameFunction regionFileNameFunction;
+    String getFileSuffix();
 
-    RegionType(RegionFactory regionFactory, String fileSuffix, RegionFileNameFunction regionFileNameFunction) {
-        this.fileSuffix = fileSuffix;
-        this.regionFactory = regionFactory;
-        this.regionFileNameFunction = regionFileNameFunction;
-    }
+    Region createRegion(MCAWorld world, Path regionFile);
 
-    public String getFileSuffix() {
-        return fileSuffix;
-    }
+    Path getRegionFile(Path regionFolder, int regionX, int regionZ);
 
-    public Region createRegion(MCAWorld world, Path regionFile) {
-        return this.regionFactory.create(world, regionFile);
-    }
-
-    public String getRegionFileName(int regionX, int regionZ) {
-        return regionFileNameFunction.getRegionFileName(regionX, regionZ);
-    }
-
-    public Path getRegionFile(Path regionFolder, int regionX, int regionZ) {
-        return regionFolder.resolve(getRegionFileName(regionX, regionZ));
-    }
-
-    @Nullable
-    public static RegionType forFileName(String fileName) {
-        //noinspection ForLoopReplaceableByForEach
-        for (int i = 0; i < VALUES.length; i++) {
-            RegionType regionType = VALUES[i];
-            if (fileName.endsWith(regionType.fileSuffix))
+    static @Nullable RegionType forFileName(String fileName) {
+        for (RegionType regionType : REGISTRY.values()) {
+            if (fileName.endsWith(regionType.getFileSuffix()))
                 return regionType;
         }
+
         return null;
     }
 
-    @NotNull
-    public static Region loadRegion(MCAWorld world, Path regionFolder, int regionX, int regionZ) {
-        //noinspection ForLoopReplaceableByForEach
-        for (int i = 0; i < VALUES.length; i++) {
-            RegionType regionType = VALUES[i];
+    static @NotNull Region loadRegion(MCAWorld world, Path regionFolder, int regionX, int regionZ) {
+        for (RegionType regionType : REGISTRY.values()) {
             Path regionFile = regionType.getRegionFile(regionFolder, regionX, regionZ);
             if (Files.exists(regionFile)) return regionType.createRegion(world, regionFile);
         }
         return DEFAULT.createRegion(world, DEFAULT.getRegionFile(regionFolder, regionX, regionZ));
+    }
+
+    @RequiredArgsConstructor
+    class Impl implements RegionType {
+
+        @Getter private final Key key;
+        @Getter private final String fileSuffix;
+        private final RegionFactory regionFactory;
+        private final RegionFileNameFunction regionFileNameFunction;
+
+        public Region createRegion(MCAWorld world, Path regionFile) {
+            return this.regionFactory.create(world, regionFile);
+        }
+
+        public String getRegionFileName(int regionX, int regionZ) {
+            return regionFileNameFunction.getRegionFileName(regionX, regionZ);
+        }
+
+        public Path getRegionFile(Path regionFolder, int regionX, int regionZ) {
+            return regionFolder.resolve(getRegionFileName(regionX, regionZ));
+        }
+
     }
 
     @FunctionalInterface

@@ -67,7 +67,11 @@ public class RegionFileWatchService extends Thread {
         FileHelper.createDirectories(folder);
 
         this.watchService = folder.getFileSystem().newWatchService();
-        folder.register(this.watchService, StandardWatchEventKinds.ENTRY_CREATE, StandardWatchEventKinds.ENTRY_MODIFY);
+        folder.register(this.watchService,
+                StandardWatchEventKinds.ENTRY_CREATE,
+                StandardWatchEventKinds.ENTRY_MODIFY,
+                StandardWatchEventKinds.ENTRY_DELETE
+        );
 
         Logger.global.logDebug("Created region-file watch-service for map '" + map.getId() + "' at '" + folder + "'.");
     }

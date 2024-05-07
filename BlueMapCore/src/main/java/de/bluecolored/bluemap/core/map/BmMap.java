@@ -34,21 +34,29 @@ import de.bluecolored.bluemap.api.markers.MarkerSet;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.map.lowres.LowresTileManager;
+import de.bluecolored.bluemap.core.map.renderstate.MapChunkState;
+import de.bluecolored.bluemap.core.map.renderstate.MapTileState;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
-import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.storage.MapStorage;
 import de.bluecolored.bluemap.core.storage.compression.CompressedInputStream;
 import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.world.World;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.Setter;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.nio.charset.StandardCharsets;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
 @DebugDump
+@Getter
 public class BmMap {
 
     private static final Gson GSON = ResourcesGson.addAdapter(new GsonBuilder())
@@ -63,20 +71,23 @@ public class BmMap {
     private final MapSettings mapSettings;
 
     private final ResourcePack resourcePack;
-    private final MapRenderState renderState;
     private final TextureGallery textureGallery;
+
+    private final MapTileState mapTileState;
+    private final MapChunkState mapChunkState;
 
     private final HiresModelManager hiresModelManager;
     private final LowresTileManager lowresTileManager;
 
     private final ConcurrentHashMap<String, MarkerSet> markerSets;
 
-    private Predicate<Vector2i> tileFilter;
+    @Setter private Predicate<Vector2i> tileFilter;
 
-    private long renderTimeSumNanos;
-    private long tilesRendered;
+    @Getter(AccessLevel.NONE) private long renderTimeSumNanos;
+    @Getter(AccessLevel.NONE) private long tilesRendered;
+    @Getter(AccessLevel.NONE) private long lastSaveTime;
 
-    public BmMap(String id, String name, World world, MapStorage storage, ResourcePack resourcePack, MapSettings settings) throws IOException {
+    public BmMap(String id, String name, World world, MapStorage storage, ResourcePack resourcePack, MapSettings settings) throws IOException, InterruptedException {
         this.id = Objects.requireNonNull(id);
         this.name = Objects.requireNonNull(name);
         this.world = Objects.requireNonNull(world);
@@ -84,9 +95,14 @@ public class BmMap {
         this.resourcePack = Objects.requireNonNull(resourcePack);
         this.mapSettings = Objects.requireNonNull(settings);
 
-        this.renderState = new MapRenderState();
-        loadRenderState();
+        Logger.global.logDebug("Loading render-state for map '" + id + "'");
+        this.mapTileState = new MapTileState(storage.tileState());
+        this.mapTileState.load();
+        this.mapChunkState = new MapChunkState(storage.chunkState());
 
+        if (Thread.interrupted()) throw new InterruptedException();
+
+        Logger.global.logDebug("Loading textures for map '" + id + "'");
         this.textureGallery = loadTextureGallery();
         this.textureGallery.put(resourcePack);
         saveTextureGallery();
@@ -112,6 +128,7 @@ public class BmMap {
 
         this.renderTimeSumNanos = 0;
         this.tilesRendered = 0;
+        this.lastSaveTime = -1;
 
         saveMapSettings();
     }
@@ -130,9 +147,23 @@ public class BmMap {
         tilesRendered ++;
     }
 
+    public void unrenderTile(Vector2i tile) {
+        hiresModelManager.unrender(tile, lowresTileManager);
+    }
+
+    public synchronized boolean save(long minTimeSinceLastSave) {
+        long now = System.currentTimeMillis();
+        if (now - lastSaveTime < minTimeSinceLastSave)
+            return false;
+
+        save();
+        return true;
+    }
+
     public synchronized void save() {
         lowresTileManager.save();
-        saveRenderState();
+        mapTileState.save();
+        mapChunkState.save();
         saveMarkerState();
         savePlayerState();
         saveMapSettings();
@@ -142,25 +173,10 @@ public class BmMap {
             if (!storage.textures().exists())
                 saveTextureGallery();
         } catch (IOException e) {
-            Logger.global.logError("Failed to read texture gallery", e);
+            Logger.global.logError("Failed to read texture gallery for map '" + getId() + "'!", e);
         }
-    }
 
-    private void loadRenderState() throws IOException {
-        try (CompressedInputStream in = storage.renderState().read()){
-            if (in != null)
-                this.renderState.load(in.decompress());
-        } catch (IOException ex) {
-            Logger.global.logWarning("Failed to load render-state for map '" + getId() + "': " + ex);
-        }
-    }
-
-    public synchronized void saveRenderState() {
-        try (OutputStream out = storage.renderState().write()) {
-            this.renderState.save(out);
-        } catch (IOException ex){
-            Logger.global.logError("Failed to save render-state for map: '" + this.id + "'!", ex);
-        }
+        lastSaveTime = System.currentTimeMillis();
     }
 
     private TextureGallery loadTextureGallery() throws IOException {
@@ -215,50 +231,6 @@ public class BmMap {
         } catch (Exception ex) {
             Logger.global.logError("Failed to save markers for map '" + getId() + "'!", ex);
         }
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public World getWorld() {
-        return world;
-    }
-
-    public MapStorage getStorage() {
-        return storage;
-    }
-
-    public MapSettings getMapSettings() {
-        return mapSettings;
-    }
-
-    public MapRenderState getRenderState() {
-        return renderState;
-    }
-
-    public HiresModelManager getHiresModelManager() {
-        return hiresModelManager;
-    }
-
-    public LowresTileManager getLowresTileManager() {
-        return lowresTileManager;
-    }
-
-    public Map<String, MarkerSet> getMarkerSets() {
-        return markerSets;
-    }
-
-    public Predicate<Vector2i> getTileFilter() {
-        return tileFilter;
-    }
-
-    public void setTileFilter(Predicate<Vector2i> tileFilter) {
-        this.tileFilter = tileFilter;
     }
 
     public long getAverageNanosPerTile() {

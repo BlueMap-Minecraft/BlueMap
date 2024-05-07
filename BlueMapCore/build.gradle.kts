@@ -65,7 +65,7 @@ dependencies {
     api ("commons-io:commons-io:2.5")
     api ("org.spongepowered:configurate-hocon:4.1.2")
     api ("org.spongepowered:configurate-gson:4.1.2")
-    api ("de.bluecolored.bluenbt:BlueNBT:2.2.1")
+    api ("de.bluecolored.bluenbt:BlueNBT:2.3.0")
     api ("org.apache.commons:commons-dbcp2:2.9.0")
     api ("io.airlift:aircompressor:0.24")
     api ("org.lz4:lz4-java:1.8.0")

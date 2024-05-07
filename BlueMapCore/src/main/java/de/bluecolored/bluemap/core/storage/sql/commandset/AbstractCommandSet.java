@@ -28,6 +28,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.core.storage.compression.Compression;
 import de.bluecolored.bluemap.core.storage.sql.Database;
+import de.bluecolored.bluemap.core.util.Key;
 import lombok.RequiredArgsConstructor;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.Nullable;
@@ -41,12 +42,16 @@ import java.util.List;
 @RequiredArgsConstructor
 public abstract class AbstractCommandSet implements CommandSet {
 
-    private final Database db;
+    protected final Database db;
 
-    final LoadingCache<String, Integer> mapKeys = Caffeine.newBuilder()
+    protected final LoadingCache<String, Integer> mapKeys = Caffeine.newBuilder()
             .build(this::findOrCreateMapKey);
-    final LoadingCache<Compression, Integer> compressionKeys = Caffeine.newBuilder()
+    protected final LoadingCache<Compression, Integer> compressionKeys = Caffeine.newBuilder()
             .build(this::findOrCreateCompressionKey);
+    protected final LoadingCache<Key, Integer> itemStorageKeys = Caffeine.newBuilder()
+            .build(this::findOrCreateItemStorageKey);
+    protected final LoadingCache<Key, Integer> gridStorageKeys = Caffeine.newBuilder()
+            .build(this::findOrCreateGridStorageKey);
 
     @Language("sql")
     public abstract String createMapTableStatement();
@@ -55,53 +60,55 @@ public abstract class AbstractCommandSet implements CommandSet {
     public abstract String createCompressionTableStatement();
 
     @Language("sql")
-    public abstract String createMapMetaTableStatement();
+    public abstract String createItemStorageTableStatement();
 
     @Language("sql")
-    public abstract String createMapTileTableStatement();
+    public abstract String createItemStorageDataTableStatement();
 
     @Language("sql")
-    public abstract String fixLegacyCompressionIdsStatement();
+    public abstract String createGridStorageTableStatement();
+
+    @Language("sql")
+    public abstract String createGridStorageDataTableStatement();
 
     public void initializeTables() throws IOException {
         db.run(connection -> {
             executeUpdate(connection, createMapTableStatement());
             executeUpdate(connection, createCompressionTableStatement());
-            executeUpdate(connection, createMapMetaTableStatement());
-            executeUpdate(connection, createMapTileTableStatement());
+            executeUpdate(connection, createItemStorageTableStatement());
+            executeUpdate(connection, createItemStorageDataTableStatement());
+            executeUpdate(connection, createGridStorageTableStatement());
+            executeUpdate(connection, createGridStorageDataTableStatement());
         });
-
-        db.run(connection -> executeUpdate(connection, fixLegacyCompressionIdsStatement()));
     }
 
     @Language("sql")
-    public abstract String writeMapTileStatement();
+    public abstract String itemStorageWriteStatement();
 
     @Override
-    public int writeMapTile(
-            String mapId, int lod, int x, int z, Compression compression,
-            byte[] bytes
-    ) throws IOException {
+    public void writeItem(String mapId, Key key, Compression compression, byte[] bytes) throws IOException {
         int mapKey = mapKey(mapId);
+        int storageKey = itemStorageKey(key);
+        int compressionKey = compressionKey(compression);
+        db.run(connection -> executeUpdate(connection,
+                itemStorageWriteStatement(),
+                mapKey, storageKey, compressionKey,
+                bytes
+        ));
+    }
+
+    @Language("sql")
+    public abstract String itemStorageReadStatement();
+
+    @Override
+    public byte @Nullable [] readItem(String mapId, Key key, Compression compression) throws IOException {
+        int mapKey = mapKey(mapId);
+        int storageKey = itemStorageKey(key);
         int compressionKey = compressionKey(compression);
         return db.run(connection -> {
-            return executeUpdate(connection,
-                    writeMapTileStatement(),
-                    mapKey, lod, x, z, compressionKey,
-                    bytes
-            );
-        });
-    }
-
-    @Language("sql")
-    public abstract String readMapTileStatement();
-
-    @Override
-    public byte @Nullable [] readMapTile(String mapId, int lod, int x, int z, Compression compression) throws IOException {
-        return db.run(connection -> {
             ResultSet result = executeQuery(connection,
-                    readMapTileStatement(),
-                    mapId, lod, x, z, compression.getKey().getFormatted()
+                    itemStorageReadStatement(),
+                    mapKey, storageKey, compressionKey
             );
             if (!result.next()) return null;
             return result.getBytes(1);
@@ -109,29 +116,30 @@ public abstract class AbstractCommandSet implements CommandSet {
     }
 
     @Language("sql")
-    public abstract String deleteMapTileStatement();
+    public abstract String itemStorageDeleteStatement();
 
     @Override
-    public int deleteMapTile(String mapId, int lod, int x, int z, Compression compression) throws IOException {
+    public void deleteItem(String mapId, Key key) throws IOException {
         int mapKey = mapKey(mapId);
-        int compressionKey = compressionKey(compression);
-        return db.run(connection -> {
-            return executeUpdate(connection,
-                    deleteMapTileStatement(),
-                    mapKey, lod, x, z, compressionKey
-            );
-        });
+        int storageKey = itemStorageKey(key);
+        db.run(connection -> executeUpdate(connection,
+                itemStorageDeleteStatement(),
+                mapKey, storageKey
+        ));
     }
 
     @Language("sql")
-    public abstract String hasMapTileStatement();
+    public abstract String itemStorageHasStatement();
 
     @Override
-    public boolean hasMapTile(String mapId, int lod, int x, int z, Compression compression) throws IOException {
+    public boolean hasItem(String mapId, Key key, Compression compression) throws IOException {
+        int mapKey = mapKey(mapId);
+        int storageKey = itemStorageKey(key);
+        int compressionKey = compressionKey(compression);
         return db.run(connection -> {
             ResultSet result = executeQuery(connection,
-                    hasMapTileStatement(),
-                    mapId, lod, x, z, compression.getKey().getFormatted()
+                    itemStorageHasStatement(),
+                    mapKey, storageKey, compressionKey
             );
             if (!result.next()) throw new IllegalStateException("Counting query returned empty result!");
             return result.getBoolean(1);
@@ -139,43 +147,93 @@ public abstract class AbstractCommandSet implements CommandSet {
     }
 
     @Language("sql")
-    public abstract String countAllMapTilesStatement();
+    public abstract String gridStorageWriteStatement();
 
     @Override
-    public int countAllMapTiles(String mapId) throws IOException {
+    public void writeGridItem(
+            String mapId, Key key, int x, int z, Compression compression,
+            byte[] bytes
+    ) throws IOException {
+        int mapKey = mapKey(mapId);
+        int storageKey = gridStorageKey(key);
+        int compressionKey = compressionKey(compression);
+        db.run(connection -> executeUpdate(connection,
+                gridStorageWriteStatement(),
+                mapKey, storageKey, x, z, compressionKey,
+                bytes
+        ));
+    }
+
+    @Language("sql")
+    public abstract String gridStorageReadStatement();
+
+    @Override
+    public byte @Nullable [] readGridItem(
+            String mapId, Key key, int x, int z, Compression compression
+    ) throws IOException {
+        int mapKey = mapKey(mapId);
+        int storageKey = gridStorageKey(key);
+        int compressionKey = compressionKey(compression);
         return db.run(connection -> {
             ResultSet result = executeQuery(connection,
-                    countAllMapTilesStatement(),
-                    mapId
+                    gridStorageReadStatement(),
+                    mapKey, storageKey, x, z, compressionKey
+            );
+            if (!result.next()) return null;
+            return result.getBytes(1);
+        });
+    }
+
+    @Language("sql")
+    public abstract String gridStorageDeleteStatement();
+
+    @Override
+    public void deleteGridItem(
+            String mapId, Key key, int x, int z
+    ) throws IOException {
+        int mapKey = mapKey(mapId);
+        int storageKey = gridStorageKey(key);
+        db.run(connection -> executeUpdate(connection,
+                gridStorageDeleteStatement(),
+                mapKey, storageKey, x, z
+        ));
+    }
+
+    @Language("sql")
+    public abstract String gridStorageHasStatement();
+
+    @Override
+    public boolean hasGridItem(
+            String mapId, Key key, int x, int z, Compression compression
+    ) throws IOException {
+        int mapKey = mapKey(mapId);
+        int storageKey = gridStorageKey(key);
+        int compressionKey = compressionKey(compression);
+        return db.run(connection -> {
+            ResultSet result = executeQuery(connection,
+                    gridStorageHasStatement(),
+                    mapKey, storageKey, x, z, compressionKey
             );
             if (!result.next()) throw new IllegalStateException("Counting query returned empty result!");
-            return result.getInt(1);
+            return result.getBoolean(1);
         });
     }
 
     @Language("sql")
-    public abstract String purgeMapTilesStatement();
+    public abstract String gridStorageListStatement();
 
     @Override
-    public int purgeMapTiles(String mapId, int limit) throws IOException {
+    public TilePosition[] listGridItems(
+            String mapId, Key key, Compression compression,
+            int start, int count
+    ) throws IOException {
         int mapKey = mapKey(mapId);
-        return db.run(connection -> {
-            return executeUpdate(connection,
-                    purgeMapTilesStatement(),
-                    mapKey, limit
-            );
-        });
-    }
-
-    @Language("sql")
-    public abstract String listMapTilesStatement();
-
-    @Override
-    public TilePosition[] listMapTiles(String mapId, int lod, Compression compression, int start, int count) throws IOException {
+        int storageKey = gridStorageKey(key);
+        int compressionKey = compressionKey(compression);
         return db.run(connection -> {
             ResultSet result = executeQuery(connection,
-                    listMapTilesStatement(),
-                    mapId, lod, compression.getKey().getFormatted(),
+                    gridStorageListStatement(),
+                    mapKey, storageKey, compressionKey,
                     count, start
             );
 
@@ -199,96 +257,46 @@ public abstract class AbstractCommandSet implements CommandSet {
     }
 
     @Language("sql")
-    public abstract String writeMapMetaStatement();
+    public abstract String gridStorageCountMapItemsStatement();
 
     @Override
-    public int writeMapMeta(String mapId, String itemName, byte[] bytes) throws IOException {
+    public int countMapGridsItems(String mapId) throws IOException {
         int mapKey = mapKey(mapId);
         return db.run(connection -> {
-            return executeUpdate(connection,
-                    writeMapMetaStatement(),
-                    mapKey, itemName,
-                    bytes
-            );
-        });
-    }
-
-    @Language("sql")
-    public abstract String readMapMetaStatement();
-
-    @Override
-    public byte @Nullable [] readMapMeta(String mapId, String itemName) throws IOException {
-        return db.run(connection -> {
             ResultSet result = executeQuery(connection,
-                    readMapMetaStatement(),
-                    mapId, itemName
-            );
-            if (!result.next()) return null;
-            return result.getBytes(1);
-        });
-    }
-
-    @Language("sql")
-    public abstract String deleteMapMetaStatement();
-
-    @Override
-    public int deleteMapMeta(String mapId, String itemName) throws IOException {
-        int mapKey = mapKey(mapId);
-        return db.run(connection -> {
-            return executeUpdate(connection,
-                    deleteMapMetaStatement(),
-                    mapKey, itemName
-            );
-        });
-    }
-
-    @Language("sql")
-    public abstract String hasMapMetaStatement();
-
-    @Override
-    public boolean hasMapMeta(String mapId, String itemName) throws IOException {
-        return db.run(connection -> {
-            ResultSet result = executeQuery(connection,
-                    hasMapMetaStatement(),
-                    mapId, itemName
+                    gridStorageCountMapItemsStatement(),
+                    mapKey
             );
             if (!result.next()) throw new IllegalStateException("Counting query returned empty result!");
-            return result.getBoolean(1);
+            return result.getInt(1);
         });
     }
 
     @Language("sql")
-    public abstract String purgeMapTileTableStatement();
+    public abstract String gridStoragePurgeMapStatement();
+
+    @Override
+    public int purgeMapGrids(String mapId, int limit) throws IOException {
+        int mapKey = mapKey(mapId);
+        return db.run(connection -> {
+            return executeUpdate(connection,
+                    gridStoragePurgeMapStatement(),
+                    mapKey, limit
+            );
+        });
+    }
 
     @Language("sql")
-    public abstract String purgeMapMetaTableStatement();
-
-    @Language("sql")
-    public abstract String deleteMapStatement();
+    public abstract String purgeMapStatement();
 
     @Override
     public void purgeMap(String mapId) throws IOException {
         synchronized (mapKeys) {
             int mapKey = mapKey(mapId);
-            db.run(connection -> {
-
-                executeUpdate(connection,
-                        purgeMapTileTableStatement(),
-                        mapKey
-                );
-
-                executeUpdate(connection,
-                        purgeMapMetaTableStatement(),
-                        mapKey
-                );
-
-                executeUpdate(connection,
-                        deleteMapStatement(),
-                        mapKey
-                );
-
-            });
-
+            db.run(connection -> executeUpdate(connection,
+                    purgeMapStatement(),
+                    mapKey
+            ));
             mapKeys.invalidate(mapId);
         }
     }
@@ -390,6 +398,78 @@ public abstract class AbstractCommandSet implements CommandSet {
                     Statement.RETURN_GENERATED_KEYS
             );
             statement.setString(1, compression.getKey().getFormatted());
+            statement.executeUpdate();
+
+            ResultSet keys = statement.getGeneratedKeys();
+            if (!keys.next()) throw new IllegalStateException("No generated key returned!");
+            return keys.getInt(1);
+        });
+    }
+
+    @Language("sql")
+    public abstract String findItemStorageKeyStatement();
+
+    @Language("sql")
+    public abstract String createItemStorageKeyStatement();
+
+    public int itemStorageKey(Key key) {
+        synchronized (itemStorageKeys) {
+            //noinspection DataFlowIssue
+            return itemStorageKeys.get(key);
+        }
+    }
+
+    public int findOrCreateItemStorageKey(Key key) throws IOException {
+        return db.run(connection -> {
+            ResultSet result = executeQuery(connection,
+                    findItemStorageKeyStatement(),
+                    key.getFormatted()
+            );
+
+            if (result.next())
+                return result.getInt(1);
+
+            PreparedStatement statement = connection.prepareStatement(
+                    createItemStorageKeyStatement(),
+                    Statement.RETURN_GENERATED_KEYS
+            );
+            statement.setString(1, key.getFormatted());
+            statement.executeUpdate();
+
+            ResultSet keys = statement.getGeneratedKeys();
+            if (!keys.next()) throw new IllegalStateException("No generated key returned!");
+            return keys.getInt(1);
+        });
+    }
+
+    @Language("sql")
+    public abstract String findGridStorageKeyStatement();
+
+    @Language("sql")
+    public abstract String createGridStorageKeyStatement();
+
+    public int gridStorageKey(Key key) {
+        synchronized (gridStorageKeys) {
+            //noinspection DataFlowIssue
+            return gridStorageKeys.get(key);
+        }
+    }
+
+    public int findOrCreateGridStorageKey(Key key) throws IOException {
+        return db.run(connection -> {
+            ResultSet result = executeQuery(connection,
+                    findGridStorageKeyStatement(),
+                    key.getFormatted()
+            );
+
+            if (result.next())
+                return result.getInt(1);
+
+            PreparedStatement statement = connection.prepareStatement(
+                    createGridStorageKeyStatement(),
+                    Statement.RETURN_GENERATED_KEYS
+            );
+            statement.setString(1, key.getFormatted());
             statement.executeUpdate();
 
             ResultSet keys = statement.getGeneratedKeys();

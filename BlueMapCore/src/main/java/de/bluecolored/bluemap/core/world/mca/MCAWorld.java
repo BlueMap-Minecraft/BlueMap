@@ -31,15 +31,12 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.resources.datapack.DataPack;
+import de.bluecolored.bluemap.core.resources.pack.datapack.DataPack;
 import de.bluecolored.bluemap.core.storage.compression.Compression;
 import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.Vector2iCache;
-import de.bluecolored.bluemap.core.world.Chunk;
-import de.bluecolored.bluemap.core.world.DimensionType;
-import de.bluecolored.bluemap.core.world.Region;
-import de.bluecolored.bluemap.core.world.World;
+import de.bluecolored.bluemap.core.world.*;
 import de.bluecolored.bluemap.core.world.mca.chunk.ChunkLoader;
 import de.bluecolored.bluemap.core.world.mca.data.LevelData;
 import de.bluecolored.bluemap.core.world.mca.region.RegionType;
@@ -53,7 +50,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
+import java.util.function.Predicate;
 
 @Getter
 @ToString
@@ -68,8 +65,8 @@ public class MCAWorld implements World {
     private final String id;
     private final Path worldFolder;
     private final Key dimension;
-    private final LevelData levelData;
     private final DataPack dataPack;
+    private final LevelData levelData;
 
     private final DimensionType dimensionType;
     private final Vector3i spawnPoint;
@@ -88,12 +85,12 @@ public class MCAWorld implements World {
             .expireAfterWrite(10, TimeUnit.MINUTES)
             .build(this::loadChunk);
 
-    private MCAWorld(Path worldFolder, Key dimension, LevelData levelData, DataPack dataPack) {
+    private MCAWorld(Path worldFolder, Key dimension, DataPack dataPack, LevelData levelData) {
         this.id = id(worldFolder, dimension);
         this.worldFolder = worldFolder;
         this.dimension = dimension;
-        this.levelData = levelData;
         this.dataPack = dataPack;
+        this.levelData = levelData;
 
         LevelData.Dimension dimensionData = levelData.getData().getWorldGenSettings().getDimensions().get(dimension.getFormatted());
         if (dimensionData == null) {
@@ -186,11 +183,20 @@ public class MCAWorld implements World {
     }
 
     @Override
-    public void preloadRegionChunks(int x, int z) {
+    public void preloadRegionChunks(int x, int z, Predicate<Vector2i> chunkFilter) {
         try {
-            getRegion(x, z).iterateAllChunks((cx, cz, chunk) -> {
-                Vector2i chunkPos = VECTOR_2_I_CACHE.get(cx, cz);
-                chunkCache.put(chunkPos, chunk);
+            getRegion(x, z).iterateAllChunks(new ChunkConsumer() {
+                @Override
+                public boolean filter(int chunkX, int chunkZ, int lastModified) {
+                    Vector2i chunkPos = VECTOR_2_I_CACHE.get(chunkX, chunkZ);
+                    return chunkFilter.test(chunkPos);
+                }
+
+                @Override
+                public void accept(int chunkX, int chunkZ, Chunk chunk) {
+                    Vector2i chunkPos = VECTOR_2_I_CACHE.get(chunkX, chunkZ);
+                    chunkCache.put(chunkPos, chunk);
+                }
             });
         } catch (IOException ex) {
             Logger.global.logDebug("Unexpected exception trying to load preload region (x:" + x + ", z:" + z + "):" + ex);
@@ -253,33 +259,17 @@ public class MCAWorld implements World {
         }
 
         Logger.global.logDebug("Unexpected exception trying to load chunk (x:" + x + ", z:" + z + "):" + loadException);
-        return Chunk.EMPTY_CHUNK;
+        return Chunk.ERRORED_CHUNK;
     }
 
-    public static MCAWorld load(Path worldFolder, Key dimension) throws IOException, InterruptedException {
+    public static MCAWorld load(Path worldFolder, Key dimension, DataPack dataPack) throws IOException, InterruptedException {
         // load level.dat
         Path levelFile = worldFolder.resolve("level.dat");
         InputStream levelFileIn = Compression.GZIP.decompress(Files.newInputStream(levelFile));
         LevelData levelData = MCAUtil.BLUENBT.read(levelFileIn, LevelData.class);
 
-        // load datapacks
-        DataPack dataPack = new DataPack();
-        Path dataPackFolder = worldFolder.resolve("datapacks");
-        if (Files.exists(dataPackFolder)) {
-            List<Path> roots;
-            try (var stream = Files.list(dataPackFolder)) {
-                roots = stream
-                        .sorted(Comparator.reverseOrder())
-                        .collect(Collectors.toList());
-            }
-            for (Path root : roots) {
-                dataPack.load(root);
-            }
-        }
-        dataPack.bake();
-
         // create world
-        return new MCAWorld(worldFolder, dimension, levelData, dataPack);
+        return new MCAWorld(worldFolder, dimension, dataPack, levelData);
     }
 
     public static String id(Path worldFolder, Key dimension) {

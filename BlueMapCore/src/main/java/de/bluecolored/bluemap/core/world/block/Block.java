@@ -24,10 +24,7 @@
  */
 package de.bluecolored.bluemap.core.world.block;
 
-import de.bluecolored.bluemap.core.world.BlockState;
-import de.bluecolored.bluemap.core.world.Chunk;
-import de.bluecolored.bluemap.core.world.LightData;
-import de.bluecolored.bluemap.core.world.World;
+import de.bluecolored.bluemap.core.world.*;
 import de.bluecolored.bluemap.core.world.block.entity.BlockEntity;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,11 +33,11 @@ public class Block<T extends Block<T>> {
     private World world;
     private int x, y, z;
 
-    private Chunk chunk;
+    private @Nullable Chunk chunk;
 
-    private BlockState blockState;
+    private @Nullable BlockState blockState;
     private final LightData lightData = new LightData(-1, -1);
-    private String biomeId;
+    private @Nullable Biome biome;
 
     public Block(World world, int x, int y, int z) {
         set(world, x, y, z);
@@ -82,7 +79,7 @@ public class Block<T extends Block<T>> {
     protected void reset() {
         this.blockState = null;
         this.lightData.set(-1, -1);
-        this.biomeId = null;
+        this.biome = null;
     }
 
     public T add(int dx, int dy, int dz) {
@@ -100,7 +97,7 @@ public class Block<T extends Block<T>> {
 
         this.blockState = source.blockState;
         this.lightData.set(source.lightData.getSkyLight(), source.lightData.getBlockLight());
-        this.biomeId = source.biomeId;
+        this.biome = source.biome;
 
         return self();
     }
@@ -136,9 +133,9 @@ public class Block<T extends Block<T>> {
         return lightData;
     }
 
-    public String getBiomeId() {
-        if (biomeId == null) biomeId = getChunk().getBiome(x, y, z);
-        return biomeId;
+    public Biome getBiome() {
+        if (biome == null) biome = getChunk().getBiome(x, y, z);
+        return biome;
     }
 
     public int getSunLightLevel() {
@@ -164,7 +161,7 @@ public class Block<T extends Block<T>> {
                    ", chunk=" + getChunk() +
                    ", blockState=" + getBlockState() +
                    ", lightData=" + getLightData() +
-                   ", biomeId=" + getBiomeId() +
+                   ", biome=" + getBiome() +
                    '}';
         } else {
             return "Block{" +

@@ -49,13 +49,13 @@ public class RenderManagerImpl implements RenderManager {
     @Override
     public boolean scheduleMapUpdateTask(BlueMapMap map, boolean force) {
         BlueMapMapImpl cmap = castMap(map);
-        return renderManager.scheduleRenderTask(new MapUpdateTask(cmap.getBmMap(), force));
+        return renderManager.scheduleRenderTask(new MapUpdateTask(cmap.getBmMap(), s -> force));
     }
 
     @Override
     public boolean scheduleMapUpdateTask(BlueMapMap map, Collection<Vector2i> regions, boolean force) {
         BlueMapMapImpl cmap = castMap(map);
-        return renderManager.scheduleRenderTask(new MapUpdateTask(cmap.getBmMap(), regions, force));
+        return renderManager.scheduleRenderTask(new MapUpdateTask(cmap.getBmMap(), regions, s -> force));
     }
 
     @Override

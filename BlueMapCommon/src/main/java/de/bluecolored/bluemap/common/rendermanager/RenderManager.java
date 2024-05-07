@@ -106,9 +106,23 @@ public class RenderManager {
     }
 
     public void awaitIdle() throws InterruptedException {
+        awaitIdle(false);
+    }
+
+    public void awaitIdle(boolean log) throws InterruptedException {
         synchronized (this.renderTasks) {
-            while (!this.renderTasks.isEmpty())
-                this.renderTasks.wait(10000);
+            while (!this.renderTasks.isEmpty()) {
+                this.renderTasks.wait(5000);
+
+                if (log) {
+                    RenderTask task = this.getCurrentRenderTask();
+                    if (task != null) {
+                        Logger.global.logInfo("Waiting for task '" + task.getDescription() + "' to stop.. (" +
+                                (Math.round(task.estimateProgress() * 10000) / 100.0) + "%)");
+                    }
+                }
+
+            }
         }
     }
 

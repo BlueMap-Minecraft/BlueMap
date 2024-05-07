@@ -40,34 +40,39 @@ public interface MapStorage {
     GridStorage lowresTiles(int lod);
 
     /**
-     * Returns a {@link SingleItemStorage} for a map asset with the given name
+     * Returns a {@link GridStorage} for the tile-state (meta-) data of this map
      */
-    SingleItemStorage asset(String name);
+    GridStorage tileState();
 
     /**
-     * Returns a {@link SingleItemStorage} for the render-state data of this map
+     * Returns a {@link GridStorage} for the chunk-state (meta-) data of this map
      */
-    SingleItemStorage renderState();
+    GridStorage chunkState();
 
     /**
-     * Returns a {@link SingleItemStorage} for the settings (settings.json) of this map
+     * Returns a {@link ItemStorage} for a map asset with the given name
      */
-    SingleItemStorage settings();
+    ItemStorage asset(String name);
 
     /**
-     * Returns a {@link SingleItemStorage} for the texture-data (textures.json) of this map
+     * Returns a {@link ItemStorage} for the settings (settings.json) of this map
      */
-    SingleItemStorage textures();
+    ItemStorage settings();
 
     /**
-     * Returns a {@link SingleItemStorage} for the marker-data (live/markers.json) of this map
+     * Returns a {@link ItemStorage} for the texture-data (textures.json) of this map
      */
-    SingleItemStorage markers();
+    ItemStorage textures();
 
     /**
-     * Returns a {@link SingleItemStorage} for the player-data (live/players.json) of this map
+     * Returns a {@link ItemStorage} for the marker-data (live/markers.json) of this map
      */
-    SingleItemStorage players();
+    ItemStorage markers();
+
+    /**
+     * Returns a {@link ItemStorage} for the player-data (live/players.json) of this map
+     */
+    ItemStorage players();
 
     /**
      * Deletes the entire map from the storage

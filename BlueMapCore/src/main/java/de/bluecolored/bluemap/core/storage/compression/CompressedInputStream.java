@@ -37,6 +37,14 @@ public class CompressedInputStream extends DelegateInputStream {
     private final Compression compression;
 
     /**
+     * Creates a new CompressedInputStream with {@link Compression#NONE} from an (uncompressed) {@link InputStream}.
+     * This does <b>not</b> compress the provided InputStream.
+     */
+    public CompressedInputStream(InputStream in) {
+        this(in, Compression.NONE);
+    }
+
+    /**
      * Creates a new CompressedInputStream from an <b>already compressed</b> {@link InputStream} and the {@link Compression}
      * it is compressed with.
      * This does <b>not</b> compress the provided InputStream.

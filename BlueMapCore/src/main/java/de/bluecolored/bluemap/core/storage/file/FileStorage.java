@@ -39,11 +39,11 @@ public class FileStorage implements Storage {
     private final Path root;
     private final LoadingCache<String, FileMapStorage> mapStorages;
 
-    public FileStorage(Path root, Compression compression) {
+    public FileStorage(Path root, Compression compression, boolean atomic) {
         this.root = root;
 
         mapStorages = Caffeine.newBuilder()
-                .build(id -> new FileMapStorage(root.resolve(id), compression));
+                .build(id -> new FileMapStorage(root.resolve(id), compression, atomic));
     }
 
     @Override

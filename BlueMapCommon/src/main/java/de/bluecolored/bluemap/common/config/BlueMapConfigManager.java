@@ -29,9 +29,8 @@ import de.bluecolored.bluemap.common.BlueMapConfiguration;
 import de.bluecolored.bluemap.common.config.storage.StorageConfig;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
-import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.resources.datapack.DataPack;
+import de.bluecolored.bluemap.core.resources.pack.datapack.DataPack;
 import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.util.Key;
 import lombok.Builder;
@@ -51,26 +50,26 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
 
     private final ConfigManager configManager;
 
-    private final MinecraftVersion minecraftVersion;
     private final CoreConfig coreConfig;
     private final WebserverConfig webserverConfig;
     private final WebappConfig webappConfig;
     private final PluginConfig pluginConfig;
     private final Map<String, MapConfig> mapConfigs;
     private final Map<String, StorageConfig> storageConfigs;
-    private final Path resourcePacksFolder;
+    private final Path packsFolder;
+    private final @Nullable String minecraftVersion;
     private final @Nullable Path modsFolder;
 
     @Builder
     private BlueMapConfigManager(
-            @NonNull MinecraftVersion minecraftVersion,
             @NonNull Path configRoot,
+            @Nullable String minecraftVersion,
             @Nullable Path defaultDataFolder,
             @Nullable Path defaultWebroot,
             @Nullable Collection<ServerWorld> autoConfigWorlds,
             @Nullable Boolean usePluginConfig,
             @Nullable Boolean useMetricsConfig,
-            @Nullable Path resourcePacksFolder,
+            @Nullable Path packsFolder,
             @Nullable Path modsFolder
     ) throws ConfigurationException {
         // set defaults
@@ -79,10 +78,9 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
         if (autoConfigWorlds == null) autoConfigWorlds = Collections.emptyList();
         if (usePluginConfig == null) usePluginConfig = true;
         if (useMetricsConfig == null) useMetricsConfig = true;
-        if (resourcePacksFolder == null) resourcePacksFolder = configRoot.resolve("resourcepacks");
+        if (packsFolder == null) packsFolder = configRoot.resolve("packs");
 
         // load
-        this.minecraftVersion = minecraftVersion;
         this.configManager = new ConfigManager(configRoot);
         this.coreConfig = loadCoreConfig(defaultDataFolder, useMetricsConfig);
         this.webappConfig = loadWebappConfig(defaultWebroot);
@@ -90,7 +88,8 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
         this.pluginConfig = usePluginConfig ? loadPluginConfig() : new PluginConfig();
         this.storageConfigs = Collections.unmodifiableMap(loadStorageConfigs(webappConfig.getWebroot()));
         this.mapConfigs = Collections.unmodifiableMap(loadMapConfigs(autoConfigWorlds));
-        this.resourcePacksFolder = resourcePacksFolder;
+        this.packsFolder = packsFolder;
+        this.minecraftVersion = minecraftVersion;
         this.modsFolder = modsFolder;
     }
 

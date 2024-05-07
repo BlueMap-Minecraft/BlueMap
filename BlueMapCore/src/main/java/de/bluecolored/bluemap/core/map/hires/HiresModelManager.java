@@ -29,9 +29,10 @@ import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.TileMetaConsumer;
-import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.storage.GridStorage;
 import de.bluecolored.bluemap.core.util.Grid;
+import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.World;
 import lombok.Getter;
 
@@ -77,6 +78,23 @@ public class HiresModelManager {
         }
 
         TileModel.instancePool().recycleInstance(model);
+    }
+
+    /**
+     * Un-renders a tile.
+     * The hires tile is deleted and the tileMetaConsumer (lowres) is updated with default values in the tiles area.
+     */
+    public void unrender(Vector2i tile, TileMetaConsumer tileMetaConsumer) {
+        try {
+            storage.delete(tile.getX(), tile.getY());
+        } catch (IOException ex) {
+            Logger.global.logError("Failed to delete hires model: " + tile, ex);
+        }
+
+        Color color = new Color();
+        tileGrid.forEachIntersecting(tile, Grid.UNIT, (x, z) ->
+                tileMetaConsumer.set(x, z, color, 0, 0)
+        );
     }
 
     private void save(final TileModel model, Vector2i tile) {

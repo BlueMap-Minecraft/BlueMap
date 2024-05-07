@@ -32,11 +32,11 @@ import de.bluecolored.bluemap.core.map.hires.TileModel;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.resources.BlockColorCalculatorFactory;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
-import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.resources.resourcepack.blockmodel.BlockModel;
-import de.bluecolored.bluemap.core.resources.resourcepack.blockmodel.TextureVariable;
-import de.bluecolored.bluemap.core.resources.resourcepack.blockstate.Variant;
-import de.bluecolored.bluemap.core.resources.resourcepack.texture.Texture;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockmodel.BlockModel;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockmodel.TextureVariable;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.Variant;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.util.math.MatrixM3f;
@@ -138,7 +138,7 @@ public class LiquidModelBuilder {
 
         tintcolor.set(1f, 1f, 1f, 1f, true);
         if (blockState.isWater()) {
-            blockColorCalculator.getWaterAverageColor(block, tintcolor);
+            blockColorCalculator.getBlendedWaterColor(block, tintcolor);
         }
 
         int modelStart = blockModel.getStart();

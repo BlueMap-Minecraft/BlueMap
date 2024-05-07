@@ -29,6 +29,7 @@ import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.util.Grid;
 
 import java.util.Collection;
+import java.util.function.Predicate;
 
 /**
  * Represents a World on the Server.<br>
@@ -74,7 +75,11 @@ public interface World {
     /**
      * Loads all chunks from the specified region into the chunk cache (if there is a cache)
      */
-    void preloadRegionChunks(int x, int z);
+    default void preloadRegionChunks(int x, int z) {
+        preloadRegionChunks(x, z, pos -> true);
+    }
+
+    void preloadRegionChunks(int x, int z, Predicate<Vector2i> chunkFilter);
 
     /**
      * Invalidates the complete chunk cache (if there is a cache), so that every chunk has to be reloaded from disk

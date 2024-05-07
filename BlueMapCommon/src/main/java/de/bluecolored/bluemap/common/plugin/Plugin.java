@@ -44,7 +44,8 @@ import de.bluecolored.bluemap.core.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.metrics.Metrics;
-import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resources.MinecraftVersion;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.util.Tristate;
@@ -124,7 +125,7 @@ public class Plugin implements ServerEventListener {
                 BlueMapConfigManager configManager = BlueMapConfigManager.builder()
                         .minecraftVersion(serverInterface.getMinecraftVersion())
                         .configRoot(serverInterface.getConfigFolder())
-                        .resourcePacksFolder(serverInterface.getConfigFolder().resolve("resourcepacks"))
+                        .packsFolder(serverInterface.getConfigFolder().resolve("packs"))
                         .modsFolder(serverInterface.getModsFolder().orElse(null))
                         .useMetricsConfig(serverInterface.isMetricsEnabled() == Tristate.UNDEFINED)
                         .autoConfigWorlds(serverInterface.getLoadedServerWorlds())
@@ -287,7 +288,7 @@ public class Plugin implements ServerEventListener {
                         save();
                     }
                 };
-                daemonTimer.schedule(saveTask, TimeUnit.MINUTES.toMillis(2), TimeUnit.MINUTES.toMillis(2));
+                daemonTimer.schedule(saveTask, TimeUnit.MINUTES.toMillis(10), TimeUnit.MINUTES.toMillis(10));
 
                 //periodically save markers
                 int writeMarkersInterval = pluginConfig.getWriteMarkersInterval();
@@ -341,11 +342,12 @@ public class Plugin implements ServerEventListener {
                 }
 
                 //metrics
+                MinecraftVersion minecraftVersion = blueMap.getOrLoadMinecraftVersion();
                 TimerTask metricsTask = new TimerTask() {
                     @Override
                     public void run() {
                         if (serverInterface.isMetricsEnabled().getOr(coreConfig::isMetrics))
-                            Metrics.sendReport(implementationType, configManager.getMinecraftVersion().getVersionString());
+                            Metrics.sendReport(implementationType, minecraftVersion.getId());
                     }
                 };
                 daemonTimer.scheduleAtFixedRate(metricsTask, TimeUnit.MINUTES.toMillis(1), TimeUnit.MINUTES.toMillis(30));
@@ -389,12 +391,11 @@ public class Plugin implements ServerEventListener {
     public void unload() {
         this.unload(false);
     }
+
     public void unload(boolean keepWebserver) {
         loadingLock.interruptAndLock();
         try {
             synchronized (this) {
-                //save
-                save();
 
                 //disable api
                 if (api != null) api.unregister();
@@ -415,8 +416,18 @@ public class Plugin implements ServerEventListener {
                 }
                 regionFileWatchServices = null;
 
-                //stop services
+                // stop render-manager
                 if (renderManager != null){
+                    if (renderManager.getCurrentRenderTask() != null) {
+                        renderManager.removeAllRenderTasks();
+                        if (!renderManager.isRunning()) renderManager.start(1);
+                        try {
+                            renderManager.awaitIdle(true);
+                        } catch (InterruptedException ex) {
+                            Thread.currentThread().interrupt();
+                        }
+                    }
+
                     renderManager.stop();
                     try {
                         renderManager.awaitShutdown();
@@ -424,8 +435,11 @@ public class Plugin implements ServerEventListener {
                         Thread.currentThread().interrupt();
                     }
                 }
-                renderManager = null;
 
+                //save
+                save();
+
+                // stop webserver
                 if (webServer != null && !keepWebserver) {
                     try {
                         webServer.close();
@@ -435,7 +449,7 @@ public class Plugin implements ServerEventListener {
                     webServer = null;
                 }
 
-                if (webLogger != null) {
+                if (webLogger != null && !keepWebserver) {
                     try {
                         webLogger.close();
                     } catch (Exception ex) {

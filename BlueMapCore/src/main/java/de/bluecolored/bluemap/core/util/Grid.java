@@ -30,10 +30,24 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 public class Grid {
 
-    public static final Grid UNIT = new Grid(Vector2i.ONE);
+    public static final Grid UNIT = new Grid(Vector2i.ONE, Vector2i.ZERO) {
+        @Override public int getCellX(int posX) { return posX; }
+        @Override public int getCellY(int posY) { return posY; }
+        @Override public Vector2i getCell(Vector2i pos) { return pos; }
+        @Override public int getLocalX(int posX) { return 0; }
+        @Override public int getLocalY(int posY) { return 0; }
+        @Override public Vector2i getLocal(Vector2i pos) { return pos; }
+        @Override public int getCellMinX(int cellX) { return cellX; }
+        @Override public int getCellMinY(int cellY) { return cellY; }
+        @Override public Vector2i getCellMin(Vector2i cell) { return cell; }
+        @Override public int getCellMaxX(int cellX) { return cellX; }
+        @Override public int getCellMaxY(int cellY) { return cellY; }
+        @Override public Vector2i getCellMax(Vector2i cell) { return cell; }
+    };
 
     private final Vector2i gridSize;
     private final Vector2i offset;
@@ -158,13 +172,27 @@ public class Grid {
         );
     }
 
+    public void forEachIntersecting(Vector2i cell, Grid targetGrid, Consumer<Vector2i> action) {
+        forEachIntersecting(cell, targetGrid, (x, y) -> action.accept(new Vector2i(x, y)));
+    }
+
+    public void forEachIntersecting(Vector2i cell, Grid targetGrid, BiIntConsumer action) {
+        Vector2i min = getCellMin(cell, targetGrid);
+        Vector2i max = getCellMax(cell, targetGrid);
+        for (int x = min.getX(); x <= max.getX(); x++){
+            for (int y = min.getY(); y <= max.getY(); y++){
+                action.accept(x, y);
+            }
+        }
+    }
+
     public Collection<Vector2i> getIntersecting(Vector2i cell, Grid targetGrid) {
         Vector2i min = getCellMin(cell, targetGrid);
         Vector2i max = getCellMax(cell, targetGrid);
 
         if (min.equals(max)) return Collections.singleton(min);
 
-        Collection<Vector2i> intersects = new ArrayList<>();
+        Collection<Vector2i> intersects = new ArrayList<>((max.getX() - min.getX() + 1) * (max.getY() - min.getY() + 1));
         for (int x = min.getX(); x <= max.getX(); x++){
             for (int y = min.getY(); y <= max.getY(); y++){
                 intersects.add(new Vector2i(x, y));

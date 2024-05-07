@@ -41,6 +41,7 @@ public class FileConfig extends StorageConfig {
 
     private Path root = Path.of("bluemap", "web", "maps");
     private String compression = Compression.GZIP.getKey().getFormatted();
+    private boolean atomic = true;
 
     public Compression getCompression() throws ConfigurationException {
         return parseKey(Compression.REGISTRY, compression, "compression");
@@ -48,7 +49,7 @@ public class FileConfig extends StorageConfig {
 
     @Override
     public FileStorage createStorage() throws ConfigurationException {
-        return new FileStorage(root, getCompression());
+        return new FileStorage(root, getCompression(), atomic);
     }
 
 }

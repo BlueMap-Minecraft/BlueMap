@@ -26,69 +26,35 @@ package de.bluecolored.bluemap.core.world;
 
 import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluemap.core.util.Keyed;
 import de.bluecolored.bluemap.core.util.math.Color;
+import lombok.Getter;
 
 @DebugDump
-public class Biome extends Key {
+public interface Biome extends Keyed {
 
-    public static final Biome DEFAULT = new Biome("minecraft:ocean");
+    Biome DEFAULT = new Default();
 
-    private float humidity = 0.5f;
-    private float temp = 0.5f;
-    private final Color waterColor = new Color().set(4159204 | 0xFF000000).premultiplied();
+    float getDownfall();
 
-    private final Color overlayFoliageColor = new Color().premultiplied();
-    private final Color overlayGrassColor = new Color().premultiplied();
+    float getTemperature();
 
-    public Biome(String formatted) {
-        super(formatted);
-    }
+    Color getWaterColor();
 
-    public Biome(String formatted, float humidity, float temp, Color waterColor) {
-        this(formatted);
-        this.humidity = humidity;
-        this.temp = temp;
-        this.waterColor.set(waterColor).premultiplied();
-    }
+    Color getOverlayFoliageColor();
 
-    public Biome(String formatted, float humidity, float temp, Color waterColor, Color overlayFoliageColor, Color overlayGrassColor) {
-        this(formatted, humidity, temp, waterColor);
-        this.overlayFoliageColor.set(overlayFoliageColor).premultiplied();
-        this.overlayGrassColor.set(overlayGrassColor).premultiplied();
-    }
+    Color getOverlayGrassColor();
 
-    public float getHumidity() {
-        return humidity;
-    }
+    @Getter
+    class Default implements Biome {
 
-    public float getTemp() {
-        return temp;
-    }
+        private final Key key = Key.bluemap("default");
+        private final float downfall = 0.5f;
+        private final float temperature = 0.5f;
+        private final Color waterColor = new Color().set(4159204 | 0xFF000000).premultiplied();
+        private final Color overlayFoliageColor = new Color().premultiplied();
+        private final Color overlayGrassColor = new Color().premultiplied();
 
-    public Color getWaterColor() {
-        return waterColor;
-    }
-
-    public Color getOverlayFoliageColor() {
-        return overlayFoliageColor;
-    }
-
-    public Color getOverlayGrassColor() {
-        return overlayGrassColor;
-    }
-
-    @Override
-    public String toString() {
-        return "Biome{" +
-               "value='" + getValue() + '\'' +
-               ", namespace=" + getNamespace() +
-               ", formatted=" + getFormatted() +
-               ", humidity=" + humidity +
-               ", temp=" + temp +
-               ", waterColor=" + waterColor +
-               ", overlayFoliageColor=" + overlayFoliageColor +
-               ", overlayGrassColor=" + overlayGrassColor +
-               '}';
     }
 
 }

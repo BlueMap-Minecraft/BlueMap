@@ -63,6 +63,11 @@ public interface GridStorage {
     boolean exists(int x, int z) throws IOException;
 
     /**
+     * Returns a {@link ItemStorage} for the given position
+     */
+    ItemStorage cell(int x, int z);
+
+    /**
      * Returns a stream over all <b>existing</b> items in this storage
      */
     Stream<Cell> stream() throws IOException;
@@ -72,7 +77,7 @@ public interface GridStorage {
      */
     boolean isClosed();
 
-    interface Cell extends SingleItemStorage {
+    interface Cell extends ItemStorage {
 
         /**
          * Returns the x position of this item in the grid

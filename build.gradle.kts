@@ -1,4 +1,3 @@
-
 tasks.register("clean") {
     gradle.includedBuilds.forEach {
         // workaround for https://github.com/neoforged/NeoGradle/issues/18
@@ -47,4 +46,12 @@ tasks.register("publish") {
 
         dependsOn(it.task(":publish"))
     }
+}
+
+// adding repositories here so intellij can download source-files and javadocs
+repositories {
+    mavenCentral()
+    maven ("https://libraries.minecraft.net")
+    maven ("https://repo.papermc.io/repository/maven-public/")
+    maven ("https://repo.bluecolored.de/releases")
 }

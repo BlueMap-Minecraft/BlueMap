@@ -39,12 +39,13 @@ public class FileHelper {
      * once the stream gets closed.
      */
     public static OutputStream createFilepartOutputStream(final Path file) throws IOException {
-        final Path partFile = getPartFile(file);
-        FileHelper.createDirectories(partFile.getParent());
+        Path folder = file.toAbsolutePath().normalize().getParent();
+        final Path partFile = folder.resolve(file.getFileName() + ".filepart");
+        FileHelper.createDirectories(folder);
         OutputStream os = Files.newOutputStream(partFile, StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE);
         return new OnCloseOutputStream(os, () -> {
             if (!Files.exists(partFile)) return;
-            FileHelper.createDirectories(file.getParent());
+            FileHelper.createDirectories(folder);
             FileHelper.move(partFile, file);
         });
     }
@@ -74,10 +75,6 @@ public class FileHelper {
     public static Path createDirectories(Path dir, FileAttribute<?>... attrs) throws IOException {
         if (Files.isDirectory(dir)) return dir;
         return Files.createDirectories(dir, attrs);
-    }
-
-    private static Path getPartFile(Path file) {
-        return file.normalize().getParent().resolve(file.getFileName() + ".filepart");
     }
 
 }
