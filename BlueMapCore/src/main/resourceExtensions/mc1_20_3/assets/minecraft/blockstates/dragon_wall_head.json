@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "minecraft:entity/dragon_wall_head",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "minecraft:entity/dragon_wall_head",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "minecraft:entity/dragon_wall_head",
+      "y": 270
+    },
+    "facing=north": {
+      "model": "minecraft:entity/dragon_wall_head"
+    }
+  }
+}

@@ -1,0 +1,67 @@
+{
+  "variants": {
+    "rotation=0": {
+      "model": "minecraft:entity/skeleton_skull",
+      "y": 180
+    },
+    "rotation=1": {
+      "model": "minecraft:entity/skeleton_skull",
+      "y": 202
+    },
+    "rotation=2": {
+      "model": "minecraft:entity/skeleton_skull",
+      "y": 225
+    },
+    "rotation=3": {
+      "model": "minecraft:entity/skeleton_skull",
+      "y": 247
+    },
+    "rotation=4": {
+      "model": "minecraft:entity/skeleton_skull",
+      "y": 270
+    },
+    "rotation=5": {
+      "model": "minecraft:entity/skeleton_skull",
+      "y": 292
+    },
+    "rotation=6": {
+      "model": "minecraft:entity/skeleton_skull",
+      "y": 315
+    },
+    "rotation=7": {
+      "model": "minecraft:entity/skeleton_skull",
+      "y": 337
+    },
+    "rotation=8": {
+      "model": "minecraft:entity/skeleton_skull"
+    },
+    "rotation=9": {
+      "model": "minecraft:entity/skeleton_skull",
+      "y": 22
+    },
+    "rotation=10": {
+      "model": "minecraft:entity/skeleton_skull",
+      "y": 45
+    },
+    "rotation=11": {
+      "model": "minecraft:entity/skeleton_skull",
+      "y": 67
+    },
+    "rotation=12": {
+      "model": "minecraft:entity/skeleton_skull",
+      "y": 90
+    },
+    "rotation=13": {
+      "model": "minecraft:entity/skeleton_skull",
+      "y": 112
+    },
+    "rotation=14": {
+      "model": "minecraft:entity/skeleton_skull",
+      "y": 135
+    },
+    "rotation=15": {
+      "model": "minecraft:entity/skeleton_skull",
+      "y": 157
+    }
+  }
+}
