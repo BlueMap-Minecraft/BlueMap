@@ -10,6 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -47,7 +48,7 @@ public class VersionManifest {
     public static VersionManifest fetch() throws IOException {
         try (
                 InputStream in = new URL(MANIFEST_URL).openStream();
-                Reader reader = new BufferedReader(new InputStreamReader(in))
+                Reader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))
         ) {
             instance = GSON.fromJson(reader, VersionManifest.class);
         }
@@ -94,7 +95,7 @@ public class VersionManifest {
             if (detail == null) {
                 try (
                         InputStream in = new URL(url).openStream();
-                        Reader reader = new BufferedReader(new InputStreamReader(in))
+                        Reader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))
                 ) {
                     detail = GSON.fromJson(reader, VersionDetail.class);
                 }

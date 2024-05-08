@@ -3,7 +3,6 @@ package de.bluecolored.bluemap.core.resources.pack;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.resources.PackMeta;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
@@ -80,9 +79,9 @@ public abstract class Pack {
         resourceLoader.load(root);
     }
 
-    protected <T> void loadResource(Path root, Path file, Loader<T> loader, Map<? super ResourcePath<T>, T> resultMap) {
+    protected <T> void loadResource(Path root, Path file, int namespacePos, int valuePos, Loader<T> loader, Map<? super ResourcePath<T>, T> resultMap) {
         try {
-            ResourcePath<T> resourcePath = new ResourcePath<>(root.relativize(file));
+            ResourcePath<T> resourcePath = new ResourcePath<>(root.relativize(file), namespacePos, valuePos);
             if (resultMap.containsKey(resourcePath)) return; // don't load already present resources
 
             T resource = loader.load(resourcePath);

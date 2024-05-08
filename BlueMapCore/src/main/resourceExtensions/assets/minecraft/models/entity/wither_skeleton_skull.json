@@ -1,0 +1,7 @@
+{
+  "credit": "Made with Blockbench by TyBraniff for Bluemaps support.",
+  "parent": "minecraft:entity/skull_32",
+  "textures": {
+    "entity": "entity/skeleton/wither_skeleton"
+  }
+}

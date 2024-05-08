@@ -2,7 +2,8 @@ package de.bluecolored.bluemap.core.resources.pack.datapack.biome;
 
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.math.Color;
-import de.bluecolored.bluemap.core.world.Biome;
+import de.bluecolored.bluemap.core.world.biome.Biome;
+import de.bluecolored.bluemap.core.world.biome.GrassColorModifier;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -38,6 +39,11 @@ public class DatapackBiome implements Biome {
         return data.effects.grassColor;
     }
 
+    @Override
+    public GrassColorModifier getGrassColorModifier() {
+        return data.effects.grassColorModifier;
+    }
+
     @SuppressWarnings("FieldMayBeFinal")
     @Getter
     public static class Data {
@@ -55,6 +61,7 @@ public class DatapackBiome implements Biome {
         private Color waterColor = Biome.DEFAULT.getWaterColor();
         private Color foliageColor = Biome.DEFAULT.getOverlayFoliageColor();
         private Color grassColor = Biome.DEFAULT.getOverlayGrassColor();
+        private GrassColorModifier grassColorModifier = Biome.DEFAULT.getGrassColorModifier();
 
     }
 

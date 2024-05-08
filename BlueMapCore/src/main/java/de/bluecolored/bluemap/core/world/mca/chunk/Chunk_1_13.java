@@ -26,7 +26,7 @@ package de.bluecolored.bluemap.core.world.mca.chunk;
 
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.util.Key;
-import de.bluecolored.bluemap.core.world.Biome;
+import de.bluecolored.bluemap.core.world.biome.Biome;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.DimensionType;
 import de.bluecolored.bluemap.core.world.LightData;

@@ -134,7 +134,7 @@ public class ResourcePack extends Pack {
                                 .flatMap(ResourcePack::walk)
                                 .filter(path -> path.getFileName().toString().endsWith(".json"))
                                 .filter(Files::isRegularFile)
-                                .forEach(file -> loadResource(root, file, key -> {
+                                .forEach(file -> loadResource(root, file, 1, 3, key -> {
                                     try (BufferedReader reader = Files.newBufferedReader(file)) {
                                         return ResourcesGson.INSTANCE.fromJson(reader, BlockState.class);
                                     }
@@ -150,7 +150,7 @@ public class ResourcePack extends Pack {
                                 .flatMap(ResourcePack::walk)
                                 .filter(path -> path.getFileName().toString().endsWith(".json"))
                                 .filter(Files::isRegularFile)
-                                .forEach(file -> loadResource(root, file, key -> {
+                                .forEach(file -> loadResource(root, file, 1, 3, key -> {
                                     try (BufferedReader reader = Files.newBufferedReader(file)) {
                                         return ResourcesGson.INSTANCE.fromJson(reader, BlockModel.class);
                                     }
@@ -162,7 +162,7 @@ public class ResourcePack extends Pack {
                         walk(root.resolve("assets").resolve("minecraft").resolve("textures").resolve("colormap"))
                                 .filter(path -> path.getFileName().toString().endsWith(".png"))
                                 .filter(Files::isRegularFile)
-                                .forEach(file -> loadResource(root, file, key -> {
+                                .forEach(file -> loadResource(root, file, 1, 3, key -> {
                                     try (InputStream in = Files.newInputStream(file)) {
                                         return ImageIO.read(in);
                                     }
@@ -226,7 +226,7 @@ public class ResourcePack extends Pack {
                     .flatMap(ResourcePack::walk)
                     .filter(path -> path.getFileName().toString().endsWith(".png"))
                     .filter(Files::isRegularFile)
-                    .forEach(file -> loadResource(root, file, key -> {
+                    .forEach(file -> loadResource(root, file, 1, 3, key -> {
                         if (!usedTextures.contains(key)) return null; // don't load unused textures
 
                         // load image

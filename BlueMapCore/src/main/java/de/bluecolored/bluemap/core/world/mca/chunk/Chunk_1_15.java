@@ -24,7 +24,7 @@
  */
 package de.bluecolored.bluemap.core.world.mca.chunk;
 
-import de.bluecolored.bluemap.core.world.Biome;
+import de.bluecolored.bluemap.core.world.biome.Biome;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 
 public class Chunk_1_15 extends Chunk_1_13 {

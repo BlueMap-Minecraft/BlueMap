@@ -1,7 +1,0 @@
-{
-    "credit": "Made with Blockbench by TyBraniff for Bluemaps support.",
-    "parent": "minecraft:entity/wall_skull_64",
-    "textures": {
-		"entity": "entity/player/slim/steve"
-    }
-}

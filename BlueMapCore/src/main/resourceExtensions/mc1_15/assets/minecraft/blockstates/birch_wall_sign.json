@@ -1,8 +1,0 @@
-{
-    "variants": {
-        "facing=south": { "model": "block/sign/wall_birch" },
-        "facing=west": { "model": "block/sign/wall_birch", "y": 90 },
-        "facing=north": { "model": "block/sign/wall_birch", "y": 180 },
-        "facing=east": { "model": "block/sign/wall_birch", "y": 270 }
-    }
-}

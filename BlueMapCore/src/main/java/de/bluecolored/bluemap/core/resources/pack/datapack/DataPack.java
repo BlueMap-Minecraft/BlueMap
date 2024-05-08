@@ -30,7 +30,7 @@ import de.bluecolored.bluemap.core.resources.pack.Pack;
 import de.bluecolored.bluemap.core.resources.pack.datapack.biome.DatapackBiome;
 import de.bluecolored.bluemap.core.resources.pack.datapack.dimension.DimensionTypeData;
 import de.bluecolored.bluemap.core.util.Key;
-import de.bluecolored.bluemap.core.world.Biome;
+import de.bluecolored.bluemap.core.world.biome.Biome;
 import de.bluecolored.bluemap.core.world.DimensionType;
 import de.bluecolored.bluemap.core.world.mca.chunk.LegacyBiomes;
 import org.jetbrains.annotations.Nullable;
@@ -88,7 +88,7 @@ public class DataPack extends Pack {
                 .flatMap(DataPack::walk)
                 .filter(path -> path.getFileName().toString().endsWith(".json"))
                 .filter(Files::isRegularFile)
-                .forEach(file -> loadResource(root, file, key -> {
+                .forEach(file -> loadResource(root, file, 1, 3, key -> {
                     try (BufferedReader reader = Files.newBufferedReader(file)) {
                         return ResourcesGson.INSTANCE.fromJson(reader, DimensionTypeData.class);
                     }
@@ -100,7 +100,7 @@ public class DataPack extends Pack {
                 .flatMap(DataPack::walk)
                 .filter(path -> path.getFileName().toString().endsWith(".json"))
                 .filter(Files::isRegularFile)
-                .forEach(file -> loadResource(root, file, key -> {
+                .forEach(file -> loadResource(root, file, 1, 4, key -> {
                     try (BufferedReader reader = Files.newBufferedReader(file)) {
                         return new DatapackBiome(key, ResourcesGson.INSTANCE.fromJson(reader, DatapackBiome.Data.class));
                     }

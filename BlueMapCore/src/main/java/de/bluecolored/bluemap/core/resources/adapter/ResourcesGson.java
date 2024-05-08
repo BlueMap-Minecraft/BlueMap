@@ -31,8 +31,10 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockmodel.Face;
 import de.bluecolored.bluemap.core.util.Direction;
+import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.math.Axis;
 import de.bluecolored.bluemap.core.util.math.Color;
+import de.bluecolored.bluemap.core.world.biome.GrassColorModifier;
 
 import java.util.EnumMap;
 
@@ -56,7 +58,12 @@ public class ResourcesGson {
                 .registerTypeAdapter(
                         new TypeToken<EnumMap<Direction, Face>>(){}.getType(),
                         new EnumMapInstanceCreator<Direction, Face>(Direction.class)
-                );
+                )
+                .registerTypeAdapter(GrassColorModifier.class, new RegistryAdapter<>(
+                        GrassColorModifier.REGISTRY,
+                        Key.MINECRAFT_NAMESPACE,
+                        GrassColorModifier.NONE
+                ));
     }
 
 }

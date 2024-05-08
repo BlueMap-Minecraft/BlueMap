@@ -26,7 +26,7 @@ package de.bluecolored.bluemap.core.world.mca.chunk;
 
 import de.bluecolored.bluemap.core.resources.pack.datapack.DataPack;
 import de.bluecolored.bluemap.core.util.Key;
-import de.bluecolored.bluemap.core.world.Biome;
+import de.bluecolored.bluemap.core.world.biome.Biome;
 import org.jetbrains.annotations.Nullable;
 
 public class LegacyBiomes {

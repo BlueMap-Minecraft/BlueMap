@@ -121,28 +121,11 @@ tasks.processResources {
     }
 }
 
-//resource Extensions
-val resourceIds: Array<String> = arrayOf(
-    "1_13", "1_15", "1_16", "1_18", "1_20_3"
-)
-
-tasks.register("zipResourceExtensions") {
-    resourceIds.forEach {
-        dependsOn("zipResourceExtensions$it")
-    }
-}
-
-resourceIds.forEach {
-    zipResourcesTask(it)
-}
-
-fun zipResourcesTask(resourceId: String) {
-    tasks.register ("zipResourceExtensions$resourceId", type = Zip::class) {
-        from(fileTree("src/main/resourceExtensions/mc$resourceId"))
-        archiveFileName.set("resourceExtensions.zip")
-        destinationDirectory.set(file("src/main/resources/de/bluecolored/bluemap/mc$resourceId/"))
-        outputs.upToDateWhen{ false }
-    }
+tasks.register("zipResourceExtensions", type = Zip::class) {
+    from(fileTree("src/main/resourceExtensions"))
+    archiveFileName.set("resourceExtensions.zip")
+    destinationDirectory.set(file("src/main/resources/de/bluecolored/bluemap/"))
+    outputs.upToDateWhen{ false }
 }
 
 //always update the zip before build

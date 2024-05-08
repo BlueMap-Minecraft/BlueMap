@@ -1,0 +1,48 @@
+{
+  "credit": "Made with Blockbench by TyBraniff for Bluemaps support.",
+  "texture_size": [64, 64],
+  "textures": {
+    "0": "entity/banner_base"
+  },
+  "elements": [
+    {
+      "name": "Handle",
+      "from": [1.2, 28.4, 7.5],
+      "to": [14.8, 29.4, 8.5],
+      "faces": {
+        "north": { "uv": [0.5, 11.5, 5.5, 12], "texture": "#0" },
+        "east": { "uv": [0, 11, 0.5, 11.5], "texture": "#0" },
+        "south": { "uv": [5.5, 10.5, 10.5, 11], "texture": "#0" },
+        "west": { "uv": [5.5, 11, 6, 11.5], "texture": "#0" },
+        "up": { "uv": [5.5, 11, 0.5, 10.5], "texture": "#0" },
+        "down": { "uv": [5.5, 11, 0.5, 11.5], "texture": "#0" }
+      }
+    },
+    {
+      "name": "Cloth",
+      "from": [1.2, 1.4, 7],
+      "to": [14.8, 29.4, 7.5],
+      "faces": {
+        "north": { "uv": [0.25, 0.25, 5.5, 10.25], "texture": "#0", "tintindex": 0 },
+        "east": { "uv": [0, 0.25, 0.25, 10.25], "texture": "#0", "tintindex": 0 },
+        "south": { "uv": [5.5, 0.25, 10.5, 10.25], "texture": "#0", "tintindex": 0 },
+        "west": { "uv": [5.5, 0.25, 5.25, 10], "texture": "#0", "tintindex": 0 },
+        "up": { "uv": [5.25, 0, 0.25, 0.25], "texture": "#0", "tintindex": 0 },
+        "down": { "uv": [5, 0.25, 0.25, 0], "texture": "#0", "tintindex": 0 }
+      }
+    },
+    {
+      "name": "Pole",
+      "from": [7.5, 0, 7.5],
+      "to": [8.5, 28.4, 8.5],
+      "faces": {
+        "north": { "uv": [11.5, 0.5, 12, 11], "texture": "#0" },
+        "east": { "uv": [11, 0.5, 11.5, 11], "texture": "#0" },
+        "south": { "uv": [12.5, 0.5, 13, 11], "texture": "#0" },
+        "west": { "uv": [12, 0.5, 12.5, 11], "texture": "#0" },
+        "up": { "uv": [11.5, 0.5, 11, 0], "texture": "#0" },
+        "down": { "uv": [13, 0, 12.5, 0.5], "texture": "#0" }
+      }
+    }
+  ]
+}

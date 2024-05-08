@@ -28,7 +28,7 @@ import com.flowpowered.math.GenericMath;
 import com.google.gson.stream.JsonReader;
 import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.util.math.Color;
-import de.bluecolored.bluemap.core.world.Biome;
+import de.bluecolored.bluemap.core.world.biome.Biome;
 import de.bluecolored.bluemap.core.world.block.Block;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 
@@ -188,12 +188,10 @@ public class BlockColorCalculatorFactory {
 
             int x, y, z;
 
-            Biome biome;
             for (y = BLEND_MIN_Y; y <= BLEND_MAX_Y; y++) {
                 for (x = BLEND_MIN_X; x <= BLEND_MAX_X; x++) {
                     for (z = BLEND_MIN_Z; z <= BLEND_MAX_Z; z++) {
-                        biome = block.getNeighborBlock(x, y, z).getBiome();
-                        target.add(getGrassColor(biome, tempColor));
+                        target.add(getGrassColor(block.getNeighborBlock(x, y, z), tempColor));
                     }
                 }
             }
@@ -201,9 +199,12 @@ public class BlockColorCalculatorFactory {
             return target.flatten();
         }
 
-        public Color getGrassColor(Biome biome, Color target) {
+        public Color getGrassColor(Block<?> block, Color target) {
+            Biome biome = block.getBiome();
             getColorFromMap(biome, grassMap, 0xff52952f, target);
-            return target.overlay(biome.getOverlayGrassColor());
+            target.overlay(biome.getOverlayGrassColor());
+            biome.getGrassColorModifier().apply(block, target);
+            return target;
         }
 
         private void getColorFromMap(Biome biome, int[] colorMap, int defaultColor, Color target) {

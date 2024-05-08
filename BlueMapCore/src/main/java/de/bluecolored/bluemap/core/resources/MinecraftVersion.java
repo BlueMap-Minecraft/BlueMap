@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
@@ -196,7 +197,7 @@ public class MinecraftVersion {
                 Path versionFile = fsRoot.resolve("version.json");
                 if (!Files.exists(versionFile)) continue;
 
-                try (Reader reader = Files.newBufferedReader(file)) {
+                try (Reader reader = Files.newBufferedReader(versionFile, StandardCharsets.UTF_8)) {
                     return GSON.fromJson(reader, VersionInfo.class);
                 }
             }
@@ -217,8 +218,8 @@ public class MinecraftVersion {
 
     public static class VersionInfoAdapter extends AbstractTypeAdapterFactory<VersionInfo> {
 
-        public VersionInfoAdapter(Class<VersionInfo> type) {
-            super(type);
+        public VersionInfoAdapter() {
+            super(VersionInfo.class);
         }
 
         @Override
