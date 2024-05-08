@@ -299,15 +299,17 @@ export class BlueMapApp {
 
         // create maps
         if (settings.maps !== undefined){
-            for (let mapId of settings.maps) {
+            let loadingPromises = settings.maps.map(mapId => {
                 let map = new BlueMapMap(mapId, this.dataUrl + mapId + "/", this.loadBlocker, this.mapViewer.events);
                 maps.push(map);
 
-                await map.loadSettings(this.mapViewer.tileCacheHash)
+                return map.loadSettings(this.mapViewer.tileCacheHash)
                     .catch(error => {
                         alert(this.events, `Failed to load settings for map '${map.data.id}':` + error, "warning");
                     });
-            }
+            })
+
+            await Promise.all(loadingPromises);
         }
 
         // sort maps
