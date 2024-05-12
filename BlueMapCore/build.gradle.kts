@@ -60,7 +60,7 @@ repositories {
 
 @Suppress("GradlePackageUpdate")
 dependencies {
-    api ("com.github.ben-manes.caffeine:caffeine:2.8.5")
+    api ("com.github.ben-manes.caffeine:caffeine:3.1.8")
     api ("org.apache.commons:commons-lang3:3.6")
     api ("commons-io:commons-io:2.5")
     api ("org.spongepowered:configurate-hocon:4.1.2")
@@ -73,14 +73,14 @@ dependencies {
     api ("de.bluecolored.bluemap:BlueMapAPI")
 
     compileOnly ("org.jetbrains:annotations:23.0.0")
-    compileOnly ("org.projectlombok:lombok:1.18.30")
+    compileOnly ("org.projectlombok:lombok:1.18.32")
 
-    annotationProcessor ("org.projectlombok:lombok:1.18.30")
+    annotationProcessor ("org.projectlombok:lombok:1.18.32")
 
     testImplementation ("org.junit.jupiter:junit-jupiter:5.8.2")
     testRuntimeOnly ("org.junit.jupiter:junit-jupiter-engine:5.8.2")
-    testCompileOnly ("org.projectlombok:lombok:1.18.30")
-    testAnnotationProcessor ("org.projectlombok:lombok:1.18.30")
+    testCompileOnly ("org.projectlombok:lombok:1.18.32")
+    testAnnotationProcessor ("org.projectlombok:lombok:1.18.32")
 }
 
 spotless {

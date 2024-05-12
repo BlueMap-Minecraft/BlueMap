@@ -30,9 +30,9 @@ dependencies {
     api ("de.bluecolored.bluemap:BlueMapCore")
 
     compileOnly ("org.jetbrains:annotations:16.0.2")
-    compileOnly ("org.projectlombok:lombok:1.18.30")
+    compileOnly ("org.projectlombok:lombok:1.18.32")
 
-    annotationProcessor ("org.projectlombok:lombok:1.18.30")
+    annotationProcessor ("org.projectlombok:lombok:1.18.32")
 
     testImplementation ("org.junit.jupiter:junit-jupiter:5.8.2")
     testRuntimeOnly ("org.junit.jupiter:junit-jupiter-engine:5.8.2")

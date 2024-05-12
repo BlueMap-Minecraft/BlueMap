@@ -48,7 +48,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
@@ -76,13 +79,17 @@ public class MCAWorld implements World {
     private final ChunkLoader chunkLoader = new ChunkLoader(this);
     private final LoadingCache<Vector2i, Region> regionCache = Caffeine.newBuilder()
             .executor(BlueMap.THREAD_POOL)
+            .softValues()
             .maximumSize(32)
             .expireAfterWrite(10, TimeUnit.MINUTES)
+            .expireAfterAccess(1, TimeUnit.MINUTES)
             .build(this::loadRegion);
     private final LoadingCache<Vector2i, Chunk> chunkCache = Caffeine.newBuilder()
             .executor(BlueMap.THREAD_POOL)
+            .softValues()
             .maximumSize(10240) // 10 regions worth of chunks
             .expireAfterWrite(10, TimeUnit.MINUTES)
+            .expireAfterAccess(1, TimeUnit.MINUTES)
             .build(this::loadChunk);
 
     private MCAWorld(Path worldFolder, Key dimension, DataPack dataPack, LevelData levelData) {
