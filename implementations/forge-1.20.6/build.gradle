@@ -25,10 +25,12 @@ group = "de.bluecolored.bluemap.forge"
 version = System.getProperty("bluemap.version") ?: "?" // set by BlueMapCore
 archivesBaseName = 'bluemap'
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(16)
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 minecraft {
-	mappings channel: 'official', version: '1.17.1'
+	mappings channel: 'official', version: '1.20.6'
+
+	reobf = false
 
 	runs {
 		server {
@@ -62,7 +64,7 @@ configurations {
 }
 
 dependencies {
-	minecraft 'net.minecraftforge:forge:1.17.1-37.0.109'
+	minecraft 'net.minecraftforge:forge:1.20.6-50.0.13'
 
 	shadowInclude ("de.bluecolored.bluemap.common:BlueMapCommon") {
 		//exclude dependencies provided by forge
@@ -101,7 +103,7 @@ jar {
 	}
 }
 
-jar.finalizedBy('reobfJar')
+//jar.finalizedBy('reobfJar')
 
 tasks.withType(JavaCompile).configureEach {
 	options.encoding = "utf-8"
@@ -117,6 +119,7 @@ test {
 }
 
 shadowJar {
+	def version = System.getProperty("bluemap.version") ?: "" // set by BlueMapCore
 	destinationDirectory.set(file("../../build/release"))
 	archiveFileName.set("BlueMap-${project.version}-${project.name}.jar")
 
@@ -153,6 +156,7 @@ processResources {
 	}
 }
 
+/*
 afterEvaluate {
 	reobf {
 		shadowJar {
@@ -160,9 +164,10 @@ afterEvaluate {
 		}
 	}
 }
+*/
 
 task release {
-	dependsOn(build)
+	dependsOn(shadowJar)
 }
 
 modrinth {
@@ -173,12 +178,12 @@ modrinth {
 			.getText()
 			.replace("{version}", project.version.toString())
 	uploadFile = shadowJar
-	gameVersions = ["1.17.1"]
+	gameVersions = ["1.20.6"]
 }
 
 curseforge {
 	apiKey = System.getenv("CURSEFORGE_TOKEN") ?: ""
-	project {
+    project {
 		id = "406463"
 		changelogType = "markdown"
 		changelog = file("../../release.md")
@@ -188,11 +193,9 @@ curseforge {
 
 		addGameVersion "Forge"
 
-		addGameVersion "Java 18"
-		addGameVersion "Java 17"
-		addGameVersion "Java 16"
+		addGameVersion "Java 21"
 
-		addGameVersion "1.17.1"
+		addGameVersion "1.20.6"
 
 		mainArtifact shadowJar
 	}

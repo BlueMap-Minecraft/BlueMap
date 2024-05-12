@@ -5,7 +5,7 @@ buildscript {
 		mavenCentral()
 	}
 	dependencies {
-		classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '6.0.+', changing: true
+		classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '[6.0.24,6.2)', changing: true
 	}
 }
 
@@ -14,7 +14,7 @@ plugins {
 	id "java-library"
 	id "com.diffplug.spotless" version "6.1.2"
 	id "com.github.node-gradle.node" version "3.0.1"
-	id "com.github.johnrengelman.shadow" version "7.1.2"
+	id "com.github.johnrengelman.shadow" version "8.1.1"
 	id "com.modrinth.minotaur" version "2.+"
 	id "com.matthewprenger.cursegradle" version "1.4.0"
 }
@@ -25,10 +25,7 @@ group = "de.bluecolored.bluemap.forge"
 version = System.getProperty("bluemap.version") ?: "?" // set by BlueMapCore
 archivesBaseName = 'bluemap'
 
-def javaTarget = 17
-java {
-	toolchain.languageVersion = JavaLanguageVersion.of(javaTarget)
-}
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
 minecraft {
 	mappings channel: 'official', version: '1.20'

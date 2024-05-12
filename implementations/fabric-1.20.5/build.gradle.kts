@@ -144,7 +144,7 @@ modrinth {
 		.readText()
 		.replace("{version}", project.version.toString()))
 	uploadFile.set(tasks.findByName("remappedShadowJar"))
-	gameVersions.addAll("1.20", "1.20.1", "1.20.2", "1.20.3", "1.20.4")
+	gameVersions.addAll("1.20.5", "1.20.6")
 	dependencies {
 		required.project("P7dR8mSH") // Fabric API
 	}
@@ -162,14 +162,10 @@ curseforge {
 
 		addGameVersion("Fabric")
 
-		addGameVersion("Java 18")
-		addGameVersion("Java 17")
+		addGameVersion("Java 21")
 
-		addGameVersion("1.20")
-		addGameVersion("1.20.1")
-		addGameVersion("1.20.2")
-		addGameVersion("1.20.3")
-		addGameVersion("1.20.4")
+		addGameVersion("1.20.5")
+		addGameVersion("1.20.6")
 
 		mainArtifact(tasks.findByName("remappedShadowJar"), closureOf<CurseArtifact> {
 			relations(closureOf<CurseRelation> {

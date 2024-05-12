@@ -3,7 +3,7 @@ plugins {
 	`java-library`
 	id("com.diffplug.spotless") version "6.1.2"
 	id ("com.github.node-gradle.node") version "3.0.1"
-	id ("com.github.johnrengelman.shadow") version "7.1.2"
+	id ("com.github.johnrengelman.shadow") version "8.1.1"
 	id ("com.modrinth.minotaur") version "2.+"
 	id ("io.papermc.hangar-publish-plugin") version "0.1.2"
 }

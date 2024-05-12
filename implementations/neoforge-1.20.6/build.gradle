@@ -1,12 +1,12 @@
 plugins {
     id "java"
     id "java-library"
-    id "net.neoforged.gradle.userdev" version '7.0.57'
+    id "net.neoforged.gradle.userdev" version '7.0.120'
     id "com.diffplug.spotless" version "6.1.2"
     id "com.github.node-gradle.node" version "3.0.1"
     id "com.modrinth.minotaur" version "2.+"
     id "com.matthewprenger.cursegradle" version "1.4.0"
-    id "com.github.johnrengelman.shadow" version "7.1.2"
+    id "com.github.johnrengelman.shadow" version "8.1.1"
 }
 
 group = "de.bluecolored.bluemap.forge"
@@ -27,7 +27,7 @@ base {
     archivesName = "bluemap"
 }
 
-java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 sourceSets.main.resources { srcDir 'src/generated/resources' }
 
 configurations {
@@ -35,7 +35,7 @@ configurations {
 }
 
 dependencies {
-    implementation "net.neoforged:neoforge:20.2.86"
+    implementation "net.neoforged:neoforge:${neo_version}"
 
     shadowInclude ("de.bluecolored.bluemap.common:BlueMapCommon") {
         //exclude dependencies provided by forge
@@ -66,7 +66,7 @@ tasks.withType(ProcessResources).configureEach {
     ]
     inputs.properties replaceProperties
 
-    filesMatching(['META-INF/mods.toml', 'pack.mcmeta']) {
+    filesMatching(['META-INF/neoforge.mods.toml', 'pack.mcmeta']) {
         expand replaceProperties + [project: project]
     }
 }
@@ -133,7 +133,7 @@ modrinth {
             .replace("{version}", project.version.toString())
     uploadFile = shadowJar
     loaders = ["neoforge"]
-    gameVersions = ["1.20.2", "1.20.3", "1.20.4"]
+    gameVersions = ["1.20.6"]
 }
 
 curseforge {
@@ -148,12 +148,9 @@ curseforge {
 
         addGameVersion "NeoForge"
 
-        addGameVersion "Java 18"
-        addGameVersion "Java 17"
+        addGameVersion "Java 21"
 
-        addGameVersion "1.20.2"
-        addGameVersion "1.20.3"
-        addGameVersion "1.20.4"
+        addGameVersion "1.20.6"
 
         mainArtifact shadowJar
     }
