@@ -127,7 +127,7 @@ void main() {
 	bool isChunkBorder;
 	{
 		float lineInterval = 16.0;
-		float lineThickness = 0.1;
+		float lineThickness = 0.125; //width of two Minecraft pixels
 		float offset = 0.5;
 
 		vec2 worldPos = vWorldPosition.xz;
