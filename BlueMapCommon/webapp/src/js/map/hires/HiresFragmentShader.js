@@ -24,6 +24,7 @@
  */
 import { ShaderChunk } from 'three';
 
+// language=GLSL
 export const HIRES_FRAGMENT_SHADER = `
 ${ShaderChunk.logdepthbuf_pars_fragment}
 
@@ -31,6 +32,7 @@ ${ShaderChunk.logdepthbuf_pars_fragment}
 	#define texture texture2D
 #endif
 
+uniform float distance;
 uniform sampler2D textureImage;
 uniform float sunlightStrength;
 uniform float ambientLight;
@@ -79,13 +81,14 @@ void main() {
 		float x = abs(mod(worldPos.x, lineInterval) - offset);
 		float y = abs(mod(worldPos.y, lineInterval) - offset);
 		bool isChunkBorder = x < lineThickness || y < lineThickness;
-		
+
 		//only show line on upwards facing surfaces
 		showChunkBorder = isChunkBorder && vNormal.y > 0.1;
 	}
 
 	vec4 lineColour = vec4(1.0, 0.0, 1.0, 0.4);
-	color.rgb = mix(color.rgb, lineColour.rgb, float(showChunkBorder) * lineColour.a);
+	float distFac = smoothstep(200.0, 600.0, distance);
+	color.rgb = mix(mix(color.rgb, lineColour.rgb, float(showChunkBorder) * lineColour.a), color.rgb, distFac);
 
 	gl_FragColor = color;
 	

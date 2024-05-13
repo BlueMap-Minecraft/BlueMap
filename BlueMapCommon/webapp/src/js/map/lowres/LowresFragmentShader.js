@@ -24,6 +24,7 @@
  */
 import { ShaderChunk } from 'three';
 
+// language=GLSL
 export const LOWRES_FRAGMENT_SHADER = `
 ${ShaderChunk.logdepthbuf_pars_fragment}
 
