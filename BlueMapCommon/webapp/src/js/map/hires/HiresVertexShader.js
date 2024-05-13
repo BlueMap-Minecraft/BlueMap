@@ -33,6 +33,7 @@ attribute float sunlight;
 attribute float blocklight;
 
 varying vec3 vPosition;
+varying vec3 vWorldPosition;
 varying vec3 vNormal;
 varying vec2 vUv;
 varying vec3 vColor;
@@ -42,6 +43,8 @@ varying float vBlocklight;
 
 void main() {
 	vPosition = position;
+	vec4 worldPos = modelMatrix * vec4(vPosition, 1);
+	vWorldPosition = worldPos.xyz;
 	vNormal = normal;
 	vUv = uv;
 	vColor = color;

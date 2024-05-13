@@ -98,9 +98,10 @@ void main() {
 	
 	float ao = 0.0;
 	float aoStrength = 0.0;
+	float distFac = smoothstep(200.0, 600.0, distance);
 	if(lod == 1.0) {
 		aoStrength = smoothstep(PI - 0.8, PI - 0.2, acos(-clamp(viewMatrix[1][2], 0.0, 1.0)));
-		aoStrength *= 1.0 - smoothstep(200.0, 600.0, distance);
+		aoStrength *= 1.0 - distFac;
 		
 		if (aoStrength > 0.0) { 
 			const float r = 3.0;
@@ -123,6 +124,22 @@ void main() {
 	float light = mix(blockLight, 15.0, sunlightStrength);
 	color.rgb *= mix(ambientLight, 1.0, light / 15.0);
 
+	bool isChunkBorder;
+	{
+		float lineInterval = 16.0;
+		float lineThickness = 0.1;
+		float offset = 0.5;
+
+		vec2 worldPos = vWorldPosition.xz;
+		worldPos += offset;
+		float x = abs(mod(worldPos.x, lineInterval) - offset);
+		float y = abs(mod(worldPos.y, lineInterval) - offset);
+		isChunkBorder = x < lineThickness || y < lineThickness;
+	}
+
+	vec4 lineColour = vec4(1.0, 0.0, 1.0, 0.4);
+	color.rgb = mix(mix(color.rgb, lineColour.rgb, float(isChunkBorder) * lineColour.a), color.rgb, distFac);
+	
 	vec3 adjustedVoidColor = adjustColor(voidColor);
 	//where there's transparency, there is void that needs to be coloured
 	color.rgb = mix(adjustedVoidColor, color.rgb, color.a);
