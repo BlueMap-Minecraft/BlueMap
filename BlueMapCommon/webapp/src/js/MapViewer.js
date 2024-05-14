@@ -43,8 +43,9 @@ export class MapViewer {
 	/**
 	 * @param element {Element}
 	 * @param events {EventTarget}
+	 * @param chunkBorders {Boolean}
 	 */
-	constructor(element, events = element) {
+	constructor(element, events = element, chunkBorders) {
 		Object.defineProperty( this, 'isMapViewer', { value: true } );
 
 		this.rootElement = element;
@@ -61,6 +62,7 @@ export class MapViewer {
 				ambientLight: { value: 0 },
 				skyColor: { value: new Color(0.5, 0.5, 1) },
 				voidColor: { value: new Color(0, 0, 0) },
+				chunkBorders: { value: chunkBorders },
 				hiresTileMap: {
 					value: {
 						map: null,

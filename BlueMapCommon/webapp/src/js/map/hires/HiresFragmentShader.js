@@ -40,6 +40,7 @@ uniform float animationFrameHeight;
 uniform float animationFrameIndex;
 uniform float animationInterpolationFrameIndex;
 uniform float animationInterpolation;
+uniform bool chunkBorders;
 
 varying vec3 vPosition;
 varying vec3 vWorldPosition;
@@ -70,8 +71,8 @@ void main() {
 	float light = mix(vBlocklight, max(vSunlight, vBlocklight), sunlightStrength);
 	color.rgb *= mix(ambientLight, 1.0, light / 15.0);
 	
-	bool showChunkBorder;
-	{
+	if (chunkBorders) {
+		vec4 lineColour = vec4(1.0, 0.0, 1.0, 0.4);
 		float lineInterval = 16.0;
 		float lineThickness = 0.125; //width of two Minecraft pixels
 		float offset = 0.5;
@@ -83,12 +84,11 @@ void main() {
 		bool isChunkBorder = x < lineThickness || y < lineThickness;
 
 		//only show line on upwards facing surfaces
-		showChunkBorder = isChunkBorder && vNormal.y > 0.1;
-	}
+		bool showChunkBorder = isChunkBorder && vNormal.y > 0.1;
 
-	vec4 lineColour = vec4(1.0, 0.0, 1.0, 0.4);
-	float distFac = smoothstep(200.0, 600.0, distance);
-	color.rgb = mix(mix(color.rgb, lineColour.rgb, float(showChunkBorder) * lineColour.a), color.rgb, distFac);
+		float distFac = smoothstep(200.0, 600.0, distance);
+		color.rgb = mix(mix(color.rgb, lineColour.rgb, float(showChunkBorder) * lineColour.a), color.rgb, distFac);
+	}
 
 	gl_FragColor = color;
 	
