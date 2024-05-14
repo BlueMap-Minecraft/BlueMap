@@ -269,8 +269,7 @@ public class MCAWorld implements World {
 
         // load level.dat
         Path levelFile = worldFolder.resolve("level.dat");
-        BlueNBT blueNBT = MCAUtil.addCommonNbtAdapters(new BlueNBT());
-        blueNBT.register(TypeToken.get(DimensionType.class), new DimensionTypeDeserializer(blueNBT, dataPack));
+        BlueNBT blueNBT = createBlueNBTForDataPack(dataPack);
         LevelData levelData;
         try (InputStream levelFileIn = Compression.GZIP.decompress(Files.newInputStream(levelFile))) {
             levelData = blueNBT.read(levelFileIn, LevelData.class);
@@ -295,6 +294,12 @@ public class MCAWorld implements World {
         if (DataPack.DIMENSION_THE_NETHER.equals(dimension)) return worldFolder.resolve("DIM-1");
         if (DataPack.DIMENSION_THE_END.equals(dimension)) return worldFolder.resolve("DIM1");
         return worldFolder.resolve("dimensions").resolve(dimension.getNamespace()).resolve(dimension.getValue());
+    }
+
+    private static BlueNBT createBlueNBTForDataPack(DataPack dataPack) {
+        BlueNBT blueNBT = MCAUtil.addCommonNbtAdapters(new BlueNBT());
+        blueNBT.register(TypeToken.get(DimensionType.class), new DimensionTypeDeserializer(blueNBT, dataPack));
+        return blueNBT;
     }
 
 }
