@@ -68,7 +68,7 @@ public class HiresModelRenderer {
         for (x = modelMin.getX(); x <= modelMax.getX(); x++){
             for (z = modelMin.getZ(); z <= modelMax.getZ(); z++){
 
-                maxHeight = 0;
+                maxHeight = Integer.MIN_VALUE;
                 topBlockLight = 0;
 
                 columnColor.set(0, 0, 0, 0, true);
@@ -104,6 +104,9 @@ public class HiresModelRenderer {
                         //if (blockColor.a > 0.999 && block.getProperties().isCulling()) break;
                     }
                 }
+
+                if (maxHeight == Integer.MIN_VALUE)
+                    maxHeight = 0;
 
                 tileMetaConsumer.set(x, z, columnColor, maxHeight, (int) topBlockLight);
             }
