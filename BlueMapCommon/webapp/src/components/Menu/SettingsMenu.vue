@@ -56,7 +56,7 @@
       >{{lang.name}}</SimpleButton>
     </Group>
 
-    <SwitchButton :on="appState.chunkBorders" @action="switchChunkBorders(); $bluemap.saveUserSettings();">{{ $t("chunkBorders.button") }}</SwitchButton>
+    <SwitchButton :on="mapViewer.uniforms.chunkBorders.value" @action="switchChunkBorders(); $bluemap.saveUserSettings();">{{ $t("chunkBorders.button") }}</SwitchButton>
 
     <SwitchButton :on="appState.debug" @action="switchDebug(); $bluemap.saveUserSettings();">{{ $t("debug.button") }}</SwitchButton>
 
@@ -108,7 +108,7 @@ name: "SettingsMenu",
   },
   methods: {
     switchChunkBorders() {
-      this.$bluemap.setChunkBorders(!this.appState.chunkBorders);
+      this.$bluemap.setChunkBorders(!this.mapViewer.uniforms.chunkBorders.value);
     },
     switchDebug() {
       this.$bluemap.setDebug(!this.appState.debug);

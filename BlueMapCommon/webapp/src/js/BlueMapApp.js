@@ -46,6 +46,11 @@ export class BlueMapApp {
     constructor(rootElement) {
         this.events = rootElement;
 
+        this.mapViewer = new MapViewer(rootElement, this.events);
+
+        this.mapControls = new MapControls(this.mapViewer.renderer.domElement, rootElement);
+        this.freeFlightControls = new FreeFlightControls(this.mapViewer.renderer.domElement);
+
         /** @type {PlayerMarkerManager} */
         this.playerMarkerManager = null;
         /** @type {NormalMarkerManager} */
@@ -100,14 +105,8 @@ export class BlueMapApp {
             screenshot: {
                 clipboard: true
             },
-            chunkBorders: false,
             debug: false
         });
-
-        this.mapViewer = new MapViewer(rootElement, this.events, this.appState.chunkBorders);
-
-        this.mapControls = new MapControls(this.mapViewer.renderer.domElement, rootElement);
-        this.freeFlightControls = new FreeFlightControls(this.mapViewer.renderer.domElement);
 
         // init
         this.updateControlsSettings();
@@ -527,7 +526,6 @@ export class BlueMapApp {
     }
 
     setChunkBorders(chunkBorders) {
-        this.appState.chunkBorders = chunkBorders;
         this.mapViewer.data.uniforms.chunkBorders.value = chunkBorders;
     }
 
@@ -614,7 +612,7 @@ export class BlueMapApp {
         this.setTheme(this.loadUserSetting("theme", this.appState.theme));
         this.setScreenshotClipboard(this.loadUserSetting("screenshotClipboard", this.appState.screenshot.clipboard));
         await setLanguage(this.loadUserSetting("lang", i18n.locale.value));
-        this.setChunkBorders(this.loadUserSetting("chunkBorders", this.appState.chunkBorders))
+        this.setChunkBorders(this.loadUserSetting("chunkBorders", this.mapViewer.data.uniforms.chunkBorders.value))
         this.setDebug(this.loadUserSetting("debug", this.appState.debug));
 
         alert(this.events, "Settings loaded!", "info");
@@ -636,7 +634,7 @@ export class BlueMapApp {
         this.saveUserSetting("theme", this.appState.theme);
         this.saveUserSetting("screenshotClipboard", this.appState.screenshot.clipboard);
         this.saveUserSetting("lang", i18n.locale.value);
-        this.saveUserSetting("chunkBorders", this.appState.chunkBorders);
+        this.saveUserSetting("chunkBorders", this.mapViewer.data.uniforms.chunkBorders.value);
         this.saveUserSetting("debug", this.appState.debug);
 
         alert(this.events, "Settings saved!", "info");
