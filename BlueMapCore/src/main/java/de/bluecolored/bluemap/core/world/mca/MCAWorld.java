@@ -28,6 +28,7 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.google.gson.reflect.TypeToken;
 import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -38,8 +39,10 @@ import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.Vector2iCache;
 import de.bluecolored.bluemap.core.world.*;
 import de.bluecolored.bluemap.core.world.mca.chunk.ChunkLoader;
+import de.bluecolored.bluemap.core.world.mca.data.DimensionTypeDeserializer;
 import de.bluecolored.bluemap.core.world.mca.data.LevelData;
 import de.bluecolored.bluemap.core.world.mca.region.RegionType;
+import de.bluecolored.bluenbt.BlueNBT;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -101,9 +104,9 @@ public class MCAWorld implements World {
 
         LevelData.Dimension dimensionData = levelData.getData().getWorldGenSettings().getDimensions().get(dimension.getFormatted());
         if (dimensionData == null) {
-            if (DataPack.DIMENSION_OVERWORLD.equals(dimension)) dimensionData = new LevelData.Dimension(DataPack.DIMENSION_TYPE_OVERWORLD.getFormatted());
-            else if (DataPack.DIMENSION_THE_NETHER.equals(dimension)) dimensionData = new LevelData.Dimension(DataPack.DIMENSION_TYPE_THE_NETHER.getFormatted());
-            else if (DataPack.DIMENSION_THE_END.equals(dimension)) dimensionData = new LevelData.Dimension(DataPack.DIMENSION_TYPE_THE_END.getFormatted());
+            if (DataPack.DIMENSION_OVERWORLD.equals(dimension)) dimensionData = new LevelData.Dimension(DimensionType.OVERWORLD);
+            else if (DataPack.DIMENSION_THE_NETHER.equals(dimension)) dimensionData = new LevelData.Dimension(DimensionType.NETHER);
+            else if (DataPack.DIMENSION_THE_END.equals(dimension)) dimensionData = new LevelData.Dimension(DimensionType.END);
             else {
                 Logger.global.logWarning("The level-data does not contain any dimension with the id '" + dimension +
                         "', using fallback.");
@@ -111,14 +114,7 @@ public class MCAWorld implements World {
             }
         }
 
-        DimensionType dimensionType = dataPack.getDimensionType(new Key(dimensionData.getType()));
-        if (dimensionType == null) {
-            Logger.global.logWarning("The data-pack for world '" + worldFolder +
-                    "' does not contain any dimension-type with the id '" + dimensionData.getType() + "', using fallback.");
-            dimensionType = DimensionType.OVERWORLD;
-        }
-
-        this.dimensionType = dimensionType;
+        this.dimensionType = dimensionData.getType();
         this.spawnPoint = new Vector3i(
                 levelData.getData().getSpawnX(),
                 levelData.getData().getSpawnY(),
@@ -270,10 +266,15 @@ public class MCAWorld implements World {
     }
 
     public static MCAWorld load(Path worldFolder, Key dimension, DataPack dataPack) throws IOException, InterruptedException {
+
         // load level.dat
         Path levelFile = worldFolder.resolve("level.dat");
-        InputStream levelFileIn = Compression.GZIP.decompress(Files.newInputStream(levelFile));
-        LevelData levelData = MCAUtil.BLUENBT.read(levelFileIn, LevelData.class);
+        BlueNBT blueNBT = MCAUtil.addCommonNbtAdapters(new BlueNBT());
+        blueNBT.register(TypeToken.get(DimensionType.class), new DimensionTypeDeserializer(blueNBT, dataPack));
+        LevelData levelData;
+        try (InputStream levelFileIn = Compression.GZIP.decompress(Files.newInputStream(levelFile))) {
+            levelData = blueNBT.read(levelFileIn, LevelData.class);
+        }
 
         // create world
         return new MCAWorld(worldFolder, dimension, dataPack, levelData);

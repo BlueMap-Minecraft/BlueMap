@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.core.world.mca.data;
 
 import de.bluecolored.bluemap.api.debug.DebugDump;
+import de.bluecolored.bluemap.core.world.DimensionType;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -58,7 +59,7 @@ public class LevelData {
     @AllArgsConstructor
     @DebugDump
     public static class Dimension {
-        private String type = "minecraft:overworld";
+        private DimensionType type = DimensionType.OVERWORLD;
     }
 
 }

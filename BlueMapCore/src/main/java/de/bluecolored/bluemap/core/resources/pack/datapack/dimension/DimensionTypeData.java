@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.core.resources.pack.datapack.dimension;
 
 import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.world.DimensionType;
+import de.bluecolored.bluenbt.NBTName;
 import lombok.*;
 import lombok.experimental.Accessors;
 
@@ -33,13 +34,30 @@ import lombok.experimental.Accessors;
 @DebugDump
 public class DimensionTypeData implements DimensionType {
 
+    @NBTName("natural")
     private boolean natural;
-    @Accessors(fluent = true) private boolean hasSkylight;
-    @Accessors(fluent = true) private boolean hasCeiling;
+
+    @NBTName("has_skylight")
+    @Accessors(fluent = true)
+    private boolean hasSkylight;
+
+    @NBTName("has_ceiling")
+    @Accessors(fluent = true)
+    private boolean hasCeiling;
+
+    @NBTName("ambient_light")
     private float ambientLight;
+
+    @NBTName("min_y")
     private int minY;
+
+    @NBTName("height")
     private int height;
+
+    @NBTName("fixed_time")
     private Long fixedTime;
+
+    @NBTName("coordinate_scale")
     private double coordinateScale;
 
 }
