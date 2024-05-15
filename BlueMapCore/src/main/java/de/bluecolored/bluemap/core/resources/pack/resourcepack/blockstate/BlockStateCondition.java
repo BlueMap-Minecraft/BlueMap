@@ -24,8 +24,6 @@
  */
 package de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate;
 
-
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.util.Preconditions;
 import de.bluecolored.bluemap.core.world.BlockState;
 
@@ -41,7 +39,6 @@ public interface BlockStateCondition {
 
     boolean matches(BlockState state);
 
-    @DebugDump
     class Property implements BlockStateCondition {
 
         private final String key;
@@ -61,7 +58,6 @@ public interface BlockStateCondition {
 
     }
 
-    @DebugDump
     class PropertySet implements BlockStateCondition {
 
         private final String key;
@@ -82,7 +78,6 @@ public interface BlockStateCondition {
 
     }
 
-    @DebugDump
     class And implements BlockStateCondition {
 
         final BlockStateCondition[] conditions;
@@ -117,7 +112,6 @@ public interface BlockStateCondition {
 
     }
 
-    @DebugDump
     class Or implements BlockStateCondition {
 
         private final BlockStateCondition[] conditions;

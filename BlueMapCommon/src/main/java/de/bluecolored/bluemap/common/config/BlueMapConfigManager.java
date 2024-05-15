@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.common.config;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.common.BlueMapConfiguration;
 import de.bluecolored.bluemap.common.config.storage.StorageConfig;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
@@ -44,7 +43,6 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Stream;
 
-@DebugDump
 @Getter
 public class BlueMapConfigManager implements BlueMapConfiguration {
 

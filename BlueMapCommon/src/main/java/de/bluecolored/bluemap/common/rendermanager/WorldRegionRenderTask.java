@@ -26,7 +26,7 @@ package de.bluecolored.bluemap.common.rendermanager;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector2l;
-import de.bluecolored.bluemap.api.debug.DebugDump;
+import de.bluecolored.bluemap.common.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.map.renderstate.TileActionResolver.ActionAndNextState;
@@ -47,7 +47,6 @@ import java.util.function.Predicate;
 import static de.bluecolored.bluemap.core.map.renderstate.TileActionResolver.Action.DELETE;
 import static de.bluecolored.bluemap.core.map.renderstate.TileActionResolver.Action.RENDER;
 
-@DebugDump
 public class WorldRegionRenderTask implements RenderTask {
 
     @Getter private final BmMap map;

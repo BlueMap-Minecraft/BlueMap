@@ -24,10 +24,8 @@
  */
 package de.bluecolored.bluemap.core.map.renderstate;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.storage.GridStorage;
 
-@DebugDump
 public class MapChunkState extends CellStorage<ChunkInfoRegion> {
 
     static final int SHIFT = 7;

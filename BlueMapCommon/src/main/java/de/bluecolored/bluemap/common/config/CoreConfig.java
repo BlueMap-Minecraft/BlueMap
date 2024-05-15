@@ -24,13 +24,11 @@
  */
 package de.bluecolored.bluemap.common.config;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import java.nio.file.Path;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
-@DebugDump
 @ConfigSerializable
 public class CoreConfig {
 
@@ -75,7 +73,6 @@ public class CoreConfig {
         return log;
     }
 
-    @DebugDump
     @ConfigSerializable
     public static class LogConfig {
 

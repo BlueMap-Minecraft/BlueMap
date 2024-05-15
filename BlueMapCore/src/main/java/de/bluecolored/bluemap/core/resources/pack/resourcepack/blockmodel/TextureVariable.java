@@ -28,7 +28,6 @@ import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
@@ -38,7 +37,6 @@ import java.io.IOException;
 import java.util.Objects;
 import java.util.function.Function;
 
-@DebugDump
 @JsonAdapter(TextureVariable.Adapter.class)
 public class TextureVariable {
 

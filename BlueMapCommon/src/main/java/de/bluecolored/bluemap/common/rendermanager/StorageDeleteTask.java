@@ -24,7 +24,7 @@
  */
 package de.bluecolored.bluemap.common.rendermanager;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
+import de.bluecolored.bluemap.common.debug.DebugDump;
 import de.bluecolored.bluemap.core.storage.MapStorage;
 
 import java.util.Objects;

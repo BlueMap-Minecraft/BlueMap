@@ -24,11 +24,8 @@
  */
 package de.bluecolored.bluemap.core.util;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
-
 import java.util.concurrent.ConcurrentHashMap;
 
-@DebugDump
 public class Key implements Keyed {
 
     private static final ConcurrentHashMap<String, String> STRING_INTERN_POOL = new ConcurrentHashMap<>();

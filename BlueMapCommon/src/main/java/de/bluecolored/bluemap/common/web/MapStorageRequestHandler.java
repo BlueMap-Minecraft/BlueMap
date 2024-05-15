@@ -25,7 +25,6 @@
 package de.bluecolored.bluemap.common.web;
 
 import de.bluecolored.bluemap.api.ContentTypeRegistry;
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.common.web.http.HttpRequest;
 import de.bluecolored.bluemap.common.web.http.HttpRequestHandler;
 import de.bluecolored.bluemap.common.web.http.HttpResponse;
@@ -47,7 +46,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@DebugDump
 @RequiredArgsConstructor
 public class MapStorageRequestHandler implements HttpRequestHandler {
 

@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.core.resources.pack.resourcepack.texture;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.util.BufferedImageUtil;
 import de.bluecolored.bluemap.core.util.math.Color;
@@ -36,7 +35,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Base64;
 
-@DebugDump
 public class Texture {
 
     public static final Texture MISSING = new Texture(

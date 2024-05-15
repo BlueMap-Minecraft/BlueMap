@@ -31,7 +31,6 @@ import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.util.Key;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,7 +39,6 @@ import java.nio.file.Path;
 import java.util.Locale;
 import java.util.function.Function;
 
-@DebugDump
 @JsonAdapter(ResourcePath.Adapter.class)
 public class ResourcePath<T> extends Key {
 

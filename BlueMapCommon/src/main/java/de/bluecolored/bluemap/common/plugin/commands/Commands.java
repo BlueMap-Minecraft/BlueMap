@@ -48,7 +48,7 @@ import de.bluecolored.bluemap.common.plugin.text.TextFormat;
 import de.bluecolored.bluemap.common.rendermanager.*;
 import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.core.BlueMap;
-import de.bluecolored.bluemap.core.debug.StateDumper;
+import de.bluecolored.bluemap.common.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.map.renderstate.TileInfoRegion;
@@ -635,7 +635,7 @@ public class Commands<S> {
         final CommandSource source = commandSourceInterface.apply(context.getSource());
 
         try {
-            Path file = plugin.getBlueMap().getConfig().getCoreConfig().getData().resolve("dump.json");
+            Path file = plugin.getBlueMap().getConfig().getCoreConfig().getData().resolve("dump.json.gz");
             StateDumper.global().dump(file);
 
             source.sendMessage(Text.of(TextColor.GREEN, "Dump created at: " + file));

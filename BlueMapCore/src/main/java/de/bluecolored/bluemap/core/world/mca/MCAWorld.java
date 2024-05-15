@@ -29,7 +29,6 @@ import com.flowpowered.math.vector.Vector3i;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.gson.reflect.TypeToken;
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.pack.datapack.DataPack;
@@ -60,7 +59,6 @@ import java.util.function.Predicate;
 
 @Getter
 @ToString
-@DebugDump
 public class MCAWorld implements World {
 
     private static final Grid CHUNK_GRID = new Grid(16);

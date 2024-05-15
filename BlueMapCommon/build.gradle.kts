@@ -27,6 +27,7 @@ repositories {
 
 dependencies {
     api ("com.mojang:brigadier:1.0.17")
+
     api ("de.bluecolored.bluemap:BlueMapCore")
 
     compileOnly ("org.jetbrains:annotations:16.0.2")

@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.core.resources.pack.resourcepack.blockmodel;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
@@ -34,7 +33,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
-@DebugDump
 public class BlockModel {
 
     private ResourcePath<BlockModel> parent;

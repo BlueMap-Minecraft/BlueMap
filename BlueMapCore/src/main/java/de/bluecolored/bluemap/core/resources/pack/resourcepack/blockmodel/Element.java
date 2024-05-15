@@ -30,7 +30,6 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.Direction;
@@ -39,7 +38,6 @@ import java.io.IOException;
 import java.util.EnumMap;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
-@DebugDump
 @JsonAdapter(Element.Adapter.class)
 public class Element {
     private static final Vector3f FULL_BLOCK_MIN = Vector3f.ZERO;

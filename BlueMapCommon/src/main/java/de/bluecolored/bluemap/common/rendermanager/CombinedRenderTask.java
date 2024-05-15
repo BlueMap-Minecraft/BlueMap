@@ -24,11 +24,8 @@
  */
 package de.bluecolored.bluemap.common.rendermanager;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
-
 import java.util.*;
 
-@DebugDump
 public class CombinedRenderTask<T extends RenderTask> implements RenderTask {
 
     private final String description;

@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.core.map.renderstate;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.storage.GridStorage;
 import de.bluecolored.bluemap.core.util.Grid;
@@ -36,7 +35,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
-@DebugDump
 public class MapTileState extends CellStorage<TileInfoRegion> {
 
     static final int SHIFT = 5;

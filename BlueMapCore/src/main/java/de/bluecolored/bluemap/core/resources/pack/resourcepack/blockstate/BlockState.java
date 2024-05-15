@@ -24,13 +24,11 @@
  */
 package de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
 
 @SuppressWarnings("FieldMayBeFinal")
-@DebugDump
 public class BlockState {
 
     private Variants variants = null;

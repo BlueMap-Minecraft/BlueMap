@@ -28,7 +28,6 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
 
 import java.io.IOException;
@@ -36,7 +35,6 @@ import java.util.Arrays;
 import java.util.function.Consumer;
 
 @SuppressWarnings("FieldMayBeFinal")
-@DebugDump
 @JsonAdapter(VariantSet.Adapter.class)
 public class VariantSet {
 

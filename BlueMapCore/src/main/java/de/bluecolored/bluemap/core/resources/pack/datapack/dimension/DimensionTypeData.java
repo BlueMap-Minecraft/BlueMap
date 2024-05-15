@@ -24,14 +24,12 @@
  */
 package de.bluecolored.bluemap.core.resources.pack.datapack.dimension;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.world.DimensionType;
 import de.bluecolored.bluenbt.NBTName;
 import lombok.*;
 import lombok.experimental.Accessors;
 
 @Data
-@DebugDump
 public class DimensionTypeData implements DimensionType {
 
     @NBTName("natural")

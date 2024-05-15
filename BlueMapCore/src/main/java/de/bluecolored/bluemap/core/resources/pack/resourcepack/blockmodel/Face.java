@@ -25,14 +25,12 @@
 package de.bluecolored.bluemap.core.resources.pack.resourcepack.blockmodel;
 
 import com.flowpowered.math.vector.Vector4f;
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.Direction;
 
 import java.util.function.Function;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
-@DebugDump
 public class Face {
 
     private static final TextureVariable DEFAULT_TEXTURE = new TextureVariable(ResourcePack.MISSING_TEXTURE);

@@ -31,7 +31,6 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
 import de.bluecolored.bluemap.core.util.math.Axis;
 import de.bluecolored.bluemap.core.util.math.MatrixM4f;
@@ -39,7 +38,6 @@ import de.bluecolored.bluemap.core.util.math.MatrixM4f;
 import java.io.IOException;
 
 @SuppressWarnings("FieldMayBeFinal")
-@DebugDump
 @JsonAdapter(Rotation.Adapter.class)
 public class Rotation {
     private static final Vector3f DEFAULT_ORIGIN = new Vector3f(8, 8, 8);

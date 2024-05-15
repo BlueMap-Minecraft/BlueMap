@@ -24,7 +24,7 @@
  */
 package de.bluecolored.bluemap.common.serverinterface;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
+import de.bluecolored.bluemap.common.debug.DebugDump;
 import de.bluecolored.bluemap.core.util.Tristate;
 import de.bluecolored.bluemap.core.world.World;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;

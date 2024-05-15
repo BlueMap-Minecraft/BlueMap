@@ -26,7 +26,6 @@ package de.bluecolored.bluemap.core.map.renderstate;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.google.gson.reflect.TypeToken;
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.storage.GridStorage;
 import de.bluecolored.bluemap.core.storage.compression.CompressedInputStream;
@@ -41,7 +40,6 @@ import java.io.OutputStream;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-@DebugDump
 abstract class CellStorage<T extends CellStorage.Cell> {
 
     private static final BlueNBT BLUE_NBT = new BlueNBT();

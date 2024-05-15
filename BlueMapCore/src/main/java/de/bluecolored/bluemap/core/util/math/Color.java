@@ -24,10 +24,7 @@
  */
 package de.bluecolored.bluemap.core.util.math;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
-
 @SuppressWarnings("UnusedReturnValue")
-@DebugDump
 public class Color {
 
     public float r, g, b, a;

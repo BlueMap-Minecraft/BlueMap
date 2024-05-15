@@ -24,14 +24,12 @@
  */
 package de.bluecolored.bluemap.common.web;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.common.web.http.HttpRequest;
 import de.bluecolored.bluemap.common.web.http.HttpRequestHandler;
 import de.bluecolored.bluemap.common.web.http.HttpResponse;
 import de.bluecolored.bluemap.common.web.http.HttpStatusCode;
 import de.bluecolored.bluemap.core.BlueMap;
 
-@DebugDump
 public class BlueMapResponseModifier implements HttpRequestHandler {
 
     private final HttpRequestHandler delegate;

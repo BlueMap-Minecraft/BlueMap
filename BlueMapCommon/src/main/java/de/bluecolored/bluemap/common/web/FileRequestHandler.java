@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.common.web;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.common.web.http.*;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
@@ -39,7 +38,6 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
-@DebugDump
 public class FileRequestHandler implements HttpRequestHandler {
 
     private final Path webRoot;

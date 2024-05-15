@@ -24,10 +24,8 @@
  */
 package de.bluecolored.bluemap.core.world;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.util.Tristate;
 
-@DebugDump
 public class BlockProperties {
 
     public static final BlockProperties DEFAULT = new BlockProperties();

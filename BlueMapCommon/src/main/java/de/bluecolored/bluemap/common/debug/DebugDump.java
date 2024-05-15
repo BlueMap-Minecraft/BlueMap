@@ -22,30 +22,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.serverinterface;
+package de.bluecolored.bluemap.common.debug;
 
-import de.bluecolored.bluemap.common.debug.DebugDump;
-import de.bluecolored.bluemap.core.util.Key;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import java.io.IOException;
-import java.nio.file.Path;
+@Retention(RetentionPolicy.RUNTIME)
+@Target({
+        ElementType.METHOD,
+        ElementType.FIELD,
+        ElementType.TYPE
+})
+public @interface DebugDump {
 
-public interface ServerWorld {
+    String value() default "";
 
-    @DebugDump
-    Path getWorldFolder();
-
-    @DebugDump
-    Key getDimension();
-
-    /**
-     * Attempts to persist all changes that have been made in a world to disk.
-     *
-     * @return <code>true</code> if the changes have been successfully persisted, <code>false</code> if this operation is not supported by the implementation
-     * @throws IOException if something went wrong trying to persist the changes
-     */
-    default boolean persistWorldChanges() throws IOException {
-        return false;
-    }
+    boolean exclude() default false;
 
 }

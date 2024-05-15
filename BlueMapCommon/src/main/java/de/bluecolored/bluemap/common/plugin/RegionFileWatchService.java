@@ -25,7 +25,6 @@
 package de.bluecolored.bluemap.common.plugin;
 
 import com.flowpowered.math.vector.Vector2i;
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -52,7 +51,6 @@ public class RegionFileWatchService extends Thread {
 
     private Timer delayTimer;
 
-    @DebugDump
     private final Map<Vector2i, TimerTask> scheduledUpdates;
 
     public RegionFileWatchService(RenderManager renderManager, BmMap map) throws IOException {

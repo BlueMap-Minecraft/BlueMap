@@ -24,12 +24,10 @@
  */
 package de.bluecolored.bluemap.common.web;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.common.web.http.*;
 import de.bluecolored.bluemap.core.logger.Logger;
 import lombok.Getter;
 
-@DebugDump
 @Getter
 public class LoggingRequestHandler implements HttpRequestHandler {
 

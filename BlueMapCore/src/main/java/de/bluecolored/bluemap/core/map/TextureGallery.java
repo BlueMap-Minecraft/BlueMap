@@ -29,7 +29,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonParseException;
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
@@ -43,7 +42,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 
-@DebugDump
 public class TextureGallery {
 
     private static final Gson GSON = ResourcesGson.addAdapter(new GsonBuilder())

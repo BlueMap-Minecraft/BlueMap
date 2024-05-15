@@ -26,7 +26,6 @@ package de.bluecolored.bluemap.core.resources;
 
 import com.flowpowered.math.GenericMath;
 import com.google.gson.stream.JsonReader;
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.biome.Biome;
 import de.bluecolored.bluemap.core.world.block.Block;
@@ -40,7 +39,6 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-@DebugDump
 public class BlockColorCalculatorFactory {
 
     private static final int BLEND_RADIUS_H = 2;

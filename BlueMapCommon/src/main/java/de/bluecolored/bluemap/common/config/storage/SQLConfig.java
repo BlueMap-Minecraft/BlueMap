@@ -24,8 +24,8 @@
  */
 package de.bluecolored.bluemap.common.config.storage;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.common.config.ConfigurationException;
+import de.bluecolored.bluemap.common.debug.DebugDump;
 import de.bluecolored.bluemap.core.storage.compression.Compression;
 import de.bluecolored.bluemap.core.storage.sql.Database;
 import de.bluecolored.bluemap.core.storage.sql.SQLStorage;
@@ -51,17 +51,20 @@ import java.util.Optional;
 @Getter
 public class SQLConfig extends StorageConfig {
 
+    @DebugDump(exclude = true)
     private String connectionUrl = "jdbc:mysql://localhost/bluemap?permitMysqlScheme";
+
+    @DebugDump(exclude = true)
     private Map<String, String> connectionProperties = new HashMap<>();
-    @DebugDump private String dialect = null;
 
-    @DebugDump private String driverJar = null;
-    @DebugDump private String driverClass = null;
-    @DebugDump private int maxConnections = -1;
+    private String dialect = null;
 
-    @DebugDump private String compression = Compression.GZIP.getKey().getFormatted();
+    private String driverJar = null;
+    private String driverClass = null;
+    private int maxConnections = -1;
 
-    @DebugDump
+    private String compression = Compression.GZIP.getKey().getFormatted();
+
     @Getter(AccessLevel.NONE)
     private transient URL driverJarURL = null;
 

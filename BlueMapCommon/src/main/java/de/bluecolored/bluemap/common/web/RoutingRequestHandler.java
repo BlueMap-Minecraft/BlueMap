@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.common.web;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.common.web.http.HttpRequest;
 import de.bluecolored.bluemap.common.web.http.HttpRequestHandler;
 import de.bluecolored.bluemap.common.web.http.HttpResponse;
@@ -39,7 +38,6 @@ import java.util.LinkedList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@DebugDump
 public class RoutingRequestHandler implements HttpRequestHandler {
 
     public final LinkedList<Route> routes;
@@ -83,7 +81,6 @@ public class RoutingRequestHandler implements HttpRequestHandler {
         return new HttpResponse(HttpStatusCode.BAD_REQUEST);
     }
 
-    @DebugDump
     @AllArgsConstructor
     @Getter @Setter
     public static class Route {

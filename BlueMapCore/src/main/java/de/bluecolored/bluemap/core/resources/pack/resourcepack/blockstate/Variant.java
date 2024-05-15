@@ -28,7 +28,6 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockmodel.BlockModel;
@@ -38,7 +37,6 @@ import de.bluecolored.bluemap.core.util.math.MatrixM3f;
 import java.io.IOException;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
-@DebugDump
 @JsonAdapter(Variant.Adapter.class)
 public class Variant {
 

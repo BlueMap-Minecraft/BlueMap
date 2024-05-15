@@ -25,7 +25,6 @@
 package de.bluecolored.bluemap.core.resources;
 
 import com.google.gson.stream.JsonReader;
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.world.BlockProperties;
 import de.bluecolored.bluemap.core.world.BlockState;
 
@@ -39,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-@DebugDump
 public class BlockPropertiesConfig {
 
     private final Map<String, List<BlockStateMapping<BlockProperties>>> mappings;

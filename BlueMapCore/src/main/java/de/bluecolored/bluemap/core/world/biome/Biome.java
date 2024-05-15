@@ -24,13 +24,11 @@
  */
 package de.bluecolored.bluemap.core.world.biome;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.Keyed;
 import de.bluecolored.bluemap.core.util.math.Color;
 import lombok.Getter;
 
-@DebugDump
 public interface Biome extends Keyed {
 
     Biome DEFAULT = new Default();

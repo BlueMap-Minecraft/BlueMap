@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.core.world;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.util.Key;
 import org.jetbrains.annotations.NotNull;
 
@@ -39,7 +38,6 @@ import java.util.regex.Pattern;
  * <br>
  * <i>The implementation of this class has to be thread-save!</i><br>
  */
-@DebugDump
 public class BlockState extends Key {
 
     private static final Pattern BLOCKSTATE_SERIALIZATION_PATTERN = Pattern.compile("^(.+?)(?:\\[(.*)])?$");

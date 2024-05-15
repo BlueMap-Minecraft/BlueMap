@@ -28,7 +28,6 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
 import de.bluecolored.bluemap.core.world.BlockState;
 import org.apache.commons.lang3.StringUtils;
@@ -39,7 +38,6 @@ import java.util.List;
 import java.util.function.Consumer;
 
 @SuppressWarnings("FieldMayBeFinal")
-@DebugDump
 @JsonAdapter(Multipart.Adapter.class)
 public class Multipart {
 
