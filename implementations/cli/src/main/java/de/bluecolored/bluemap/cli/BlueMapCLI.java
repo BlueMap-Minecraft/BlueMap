@@ -31,6 +31,8 @@ import de.bluecolored.bluemap.common.config.BlueMapConfigManager;
 import de.bluecolored.bluemap.common.config.ConfigurationException;
 import de.bluecolored.bluemap.common.config.CoreConfig;
 import de.bluecolored.bluemap.common.config.WebserverConfig;
+import de.bluecolored.bluemap.common.events.EventUtils;
+import de.bluecolored.bluemap.common.events.WebserverStartEvent;
 import de.bluecolored.bluemap.common.plugin.RegionFileWatchService;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
@@ -236,12 +238,15 @@ public class BlueMapCLI {
         );
 
         try {
-            //noinspection resource
             HttpServer webServer = new HttpServer(handler);
             webServer.bind(new InetSocketAddress(
                     config.resolveIp(),
                     config.getPort()
             ));
+
+            // webserver start event
+            EventUtils.dispatch(WebserverStartEvent.DISPATCHER, new WebserverStartEvent(webServer, routingRequestHandler));
+
             webServer.start();
         } catch (UnknownHostException ex) {
             throw new ConfigurationException("BlueMap failed to resolve the ip in your webserver-config.\n" +
