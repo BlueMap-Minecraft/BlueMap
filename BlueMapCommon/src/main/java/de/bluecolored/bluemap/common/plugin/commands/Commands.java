@@ -39,7 +39,13 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
+import de.bluecolored.bluemap.api.BlueMapAPI;
+import de.bluecolored.bluemap.api.events.EventDispatcher;
+import de.bluecolored.bluemap.api.events.Events;
+import de.bluecolored.bluemap.api.events.MapEvent;
 import de.bluecolored.bluemap.common.config.ConfigurationException;
+import de.bluecolored.bluemap.common.debug.StateDumper;
+import de.bluecolored.bluemap.common.events.EventUtils;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.PluginState;
 import de.bluecolored.bluemap.common.plugin.text.Text;
@@ -48,7 +54,6 @@ import de.bluecolored.bluemap.common.plugin.text.TextFormat;
 import de.bluecolored.bluemap.common.rendermanager.*;
 import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.core.BlueMap;
-import de.bluecolored.bluemap.common.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.map.renderstate.TileInfoRegion;
@@ -69,6 +74,9 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public class Commands<S> {
+
+    private static final EventDispatcher<MapEvent.Freeze> MAP_FREEZE_EVENT_DISPATCHER = Events.getDispatcher(MapEvent.Freeze.class);
+    private static final EventDispatcher<MapEvent.Unfreeze> MAP_UNFREEZE_EVENT_DISPATCHER = Events.getDispatcher(MapEvent.Unfreeze.class);
 
     private final Plugin plugin;
     private final CommandDispatcher<S> dispatcher;
@@ -719,6 +727,14 @@ public class Commands<S> {
                 source.sendMessage(Text.of(TextColor.GRAY, "Any currently scheduled updates for this map have been cancelled."));
 
                 plugin.save();
+
+                // event
+                BlueMapAPI.getInstance()
+                        .flatMap(api -> api.getMap(map.getId()))
+                        .ifPresent(apiMap ->
+                                EventUtils.dispatchAsync(MAP_FREEZE_EVENT_DISPATCHER, new MapEvent.Freeze(apiMap))
+                        );
+
             }, "BlueMap-Plugin-FreezeCommand").start();
         } else {
             source.sendMessage(Text.of(TextColor.RED, "This map is already frozen!"));
@@ -751,6 +767,14 @@ public class Commands<S> {
                 source.sendMessage(Text.of(TextColor.GREEN, "Map ", TextColor.WHITE, mapString, TextColor.GREEN, " is no longer frozen and will be automatically updated!"));
 
                 plugin.save();
+
+                // event
+                BlueMapAPI.getInstance()
+                        .flatMap(api -> api.getMap(map.getId()))
+                        .ifPresent(apiMap ->
+                                EventUtils.dispatchAsync(MAP_UNFREEZE_EVENT_DISPATCHER, new MapEvent.Unfreeze(apiMap))
+                        );
+
             }, "BlueMap-Plugin-UnfreezeCommand").start();
         } else {
             source.sendMessage(Text.of(TextColor.RED, "This map is not frozen!"));

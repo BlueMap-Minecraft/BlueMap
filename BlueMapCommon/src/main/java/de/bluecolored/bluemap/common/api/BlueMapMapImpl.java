@@ -28,7 +28,11 @@ import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.BlueMapWorld;
 import de.bluecolored.bluemap.api.AssetStorage;
+import de.bluecolored.bluemap.api.events.EventDispatcher;
+import de.bluecolored.bluemap.api.events.Events;
+import de.bluecolored.bluemap.api.events.MapEvent;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
+import de.bluecolored.bluemap.common.events.EventUtils;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
@@ -41,6 +45,9 @@ import java.util.Objects;
 import java.util.function.Predicate;
 
 public class BlueMapMapImpl implements BlueMapMap {
+
+    private static final EventDispatcher<MapEvent.Freeze> MAP_FREEZE_EVENT_DISPATCHER = Events.getDispatcher(MapEvent.Freeze.class);
+    private static final EventDispatcher<MapEvent.Unfreeze> MAP_UNFREEZE_EVENT_DISPATCHER = Events.getDispatcher(MapEvent.Unfreeze.class);
 
     private final WeakReference<Plugin> plugin;
     private final WeakReference<BmMap> map;
@@ -127,6 +134,9 @@ public class BlueMapMapImpl implements BlueMapMap {
         plugin.startWatchingMap(map);
         plugin.getPluginState().getMapState(map).setUpdateEnabled(true);
         plugin.getRenderManager().scheduleRenderTask(new MapUpdateTask(map));
+
+        // event
+        EventUtils.dispatchAsync(MAP_UNFREEZE_EVENT_DISPATCHER, new MapEvent.Unfreeze(this));
     }
 
     private synchronized void freeze() {
@@ -143,6 +153,9 @@ public class BlueMapMapImpl implements BlueMapMap {
 
             return false;
         });
+
+        // event
+        EventUtils.dispatchAsync(MAP_FREEZE_EVENT_DISPATCHER, new MapEvent.Freeze(this));
     }
 
     @Override

@@ -25,6 +25,10 @@
 package de.bluecolored.bluemap.common.api;
 
 import de.bluecolored.bluemap.api.WebApp;
+import de.bluecolored.bluemap.api.events.EventDispatcher;
+import de.bluecolored.bluemap.api.events.Events;
+import de.bluecolored.bluemap.api.events.PlayerVisibilityChangeEvent;
+import de.bluecolored.bluemap.common.events.EventUtils;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.util.FileHelper;
@@ -41,6 +45,8 @@ import java.util.stream.Stream;
 
 public class WebAppImpl implements WebApp {
     private static final Path IMAGE_ROOT_PATH = Path.of("data", "images");
+
+    private static final EventDispatcher<PlayerVisibilityChangeEvent> VISIBILITY_CHANGE_EVENT_DISPATCHER = Events.getDispatcher(PlayerVisibilityChangeEvent.class);
 
     private final Plugin plugin;
 
@@ -60,6 +66,9 @@ public class WebAppImpl implements WebApp {
         } else {
             plugin.getPluginState().addHiddenPlayer(player);
         }
+
+        // event
+        EventUtils.dispatchAsync(VISIBILITY_CHANGE_EVENT_DISPATCHER, new PlayerVisibilityChangeEvent(player, visible));
     }
 
     @Override
