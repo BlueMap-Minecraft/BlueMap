@@ -39,7 +39,6 @@ import de.bluecolored.bluemap.core.world.World;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 public class BlueMapAPIImpl extends BlueMapAPI {
@@ -107,8 +106,7 @@ public class BlueMapAPIImpl extends BlueMapAPI {
             if (coreWorld != null) world = coreWorld;
         }
 
-        if (world instanceof World) {
-            var coreWorld = (World) world;
+        if (world instanceof World coreWorld) {
             return Optional.of(new BlueMapWorldImpl(plugin, coreWorld));
         }
 
@@ -146,7 +144,7 @@ public class BlueMapAPIImpl extends BlueMapAPI {
     public void register() {
         try {
             BlueMapAPI.registerInstance(this);
-        } catch (ExecutionException ex) {
+        } catch (Exception ex) {
             Logger.global.logError("BlueMapAPI: A BlueMapAPI listener threw an exception (onEnable)!", ex.getCause());
         }
     }
@@ -154,7 +152,7 @@ public class BlueMapAPIImpl extends BlueMapAPI {
     public void unregister() {
         try {
             BlueMapAPI.unregisterInstance(this);
-        } catch (ExecutionException ex) {
+        } catch (Exception ex) {
             Logger.global.logError("BlueMapAPI: A BlueMapAPI listener threw an exception (onDisable)!", ex.getCause());
         }
     }

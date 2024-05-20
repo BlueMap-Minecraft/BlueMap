@@ -28,12 +28,16 @@ import de.bluecolored.bluemap.common.web.http.HttpRequest;
 import de.bluecolored.bluemap.common.web.http.HttpRequestHandler;
 import de.bluecolored.bluemap.common.web.http.HttpResponse;
 import de.bluecolored.bluemap.common.web.http.HttpStatusCode;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.Setter;
 
 import java.util.function.Supplier;
 
+@Getter @Setter
 public class JsonDataRequestHandler implements HttpRequestHandler {
 
-    private final Supplier<String> dataSupplier;
+    private @NonNull Supplier<String> dataSupplier;
 
     public JsonDataRequestHandler(Supplier<String> dataSupplier) {
         this.dataSupplier = dataSupplier;

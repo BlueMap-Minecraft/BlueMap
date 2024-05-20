@@ -34,16 +34,18 @@ import lombok.NonNull;
 import lombok.Setter;
 import org.intellij.lang.annotations.Language;
 
-import java.util.LinkedList;
+import java.util.Deque;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Getter
 public class RoutingRequestHandler implements HttpRequestHandler {
 
-    public final LinkedList<Route> routes;
+    private final Deque<Route> routes;
 
     public RoutingRequestHandler() {
-        this.routes = new LinkedList<>();
+        this.routes = new ConcurrentLinkedDeque<>();
     }
 
     public void register(@Language("RegExp") String pattern, HttpRequestHandler handler) {

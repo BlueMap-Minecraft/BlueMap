@@ -26,14 +26,18 @@ package de.bluecolored.bluemap.common.web;
 
 import de.bluecolored.bluemap.common.web.http.*;
 import de.bluecolored.bluemap.core.logger.Logger;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NonNull;
+import lombok.Setter;
 
-@Getter
+@Getter @Setter
+@AllArgsConstructor
 public class LoggingRequestHandler implements HttpRequestHandler {
 
-    private final HttpRequestHandler delegate;
-    private final Logger logger;
-    private final String format;
+    private @NonNull HttpRequestHandler delegate;
+    private @NonNull String format;
+    private @NonNull Logger logger;
 
     public LoggingRequestHandler(HttpRequestHandler delegate) {
         this(delegate, Logger.global);
@@ -45,12 +49,6 @@ public class LoggingRequestHandler implements HttpRequestHandler {
 
     public LoggingRequestHandler(HttpRequestHandler delegate, String format) {
         this(delegate, format, Logger.global);
-    }
-
-    public LoggingRequestHandler(HttpRequestHandler delegate, String format, Logger logger) {
-        this.delegate = delegate;
-        this.format = format;
-        this.logger = logger;
     }
 
     @Override
