@@ -25,6 +25,9 @@
 package de.bluecolored.bluemap.common.web;
 
 import de.bluecolored.bluemap.common.web.http.*;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.Setter;
 import org.apache.commons.lang3.time.DateFormatUtils;
 
 import java.io.File;
@@ -38,9 +41,10 @@ import java.util.Locale;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 
+@Getter @Setter
 public class FileRequestHandler implements HttpRequestHandler {
 
-    private final Path webRoot;
+    private @NonNull Path webRoot;
 
     public FileRequestHandler(Path webRoot) {
         this.webRoot = webRoot.normalize();
