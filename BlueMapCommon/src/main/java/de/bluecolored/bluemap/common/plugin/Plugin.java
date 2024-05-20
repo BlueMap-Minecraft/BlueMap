@@ -30,6 +30,10 @@ import de.bluecolored.bluemap.common.InterruptableReentrantLock;
 import de.bluecolored.bluemap.common.MissingResourcesException;
 import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.config.*;
+import de.bluecolored.bluemap.common.debug.StateDumper;
+import de.bluecolored.bluemap.common.events.EventUtils;
+import de.bluecolored.bluemap.common.events.PluginLifecycleEvent;
+import de.bluecolored.bluemap.common.events.WebserverStartEvent;
 import de.bluecolored.bluemap.common.live.LivePlayersDataSupplier;
 import de.bluecolored.bluemap.common.plugin.skins.PlayerSkinUpdater;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
@@ -39,7 +43,6 @@ import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.common.web.*;
 import de.bluecolored.bluemap.common.web.http.HttpServer;
-import de.bluecolored.bluemap.common.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.metrics.Metrics;
@@ -119,6 +122,9 @@ public class Plugin implements ServerEventListener {
                 if (loaded) return;
                 unload(); //ensure nothing is left running (from a failed load or something)
 
+                // plugin pre load event
+                EventUtils.dispatch(PluginLifecycleEvent.Load.Pre.DISPATCHER, new PluginLifecycleEvent.Load.Pre(this));
+
                 //load configs
                 BlueMapConfigManager configManager = BlueMapConfigManager.builder()
                         .minecraftVersion(serverInterface.getMinecraftVersion())
@@ -143,6 +149,12 @@ public class Plugin implements ServerEventListener {
                 } else {
                     Logger.global.remove(DEBUG_FILE_LOG_NAME);
                 }
+
+                // plugin configuration event
+                EventUtils.dispatch(
+                        PluginLifecycleEvent.Load.Configurations.DISPATCHER,
+                        new PluginLifecycleEvent.Load.Configurations(this, configManager)
+                );
 
                 //load plugin state
                 try {
@@ -231,6 +243,10 @@ public class Plugin implements ServerEventListener {
                                 webserverConfig.resolveIp(),
                                 webserverConfig.getPort()
                         ));
+
+                        // webserver start event
+                        EventUtils.dispatch(WebserverStartEvent.DISPATCHER, new WebserverStartEvent(webServer, routingRequestHandler));
+
                         webServer.start();
                     } catch (UnknownHostException ex) {
                         throw new ConfigurationException("BlueMap failed to resolve the ip in your webserver-config.\n" +
@@ -374,6 +390,10 @@ public class Plugin implements ServerEventListener {
 
                 //done
                 loaded = true;
+
+                // plugin post load event
+                EventUtils.dispatch(PluginLifecycleEvent.Load.Post.DISPATCHER, new PluginLifecycleEvent.Load.Post(this));
+
             }
         } catch (ConfigurationException ex) {
             Logger.global.logWarning(ex.getFormattedExplanation());
@@ -394,6 +414,9 @@ public class Plugin implements ServerEventListener {
         loadingLock.interruptAndLock();
         try {
             synchronized (this) {
+
+                // plugin pre unload event
+                EventUtils.dispatch(PluginLifecycleEvent.Unload.Pre.DISPATCHER, new PluginLifecycleEvent.Unload.Pre(this));
 
                 //disable api
                 if (api != null) api.unregister();
@@ -474,6 +497,10 @@ public class Plugin implements ServerEventListener {
 
                 //done
                 loaded = false;
+
+                // plugin post unload event
+                EventUtils.dispatch(PluginLifecycleEvent.Unload.Post.DISPATCHER, new PluginLifecycleEvent.Unload.Post(this));
+
             }
         } finally {
             loadingLock.unlock();
@@ -512,6 +539,9 @@ public class Plugin implements ServerEventListener {
 
     public synchronized void save() {
         if (blueMap == null) return;
+
+        // plugin save event
+        EventUtils.dispatch(PluginLifecycleEvent.Save.DISPATCHER, new PluginLifecycleEvent.Save(this));
 
         if (pluginState != null) {
             try {
