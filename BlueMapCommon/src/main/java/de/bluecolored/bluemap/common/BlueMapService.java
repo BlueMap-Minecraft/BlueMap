@@ -200,7 +200,7 @@ public class BlueMapService implements Closeable {
                 dimension = DataPack.DIMENSION_THE_END;
             } else if (
                     worldFolder.getNameCount() > 3 &&
-                    worldFolder.getName(worldFolder.getNameCount() - 3).equals(Path.of("dimensions"))
+                    worldFolder.getName(worldFolder.getNameCount() - 3).toString().equals("dimensions")
             ) {
                 String namespace = worldFolder.getName(worldFolder.getNameCount() - 2).toString();
                 String value = worldFolder.getName(worldFolder.getNameCount() - 1).toString();

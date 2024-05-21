@@ -48,11 +48,11 @@ import org.apache.commons.cli.*;
 import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -363,7 +363,7 @@ public class BlueMapCLI {
             if (blueMap != null) {
                 BlueMapConfiguration configProvider = blueMap.getConfig();
                 if (configProvider instanceof BlueMapConfigManager) {
-                    Logger.global.logWarning("Please check: " + ((BlueMapConfigManager) configProvider).getConfigManager().findConfigPath(Path.of("core")).toAbsolutePath().normalize());
+                    Logger.global.logWarning("Please check: " + ((BlueMapConfigManager) configProvider).getConfigManager().resolveConfigFile(BlueMapConfigManager.CORE_CONFIG_NAME).toAbsolutePath().normalize());
                 }
             }
             System.exit(2);
@@ -461,19 +461,20 @@ public class BlueMapCLI {
     private static String getCliCommand() {
         String filename = "bluemap-cli.jar";
         try {
-            File file = new File(BlueMapCLI.class.getProtectionDomain()
+            Path file = Path.of(BlueMapCLI.class.getProtectionDomain()
                     .getCodeSource()
                     .getLocation()
-                    .getPath());
+                    .toURI());
 
-            if (file.isFile()) {
+            if (Files.isRegularFile(file)) {
                 try {
-                    filename = "." + File.separator + new File("").getCanonicalFile().toPath().relativize(file.toPath());
+                    filename = "." + file.getFileSystem().getSeparator() +
+                            Path.of("").toRealPath().relativize(file.toRealPath());
                 } catch (IllegalArgumentException ex) {
-                    filename = file.getAbsolutePath();
+                    filename = file.toAbsolutePath().toString();
                 }
             }
-        } catch (IOException ignore) {}
+        } catch (Exception ignore) {}
         return "java -jar " + filename;
     }
 

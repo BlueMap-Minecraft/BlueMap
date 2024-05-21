@@ -40,7 +40,6 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 public class WebAppImpl implements WebApp {
-    private static final Path IMAGE_ROOT_PATH = Path.of("data", "images");
 
     private final Plugin plugin;
 
@@ -88,8 +87,8 @@ public class WebAppImpl implements WebApp {
         Path webRoot = getWebRoot().toAbsolutePath();
         String separator = webRoot.getFileSystem().getSeparator();
 
-        Path imageRootFolder = webRoot.resolve(IMAGE_ROOT_PATH);
-        Path imagePath = imageRootFolder.resolve(Path.of(path.replace("/", separator) + ".png")).toAbsolutePath();
+        Path imageRootFolder = webRoot.resolve("data").resolve("images");
+        Path imagePath = imageRootFolder.resolve(path.replace("/", separator) + ".png").toAbsolutePath();
 
         FileHelper.createDirectories(imagePath.getParent());
         Files.deleteIfExists(imagePath);
@@ -108,7 +107,7 @@ public class WebAppImpl implements WebApp {
         Path webRoot = getWebRoot().toAbsolutePath();
         String separator = webRoot.getFileSystem().getSeparator();
 
-        Path imageRootPath = webRoot.resolve("data").resolve(IMAGE_ROOT_PATH).toAbsolutePath();
+        Path imageRootPath = webRoot.resolve("data").resolve("images").toAbsolutePath();
 
         Map<String, String> availableImagesMap = new HashMap<>();
 

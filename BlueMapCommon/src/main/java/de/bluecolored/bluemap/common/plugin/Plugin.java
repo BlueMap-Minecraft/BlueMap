@@ -167,7 +167,7 @@ public class Plugin implements ServerEventListener {
 
                     BlueMapConfiguration configProvider = blueMap.getConfig();
                     if (configProvider instanceof BlueMapConfigManager) {
-                        Logger.global.logWarning("Please check: " + ((BlueMapConfigManager) configProvider).getConfigManager().findConfigPath(Path.of("core")).toAbsolutePath().normalize());
+                        Logger.global.logWarning("Please check: " + ((BlueMapConfigManager) configProvider).getConfigManager().resolveConfigFile(BlueMapConfigManager.CORE_CONFIG_NAME).toAbsolutePath().normalize());
                     }
 
                     Logger.global.logInfo("If you have changed the config you can simply reload the plugin using: /bluemap reload");

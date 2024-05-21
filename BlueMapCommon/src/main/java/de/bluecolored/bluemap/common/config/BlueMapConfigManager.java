@@ -46,6 +46,13 @@ import java.util.stream.Stream;
 @Getter
 public class BlueMapConfigManager implements BlueMapConfiguration {
 
+    public static final String CORE_CONFIG_NAME = "core";
+    public static final String WEBSERVER_CONFIG_NAME = "webserver";
+    public static final String WEBAPP_CONFIG_NAME = "webapp";
+    public static final String PLUGIN_CONFIG_NAME = "plugin";
+    public static final String MAPS_CONFIG_FOLDER_NAME = "maps";
+    public static final String STORAGES_CONFIG_FOLDER_NAME = "storages";
+
     private final ConfigManager configManager;
 
     private final CoreConfig coreConfig;
@@ -92,16 +99,15 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
     }
 
     private CoreConfig loadCoreConfig(Path defaultDataFolder, boolean useMetricsConfig) throws ConfigurationException {
-        Path configFileRaw = Path.of("core");
-        Path configFile = configManager.findConfigPath(configFileRaw);
+        Path configFile = configManager.resolveConfigFile(CORE_CONFIG_NAME);
         Path configFolder = configFile.getParent();
 
         if (!Files.exists(configFile)) {
             try {
                 FileHelper.createDirectories(configFolder);
                 Files.writeString(
-                        configFolder.resolve("core.conf"),
-                        configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/core.conf")
+                        configFile,
+                        configManager.loadConfigTemplate(CORE_CONFIG_NAME)
                                 .setConditional("metrics", useMetricsConfig)
                                 .setVariable("timestamp", LocalDateTime.now().withNano(0).toString())
                                 .setVariable("version", BlueMap.VERSION)
@@ -118,7 +124,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
             }
         }
 
-        return configManager.loadConfig(configFileRaw, CoreConfig.class);
+        return configManager.loadConfig(CORE_CONFIG_NAME, CoreConfig.class);
     }
 
     /**
@@ -137,16 +143,15 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
     }
 
     private WebserverConfig loadWebserverConfig(Path defaultWebroot, Path dataRoot) throws ConfigurationException {
-        Path configFileRaw = Path.of("webserver");
-        Path configFile = configManager.findConfigPath(configFileRaw);
+        Path configFile = configManager.resolveConfigFile(WEBSERVER_CONFIG_NAME);
         Path configFolder = configFile.getParent();
 
         if (!Files.exists(configFile)) {
             try {
                 FileHelper.createDirectories(configFolder);
                 Files.writeString(
-                        configFolder.resolve("webserver.conf"),
-                        configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/webserver.conf")
+                        configFile,
+                        configManager.loadConfigTemplate(WEBSERVER_CONFIG_NAME)
                                 .setVariable("webroot", formatPath(defaultWebroot))
                                 .setVariable("logfile", formatPath(dataRoot.resolve("logs").resolve("webserver.log")))
                                 .setVariable("logfile-with-time", formatPath(dataRoot.resolve("logs").resolve("webserver_%1$tF_%1$tT.log")))
@@ -158,20 +163,19 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
             }
         }
 
-        return configManager.loadConfig(configFileRaw, WebserverConfig.class);
+        return configManager.loadConfig(WEBSERVER_CONFIG_NAME, WebserverConfig.class);
     }
 
     private WebappConfig loadWebappConfig(Path defaultWebroot) throws ConfigurationException {
-        Path configFileRaw = Path.of("webapp");
-        Path configFile = configManager.findConfigPath(configFileRaw);
+        Path configFile = configManager.resolveConfigFile(WEBAPP_CONFIG_NAME);
         Path configFolder = configFile.getParent();
 
         if (!Files.exists(configFile)) {
             try {
                 FileHelper.createDirectories(configFolder);
                 Files.writeString(
-                        configFolder.resolve("webapp.conf"),
-                        configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/webapp.conf")
+                        configFile,
+                        configManager.loadConfigTemplate(WEBAPP_CONFIG_NAME)
                                 .setVariable("webroot", formatPath(defaultWebroot))
                                 .build(),
                         StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
@@ -181,20 +185,19 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
             }
         }
 
-        return configManager.loadConfig(configFileRaw, WebappConfig.class);
+        return configManager.loadConfig(WEBAPP_CONFIG_NAME, WebappConfig.class);
     }
 
     private PluginConfig loadPluginConfig() throws ConfigurationException {
-        Path configFileRaw = Path.of("plugin");
-        Path configFile = configManager.findConfigPath(configFileRaw);
+        Path configFile = configManager.resolveConfigFile(PLUGIN_CONFIG_NAME);
         Path configFolder = configFile.getParent();
 
         if (!Files.exists(configFile)) {
             try {
                 FileHelper.createDirectories(configFolder);
                 Files.writeString(
-                        configFolder.resolve("plugin.conf"),
-                        configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/plugin.conf")
+                        configFile,
+                        configManager.loadConfigTemplate(PLUGIN_CONFIG_NAME)
                                 .build(),
                         StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                 );
@@ -203,14 +206,13 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
             }
         }
 
-        return configManager.loadConfig(configFileRaw, PluginConfig.class);
+        return configManager.loadConfig(PLUGIN_CONFIG_NAME, PluginConfig.class);
     }
 
     private Map<String, MapConfig> loadMapConfigs(Collection<ServerWorld> autoConfigWorlds) throws ConfigurationException {
         Map<String, MapConfig> mapConfigs = new HashMap<>();
 
-        Path mapFolder = Paths.get("maps");
-        Path mapConfigFolder = configManager.getConfigRoot().resolve(mapFolder);
+        Path mapConfigFolder = configManager.getConfigRoot().resolve(MAPS_CONFIG_FOLDER_NAME);
 
         if (!Files.exists(mapConfigFolder)){
             try {
@@ -290,8 +292,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
         try (Stream<Path> configFiles = Files.list(mapConfigFolder)) {
             for (var configFile : configFiles.toArray(Path[]::new)) {
                 if (!configManager.isConfigFile(configFile)) continue;
-                Path rawConfig = configManager.getRaw(configFile);
-                String id = sanitiseMapId(rawConfig.getFileName().toString());
+                String id = sanitiseMapId(configManager.getConfigName(configFile));
 
                 if (mapConfigs.containsKey(id)) {
                     throw new ConfigurationException("At least two of your map-config file-names result in ambiguous map-id's!\n" +
@@ -299,7 +300,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
                             "To resolve this issue, rename this file to something else.");
                 }
 
-                MapConfig mapConfig = configManager.loadConfig(rawConfig, MapConfig.class);
+                MapConfig mapConfig = configManager.loadConfig(configFile, MapConfig.class);
                 mapConfigs.put(id, mapConfig);
             }
         } catch (IOException ex) {
@@ -315,8 +316,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
     private Map<String, StorageConfig> loadStorageConfigs(Path defaultWebroot) throws ConfigurationException {
         Map<String, StorageConfig> storageConfigs = new HashMap<>();
 
-        Path storageFolder = Paths.get("storages");
-        Path storageConfigFolder = configManager.getConfigRoot().resolve(storageFolder);
+        Path storageConfigFolder = configManager.getConfigRoot().resolve(STORAGES_CONFIG_FOLDER_NAME);
 
         if (!Files.exists(storageConfigFolder)){
             try {
@@ -345,11 +345,10 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
         try (Stream<Path> configFiles = Files.list(storageConfigFolder)) {
             for (var configFile : configFiles.toArray(Path[]::new)) {
                 if (!configManager.isConfigFile(configFile)) continue;
-                Path rawConfig = configManager.getRaw(configFile);
-                String id = rawConfig.getFileName().toString();
+                String id = configManager.getConfigName(configFile);
 
-                StorageConfig storageConfig = configManager.loadConfig(rawConfig, StorageConfig.Base.class); // load superclass
-                storageConfig = configManager.loadConfig(rawConfig, storageConfig.getStorageType().getConfigType()); // load actual config type
+                StorageConfig storageConfig = configManager.loadConfig(configFile, StorageConfig.Base.class); // load superclass
+                storageConfig = configManager.loadConfig(configFile, storageConfig.getStorageType().getConfigType()); // load actual config type
 
                 storageConfigs.put(id, storageConfig);
             }

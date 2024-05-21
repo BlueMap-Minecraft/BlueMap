@@ -32,21 +32,15 @@ import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.util.FileHelper;
-import org.apache.commons.io.FileUtils;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipFile;
 
 public class WebFilesManager {
 
@@ -114,39 +108,17 @@ public class WebFilesManager {
     }
 
     public void updateFiles() throws IOException {
-        URL fileResource = getClass().getResource("/de/bluecolored/bluemap/webapp.zip");
-        File tempFile = File.createTempFile("bluemap_webroot_extraction", null);
+        URL zippedWebapp = getClass().getResource("/de/bluecolored/bluemap/webapp.zip");
+        if (zippedWebapp == null) throw new IOException("Failed to open bundled webapp.");
 
-        if (fileResource == null) throw new IOException("Failed to open bundled webapp.");
+        // extract zip to webroot
+        FileHelper.extractZipFile(zippedWebapp, webRoot, StandardCopyOption.REPLACE_EXISTING);
 
-        try {
-            FileUtils.copyURLToFile(fileResource, tempFile, 10000, 10000);
-            try (ZipFile zipFile = new ZipFile(tempFile)){
-                Enumeration<? extends ZipEntry> entries = zipFile.entries();
-                while(entries.hasMoreElements()) {
-                    ZipEntry zipEntry = entries.nextElement();
-                    if (zipEntry.isDirectory()) {
-                        File dir = webRoot.resolve(zipEntry.getName()).toFile();
-                        FileUtils.forceMkdir(dir);
-                    } else {
-                        File target = webRoot.resolve(zipEntry.getName()).toFile();
-                        FileUtils.forceMkdirParent(target);
-                        FileUtils.copyInputStreamToFile(zipFile.getInputStream(zipEntry), target);
-                    }
-                }
-            }
-
-            // set version in index.html
-            Path indexFile = webRoot.resolve("index.html");
-            String indexContent = Files.readString(indexFile);
-            indexContent = indexContent.replace("%version%", BlueMap.VERSION);
-            Files.writeString(indexFile, indexContent);
-
-        } finally {
-            if (!tempFile.delete()) {
-                Logger.global.logWarning("Failed to delete file: " + tempFile);
-            }
-        }
+        // set version in index.html
+        Path indexFile = webRoot.resolve("index.html");
+        String indexContent = Files.readString(indexFile);
+        indexContent = indexContent.replace("%version%", BlueMap.VERSION);
+        Files.writeString(indexFile, indexContent);
     }
 
     @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal", "unused", "MismatchedQueryAndUpdateOfCollection"})

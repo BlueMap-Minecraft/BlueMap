@@ -28,7 +28,9 @@ import de.bluecolored.bluemap.core.util.stream.OnCloseOutputStream;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.URL;
 import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
 
@@ -46,14 +48,14 @@ public class FileHelper {
         return new OnCloseOutputStream(os, () -> {
             if (!Files.exists(partFile)) return;
             FileHelper.createDirectories(folder);
-            FileHelper.move(partFile, file);
+            FileHelper.atomicMove(partFile, file);
         });
     }
 
     /**
      * Tries to move the file atomically, but fallbacks to a normal move operation if moving atomically fails
      */
-    public static void move(Path from, Path to) throws IOException {
+    public static void atomicMove(Path from, Path to) throws IOException {
         try {
             Files.move(from, to, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
         } catch (FileNotFoundException | NoSuchFileException ignore) {
@@ -75,6 +77,41 @@ public class FileHelper {
     public static Path createDirectories(Path dir, FileAttribute<?>... attrs) throws IOException {
         if (Files.isDirectory(dir)) return dir;
         return Files.createDirectories(dir, attrs);
+    }
+
+
+    /**
+     * Extracts the entire zip-file into the given target directory
+     */
+    public static void extractZipFile(URL zipFile, Path targetDirectory, CopyOption... options) throws IOException {
+        Path temp = Files.createTempFile(null, ".zip");
+        FileHelper.copy(zipFile, temp);
+        FileHelper.extractZipFile(temp, targetDirectory, options);
+        Files.deleteIfExists(temp);
+    }
+
+    /**
+     * Extracts the entire zip-file into the given target directory
+     */
+    public static void extractZipFile(Path zipFile, Path targetDirectory, CopyOption... options) throws IOException {
+        try (FileSystem webappZipFs = FileSystems.newFileSystem(zipFile, (ClassLoader) null)) {
+            CopyingPathVisitor copyAction = new CopyingPathVisitor(targetDirectory, options);
+            for (Path root : webappZipFs.getRootDirectories()) {
+                Files.walkFileTree(root, copyAction);
+            }
+        }
+    }
+
+    /**
+     * Copies from a URL to a target-path
+     */
+    public static void copy(URL source, Path target) throws IOException {
+        try (
+                InputStream in = source.openStream();
+                OutputStream out = Files.newOutputStream(target)
+        ) {
+            in.transferTo(out);
+        }
     }
 
 }

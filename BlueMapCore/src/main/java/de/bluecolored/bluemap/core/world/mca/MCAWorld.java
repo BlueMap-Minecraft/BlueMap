@@ -45,17 +45,16 @@ import de.bluecolored.bluenbt.BlueNBT;
 import lombok.Getter;
 import lombok.ToString;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 @Getter
 @ToString
@@ -162,25 +161,33 @@ public class MCAWorld implements World {
 
     @Override
     public Collection<Vector2i> listRegions() {
-        File[] regionFiles = getRegionFolder().toFile().listFiles();
-        if (regionFiles == null) return Collections.emptyList();
+        try (Stream<Path> stream = Files.list(regionFolder)) {
+            return stream
+                    .map(file -> {
+                        try {
+                            String fileName = file.getFileName().toString();
 
-        List<Vector2i> regions = new ArrayList<>(regionFiles.length);
+                            if (RegionType.forFileName(fileName) == null) return null;
+                            if (Files.size(file) <= 0) return null;
 
-        for (File file : regionFiles) {
-            if (RegionType.forFileName(file.getName()) == null) continue;
-            if (file.length() <= 0) continue;
+                            String[] filenameParts = fileName.split("\\.");
+                            int rX = Integer.parseInt(filenameParts[1]);
+                            int rZ = Integer.parseInt(filenameParts[2]);
 
-            try {
-                String[] filenameParts = file.getName().split("\\.");
-                int rX = Integer.parseInt(filenameParts[1]);
-                int rZ = Integer.parseInt(filenameParts[2]);
-
-                regions.add(new Vector2i(rX, rZ));
-            } catch (NumberFormatException ignore) {}
+                            return new Vector2i(rX, rZ);
+                        } catch (IOException ex) {
+                            Logger.global.logError("Failed to read region-file: " + file, ex);
+                            return null;
+                        } catch (NumberFormatException ignore) {
+                            return null;
+                        }
+                    })
+                    .filter(Objects::nonNull)
+                    .toList();
+        } catch (IOException ex) {
+            Logger.global.logError("Failed to list regions for world: '" + getId() + "'", ex);
+            return List.of();
         }
-
-        return regions;
     }
 
     @Override
