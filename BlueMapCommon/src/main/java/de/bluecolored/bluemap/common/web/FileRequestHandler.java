@@ -92,7 +92,7 @@ public class FileRequestHandler implements HttpRequestHandler {
 
         // default to index.html
         if (!Files.exists(filePath) || Files.isDirectory(filePath)){
-            filePath = filePath.resolve("/index.html");
+            filePath = filePath.resolve("index.html");
         }
 
         if (!Files.exists(filePath) || Files.isDirectory(filePath)){

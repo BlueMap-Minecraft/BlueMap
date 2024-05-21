@@ -53,6 +53,11 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
     public static final String MAPS_CONFIG_FOLDER_NAME = "maps";
     public static final String STORAGES_CONFIG_FOLDER_NAME = "storages";
 
+    public static final String MAP_STORAGE_CONFIG_NAME = MAPS_CONFIG_FOLDER_NAME + "/map";
+
+    public static final String FILE_STORAGE_CONFIG_NAME = STORAGES_CONFIG_FOLDER_NAME + "/file";
+    public static final String SQL_STORAGE_CONFIG_NAME = STORAGES_CONFIG_FOLDER_NAME + "/sql";
+
     private final ConfigManager configManager;
 
     private final CoreConfig coreConfig;
@@ -220,19 +225,19 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
                 if (autoConfigWorlds.isEmpty()) {
                     Path worldFolder = Path.of("world");
                     Files.writeString(
-                            mapConfigFolder.resolve("overworld.conf"),
+                            configManager.resolveConfigFile(MAPS_CONFIG_FOLDER_NAME + "/overworld"),
                             createOverworldMapTemplate("Overworld", worldFolder,
                                     DataPack.DIMENSION_OVERWORLD, 0).build(),
                             StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                     );
                     Files.writeString(
-                            mapConfigFolder.resolve("nether.conf"),
+                            configManager.resolveConfigFile(MAPS_CONFIG_FOLDER_NAME + "/nether"),
                             createNetherMapTemplate("Nether", worldFolder,
                                     DataPack.DIMENSION_THE_NETHER, 0).build(),
                             StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                     );
                     Files.writeString(
-                            mapConfigFolder.resolve("end.conf"),
+                            configManager.resolveConfigFile(MAPS_CONFIG_FOLDER_NAME + "/end"),
                             createEndMapTemplate("End", worldFolder,
                                     DataPack.DIMENSION_THE_END, 0).build(),
                             StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
@@ -264,7 +269,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
                             uniqueId = id + "_" + (++i);
                         mapIds.add(uniqueId);
 
-                        Path configFile = mapConfigFolder.resolve(uniqueId + ".conf");
+                        Path configFile = configManager.resolveConfigFile(MAPS_CONFIG_FOLDER_NAME + "/" + uniqueId);
                         String name = worldFolder.getFileName() + " (" + dimensionName + ")";
                         if (i > 1) name = name + " (" + i + ")";
 
@@ -322,15 +327,15 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
             try {
                 FileHelper.createDirectories(storageConfigFolder);
                 Files.writeString(
-                        storageConfigFolder.resolve("file.conf"),
-                        configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/storages/file.conf")
+                        configManager.resolveConfigFile(FILE_STORAGE_CONFIG_NAME),
+                        configManager.loadConfigTemplate(FILE_STORAGE_CONFIG_NAME)
                                 .setVariable("root", formatPath(defaultWebroot.resolve("maps")))
                                 .build(),
                         StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                 );
                 Files.writeString(
-                        storageConfigFolder.resolve("sql.conf"),
-                        configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/storages/sql.conf").build(),
+                        configManager.resolveConfigFile(SQL_STORAGE_CONFIG_NAME),
+                        configManager.loadConfigTemplate(SQL_STORAGE_CONFIG_NAME).build(),
                         StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                 );
             } catch (IOException | NullPointerException ex) {
@@ -367,7 +372,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
     }
 
     private ConfigTemplate createOverworldMapTemplate(String name, Path worldFolder, Key dimension, int index) throws IOException {
-        return configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/maps/map.conf")
+        return configManager.loadConfigTemplate(MAP_STORAGE_CONFIG_NAME)
                 .setVariable("name", name)
                 .setVariable("sorting", "" + index)
                 .setVariable("world", formatPath(worldFolder))
@@ -381,7 +386,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
     }
 
     private ConfigTemplate createNetherMapTemplate(String name, Path worldFolder, Key dimension, int index) throws IOException {
-        return configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/maps/map.conf")
+        return configManager.loadConfigTemplate(MAP_STORAGE_CONFIG_NAME)
                 .setVariable("name", name)
                 .setVariable("sorting", "" + (100 + index))
                 .setVariable("world", formatPath(worldFolder))
@@ -395,7 +400,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
     }
 
     private ConfigTemplate createEndMapTemplate(String name, Path worldFolder, Key dimension, int index) throws IOException {
-        return configManager.loadConfigTemplate("/de/bluecolored/bluemap/config/maps/map.conf")
+        return configManager.loadConfigTemplate(MAP_STORAGE_CONFIG_NAME)
                 .setVariable("name", name)
                 .setVariable("sorting", "" + (200 + index))
                 .setVariable("world", formatPath(worldFolder))
