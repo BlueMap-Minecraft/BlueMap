@@ -36,6 +36,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.regex.Pattern;
 
 /*
  * LinearFormat:
@@ -63,6 +64,7 @@ import java.nio.file.StandardOpenOption;
 public class LinearRegion implements Region {
 
     public static final String FILE_SUFFIX = ".linear";
+    public static final Pattern FILE_PATTERN = Pattern.compile("^r\\.(-?\\d+)\\.(-?\\d+)\\.linear$");
 
     private static final long MAGIC = 0xc3ff13183cca9d9aL;
 

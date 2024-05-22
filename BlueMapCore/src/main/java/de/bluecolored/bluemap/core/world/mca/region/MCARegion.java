@@ -40,11 +40,14 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.regex.Pattern;
 
 @Getter
 public class MCARegion implements Region {
 
     public static final String FILE_SUFFIX = ".mca";
+    public static final Pattern FILE_PATTERN = Pattern.compile("^r\\.(-?\\d+)\\.(-?\\d+)\\.mca$");
+
     public static final Compression[] CHUNK_COMPRESSION_MAP = new Compression[255];
     static {
         CHUNK_COMPRESSION_MAP[0] = Compression.NONE;

@@ -27,7 +27,9 @@ package de.bluecolored.bluemap.core.world;
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.util.Grid;
+import de.bluecolored.bluemap.core.util.WatchService;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.function.Predicate;
 
@@ -73,12 +75,24 @@ public interface World {
     Collection<Vector2i> listRegions();
 
     /**
+     * Creates and returns a new {@link WatchService} which watches for any changes in this worlds regions.
+     * @throws IOException if an IOException occurred while creating the watch-service
+     * @throws UnsupportedOperationException if watching this world is not supported
+     */
+    default WatchService<Vector2i> createRegionWatchService() throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
      * Loads all chunks from the specified region into the chunk cache (if there is a cache)
      */
     default void preloadRegionChunks(int x, int z) {
         preloadRegionChunks(x, z, pos -> true);
     }
 
+    /**
+     * Loads the filtered chunks from the specified region into the chunk cache (if there is a cache)
+     */
     void preloadRegionChunks(int x, int z, Predicate<Vector2i> chunkFilter);
 
     /**
@@ -90,10 +104,5 @@ public interface World {
      * Invalidates the chunk from the chunk-cache (if there is a cache), so that the chunk has to be reloaded from disk
      */
     void invalidateChunkCache(int x, int z);
-
-    /**
-     * Cleans up invalid cache-entries to free up memory
-     */
-    void cleanUpChunkCache();
 
 }

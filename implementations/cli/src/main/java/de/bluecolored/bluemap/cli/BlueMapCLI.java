@@ -31,7 +31,7 @@ import de.bluecolored.bluemap.common.config.BlueMapConfigManager;
 import de.bluecolored.bluemap.common.config.ConfigurationException;
 import de.bluecolored.bluemap.common.config.CoreConfig;
 import de.bluecolored.bluemap.common.config.WebserverConfig;
-import de.bluecolored.bluemap.common.plugin.RegionFileWatchService;
+import de.bluecolored.bluemap.common.plugin.MapUpdateService;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.rendermanager.RenderTask;
@@ -88,16 +88,19 @@ public class BlueMapCLI {
         Map<String, BmMap> maps = blueMap.getOrLoadMaps(mapFilter);
 
         //watcher
-        List<RegionFileWatchService> regionFileWatchServices = new ArrayList<>();
+        List<MapUpdateService> mapUpdateServices = new ArrayList<>();
         if (watch) {
             for (BmMap map : maps.values()) {
                 try {
-                    RegionFileWatchService watcher = new RegionFileWatchService(renderManager, map);
+                    MapUpdateService watcher = new MapUpdateService(renderManager, map);
                     watcher.start();
-                    regionFileWatchServices.add(watcher);
+                    mapUpdateServices.add(watcher);
                 } catch (IOException ex) {
                     Logger.global.logError("Failed to create file-watcher for map: " + map.getId() +
-                                           " (This map might not automatically update)", ex);
+                            " (This map might not automatically update)", ex);
+                } catch (UnsupportedOperationException ex) {
+                    Logger.global.logWarning("Update-watcher for map '" + map.getId() + "' is not supported for the world-type." +
+                            " (This means the map might not automatically update)");
                 }
             }
         }
@@ -150,8 +153,8 @@ public class BlueMapCLI {
             updateInfoTask.cancel();
             saveTask.cancel();
 
-            regionFileWatchServices.forEach(RegionFileWatchService::close);
-            regionFileWatchServices.clear();
+            mapUpdateServices.forEach(MapUpdateService::close);
+            mapUpdateServices.clear();
 
             renderManager.removeAllRenderTasks();
             try {

@@ -36,6 +36,7 @@ import de.bluecolored.bluemap.core.storage.compression.Compression;
 import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.Vector2iCache;
+import de.bluecolored.bluemap.core.util.WatchService;
 import de.bluecolored.bluemap.core.world.*;
 import de.bluecolored.bluemap.core.world.mca.chunk.ChunkLoader;
 import de.bluecolored.bluemap.core.world.mca.data.DimensionTypeDeserializer;
@@ -165,20 +166,10 @@ public class MCAWorld implements World {
             return stream
                     .map(file -> {
                         try {
-                            String fileName = file.getFileName().toString();
-
-                            if (RegionType.forFileName(fileName) == null) return null;
                             if (Files.size(file) <= 0) return null;
-
-                            String[] filenameParts = fileName.split("\\.");
-                            int rX = Integer.parseInt(filenameParts[1]);
-                            int rZ = Integer.parseInt(filenameParts[2]);
-
-                            return new Vector2i(rX, rZ);
+                            return RegionType.regionForFileName(file.getFileName().toString());
                         } catch (IOException ex) {
                             Logger.global.logError("Failed to read region-file: " + file, ex);
-                            return null;
-                        } catch (NumberFormatException ignore) {
                             return null;
                         }
                     })
@@ -188,6 +179,11 @@ public class MCAWorld implements World {
             Logger.global.logError("Failed to list regions for world: '" + getId() + "'", ex);
             return List.of();
         }
+    }
+
+    @Override
+    public WatchService<Vector2i> createRegionWatchService() throws IOException {
+        return new MCAWorldRegionWatchService(this.regionFolder);
     }
 
     @Override
@@ -221,11 +217,6 @@ public class MCAWorld implements World {
     public void invalidateChunkCache(int x, int z) {
         regionCache.invalidate(VECTOR_2_I_CACHE.get(x >> 5, z >> 5));
         chunkCache.invalidate(VECTOR_2_I_CACHE.get(x, z));
-    }
-
-    @Override
-    public void cleanUpChunkCache() {
-        chunkCache.cleanUp();
     }
 
     private Region loadRegion(Vector2i regionPos) {

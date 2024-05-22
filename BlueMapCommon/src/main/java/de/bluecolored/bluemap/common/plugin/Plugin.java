@@ -94,7 +94,7 @@ public class Plugin implements ServerEventListener {
 
     private Timer daemonTimer;
 
-    private Map<String, RegionFileWatchService> regionFileWatchServices;
+    private Map<String, MapUpdateService> mapUpdateServices;
 
     private PlayerSkinUpdater skinUpdater;
 
@@ -316,8 +316,8 @@ public class Plugin implements ServerEventListener {
                 TimerTask fileWatcherRestartTask = new TimerTask() {
                     @Override
                     public void run() {
-                        regionFileWatchServices.values().forEach(RegionFileWatchService::close);
-                        regionFileWatchServices.clear();
+                        mapUpdateServices.values().forEach(MapUpdateService::close);
+                        mapUpdateServices.clear();
                         initFileWatcherTasks();
                     }
                 };
@@ -351,7 +351,7 @@ public class Plugin implements ServerEventListener {
                 daemonTimer.scheduleAtFixedRate(metricsTask, TimeUnit.MINUTES.toMillis(1), TimeUnit.MINUTES.toMillis(30));
 
                 //watch map-changes
-                this.regionFileWatchServices = new HashMap<>();
+                this.mapUpdateServices = new HashMap<>();
                 initFileWatcherTasks();
 
                 //register listener
@@ -408,11 +408,11 @@ public class Plugin implements ServerEventListener {
                 daemonTimer = null;
 
                 //stop file-watchers
-                if (regionFileWatchServices != null) {
-                    regionFileWatchServices.values().forEach(RegionFileWatchService::close);
-                    regionFileWatchServices.clear();
+                if (mapUpdateServices != null) {
+                    mapUpdateServices.values().forEach(MapUpdateService::close);
+                    mapUpdateServices.clear();
                 }
-                regionFileWatchServices = null;
+                mapUpdateServices = null;
 
                 // stop render-manager
                 if (renderManager != null){
@@ -567,16 +567,20 @@ public class Plugin implements ServerEventListener {
         stopWatchingMap(map);
 
         try {
-            RegionFileWatchService watcher = new RegionFileWatchService(renderManager, map);
+            MapUpdateService watcher = new MapUpdateService(renderManager, map);
             watcher.start();
-            regionFileWatchServices.put(map.getId(), watcher);
+            mapUpdateServices.put(map.getId(), watcher);
         } catch (IOException ex) {
-            Logger.global.logError("Failed to create file-watcher for map: " + map.getId() + " (This means the map might not automatically update)", ex);
+            Logger.global.logError("Failed to create update-watcher for map: " + map.getId() +
+                    " (This means the map might not automatically update)", ex);
+        } catch (UnsupportedOperationException ex) {
+            Logger.global.logWarning("Update-watcher for map '" + map.getId() + "' is not supported for the world-type." +
+                    " (This means the map might not automatically update)");
         }
     }
 
     public synchronized void stopWatchingMap(BmMap map) {
-        RegionFileWatchService watcher = regionFileWatchServices.remove(map.getId());
+        MapUpdateService watcher = mapUpdateServices.remove(map.getId());
         if (watcher != null) {
             watcher.close();
         }
