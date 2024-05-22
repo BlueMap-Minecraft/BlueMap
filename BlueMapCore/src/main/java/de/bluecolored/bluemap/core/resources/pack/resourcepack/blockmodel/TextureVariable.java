@@ -142,6 +142,9 @@ public class TextureVariable {
             if (value.charAt(0) == '#') {
                 return new TextureVariable(value.substring(1));
             } else {
+
+                // if the value contains neither a : nor a / it is safe to assume it was meant to be a reference
+                // as there is no texture at root-level in the implicit "minecraft" namespace
                 if (!(value.contains(":") || value.contains("/"))) {
                     return new TextureVariable(value);
                 }
@@ -149,5 +152,7 @@ public class TextureVariable {
                 return new TextureVariable(new ResourcePath<>(value));
             }
         }
+
     }
+
 }
