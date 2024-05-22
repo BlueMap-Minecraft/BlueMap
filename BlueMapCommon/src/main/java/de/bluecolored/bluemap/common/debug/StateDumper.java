@@ -108,13 +108,13 @@ public class StateDumper {
         }
 
         if (!alreadyDumped.add(instance)) {
-            writer.value("<<" + Objects.toIdentityString(instance) + ">>");
+            writer.value("<<" + toIdentityString(instance) + ">>");
             return;
         }
 
         writer.beginObject();
         try {
-            String identityString = Objects.toIdentityString(instance);
+            String identityString = toIdentityString(instance);
             writer.name("#identity").value(identityString);
 
             if (instance instanceof Map<?, ?> map) {
@@ -206,6 +206,10 @@ public class StateDumper {
         } finally {
             writer.endObject();
         }
+    }
+
+    private static String toIdentityString(Object instance) {
+        return instance.getClass().getName() + "@" + Integer.toHexString(System.identityHashCode(instance));
     }
 
     private void dumpAnnotatedInstance(Class<?> type, Object instance, JsonWriter writer, Set<Object> alreadyDumped) throws IOException {
