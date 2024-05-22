@@ -30,6 +30,7 @@ import de.bluecolored.bluemap.core.world.mca.region.RegionType;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.nio.file.ClosedWatchServiceException;
 import java.nio.file.Path;
 import java.nio.file.StandardWatchEventKinds;
 import java.nio.file.WatchKey;
@@ -52,22 +53,34 @@ public class MCAWorldRegionWatchService implements WatchService<Vector2i> {
 
     @Override
     public @Nullable List<Vector2i> poll() {
-        WatchKey key = watchService.poll();
-        if (key == null) return null;
-        return processWatchKey(key);
+        try {
+            WatchKey key = watchService.poll();
+            if (key == null) return null;
+            return processWatchKey(key);
+        } catch (ClosedWatchServiceException e) {
+            throw new ClosedException(e);
+        }
     }
 
     @Override
     public @Nullable List<Vector2i> poll(long timeout, TimeUnit unit) throws InterruptedException {
-        WatchKey key = watchService.poll(timeout, unit);
-        if (key == null) return null;
-        return processWatchKey(key);
+        try {
+            WatchKey key = watchService.poll(timeout, unit);
+            if (key == null) return null;
+            return processWatchKey(key);
+        } catch (ClosedWatchServiceException e) {
+            throw new ClosedException(e);
+        }
     }
 
     @Override
     public List<Vector2i> take() throws InterruptedException {
-        WatchKey key = watchService.take();
-        return processWatchKey(key);
+        try {
+            WatchKey key = watchService.take();
+            return processWatchKey(key);
+        } catch (ClosedWatchServiceException e) {
+            throw new ClosedException(e);
+        }
     }
 
     @Override

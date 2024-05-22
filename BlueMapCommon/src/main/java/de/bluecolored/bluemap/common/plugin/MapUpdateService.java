@@ -32,7 +32,6 @@ import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.util.WatchService;
 
 import java.io.IOException;
-import java.nio.file.ClosedWatchServiceException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
@@ -67,7 +66,7 @@ public class MapUpdateService extends Thread {
         try {
             while (!closed)
                 this.watchService.take().forEach(this::updateRegion);
-        } catch (ClosedWatchServiceException ignore) {
+        } catch (WatchService.ClosedException ignore) {
         } catch (InterruptedException iex) {
             Thread.currentThread().interrupt();
         } finally {
