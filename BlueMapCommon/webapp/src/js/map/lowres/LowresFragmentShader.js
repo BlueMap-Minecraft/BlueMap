@@ -24,6 +24,7 @@
  */
 import { ShaderChunk } from 'three';
 
+// language=GLSL
 export const LOWRES_FRAGMENT_SHADER = `
 ${ShaderChunk.logdepthbuf_pars_fragment}
 
@@ -51,6 +52,7 @@ uniform vec2 textureSize;
 uniform float lod;
 uniform float lodScale;
 uniform vec3 voidColor;
+uniform bool chunkBorders;
 
 varying vec3 vPosition;
 varying vec3 vWorldPosition;
@@ -98,9 +100,10 @@ void main() {
 	
 	float ao = 0.0;
 	float aoStrength = 0.0;
+	float distFac = smoothstep(200.0, 600.0, distance);
 	if(lod == 1.0) {
 		aoStrength = smoothstep(PI - 0.8, PI - 0.2, acos(-clamp(viewMatrix[1][2], 0.0, 1.0)));
-		aoStrength *= 1.0 - smoothstep(200.0, 600.0, distance);
+		aoStrength *= 1.0 - distFac;
 		
 		if (aoStrength > 0.0) { 
 			const float r = 3.0;
@@ -123,6 +126,21 @@ void main() {
 	float light = mix(blockLight, 15.0, sunlightStrength);
 	color.rgb *= mix(ambientLight, 1.0, light / 15.0);
 
+	if (chunkBorders) {
+		vec4 lineColour = vec4(1.0, 0.0, 1.0, 0.4);
+		float lineInterval = 16.0;
+		float lineThickness = 0.125; //width of two Minecraft pixels
+		float offset = 0.5;
+
+		vec2 worldPos = vWorldPosition.xz;
+		worldPos += offset;
+		float x = abs(mod(worldPos.x, lineInterval) - offset);
+		float y = abs(mod(worldPos.y, lineInterval) - offset);
+		bool isChunkBorder = x < lineThickness || y < lineThickness;
+
+		color.rgb = mix(mix(color.rgb, lineColour.rgb, float(isChunkBorder) * lineColour.a), color.rgb, distFac);
+	}
+	
 	vec3 adjustedVoidColor = adjustColor(voidColor);
 	//where there's transparency, there is void that needs to be coloured
 	color.rgb = mix(adjustedVoidColor, color.rgb, color.a);
