@@ -110,7 +110,7 @@ public final class Addons {
 
             // try to find entrypoint class and load jar with new classloader if needed
             try {
-                entrypointClass = BlueMap.class.getClassLoader().loadClass(addonInfo.getEntrypoint());
+                entrypointClass = addonClassLoader.loadClass(addonInfo.getEntrypoint());
             } catch (ClassNotFoundException e) {
                 addonClassLoader = new URLClassLoader(
                         new URL[]{ jarFile.toUri().toURL() },
