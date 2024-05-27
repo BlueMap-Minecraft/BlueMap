@@ -45,12 +45,12 @@ import java.util.stream.Stream;
 
 import static de.bluecolored.bluemap.common.addons.AddonInfo.ADDON_INFO_FILE;
 
-public final class AddonManager {
+public final class Addons {
 
     private static final Gson GSON = new GsonBuilder().create();
     private static final Map<String, LoadedAddon> LOADED_ADDONS = new ConcurrentHashMap<>();
 
-    private AddonManager() {
+    private Addons() {
         throw new UnsupportedOperationException("Utility class");
     }
 
@@ -63,7 +63,7 @@ public final class AddonManager {
                 files
                         .filter(Files::isRegularFile)
                         .filter(f -> f.getFileName().toString().endsWith(".jar"))
-                        .forEach(expectOnlyAddons ? AddonManager::tryLoadAddon : AddonManager::tryLoadJar);
+                        .forEach(expectOnlyAddons ? Addons::tryLoadAddon : Addons::tryLoadJar);
         } catch (IOException e) {
             Logger.global.logError("Failed to load addons from '%s'".formatted(root), e);
         }

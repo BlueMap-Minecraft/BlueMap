@@ -27,7 +27,7 @@ package de.bluecolored.bluemap.cli;
 import de.bluecolored.bluemap.common.BlueMapConfiguration;
 import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.MissingResourcesException;
-import de.bluecolored.bluemap.common.addons.AddonManager;
+import de.bluecolored.bluemap.common.addons.Addons;
 import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.config.BlueMapConfigManager;
 import de.bluecolored.bluemap.common.config.ConfigurationException;
@@ -312,7 +312,7 @@ public class BlueMapCLI {
             // load addons
             Path addonsFolder = cli.configFolder.resolve("addons");
             Files.createDirectories(addonsFolder);
-            AddonManager.tryLoadAddons(cli.configFolder.resolve("addons"), true);
+            Addons.tryLoadAddons(cli.configFolder.resolve("addons"), true);
 
             // load configs
             BlueMapConfigManager configs = BlueMapConfigManager.builder()
