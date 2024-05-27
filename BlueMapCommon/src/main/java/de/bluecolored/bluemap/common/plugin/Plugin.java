@@ -28,6 +28,7 @@ import de.bluecolored.bluemap.common.BlueMapConfiguration;
 import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.InterruptableReentrantLock;
 import de.bluecolored.bluemap.common.MissingResourcesException;
+import de.bluecolored.bluemap.common.addons.AddonManager;
 import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.config.*;
 import de.bluecolored.bluemap.common.live.LivePlayersDataSupplier;
@@ -50,6 +51,8 @@ import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.util.Tristate;
 import de.bluecolored.bluemap.core.world.World;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
+import lombok.AccessLevel;
+import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 import org.spongepowered.configurate.serialize.SerializationException;
@@ -61,6 +64,7 @@ import java.io.Writer;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -70,6 +74,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
+@Getter
 public class Plugin implements ServerEventListener {
 
     public static final String PLUGIN_ID = "bluemap";
@@ -77,25 +82,23 @@ public class Plugin implements ServerEventListener {
 
     private static final String DEBUG_FILE_LOG_NAME = "file-debug-log";
 
+    @Getter(AccessLevel.NONE)
     private final InterruptableReentrantLock loadingLock = new InterruptableReentrantLock();
 
     private final String implementationType;
     private final Server serverInterface;
 
     private BlueMapService blueMap;
-
     private PluginState pluginState;
-
     private RenderManager renderManager;
-    private HttpServer webServer;
-    private Logger webLogger;
-
     private BlueMapAPIImpl api;
 
+    private HttpServer webServer;
+    private RoutingRequestHandler webRequestHandler;
+    private Logger webLogger;
+
     private Timer daemonTimer;
-
     private Map<String, MapUpdateService> mapUpdateServices;
-
     private PlayerSkinUpdater skinUpdater;
 
     private boolean loaded = false;
@@ -118,6 +121,12 @@ public class Plugin implements ServerEventListener {
 
                 if (loaded) return;
                 unload(); //ensure nothing is left running (from a failed load or something)
+
+                //load addons
+                Path addonsFolder = serverInterface.getConfigFolder().resolve("addons");
+                Files.createDirectories(addonsFolder);
+                AddonManager.tryLoadAddons(addonsFolder, true);
+                serverInterface.getModsFolder().ifPresent(AddonManager::tryLoadAddons);
 
                 //load configs
                 BlueMapConfigManager configManager = BlueMapConfigManager.builder()
@@ -184,10 +193,10 @@ public class Plugin implements ServerEventListener {
                     Path webroot = webserverConfig.getWebroot();
                     FileHelper.createDirectories(webroot);
 
-                    RoutingRequestHandler routingRequestHandler = new RoutingRequestHandler();
+                    this.webRequestHandler = new RoutingRequestHandler();
 
                     // default route
-                    routingRequestHandler.register(".*", new FileRequestHandler(webroot));
+                    webRequestHandler.register(".*", new FileRequestHandler(webroot));
 
                     // map route
                     for (var mapConfigEntry : configManager.getMapConfigs().entrySet()) {
@@ -203,7 +212,7 @@ public class Plugin implements ServerEventListener {
                             mapRequestHandler = new MapRequestHandler(storage.map(id));
                         }
 
-                        routingRequestHandler.register(
+                        webRequestHandler.register(
                                 "maps/" + Pattern.quote(id) + "/(.*)",
                                 "$1",
                                 new BlueMapResponseModifier(mapRequestHandler)
@@ -223,7 +232,7 @@ public class Plugin implements ServerEventListener {
 
                     try {
                         webServer = new HttpServer(new LoggingRequestHandler(
-                                routingRequestHandler,
+                                webRequestHandler,
                                 webserverConfig.getLog().getFormat(),
                                 webLogger
                         ));
@@ -360,10 +369,6 @@ public class Plugin implements ServerEventListener {
                 //enable api
                 this.api = new BlueMapAPIImpl(this);
                 this.api.register();
-
-                //save webapp settings again (for api-registered scripts and styles)
-                if (webappConfig.isEnabled())
-                    this.getBlueMap().getWebFilesManager().saveSettings();
 
                 //start render-manager
                 if (pluginState.isRenderThreadsEnabled()) {
@@ -636,38 +641,6 @@ public class Plugin implements ServerEventListener {
     public @Nullable World getWorld(ServerWorld serverWorld) {
         String id = MCAWorld.id(serverWorld.getWorldFolder(), serverWorld.getDimension());
         return getBlueMap().getWorlds().get(id);
-    }
-
-    public Server getServerInterface() {
-        return serverInterface;
-    }
-
-    public BlueMapService getBlueMap() {
-        return blueMap;
-    }
-
-    public PluginState getPluginState() {
-        return pluginState;
-    }
-
-    public RenderManager getRenderManager() {
-        return renderManager;
-    }
-
-    public HttpServer getWebServer() {
-        return webServer;
-    }
-
-    public boolean isLoaded() {
-        return loaded;
-    }
-
-    public String getImplementationType() {
-        return implementationType;
-    }
-
-    public PlayerSkinUpdater getSkinUpdater() {
-        return skinUpdater;
     }
 
     private void initFileWatcherTasks() {

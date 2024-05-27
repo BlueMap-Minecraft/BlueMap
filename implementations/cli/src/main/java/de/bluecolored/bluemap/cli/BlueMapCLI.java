@@ -27,6 +27,8 @@ package de.bluecolored.bluemap.cli;
 import de.bluecolored.bluemap.common.BlueMapConfiguration;
 import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.MissingResourcesException;
+import de.bluecolored.bluemap.common.addons.AddonManager;
+import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.config.BlueMapConfigManager;
 import de.bluecolored.bluemap.common.config.ConfigurationException;
 import de.bluecolored.bluemap.common.config.CoreConfig;
@@ -113,6 +115,10 @@ public class BlueMapCLI {
             totalRegions += updateTask.getRegions().size();
         }
 
+        // enable api
+        BlueMapAPIImpl api = new BlueMapAPIImpl(blueMap, null);
+        api.register();
+
         Logger.global.logInfo("Start updating " + maps.size() + " maps (" + totalRegions + " regions, ~" + totalRegions * 1024L + " chunks)...");
 
         // start rendering
@@ -150,6 +156,8 @@ public class BlueMapCLI {
 
         Runnable shutdown = () -> {
             Logger.global.logInfo("Stopping...");
+            api.unregister();
+
             updateInfoTask.cancel();
             saveTask.cancel();
 
@@ -301,6 +309,12 @@ public class BlueMapCLI {
                 cli.minecraftVersion = cmd.getOptionValue("v");
             }
 
+            // load addons
+            Path addonsFolder = cli.configFolder.resolve("addons");
+            Files.createDirectories(addonsFolder);
+            AddonManager.tryLoadAddons(cli.configFolder.resolve("addons"), true);
+
+            // load configs
             BlueMapConfigManager configs = BlueMapConfigManager.builder()
                     .minecraftVersion(cli.minecraftVersion)
                     .configRoot(cli.configFolder)
