@@ -26,10 +26,10 @@ package de.bluecolored.bluemap.core.world.mca.chunk;
 
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.util.Key;
-import de.bluecolored.bluemap.core.world.biome.Biome;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.DimensionType;
 import de.bluecolored.bluemap.core.world.LightData;
+import de.bluecolored.bluemap.core.world.biome.Biome;
 import de.bluecolored.bluemap.core.world.block.entity.BlockEntity;
 import de.bluecolored.bluemap.core.world.mca.MCAUtil;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
@@ -38,9 +38,8 @@ import de.bluecolored.bluenbt.NBTName;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class Chunk_1_18 extends MCAChunk {
 
@@ -116,9 +115,15 @@ public class Chunk_1_18 extends MCAChunk {
             this.sectionMax = 0;
         }
 
-        this.blockEntities = data.blockEntities.stream().collect(Collectors.toMap(
-            it -> (long) it.getY() << 8 | (it.getX() & 0xF) << 4 | it.getZ() & 0xF, it -> it
-        ));
+        // load block-entities
+        this.blockEntities = new HashMap<>();
+        for (int i = 0; i < data.blockEntities.length; i++) {
+            BlockEntity be = data.blockEntities[i];
+            if (be == null) continue;
+
+            long hash = (long) be.getY() << 8 | (be.getX() & 0xF) << 4 | be.getZ() & 0xF;
+            blockEntities.put(hash, be);
+        }
     }
 
     @Override
@@ -285,7 +290,7 @@ public class Chunk_1_18 extends MCAChunk {
         private long inhabitedTime = 0;
         private HeightmapsData heightmaps = new HeightmapsData();
         private SectionData @Nullable [] sections = null;
-        @NBTName("block_entities") private List<BlockEntity> blockEntities = List.of();
+        @NBTName("block_entities") private @Nullable BlockEntity [] blockEntities = EMPTY_BLOCK_ENTITIES_ARRAY;
     }
 
     @Getter

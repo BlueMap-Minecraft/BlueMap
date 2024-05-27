@@ -41,7 +41,7 @@ public class MCAUtil {
     public static BlueNBT addCommonNbtAdapters(BlueNBT nbt) {
         nbt.register(TypeToken.get(BlockState.class), new BlockStateDeserializer());
         nbt.register(TypeToken.get(Key.class), new KeyDeserializer());
-        nbt.register(TypeToken.get(BlockEntity.class), new BlockEntity.BlockEntityDeserializer());
+        nbt.register(TypeToken.get(BlockEntity.class), new BlockEntity.BlockEntityDeserializer(nbt));
         return nbt;
     }
 
