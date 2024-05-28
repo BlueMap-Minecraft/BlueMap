@@ -126,7 +126,7 @@ public class Plugin implements ServerEventListener {
                 Path addonsFolder = serverInterface.getConfigFolder().resolve("addons");
                 Files.createDirectories(addonsFolder);
                 Addons.tryLoadAddons(addonsFolder, true);
-                serverInterface.getModsFolder().ifPresent(Addons::tryLoadAddons);
+                //serverInterface.getModsFolder().ifPresent(Addons::tryLoadAddons);
 
                 //load configs
                 BlueMapConfigManager configManager = BlueMapConfigManager.builder()

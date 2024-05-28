@@ -59,6 +59,7 @@ public final class Addons {
     }
 
     public static void tryLoadAddons(Path root, boolean expectOnlyAddons) {
+        if (!Files.exists(root)) return;
         try (Stream<Path> files = Files.list(root)) {
                 files
                         .filter(Files::isRegularFile)
