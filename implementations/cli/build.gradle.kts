@@ -24,7 +24,6 @@ repositories {
 dependencies {
 	api ("de.bluecolored.bluemap:BlueMapCommon")
 
-	@Suppress("GradlePackageUpdate")
 	implementation ("commons-cli:commons-cli:1.5.0")
 
 	testImplementation ("org.junit.jupiter:junit-jupiter:5.8.2")
@@ -68,23 +67,6 @@ tasks.jar {
 tasks.shadowJar {
 	destinationDirectory.set(file("../../build/release"))
 	archiveFileName.set("BlueMap-${project.version}-${project.name}.jar")
-
-	//relocate ("com.flowpowered.math", "de.bluecolored.shadow.flowpowered.math") //DON"T relocate this, because the API depends on it
-	relocate ("com.google", "de.bluecolored.shadow.google")
-	relocate ("com.typesafe", "de.bluecolored.shadow.typesafe")
-	relocate ("de.bluecolored.bluenbt", "de.bluecolored.shadow.bluenbt")
-	relocate ("org.spongepowered.configurate", "de.bluecolored.shadow.configurate")
-	relocate ("com.github.benmanes.caffeine", "de.bluecolored.shadow.benmanes.caffeine")
-	relocate ("org.aopalliance", "de.bluecolored.shadow.aopalliance")
-	relocate ("javax.inject", "de.bluecolored.shadow.javax.inject")
-	relocate ("javax.annotation", "de.bluecolored.shadow.javax.annotation")
-	relocate ("com.mojang.brigadier", "de.bluecolored.shadow.mojang.brigadier")
-	relocate ("org.checkerframework", "de.bluecolored.shadow.checkerframework")
-	relocate ("org.codehaus", "de.bluecolored.shadow.codehaus")
-	relocate ("io.leangen.geantyref", "de.bluecolored.shadow.geantyref")
-	relocate ("io.airlift", "de.bluecolored.shadow.airlift")
-	relocate ("org.apache.commons", "de.bluecolored.shadow.apache.commons")
-	relocate ("net.jpountz", "de.bluecolored.shadow.jpountz")
 }
 
 tasks.register("release") {

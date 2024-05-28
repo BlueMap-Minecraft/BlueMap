@@ -30,7 +30,6 @@ import com.google.gson.stream.JsonReader;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
 import de.bluecolored.bluemap.core.world.BlockState;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -111,9 +110,9 @@ public class Variants {
             List<BlockStateCondition> conditions = new ArrayList<>();
             boolean invalid = false;
             if (!conditionString.isEmpty() && !conditionString.equals("default") && !conditionString.equals("normal")) {
-                String[] conditionSplit = StringUtils.split(conditionString, ',');
+                String[] conditionSplit = conditionString.split(",");
                 for (String element : conditionSplit) {
-                    String[] keyval = StringUtils.split(element, "=", 2);
+                    String[] keyval = element.split("=", 2);
                     if (keyval.length < 2) {
                         Logger.global.logDebug("Failed to parse condition: Condition-String '" + conditionString + "' is invalid!");
                         invalid = true;

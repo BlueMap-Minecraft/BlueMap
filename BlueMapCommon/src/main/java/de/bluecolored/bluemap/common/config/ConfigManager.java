@@ -29,7 +29,6 @@ import de.bluecolored.bluemap.common.config.typeserializer.KeyTypeSerializer;
 import de.bluecolored.bluemap.common.config.typeserializer.Vector2iTypeSerializer;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.util.Key;
-import org.apache.commons.io.IOUtils;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.loader.AbstractConfigurationLoader;
@@ -38,6 +37,8 @@ import org.spongepowered.configurate.serialize.SerializationException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -73,10 +74,15 @@ public class ConfigManager {
 
     public ConfigTemplate loadConfigTemplate(String name) throws IOException {
         String resource = CONFIG_TEMPLATE_RESOURCE_PATH + name + ConfigLoader.DEFAULT.getFileSuffix();
-        InputStream in = BlueMap.class.getResourceAsStream(resource);
-        if (in == null) throw new IOException("Resource not found: " + resource);
-        String configTemplate = IOUtils.toString(in, StandardCharsets.UTF_8);
-        return new ConfigTemplate(configTemplate);
+        try (InputStream in = BlueMap.class.getResourceAsStream(resource)) {
+            if (in == null) throw new IOException("Resource not found: " + resource);
+
+            StringWriter writer = new StringWriter();
+            InputStreamReader reader = new InputStreamReader(in, StandardCharsets.UTF_8);
+            reader.transferTo(writer);
+
+            return new ConfigTemplate(writer.toString());
+        }
     }
 
     public Path resolveConfigFile(String name) {

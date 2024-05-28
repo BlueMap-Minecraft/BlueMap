@@ -47,7 +47,6 @@ import de.bluecolored.bluemap.core.metrics.Metrics;
 import de.bluecolored.bluemap.core.storage.MapStorage;
 import de.bluecolored.bluemap.core.util.FileHelper;
 import org.apache.commons.cli.*;
-import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.IOException;
@@ -56,9 +55,11 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
@@ -136,8 +137,12 @@ public class BlueMapCLI {
 
                 String eta = "";
                 if (etaMs > 0) {
-                    String etrDurationString = DurationFormatUtils.formatDuration(etaMs, "HH:mm:ss");
-                    eta = " (ETA: " + etrDurationString + ")";
+                    Duration duration = Duration.of(etaMs, ChronoUnit.MILLIS);
+                    eta = " (ETA: %d:%02d:%02d)".formatted(
+                            duration.toHours(),
+                            duration.toMinutesPart(),
+                            duration.toSecondsPart()
+                    );
                 }
                 Logger.global.logInfo(task.getDescription() + ": " + (Math.round(progress * 100000) / 1000.0) + "%" + eta);
             }

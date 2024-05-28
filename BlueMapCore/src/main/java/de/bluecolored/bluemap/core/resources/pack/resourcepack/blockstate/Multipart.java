@@ -30,7 +30,7 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
 import de.bluecolored.bluemap.core.world.BlockState;
-import org.apache.commons.lang3.StringUtils;
+import lombok.Getter;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -41,13 +41,10 @@ import java.util.function.Consumer;
 @JsonAdapter(Multipart.Adapter.class)
 public class Multipart {
 
+    @Getter
     private VariantSet[] parts = new VariantSet[0];
 
     private Multipart(){}
-
-    public VariantSet[] getParts() {
-        return parts;
-    }
 
     public void forEach(BlockState blockState, int x, int y, int z, Consumer<Variant> consumer) {
         for (VariantSet part : parts) {
@@ -99,32 +96,32 @@ public class Multipart {
             in.beginObject();
             while (in.hasNext()) {
                 String name = in.nextName();
-                if (name.equals(JSON_COMMENT)) {
-                    in.skipValue();
-                    continue;
-                }
-
-                if (name.equals("OR")) {
-                    List<BlockStateCondition> orConditions = new ArrayList<>();
-                    in.beginArray();
-                    while (in.hasNext()) {
-                        orConditions.add(readCondition(in));
+                switch (name) {
+                    case JSON_COMMENT -> in.skipValue();
+                    case "OR" -> {
+                        List<BlockStateCondition> orConditions = new ArrayList<>();
+                        in.beginArray();
+                        while (in.hasNext()) {
+                            orConditions.add(readCondition(in));
+                        }
+                        in.endArray();
+                        andConditions.add(
+                                BlockStateCondition.or(orConditions.toArray(new BlockStateCondition[0])));
                     }
-                    in.endArray();
-                    andConditions.add(
-                            BlockStateCondition.or(orConditions.toArray(new BlockStateCondition[0])));
-                } else if (name.equals("AND")) {
-                    List<BlockStateCondition> andArray = new ArrayList<>();
-                    in.beginArray();
-                    while (in.hasNext()) {
-                        andArray.add(readCondition(in));
+                    case "AND" -> {
+                        List<BlockStateCondition> andArray = new ArrayList<>();
+                        in.beginArray();
+                        while (in.hasNext()) {
+                            andArray.add(readCondition(in));
+                        }
+                        in.endArray();
+                        andConditions.add(
+                                BlockStateCondition.and(andArray.toArray(new BlockStateCondition[0])));
                     }
-                    in.endArray();
-                    andConditions.add(
-                            BlockStateCondition.and(andArray.toArray(new BlockStateCondition[0])));
-                } else {
-                    String[] values = StringUtils.split(nextStringOrBoolean(in), '|');
-                    andConditions.add(BlockStateCondition.property(name, values));
+                    default -> {
+                        String[] values = nextStringOrBoolean(in).split("\\|");
+                        andConditions.add(BlockStateCondition.property(name, values));
+                    }
                 }
             }
             in.endObject();

@@ -29,17 +29,15 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
-import org.apache.commons.lang3.time.DateFormatUtils;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.Locale;
-import java.util.TimeZone;
+import java.time.Instant;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.concurrent.TimeUnit;
 
 @Getter @Setter
@@ -114,11 +112,11 @@ public class FileRequestHandler implements HttpRequestHandler {
         HttpHeader modHeader = request.getHeader("If-Modified-Since");
         if (modHeader != null){
             try {
-                long since = stringToTimestamp(modHeader.getValue());
+                long since = Instant.from(DateTimeFormatter.RFC_1123_DATE_TIME.parse(modHeader.getValue())).toEpochMilli();
                 if (since + 1000 >= lastModified){
                     return new HttpResponse(HttpStatusCode.NOT_MODIFIED);
                 }
-            } catch (IllegalArgumentException ignored){}
+            } catch (DateTimeParseException ignored){}
         }
 
         //check ETag
@@ -136,7 +134,7 @@ public class FileRequestHandler implements HttpRequestHandler {
         //create response
         HttpResponse response = new HttpResponse(HttpStatusCode.OK);
         response.addHeader("ETag", eTag);
-        if (lastModified > 0) response.addHeader("Last-Modified", timestampToString(lastModified));
+        if (lastModified > 0) response.addHeader("Last-Modified", DateTimeFormatter.RFC_1123_DATE_TIME.format(Instant.ofEpochMilli(lastModified)));
         response.addHeader("Cache-Control", "public");
         response.addHeader("Cache-Control", "max-age=" + TimeUnit.DAYS.toSeconds(1));
 
@@ -153,40 +151,6 @@ public class FileRequestHandler implements HttpRequestHandler {
             return response;
         } catch (FileNotFoundException e) {
             return new HttpResponse(HttpStatusCode.NOT_FOUND);
-        }
-    }
-
-    private static String timestampToString(long time){
-        return DateFormatUtils.format(time, "EEE, dd MMM yyy HH:mm:ss 'GMT'", TimeZone.getTimeZone("GMT"), Locale.ENGLISH);
-    }
-
-    private static long stringToTimestamp(String timeString) throws IllegalArgumentException {
-        try {
-            int day = Integer.parseInt(timeString.substring(5, 7));
-            int month = switch (timeString.substring(8, 11)) {
-                case "Jan" -> Calendar.JANUARY;
-                case "Feb" -> Calendar.FEBRUARY;
-                case "Mar" -> Calendar.MARCH;
-                case "Apr" -> Calendar.APRIL;
-                case "May" -> Calendar.MAY;
-                case "Jun" -> Calendar.JUNE;
-                case "Jul" -> Calendar.JULY;
-                case "Aug" -> Calendar.AUGUST;
-                case "Sep" -> Calendar.SEPTEMBER;
-                case "Oct" -> Calendar.OCTOBER;
-                case "Nov" -> Calendar.NOVEMBER;
-                case "Dec" -> Calendar.DECEMBER;
-                default -> throw new IllegalArgumentException("Invalid timestamp format");
-            };
-            int year = Integer.parseInt(timeString.substring(12, 16));
-            int hour = Integer.parseInt(timeString.substring(17, 19));
-            int min = Integer.parseInt(timeString.substring(20, 22));
-            int sec = Integer.parseInt(timeString.substring(23, 25));
-            GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
-            cal.set(year, month, day, hour, min, sec);
-            return cal.getTimeInMillis();
-        } catch (NumberFormatException | IndexOutOfBoundsException e){
-            throw new IllegalArgumentException(e);
         }
     }
 

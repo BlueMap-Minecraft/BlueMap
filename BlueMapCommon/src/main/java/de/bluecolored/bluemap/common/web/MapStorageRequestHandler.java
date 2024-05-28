@@ -38,7 +38,6 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.apache.commons.io.IOUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -132,7 +131,7 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
             response.addHeader("Content-Encoding", Compression.GZIP.getId());
             ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
             try (OutputStream os = Compression.GZIP.compress(byteOut)) {
-                IOUtils.copyLarge(data.decompress(), os);
+                data.decompress().transferTo(os);
             }
             byte[] compressedData = byteOut.toByteArray();
             response.setData(new ByteArrayInputStream(compressedData));

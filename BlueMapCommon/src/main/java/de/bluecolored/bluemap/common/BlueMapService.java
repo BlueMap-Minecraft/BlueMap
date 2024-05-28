@@ -47,7 +47,6 @@ import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.World;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
-import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.ConfigurationNode;
@@ -399,7 +398,7 @@ public class BlueMapService implements Closeable {
             URL resourceExtensionsUrl = Objects.requireNonNull(
                     Plugin.class.getResource("/de/bluecolored/bluemap/resourceExtensions.zip")
             );
-            FileUtils.copyURLToFile(resourceExtensionsUrl, resourceExtensionsFile.toFile(), 10000, 10000);
+            FileHelper.copy(resourceExtensionsUrl, resourceExtensionsFile);
         } catch (IOException ex) {
             throw new ConfigurationException(
                     "Failed to create resourceExtensions.zip!\n" +
