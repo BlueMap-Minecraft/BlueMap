@@ -184,7 +184,7 @@ public class SpongePlugin implements Server {
     }
 
     @Listener
-    public void onPlayerLeave(ServerSideConnectionEvent.Disconnect evt) {
+    public void onPlayerLeave(ServerSideConnectionEvent.Leave evt) {
         UUID playerUUID = evt.player().uniqueId();
         onlinePlayerMap.remove(playerUUID);
         synchronized (onlinePlayerList) {
