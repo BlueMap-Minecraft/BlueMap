@@ -42,18 +42,18 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.Level;
-import net.neoforged.bus.api.SubscribeEvent;
-import net.neoforged.fml.IExtensionPoint;
-import net.neoforged.fml.ModLoadingContext;
-import net.neoforged.fml.common.Mod;
-import net.neoforged.neoforge.common.NeoForge;
-import net.neoforged.neoforge.event.RegisterCommandsEvent;
-import net.neoforged.neoforge.event.TickEvent;
-import net.neoforged.neoforge.event.entity.player.PlayerEvent;
-import net.neoforged.neoforge.event.server.ServerStartedEvent;
-import net.neoforged.neoforge.event.server.ServerStartingEvent;
-import net.neoforged.neoforge.event.server.ServerStoppingEvent;
-import net.neoforged.neoforge.network.NetworkConstants;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.RegisterCommandsEvent;
+import net.minecraftforge.event.TickEvent.ServerTickEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent;
+import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
+import net.minecraftforge.event.server.ServerStartedEvent;
+import net.minecraftforge.event.server.ServerStartingEvent;
+import net.minecraftforge.event.server.ServerStoppingEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
+import net.minecraftforge.fml.IExtensionPoint;
+import net.minecraftforge.fml.ModLoadingContext;
+import net.minecraftforge.fml.common.Mod;
 import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
@@ -81,7 +81,7 @@ public class ForgeMod implements Server {
         this.onlinePlayerMap = new ConcurrentHashMap<>();
         this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
 
-        this.pluginInstance = new Plugin("neoforge-1.20.2", this);
+        this.pluginInstance = new Plugin("forge", this);
 
         this.eventForwarder = new ForgeEventForwarder();
         this.worlds = Caffeine.newBuilder()
@@ -90,10 +90,16 @@ public class ForgeMod implements Server {
                 .maximumSize(1000)
                 .build(ForgeWorld::new);
 
-        NeoForge.EVENT_BUS.register(this);
+        MinecraftForge.EVENT_BUS.register(this);
 
         //Make sure the mod being absent on the other network side does not cause the client to display the server as incompatible
-        ModLoadingContext.get().registerExtensionPoint(IExtensionPoint.DisplayTest.class, () -> new IExtensionPoint.DisplayTest(() -> NetworkConstants.IGNORESERVERONLY, (a, b) -> true));
+        ModLoadingContext.get().registerExtensionPoint(
+                IExtensionPoint.DisplayTest.class,
+                () -> new IExtensionPoint.DisplayTest(
+                        () -> IExtensionPoint.DisplayTest.IGNORESERVERONLY,
+                        (a, b) -> true
+                )
+        );
     }
 
     @SubscribeEvent
@@ -134,7 +140,7 @@ public class ForgeMod implements Server {
     }
 
     @SubscribeEvent
-    public void onTick(TickEvent.ServerTickEvent evt) {
+    public void onTick(ServerTickEvent evt) {
         updateSomePlayers();
     }
 
@@ -198,7 +204,7 @@ public class ForgeMod implements Server {
     }
 
     @SubscribeEvent
-    public void onPlayerJoin(PlayerEvent.PlayerLoggedInEvent evt) {
+    public void onPlayerJoin(PlayerLoggedInEvent evt) {
         var playerInstance = evt.getEntity();
         if (!(playerInstance instanceof ServerPlayer)) return;
 
@@ -208,7 +214,7 @@ public class ForgeMod implements Server {
     }
 
     @SubscribeEvent
-    public void onPlayerLeave(PlayerEvent.PlayerLoggedOutEvent evt) {
+    public void onPlayerLeave(PlayerLoggedOutEvent evt) {
         var player = evt.getEntity();
         if (!(player instanceof ServerPlayer)) return;
 

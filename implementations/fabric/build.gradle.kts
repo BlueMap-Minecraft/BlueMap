@@ -10,7 +10,7 @@ plugins {
 	id("com.diffplug.spotless") version "6.1.2"
 	id ("com.github.node-gradle.node") version "3.0.1"
 	id ("com.github.johnrengelman.shadow") version "8.1.1"
-	id ("fabric-loom") version "1.3-SNAPSHOT"
+	id ("fabric-loom") version "1.6-SNAPSHOT"
 	id ("com.modrinth.minotaur") version "2.+"
 	id ("com.matthewprenger.cursegradle") version "1.4.0"
 }
@@ -18,7 +18,7 @@ plugins {
 group = "de.bluecolored.bluemap"
 version = System.getProperty("bluemap.version") ?: "?" // set by BlueMapCore
 
-val javaTarget = 17
+val javaTarget = 21
 java {
 	sourceCompatibility = JavaVersion.toVersion(javaTarget)
 	targetCompatibility = JavaVersion.toVersion(javaTarget)
@@ -48,14 +48,14 @@ dependencies {
 		exclude (group = "com.mojang", module = "brigadier")
 	}
 
-	minecraft ("com.mojang:minecraft:1.18-pre5")
-	mappings ("net.fabricmc:yarn:1.18-pre5+build.4:v2")
-	modImplementation ("net.fabricmc:fabric-loader:0.11.3")
-	modImplementation ("net.fabricmc.fabric-api:fabric-api:0.42.2+1.18")
+	minecraft ("com.mojang:minecraft:1.20.5")
+	mappings ("net.fabricmc:yarn:1.20.5+build.1")
+	modImplementation ("net.fabricmc:fabric-loader:0.15.10")
+	modImplementation ("net.fabricmc.fabric-api:fabric-api:0.97.8+1.20.5")
 	modImplementation("me.lucko:fabric-permissions-api:0.1-SNAPSHOT")
 
-	testImplementation ("org.junit.jupiter:junit-jupiter:5.8.2")
-	testRuntimeOnly ("org.junit.jupiter:junit-jupiter-engine:5.8.2")
+	testImplementation ("org.junit.jupiter:junit-jupiter:5.9.0")
+	testRuntimeOnly ("org.junit.jupiter:junit-jupiter-engine:5.9.0")
 }
 
 spotless {
@@ -135,7 +135,7 @@ modrinth {
 		.readText()
 		.replace("{version}", project.version.toString()))
 	uploadFile.set(tasks.findByName("remappedShadowJar"))
-	gameVersions.addAll("1.18", "1.18.1", "1.18.2")
+	gameVersions.addAll("1.20.5", "1.20.6")
 	dependencies {
 		required.project("P7dR8mSH") // Fabric API
 	}
@@ -153,12 +153,10 @@ curseforge {
 
 		addGameVersion("Fabric")
 
-		addGameVersion("Java 18")
-		addGameVersion("Java 17")
+		addGameVersion("Java 21")
 
-		addGameVersion("1.18")
-		addGameVersion("1.18.1")
-		addGameVersion("1.18.2")
+		addGameVersion("1.20.5")
+		addGameVersion("1.20.6")
 
 		mainArtifact(tasks.findByName("remappedShadowJar"), closureOf<CurseArtifact> {
 			relations(closureOf<CurseRelation> {

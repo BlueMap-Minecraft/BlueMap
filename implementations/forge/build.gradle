@@ -5,7 +5,7 @@ buildscript {
 		mavenCentral()
 	}
 	dependencies {
-		classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '6.0.+', changing: true
+		classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '[6.0.24,6.2)', changing: true
 	}
 }
 
@@ -25,14 +25,12 @@ group = "de.bluecolored.bluemap"
 version = System.getProperty("bluemap.version") ?: "?" // set by BlueMapCore
 archivesBaseName = 'bluemap'
 
-def javaTarget = 17
-java {
-	sourceCompatibility = JavaVersion.toVersion(javaTarget)
-	targetCompatibility = JavaVersion.toVersion(javaTarget)
-}
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 minecraft {
-	mappings channel: 'official', version: '1.18.1'
+	mappings channel: 'official', version: '1.20.6'
+
+	reobf = false
 
 	runs {
 		server {
@@ -62,7 +60,7 @@ configurations {
 }
 
 dependencies {
-	minecraft 'net.minecraftforge:forge:1.18.1-39.0.19'
+	minecraft 'net.minecraftforge:forge:1.20.6-50.0.13'
 
 	shadowInclude ("de.bluecolored.bluemap:BlueMapCommon") {
 		//exclude dependencies provided by forge
@@ -99,8 +97,6 @@ jar {
 	}
 }
 
-jar.finalizedBy('reobfJar')
-
 tasks.withType(JavaCompile).configureEach {
 	options.encoding = "utf-8"
 }
@@ -115,6 +111,7 @@ test {
 }
 
 shadowJar {
+	def version = System.getProperty("bluemap.version") ?: "" // set by BlueMapCore
 	destinationDirectory.set(file("../../build/release"))
 	archiveFileName.set("BlueMap-${project.version}-${project.name}.jar")
 
@@ -152,16 +149,8 @@ processResources {
 	}
 }
 
-afterEvaluate {
-	reobf {
-		shadowJar {
-			mappings = createMcpToSrg.output
-		}
-	}
-}
-
 task release {
-	dependsOn(build)
+	dependsOn(shadowJar)
 }
 
 modrinth {
@@ -172,7 +161,7 @@ modrinth {
 			.getText()
 			.replace("{version}", project.version.toString())
 	uploadFile = shadowJar
-	gameVersions = ["1.18.1", "1.18.2"]
+	gameVersions = ["1.20.6"]
 }
 
 curseforge {
@@ -187,11 +176,9 @@ curseforge {
 
 		addGameVersion "Forge"
 
-		addGameVersion "Java 18"
-		addGameVersion "Java 17"
+		addGameVersion "Java 21"
 
-		addGameVersion "1.18.1"
-		addGameVersion "1.18.2"
+		addGameVersion "1.20.6"
 
 		mainArtifact shadowJar
 	}

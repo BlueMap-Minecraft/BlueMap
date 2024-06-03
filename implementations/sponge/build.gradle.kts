@@ -5,7 +5,7 @@ plugins {
 	`java-library`
 	id("com.diffplug.spotless") version "6.1.2"
 	id ("com.github.node-gradle.node") version "3.0.1"
-	id ("com.github.johnrengelman.shadow") version "7.1.2"
+	id ("com.github.johnrengelman.shadow") version "8.1.1"
 	id ("org.spongepowered.gradle.plugin") version "2.0.0"
 	id ("com.modrinth.minotaur") version "2.+"
 	id("org.spongepowered.gradle.ore") version "2.2.0"

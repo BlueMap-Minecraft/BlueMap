@@ -21,6 +21,7 @@ jobs:
           java-version: |
             16
             17
+            21
           cache: 'gradle'
       - name: Build with Gradle
         run: ./gradlew clean :BlueMapCore:publish :BlueMapCommon:publish

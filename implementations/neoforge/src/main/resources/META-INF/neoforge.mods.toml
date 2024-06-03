@@ -7,6 +7,7 @@ modId="${mod_id}"
 version="${mod_version}"
 displayName="${mod_name}"
 description='''${mod_description}'''
+displayTest="IGNORE_SERVER_VERSION"
 
 [[dependencies.${mod_id}]] #optional
     modId="neoforge"
