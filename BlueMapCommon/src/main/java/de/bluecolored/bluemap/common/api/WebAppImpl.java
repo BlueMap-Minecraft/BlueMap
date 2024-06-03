@@ -44,7 +44,7 @@ public class WebAppImpl implements WebApp {
     private final BlueMapService blueMapService;
     private final @Nullable Plugin plugin;
 
-    private final Timer timer = new Timer();
+    private final Timer timer = new Timer("BlueMap-WebbAppImpl-Timer", true);
     private @Nullable TimerTask scheduledWebAppSettingsUpdate;
 
     public WebAppImpl(BlueMapService blueMapService, @Nullable Plugin plugin) {

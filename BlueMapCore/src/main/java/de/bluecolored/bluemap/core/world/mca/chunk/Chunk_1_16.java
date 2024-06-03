@@ -34,6 +34,8 @@ import de.bluecolored.bluemap.core.world.block.entity.BlockEntity;
 import de.bluecolored.bluemap.core.world.mca.MCAUtil;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 import de.bluecolored.bluemap.core.world.mca.PackedIntArrayAccess;
+import de.bluecolored.bluemap.core.world.mca.data.LenientBlockEntityArrayDeserializer;
+import de.bluecolored.bluenbt.NBTDeserializer;
 import de.bluecolored.bluenbt.NBTName;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
@@ -282,7 +284,10 @@ public class Chunk_1_16 extends MCAChunk {
         private HeightmapsData heightmaps = new HeightmapsData();
         private SectionData @Nullable [] sections = null;
         private int[] biomes = EMPTY_INT_ARRAY;
-        @NBTName("TileEntities") private @Nullable BlockEntity [] blockEntities = EMPTY_BLOCK_ENTITIES_ARRAY;
+
+        @NBTName("TileEntities")
+        @NBTDeserializer(LenientBlockEntityArrayDeserializer.class)
+        private @Nullable BlockEntity [] blockEntities = EMPTY_BLOCK_ENTITIES_ARRAY;
     }
 
     @Getter

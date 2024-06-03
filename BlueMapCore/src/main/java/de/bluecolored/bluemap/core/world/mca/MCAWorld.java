@@ -203,7 +203,7 @@ public class MCAWorld implements World {
                 }
             });
         } catch (IOException ex) {
-            Logger.global.logDebug("Unexpected exception trying to load preload region (x:" + x + ", z:" + z + "):" + ex);
+            Logger.global.logDebug("Unexpected exception trying to load preload region (x:" + x + ", z:" + z + "): " + ex);
         }
     }
 
@@ -257,7 +257,7 @@ public class MCAWorld implements World {
             }
         }
 
-        Logger.global.logDebug("Unexpected exception trying to load chunk (x:" + x + ", z:" + z + "):" + loadException);
+        Logger.global.logDebug("Unexpected exception trying to load chunk (x:" + x + ", z:" + z + "): " + loadException);
         return Chunk.ERRORED_CHUNK;
     }
 

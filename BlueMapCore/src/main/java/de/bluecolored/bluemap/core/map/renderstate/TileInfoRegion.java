@@ -24,12 +24,18 @@
  */
 package de.bluecolored.bluemap.core.map.renderstate;
 
+import com.google.gson.reflect.TypeToken;
+import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluemap.core.util.RegistryAdapter;
+import de.bluecolored.bluenbt.BlueNBT;
 import de.bluecolored.bluenbt.NBTName;
 import de.bluecolored.bluenbt.NBTPostDeserialize;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
@@ -120,6 +126,31 @@ public class TileInfoRegion implements CellStorage.Cell {
         TileInfoRegion region = new TileInfoRegion();
         region.init();
         return region;
+    }
+
+    /**
+     * Only loads the palette-part from a TileState-file
+     */
+    public static TileState[] loadPalette(InputStream in) throws IOException {
+        return PaletteOnly.BLUE_NBT.read(in, PaletteOnly.class).tileStates.palette;
+    }
+
+    @Getter
+    private static class PaletteOnly {
+
+        private final static BlueNBT BLUE_NBT = new BlueNBT();
+        static {
+            BLUE_NBT.register(TypeToken.get(TileState.class), new RegistryAdapter<>(TileState.REGISTRY, Key.BLUEMAP_NAMESPACE, TileState.UNKNOWN));
+        }
+
+        @NBTName("tile-states")
+        private TileStates tileStates;
+
+        @Getter
+        private static class TileStates {
+            private TileState[] palette;
+        }
+
     }
 
 }

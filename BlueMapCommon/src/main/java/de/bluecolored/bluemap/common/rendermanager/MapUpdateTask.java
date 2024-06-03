@@ -28,8 +28,10 @@ import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.map.renderstate.MapTileState;
+import de.bluecolored.bluemap.core.map.renderstate.TileInfoRegion;
 import de.bluecolored.bluemap.core.map.renderstate.TileState;
 import de.bluecolored.bluemap.core.storage.GridStorage;
+import de.bluecolored.bluemap.core.storage.compression.CompressedInputStream;
 import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.world.World;
 
@@ -134,6 +136,21 @@ public class MapUpdateTask extends CombinedRenderTask<RenderTask> {
         Grid cellGrid = MapTileState.GRID.multiply(tileGrid);
         try (Stream<GridStorage.Cell> stream = map.getStorage().tileState().stream()) {
             stream
+                    .filter(c -> { // filter out files that are fully UNKNOWN
+                        try (CompressedInputStream in = c.read()) {
+                            if (in == null) return false;
+                            TileState[] states = TileInfoRegion.loadPalette(in.decompress());
+                            for (TileState state : states) {
+                                if (
+                                        state != TileState.UNKNOWN &&
+                                        state != TileState.NOT_GENERATED
+                                ) return true;
+                            }
+                            return false;
+                        } catch (IOException ignore) {
+                            return true;
+                        }
+                    })
                     .map(c -> new Vector2i(c.getX(), c.getZ()))
                     .flatMap(v -> cellGrid.getIntersecting(v, regionGrid).stream())
                     .filter(regionRadiusFilter)
