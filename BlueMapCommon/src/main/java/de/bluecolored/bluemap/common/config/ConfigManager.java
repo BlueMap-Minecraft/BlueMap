@@ -29,28 +29,24 @@ import de.bluecolored.bluemap.common.config.typeserializer.KeyTypeSerializer;
 import de.bluecolored.bluemap.common.config.typeserializer.Vector2iTypeSerializer;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.util.Key;
-import org.apache.commons.io.IOUtils;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.ConfigurationNode;
-import org.spongepowered.configurate.gson.GsonConfigurationLoader;
-import org.spongepowered.configurate.hocon.HoconConfigurationLoader;
 import org.spongepowered.configurate.loader.AbstractConfigurationLoader;
 import org.spongepowered.configurate.loader.ConfigurationLoader;
 import org.spongepowered.configurate.serialize.SerializationException;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.Objects;
 
 public class ConfigManager {
 
-    private static final String[] CONFIG_FILE_ENDINGS = new String[] {
-            ".conf",
-            ".json"
-    };
+    private static final String CONFIG_TEMPLATE_RESOURCE_PATH = "/de/bluecolored/bluemap/config/";
 
     private final Path configRoot;
 
@@ -58,30 +54,66 @@ public class ConfigManager {
         this.configRoot = configRoot;
     }
 
-    public <T> T loadConfig(Path rawPath, Class<T> type) throws ConfigurationException {
-        Path path = findConfigPath(rawPath);
-        ConfigurationNode configNode = loadConfigFile(path);
+    public <T> T loadConfig(String name, Class<T> type) throws ConfigurationException {
+        Path file = resolveConfigFile(name);
+        return loadConfig(file, type);
+    }
+
+    public <T> T loadConfig(Path file, Class<T> type) throws ConfigurationException {
+        ConfigurationNode configNode = loadConfigFile(file);
         try {
             return Objects.requireNonNull(configNode.get(type));
         } catch (SerializationException | NullPointerException ex) {
             throw new ConfigurationException(
                     "BlueMap failed to parse this file:\n" +
-                            path + "\n" +
+                            file + "\n" +
                             "Check if the file is correctly formatted and all values are correct!",
                     ex);
         }
     }
 
-    public ConfigurationNode loadConfig(Path rawPath) throws ConfigurationException {
-        Path path = findConfigPath(rawPath);
-        return loadConfigFile(path);
+    public ConfigTemplate loadConfigTemplate(String name) throws IOException {
+        String resource = CONFIG_TEMPLATE_RESOURCE_PATH + name + ConfigLoader.DEFAULT.getFileSuffix();
+        try (InputStream in = BlueMap.class.getResourceAsStream(resource)) {
+            if (in == null) throw new IOException("Resource not found: " + resource);
+
+            StringWriter writer = new StringWriter();
+            InputStreamReader reader = new InputStreamReader(in, StandardCharsets.UTF_8);
+            reader.transferTo(writer);
+
+            return new ConfigTemplate(writer.toString());
+        }
     }
 
-    public ConfigTemplate loadConfigTemplate(String resource) throws IOException {
-        InputStream in = BlueMap.class.getResourceAsStream(resource);
-        if (in == null) throw new IOException("Resource not found: " + resource);
-        String configTemplate = IOUtils.toString(in, StandardCharsets.UTF_8);
-        return new ConfigTemplate(configTemplate);
+    public Path resolveConfigFile(String name) {
+        for (ConfigLoader configLoader : ConfigLoader.REGISTRY.values()) {
+            Path path = configRoot.resolve(name + configLoader.getFileSuffix());
+            if (Files.isRegularFile(path)) return path;
+        }
+
+        return configRoot.resolve(name + ConfigLoader.DEFAULT.getFileSuffix());
+    }
+
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    public boolean isConfigFile(Path file) {
+        String fileName = file.getFileName().toString();
+        for (ConfigLoader configLoader : ConfigLoader.REGISTRY.values())
+            if (fileName.endsWith(configLoader.getFileSuffix())) return true;
+        return false;
+    }
+
+    public String getConfigName(Path file) {
+        String fileName = file.getFileName().toString();
+        for (ConfigLoader configLoader : ConfigLoader.REGISTRY.values()) {
+            String suffix = configLoader.getFileSuffix();
+            if (fileName.endsWith(suffix))
+                return fileName.substring(0, fileName.length() - suffix.length());
+        }
+        return fileName;
+    }
+
+    public Path getConfigRoot() {
+        return configRoot;
     }
 
     private ConfigurationNode loadConfigFile(Path path) throws ConfigurationException {
@@ -110,58 +142,17 @@ public class ConfigManager {
         }
     }
 
-    public Path getConfigRoot() {
-        return configRoot;
-    }
-
-    public Path findConfigPath(Path rawPath) {
-        if (!rawPath.startsWith(configRoot))
-            rawPath = configRoot.resolve(rawPath);
-
-        for (String fileEnding : CONFIG_FILE_ENDINGS) {
-            if (rawPath.getFileName().endsWith(fileEnding)) return rawPath;
-        }
-
-        for (String fileEnding : CONFIG_FILE_ENDINGS) {
-            Path path = rawPath.getParent().resolve(rawPath.getFileName() + fileEnding);
-            if (Files.exists(path)) return path;
-        }
-
-        return rawPath.getParent().resolve(rawPath.getFileName() + CONFIG_FILE_ENDINGS[0]);
-    }
-
-    public boolean isConfigFile(Path path) {
-        if (!Files.isRegularFile(path)) return false;
-
-        String fileName = path.getFileName().toString();
-        for (String fileEnding : CONFIG_FILE_ENDINGS) {
-            if (fileName.endsWith(fileEnding)) return true;
-        }
-
-        return false;
-    }
-
-    public Path getRaw(Path path) {
-        String fileName = path.getFileName().toString();
-        String rawName = null;
-
-        for (String fileEnding : CONFIG_FILE_ENDINGS) {
-            if (fileName.endsWith(fileEnding)) {
-                rawName = fileName.substring(0, fileName.length() - fileEnding.length());
+    private ConfigurationLoader<? extends ConfigurationNode> getLoader(Path path){
+        AbstractConfigurationLoader.Builder<?, ?> builder = null;
+        for (ConfigLoader loader : ConfigLoader.REGISTRY.values()) {
+            if (path.getFileName().endsWith(loader.getFileSuffix())) {
+                builder = loader.createLoaderBuilder();
                 break;
             }
         }
 
-        if (rawName == null) return path;
-        return path.getParent().resolve(rawName);
-    }
-
-    private ConfigurationLoader<? extends ConfigurationNode> getLoader(Path path){
-        AbstractConfigurationLoader.Builder<?, ?> builder;
-        if (path.getFileName().endsWith(".json"))
-            builder = GsonConfigurationLoader.builder();
-        else
-            builder = HoconConfigurationLoader.builder();
+        if (builder == null)
+            builder = ConfigLoader.DEFAULT.createLoaderBuilder();
 
         return builder
                 .path(path)

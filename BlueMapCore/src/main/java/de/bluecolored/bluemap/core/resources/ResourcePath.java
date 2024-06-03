@@ -31,7 +31,6 @@ import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.util.Key;
 import org.jetbrains.annotations.Nullable;
 
@@ -40,7 +39,6 @@ import java.nio.file.Path;
 import java.util.Locale;
 import java.util.function.Function;
 
-@DebugDump
 @JsonAdapter(ResourcePath.Adapter.class)
 public class ResourcePath<T> extends Key {
 
@@ -54,8 +52,8 @@ public class ResourcePath<T> extends Key {
         super(namespace.toLowerCase(Locale.ROOT), value.toLowerCase(Locale.ROOT));
     }
 
-    public ResourcePath(Path filePath) {
-        super(parsePath(filePath).toLowerCase(Locale.ROOT));
+    public ResourcePath(Path filePath, int namespacePos, int valuePos) {
+        super(parsePath(filePath, namespacePos, valuePos).toLowerCase(Locale.ROOT));
     }
 
     @Nullable
@@ -73,12 +71,12 @@ public class ResourcePath<T> extends Key {
         this.resource = resource;
     }
 
-    private static String parsePath(Path filePath) {
-        if (filePath.getNameCount() < 4)
-            throw new IllegalArgumentException("The provided filePath has less than 4 segments!");
+    private static String parsePath(Path filePath, int namespacePos, int valuePos) {
+        if (filePath.getNameCount() <= valuePos)
+            throw new IllegalArgumentException("The provided filePath has not enough segments!");
 
-        String namespace = filePath.getName(1).toString();
-        String path = filePath.subpath(3, filePath.getNameCount()).toString().replace(filePath.getFileSystem().getSeparator(), "/");
+        String namespace = filePath.getName(namespacePos).toString();
+        String path = filePath.subpath(valuePos, filePath.getNameCount()).toString().replace(filePath.getFileSystem().getSeparator(), "/");
 
         // remove file-ending
         int dotIndex = path.lastIndexOf('.');

@@ -39,10 +39,10 @@ import java.util.function.Function;
 
 public interface Dialect extends Keyed {
 
-    Dialect MYSQL = new Impl(Key.bluemap("mysql"), MySQLCommandSet::new);
-    Dialect MARIADB = new Impl(Key.bluemap("mariadb"), MySQLCommandSet::new);
-    Dialect POSTGRESQL = new Impl(Key.bluemap("postgresql"), PostgreSQLCommandSet::new);
-    Dialect SQLITE = new Impl(Key.bluemap("sqlite"), SqliteCommandSet::new);
+    Dialect MYSQL = new Impl(Key.bluemap("mysql"), "jdbc:mysql:", MySQLCommandSet::new);
+    Dialect MARIADB = new Impl(Key.bluemap("mariadb"), "jdbc:mariadb:", MySQLCommandSet::new);
+    Dialect POSTGRESQL = new Impl(Key.bluemap("postgresql"), "jdbc:postgresql:", PostgreSQLCommandSet::new);
+    Dialect SQLITE = new Impl(Key.bluemap("sqlite"), "jdbc:sqlite:", SqliteCommandSet::new);
 
     Registry<Dialect> REGISTRY = new Registry<>(
             MYSQL,
@@ -51,15 +51,22 @@ public interface Dialect extends Keyed {
             SQLITE
     );
 
+    boolean supports(String connectionUrl);
+
     CommandSet createCommandSet(Database database);
 
     @RequiredArgsConstructor
     class Impl implements Dialect {
 
-        @Getter
-        private final Key key;
+        @Getter private final Key key;
+        private final String protocol;
 
         private final Function<Database, CommandSet> commandSetProvider;
+
+        @Override
+        public boolean supports(String connectionUrl) {
+            return connectionUrl.startsWith(protocol);
+        }
 
         @Override
         public CommandSet createCommandSet(Database database) {

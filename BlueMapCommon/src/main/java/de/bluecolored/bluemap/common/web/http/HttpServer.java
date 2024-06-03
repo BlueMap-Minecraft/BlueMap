@@ -24,14 +24,15 @@
  */
 package de.bluecolored.bluemap.common.web.http;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.IOException;
 
-@DebugDump
 public class HttpServer extends Server {
 
-    private final HttpRequestHandler requestHandler;
+    @Getter @Setter
+    private HttpRequestHandler requestHandler;
 
     public HttpServer(HttpRequestHandler requestHandler) throws IOException {
         this.requestHandler = requestHandler;
@@ -40,10 +41,6 @@ public class HttpServer extends Server {
     @Override
     public SelectionConsumer createConnectionHandler() {
         return new HttpConnection(requestHandler);
-
-        // Enable async request handling ...
-        // TODO: maybe find a better/separate executor than using bluemap's common thread-pool
-        //return new HttpConnection(requestHandler, BlueMap.THREAD_POOL);
     }
 
 }

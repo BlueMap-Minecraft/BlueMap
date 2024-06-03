@@ -33,7 +33,6 @@ import de.bluecolored.bluemap.common.serverinterface.Server;
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
-import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.registries.Registries;
@@ -141,12 +140,8 @@ public class ForgeMod implements Server {
     }
 
     @Override
-    public MinecraftVersion getMinecraftVersion() {
-        try {
-            return MinecraftVersion.of(SharedConstants.getCurrentVersion().getId());
-        } catch (IllegalArgumentException ex) {
-            return MinecraftVersion.LATEST_SUPPORTED;
-        }
+    public String getMinecraftVersion() {
+        return SharedConstants.getCurrentVersion().getId();
     }
 
     @Override

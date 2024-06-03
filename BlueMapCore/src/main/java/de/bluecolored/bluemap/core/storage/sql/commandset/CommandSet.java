@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.core.storage.sql.commandset;
 
 import de.bluecolored.bluemap.core.storage.compression.Compression;
+import de.bluecolored.bluemap.core.util.Key;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Closeable;
@@ -34,39 +35,39 @@ public interface CommandSet extends Closeable {
 
     void initializeTables() throws IOException;
 
-    int writeMapTile(
-            String mapId, int lod, int x, int z, Compression compression,
+    void writeItem(String mapId, Key key, Compression compression, byte[] bytes) throws IOException;
+
+    byte @Nullable [] readItem(String mapId, Key key, Compression compression) throws IOException;
+
+    void deleteItem(String mapId, Key key) throws IOException;
+
+    boolean hasItem(String mapId, Key key, Compression compression) throws IOException;
+
+    void writeGridItem(
+            String mapId, Key key, int x, int z, Compression compression,
             byte[] bytes
     ) throws IOException;
 
-    byte @Nullable [] readMapTile(
-            String mapId, int lod, int x, int z, Compression compression
+    byte @Nullable [] readGridItem(
+            String mapId, Key key, int x, int z, Compression compression
     ) throws IOException;
 
-    int deleteMapTile(
-            String mapId, int lod, int x, int z, Compression compression
+    void deleteGridItem(
+            String mapId, Key key, int x, int z
     ) throws IOException;
 
-    boolean hasMapTile(
-            String mapId, int lod, int x, int z, Compression compression
+    boolean hasGridItem(
+            String mapId, Key key, int x, int z, Compression compression
     ) throws IOException;
 
-    TilePosition[] listMapTiles(
-            String mapId, int lod, Compression compression,
+    TilePosition[] listGridItems(
+            String mapId, Key key, Compression compression,
             int start, int count
     ) throws IOException;
 
-    int countAllMapTiles(String mapId) throws IOException;
+    int countMapGridsItems(String mapId) throws IOException;
 
-    int purgeMapTiles(String mapId, int limit) throws IOException;
-
-    int writeMapMeta(String mapId, String itemName, byte[] bytes) throws IOException;
-
-    byte @Nullable [] readMapMeta(String mapId, String itemName) throws IOException;
-
-    int deleteMapMeta(String mapId, String itemName) throws IOException;
-
-    boolean hasMapMeta(String mapId, String itemName) throws IOException;
+    int purgeMapGrids(String mapId, int limit) throws IOException;
 
     void purgeMap(String mapId) throws IOException;
 

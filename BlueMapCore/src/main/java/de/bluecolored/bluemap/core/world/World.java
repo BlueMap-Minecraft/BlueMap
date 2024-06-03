@@ -27,8 +27,13 @@ package de.bluecolored.bluemap.core.world;
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.util.Grid;
+import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluemap.core.util.WatchService;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collection;
+import java.util.function.Predicate;
 
 /**
  * Represents a World on the Server.<br>
@@ -72,9 +77,25 @@ public interface World {
     Collection<Vector2i> listRegions();
 
     /**
+     * Creates and returns a new {@link WatchService} which watches for any changes in this worlds regions.
+     * @throws IOException if an IOException occurred while creating the watch-service
+     * @throws UnsupportedOperationException if watching this world is not supported
+     */
+    default WatchService<Vector2i> createRegionWatchService() throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
      * Loads all chunks from the specified region into the chunk cache (if there is a cache)
      */
-    void preloadRegionChunks(int x, int z);
+    default void preloadRegionChunks(int x, int z) {
+        preloadRegionChunks(x, z, pos -> true);
+    }
+
+    /**
+     * Loads the filtered chunks from the specified region into the chunk cache (if there is a cache)
+     */
+    void preloadRegionChunks(int x, int z, Predicate<Vector2i> chunkFilter);
 
     /**
      * Invalidates the complete chunk cache (if there is a cache), so that every chunk has to be reloaded from disk
@@ -87,8 +108,16 @@ public interface World {
     void invalidateChunkCache(int x, int z);
 
     /**
-     * Cleans up invalid cache-entries to free up memory
+     * Generates a unique world-id based on a world-folder and a dimension
      */
-    void cleanUpChunkCache();
+    static String id(Path worldFolder, Key dimension) {
+        worldFolder = worldFolder.toAbsolutePath().normalize();
+
+        Path workingDir = Path.of("").toAbsolutePath().normalize();
+        if (worldFolder.startsWith(workingDir))
+            worldFolder = workingDir.relativize(worldFolder);
+
+        return worldFolder + "#" + dimension.getFormatted();
+    }
 
 }

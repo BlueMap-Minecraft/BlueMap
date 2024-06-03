@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=east": { "model": "minecraft:entity/oak_wall_hanging_sign", "y": 90 },
+    "facing=south": { "model": "minecraft:entity/oak_wall_hanging_sign", "y": 180 },
+    "facing=west": { "model": "minecraft:entity/oak_wall_hanging_sign", "y": 270 },
+    "facing=north": { "model": "minecraft:entity/oak_wall_hanging_sign" }
+  }
+}

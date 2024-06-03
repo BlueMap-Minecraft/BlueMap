@@ -24,13 +24,12 @@
  */
 package de.bluecolored.bluemap.common.config.storage;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.common.config.ConfigurationException;
+import de.bluecolored.bluemap.common.debug.DebugDump;
 import de.bluecolored.bluemap.core.storage.compression.Compression;
 import de.bluecolored.bluemap.core.storage.sql.Database;
 import de.bluecolored.bluemap.core.storage.sql.SQLStorage;
 import de.bluecolored.bluemap.core.storage.sql.commandset.CommandSet;
-import de.bluecolored.bluemap.core.util.Key;
 import lombok.AccessLevel;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
@@ -46,27 +45,26 @@ import java.sql.Driver;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
 @ConfigSerializable
 @Getter
 public class SQLConfig extends StorageConfig {
 
-    private static final Pattern URL_DIALECT_PATTERN = Pattern.compile("jdbc:([^:]*):.*");
-
+    @DebugDump(exclude = true)
     private String connectionUrl = "jdbc:mysql://localhost/bluemap?permitMysqlScheme";
+
+    @DebugDump(exclude = true)
     private Map<String, String> connectionProperties = new HashMap<>();
-    @DebugDump private String dialect = null;
 
-    @DebugDump private String driverJar = null;
-    @DebugDump private String driverClass = null;
-    @DebugDump private int maxConnections = -1;
+    private String dialect = null;
 
-    @DebugDump private String compression = Compression.GZIP.getKey().getFormatted();
+    private String driverJar = null;
+    private String driverClass = null;
+    private int maxConnections = -1;
 
-    @DebugDump
+    private String compression = Compression.GZIP.getKey().getFormatted();
+
     @Getter(AccessLevel.NONE)
     private transient URL driverJarURL = null;
 
@@ -101,14 +99,17 @@ public class SQLConfig extends StorageConfig {
 
         // default from connection-url
         if (key == null) {
-            Matcher matcher = URL_DIALECT_PATTERN.matcher(connectionUrl);
-            if (!matcher.find()) {
-                throw new ConfigurationException("""
-                Failed to parse the provided connection-url!
+            for (Dialect d : Dialect.REGISTRY.values()) {
+                if (d.supports(connectionUrl)) {
+                    key = d.getKey().getFormatted();
+                    break;
+                }
+            }
+
+            if (key == null) throw new ConfigurationException("""
+                Could not find any sql-dialect that is matching the given connection-url.
                 Please check your 'connection-url' setting in your configuration and make sure it is in the correct format.
                 """.strip());
-            }
-            key = Key.bluemap(matcher.group(1)).getFormatted();
         }
 
         return parseKey(Dialect.REGISTRY, key, "dialect");

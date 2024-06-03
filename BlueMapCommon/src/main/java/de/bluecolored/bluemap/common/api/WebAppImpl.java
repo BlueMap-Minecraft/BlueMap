@@ -25,36 +25,47 @@
 package de.bluecolored.bluemap.common.api;
 
 import de.bluecolored.bluemap.api.WebApp;
+import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.util.FileHelper;
+import org.jetbrains.annotations.Nullable;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class WebAppImpl implements WebApp {
-    private static final Path IMAGE_ROOT_PATH = Path.of("data", "images");
 
-    private final Plugin plugin;
+    private final BlueMapService blueMapService;
+    private final @Nullable Plugin plugin;
+
+    private final Timer timer = new Timer("BlueMap-WebbAppImpl-Timer", true);
+    private @Nullable TimerTask scheduledWebAppSettingsUpdate;
+
+    public WebAppImpl(BlueMapService blueMapService, @Nullable Plugin plugin) {
+        this.blueMapService = blueMapService;
+        this.plugin = plugin;
+    }
 
     public WebAppImpl(Plugin plugin) {
+        this.blueMapService = plugin.getBlueMap();
         this.plugin = plugin;
     }
 
     @Override
     public Path getWebRoot() {
-        return plugin.getBlueMap().getConfig().getWebappConfig().getWebroot();
+        return blueMapService.getConfig().getWebappConfig().getWebroot();
     }
 
     @Override
     public void setPlayerVisibility(UUID player, boolean visible) {
+        if (plugin == null) return; // fail silently: not supported on non-plugin platforms
+
         if (visible) {
             plugin.getPluginState().removeHiddenPlayer(player);
         } else {
@@ -64,19 +75,48 @@ public class WebAppImpl implements WebApp {
 
     @Override
     public boolean getPlayerVisibility(UUID player) {
+        if (plugin == null) return false; // fail silently: not supported on non-plugin platforms
+
         return !plugin.getPluginState().isPlayerHidden(player);
     }
 
     @Override
-    public void registerScript(String url) {
+    public synchronized void registerScript(String url) {
         Logger.global.logDebug("Registering script from API: " + url);
-        plugin.getBlueMap().getWebFilesManager().getScripts().add(url);
+        blueMapService.getWebFilesManager().getScripts().add(url);
+        scheduleUpdateWebAppSettings();
     }
 
     @Override
-    public void registerStyle(String url) {
+    public synchronized void registerStyle(String url) {
         Logger.global.logDebug("Registering style from API: " + url);
-        plugin.getBlueMap().getWebFilesManager().getStyles().add(url);
+        blueMapService.getWebFilesManager().getStyles().add(url);
+        scheduleUpdateWebAppSettings();
+    }
+
+    /**
+     * Save webapp-settings after a short delay, if no other save is already scheduled.
+     * (to bulk-save changes in case there is a lot of scripts being registered at once)
+     */
+    private synchronized void scheduleUpdateWebAppSettings() {
+        if (!blueMapService.getConfig().getWebappConfig().isEnabled()) return;
+        if (scheduledWebAppSettingsUpdate != null) return;
+
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                synchronized (WebAppImpl.this) {
+                    try {
+                        if (blueMapService.getConfig().getWebappConfig().isEnabled())
+                            blueMapService.getWebFilesManager().saveSettings();
+                    } catch (IOException ex) {
+                        Logger.global.logError("Failed to update webapp settings", ex);
+                    } finally {
+                        scheduledWebAppSettingsUpdate = null;
+                    }
+                }
+            }
+        }, 1000);
     }
 
     @Override
@@ -88,8 +128,8 @@ public class WebAppImpl implements WebApp {
         Path webRoot = getWebRoot().toAbsolutePath();
         String separator = webRoot.getFileSystem().getSeparator();
 
-        Path imageRootFolder = webRoot.resolve(IMAGE_ROOT_PATH);
-        Path imagePath = imageRootFolder.resolve(Path.of(path.replace("/", separator) + ".png")).toAbsolutePath();
+        Path imageRootFolder = webRoot.resolve("data").resolve("images");
+        Path imagePath = imageRootFolder.resolve(path.replace("/", separator) + ".png").toAbsolutePath();
 
         FileHelper.createDirectories(imagePath.getParent());
         Files.deleteIfExists(imagePath);
@@ -108,7 +148,7 @@ public class WebAppImpl implements WebApp {
         Path webRoot = getWebRoot().toAbsolutePath();
         String separator = webRoot.getFileSystem().getSeparator();
 
-        Path imageRootPath = webRoot.resolve("data").resolve(IMAGE_ROOT_PATH).toAbsolutePath();
+        Path imageRootPath = webRoot.resolve("data").resolve("images").toAbsolutePath();
 
         Map<String, String> availableImagesMap = new HashMap<>();
 

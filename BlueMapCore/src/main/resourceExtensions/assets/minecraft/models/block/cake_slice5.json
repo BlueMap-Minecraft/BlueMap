@@ -1,0 +1,25 @@
+{
+  "credit": "Made with Blockbench by TyBraniff for Bluemaps support.",
+  "ambientocclusion": false,
+  "textures": {
+    "3": "block/cake_inner",
+    "bottom": "block/cake_bottom",
+    "top": "block/cake_top",
+    "side": "block/cake_side",
+    "particle": "block/cake_inner"
+  },
+  "elements": [
+    {
+      "from": [11, 0, 1],
+      "to": [15, 8, 15],
+      "faces": {
+        "north": { "uv": [1, 8, 5, 16], "texture": "#side" },
+        "east": { "uv": [1, 8, 15, 16], "texture": "#side" },
+        "south": { "uv": [11, 8, 15, 16], "texture": "#side" },
+        "west": { "uv": [1, 8, 15, 16], "texture": "#3" },
+        "up": { "uv": [11, 1, 15, 15], "texture": "#top" },
+        "down": { "uv": [1, 1, 0, 15], "texture": "#bottom" }
+      }
+    }
+  ]
+}

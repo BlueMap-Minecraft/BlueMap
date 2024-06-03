@@ -27,12 +27,13 @@ repositories {
 
 dependencies {
     api ("com.mojang:brigadier:1.0.17")
+
     api ("de.bluecolored.bluemap:BlueMapCore")
 
     compileOnly ("org.jetbrains:annotations:16.0.2")
-    compileOnly ("org.projectlombok:lombok:1.18.30")
+    compileOnly ("org.projectlombok:lombok:1.18.32")
 
-    annotationProcessor ("org.projectlombok:lombok:1.18.30")
+    annotationProcessor ("org.projectlombok:lombok:1.18.32")
 
     testImplementation ("org.junit.jupiter:junit-jupiter:5.8.2")
     testRuntimeOnly ("org.junit.jupiter:junit-jupiter-engine:5.8.2")
@@ -69,12 +70,14 @@ tasks.test {
     useJUnitPlatform()
 }
 
-tasks.register("buildWebapp", type = NpmTask::class) {
+tasks.clean {
     doFirst {
         if (!file("webapp/dist/").deleteRecursively())
             throw IOException("Failed to delete build directory!")
     }
+}
 
+tasks.register("buildWebapp", type = NpmTask::class) {
     dependsOn ("npmInstall")
     args.set(listOf("run", "build"))
 
@@ -88,7 +91,6 @@ tasks.register("zipWebapp", type = Zip::class) {
     archiveFileName.set("webapp.zip")
     destinationDirectory.set(file("src/main/resources/de/bluecolored/bluemap/"))
 
-    //outputs.upToDateWhen { false }
     inputs.dir("webapp/dist/")
     outputs.file("src/main/resources/de/bluecolored/bluemap/webapp.zip")
 }

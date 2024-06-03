@@ -60,12 +60,10 @@ repositories {
 
 @Suppress("GradlePackageUpdate")
 dependencies {
-    api ("com.github.ben-manes.caffeine:caffeine:2.8.5")
-    api ("org.apache.commons:commons-lang3:3.6")
-    api ("commons-io:commons-io:2.5")
+    api ("com.github.ben-manes.caffeine:caffeine:3.1.8")
     api ("org.spongepowered:configurate-hocon:4.1.2")
     api ("org.spongepowered:configurate-gson:4.1.2")
-    api ("de.bluecolored.bluenbt:BlueNBT:2.2.1")
+    api ("de.bluecolored.bluenbt:BlueNBT:2.3.0")
     api ("org.apache.commons:commons-dbcp2:2.9.0")
     api ("io.airlift:aircompressor:0.24")
     api ("org.lz4:lz4-java:1.8.0")
@@ -73,14 +71,14 @@ dependencies {
     api ("de.bluecolored.bluemap:BlueMapAPI")
 
     compileOnly ("org.jetbrains:annotations:23.0.0")
-    compileOnly ("org.projectlombok:lombok:1.18.30")
+    compileOnly ("org.projectlombok:lombok:1.18.32")
 
-    annotationProcessor ("org.projectlombok:lombok:1.18.30")
+    annotationProcessor ("org.projectlombok:lombok:1.18.32")
 
     testImplementation ("org.junit.jupiter:junit-jupiter:5.8.2")
     testRuntimeOnly ("org.junit.jupiter:junit-jupiter-engine:5.8.2")
-    testCompileOnly ("org.projectlombok:lombok:1.18.30")
-    testAnnotationProcessor ("org.projectlombok:lombok:1.18.30")
+    testCompileOnly ("org.projectlombok:lombok:1.18.32")
+    testAnnotationProcessor ("org.projectlombok:lombok:1.18.32")
 }
 
 spotless {
@@ -121,28 +119,11 @@ tasks.processResources {
     }
 }
 
-//resource Extensions
-val resourceIds: Array<String> = arrayOf(
-    "1_13", "1_15", "1_16", "1_18", "1_20_3"
-)
-
-tasks.register("zipResourceExtensions") {
-    resourceIds.forEach {
-        dependsOn("zipResourceExtensions$it")
-    }
-}
-
-resourceIds.forEach {
-    zipResourcesTask(it)
-}
-
-fun zipResourcesTask(resourceId: String) {
-    tasks.register ("zipResourceExtensions$resourceId", type = Zip::class) {
-        from(fileTree("src/main/resourceExtensions/mc$resourceId"))
-        archiveFileName.set("resourceExtensions.zip")
-        destinationDirectory.set(file("src/main/resources/de/bluecolored/bluemap/mc$resourceId/"))
-        outputs.upToDateWhen{ false }
-    }
+tasks.register("zipResourceExtensions", type = Zip::class) {
+    from(fileTree("src/main/resourceExtensions"))
+    archiveFileName.set("resourceExtensions.zip")
+    destinationDirectory.set(file("src/main/resources/de/bluecolored/bluemap/"))
+    outputs.upToDateWhen{ false }
 }
 
 //always update the zip before build

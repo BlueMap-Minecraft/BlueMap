@@ -1,0 +1,195 @@
+buildscript {
+	repositories {
+		// These repositories are only for Gradle plugins, put any other repositories in the repository block further below
+		maven { url = 'https://maven.minecraftforge.net' }
+		mavenCentral()
+	}
+	dependencies {
+		classpath group: 'net.minecraftforge.gradle', name: 'ForgeGradle', version: '[6.0.24,6.2)', changing: true
+	}
+}
+
+plugins {
+	id "java"
+	id "java-library"
+	id "com.diffplug.spotless" version "6.1.2"
+	id "com.github.node-gradle.node" version "3.0.1"
+	id "com.github.johnrengelman.shadow" version "8.1.1"
+	id "com.modrinth.minotaur" version "2.+"
+	id "com.matthewprenger.cursegradle" version "1.4.0"
+}
+
+apply plugin: "net.minecraftforge.gradle"
+
+group = "de.bluecolored.bluemap"
+version = System.getProperty("bluemap.version") ?: "?" // set by BlueMapCore
+archivesBaseName = 'bluemap'
+
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+minecraft {
+	mappings channel: 'official', version: '1.20.6'
+
+	reobf = false
+
+	runs {
+		server {
+			workingDirectory project.file('run')
+			property 'forge.logging.markers', 'REGISTRIES'
+			property 'forge.logging.console.level', 'debug'
+
+			mods {
+				bluemap {
+					source sourceSets.main
+				}
+			}
+		}
+	}
+}
+
+sourceSets.main.resources { srcDir 'src/generated/resources' }
+
+repositories {
+	mavenCentral()
+	maven { url = "https://libraries.minecraft.net" }
+	maven { url = "https://repo.bluecolored.de/releases" }
+}
+
+configurations {
+	implementation.extendsFrom(shadowInclude)
+}
+
+dependencies {
+	minecraft 'net.minecraftforge:forge:1.20.6-50.0.13'
+
+	shadowInclude ("de.bluecolored.bluemap:BlueMapCommon") {
+		//exclude dependencies provided by forge
+		exclude (group: "com.google.guava", module: "guava")
+		exclude (group: "com.google.code.gson", module: "gson")
+		exclude (group: "com.mojang", module: "brigadier")
+	}
+
+	testImplementation ("org.junit.jupiter:junit-jupiter:5.8.2")
+	testRuntimeOnly ("org.junit.jupiter:junit-jupiter-engine:5.8.2")
+}
+
+spotless {
+	java {
+		target ("src/*/java/**/*.java")
+
+		licenseHeaderFile("../../HEADER")
+		indentWithSpaces()
+		trimTrailingWhitespace()
+	}
+}
+
+jar {
+	manifest {
+		attributes([
+				"Specification-Title"     : "bluemap",
+				"Specification-Vendor"    : "bluemap",
+				"Specification-Version"   : "1", // We are version 1 of ourselves
+				"Implementation-Title"    : project.name,
+				"Implementation-Version"  : project.jar.archiveVersion,
+				"Implementation-Vendor"   : "bluemap",
+				"Implementation-Timestamp": new Date().format("yyyy-MM-dd'T'HH:mm:ssZ")
+		])
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	options.encoding = "utf-8"
+}
+
+tasks.withType(AbstractArchiveTask).configureEach {
+	setReproducibleFileOrder(true)
+	setPreserveFileTimestamps(false)
+}
+
+test {
+	useJUnitPlatform()
+}
+
+shadowJar {
+	def version = System.getProperty("bluemap.version") ?: "" // set by BlueMapCore
+	destinationDirectory.set(file("../../build/release"))
+	archiveFileName.set("BlueMap-${project.version}-${project.name}.jar")
+
+	configurations = [project.configurations.shadowInclude]
+
+	//relocate ("com.flowpowered.math", "de.bluecolored.shadow.flowpowered.math") //DON"T relocate this, because the API depends on it
+	relocate ("com.typesafe.config", "de.bluecolored.shadow.typesafe.config")
+	relocate ("de.bluecolored.bluenbt", "de.bluecolored.shadow.bluenbt")
+	relocate ("org.spongepowered.configurate", "de.bluecolored.shadow.configurate")
+	relocate ("com.github.benmanes.caffeine", "de.bluecolored.shadow.benmanes.caffeine")
+	relocate ("org.aopalliance", "de.bluecolored.shadow.aopalliance")
+	relocate ("javax.inject", "de.bluecolored.shadow.javax.inject")
+	relocate ("org.checkerframework", "de.bluecolored.shadow.checkerframework")
+	relocate ("org.codehaus", "de.bluecolored.shadow.codehaus")
+	relocate ("io.leangen.geantyref", "de.bluecolored.shadow.geantyref")
+	relocate ("io.airlift", "de.bluecolored.shadow.airlift")
+	relocate ("net.jpountz", "de.bluecolored.shadow.jpountz")
+
+	relocate ("com.google.errorprone", "de.bluecolored.shadow.google.errorprone")
+	relocate ("com.google.inject", "de.bluecolored.shadow.google.inject")
+
+	relocate ("org.apache.commons.dbcp2", "de.bluecolored.shadow.apache.commons.dbcp2")
+	relocate ("org.apache.commons.logging", "de.bluecolored.shadow.apache.commons.logging")
+	relocate ("org.apache.commons.pool2", "de.bluecolored.shadow.apache.commons.pool2")
+}
+
+processResources {
+	from(sourceSets.main.resources.srcDirs) {
+		include 'mcmod.info','META-INF/mods.toml'
+		duplicatesStrategy = DuplicatesStrategy.WARN
+
+		expand (
+				version: project.version
+		)
+	}
+}
+
+task release {
+	dependsOn(shadowJar)
+}
+
+modrinth {
+	token = System.getenv("MODRINTH_TOKEN")
+	projectId = "swbUV1cr"
+	versionNumber = "${project.version}-${project.name}"
+	changelog = file("../../release.md")
+			.getText()
+			.replace("{version}", project.version.toString())
+	uploadFile = shadowJar
+	gameVersions = ["1.20.6"]
+}
+
+curseforge {
+	apiKey = System.getenv("CURSEFORGE_TOKEN") ?: ""
+	project {
+		id = "406463"
+		changelogType = "markdown"
+		changelog = file("../../release.md")
+				.getText()
+				.replace("{version}", project.version.toString())
+		releaseType = "release"
+
+		addGameVersion "Forge"
+
+		addGameVersion "Java 21"
+
+		addGameVersion "1.20.6"
+
+		mainArtifact shadowJar
+	}
+	options {
+		javaVersionAutoDetect = false
+		javaIntegration = false
+		forgeGradleIntegration = false
+	}
+}
+
+task publish {
+	dependsOn(tasks.findByName("modrinth"))
+	dependsOn(tasks.findByName("curseforge"))
+}

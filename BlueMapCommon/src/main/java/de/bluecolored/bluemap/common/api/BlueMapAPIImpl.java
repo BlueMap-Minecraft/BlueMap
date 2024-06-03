@@ -29,27 +29,44 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.BlueMapWorld;
+import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.world.World;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 public class BlueMapAPIImpl extends BlueMapAPI {
 
-    private final Plugin plugin;
+    private final BlueMapService blueMapService;
+    private final @Nullable Plugin plugin;
+
+    private final WebAppImpl webAppImpl;
+    private final @Nullable RenderManagerImpl renderManagerImpl;
+    private final @Nullable PluginImpl pluginImpl;
+
     private final LoadingCache<Object, Optional<BlueMapWorld>> worldCache;
     private final LoadingCache<String, Optional<BlueMapMap>> mapCache;
 
     public BlueMapAPIImpl(Plugin plugin) {
+        this(plugin.getBlueMap(), plugin);
+    }
+
+    public BlueMapAPIImpl(BlueMapService blueMapService, @Nullable Plugin plugin) {
+        this.blueMapService = blueMapService;
         this.plugin = plugin;
+
+        this.renderManagerImpl = plugin != null ? new RenderManagerImpl(this, plugin) : null;
+        this.webAppImpl = new WebAppImpl(blueMapService, plugin);
+        this.pluginImpl = plugin != null ? new PluginImpl(plugin) : null;
+
         this.worldCache = Caffeine.newBuilder()
                 .executor(BlueMap.THREAD_POOL)
                 .weakKeys()
@@ -61,23 +78,8 @@ public class BlueMapAPIImpl extends BlueMapAPI {
     }
 
     @Override
-    public RenderManagerImpl getRenderManager() {
-        return new RenderManagerImpl(this, plugin);
-    }
-
-    @Override
-    public WebAppImpl getWebApp() {
-        return new WebAppImpl(plugin);
-    }
-
-    @Override
-    public de.bluecolored.bluemap.api.plugin.Plugin getPlugin() {
-        return new PluginImpl(plugin);
-    }
-
-    @Override
     public Collection<BlueMapMap> getMaps() {
-        Map<String, BmMap> maps = plugin.getBlueMap().getMaps();
+        Map<String, BmMap> maps = blueMapService.getMaps();
         return maps.keySet().stream()
                 .map(this::getMap)
                 .filter(Optional::isPresent)
@@ -87,7 +89,7 @@ public class BlueMapAPIImpl extends BlueMapAPI {
 
     @Override
     public Collection<BlueMapWorld> getWorlds() {
-        Map<String, World> worlds = plugin.getBlueMap().getWorlds();
+        Map<String, World> worlds = blueMapService.getWorlds();
         return worlds.keySet().stream()
                 .map(this::getWorld)
                 .filter(Optional::isPresent)
@@ -103,14 +105,15 @@ public class BlueMapAPIImpl extends BlueMapAPI {
     public Optional<BlueMapWorld> getWorldUncached(Object world) {
 
         if (world instanceof String) {
-            var coreWorld = plugin.getBlueMap().getWorlds().get(world);
+            var coreWorld = blueMapService.getWorlds().get(world);
             if (coreWorld != null) world = coreWorld;
         }
 
-        if (world instanceof World) {
-            var coreWorld = (World) world;
-            return Optional.of(new BlueMapWorldImpl(plugin, coreWorld));
+        if (world instanceof World coreWorld) {
+            return Optional.of(new BlueMapWorldImpl(coreWorld, blueMapService, plugin));
         }
+
+        if (plugin == null) return Optional.empty();
 
         ServerWorld serverWorld = plugin.getServerInterface().getServerWorld(world).orElse(null);
         if (serverWorld == null) return Optional.empty();
@@ -118,7 +121,8 @@ public class BlueMapAPIImpl extends BlueMapAPI {
         World coreWorld = plugin.getWorld(serverWorld);
         if (coreWorld == null) return Optional.empty();
 
-        return Optional.of(new BlueMapWorldImpl(plugin, coreWorld));
+        return Optional.of(new BlueMapWorldImpl(coreWorld, blueMapService, plugin));
+
     }
 
     @Override
@@ -127,7 +131,7 @@ public class BlueMapAPIImpl extends BlueMapAPI {
     }
 
     public Optional<BlueMapMap> getMapUncached(String id) {
-        var maps = plugin.getBlueMap().getMaps();
+        var maps = blueMapService.getMaps();
 
         var map = maps.get(id);
         if (map == null) return Optional.empty();
@@ -135,7 +139,7 @@ public class BlueMapAPIImpl extends BlueMapAPI {
         var world = getWorld(map.getWorld()).orElse(null);
         if (world == null) return Optional.empty();
 
-        return Optional.of(new BlueMapMapImpl(plugin, map, (BlueMapWorldImpl) world));
+        return Optional.of(new BlueMapMapImpl(map, (BlueMapWorldImpl) world, plugin));
     }
 
     @Override
@@ -143,10 +147,27 @@ public class BlueMapAPIImpl extends BlueMapAPI {
         return BlueMap.VERSION;
     }
 
+    @Override
+    public WebAppImpl getWebApp() {
+        return webAppImpl;
+    }
+
+    @Override
+    public RenderManagerImpl getRenderManager() {
+        if (renderManagerImpl == null) throw new UnsupportedOperationException("RenderManager API is not supported on this platform");
+        return renderManagerImpl;
+    }
+
+    @Override
+    public de.bluecolored.bluemap.api.plugin.Plugin getPlugin() {
+        if (pluginImpl == null) throw new UnsupportedOperationException("Plugin API is not supported on this platform");
+        return pluginImpl;
+    }
+
     public void register() {
         try {
             BlueMapAPI.registerInstance(this);
-        } catch (ExecutionException ex) {
+        } catch (Exception ex) {
             Logger.global.logError("BlueMapAPI: A BlueMapAPI listener threw an exception (onEnable)!", ex.getCause());
         }
     }
@@ -154,9 +175,31 @@ public class BlueMapAPIImpl extends BlueMapAPI {
     public void unregister() {
         try {
             BlueMapAPI.unregisterInstance(this);
-        } catch (ExecutionException ex) {
+        } catch (Exception ex) {
             Logger.global.logError("BlueMapAPI: A BlueMapAPI listener threw an exception (onDisable)!", ex.getCause());
         }
+    }
+
+    /**
+     * Easy-access method for addons depending on BlueMapCommon:<br>
+     * <blockquote><pre>
+     *     BlueMapService bluemap = ((BlueMapAPIImpl) blueMapAPI).blueMapService();
+     * </pre></blockquote>
+     */
+    @SuppressWarnings("unused")
+    public BlueMapService blueMapService() {
+        return blueMapService;
+    }
+
+    /**
+     * Easy-access method for addons depending on BlueMapCommon:<br>
+     * <blockquote><pre>
+     *     Plugin plugin = ((BlueMapAPIImpl) blueMapAPI).plugin();
+     * </pre></blockquote>
+     */
+    @SuppressWarnings("unused")
+    public @Nullable Plugin plugin() {
+        return plugin;
     }
 
 }

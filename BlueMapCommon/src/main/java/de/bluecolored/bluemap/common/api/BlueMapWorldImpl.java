@@ -26,9 +26,11 @@ package de.bluecolored.bluemap.common.api;
 
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.BlueMapWorld;
+import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.core.world.World;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.WeakReference;
 import java.nio.file.Path;
@@ -39,17 +41,15 @@ import java.util.stream.Collectors;
 public class BlueMapWorldImpl implements BlueMapWorld {
 
     private final String id;
-    private final WeakReference<Plugin> plugin;
     private final WeakReference<World> world;
+    private final WeakReference<BlueMapService> blueMapService;
+    private final WeakReference<Plugin> plugin;
 
-    public BlueMapWorldImpl(Plugin plugin, World world) {
+    public BlueMapWorldImpl(World world, BlueMapService blueMapService, @Nullable Plugin plugin) {
         this.id = world.getId();
-        this.plugin = new WeakReference<>(plugin);
         this.world = new WeakReference<>(world);
-    }
-
-    public World getWorld() {
-        return unpack(world);
+        this.blueMapService = new WeakReference<>(blueMapService);
+        this.plugin = new WeakReference<>(plugin);
     }
 
     @Override
@@ -70,11 +70,10 @@ public class BlueMapWorldImpl implements BlueMapWorld {
 
     @Override
     public Collection<BlueMapMap> getMaps() {
-        Plugin plugin = unpack(this.plugin);
         World world = unpack(this.world);
-        return plugin.getBlueMap().getMaps().values().stream()
+        return unpack(blueMapService).getMaps().values().stream()
                 .filter(map -> map.getWorld().equals(world))
-                .map(map -> new BlueMapMapImpl(plugin, map, this))
+                .map(map -> new BlueMapMapImpl(map, this, plugin.get()))
                 .collect(Collectors.toUnmodifiableSet());
     }
 
@@ -95,6 +94,16 @@ public class BlueMapWorldImpl implements BlueMapWorld {
 
     private <T> T unpack(WeakReference<T> ref) {
         return Objects.requireNonNull(ref.get(), "Reference lost to delegate object. Most likely BlueMap got reloaded and this instance is no longer valid.");
+    }
+
+    /**
+     * Easy-access method for addons depending on BlueMapCore:<br>
+     * <blockquote><pre>
+     *     World world = ((BlueMapWorldImpl) blueMapWorld).world();
+     * </pre></blockquote>
+     */
+    public World world() {
+        return unpack(world);
     }
 
 }

@@ -24,7 +24,7 @@
  */
 package de.bluecolored.bluemap.common.rendermanager;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
+import de.bluecolored.bluemap.common.debug.DebugDump;
 import de.bluecolored.bluemap.core.map.BmMap;
 
 import java.util.Objects;
@@ -55,19 +55,15 @@ public class MapPurgeTask implements RenderTask {
         // save lowres-tile-manager to clear/flush any buffered data
         this.map.getLowresTileManager().save();
 
-        try {
-            // purge the map
-            map.getStorage().delete(progress -> {
-                this.progress = progress;
-                return !this.cancelled;
-            });
+        // purge the map
+        map.getStorage().delete(progress -> {
+            this.progress = progress;
+            return !this.cancelled;
+        });
 
-            // reset texture gallery
-            map.resetTextureGallery();
-        } finally {
-            // reset renderstate
-            map.getRenderState().reset();
-        }
+        map.resetTextureGallery();
+        map.getMapTileState().reset();
+        map.getMapChunkState().reset();
     }
 
     @Override

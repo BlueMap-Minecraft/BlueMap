@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=east": { "model": "minecraft:entity/wall_banner", "y": 90 },
+    "facing=south": { "model": "minecraft:entity/wall_banner", "y": 180 },
+    "facing=west": { "model": "minecraft:entity/wall_banner", "y": 270 },
+    "facing=north": { "model": "minecraft:entity/wall_banner" }
+  }
+}

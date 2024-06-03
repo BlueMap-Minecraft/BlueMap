@@ -25,8 +25,9 @@
 package de.bluecolored.bluemap.core.world.block;
 
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
-import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.world.*;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
@@ -34,8 +35,7 @@ public class ExtendedBlock<T extends ExtendedBlock<T>> extends Block<T> {
     private final ResourcePack resourcePack;
     private final RenderSettings renderSettings;
 
-    private BlockProperties properties;
-    private Biome biome;
+    private @Nullable BlockProperties properties;
 
     private boolean insideRenderBoundsCalculated, insideRenderBounds;
     private boolean isCaveCalculated, isCave;
@@ -51,7 +51,6 @@ public class ExtendedBlock<T extends ExtendedBlock<T>> extends Block<T> {
         super.reset();
 
         this.properties = null;
-        this.biome = null;
 
         this.insideRenderBoundsCalculated = false;
         this.isCaveCalculated = false;
@@ -61,7 +60,6 @@ public class ExtendedBlock<T extends ExtendedBlock<T>> extends Block<T> {
         super.copy(source);
 
         this.properties = source.properties;
-        this.biome = source.biome;
 
         this.insideRenderBoundsCalculated = source.insideRenderBoundsCalculated;
         this.insideRenderBounds = source.insideRenderBounds;
@@ -88,11 +86,6 @@ public class ExtendedBlock<T extends ExtendedBlock<T>> extends Block<T> {
     public BlockProperties getProperties() {
         if (properties == null) properties = resourcePack.getBlockProperties(getBlockState());
         return properties;
-    }
-
-    public Biome getBiome() {
-        if (biome == null) biome = resourcePack.getBiome(getBiomeId());
-        return biome;
     }
 
     public RenderSettings getRenderSettings() {

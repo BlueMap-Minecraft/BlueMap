@@ -26,9 +26,9 @@ package de.bluecolored.bluemap.core.resources;
 
 import com.flowpowered.math.GenericMath;
 import com.google.gson.stream.JsonReader;
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.util.math.Color;
-import de.bluecolored.bluemap.core.world.Biome;
+import de.bluecolored.bluemap.core.world.biome.Biome;
+import de.bluecolored.bluemap.core.world.block.Block;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 
 import java.awt.image.BufferedImage;
@@ -39,16 +39,17 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-@DebugDump
 public class BlockColorCalculatorFactory {
 
+    private static final int BLEND_RADIUS_H = 2;
+    private static final int BLEND_RADIUS_V = 1;
     private static final int
-            AVERAGE_MIN_X = - 2,
-            AVERAGE_MAX_X =   2,
-            AVERAGE_MIN_Y = - 1,
-            AVERAGE_MAX_Y =   1,
-            AVERAGE_MIN_Z = - 2,
-            AVERAGE_MAX_Z =   2;
+            BLEND_MIN_X = - BLEND_RADIUS_H,
+            BLEND_MAX_X =   BLEND_RADIUS_H,
+            BLEND_MIN_Y = - BLEND_RADIUS_V,
+            BLEND_MAX_Y =   BLEND_RADIUS_V,
+            BLEND_MIN_Z = - BLEND_RADIUS_H,
+            BLEND_MAX_Z =   BLEND_RADIUS_H;
 
     private final int[] foliageMap = new int[65536];
     private final int[] grassMap = new int[65536];
@@ -73,13 +74,13 @@ public class BlockColorCalculatorFactory {
                 ColorFunction colorFunction;
                 switch (value) {
                     case "@foliage":
-                        colorFunction = BlockColorCalculator::getFoliageAverageColor;
+                        colorFunction = BlockColorCalculator::getBlendedFoliageColor;
                         break;
                     case "@grass":
-                        colorFunction = BlockColorCalculator::getGrassAverageColor;
+                        colorFunction = BlockColorCalculator::getBlendedGrassColor;
                         break;
                     case "@water":
-                        colorFunction = BlockColorCalculator::getWaterAverageColor;
+                        colorFunction = BlockColorCalculator::getBlendedWaterColor;
                         break;
                     case "@redstone":
                         colorFunction = BlockColorCalculator::getRedstoneColor;
@@ -120,17 +121,18 @@ public class BlockColorCalculatorFactory {
 
         private final Color tempColor = new Color();
 
+        @SuppressWarnings("UnusedReturnValue")
         public Color getBlockColor(BlockNeighborhood<?> block, Color target) {
             String blockId = block.getBlockState().getFormatted();
 
             ColorFunction colorFunction = blockColorMap.get(blockId);
             if (colorFunction == null) colorFunction = blockColorMap.get("default");
-            if (colorFunction == null) colorFunction = BlockColorCalculator::getFoliageAverageColor;
+            if (colorFunction == null) colorFunction = BlockColorCalculator::getBlendedFoliageColor;
 
             return colorFunction.invoke(this, block, target);
         }
 
-        public Color getRedstoneColor(BlockNeighborhood<?> block, Color target) {
+        public Color getRedstoneColor(Block<?> block, Color target) {
             int power = block.getBlockState().getRedstonePower();
             return target.set(
                     (power + 5f) / 20f, 0f, 0f,
@@ -138,15 +140,15 @@ public class BlockColorCalculatorFactory {
             );
         }
 
-        public Color getWaterAverageColor(BlockNeighborhood<?> block, Color target) {
+        public Color getBlendedWaterColor(BlockNeighborhood<?> block, Color target) {
             target.set(0, 0, 0, 0, true);
 
             int x, y, z;
 
             Biome biome;
-            for (y = AVERAGE_MIN_Y; y <= AVERAGE_MAX_Y; y++) {
-                for (x = AVERAGE_MIN_X; x <= AVERAGE_MAX_X; x++) {
-                    for (z = AVERAGE_MIN_Z; z <= AVERAGE_MAX_Z; z++) {
+            for (y = BLEND_MIN_Y; y <= BLEND_MAX_Y; y++) {
+                for (x = BLEND_MIN_X; x <= BLEND_MAX_X; x++) {
+                    for (z = BLEND_MIN_Z; z <= BLEND_MAX_Z; z++) {
                         biome = block.getNeighborBlock(x, y, z).getBiome();
                         target.add(biome.getWaterColor());
                     }
@@ -156,15 +158,15 @@ public class BlockColorCalculatorFactory {
             return target.flatten();
         }
 
-        public Color getFoliageAverageColor(BlockNeighborhood<?> block, Color target) {
+        public Color getBlendedFoliageColor(BlockNeighborhood<?> block, Color target) {
             target.set(0, 0, 0, 0, true);
 
             int x, y, z;
 
             Biome biome;
-            for (y = AVERAGE_MIN_Y; y <= AVERAGE_MAX_Y; y++) {
-                for (x = AVERAGE_MIN_X; x <= AVERAGE_MAX_X; x++) {
-                    for (z = AVERAGE_MIN_Z; z <= AVERAGE_MAX_Z; z++) {
+            for (y = BLEND_MIN_Y; y <= BLEND_MAX_Y; y++) {
+                for (x = BLEND_MIN_X; x <= BLEND_MAX_X; x++) {
+                    for (z = BLEND_MIN_Z; z <= BLEND_MAX_Z; z++) {
                         biome = block.getNeighborBlock(x, y, z).getBiome();
                         target.add(getFoliageColor(biome, tempColor));
                     }
@@ -179,17 +181,15 @@ public class BlockColorCalculatorFactory {
             return target.overlay(biome.getOverlayFoliageColor());
         }
 
-        public Color getGrassAverageColor(BlockNeighborhood<?> block, Color target) {
+        public Color getBlendedGrassColor(BlockNeighborhood<?> block, Color target) {
             target.set(0, 0, 0, 0, true);
 
             int x, y, z;
 
-            Biome biome;
-            for (y = AVERAGE_MIN_Y; y <= AVERAGE_MAX_Y; y++) {
-                for (x = AVERAGE_MIN_X; x <= AVERAGE_MAX_X; x++) {
-                    for (z = AVERAGE_MIN_Z; z <= AVERAGE_MAX_Z; z++) {
-                        biome = block.getNeighborBlock(x, y, z).getBiome();
-                        target.add(getGrassColor(biome, tempColor));
+            for (y = BLEND_MIN_Y; y <= BLEND_MAX_Y; y++) {
+                for (x = BLEND_MIN_X; x <= BLEND_MAX_X; x++) {
+                    for (z = BLEND_MIN_Z; z <= BLEND_MAX_Z; z++) {
+                        target.add(getGrassColor(block.getNeighborBlock(x, y, z), tempColor));
                     }
                 }
             }
@@ -197,19 +197,22 @@ public class BlockColorCalculatorFactory {
             return target.flatten();
         }
 
-        public Color getGrassColor(Biome biome, Color target) {
+        public Color getGrassColor(Block<?> block, Color target) {
+            Biome biome = block.getBiome();
             getColorFromMap(biome, grassMap, 0xff52952f, target);
-            return target.overlay(biome.getOverlayGrassColor());
+            target.overlay(biome.getOverlayGrassColor());
+            biome.getGrassColorModifier().apply(block, target);
+            return target;
         }
 
         private void getColorFromMap(Biome biome, int[] colorMap, int defaultColor, Color target) {
-            double temperature = GenericMath.clamp(biome.getTemp(), 0.0, 1.0);
-            double humidity = GenericMath.clamp(biome.getHumidity(), 0.0, 1.0);
+            double temperature = GenericMath.clamp(biome.getTemperature(), 0.0, 1.0);
+            double downfall = GenericMath.clamp(biome.getDownfall(), 0.0, 1.0);
 
-            humidity *= temperature;
+            downfall *= temperature;
 
             int x = (int) ((1.0 - temperature) * 255.0);
-            int y = (int) ((1.0 - humidity) * 255.0);
+            int y = (int) ((1.0 - downfall) * 255.0);
 
             int index = y << 8 | x;
             int color = (index >= colorMap.length ? defaultColor : colorMap[index]) | 0xFF000000;

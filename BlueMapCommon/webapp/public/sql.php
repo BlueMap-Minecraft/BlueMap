@@ -9,30 +9,27 @@ $username = 'root';
 $password = '';
 $database = 'bluemap';
 
-// set this to "none" if you disabled compression on your maps
-$hiresCompression = 'gzip';
-
 // !!! END - DONT CHANGE ANYTHING AFTER THIS LINE !!!
 
 
 
 
+// compression
+$compressionHeaderMap = [
+    "bluemap:none" => null,
+    "bluemap:gzip" => "gzip",
+    "bluemap:deflate" => "deflate",
+    "bluemap:zstd" => "zstd",
+    "bluemap:lz4" => "lz4"
+]
 
-// some helper functions
-function error($code, $message = null) {
-    global $path;
-
-    http_response_code($code);
-    header("Content-Type: text/plain");
-    echo "BlueMap php-script - $code\n";
-    if ($message != null) echo $message."\n";
-    echo "Requested Path: $path";
-    exit;
-}
-
-function startsWith($haystack, $needle) {
-    return substr($haystack, 0, strlen($needle)) === $needle;
-}
+// meta files
+$metaFileKeys = [
+    "settings.json" => "bluemap:settings",
+    "textures.json" => "bluemap:textures",
+    "live/markers.json" => "bluemap:markers",
+    "live/players.json" => "bluemap:players",
+]
 
 // mime-types for meta-files
 $mimeDefault = "application/octet-stream";
@@ -69,6 +66,34 @@ $mimeTypes = [
     "woff" => "font/woff",
     "woff2" => "font/woff2"
 ];
+
+// some helper functions
+function error($code, $message = null) {
+    global $path;
+
+    http_response_code($code);
+    header("Content-Type: text/plain");
+    echo "BlueMap php-script - $code\n";
+    if ($message != null) echo $message."\n";
+    echo "Requested Path: $path";
+    exit;
+}
+
+function startsWith($haystack, $needle) {
+    return substr($haystack, 0, strlen($needle)) === $needle;
+}
+
+function issetOrElse(& $var, $fallback) {
+    return isset($var) ? $var : $fallback;
+}
+
+function compressionHeader($compressionKey) {
+    global $compressionHeaderMap;
+
+    $compressionHeader = issetOrElse($compressionHeaderMap[$compressionKey], null);
+    if ($compressionHeader)
+        header("Content-Encoding: ".$compressionHeader);
+}
 
 function getMimeType($path) {
     global $mimeDefault, $mimeTypes;
@@ -122,10 +147,9 @@ if (startsWith($path, "/maps/")) {
 
     // Initialize PDO
     try {
-        $sql = new PDO("$driver:host=$hostname;dbname=$database", $username, $password);
+        $sql = new PDO("$driver:host=$hostname;port=$port;dbname=$database", $username, $password);
         $sql->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     } catch (PDOException $e ) { error(500, "Failed to connect to database"); }
-
 
     // provide map-tiles
     if (startsWith($mapPath, "tiles/")) {
@@ -133,44 +157,45 @@ if (startsWith($path, "/maps/")) {
         // parse tile-coordinates
         preg_match_all("/tiles\/([\d\/]+)\/x(-?[\d\/]+)z(-?[\d\/]+).*/", $mapPath, $matches);
         $lod = intval($matches[1][0]);
+        $storage = $lod === 0 ? "bluemap:hires" : "bluemap:lowres/".$lod
         $tileX = intval(str_replace("/", "", $matches[2][0]));
         $tileZ = intval(str_replace("/", "", $matches[3][0]));
-        $compression = $lod === 0 ? $hiresCompression : "none";
 
         // query for tile
         try {
             $statement = $sql->prepare("
-                SELECT t.data
-                FROM bluemap_map_tile t
+                SELECT d.data, c.compression
+                FROM bluemap_grid_storage_data d
                 INNER JOIN bluemap_map m
-                ON t.map = m.id
-                INNER JOIN bluemap_map_tile_compression c
-                ON t.compression = c.id
+                 ON d.map = m.id
+                INNER JOIN bluemap_grid_storage s
+                 ON d.storage = s.id
+                INNER JOIN bluemap_compression c
+                 ON d.compression = c.id
                 WHERE m.map_id = :map_id
-                AND t.lod = :lod
-                AND t.x = :x
-                AND t.z = :z
-                AND c.compression = :compression
+                 AND s.key = :storage
+                 AND d.x = :x
+                 AND d.z = :z
             ");
             $statement->bindParam( ':map_id', $mapId, PDO::PARAM_STR );
-            $statement->bindParam( ':lod', $lod, PDO::PARAM_INT );
+            $statement->bindParam( ':storage', $storage, PDO::PARAM_STR );
             $statement->bindParam( ':x', $tileX, PDO::PARAM_INT );
             $statement->bindParam( ':z', $tileZ, PDO::PARAM_INT );
-            $statement->bindParam( ':compression', $compression, PDO::PARAM_STR);
+            $statement->bindParam( ':compression', $compression, PDO::PARAM_STR );
             $statement->setFetchMode(PDO::FETCH_ASSOC);
             $statement->execute();
 
             // return result
             if ($line = $statement->fetch()) {
                 header("Cache-Control: public,max-age=86400");
+                compressionHeader($line["compression"]);
 
-                if ($compression !== "none")
-                    header("Content-Encoding: $compression");
                 if ($lod === 0) {
                     header("Content-Type: application/octet-stream");
                 } else {
                     header("Content-Type: image/png");
                 }
+
                 send($line["data"]);
                 exit;
             }
@@ -183,27 +208,39 @@ if (startsWith($path, "/maps/")) {
     }
 
     // provide meta-files
-    try {
-        $statement = $sql->prepare("
-            SELECT t.value
-            FROM bluemap_map_meta t
-            INNER JOIN bluemap_map m
-            ON t.map = m.id
-            WHERE m.map_id = :map_id
-            AND t.key = :map_path
-        ");
-        $statement->bindParam( ':map_id', $mapId, PDO::PARAM_STR );
-        $statement->bindParam( ':map_path', $mapPath, PDO::PARAM_STR );
-        $statement->setFetchMode(PDO::FETCH_ASSOC);
-        $statement->execute();
+    $storage = issetOrElse($metaFileKeys[$mapPath], null);
+    if ($storage === null && startsWith($mapPath, "assets/"))
+        $storage = "bluemap:asset/".substr($mapPath, strlen("assets/"));
 
-        if ($line = $statement->fetch()) {
-            header("Cache-Control: public,max-age=86400");
-            header("Content-Type: ".getMimeType($mapPath));
-            send($line["value"]);
-            exit;
-        }
-    } catch (PDOException $e) { error(500, "Failed to fetch data"); }
+    if ($storage !== null) {
+        try {
+            $statement = $sql->prepare("
+                SELECT d.data, c.compression
+                FROM bluemap_item_storage_data d
+                INNER JOIN bluemap_map m
+                 ON d.map = m.id
+                INNER JOIN bluemap_item_storage s
+                 ON d.storage = s.id
+                INNER JOIN bluemap_compression c
+                 ON d.compression = c.id
+                WHERE m.map_id = :map_id
+                 AND s.key = :storage
+            ");
+            $statement->bindParam( ':map_id', $mapId, PDO::PARAM_STR );
+            $statement->bindParam( ':storage', $storage, PDO::PARAM_STR );
+            $statement->setFetchMode(PDO::FETCH_ASSOC);
+            $statement->execute();
+
+            if ($line = $statement->fetch()) {
+                header("Cache-Control: public,max-age=86400");
+                header("Content-Type: ".getMimeType($mapPath));
+                compressionHeader($line["compression"]);
+
+                send($line["data"]);
+                exit;
+            }
+        } catch (PDOException $e) { error(500, "Failed to fetch data"); }
+    }
 
 }
 

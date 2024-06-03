@@ -299,15 +299,17 @@ export class BlueMapApp {
 
         // create maps
         if (settings.maps !== undefined){
-            for (let mapId of settings.maps) {
+            let loadingPromises = settings.maps.map(mapId => {
                 let map = new BlueMapMap(mapId, this.dataUrl + mapId + "/", this.loadBlocker, this.mapViewer.events);
                 maps.push(map);
 
-                await map.loadSettings(this.mapViewer.tileCacheHash)
+                return map.loadSettings(this.mapViewer.tileCacheHash)
                     .catch(error => {
                         alert(this.events, `Failed to load settings for map '${map.data.id}':` + error, "warning");
                     });
-            }
+            })
+
+            await Promise.all(loadingPromises);
         }
 
         // sort maps
@@ -523,6 +525,10 @@ export class BlueMapApp {
         this.appState.controls.state = "free";
     }
 
+    setChunkBorders(chunkBorders) {
+        this.mapViewer.data.uniforms.chunkBorders.value = chunkBorders;
+    }
+
     setDebug(debug) {
         this.appState.debug = debug;
 
@@ -606,6 +612,7 @@ export class BlueMapApp {
         this.setTheme(this.loadUserSetting("theme", this.appState.theme));
         this.setScreenshotClipboard(this.loadUserSetting("screenshotClipboard", this.appState.screenshot.clipboard));
         await setLanguage(this.loadUserSetting("lang", i18n.locale.value));
+        this.setChunkBorders(this.loadUserSetting("chunkBorders", this.mapViewer.data.uniforms.chunkBorders.value))
         this.setDebug(this.loadUserSetting("debug", this.appState.debug));
 
         alert(this.events, "Settings loaded!", "info");
@@ -627,6 +634,7 @@ export class BlueMapApp {
         this.saveUserSetting("theme", this.appState.theme);
         this.saveUserSetting("screenshotClipboard", this.appState.screenshot.clipboard);
         this.saveUserSetting("lang", i18n.locale.value);
+        this.saveUserSetting("chunkBorders", this.mapViewer.data.uniforms.chunkBorders.value);
         this.saveUserSetting("debug", this.appState.debug);
 
         alert(this.events, "Settings saved!", "info");

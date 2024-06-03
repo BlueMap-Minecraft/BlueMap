@@ -25,16 +25,16 @@
 package de.bluecolored.bluemap.common.api;
 
 import com.flowpowered.math.vector.Vector2i;
+import de.bluecolored.bluemap.api.AssetStorage;
 import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.BlueMapWorld;
-import de.bluecolored.bluemap.api.AssetStorage;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
 import de.bluecolored.bluemap.core.map.BmMap;
+import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.Objects;
@@ -42,27 +42,16 @@ import java.util.function.Predicate;
 
 public class BlueMapMapImpl implements BlueMapMap {
 
-    private final WeakReference<Plugin> plugin;
+    private final String mapId;
     private final WeakReference<BmMap> map;
     private final BlueMapWorldImpl world;
-    private final String mapId;
+    private final WeakReference<Plugin> plugin;
 
-    public BlueMapMapImpl(Plugin plugin, BmMap map) throws IOException {
-        this.plugin = new WeakReference<>(plugin);
-        this.map = new WeakReference<>(map);
-        this.world = new BlueMapWorldImpl(plugin, map.getWorld());
+    public BlueMapMapImpl(BmMap map, BlueMapWorldImpl world, @Nullable Plugin plugin) {
         this.mapId = map.getId();
-    }
-
-    public BlueMapMapImpl(Plugin plugin, BmMap map, BlueMapWorldImpl world) {
-        this.plugin = new WeakReference<>(plugin);
         this.map = new WeakReference<>(map);
         this.world = world;
-        this.mapId = map.getId();
-    }
-
-    public BmMap getBmMap() {
-        return unpack(map);
+        this.plugin = new WeakReference<>(plugin);
     }
 
     @Override
@@ -122,7 +111,9 @@ public class BlueMapMapImpl implements BlueMapMap {
     }
 
     private synchronized void unfreeze() {
-        Plugin plugin = unpack(this.plugin);
+        Plugin plugin = this.plugin.get();
+        if (plugin == null) return; // fail silently: not supported on non-plugin platforms
+
         BmMap map = unpack(this.map);
         plugin.startWatchingMap(map);
         plugin.getPluginState().getMapState(map).setUpdateEnabled(true);
@@ -130,7 +121,9 @@ public class BlueMapMapImpl implements BlueMapMap {
     }
 
     private synchronized void freeze() {
-        Plugin plugin = unpack(this.plugin);
+        Plugin plugin = this.plugin.get();
+        if (plugin == null) return; // fail silently: not supported on non-plugin platforms
+
         BmMap map = unpack(this.map);
         plugin.stopWatchingMap(map);
         plugin.getPluginState().getMapState(map).setUpdateEnabled(false);
@@ -147,7 +140,10 @@ public class BlueMapMapImpl implements BlueMapMap {
 
     @Override
     public boolean isFrozen() {
-        return !unpack(plugin).getPluginState().getMapState(unpack(map)).isUpdateEnabled();
+        Plugin plugin = this.plugin.get();
+        if (plugin == null) return false; // fail silently: not supported on non-plugin platforms
+
+        return !plugin.getPluginState().getMapState(unpack(map)).isUpdateEnabled();
     }
 
     @Override
@@ -167,6 +163,16 @@ public class BlueMapMapImpl implements BlueMapMap {
 
     private <T> T unpack(WeakReference<T> ref) {
         return Objects.requireNonNull(ref.get(), "Reference lost to delegate object. Most likely BlueMap got reloaded and this instance is no longer valid.");
+    }
+
+    /**
+     * Easy-access method for addons depending on BlueMapCore:<br>
+     * <blockquote><pre>
+     *     BmMap map = ((BlueMapMapImpl) blueMapMap).map();
+     * </pre></blockquote>
+     */
+    public BmMap map() {
+        return unpack(map);
     }
 
 }

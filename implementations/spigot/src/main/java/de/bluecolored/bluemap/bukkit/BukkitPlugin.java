@@ -28,11 +28,10 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.serverinterface.Player;
-import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.Server;
+import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
-import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.util.Key;
 import org.bstats.bukkit.Metrics;
@@ -62,7 +61,7 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
     private final Plugin pluginInstance;
     private final EventForwarder eventForwarder;
     private final BukkitCommands commands;
-    private final MinecraftVersion minecraftVersion;
+    private final String minecraftVersion;
 
     private int playerUpdateIndex = 0;
     private final Map<UUID, Player> onlinePlayerMap;
@@ -75,14 +74,14 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
         Logger.global.put(new JavaLogger(getLogger()));
 
         //try to get best matching minecraft-version
-        MinecraftVersion version = MinecraftVersion.LATEST_SUPPORTED;
+        String version = null;
         try {
             String versionString = getServer().getBukkitVersion();
             Matcher versionMatcher = Pattern.compile("(\\d+(?:\\.\\d+){1,2})[-_].*").matcher(versionString);
             if (!versionMatcher.matches()) throw new IllegalArgumentException();
-            version = MinecraftVersion.of(versionMatcher.group(1));
+            version = versionMatcher.group(1);
         } catch (IllegalArgumentException e) {
-            Logger.global.logWarning("Failed to detect the minecraft version of this server! Using latest version: " + version.getVersionString());
+            Logger.global.logWarning("Failed to detect the minecraft version of this server! Using latest version.");
         }
         this.minecraftVersion = version;
 
@@ -169,8 +168,8 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
     }
 
     @Override
-    public MinecraftVersion getMinecraftVersion() {
-        return minecraftVersion;
+    public String getMinecraftVersion() {
+        return this.minecraftVersion;
     }
 
     @Override

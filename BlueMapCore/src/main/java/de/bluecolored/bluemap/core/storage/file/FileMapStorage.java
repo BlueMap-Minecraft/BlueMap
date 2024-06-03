@@ -24,49 +24,126 @@
  */
 package de.bluecolored.bluemap.core.storage.file;
 
-import de.bluecolored.bluemap.core.storage.compression.CompressedInputStream;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+import de.bluecolored.bluemap.core.storage.GridStorage;
+import de.bluecolored.bluemap.core.storage.ItemStorage;
+import de.bluecolored.bluemap.core.storage.MapStorage;
 import de.bluecolored.bluemap.core.storage.compression.Compression;
-import de.bluecolored.bluemap.core.storage.SingleItemStorage;
 import de.bluecolored.bluemap.core.util.DeletingPathVisitor;
-import de.bluecolored.bluemap.core.util.FileHelper;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.function.DoublePredicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-@Getter
-public class FileMapStorage extends PathBasedMapStorage {
+public class FileMapStorage implements MapStorage {
+
+    private static final String TILES_PATH = "tiles";
+    private static final String RENDER_STATE_PATH = "rstate";
+    private static final String LIVE_PATH = "live";
 
     private final Path root;
+    private final Compression compression;
+    private final boolean atomic;
 
-    public FileMapStorage(Path root, Compression compression) {
-        super(
-                compression,
-                ".prbm",
-                ".png"
-        );
+    private final GridStorage hiresGridStorage;
+    private final LoadingCache<Integer, GridStorage> lowresGridStorages;
+    private final GridStorage tileStateStorage;
+    private final GridStorage chunkStateStorage;
+
+    public FileMapStorage(Path root, Compression compression, boolean atomic) {
         this.root = root;
+        this.compression = compression;
+        this.atomic = atomic;
+
+        this.hiresGridStorage = new FileGridStorage(
+                root.resolve(TILES_PATH).resolve("0"),
+                ".prbm" + compression.getFileSuffix(),
+                compression,
+                atomic
+        );
+
+        this.lowresGridStorages = Caffeine.newBuilder().build(lod -> new FileGridStorage(
+                root.resolve(TILES_PATH).resolve(String.valueOf(lod)),
+                ".png",
+                Compression.NONE,
+                atomic
+        ));
+
+        this.tileStateStorage = new FileGridStorage(
+                root.resolve(RENDER_STATE_PATH),
+                ".tiles.dat",
+                Compression.GZIP,
+                atomic
+        );
+
+        this.chunkStateStorage = new FileGridStorage(
+                root.resolve(RENDER_STATE_PATH).resolve(""),
+                ".chunks.dat",
+                Compression.GZIP,
+                atomic
+        );
+
     }
 
     @Override
-    public SingleItemStorage file(Path file, Compression compression) {
-        return new FileItemStorage(root.resolve(file), compression);
+    public GridStorage hiresTiles() {
+        return hiresGridStorage;
     }
 
     @Override
-    @SuppressWarnings("resource")
-    public Stream<Path> files(Path path) throws IOException {
-        return Files.walk(root.resolve(path))
-                .filter(Files::isRegularFile);
+    public GridStorage lowresTiles(int lod) {
+        return lowresGridStorages.get(lod);
+    }
+
+    @Override
+    public GridStorage tileState() {
+        return tileStateStorage;
+    }
+
+    @Override
+    public GridStorage chunkState() {
+        return chunkStateStorage;
+    }
+
+    public Path getAssetPath(String name) {
+        String[] parts = MapStorage.escapeAssetName(name)
+                .split("/");
+
+        Path assetPath = root.resolve("assets");
+        for (String part : parts)
+            assetPath = assetPath.resolve(part);
+
+        return assetPath;
+    }
+
+    @Override
+    public ItemStorage asset(String name) {
+        return new FileItemStorage(getAssetPath(name), Compression.NONE, atomic);
+    }
+
+    @Override
+    public ItemStorage settings() {
+        return new FileItemStorage(root.resolve("settings.json"), Compression.NONE, atomic);
+    }
+
+    @Override
+    public ItemStorage textures() {
+        return new FileItemStorage(root.resolve("textures.json" + compression.getFileSuffix()), compression, atomic);
+    }
+
+    @Override
+    public ItemStorage markers() {
+        return new FileItemStorage(root.resolve(LIVE_PATH).resolve("markers.json"), Compression.NONE, atomic);
+    }
+
+    @Override
+    public ItemStorage players() {
+        return new FileItemStorage(root.resolve(LIVE_PATH).resolve("players.json"), Compression.NONE, atomic);
     }
 
     @Override
@@ -105,44 +182,6 @@ public class FileMapStorage extends PathBasedMapStorage {
     @Override
     public boolean isClosed() {
         return false;
-    }
-
-    @RequiredArgsConstructor
-    private static class FileItemStorage implements SingleItemStorage {
-
-        private final Path file;
-        private final Compression compression;
-
-        @Override
-        public OutputStream write() throws IOException {
-            return compression.compress(FileHelper.createFilepartOutputStream(file));
-        }
-
-        @Override
-        public CompressedInputStream read() throws IOException {
-            if (!Files.exists(file)) return null;
-            try {
-                return new CompressedInputStream(Files.newInputStream(file), compression);
-            } catch (FileNotFoundException | NoSuchFileException ex) {
-                return null;
-            }
-        }
-
-        @Override
-        public void delete() throws IOException {
-            Files.delete(file);
-        }
-
-        @Override
-        public boolean exists() {
-            return Files.exists(file);
-        }
-
-        @Override
-        public boolean isClosed() {
-            return false;
-        }
-
     }
 
 }

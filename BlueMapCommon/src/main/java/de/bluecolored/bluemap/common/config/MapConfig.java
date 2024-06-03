@@ -26,7 +26,6 @@ package de.bluecolored.bluemap.common.config;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.map.MapSettings;
 import de.bluecolored.bluemap.core.util.Key;
 import lombok.AccessLevel;
@@ -38,7 +37,6 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import java.nio.file.Path;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
-@DebugDump
 @ConfigSerializable
 @Getter
 public class MapConfig implements MapSettings {

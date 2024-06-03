@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.common.config;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import java.nio.file.Path;
@@ -33,7 +32,6 @@ import java.util.Optional;
 import java.util.Set;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
-@DebugDump
 @ConfigSerializable
 public class WebappConfig {
 

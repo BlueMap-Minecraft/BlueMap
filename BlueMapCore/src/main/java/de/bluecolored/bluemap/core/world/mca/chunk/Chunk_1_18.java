@@ -26,21 +26,22 @@ package de.bluecolored.bluemap.core.world.mca.chunk;
 
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.util.Key;
-import de.bluecolored.bluemap.core.world.Biome;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.DimensionType;
 import de.bluecolored.bluemap.core.world.LightData;
+import de.bluecolored.bluemap.core.world.biome.Biome;
 import de.bluecolored.bluemap.core.world.block.entity.BlockEntity;
 import de.bluecolored.bluemap.core.world.mca.MCAUtil;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 import de.bluecolored.bluemap.core.world.mca.PackedIntArrayAccess;
+import de.bluecolored.bluemap.core.world.mca.data.LenientBlockEntityArrayDeserializer;
+import de.bluecolored.bluenbt.NBTDeserializer;
 import de.bluecolored.bluenbt.NBTName;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class Chunk_1_18 extends MCAChunk {
 
@@ -99,7 +100,7 @@ public class Chunk_1_18 extends MCAChunk {
             // load sections into ordered array
             this.sections = new Section[1 + max - min];
             for (SectionData sectionData : sectionsData) {
-                Section section = new Section(sectionData);
+                Section section = new Section(getWorld(), sectionData);
                 int y = section.getSectionY();
 
                 if (min > y) min = y;
@@ -116,9 +117,15 @@ public class Chunk_1_18 extends MCAChunk {
             this.sectionMax = 0;
         }
 
-        this.blockEntities = data.blockEntities.stream().collect(Collectors.toMap(
-            it -> (long) it.getY() << 8 | (it.getX() & 0xF) << 4 | it.getZ() & 0xF, it -> it
-        ));
+        // load block-entities
+        this.blockEntities = new HashMap<>();
+        for (int i = 0; i < data.blockEntities.length; i++) {
+            BlockEntity be = data.blockEntities[i];
+            if (be == null) continue;
+
+            long hash = (long) be.getY() << 8 | (be.getX() & 0xF) << 4 | be.getZ() & 0xF;
+            blockEntities.put(hash, be);
+        }
     }
 
     @Override
@@ -145,9 +152,9 @@ public class Chunk_1_18 extends MCAChunk {
     }
 
     @Override
-    public String getBiome(int x, int y, int z) {
+    public Biome getBiome(int x, int y, int z) {
         Section section = getSection(y >> 4);
-        if (section == null) return Biome.DEFAULT.getFormatted();
+        if (section == null) return Biome.DEFAULT;
 
         return section.getBiome(x, y, z);
     }
@@ -208,17 +215,23 @@ public class Chunk_1_18 extends MCAChunk {
 
         private final int sectionY;
         private final BlockState[] blockPalette;
-        private final String[] biomePalette;
+        private final Biome[] biomePalette;
         private final PackedIntArrayAccess blocks;
         private final PackedIntArrayAccess biomes;
         private final byte[] blockLight;
         private final byte[] skyLight;
 
-        public Section(SectionData sectionData) {
+        public Section(MCAWorld world, SectionData sectionData) {
             this.sectionY = sectionData.y;
 
             this.blockPalette = sectionData.blockStates.palette;
-            this.biomePalette = sectionData.biomes.palette;
+
+            this.biomePalette = new Biome[sectionData.biomes.palette.length];
+            for (int i = 0; i < this.biomePalette.length; i++) {
+                Biome biome = world.getDataPack().getBiome(sectionData.biomes.palette[i]);
+                if (biome == null) biome = Biome.DEFAULT;
+                this.biomePalette[i] = biome;
+            }
 
             this.blocks = new PackedIntArrayAccess(sectionData.blockStates.data, BLOCKS_PER_SECTION);
             this.biomes = new PackedIntArrayAccess(Math.max(MCAUtil.ceilLog2(this.biomePalette.length), 1), sectionData.biomes.data);
@@ -240,14 +253,14 @@ public class Chunk_1_18 extends MCAChunk {
             return blockPalette[id];
         }
 
-        public String getBiome(int x, int y, int z) {
+        public Biome getBiome(int x, int y, int z) {
             if (biomePalette.length == 1) return biomePalette[0];
-            if (biomePalette.length == 0) return Biome.DEFAULT.getValue();
+            if (biomePalette.length == 0) return Biome.DEFAULT;
 
             int id = biomes.get((y & 0b1100) << 2 | z & 0b1100 | (x & 0b1100) >> 2);
             if (id >= biomePalette.length) {
                 Logger.global.noFloodWarning("biome-palette-warning", "Got biome-palette id " + id + " but palette has size of " + biomePalette.length + ".");
-                return Biome.DEFAULT.getValue();
+                return Biome.DEFAULT;
             }
 
             return biomePalette[id];
@@ -279,7 +292,10 @@ public class Chunk_1_18 extends MCAChunk {
         private long inhabitedTime = 0;
         private HeightmapsData heightmaps = new HeightmapsData();
         private SectionData @Nullable [] sections = null;
-        @NBTName("block_entities") private List<BlockEntity> blockEntities = List.of();
+
+        @NBTName("block_entities")
+        @NBTDeserializer(LenientBlockEntityArrayDeserializer.class)
+        private @Nullable BlockEntity [] blockEntities = EMPTY_BLOCK_ENTITIES_ARRAY;
     }
 
     @Getter
@@ -309,7 +325,7 @@ public class Chunk_1_18 extends MCAChunk {
     @Getter
     @SuppressWarnings("FieldMayBeFinal")
     public static class BiomesData {
-        private String[] palette = EMPTY_STRING_ARRAY;
+        private Key[] palette = EMPTY_KEY_ARRAY;
         private long[] data = EMPTY_LONG_ARRAY;
     }
 

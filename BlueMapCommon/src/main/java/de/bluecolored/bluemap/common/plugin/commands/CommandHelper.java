@@ -30,12 +30,13 @@ import de.bluecolored.bluemap.common.plugin.text.TextColor;
 import de.bluecolored.bluemap.common.plugin.text.TextFormat;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.rendermanager.RenderTask;
-import org.apache.commons.lang3.time.DurationFormatUtils;
 
 import java.lang.ref.WeakReference;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 
 public class CommandHelper {
@@ -96,7 +97,13 @@ public class CommandHelper {
 
                         long etaMs = renderer.estimateCurrentRenderTaskTimeRemaining();
                         if (etaMs > 0) {
-                            lines.add(Text.of(TextColor.GRAY, "\u00A0\u00A0\u00A0ETA: ", TextColor.WHITE, DurationFormatUtils.formatDuration(etaMs, "HH:mm:ss")));
+                            Duration eta = Duration.of(etaMs, ChronoUnit.MILLIS);
+                            String etaString = "%d:%02d:%02d".formatted(
+                                    eta.toHours(),
+                                    eta.toMinutesPart(),
+                                    eta.toSecondsPart()
+                            );
+                            lines.add(Text.of(TextColor.GRAY, "\u00A0\u00A0\u00A0ETA: ", TextColor.WHITE, etaString));
                         }
                     }
                 }

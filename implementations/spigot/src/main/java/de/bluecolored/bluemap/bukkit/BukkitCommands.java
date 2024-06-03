@@ -31,7 +31,6 @@ import com.mojang.brigadier.suggestion.Suggestions;
 import com.mojang.brigadier.tree.CommandNode;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.commands.Commands;
-import org.apache.commons.lang.StringUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
@@ -121,7 +120,7 @@ public class BukkitCommands implements Listener {
         public boolean execute(CommandSender sender, String commandLabel, String[] args) {
             String command = commandLabel;
             if (args.length > 0) {
-                command += " " + StringUtils.join(args, ' ');
+                command += " " + String.join(" ", args);
             }
 
             try {

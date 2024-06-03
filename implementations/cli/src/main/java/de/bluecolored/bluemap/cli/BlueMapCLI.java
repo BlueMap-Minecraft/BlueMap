@@ -27,11 +27,14 @@ package de.bluecolored.bluemap.cli;
 import de.bluecolored.bluemap.common.BlueMapConfiguration;
 import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.MissingResourcesException;
+import de.bluecolored.bluemap.common.addons.Addons;
+import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.config.BlueMapConfigManager;
 import de.bluecolored.bluemap.common.config.ConfigurationException;
 import de.bluecolored.bluemap.common.config.CoreConfig;
 import de.bluecolored.bluemap.common.config.WebserverConfig;
-import de.bluecolored.bluemap.common.plugin.RegionFileWatchService;
+import de.bluecolored.bluemap.common.debug.StateDumper;
+import de.bluecolored.bluemap.common.plugin.MapUpdateService;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.rendermanager.RenderTask;
@@ -39,25 +42,26 @@ import de.bluecolored.bluemap.common.web.*;
 import de.bluecolored.bluemap.common.web.http.HttpRequestHandler;
 import de.bluecolored.bluemap.common.web.http.HttpServer;
 import de.bluecolored.bluemap.core.BlueMap;
-import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
+import de.bluecolored.bluemap.core.map.renderstate.TileState;
 import de.bluecolored.bluemap.core.metrics.Metrics;
 import de.bluecolored.bluemap.core.storage.MapStorage;
 import de.bluecolored.bluemap.core.util.FileHelper;
 import org.apache.commons.cli.*;
-import org.apache.commons.lang3.time.DurationFormatUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
@@ -65,17 +69,11 @@ import java.util.regex.Pattern;
 
 public class BlueMapCLI {
 
-    private MinecraftVersion minecraftVersion = MinecraftVersion.LATEST_SUPPORTED;
+    private String minecraftVersion = null;
     private Path configFolder = Path.of("config");
 
-    public void renderMaps(BlueMapService blueMap, boolean watch, boolean forceRender, boolean forceGenerateWebapp,
+    public void renderMaps(BlueMapService blueMap, boolean watch, Predicate<TileState> force, boolean forceGenerateWebapp,
                            @Nullable String mapsToRender) throws ConfigurationException, IOException, InterruptedException {
-
-        //metrics report
-        if (blueMap.getConfig().getCoreConfig().isMetrics()) Metrics.sendReportAsync(
-                "cli",
-                blueMap.getConfig().getMinecraftVersion().getVersionString()
-        );
 
         if (blueMap.getConfig().getWebappConfig().isEnabled())
             blueMap.createOrUpdateWebApp(forceGenerateWebapp);
@@ -95,16 +93,19 @@ public class BlueMapCLI {
         Map<String, BmMap> maps = blueMap.getOrLoadMaps(mapFilter);
 
         //watcher
-        List<RegionFileWatchService> regionFileWatchServices = new ArrayList<>();
+        List<MapUpdateService> mapUpdateServices = new ArrayList<>();
         if (watch) {
             for (BmMap map : maps.values()) {
                 try {
-                    RegionFileWatchService watcher = new RegionFileWatchService(renderManager, map);
+                    MapUpdateService watcher = new MapUpdateService(renderManager, map);
                     watcher.start();
-                    regionFileWatchServices.add(watcher);
+                    mapUpdateServices.add(watcher);
                 } catch (IOException ex) {
                     Logger.global.logError("Failed to create file-watcher for map: " + map.getId() +
-                                           " (This map might not automatically update)", ex);
+                            " (This map might not automatically update)", ex);
+                } catch (UnsupportedOperationException ex) {
+                    Logger.global.logWarning("Update-watcher for map '" + map.getId() + "' is not supported for the world-type." +
+                            " (This means the map might not automatically update)");
                 }
             }
         }
@@ -112,10 +113,14 @@ public class BlueMapCLI {
         //update all maps
         int totalRegions = 0;
         for (BmMap map : maps.values()) {
-            MapUpdateTask updateTask = new MapUpdateTask(map, forceRender);
+            MapUpdateTask updateTask = new MapUpdateTask(map, force);
             renderManager.scheduleRenderTask(updateTask);
             totalRegions += updateTask.getRegions().size();
         }
+
+        // enable api
+        BlueMapAPIImpl api = new BlueMapAPIImpl(blueMap, null);
+        api.register();
 
         Logger.global.logInfo("Start updating " + maps.size() + " maps (" + totalRegions + " regions, ~" + totalRegions * 1024L + " chunks)...");
 
@@ -134,8 +139,12 @@ public class BlueMapCLI {
 
                 String eta = "";
                 if (etaMs > 0) {
-                    String etrDurationString = DurationFormatUtils.formatDuration(etaMs, "HH:mm:ss");
-                    eta = " (ETA: " + etrDurationString + ")";
+                    Duration duration = Duration.of(etaMs, ChronoUnit.MILLIS);
+                    eta = " (ETA: %d:%02d:%02d)".formatted(
+                            duration.toHours(),
+                            duration.toMinutesPart(),
+                            duration.toSecondsPart()
+                    );
                 }
                 Logger.global.logInfo(task.getDescription() + ": " + (Math.round(progress * 100000) / 1000.0) + "%" + eta);
             }
@@ -154,15 +163,22 @@ public class BlueMapCLI {
 
         Runnable shutdown = () -> {
             Logger.global.logInfo("Stopping...");
+            api.unregister();
+
             updateInfoTask.cancel();
             saveTask.cancel();
-            renderManager.stop();
 
-            for (RegionFileWatchService watcher : regionFileWatchServices) {
-                watcher.close();
+            mapUpdateServices.forEach(MapUpdateService::close);
+            mapUpdateServices.clear();
+
+            renderManager.removeAllRenderTasks();
+            try {
+                renderManager.awaitIdle(true);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
             }
-            regionFileWatchServices.clear();
 
+            renderManager.stop();
             try {
                 renderManager.awaitShutdown();
             } catch (InterruptedException e) {
@@ -178,6 +194,12 @@ public class BlueMapCLI {
         Thread shutdownHook = new Thread(shutdown, "BlueMap-CLI-ShutdownHook");
         Runtime.getRuntime().addShutdownHook(shutdownHook);
 
+        //metrics report
+        if (blueMap.getConfig().getCoreConfig().isMetrics()) Metrics.sendReportAsync(
+                "cli",
+                blueMap.getOrLoadMinecraftVersion().getId()
+        );
+
         // wait until done, then shutdown if not watching
         renderManager.awaitIdle();
         Logger.global.logInfo("Your maps are now all up-to-date!");
@@ -189,6 +211,8 @@ public class BlueMapCLI {
             Runtime.getRuntime().removeShutdownHook(shutdownHook);
             shutdown.run();
         }
+
+        StateDumper.global().dump(Path.of("teststate.json"));
     }
 
     public void startWebserver(BlueMapService blueMap, boolean verbose) throws IOException, ConfigurationException, InterruptedException {
@@ -291,16 +315,15 @@ public class BlueMapCLI {
 
             //minecraft version
             if (cmd.hasOption("v")) {
-                String versionString = cmd.getOptionValue("v");
-                try {
-                    cli.minecraftVersion = MinecraftVersion.of(versionString);
-                } catch (IllegalArgumentException e) {
-                    Logger.global.logWarning("Could not determine a version from the provided version-string: '" + versionString + "'");
-                    System.exit(1);
-                    return;
-                }
+                cli.minecraftVersion = cmd.getOptionValue("v");
             }
 
+            // load addons
+            Path addonsFolder = cli.configFolder.resolve("addons");
+            Files.createDirectories(addonsFolder);
+            Addons.tryLoadAddons(cli.configFolder.resolve("addons"), true);
+
+            // load configs
             BlueMapConfigManager configs = BlueMapConfigManager.builder()
                     .minecraftVersion(cli.minecraftVersion)
                     .configRoot(cli.configFolder)
@@ -333,7 +356,9 @@ public class BlueMapCLI {
                 noActions = false;
 
                 boolean watch = cmd.hasOption("u");
-                boolean force = cmd.hasOption("f");
+                Predicate<TileState> force = t -> false;
+                if (cmd.hasOption("f")) force = t -> true;
+                else if (cmd.hasOption("e")) force = t -> t == TileState.RENDERED_EDGE;
                 boolean generateWebappFiles = cmd.hasOption("g");
                 String mapsToRender = cmd.getOptionValue("m", null);
                 cli.renderMaps(blueMap, watch, force, generateWebappFiles, mapsToRender);
@@ -366,7 +391,7 @@ public class BlueMapCLI {
             if (blueMap != null) {
                 BlueMapConfiguration configProvider = blueMap.getConfig();
                 if (configProvider instanceof BlueMapConfigManager) {
-                    Logger.global.logWarning("Please check: " + ((BlueMapConfigManager) configProvider).getConfigManager().findConfigPath(Path.of("core")).toAbsolutePath().normalize());
+                    Logger.global.logWarning("Please check: " + ((BlueMapConfigManager) configProvider).getConfigManager().resolveConfigFile(BlueMapConfigManager.CORE_CONFIG_NAME).toAbsolutePath().normalize());
                 }
             }
             System.exit(2);
@@ -431,6 +456,7 @@ public class BlueMapCLI {
         options.addOption("s", "generate-websettings", false, "Updates the settings.json for the web-app");
 
         options.addOption("r", "render", false, "Renders the maps configured in the 'render.conf' file");
+        options.addOption("e", "fix-edges", false, "Forces rendering the map-edges, instead of only rendering chunks that have been modified since the last render");
         options.addOption("f", "force-render", false, "Forces rendering everything, instead of only rendering chunks that have been modified since the last render");
         options.addOption("m", "maps", true, "A comma-separated list of map-id's that should be rendered. Example: 'world,nether'");
 
@@ -464,19 +490,20 @@ public class BlueMapCLI {
     private static String getCliCommand() {
         String filename = "bluemap-cli.jar";
         try {
-            File file = new File(BlueMapCLI.class.getProtectionDomain()
+            Path file = Path.of(BlueMapCLI.class.getProtectionDomain()
                     .getCodeSource()
                     .getLocation()
-                    .getPath());
+                    .toURI());
 
-            if (file.isFile()) {
+            if (Files.isRegularFile(file)) {
                 try {
-                    filename = "." + File.separator + new File("").getCanonicalFile().toPath().relativize(file.toPath());
+                    filename = "." + file.getFileSystem().getSeparator() +
+                            Path.of("").toRealPath().relativize(file.toRealPath());
                 } catch (IllegalArgumentException ex) {
-                    filename = file.getAbsolutePath();
+                    filename = file.toAbsolutePath().toString();
                 }
             }
-        } catch (IOException ignore) {}
+        } catch (Exception ignore) {}
         return "java -jar " + filename;
     }
 

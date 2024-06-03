@@ -25,19 +25,21 @@
 package de.bluecolored.bluemap.common.rendermanager;
 
 import com.flowpowered.math.vector.Vector2i;
-import de.bluecolored.bluemap.api.debug.DebugDump;
+import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
+import de.bluecolored.bluemap.core.map.renderstate.MapTileState;
+import de.bluecolored.bluemap.core.map.renderstate.TileInfoRegion;
+import de.bluecolored.bluemap.core.map.renderstate.TileState;
+import de.bluecolored.bluemap.core.storage.GridStorage;
+import de.bluecolored.bluemap.core.storage.compression.CompressedInputStream;
 import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.world.World;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.io.IOException;
+import java.util.*;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-@DebugDump
 public class MapUpdateTask extends CombinedRenderTask<RenderTask> {
 
     private final BmMap map;
@@ -47,7 +49,7 @@ public class MapUpdateTask extends CombinedRenderTask<RenderTask> {
         this(map, getRegions(map));
     }
 
-    public MapUpdateTask(BmMap map, boolean force) {
+    public MapUpdateTask(BmMap map, Predicate<TileState> force) {
         this(map, getRegions(map), force);
     }
 
@@ -55,15 +57,15 @@ public class MapUpdateTask extends CombinedRenderTask<RenderTask> {
         this(map, getRegions(map, center, radius));
     }
 
-    public MapUpdateTask(BmMap map, Vector2i center, int radius, boolean force) {
+    public MapUpdateTask(BmMap map, Vector2i center, int radius, Predicate<TileState> force) {
         this(map, getRegions(map, center, radius), force);
     }
 
     public MapUpdateTask(BmMap map, Collection<Vector2i> regions) {
-        this(map, regions, false);
+        this(map, regions, s -> false);
     }
 
-    public MapUpdateTask(BmMap map, Collection<Vector2i> regions, boolean force) {
+    public MapUpdateTask(BmMap map, Collection<Vector2i> regions, Predicate<TileState> force) {
         super("Update map '" + map.getId() + "'", createTasks(map, regions, force));
         this.map = map;
         this.regions = Collections.unmodifiableCollection(new ArrayList<>(regions));
@@ -77,7 +79,7 @@ public class MapUpdateTask extends CombinedRenderTask<RenderTask> {
         return regions;
     }
 
-    private static Collection<RenderTask> createTasks(BmMap map, Collection<Vector2i> regions, boolean force) {
+    private static Collection<RenderTask> createTasks(BmMap map, Collection<Vector2i> regions, Predicate<TileState> force) {
         ArrayList<WorldRegionRenderTask> regionTasks = new ArrayList<>(regions.size());
         regions.forEach(region -> regionTasks.add(new WorldRegionRenderTask(map, region, force)));
 
@@ -99,33 +101,65 @@ public class MapUpdateTask extends CombinedRenderTask<RenderTask> {
         return tasks;
     }
 
-    private static List<Vector2i> getRegions(BmMap map) {
+    private static Collection<Vector2i> getRegions(BmMap map) {
         return getRegions(map, null, -1);
     }
 
-    private static List<Vector2i> getRegions(BmMap map, Vector2i center, int radius) {
+    private static Collection<Vector2i> getRegions(BmMap map, Vector2i center, int radius) {
         World world = map.getWorld();
         Grid regionGrid = world.getRegionGrid();
-        Predicate<Vector2i> regionFilter = map.getMapSettings().getRenderBoundariesCellFilter(regionGrid);
 
+        Predicate<Vector2i> regionBoundsFilter = map.getMapSettings().getCellRenderBoundariesFilter(regionGrid, true);
+        Predicate<Vector2i> regionRadiusFilter;
         if (center == null || radius < 0) {
-            return world.listRegions().stream()
-                    .filter(regionFilter)
-                    .collect(Collectors.toList());
+            regionRadiusFilter = r -> true;
+        } else {
+            Vector2i halfCell = regionGrid.getGridSize().div(2);
+            long increasedRadiusSquared = (long) Math.pow(radius + Math.ceil(halfCell.length()), 2);
+            regionRadiusFilter = r -> {
+                Vector2i min = regionGrid.getCellMin(r);
+                Vector2i regionCenter = min.add(halfCell);
+                return regionCenter.toLong().distanceSquared(center.toLong()) <= increasedRadiusSquared;
+            };
         }
 
-        List<Vector2i> regions = new ArrayList<>();
-        Vector2i halfCell = regionGrid.getGridSize().div(2);
-        long increasedRadiusSquared = (long) Math.pow(radius + Math.ceil(halfCell.length()), 2);
+        Set<Vector2i> regions = new HashSet<>();
 
-        for (Vector2i region : world.listRegions()) {
-            if (!regionFilter.test(region)) continue;
+        // update all regions in the world-files
+        world.listRegions().stream()
+                .filter(regionBoundsFilter)
+                .filter(regionRadiusFilter)
+                .forEach(regions::add);
 
-            Vector2i min = regionGrid.getCellMin(region);
-            Vector2i regionCenter = min.add(halfCell);
-
-            if (regionCenter.toLong().distanceSquared(center.toLong()) <= increasedRadiusSquared)
-                regions.add(region);
+        // also update regions that are present as map-tile-state files (they might have been rendered before but deleted now)
+        // (a little hacky as we are operating on raw tile-state files -> maybe find a better way?)
+        Grid tileGrid = map.getHiresModelManager().getTileGrid();
+        Grid cellGrid = MapTileState.GRID.multiply(tileGrid);
+        try (Stream<GridStorage.Cell> stream = map.getStorage().tileState().stream()) {
+            stream
+                    .filter(c -> {
+                        // filter out files that are fully UNKNOWN/NOT_GENERATED
+                        // this avoids unnecessarily converting UNKNOWN tiles into NOT_GENERATED tiles on force-updates
+                        try (CompressedInputStream in = c.read()) {
+                            if (in == null) return false;
+                            TileState[] states = TileInfoRegion.loadPalette(in.decompress());
+                            for (TileState state : states) {
+                                if (
+                                        state != TileState.UNKNOWN &&
+                                        state != TileState.NOT_GENERATED
+                                ) return true;
+                            }
+                            return false;
+                        } catch (IOException ignore) {
+                            return true;
+                        }
+                    })
+                    .map(c -> new Vector2i(c.getX(), c.getZ()))
+                    .flatMap(v -> cellGrid.getIntersecting(v, regionGrid).stream())
+                    .filter(regionRadiusFilter)
+                    .forEach(regions::add);
+        } catch (IOException ex) {
+            Logger.global.logError("Failed to load map tile state!", ex);
         }
 
         return regions;

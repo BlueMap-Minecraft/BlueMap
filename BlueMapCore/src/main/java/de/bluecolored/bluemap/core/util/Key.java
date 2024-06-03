@@ -24,11 +24,8 @@
  */
 package de.bluecolored.bluemap.core.util;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
-
 import java.util.concurrent.ConcurrentHashMap;
 
-@DebugDump
 public class Key implements Keyed {
 
     private static final ConcurrentHashMap<String, String> STRING_INTERN_POOL = new ConcurrentHashMap<>();
@@ -81,9 +78,13 @@ public class Key implements Keyed {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Key that = (Key) o;
+        if (!(o instanceof Key that)) return false;
+        if (!that.canEqual(this)) return false;
         return formatted == that.formatted;
+    }
+
+    protected boolean canEqual(Object o) {
+        return o instanceof Key;
     }
 
     @Override

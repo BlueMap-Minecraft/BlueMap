@@ -25,7 +25,6 @@
 package de.bluecolored.bluemap.common.web;
 
 import de.bluecolored.bluemap.api.ContentTypeRegistry;
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.common.web.http.HttpRequest;
 import de.bluecolored.bluemap.common.web.http.HttpRequestHandler;
 import de.bluecolored.bluemap.common.web.http.HttpResponse;
@@ -35,8 +34,10 @@ import de.bluecolored.bluemap.core.storage.GridStorage;
 import de.bluecolored.bluemap.core.storage.MapStorage;
 import de.bluecolored.bluemap.core.storage.compression.CompressedInputStream;
 import de.bluecolored.bluemap.core.storage.compression.Compression;
+import lombok.Getter;
+import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.io.IOUtils;
+import lombok.Setter;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -47,13 +48,13 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@DebugDump
 @RequiredArgsConstructor
+@Getter @Setter
 public class MapStorageRequestHandler implements HttpRequestHandler {
 
     private static final Pattern TILE_PATTERN = Pattern.compile("tiles/([\\d/]+)/x(-?[\\d/]+)z(-?[\\d/]+).*");
 
-    private final MapStorage mapStorage;
+    private @NonNull MapStorage mapStorage;
 
     @SuppressWarnings("resource")
     @Override
@@ -130,7 +131,7 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
             response.addHeader("Content-Encoding", Compression.GZIP.getId());
             ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
             try (OutputStream os = Compression.GZIP.compress(byteOut)) {
-                IOUtils.copyLarge(data.decompress(), os);
+                data.decompress().transferTo(os);
             }
             byte[] compressedData = byteOut.toByteArray();
             response.setData(new ByteArrayInputStream(compressedData));

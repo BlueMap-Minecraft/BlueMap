@@ -36,11 +36,8 @@ import de.bluecolored.bluemap.common.serverinterface.Server;
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
-import de.bluecolored.bluemap.core.MinecraftVersion;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.sponge.SpongeCommands.SpongeCommandProxy;
-import org.apache.maven.artifact.versioning.ArtifactVersion;
-import org.spongepowered.api.Platform;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.Command;
@@ -85,7 +82,6 @@ public class SpongePlugin implements Server {
     private final Map<UUID, Player> onlinePlayerMap;
     private final List<SpongePlayer> onlinePlayerList;
 
-    private final MinecraftVersion minecraftVersion;
     private final LoadingCache<org.spongepowered.api.world.server.ServerWorld, ServerWorld> worlds;
 
     @Inject
@@ -97,13 +93,6 @@ public class SpongePlugin implements Server {
 
         this.onlinePlayerMap = new ConcurrentHashMap<>();
         this.onlinePlayerList = Collections.synchronizedList(new ArrayList<>());
-
-        final ArtifactVersion versionFromSponge = Sponge.platform().container(Platform.Component.GAME).metadata().version();
-        this.minecraftVersion = new MinecraftVersion(
-                versionFromSponge.getMajorVersion(),
-                versionFromSponge.getMinorVersion(),
-                versionFromSponge.getIncrementalVersion()
-        );
 
         this.pluginInstance = new Plugin("sponge", this);
         this.commands = new SpongeCommands(pluginInstance);
@@ -204,8 +193,8 @@ public class SpongePlugin implements Server {
     }
 
     @Override
-    public MinecraftVersion getMinecraftVersion() {
-        return minecraftVersion;
+    public String getMinecraftVersion() {
+        return Sponge.platform().minecraftVersion().name();
     }
 
     @Override

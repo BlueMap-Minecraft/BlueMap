@@ -61,6 +61,7 @@ export class MapViewer {
 				ambientLight: { value: 0 },
 				skyColor: { value: new Color(0.5, 0.5, 1) },
 				voidColor: { value: new Color(0, 0, 0) },
+				chunkBorders: { value: false },
 				hiresTileMap: {
 					value: {
 						map: null,

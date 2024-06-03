@@ -87,13 +87,20 @@ public class HttpConnection implements SelectionConsumer {
                         () -> requestHandler.handle(request),
                         responseHandlerExecutor
                 );
-                futureResponse.thenAccept(response -> {
+                futureResponse.handle((response, error) -> {
+                    if (error != null) {
+                        Logger.global.logError("Unexpected error handling request", error);
+                        response = new HttpResponse(HttpStatusCode.INTERNAL_SERVER_ERROR);
+                    }
+
                     try {
                         response.read(channel); // do an initial read to trigger response sending intent
                         this.response = response;
                     } catch (IOException e) {
                         handleIOException(channel, e);
                     }
+
+                    return null;
                 });
             }
 

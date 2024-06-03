@@ -29,8 +29,8 @@ import de.bluecolored.bluemap.core.util.Keyed;
 import de.bluecolored.bluemap.core.util.Registry;
 import io.airlift.compress.zstd.ZstdInputStream;
 import io.airlift.compress.zstd.ZstdOutputStream;
-import net.jpountz.lz4.LZ4FrameInputStream;
-import net.jpountz.lz4.LZ4FrameOutputStream;
+import net.jpountz.lz4.LZ4BlockInputStream;
+import net.jpountz.lz4.LZ4BlockOutputStream;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -46,7 +46,7 @@ public interface Compression extends Keyed {
     Compression GZIP = new BufferedCompression(Key.bluemap("gzip"), "gzip", ".gz", GZIPOutputStream::new, GZIPInputStream::new);
     Compression DEFLATE = new BufferedCompression(Key.bluemap("deflate"), "deflate", ".deflate", DeflaterOutputStream::new, InflaterInputStream::new);
     Compression ZSTD = new BufferedCompression(Key.bluemap("zstd"), "zstd", ".zst", ZstdOutputStream::new, ZstdInputStream::new);
-    Compression LZ4 = new BufferedCompression(Key.bluemap("lz4"), "lz4", ".lz4", LZ4FrameOutputStream::new, LZ4FrameInputStream::new);
+    Compression LZ4 = new BufferedCompression(Key.bluemap("lz4"), "lz4", ".lz4", LZ4BlockOutputStream::new, LZ4BlockInputStream::new);
 
     Registry<Compression> REGISTRY = new Registry<>(
             NONE,

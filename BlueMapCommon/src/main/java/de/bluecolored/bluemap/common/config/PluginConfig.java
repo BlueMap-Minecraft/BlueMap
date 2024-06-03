@@ -24,14 +24,12 @@
  */
 package de.bluecolored.bluemap.common.config;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import java.util.ArrayList;
 import java.util.List;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
-@DebugDump
 @ConfigSerializable
 public class PluginConfig {
 

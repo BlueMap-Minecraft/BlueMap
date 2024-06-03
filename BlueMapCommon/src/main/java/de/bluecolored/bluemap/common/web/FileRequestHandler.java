@@ -24,25 +24,27 @@
  */
 package de.bluecolored.bluemap.common.web;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.common.web.http.*;
-import org.apache.commons.lang3.time.DateFormatUtils;
+import de.bluecolored.bluemap.core.logger.Logger;
+import lombok.Getter;
+import lombok.NonNull;
+import lombok.Setter;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.Locale;
-import java.util.TimeZone;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.concurrent.TimeUnit;
 
-@DebugDump
+@Getter @Setter
 public class FileRequestHandler implements HttpRequestHandler {
 
-    private final Path webRoot;
+    private @NonNull Path webRoot;
 
     public FileRequestHandler(Path webRoot) {
         this.webRoot = webRoot.normalize();
@@ -52,10 +54,16 @@ public class FileRequestHandler implements HttpRequestHandler {
     public HttpResponse handle(HttpRequest request) {
         if (!request.getMethod().equalsIgnoreCase("GET"))
             return new HttpResponse(HttpStatusCode.BAD_REQUEST);
-        return generateResponse(request);
+
+        try {
+            return generateResponse(request);
+        } catch (IOException e) {
+            Logger.global.logError("Failed to serve file", e);
+            return new HttpResponse(HttpStatusCode.INTERNAL_SERVER_ERROR);
+        }
     }
 
-    private HttpResponse generateResponse(HttpRequest request) {
+    private HttpResponse generateResponse(HttpRequest request) throws IOException {
         String path = request.getPath();
 
         // normalize path
@@ -74,48 +82,49 @@ public class FileRequestHandler implements HttpRequestHandler {
             return new HttpResponse(HttpStatusCode.FORBIDDEN);
         }
 
-        File file = filePath.toFile();
-
         // redirect to have correct relative paths
-        if (file.isDirectory() && !request.getPath().endsWith("/")) {
+        if (Files.isDirectory(filePath) && !request.getPath().endsWith("/")) {
             HttpResponse response = new HttpResponse(HttpStatusCode.SEE_OTHER);
             response.addHeader("Location", "/" + path + "/" + (request.getGETParamString().isEmpty() ? "" : "?" + request.getGETParamString()));
             return response;
         }
 
         // default to index.html
-        if (!file.exists() || file.isDirectory()){
-            file = new File(filePath + "/index.html");
+        if (!Files.exists(filePath) || Files.isDirectory(filePath)){
+            filePath = filePath.resolve("index.html");
         }
 
-        if (!file.exists() || file.isDirectory()) {
+        if (!Files.exists(filePath) || Files.isDirectory(filePath)){
             return new HttpResponse(HttpStatusCode.NOT_FOUND);
         }
 
         // don't send php files
-        if (file.getName().endsWith(".php")) {
+        if (filePath.getFileName().toString().endsWith(".php")) {
             return new HttpResponse(HttpStatusCode.FORBIDDEN);
         }
 
         // check if file is still in web-root and is not a directory
-        if (!file.toPath().normalize().startsWith(webRoot) || file.isDirectory()){
+        if (!filePath.normalize().startsWith(webRoot) || Files.isDirectory(filePath)){
             return new HttpResponse(HttpStatusCode.FORBIDDEN);
         }
 
         // check modified
-        long lastModified = file.lastModified();
+        long lastModified = Files.getLastModifiedTime(filePath).to(TimeUnit.MILLISECONDS);
         HttpHeader modHeader = request.getHeader("If-Modified-Since");
         if (modHeader != null){
             try {
-                long since = stringToTimestamp(modHeader.getValue());
+                long since = Instant.from(DateTimeFormatter.RFC_1123_DATE_TIME.parse(modHeader.getValue())).toEpochMilli();
                 if (since + 1000 >= lastModified){
                     return new HttpResponse(HttpStatusCode.NOT_MODIFIED);
                 }
-            } catch (IllegalArgumentException ignored){}
+            } catch (DateTimeParseException ignored){}
         }
 
         //check ETag
-        String eTag = Long.toHexString(file.length()) + Integer.toHexString(file.hashCode()) + Long.toHexString(lastModified);
+        String eTag =
+                Long.toHexString(Files.size(filePath)) +
+                Integer.toHexString(filePath.hashCode()) +
+                Long.toHexString(lastModified);
         HttpHeader etagHeader = request.getHeader("If-None-Match");
         if (etagHeader != null){
             if(etagHeader.getValue().equals(eTag)) {
@@ -126,12 +135,15 @@ public class FileRequestHandler implements HttpRequestHandler {
         //create response
         HttpResponse response = new HttpResponse(HttpStatusCode.OK);
         response.addHeader("ETag", eTag);
-        if (lastModified > 0) response.addHeader("Last-Modified", timestampToString(lastModified));
+        if (lastModified > 0) response.addHeader("Last-Modified", DateTimeFormatter.RFC_1123_DATE_TIME.format(Instant
+                .ofEpochMilli(lastModified)
+                .atOffset(ZoneOffset.UTC)
+        ));
         response.addHeader("Cache-Control", "public");
         response.addHeader("Cache-Control", "max-age=" + TimeUnit.DAYS.toSeconds(1));
 
         //add content type header
-        String filetype = file.getName();
+        String filetype = filePath.getFileName().toString();
         int pointIndex = filetype.lastIndexOf('.');
         if (pointIndex >= 0) filetype = filetype.substring(pointIndex + 1);
         String contentType = toContentType(filetype);
@@ -139,80 +151,29 @@ public class FileRequestHandler implements HttpRequestHandler {
 
         //send response
         try {
-            response.setData(new FileInputStream(file));
+            response.setData(Files.newInputStream(filePath));
             return response;
         } catch (FileNotFoundException e) {
             return new HttpResponse(HttpStatusCode.NOT_FOUND);
         }
     }
 
-    private static String timestampToString(long time){
-        return DateFormatUtils.format(time, "EEE, dd MMM yyy HH:mm:ss 'GMT'", TimeZone.getTimeZone("GMT"), Locale.ENGLISH);
-    }
-
-    private static long stringToTimestamp(String timeString) throws IllegalArgumentException {
-        try {
-            int day = Integer.parseInt(timeString.substring(5, 7));
-
-            int month = Calendar.JANUARY;
-            switch (timeString.substring(8, 11)){
-                case "Feb" : month = Calendar.FEBRUARY;  break;
-                case "Mar" : month = Calendar.MARCH;  break;
-                case "Apr" : month = Calendar.APRIL;  break;
-                case "May" : month = Calendar.MAY;  break;
-                case "Jun" : month = Calendar.JUNE;  break;
-                case "Jul" : month = Calendar.JULY;  break;
-                case "Aug" : month = Calendar.AUGUST;  break;
-                case "Sep" : month = Calendar.SEPTEMBER;  break;
-                case "Oct" : month = Calendar.OCTOBER; break;
-                case "Nov" : month = Calendar.NOVEMBER; break;
-                case "Dec" : month = Calendar.DECEMBER; break;
-            }
-            int year = Integer.parseInt(timeString.substring(12, 16));
-            int hour = Integer.parseInt(timeString.substring(17, 19));
-            int min = Integer.parseInt(timeString.substring(20, 22));
-            int sec = Integer.parseInt(timeString.substring(23, 25));
-            GregorianCalendar cal = new GregorianCalendar(TimeZone.getTimeZone("GMT"));
-            cal.set(year, month, day, hour, min, sec);
-            return cal.getTimeInMillis();
-        } catch (NumberFormatException | IndexOutOfBoundsException e){
-            throw new IllegalArgumentException(e);
-        }
-    }
-
     private static String toContentType(String fileEnding) {
-        String contentType = "text/plain";
-        switch (fileEnding) {
-            case "json" :
-                contentType = "application/json";
-                break;
-            case "png" :
-                contentType = "image/png";
-                break;
-            case "jpg" :
-            case "jpeg" :
-            case "jpe" :
-                contentType = "image/jpeg";
-                break;
-            case "svg" :
-                contentType = "image/svg+xml";
-                break;
-            case "css" :
-                contentType = "text/css";
-                break;
-            case "js" :
-                contentType = "text/javascript";
-                break;
-            case "html" :
-            case "htm" :
-            case "shtml" :
-                contentType = "text/html";
-                break;
-            case "xml" :
-                contentType = "text/xml";
-                break;
-        }
-        return contentType;
+        return switch (fileEnding) {
+            case "json" -> "application/json";
+            case "png" -> "image/png";
+            case "jpg",
+                 "jpeg",
+                 "jpe" -> "image/jpeg";
+            case "svg" -> "image/svg+xml";
+            case "css" -> "text/css";
+            case "js" -> "text/javascript";
+            case "html",
+                 "htm",
+                 "shtml" -> "text/html";
+            case "xml" -> "text/xml";
+            default -> "text/plain";
+        };
     }
 
 }

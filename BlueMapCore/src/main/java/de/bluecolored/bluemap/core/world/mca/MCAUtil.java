@@ -31,14 +31,18 @@ import de.bluecolored.bluemap.core.world.block.entity.BlockEntity;
 import de.bluecolored.bluemap.core.world.mca.data.BlockStateDeserializer;
 import de.bluecolored.bluemap.core.world.mca.data.KeyDeserializer;
 import de.bluecolored.bluenbt.BlueNBT;
+import org.jetbrains.annotations.Contract;
 
 public class MCAUtil {
 
-    public static final BlueNBT BLUENBT = new BlueNBT();
-    static {
-        BLUENBT.register(TypeToken.get(BlockState.class), new BlockStateDeserializer());
-        BLUENBT.register(TypeToken.get(Key.class), new KeyDeserializer());
-        BLUENBT.register(TypeToken.get(BlockEntity.class), new BlockEntity.BlockEntityDeserializer());
+    public static final BlueNBT BLUENBT = addCommonNbtAdapters(new BlueNBT());
+
+    @Contract(value = "_ -> param1", mutates = "param1")
+    public static BlueNBT addCommonNbtAdapters(BlueNBT nbt) {
+        nbt.register(TypeToken.get(BlockState.class), new BlockStateDeserializer());
+        nbt.register(TypeToken.get(Key.class), new KeyDeserializer());
+        nbt.register(TypeToken.get(BlockEntity.class), new BlockEntity.BlockEntityDeserializer(nbt));
+        return nbt;
     }
 
     /**

@@ -1,6 +1,0 @@
-{
-	"parent":"block/sign/wall_sign",
-    "textures": {
-        "sign": "entity/signs/acacia"
-	}
-}

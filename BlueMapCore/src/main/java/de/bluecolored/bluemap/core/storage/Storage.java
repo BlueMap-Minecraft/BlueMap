@@ -37,7 +37,10 @@ public interface Storage extends Closeable {
     void initialize() throws IOException;
 
     /**
-     * Returns the {@link MapStorage} for the given mapId
+     * Returns the {@link MapStorage} for the given mapId.<br>
+     * <br>
+     * If this method is invoked multiple times with the same <code>mapId</code>, it is important that the returned MapStorage should at least
+     * be equal (<code>equals() == true</code>) to the previously returned storages!
      */
     MapStorage map(String mapId);
 

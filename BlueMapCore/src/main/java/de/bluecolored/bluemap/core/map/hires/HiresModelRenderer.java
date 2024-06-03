@@ -28,7 +28,7 @@ import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.TileMetaConsumer;
 import de.bluecolored.bluemap.core.map.hires.blockmodel.BlockStateModelFactory;
-import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
@@ -65,10 +65,10 @@ public class HiresModelRenderer {
         BlockModelView blockModel = new BlockModelView(model);
 
         int x, y, z;
-        for (x = min.getX(); x <= max.getX(); x++){
-            for (z = min.getZ(); z <= max.getZ(); z++){
+        for (x = modelMin.getX(); x <= modelMax.getX(); x++){
+            for (z = modelMin.getZ(); z <= modelMax.getZ(); z++){
 
-                maxHeight = 0;
+                maxHeight = Integer.MIN_VALUE;
                 topBlockLight = 0;
 
                 columnColor.set(0, 0, 0, 0, true);
@@ -104,6 +104,9 @@ public class HiresModelRenderer {
                         //if (blockColor.a > 0.999 && block.getProperties().isCulling()) break;
                     }
                 }
+
+                if (maxHeight == Integer.MIN_VALUE)
+                    maxHeight = 0;
 
                 tileMetaConsumer.set(x, z, columnColor, maxHeight, (int) topBlockLight);
             }

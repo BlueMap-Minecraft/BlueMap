@@ -25,14 +25,16 @@
 package de.bluecolored.bluemap.core.map.lowres;
 
 import com.flowpowered.math.vector.Vector2i;
-import com.github.benmanes.caffeine.cache.*;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
+import com.github.benmanes.caffeine.cache.RemovalCause;
+import com.github.benmanes.caffeine.cache.Scheduler;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.storage.GridStorage;
 import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.util.Vector2iCache;
 import de.bluecolored.bluemap.core.util.math.Color;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -77,15 +79,7 @@ public class LowresLayer {
                 .scheduler(Scheduler.systemScheduler())
                 .expireAfterAccess(10, TimeUnit.SECONDS)
                 .expireAfterWrite(5, TimeUnit.MINUTES)
-                .writer(new CacheWriter<Vector2i, LowresTile>() {
-                    @Override
-                    public void write(@NonNull Vector2i key, @NonNull LowresTile value) {}
-
-                    @Override
-                    public void delete(@NonNull Vector2i key, @Nullable LowresTile value, @NonNull RemovalCause cause) {
-                        saveTile(key, value);
-                    }
-                })
+                .removalListener((Vector2i key, LowresTile value, RemovalCause cause) -> saveTile(key, value))
                 .build(tileWeakInstanceCache::get);
     }
 

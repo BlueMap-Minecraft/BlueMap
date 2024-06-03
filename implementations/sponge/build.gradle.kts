@@ -5,7 +5,7 @@ plugins {
 	`java-library`
 	id("com.diffplug.spotless") version "6.1.2"
 	id ("com.github.node-gradle.node") version "3.0.1"
-	id ("com.github.johnrengelman.shadow") version "7.1.2"
+	id ("com.github.johnrengelman.shadow") version "8.1.1"
 	id ("org.spongepowered.gradle.plugin") version "2.0.0"
 	id ("com.modrinth.minotaur") version "2.+"
 	id("org.spongepowered.gradle.ore") version "2.2.0"
@@ -31,7 +31,6 @@ dependencies {
 		//exclude dependencies provided by sponge
 		exclude( group = "com.google.guava", module = "guava" )
 		exclude( group = "com.google.code.gson", module = "gson" )
-		exclude( group = "org.apache.commons", module = "commons-lang3" )
 		exclude( group = "javax.inject" )
 		exclude( group = "com.google.inject" )
 	}
@@ -119,7 +118,6 @@ tasks.shadowJar {
 	relocate ("net.jpountz", "de.bluecolored.shadow.jpountz")
 
 	relocate ("org.apache.commons.dbcp2", "de.bluecolored.shadow.apache.commons.dbcp2")
-	relocate ("org.apache.commons.io", "de.bluecolored.shadow.apache.commons.io")
 	relocate ("org.apache.commons.logging", "de.bluecolored.shadow.apache.commons.logging")
 	relocate ("org.apache.commons.pool2", "de.bluecolored.shadow.apache.commons.pool2")
 }

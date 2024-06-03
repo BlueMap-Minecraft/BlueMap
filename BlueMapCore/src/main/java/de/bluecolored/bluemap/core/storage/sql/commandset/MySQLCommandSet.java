@@ -50,53 +50,51 @@ public class MySQLCommandSet extends AbstractCommandSet {
     @Language("mysql")
     public String createCompressionTableStatement() {
         return """
-        CREATE TABLE IF NOT EXISTS `bluemap_map_tile_compression` (
+        CREATE TABLE IF NOT EXISTS `bluemap_compression` (
          `id` SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
-         `compression` VARCHAR(190) NOT NULL,
+         `key` VARCHAR(190) NOT NULL,
          PRIMARY KEY (`id`),
-         UNIQUE INDEX `compression` (`compression`)
+         UNIQUE INDEX `key` (`key`)
         ) COLLATE 'utf8mb4_bin'
         """;
     }
 
     @Override
     @Language("mysql")
-    public String createMapMetaTableStatement() {
+    public String createItemStorageTableStatement() {
         return """
-        CREATE TABLE IF NOT EXISTS `bluemap_map_meta` (
-         `map` SMALLINT UNSIGNED NOT NULL,
-         `key` varchar(190) NOT NULL,
-         `value` LONGBLOB NOT NULL,
-         PRIMARY KEY (`map`, `key`),
-         CONSTRAINT `fk_bluemap_map_meta_map`
-          FOREIGN KEY (`map`)
-          REFERENCES `bluemap_map` (`id`)
-          ON UPDATE RESTRICT
-          ON DELETE CASCADE
+        CREATE TABLE IF NOT EXISTS `bluemap_item_storage` (
+         `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+         `key` VARCHAR(190) NOT NULL,
+         PRIMARY KEY (`id`),
+         UNIQUE INDEX `key` (`key`)
         ) COLLATE 'utf8mb4_bin'
         """;
     }
 
     @Override
     @Language("mysql")
-    public String createMapTileTableStatement() {
+    public String createItemStorageDataTableStatement() {
         return """
-        CREATE TABLE IF NOT EXISTS `bluemap_map_tile` (
+        CREATE TABLE IF NOT EXISTS `bluemap_item_storage_data` (
          `map` SMALLINT UNSIGNED NOT NULL,
-         `lod` SMALLINT UNSIGNED NOT NULL,
-         `x` INT NOT NULL,
-         `z` INT NOT NULL,
+         `storage` INT UNSIGNED NOT NULL,
          `compression` SMALLINT UNSIGNED NOT NULL,
          `data` LONGBLOB NOT NULL,
-         PRIMARY KEY (`map`, `lod`, `x`, `z`),
-         CONSTRAINT `fk_bluemap_map_tile_map`
+         PRIMARY KEY (`map`, `storage`),
+         CONSTRAINT `fk_bluemap_item_map`
           FOREIGN KEY (`map`)
           REFERENCES `bluemap_map` (`id`)
           ON UPDATE RESTRICT
           ON DELETE CASCADE,
-         CONSTRAINT `fk_bluemap_map_tile_compression`
+         CONSTRAINT `fk_bluemap_item`
+          FOREIGN KEY (`storage`)
+          REFERENCES `bluemap_item_storage` (`id`)
+          ON UPDATE RESTRICT
+          ON DELETE CASCADE,
+         CONSTRAINT `fk_bluemap_item_compression`
           FOREIGN KEY (`compression`)
-          REFERENCES `bluemap_map_tile_compression` (`id`)
+          REFERENCES `bluemap_compression` (`id`)
           ON UPDATE RESTRICT
           ON DELETE CASCADE
         ) COLLATE 'utf8mb4_bin'
@@ -105,50 +103,112 @@ public class MySQLCommandSet extends AbstractCommandSet {
 
     @Override
     @Language("mysql")
-    public String fixLegacyCompressionIdsStatement() {
+    public String createGridStorageTableStatement() {
         return """
-        UPDATE IGNORE `bluemap_map_tile_compression`
-        SET `compression` = CONCAT('bluemap:', `compression`)
-        WHERE NOT `compression` LIKE '%:%'
+        CREATE TABLE IF NOT EXISTS `bluemap_grid_storage` (
+         `id` SMALLINT UNSIGNED NOT NULL AUTO_INCREMENT,
+         `key` VARCHAR(190) NOT NULL,
+         PRIMARY KEY (`id`),
+         UNIQUE INDEX `key` (`key`)
+        ) COLLATE 'utf8mb4_bin'
         """;
     }
 
     @Override
     @Language("mysql")
-    public String writeMapTileStatement() {
+    public String createGridStorageDataTableStatement() {
+        return """
+        CREATE TABLE IF NOT EXISTS `bluemap_grid_storage_data` (
+         `map` SMALLINT UNSIGNED NOT NULL,
+         `storage` SMALLINT UNSIGNED NOT NULL,
+         `x` INT NOT NULL,
+         `z` INT NOT NULL,
+         `compression` SMALLINT UNSIGNED NOT NULL,
+         `data` LONGBLOB NOT NULL,
+         PRIMARY KEY (`map`, `storage`, `x`, `z`),
+         CONSTRAINT `fk_bluemap_grid_map`
+          FOREIGN KEY (`map`)
+          REFERENCES `bluemap_map` (`id`)
+          ON UPDATE RESTRICT
+          ON DELETE CASCADE,
+         CONSTRAINT `fk_bluemap_grid`
+          FOREIGN KEY (`storage`)
+          REFERENCES `bluemap_grid_storage` (`id`)
+          ON UPDATE RESTRICT
+          ON DELETE CASCADE,
+         CONSTRAINT `fk_bluemap_grid_compression`
+          FOREIGN KEY (`compression`)
+          REFERENCES `bluemap_compression` (`id`)
+          ON UPDATE RESTRICT
+          ON DELETE CASCADE
+        ) COLLATE 'utf8mb4_bin'
+        """;
+    }
+
+    @Override
+    @Language("mysql")
+    public String itemStorageWriteStatement() {
         return """
         REPLACE
-        INTO `bluemap_map_tile` (`map`, `lod`, `x`, `z`, `compression`, `data`)
+        INTO `bluemap_item_storage_data` (`map`, `storage`, `compression`, `data`)
+        VALUES (?, ?, ?, ?)
+        """;
+    }
+
+    @Override
+    @Language("mysql")
+    public String itemStorageReadStatement() {
+        return """
+        SELECT `data`
+        FROM `bluemap_item_storage_data`
+        WHERE `map` = ?
+        AND `storage` = ?
+        AND `compression` = ?
+        """;
+    }
+
+    @Override
+    @Language("mysql")
+    public String itemStorageDeleteStatement() {
+        return """
+        DELETE
+        FROM `bluemap_item_storage_data`
+        WHERE `map` = ?
+        AND `storage` = ?
+        """;
+    }
+
+    @Override
+    @Language("mysql")
+    public String itemStorageHasStatement() {
+        return """
+        SELECT COUNT(*) > 0
+        FROM `bluemap_item_storage_data`
+        WHERE `map` = ?
+        AND `storage` = ?
+        AND `compression` = ?
+        """;
+    }
+
+
+    @Override
+    @Language("mysql")
+    public String gridStorageWriteStatement() {
+        return """
+        REPLACE
+        INTO `bluemap_grid_storage_data` (`map`, `storage`, `x`, `z`, `compression`, `data`)
         VALUES (?, ?, ?, ?, ?, ?)
         """;
     }
 
     @Override
     @Language("mysql")
-    public String readMapTileStatement() {
+    public String gridStorageReadStatement() {
         return """
-        SELECT t.`data`
-        FROM `bluemap_map_tile` t
-         INNER JOIN `bluemap_map` m
-          ON t.`map` = m.`id`
-         INNER JOIN `bluemap_map_tile_compression` c
-          ON t.`compression` = c.`id`
-        WHERE m.`map_id` = ?
-        AND t.`lod` = ?
-        AND t.`x` = ?
-        AND t.`z` = ?
-        AND c.`compression` = ?
-        """;
-    }
-
-    @Override
-    @Language("mysql")
-    public String deleteMapTileStatement() {
-        return """
-        DELETE
-        FROM `bluemap_map_tile`
+        SELECT `data`
+        FROM `bluemap_grid_storage_data`
         WHERE `map` = ?
-        AND `lod` = ?
+        AND `storage` = ?
         AND `x` = ?
         AND `z` = ?
         AND `compression` = ?
@@ -157,40 +217,60 @@ public class MySQLCommandSet extends AbstractCommandSet {
 
     @Override
     @Language("mysql")
-    public String hasMapTileStatement() {
-        return """
-        SELECT COUNT(*) > 0
-        FROM `bluemap_map_tile` t
-         INNER JOIN `bluemap_map` m
-          ON t.`map` = m.`id`
-         INNER JOIN `bluemap_map_tile_compression` c
-          ON t.`compression` = c.`id`
-        WHERE m.`map_id` = ?
-        AND t.`lod` = ?
-        AND t.`x` = ?
-        AND t.`z` = ?
-        AND c.`compression` = ?
-        """;
-    }
-
-    @Override
-    @Language("mysql")
-    public String countAllMapTilesStatement() {
-        return """
-        SELECT COUNT(*)
-        FROM `bluemap_map_tile` t
-         INNER JOIN `bluemap_map` m
-          ON t.`map` = m.`id`
-        WHERE m.`map_id` = ?
-        """;
-    }
-
-    @Override
-    @Language("mysql")
-    public String purgeMapTilesStatement() {
+    public String gridStorageDeleteStatement() {
         return """
         DELETE
-        FROM `bluemap_map_tile`
+        FROM `bluemap_grid_storage_data`
+        WHERE `map` = ?
+        AND `storage` = ?
+        AND `x` = ?
+        AND `z` = ?
+        """;
+    }
+
+    @Override
+    @Language("mysql")
+    public String gridStorageHasStatement() {
+        return """
+        SELECT COUNT(*) > 0
+        FROM `bluemap_grid_storage_data`
+        WHERE `map` = ?
+        AND `storage` = ?
+        AND `x` = ?
+        AND `z` = ?
+        AND `compression` = ?
+        """;
+    }
+
+    @Override
+    @Language("mysql")
+    public String gridStorageListStatement() {
+        return """
+        SELECT `x`, `z`
+        FROM `bluemap_grid_storage_data`
+        WHERE `map` = ?
+        AND `storage` = ?
+        AND `compression` = ?
+        LIMIT ? OFFSET ?
+        """;
+    }
+
+    @Override
+    @Language("mysql")
+    public String gridStorageCountMapItemsStatement() {
+        return """
+        SELECT COUNT(*)
+        FROM `bluemap_grid_storage_data`
+        WHERE `map` = ?
+        """;
+    }
+
+    @Override
+    @Language("mysql")
+    public String gridStoragePurgeMapStatement() {
+        return """
+        DELETE
+        FROM `bluemap_grid_storage_data`
         WHERE `map` = ?
         LIMIT ?
         """;
@@ -198,95 +278,11 @@ public class MySQLCommandSet extends AbstractCommandSet {
 
     @Override
     @Language("mysql")
-    public String listMapTilesStatement() {
-        return """
-        SELECT t.`x`, t.`z`
-        FROM `bluemap_map_tile` t
-         INNER JOIN `bluemap_map` m
-          ON t.`map` = m.`id`
-         INNER JOIN `bluemap_map_tile_compression` c
-          ON t.`compression` = c.`id`
-        WHERE m.`map_id` = ?
-        AND t.`lod` = ?
-        AND c.`compression` = ?
-        LIMIT ? OFFSET ?
-        """;
-    }
-
-    @Override
-    @Language("mysql")
-    public String writeMapMetaStatement() {
-        return """
-        REPLACE
-        INTO `bluemap_map_meta` (`map`, `key`, `value`)
-        VALUES (?, ?, ?)
-        """;
-    }
-
-    @Override
-    @Language("mysql")
-    public String readMapMetaStatement() {
-        return """
-        SELECT t.`value`
-        FROM `bluemap_map_meta` t
-         INNER JOIN `bluemap_map` m
-          ON t.`map` = m.`id`
-        WHERE m.`map_id` = ?
-        AND t.`key` = ?
-        """;
-    }
-
-    @Override
-    @Language("mysql")
-    public String deleteMapMetaStatement() {
-        return """
-        DELETE
-        FROM `bluemap_map_meta`
-        WHERE `map` = ?
-        AND `key` = ?
-        """;
-    }
-
-    @Override
-    @Language("mysql")
-    public String hasMapMetaStatement() {
-        return """
-        SELECT COUNT(*) > 0
-        FROM `bluemap_map_meta` t
-         INNER JOIN `bluemap_map` m
-          ON t.`map` = m.`id`
-        WHERE m.`map_id` = ?
-        AND t.`key` = ?
-        """;
-    }
-
-    @Override
-    @Language("mysql")
-    public String purgeMapTileTableStatement() {
-        return """
-        DELETE
-        FROM `bluemap_map_tile`
-        WHERE `map` = ?
-        """;
-    }
-
-    @Override
-    @Language("mysql")
-    public String purgeMapMetaTableStatement() {
-        return """
-        DELETE
-        FROM `bluemap_map_meta`
-        WHERE `map` = ?
-        """;
-    }
-
-    @Override
-    @Language("mysql")
-    public String deleteMapStatement() {
+    public String purgeMapStatement() {
         return """
         DELETE
         FROM `bluemap_map`
-        WHERE `map` = ?
+        WHERE `id` = ?
         """;
     }
 
@@ -335,8 +331,8 @@ public class MySQLCommandSet extends AbstractCommandSet {
     public String findCompressionKeyStatement() {
         return """
         SELECT `id`
-        FROM `bluemap_map_tile_compression`
-        WHERE `compression` = ?
+        FROM `bluemap_compression`
+        WHERE `key` = ?
         """;
     }
 
@@ -345,7 +341,47 @@ public class MySQLCommandSet extends AbstractCommandSet {
     public String createCompressionKeyStatement() {
         return """
         INSERT
-        INTO `bluemap_map_tile_compression` (`compression`)
+        INTO `bluemap_compression` (`key`)
+        VALUES (?)
+        """;
+    }
+
+    @Override
+    @Language("mysql")
+    public String findItemStorageKeyStatement() {
+        return """
+        SELECT `id`
+        FROM `bluemap_item_storage`
+        WHERE `key` = ?
+        """;
+    }
+
+    @Override
+    @Language("mysql")
+    public String createItemStorageKeyStatement() {
+        return """
+        INSERT
+        INTO `bluemap_item_storage` (`key`)
+        VALUES (?)
+        """;
+    }
+
+    @Override
+    @Language("mysql")
+    public String findGridStorageKeyStatement() {
+        return """
+        SELECT `id`
+        FROM `bluemap_grid_storage`
+        WHERE `key` = ?
+        """;
+    }
+
+    @Override
+    @Language("mysql")
+    public String createGridStorageKeyStatement() {
+        return """
+        INSERT
+        INTO `bluemap_grid_storage` (`key`)
         VALUES (?)
         """;
     }

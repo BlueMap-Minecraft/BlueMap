@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.core.world;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.core.util.Key;
 import org.jetbrains.annotations.NotNull;
 
@@ -39,7 +38,6 @@ import java.util.regex.Pattern;
  * <br>
  * <i>The implementation of this class has to be thread-save!</i><br>
  */
-@DebugDump
 public class BlockState extends Key {
 
     private static final Pattern BLOCKSTATE_SERIALIZATION_PATTERN = Pattern.compile("^(.+?)(?:\\[(.*)])?$");
@@ -66,7 +64,6 @@ public class BlockState extends Key {
         this.hashed = false;
         this.hash = 0;
 
-        //this.properties = Collections.unmodifiableMap(new HashMap<>(properties)); // <- not doing this to reduce object-creation
         this.properties = properties;
         this.propertiesArray = properties.entrySet().stream()
                 .map(e -> new Property(e.getKey(), e.getValue()))
@@ -141,11 +138,15 @@ public class BlockState extends Key {
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-
-        if (!(obj instanceof BlockState)) return false;
-        BlockState b = (BlockState) obj;
+        if (!(obj instanceof BlockState b)) return false;
+        if (!b.canEqual(this)) return false;
         if (getFormatted() != b.getFormatted()) return false;
         return Arrays.equals(propertiesArray, b.propertiesArray);
+    }
+
+    @Override
+    protected boolean canEqual(Object o) {
+        return o instanceof BlockState;
     }
 
     @Override

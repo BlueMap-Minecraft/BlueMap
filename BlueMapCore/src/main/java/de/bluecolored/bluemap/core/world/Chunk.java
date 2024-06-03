@@ -24,12 +24,14 @@
  */
 package de.bluecolored.bluemap.core.world;
 
+import de.bluecolored.bluemap.core.world.biome.Biome;
 import de.bluecolored.bluemap.core.world.block.entity.BlockEntity;
 import org.jetbrains.annotations.Nullable;
 
 public interface Chunk {
 
     Chunk EMPTY_CHUNK = new Chunk() {};
+    Chunk ERRORED_CHUNK = new Chunk() {};
 
     default boolean isGenerated() {
         return false;
@@ -51,8 +53,8 @@ public interface Chunk {
         return target.set(0, 0);
     }
 
-    default String getBiome(int x, int y, int z) {
-        return Biome.DEFAULT.getFormatted();
+    default Biome getBiome(int x, int y, int z) {
+        return Biome.DEFAULT;
     }
 
     default int getMaxY(int x, int z) {
@@ -75,5 +77,6 @@ public interface Chunk {
 
     default int getOceanFloorY(int x, int z) { return 0; }
 
-    default @Nullable BlockEntity getBlockEntity(int x, int y, int z) { return null; };
+    default @Nullable BlockEntity getBlockEntity(int x, int y, int z) { return null; }
+
 }

@@ -24,69 +24,100 @@
  */
 package de.bluecolored.bluemap.core.world.mca.region;
 
+import com.flowpowered.math.vector.Vector2i;
+import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluemap.core.util.Keyed;
+import de.bluecolored.bluemap.core.util.Registry;
 import de.bluecolored.bluemap.core.world.Region;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
-import org.jetbrains.annotations.NotNull;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-public enum RegionType {
+public interface RegionType extends Keyed {
 
-    MCA (MCARegion::new, MCARegion.FILE_SUFFIX, MCARegion::getRegionFileName),
-    LINEAR (LinearRegion::new, LinearRegion.FILE_SUFFIX, LinearRegion::getRegionFileName);
+    RegionType MCA = new Impl(Key.bluemap("mca"), MCARegion::new, MCARegion::getRegionFileName, MCARegion.FILE_PATTERN);
+    RegionType LINEAR = new Impl(Key.bluemap("linear"), LinearRegion::new, LinearRegion::getRegionFileName, LinearRegion.FILE_PATTERN);
 
-    // we do this to improve performance, as calling values() creates a new array each time
-    private final static RegionType[] VALUES = values();
-    private final static RegionType DEFAULT = MCA;
+    RegionType DEFAULT = MCA;
+    Registry<RegionType> REGISTRY = new Registry<>(
+            MCA,
+            LINEAR
+    );
 
-    private final String fileSuffix;
-    private final RegionFactory regionFactory;
-    private final RegionFileNameFunction regionFileNameFunction;
+    /**
+     * Creates a new {@link Region} from the given world and region-file
+     */
+    Region createRegion(MCAWorld world, Path regionFile);
 
-    RegionType(RegionFactory regionFactory, String fileSuffix, RegionFileNameFunction regionFileNameFunction) {
-        this.fileSuffix = fileSuffix;
-        this.regionFactory = regionFactory;
-        this.regionFileNameFunction = regionFileNameFunction;
-    }
+    /**
+     * Converts region coordinates into the region-file name.
+     */
+    String getRegionFileName(int regionX, int regionZ);
 
-    public String getFileSuffix() {
-        return fileSuffix;
-    }
+    /**
+     * Converts the region-file name into region coordinates.
+     * Returns null if the name does not match the expected format.
+     */
+    @Nullable Vector2i getRegionFromFileName(String fileName);
 
-    public Region createRegion(MCAWorld world, Path regionFile) {
-        return this.regionFactory.create(world, regionFile);
-    }
-
-    public String getRegionFileName(int regionX, int regionZ) {
-        return regionFileNameFunction.getRegionFileName(regionX, regionZ);
-    }
-
-    public Path getRegionFile(Path regionFolder, int regionX, int regionZ) {
-        return regionFolder.resolve(getRegionFileName(regionX, regionZ));
-    }
-
-    @Nullable
-    public static RegionType forFileName(String fileName) {
-        //noinspection ForLoopReplaceableByForEach
-        for (int i = 0; i < VALUES.length; i++) {
-            RegionType regionType = VALUES[i];
-            if (fileName.endsWith(regionType.fileSuffix))
+    static @Nullable RegionType forFileName(String fileName) {
+        for (RegionType regionType : REGISTRY.values()) {
+            if (regionType.getRegionFromFileName(fileName) != null)
                 return regionType;
         }
+
         return null;
     }
 
-    @NotNull
-    public static Region loadRegion(MCAWorld world, Path regionFolder, int regionX, int regionZ) {
-        //noinspection ForLoopReplaceableByForEach
-        for (int i = 0; i < VALUES.length; i++) {
-            RegionType regionType = VALUES[i];
-            Path regionFile = regionType.getRegionFile(regionFolder, regionX, regionZ);
+    static @Nullable Vector2i regionForFileName(String fileName) {
+        for (RegionType regionType : REGISTRY.values()) {
+            Vector2i pos = regionType.getRegionFromFileName(fileName);
+            if (pos != null) return pos;
+        }
+
+        return null;
+    }
+
+    static Region loadRegion(MCAWorld world, Path regionFolder, int regionX, int regionZ) {
+        for (RegionType regionType : REGISTRY.values()) {
+            Path regionFile = regionFolder.resolve(regionType.getRegionFileName(regionX, regionZ));
             if (Files.exists(regionFile)) return regionType.createRegion(world, regionFile);
         }
-        return DEFAULT.createRegion(world, DEFAULT.getRegionFile(regionFolder, regionX, regionZ));
+        return DEFAULT.createRegion(world, regionFolder.resolve(DEFAULT.getRegionFileName(regionX, regionZ)));
+    }
+
+    @RequiredArgsConstructor
+    class Impl implements RegionType {
+
+        @Getter private final Key key;
+        private final RegionFactory regionFactory;
+        private final RegionFileNameFunction regionFileNameFunction;
+        private final Pattern regionFileNamePattern;
+
+        public Region createRegion(MCAWorld world, Path regionFile) {
+            return this.regionFactory.create(world, regionFile);
+        }
+
+        public String getRegionFileName(int regionX, int regionZ) {
+            return regionFileNameFunction.getRegionFileName(regionX, regionZ);
+        }
+
+        @Override
+        public @Nullable Vector2i getRegionFromFileName(String fileName) {
+            Matcher matcher = regionFileNamePattern.matcher(fileName);
+            if (!matcher.matches()) return null;
+            return new Vector2i(
+                    Integer.parseInt(matcher.group(1)),
+                    Integer.parseInt(matcher.group(2))
+            );
+        }
+
     }
 
     @FunctionalInterface

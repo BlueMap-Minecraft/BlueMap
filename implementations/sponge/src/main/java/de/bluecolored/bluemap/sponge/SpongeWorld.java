@@ -25,7 +25,7 @@
 package de.bluecolored.bluemap.sponge;
 
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
-import de.bluecolored.bluemap.core.resources.datapack.DataPack;
+import de.bluecolored.bluemap.core.resources.pack.datapack.DataPack;
 import de.bluecolored.bluemap.core.util.Key;
 import org.spongepowered.api.world.WorldTypes;
 

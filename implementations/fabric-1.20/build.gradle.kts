@@ -9,7 +9,7 @@ plugins {
 	`java-library`
 	id("com.diffplug.spotless") version "6.1.2"
 	id ("com.github.node-gradle.node") version "3.0.1"
-	id ("com.github.johnrengelman.shadow") version "7.1.2"
+	id ("com.github.johnrengelman.shadow") version "8.1.1"
 	id ("fabric-loom") version "1.5-SNAPSHOT"
 	id ("com.modrinth.minotaur") version "2.+"
 	id ("com.matthewprenger.cursegradle") version "1.4.0"
@@ -45,8 +45,6 @@ dependencies {
 		//exclude dependencies provided by fabric
 		exclude (group = "com.google.guava", module = "guava")
 		exclude (group = "com.google.code.gson", module = "gson")
-		exclude (group = "org.apache.commons", module = "commons-lang3")
-		exclude (group = "commons-io", module = "commons-io")
 		exclude (group = "com.mojang", module = "brigadier")
 	}
 

@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.common.config.storage;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.common.config.ConfigurationException;
 import de.bluecolored.bluemap.core.storage.compression.Compression;
 import de.bluecolored.bluemap.core.storage.file.FileStorage;
@@ -34,13 +33,13 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 import java.nio.file.Path;
 
 @SuppressWarnings("FieldMayBeFinal")
-@DebugDump
 @ConfigSerializable
 @Getter
 public class FileConfig extends StorageConfig {
 
     private Path root = Path.of("bluemap", "web", "maps");
     private String compression = Compression.GZIP.getKey().getFormatted();
+    private boolean atomic = true;
 
     public Compression getCompression() throws ConfigurationException {
         return parseKey(Compression.REGISTRY, compression, "compression");
@@ -48,7 +47,7 @@ public class FileConfig extends StorageConfig {
 
     @Override
     public FileStorage createStorage() throws ConfigurationException {
-        return new FileStorage(root, getCompression());
+        return new FileStorage(root, getCompression(), atomic);
     }
 
 }

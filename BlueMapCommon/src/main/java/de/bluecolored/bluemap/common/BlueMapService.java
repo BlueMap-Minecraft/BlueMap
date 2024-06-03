@@ -29,25 +29,24 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.api.gson.MarkerGson;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
 import de.bluecolored.bluemap.common.config.ConfigurationException;
 import de.bluecolored.bluemap.common.config.MapConfig;
 import de.bluecolored.bluemap.common.config.storage.StorageConfig;
 import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.core.MinecraftVersion;
-import de.bluecolored.bluemap.core.debug.StateDumper;
+import de.bluecolored.bluemap.common.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
-import de.bluecolored.bluemap.core.resources.datapack.DataPack;
-import de.bluecolored.bluemap.core.resources.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resources.MinecraftVersion;
+import de.bluecolored.bluemap.core.resources.VersionManifest;
+import de.bluecolored.bluemap.core.resources.pack.datapack.DataPack;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.World;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
-import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.ConfigurationNode;
@@ -68,12 +67,12 @@ import java.util.stream.Stream;
 /**
  * This is the attempt to generalize as many actions as possible to have CLI and Plugins run on the same general setup-code.
  */
-@DebugDump
 public class BlueMapService implements Closeable {
 
     private final BlueMapConfiguration config;
     private final WebFilesManager webFilesManager;
 
+    private MinecraftVersion minecraftVersion;
     private ResourcePack resourcePack;
     private final Map<String, World> worlds;
     private final Map<String, BmMap> maps;
@@ -200,7 +199,7 @@ public class BlueMapService implements Closeable {
                 dimension = DataPack.DIMENSION_THE_END;
             } else if (
                     worldFolder.getNameCount() > 3 &&
-                    worldFolder.getName(worldFolder.getNameCount() - 3).equals(Path.of("dimensions"))
+                    worldFolder.getName(worldFolder.getNameCount() - 3).toString().equals("dimensions")
             ) {
                 String namespace = worldFolder.getName(worldFolder.getNameCount() - 2).toString();
                 String value = worldFolder.getName(worldFolder.getNameCount() - 1).toString();
@@ -220,12 +219,12 @@ public class BlueMapService implements Closeable {
                     "Check if the 'world' setting in the config-file for that map is correct, or remove the entire config-file if you don't want that map.");
         }
 
-        String worldId = MCAWorld.id(worldFolder, dimension);
+        String worldId = World.id(worldFolder, dimension);
         World world = worlds.get(worldId);
         if (world == null) {
             try {
                 Logger.global.logDebug("Loading world " + worldId + " ...");
-                world = MCAWorld.load(worldFolder, dimension);
+                world = MCAWorld.load(worldFolder, dimension, loadDataPack(worldFolder));
                 worlds.put(worldId, world);
             } catch (IOException ex) {
                 throw new ConfigurationException(
@@ -320,108 +319,17 @@ public class BlueMapService implements Closeable {
 
     public synchronized ResourcePack getOrLoadResourcePack() throws ConfigurationException, InterruptedException {
         if (resourcePack == null) {
-            MinecraftVersion minecraftVersion = config.getMinecraftVersion();
-            @Nullable Path resourcePackFolder = config.getResourcePacksFolder();
-            @Nullable Path modsFolder = config.getModsFolder();
-
-            Path defaultResourceFile = config.getCoreConfig().getData().resolve("minecraft-client-" + minecraftVersion.getResource().getVersion().getVersionString() + ".jar");
-            Path resourceExtensionsFile = config.getCoreConfig().getData().resolve("resourceExtensions.zip");
-
-                try {
-                    FileHelper.createDirectories(resourcePackFolder);
-                } catch (IOException ex) {
-                    throw new ConfigurationException(
-                            "BlueMap failed to create this folder:\n" +
-                                    resourcePackFolder + "\n" +
-                                    "Does BlueMap have sufficient permissions?",
-                            ex);
-                }
+            MinecraftVersion minecraftVersion = getOrLoadMinecraftVersion();
+            Path vanillaResourcePack = minecraftVersion.getResourcePack();
 
             if (Thread.interrupted()) throw new InterruptedException();
 
-            if (!Files.exists(defaultResourceFile)) {
-                if (config.getCoreConfig().isAcceptDownload()) {
-                    //download file
-                    try {
-                        Logger.global.logInfo("Downloading " + minecraftVersion.getResource().getClientUrl() + " to " + defaultResourceFile + " ...");
-
-                        FileHelper.createDirectories(defaultResourceFile.getParent());
-                        Path tempResourceFile = defaultResourceFile.getParent().resolve(defaultResourceFile.getFileName() + ".filepart");
-                        Files.deleteIfExists(tempResourceFile);
-                        FileUtils.copyURLToFile(new URL(minecraftVersion.getResource().getClientUrl()), tempResourceFile.toFile(), 10000, 10000);
-                        FileHelper.move(tempResourceFile, defaultResourceFile);
-                    } catch (IOException ex) {
-                        throw new ConfigurationException("Failed to download resources!", ex);
-                    }
-
-                } else {
-                    throw new MissingResourcesException();
-                }
-            }
-
-            if (Thread.interrupted()) throw new InterruptedException();
+            Deque<Path> packRoots = getPackRoots();
+            packRoots.addLast(vanillaResourcePack);
 
             try {
-                Files.deleteIfExists(resourceExtensionsFile);
-                FileHelper.createDirectories(resourceExtensionsFile.getParent());
-                URL resourceExtensionsUrl = Objects.requireNonNull(
-                        Plugin.class.getResource(
-                                "/de/bluecolored/bluemap/" + minecraftVersion.getResource().getResourcePrefix() +
-                                        "/resourceExtensions.zip")
-                );
-                FileUtils.copyURLToFile(resourceExtensionsUrl, resourceExtensionsFile.toFile(), 10000, 10000);
-            } catch (IOException ex) {
-                throw new ConfigurationException(
-                        "Failed to create resourceExtensions.zip!\n" +
-                                "Does BlueMap has sufficient write permissions?",
-                        ex);
-            }
-
-            if (Thread.interrupted()) throw new InterruptedException();
-
-            try {
-                ResourcePack resourcePack = new ResourcePack();
-
-                List<Path> resourcePackRoots = new ArrayList<>();
-
-                if (resourcePackFolder != null) {
-                    // load from resourcepack folder
-                    try (Stream<Path> resourcepackFiles = Files.list(resourcePackFolder)) {
-                        resourcepackFiles
-                                .sorted(Comparator.reverseOrder())
-                                .forEach(resourcePackRoots::add);
-                    }
-                }
-
-                if (config.getCoreConfig().isScanForModResources()) {
-
-                    // load from mods folder
-                    if (modsFolder != null && Files.isDirectory(modsFolder)) {
-                        try (Stream<Path> resourcepackFiles = Files.list(modsFolder)) {
-                            resourcepackFiles
-                                    .filter(Files::isRegularFile)
-                                    .filter(file -> file.getFileName().toString().endsWith(".jar"))
-                                    .forEach(resourcePackRoots::add);
-                        }
-                    }
-
-                    // load from datapacks
-                    for (Path worldFolder : getWorldFolders()) {
-                        Path datapacksFolder = worldFolder.resolve("datapacks");
-                        if (!Files.isDirectory(datapacksFolder)) continue;
-
-                        try (Stream<Path> resourcepackFiles = Files.list(worldFolder.resolve("datapacks"))) {
-                            resourcepackFiles.forEach(resourcePackRoots::add);
-                        }
-                    }
-
-                }
-
-                resourcePackRoots.add(resourceExtensionsFile);
-                resourcePackRoots.add(defaultResourceFile);
-
-                resourcePack.loadResources(resourcePackRoots);
-
+                ResourcePack resourcePack = new ResourcePack(minecraftVersion.getResourcePackVersion());
+                resourcePack.loadResources(packRoots);
                 this.resourcePack = resourcePack;
             } catch (IOException | RuntimeException e) {
                 throw new ConfigurationException("Failed to parse resources!\n" +
@@ -432,17 +340,125 @@ public class BlueMapService implements Closeable {
         return this.resourcePack;
     }
 
-    private Collection<Path> getWorldFolders() {
-        Set<Path> folders = new HashSet<>();
-        for (MapConfig mapConfig : config.getMapConfigs().values()) {
-            Path folder = mapConfig.getWorld();
-            if (folder == null) continue;
-            folder = folder.toAbsolutePath().normalize();
-            if (Files.isDirectory(folder)) {
-                folders.add(folder);
+    public synchronized DataPack loadDataPack(Path worldFolder) throws ConfigurationException, InterruptedException {
+        MinecraftVersion minecraftVersion = getOrLoadMinecraftVersion();
+        Path vanillaDataPack = minecraftVersion.getDataPack();
+
+        if (Thread.interrupted()) throw new InterruptedException();
+
+        // also load world datapacks
+        Iterable<Path> worldPacks = List.of();
+        Path worldPacksFolder = worldFolder.resolve("datapacks");
+        if (Files.isDirectory(worldPacksFolder)) {
+            try (Stream<Path> worldPacksStream = Files.list(worldPacksFolder)) {
+                worldPacks = worldPacksStream.toList();
+            } catch (IOException e) {
+                throw new ConfigurationException("Failed to access the worlds datapacks folder.", e);
             }
         }
-        return folders;
+
+        Deque<Path> packRoots = getPackRoots(worldPacks);
+        packRoots.addLast(vanillaDataPack);
+
+        try {
+            DataPack datapack = new DataPack(minecraftVersion.getDataPackVersion());
+            datapack.loadResources(packRoots);
+            return datapack;
+        } catch (IOException | RuntimeException e) {
+            throw new ConfigurationException("Failed to parse resources!\n" +
+                    "Is one of your resource-packs corrupted?", e);
+        }
+    }
+
+    private synchronized Deque<Path> getPackRoots(Path... additionalRoots) throws ConfigurationException, InterruptedException {
+        return getPackRoots(List.of(additionalRoots));
+    }
+
+    private synchronized Deque<Path> getPackRoots(Iterable<Path> additionalRoots) throws ConfigurationException, InterruptedException {
+        @Nullable Path packsFolder = config.getPacksFolder();
+        @Nullable Path modsFolder = config.getModsFolder();
+
+        try {
+            FileHelper.createDirectories(packsFolder);
+        } catch (IOException ex) {
+            throw new ConfigurationException(
+                    "BlueMap failed to create this folder:\n" +
+                            packsFolder + "\n" +
+                            "Does BlueMap have sufficient permissions?",
+                    ex);
+        }
+
+        Path resourceExtensionsFile = config.getCoreConfig().getData().resolve("resourceExtensions.zip");
+
+        if (Thread.interrupted()) throw new InterruptedException();
+
+        try {
+            Files.deleteIfExists(resourceExtensionsFile);
+            FileHelper.createDirectories(resourceExtensionsFile.getParent());
+            URL resourceExtensionsUrl = Objects.requireNonNull(
+                    Plugin.class.getResource("/de/bluecolored/bluemap/resourceExtensions.zip")
+            );
+            FileHelper.copy(resourceExtensionsUrl, resourceExtensionsFile);
+        } catch (IOException ex) {
+            throw new ConfigurationException(
+                    "Failed to create resourceExtensions.zip!\n" +
+                            "Does BlueMap has sufficient write permissions?",
+                    ex);
+        }
+
+        Deque<Path> packRoots = new LinkedList<>();
+
+        // load from pack folder
+        if (packsFolder != null && Files.isDirectory(packsFolder)) {
+            try (Stream<Path> packFiles = Files.list(packsFolder)) {
+                packFiles
+                        .sorted(Comparator.reverseOrder())
+                        .forEach(packRoots::add);
+            } catch (IOException e) {
+                throw new ConfigurationException("Failed to access packs folder.", e);
+            }
+        }
+
+        // add additional roots
+        additionalRoots.forEach(packRoots::add);
+
+        // load from mods folder
+        if (config.getCoreConfig().isScanForModResources() && modsFolder != null && Files.isDirectory(modsFolder)) {
+            try (Stream<Path> packFiles = Files.list(modsFolder)) {
+                packFiles
+                        .filter(Files::isRegularFile)
+                        .filter(file -> file.getFileName().toString().endsWith(".jar"))
+                        .forEach(packRoots::add);
+            } catch (IOException e) {
+                throw new ConfigurationException("Failed to access packs folder.", e);
+            }
+        }
+
+        packRoots.add(resourceExtensionsFile);
+        return packRoots;
+    }
+
+    public synchronized MinecraftVersion getOrLoadMinecraftVersion() throws ConfigurationException {
+        if (this.minecraftVersion == null) {
+            try {
+                this.minecraftVersion = MinecraftVersion.load(
+                        config.getMinecraftVersion(),
+                        config.getCoreConfig().getData(),
+                        config.getCoreConfig().isAcceptDownload()
+                );
+            } catch (IOException ex) {
+                if (!config.getCoreConfig().isAcceptDownload()) {
+                    throw new MissingResourcesException();
+                } else {
+                    throw new ConfigurationException("""
+                            BlueMap was not able to download some important resources!
+                            Make sure BlueMap is able to connect to mojang-servers (%s)."""
+                            .formatted(VersionManifest.DOMAIN), ex);
+                }
+            }
+        }
+
+        return this.minecraftVersion;
     }
 
     public BlueMapConfiguration getConfig() {

@@ -1,0 +1,18 @@
+{
+  "overlays": {
+    "entries": [
+      {
+        "formats": { "min_inclusive": 5 },
+        "directory": "mc1_15"
+      },
+      {
+        "formats": { "min_inclusive": 7 },
+        "directory": "mc1_17"
+      },
+      {
+        "formats": { "min_inclusive": 22 },
+        "directory": "mc1_20_3"
+      }
+    ]
+  }
+}

@@ -24,26 +24,23 @@
  */
 package de.bluecolored.bluemap.core.util;
 
+import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
+@NoArgsConstructor
 public class Registry<T extends Keyed> {
 
-    private final ConcurrentHashMap<Key, T> entries;
+    private final ConcurrentHashMap<Key, T> entries = new ConcurrentHashMap<>();
 
-    public Registry() {
-        this.entries = new ConcurrentHashMap<>();
-    }
+    private final Set<Key> keys = Collections.unmodifiableSet(entries.keySet());
+    private final Collection<T> values = Collections.unmodifiableCollection(entries.values());
 
     @SafeVarargs
-    public Registry(T... defaultEntires) {
-        this();
-        for (T entry : defaultEntires)
+    public Registry(T... defaultEntries) {
+        for (T entry : defaultEntries)
             register(entry);
     }
 
@@ -71,14 +68,14 @@ public class Registry<T extends Keyed> {
      * Returns an unmodifiable set of all keys this registry contains entries for
      */
     public Set<Key> keys() {
-        return Collections.unmodifiableSet(entries.keySet());
+        return keys;
     }
 
     /**
      * Returns an unmodifiable collection of entries in this registry
      */
     public Collection<T> values() {
-        return Collections.unmodifiableCollection(entries.values());
+        return values;
     }
 
 }

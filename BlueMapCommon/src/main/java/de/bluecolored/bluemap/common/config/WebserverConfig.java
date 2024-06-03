@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.common.config;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import java.net.InetAddress;
@@ -33,7 +32,6 @@ import java.net.UnknownHostException;
 import java.nio.file.Path;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
-@DebugDump
 @ConfigSerializable
 public class WebserverConfig {
 
@@ -75,7 +73,6 @@ public class WebserverConfig {
         return log;
     }
 
-    @DebugDump
     @ConfigSerializable
     public static class LogConfig {
 

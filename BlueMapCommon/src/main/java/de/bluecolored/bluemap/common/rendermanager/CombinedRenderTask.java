@@ -24,11 +24,8 @@
  */
 package de.bluecolored.bluemap.common.rendermanager;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
-
 import java.util.*;
 
-@DebugDump
 public class CombinedRenderTask<T extends RenderTask> implements RenderTask {
 
     private final String description;
@@ -84,13 +81,10 @@ public class CombinedRenderTask<T extends RenderTask> implements RenderTask {
     public boolean contains(RenderTask task) {
         if (this.equals(task)) return true;
 
-        if (task instanceof CombinedRenderTask) {
-            CombinedRenderTask<?> combinedTask = (CombinedRenderTask<?>) task;
-
+        if (task instanceof CombinedRenderTask<?> combinedTask) {
             for (RenderTask subTask : combinedTask.tasks) {
                 if (!this.contains(subTask)) return false;
             }
-
             return true;
         }
 
@@ -111,4 +105,5 @@ public class CombinedRenderTask<T extends RenderTask> implements RenderTask {
         if (this.currentTaskIndex >= this.tasks.size()) return Optional.empty();
         return Optional.ofNullable(this.tasks.get(this.currentTaskIndex).getDescription());
     }
+
 }

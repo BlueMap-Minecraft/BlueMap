@@ -31,7 +31,6 @@ import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.rendermanager.MapPurgeTask;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 
-import java.io.IOException;
 import java.util.Collection;
 
 public class RenderManagerImpl implements RenderManager {
@@ -49,19 +48,19 @@ public class RenderManagerImpl implements RenderManager {
     @Override
     public boolean scheduleMapUpdateTask(BlueMapMap map, boolean force) {
         BlueMapMapImpl cmap = castMap(map);
-        return renderManager.scheduleRenderTask(new MapUpdateTask(cmap.getBmMap(), force));
+        return renderManager.scheduleRenderTask(new MapUpdateTask(cmap.map(), s -> force));
     }
 
     @Override
     public boolean scheduleMapUpdateTask(BlueMapMap map, Collection<Vector2i> regions, boolean force) {
         BlueMapMapImpl cmap = castMap(map);
-        return renderManager.scheduleRenderTask(new MapUpdateTask(cmap.getBmMap(), regions, force));
+        return renderManager.scheduleRenderTask(new MapUpdateTask(cmap.map(), regions, s -> force));
     }
 
     @Override
-    public boolean scheduleMapPurgeTask(BlueMapMap map) throws IOException {
+    public boolean scheduleMapPurgeTask(BlueMapMap map) {
         BlueMapMapImpl cmap = castMap(map);
-        return renderManager.scheduleRenderTask(new MapPurgeTask(cmap.getBmMap()));
+        return renderManager.scheduleRenderTask(new MapPurgeTask(cmap.map()));
     }
 
     @Override

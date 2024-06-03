@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.common.plugin.skins;
 
-import de.bluecolored.bluemap.api.debug.DebugDump;
 import de.bluecolored.bluemap.api.plugin.PlayerIconFactory;
 import de.bluecolored.bluemap.api.plugin.SkinProvider;
 import de.bluecolored.bluemap.common.plugin.Plugin;
@@ -45,7 +44,6 @@ import java.util.concurrent.CompletionException;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
-@DebugDump
 public class PlayerSkinUpdater implements ServerEventListener {
 
     private final Plugin plugin;

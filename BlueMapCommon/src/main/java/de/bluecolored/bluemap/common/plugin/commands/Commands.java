@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.common.plugin.commands;
 
+import com.flowpowered.math.vector.Vector2d;
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
@@ -47,14 +48,16 @@ import de.bluecolored.bluemap.common.plugin.text.TextFormat;
 import de.bluecolored.bluemap.common.rendermanager.*;
 import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.core.BlueMap;
-import de.bluecolored.bluemap.core.MinecraftVersion;
-import de.bluecolored.bluemap.core.debug.StateDumper;
+import de.bluecolored.bluemap.common.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
-import de.bluecolored.bluemap.core.map.MapRenderState;
+import de.bluecolored.bluemap.core.map.renderstate.TileInfoRegion;
+import de.bluecolored.bluemap.core.map.renderstate.TileState;
 import de.bluecolored.bluemap.core.storage.MapStorage;
 import de.bluecolored.bluemap.core.storage.Storage;
+import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.world.Chunk;
+import de.bluecolored.bluemap.core.world.ChunkConsumer;
 import de.bluecolored.bluemap.core.world.World;
 import de.bluecolored.bluemap.core.world.block.Block;
 import de.bluecolored.bluemap.core.world.block.entity.BlockEntity;
@@ -123,6 +126,15 @@ public class Commands<S> {
                                                 .then(argument("z", DoubleArgumentType.doubleArg())
                                                         .executes(this::debugBlockCommand))))))
 
+                .then(literal("map")
+                        .requires(requirements("bluemap.debug"))
+                        .then(argument("map", StringArgumentType.string()).suggests(new MapSuggestionProvider<>(plugin))
+                                .executes(this::debugMapCommand)
+
+                                .then(argument("x", IntegerArgumentType.integer())
+                                        .then(argument("z", IntegerArgumentType.integer())
+                                                .executes(this::debugMapCommand)))))
+
                 .then(literal("flush")
                         .requires(requirements("bluemap.debug"))
                         .executes(this::debugFlushCommand)
@@ -167,6 +179,13 @@ public class Commands<S> {
                         literal("force-update")
                         .requires(requirements("bluemap.update.force")),
                         this::forceUpdateCommand
+                ).build();
+
+        LiteralCommandNode<S> fixEdgesCommand =
+                addRenderArguments(
+                        literal("fix-edges")
+                                .requires(requirements("bluemap.update.force")),
+                        this::fixEdgesCommand
                 ).build();
 
         LiteralCommandNode<S> updateCommand =
@@ -224,6 +243,7 @@ public class Commands<S> {
         baseCommand.addChild(freezeCommand);
         baseCommand.addChild(unfreezeCommand);
         baseCommand.addChild(forceUpdateCommand);
+        baseCommand.addChild(fixEdgesCommand);
         baseCommand.addChild(updateCommand);
         baseCommand.addChild(cancelCommand);
         baseCommand.addChild(purgeCommand);
@@ -329,32 +349,27 @@ public class Commands<S> {
             renderThreadCount = plugin.getRenderManager().getWorkerThreadCount();
         }
 
-        MinecraftVersion minecraftVersion = plugin.getServerInterface().getMinecraftVersion();
+        String minecraftVersion = plugin.getServerInterface().getMinecraftVersion();
 
         source.sendMessage(Text.of(TextFormat.BOLD, TextColor.BLUE, "Version: ", TextColor.WHITE, BlueMap.VERSION));
         source.sendMessage(Text.of(TextColor.GRAY, "Commit: ", TextColor.WHITE, BlueMap.GIT_HASH));
         source.sendMessage(Text.of(TextColor.GRAY, "Implementation: ", TextColor.WHITE, plugin.getImplementationType()));
-        source.sendMessage(Text.of(
-                TextColor.GRAY, "Minecraft compatibility: ", TextColor.WHITE, minecraftVersion.getVersionString(),
-                TextColor.GRAY, " (" + minecraftVersion.getResource().getVersion().getVersionString() + ")"
-                ));
+        source.sendMessage(Text.of(TextColor.GRAY, "Minecraft: ", TextColor.WHITE, minecraftVersion));
         source.sendMessage(Text.of(TextColor.GRAY, "Render-threads: ", TextColor.WHITE, renderThreadCount));
         source.sendMessage(Text.of(TextColor.GRAY, "Available processors: ", TextColor.WHITE, Runtime.getRuntime().availableProcessors()));
         source.sendMessage(Text.of(TextColor.GRAY, "Available memory: ", TextColor.WHITE, (Runtime.getRuntime().maxMemory() / 1024L / 1024L) + " MiB"));
 
-        if (minecraftVersion.isAtLeast(new MinecraftVersion(1, 15))) {
-            String clipboardValue =
-                    "Version: " + BlueMap.VERSION + "\n" +
-                    "Commit: " + BlueMap.GIT_HASH + "\n" +
-                    "Implementation: " + plugin.getImplementationType() + "\n" +
-                    "Minecraft compatibility: " + minecraftVersion.getVersionString() + " (" + minecraftVersion.getResource().getVersion().getVersionString() + ")\n" +
-                    "Render-threads: " + renderThreadCount + "\n" +
-                    "Available processors: " + Runtime.getRuntime().availableProcessors() + "\n" +
-                    "Available memory: " + Runtime.getRuntime().maxMemory() / 1024L / 1024L + " MiB";
-            source.sendMessage(Text.of(TextColor.DARK_GRAY, "[copy to clipboard]")
-                    .setClickAction(Text.ClickAction.COPY_TO_CLIPBOARD, clipboardValue)
-                    .setHoverText(Text.of(TextColor.GRAY, "click to copy the above text .. ", TextFormat.ITALIC, TextColor.GRAY, "duh!")));
-        }
+        String clipboardValue =
+                "Version: " + BlueMap.VERSION + "\n" +
+                "Commit: " + BlueMap.GIT_HASH + "\n" +
+                "Implementation: " + plugin.getImplementationType() + "\n" +
+                "Minecraft: " + minecraftVersion + "\n" +
+                "Render-threads: " + renderThreadCount + "\n" +
+                "Available processors: " + Runtime.getRuntime().availableProcessors() + "\n" +
+                "Available memory: " + Runtime.getRuntime().maxMemory() / 1024L / 1024L + " MiB";
+        source.sendMessage(Text.of(TextColor.DARK_GRAY, "[copy to clipboard]")
+                .setClickAction(Text.ClickAction.COPY_TO_CLIPBOARD, clipboardValue)
+                .setHoverText(Text.of(TextColor.GRAY, "click to copy the above text .. ", TextFormat.ITALIC, TextColor.GRAY, "duh!")));
 
         return 1;
     }
@@ -467,6 +482,86 @@ public class Commands<S> {
         return 1;
     }
 
+    public int debugMapCommand(CommandContext<S> context) {
+        final CommandSource source = commandSourceInterface.apply(context.getSource());
+
+        // parse arguments
+        String mapId = context.getArgument("map", String.class);
+        Optional<Integer> x = getOptionalArgument(context, "x", Integer.class);
+        Optional<Integer> z = getOptionalArgument(context, "z", Integer.class);
+
+        final BmMap map = parseMap(mapId).orElse(null);
+        if (map == null) {
+            source.sendMessage(Text.of(TextColor.RED, "There is no ", helper.mapHelperHover(), " with this id: ", TextColor.WHITE, mapId));
+            return 0;
+        }
+
+        final Vector2i position;
+        if (x.isPresent() && z.isPresent()) {
+            position = new Vector2i(x.get(), z.get());
+        } else {
+            position = source.getPosition()
+                    .map(v -> v.toVector2(true))
+                    .map(Vector2d::floor)
+                    .map(Vector2d::toInt)
+                    .orElse(null);
+
+            if (position == null) {
+                source.sendMessage(Text.of(TextColor.RED, "Can't detect a location from this command-source, you'll have to define a position!"));
+                return 0;
+            }
+        }
+
+        new Thread(() -> {
+            // collect and output debug info
+            Grid chunkGrid = map.getWorld().getChunkGrid();
+            Grid regionGrid = map.getWorld().getRegionGrid();
+            Grid tileGrid = map.getHiresModelManager().getTileGrid();
+
+            Vector2i regionPos = regionGrid.getCell(position);
+            Vector2i chunkPos = chunkGrid.getCell(position);
+            Vector2i tilePos = tileGrid.getCell(position);
+
+            TileInfoRegion.TileInfo tileInfo = map.getMapTileState().get(tilePos.getX(), tilePos.getY());
+
+            int lastChunkHash = map.getMapChunkState().get(chunkPos.getX(), chunkPos.getY());
+            int currentChunkHash = 0;
+
+            class FindHashConsumer implements ChunkConsumer.ListOnly {
+                public int timestamp = 0;
+
+                @Override
+                public void accept(int chunkX, int chunkZ, int timestamp) {
+                    if (chunkPos.getX() == chunkX && chunkPos.getY() == chunkZ)
+                        this.timestamp = timestamp;
+                }
+            }
+
+            try {
+                FindHashConsumer findHashConsumer = new FindHashConsumer();
+                map.getWorld().getRegion(regionPos.getX(), regionPos.getY())
+                        .iterateAllChunks(findHashConsumer);
+                currentChunkHash = findHashConsumer.timestamp;
+            } catch (IOException e) {
+                Logger.global.logError("Failed to load chunk-hash.", e);
+            }
+
+            Map<String, Object> lines = new LinkedHashMap<>();
+            lines.put("region-pos", regionPos);
+            lines.put("chunk-pos", chunkPos);
+            lines.put("chunk-curr-hash", currentChunkHash);
+            lines.put("chunk-last-hash", lastChunkHash);
+            lines.put("tile-pos", tilePos);
+            lines.put("tile-render-time", tileInfo.getRenderTime());
+            lines.put("tile-state", tileInfo.getState().getKey().getFormatted());
+
+            source.sendMessage(Text.of(TextColor.GOLD, "Map tile info:"));
+            source.sendMessage(formatMap(lines));
+        }, "BlueMap-Plugin-DebugMapCommand").start();
+
+        return 1;
+    }
+
     public int debugBlockCommand(CommandContext<S> context) {
         final CommandSource source = commandSourceInterface.apply(context.getSource());
 
@@ -523,7 +618,7 @@ public class Commands<S> {
         lines.put("chunk-has-lightdata", chunk.hasLightData());
         lines.put("chunk-inhabited-time", chunk.getInhabitedTime());
         lines.put("block-state", block.getBlockState());
-        lines.put("biome", block.getBiomeId());
+        lines.put("biome", block.getBiome().getKey());
         lines.put("position", block.getX() + " | " + block.getY() + " | " + block.getZ());
         lines.put("block-light", block.getBlockLightLevel());
         lines.put("sun-light", block.getSunLightLevel());
@@ -533,6 +628,10 @@ public class Commands<S> {
             lines.put("block-entity", blockEntity);
         }
 
+        return formatMap(lines);
+    }
+
+    private Text formatMap(Map<String, Object> lines) {
         Object[] textElements = lines.entrySet().stream()
                 .flatMap(e -> Stream.of(TextColor.GRAY, e.getKey(), ": ", TextColor.WHITE, e.getValue(), "\n"))
                 .toArray(Object[]::new);
@@ -545,7 +644,7 @@ public class Commands<S> {
         final CommandSource source = commandSourceInterface.apply(context.getSource());
 
         try {
-            Path file = plugin.getBlueMap().getConfig().getCoreConfig().getData().resolve("dump.json");
+            Path file = plugin.getBlueMap().getConfig().getCoreConfig().getData().resolve("dump.json.gz");
             StateDumper.global().dump(file);
 
             source.sendMessage(Text.of(TextColor.GREEN, "Dump created at: " + file));
@@ -671,14 +770,18 @@ public class Commands<S> {
     }
 
     public int forceUpdateCommand(CommandContext<S> context) {
-        return updateCommand(context, true);
+        return updateCommand(context, s -> true);
+    }
+
+    public int fixEdgesCommand(CommandContext<S> context) {
+        return updateCommand(context, s -> s == TileState.RENDERED_EDGE);
     }
 
     public int updateCommand(CommandContext<S> context) {
-        return updateCommand(context, false);
+        return updateCommand(context, s -> false);
     }
 
-    public int updateCommand(CommandContext<S> context, boolean force) {
+    public int updateCommand(CommandContext<S> context, Predicate<TileState> force) {
         final CommandSource source = commandSourceInterface.apply(context.getSource());
 
         // parse world/map argument
@@ -705,8 +808,7 @@ public class Commands<S> {
             mapToRender = null;
 
             if (worldToRender == null) {
-                source.sendMessage(Text.of(TextColor.RED, "Can't detect a world from this command-source, you'll have to define a world or a map to update!")
-                        .setHoverText(Text.of(TextColor.GRAY, "/bluemap " + (force ? "force-update" : "update") + " <world|map>")));
+                source.sendMessage(Text.of(TextColor.RED, "Can't detect a world from this command-source, you'll have to define a world or a map to update!"));
                 return 0;
             }
         }
@@ -723,8 +825,7 @@ public class Commands<S> {
             } else {
                 Vector3d position = source.getPosition().orElse(null);
                 if (position == null) {
-                    source.sendMessage(Text.of(TextColor.RED, "Can't detect a position from this command-source, you'll have to define x,z coordinates to update with a radius!")
-                            .setHoverText(Text.of(TextColor.GRAY, "/bluemap " + (force ? "force-update" : "update") + " <x> <z> " + radius)));
+                    source.sendMessage(Text.of(TextColor.RED, "Can't detect a position from this command-source, you'll have to define x,z coordinates to update with a radius!"));
                     return 0;
                 }
 
@@ -754,13 +855,8 @@ public class Commands<S> {
                 }
 
                 for (BmMap map : maps) {
-                    MapUpdateTask updateTask = new MapUpdateTask(map, center, radius);
+                    MapUpdateTask updateTask = new MapUpdateTask(map, center, radius, force);
                     plugin.getRenderManager().scheduleRenderTask(updateTask);
-
-                    if (force) {
-                        MapRenderState state = map.getRenderState();
-                        updateTask.getRegions().forEach(region -> state.setRenderTime(region, -1));
-                    }
 
                     source.sendMessage(Text.of(TextColor.GREEN, "Created new Update-Task for map '" + map.getId() + "' ",
                             TextColor.GRAY, "(" + updateTask.getRegions().size() + " regions, ~" + updateTask.getRegions().size() * 1024L + " chunks)"));
@@ -874,7 +970,7 @@ public class Commands<S> {
             lines.add(Text.of(TextColor.GRAY, "\u00A0\u00A0\u00A0World: ",
                     TextColor.DARK_GRAY, map.getWorld().getId()));
             lines.add(Text.of(TextColor.GRAY, "\u00A0\u00A0\u00A0Last Update: ",
-                    TextColor.DARK_GRAY, helper.formatTime(map.getRenderState().getLatestRenderTime())));
+                    TextColor.DARK_GRAY, helper.formatTime(map.getMapTileState().getLastRenderTime() * 1000L)));
 
             if (frozen)
                 lines.add(Text.of(TextColor.AQUA, TextFormat.ITALIC, "\u00A0\u00A0\u00A0This map is frozen!"));
