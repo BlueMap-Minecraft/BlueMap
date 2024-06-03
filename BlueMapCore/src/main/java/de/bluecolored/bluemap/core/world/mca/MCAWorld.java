@@ -94,7 +94,7 @@ public class MCAWorld implements World {
             .build(this::loadChunk);
 
     private MCAWorld(Path worldFolder, Key dimension, DataPack dataPack, LevelData levelData) {
-        this.id = id(worldFolder, dimension);
+        this.id = World.id(worldFolder, dimension);
         this.worldFolder = worldFolder;
         this.dimension = dimension;
         this.dataPack = dataPack;
@@ -273,16 +273,6 @@ public class MCAWorld implements World {
 
         // create world
         return new MCAWorld(worldFolder, dimension, dataPack, levelData);
-    }
-
-    public static String id(Path worldFolder, Key dimension) {
-        worldFolder = worldFolder.toAbsolutePath().normalize();
-
-        Path workingDir = Path.of("").toAbsolutePath().normalize();
-        if (worldFolder.startsWith(workingDir))
-            worldFolder = workingDir.relativize(worldFolder);
-
-        return "MCA#" + worldFolder + "#" + dimension.getFormatted();
     }
 
     public static Path resolveDimensionFolder(Path worldFolder, Key dimension) {

@@ -31,6 +31,7 @@ import de.bluecolored.bluemap.common.MissingResourcesException;
 import de.bluecolored.bluemap.common.addons.Addons;
 import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.config.*;
+import de.bluecolored.bluemap.common.debug.StateDumper;
 import de.bluecolored.bluemap.common.live.LivePlayersDataSupplier;
 import de.bluecolored.bluemap.common.plugin.skins.PlayerSkinUpdater;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
@@ -40,7 +41,6 @@ import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.common.web.*;
 import de.bluecolored.bluemap.common.web.http.HttpServer;
-import de.bluecolored.bluemap.common.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.metrics.Metrics;
@@ -50,7 +50,6 @@ import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.util.Tristate;
 import de.bluecolored.bluemap.core.world.World;
-import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 import lombok.AccessLevel;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
@@ -639,7 +638,7 @@ public class Plugin implements ServerEventListener {
     }
 
     public @Nullable World getWorld(ServerWorld serverWorld) {
-        String id = MCAWorld.id(serverWorld.getWorldFolder(), serverWorld.getDimension());
+        String id = World.id(serverWorld.getWorldFolder(), serverWorld.getDimension());
         return getBlueMap().getWorlds().get(id);
     }
 

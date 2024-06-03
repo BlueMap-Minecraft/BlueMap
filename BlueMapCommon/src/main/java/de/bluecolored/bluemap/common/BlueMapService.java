@@ -219,7 +219,7 @@ public class BlueMapService implements Closeable {
                     "Check if the 'world' setting in the config-file for that map is correct, or remove the entire config-file if you don't want that map.");
         }
 
-        String worldId = MCAWorld.id(worldFolder, dimension);
+        String worldId = World.id(worldFolder, dimension);
         World world = worlds.get(worldId);
         if (world == null) {
             try {
