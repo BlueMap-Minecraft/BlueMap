@@ -24,12 +24,9 @@
  */
 package de.bluecolored.bluemap.sponge;
 
-import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
-import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
 import org.spongepowered.api.event.Listener;
 import org.spongepowered.api.event.Order;
-import org.spongepowered.api.event.message.PlayerChatEvent;
 import org.spongepowered.api.event.network.ServerSideConnectionEvent;
 
 public class EventForwarder {
@@ -48,11 +45,6 @@ public class EventForwarder {
     @Listener(order = Order.POST)
     public void onPlayerLeave(ServerSideConnectionEvent.Disconnect evt) {
         listener.onPlayerJoin(evt.player().uniqueId());
-    }
-
-    @Listener(order = Order.POST)
-    public void onPlayerChat(PlayerChatEvent evt) {
-        listener.onChatMessage(Text.of(PlainTextComponentSerializer.plainText().serialize(evt.message())));
     }
 
 }

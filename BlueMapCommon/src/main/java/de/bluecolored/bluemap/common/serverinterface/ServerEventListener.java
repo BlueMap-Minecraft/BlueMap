@@ -24,8 +24,6 @@
  */
 package de.bluecolored.bluemap.common.serverinterface;
 
-import de.bluecolored.bluemap.common.plugin.text.Text;
-
 import java.util.UUID;
 
 public interface ServerEventListener {
@@ -33,7 +31,5 @@ public interface ServerEventListener {
     default void onPlayerJoin(UUID playerUuid) {};
 
     default void onPlayerLeave(UUID playerUuid) {};
-
-    default void onChatMessage(Text message) {};
 
 }
