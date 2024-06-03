@@ -44,6 +44,7 @@ import de.bluecolored.bluemap.common.web.http.HttpServer;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
+import de.bluecolored.bluemap.core.map.renderstate.TileState;
 import de.bluecolored.bluemap.core.metrics.Metrics;
 import de.bluecolored.bluemap.core.storage.MapStorage;
 import de.bluecolored.bluemap.core.util.FileHelper;
@@ -71,7 +72,7 @@ public class BlueMapCLI {
     private String minecraftVersion = null;
     private Path configFolder = Path.of("config");
 
-    public void renderMaps(BlueMapService blueMap, boolean watch, boolean forceRender, boolean forceGenerateWebapp,
+    public void renderMaps(BlueMapService blueMap, boolean watch, Predicate<TileState> force, boolean forceGenerateWebapp,
                            @Nullable String mapsToRender) throws ConfigurationException, IOException, InterruptedException {
 
         if (blueMap.getConfig().getWebappConfig().isEnabled())
@@ -112,7 +113,7 @@ public class BlueMapCLI {
         //update all maps
         int totalRegions = 0;
         for (BmMap map : maps.values()) {
-            MapUpdateTask updateTask = new MapUpdateTask(map, s -> forceRender);
+            MapUpdateTask updateTask = new MapUpdateTask(map, force);
             renderManager.scheduleRenderTask(updateTask);
             totalRegions += updateTask.getRegions().size();
         }
@@ -355,7 +356,9 @@ public class BlueMapCLI {
                 noActions = false;
 
                 boolean watch = cmd.hasOption("u");
-                boolean force = cmd.hasOption("f");
+                Predicate<TileState> force = t -> false;
+                if (cmd.hasOption("f")) force = t -> true;
+                else if (cmd.hasOption("e")) force = t -> t == TileState.RENDERED_EDGE;
                 boolean generateWebappFiles = cmd.hasOption("g");
                 String mapsToRender = cmd.getOptionValue("m", null);
                 cli.renderMaps(blueMap, watch, force, generateWebappFiles, mapsToRender);
@@ -453,6 +456,7 @@ public class BlueMapCLI {
         options.addOption("s", "generate-websettings", false, "Updates the settings.json for the web-app");
 
         options.addOption("r", "render", false, "Renders the maps configured in the 'render.conf' file");
+        options.addOption("e", "fix-edges", false, "Forces rendering the map-edges, instead of only rendering chunks that have been modified since the last render");
         options.addOption("f", "force-render", false, "Forces rendering everything, instead of only rendering chunks that have been modified since the last render");
         options.addOption("m", "maps", true, "A comma-separated list of map-id's that should be rendered. Example: 'world,nether'");
 

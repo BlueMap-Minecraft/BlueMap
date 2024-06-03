@@ -52,6 +52,7 @@ import de.bluecolored.bluemap.common.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.map.renderstate.TileInfoRegion;
+import de.bluecolored.bluemap.core.map.renderstate.TileState;
 import de.bluecolored.bluemap.core.storage.MapStorage;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.Grid;
@@ -180,6 +181,13 @@ public class Commands<S> {
                         this::forceUpdateCommand
                 ).build();
 
+        LiteralCommandNode<S> fixEdgesCommand =
+                addRenderArguments(
+                        literal("fix-edges")
+                                .requires(requirements("bluemap.update.force")),
+                        this::fixEdgesCommand
+                ).build();
+
         LiteralCommandNode<S> updateCommand =
                 addRenderArguments(
                         literal("update")
@@ -235,6 +243,7 @@ public class Commands<S> {
         baseCommand.addChild(freezeCommand);
         baseCommand.addChild(unfreezeCommand);
         baseCommand.addChild(forceUpdateCommand);
+        baseCommand.addChild(fixEdgesCommand);
         baseCommand.addChild(updateCommand);
         baseCommand.addChild(cancelCommand);
         baseCommand.addChild(purgeCommand);
@@ -761,14 +770,18 @@ public class Commands<S> {
     }
 
     public int forceUpdateCommand(CommandContext<S> context) {
-        return updateCommand(context, true);
+        return updateCommand(context, s -> true);
+    }
+
+    public int fixEdgesCommand(CommandContext<S> context) {
+        return updateCommand(context, s -> s == TileState.RENDERED_EDGE);
     }
 
     public int updateCommand(CommandContext<S> context) {
-        return updateCommand(context, false);
+        return updateCommand(context, s -> false);
     }
 
-    public int updateCommand(CommandContext<S> context, boolean force) {
+    public int updateCommand(CommandContext<S> context, Predicate<TileState> force) {
         final CommandSource source = commandSourceInterface.apply(context.getSource());
 
         // parse world/map argument
@@ -795,8 +808,7 @@ public class Commands<S> {
             mapToRender = null;
 
             if (worldToRender == null) {
-                source.sendMessage(Text.of(TextColor.RED, "Can't detect a world from this command-source, you'll have to define a world or a map to update!")
-                        .setHoverText(Text.of(TextColor.GRAY, "/bluemap " + (force ? "force-update" : "update") + " <world|map>")));
+                source.sendMessage(Text.of(TextColor.RED, "Can't detect a world from this command-source, you'll have to define a world or a map to update!"));
                 return 0;
             }
         }
@@ -813,8 +825,7 @@ public class Commands<S> {
             } else {
                 Vector3d position = source.getPosition().orElse(null);
                 if (position == null) {
-                    source.sendMessage(Text.of(TextColor.RED, "Can't detect a position from this command-source, you'll have to define x,z coordinates to update with a radius!")
-                            .setHoverText(Text.of(TextColor.GRAY, "/bluemap " + (force ? "force-update" : "update") + " <x> <z> " + radius)));
+                    source.sendMessage(Text.of(TextColor.RED, "Can't detect a position from this command-source, you'll have to define x,z coordinates to update with a radius!"));
                     return 0;
                 }
 
@@ -844,7 +855,7 @@ public class Commands<S> {
                 }
 
                 for (BmMap map : maps) {
-                    MapUpdateTask updateTask = new MapUpdateTask(map, center, radius, s -> force);
+                    MapUpdateTask updateTask = new MapUpdateTask(map, center, radius, force);
                     plugin.getRenderManager().scheduleRenderTask(updateTask);
 
                     source.sendMessage(Text.of(TextColor.GREEN, "Created new Update-Task for map '" + map.getId() + "' ",
