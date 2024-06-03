@@ -187,7 +187,7 @@ if (startsWith($path, "/maps/")) {
             // return result
             if ($line = $statement->fetch()) {
                 header("Cache-Control: public,max-age=86400");
-                compressionHeader($line["compression"]);
+                compressionHeader($line["key"]);
 
                 if ($lod === 0) {
                     header("Content-Type: application/octet-stream");
@@ -233,7 +233,7 @@ if (startsWith($path, "/maps/")) {
             if ($line = $statement->fetch()) {
                 header("Cache-Control: public,max-age=86400");
                 header("Content-Type: ".getMimeType($mapPath));
-                compressionHeader($line["compression"]);
+                compressionHeader($line["key"]);
 
                 send($line["data"]);
                 exit;
