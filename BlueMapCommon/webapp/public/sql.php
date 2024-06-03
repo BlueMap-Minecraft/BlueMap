@@ -21,7 +21,7 @@ $compressionHeaderMap = [
     "bluemap:deflate" => "deflate",
     "bluemap:zstd" => "zstd",
     "bluemap:lz4" => "lz4"
-]
+];
 
 // meta files
 $metaFileKeys = [
@@ -29,7 +29,7 @@ $metaFileKeys = [
     "textures.json" => "bluemap:textures",
     "live/markers.json" => "bluemap:markers",
     "live/players.json" => "bluemap:players",
-]
+];
 
 // mime-types for meta-files
 $mimeDefault = "application/octet-stream";
@@ -125,7 +125,7 @@ if ($root === "/" || $root === "\\") $root = "";
 $uriPath = $_SERVER['REQUEST_URI'];
 $path = substr($uriPath, strlen($root));
 
-// add / 
+// add /
 if ($path === "") {
     header("Location: $uriPath/");
     exit;
@@ -157,14 +157,14 @@ if (startsWith($path, "/maps/")) {
         // parse tile-coordinates
         preg_match_all("/tiles\/([\d\/]+)\/x(-?[\d\/]+)z(-?[\d\/]+).*/", $mapPath, $matches);
         $lod = intval($matches[1][0]);
-        $storage = $lod === 0 ? "bluemap:hires" : "bluemap:lowres/".$lod
+        $storage = $lod === 0 ? "bluemap:hires" : "bluemap:lowres/".$lod;
         $tileX = intval(str_replace("/", "", $matches[2][0]));
         $tileZ = intval(str_replace("/", "", $matches[3][0]));
 
         // query for tile
         try {
             $statement = $sql->prepare("
-                SELECT d.data, c.compression
+                SELECT d.data, c.key
                 FROM bluemap_grid_storage_data d
                 INNER JOIN bluemap_map m
                  ON d.map = m.id
@@ -181,7 +181,6 @@ if (startsWith($path, "/maps/")) {
             $statement->bindParam( ':storage', $storage, PDO::PARAM_STR );
             $statement->bindParam( ':x', $tileX, PDO::PARAM_INT );
             $statement->bindParam( ':z', $tileZ, PDO::PARAM_INT );
-            $statement->bindParam( ':compression', $compression, PDO::PARAM_STR );
             $statement->setFetchMode(PDO::FETCH_ASSOC);
             $statement->execute();
 
@@ -200,7 +199,7 @@ if (startsWith($path, "/maps/")) {
                 exit;
             }
 
-        } catch (PDOException $e) { error(500, "Failed to fetch data"); }
+        } catch (PDOException $e) { error(500, "Failed to fetch data");  }
 
         // no content if nothing found
         http_response_code(204);
@@ -215,7 +214,7 @@ if (startsWith($path, "/maps/")) {
     if ($storage !== null) {
         try {
             $statement = $sql->prepare("
-                SELECT d.data, c.compression
+                SELECT d.data, c.key
                 FROM bluemap_item_storage_data d
                 INNER JOIN bluemap_map m
                  ON d.map = m.id
