@@ -36,6 +36,7 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.concurrent.TimeUnit;
@@ -134,7 +135,10 @@ public class FileRequestHandler implements HttpRequestHandler {
         //create response
         HttpResponse response = new HttpResponse(HttpStatusCode.OK);
         response.addHeader("ETag", eTag);
-        if (lastModified > 0) response.addHeader("Last-Modified", DateTimeFormatter.RFC_1123_DATE_TIME.format(Instant.ofEpochMilli(lastModified)));
+        if (lastModified > 0) response.addHeader("Last-Modified", DateTimeFormatter.RFC_1123_DATE_TIME.format(Instant
+                .ofEpochMilli(lastModified)
+                .atOffset(ZoneOffset.UTC)
+        ));
         response.addHeader("Cache-Control", "public");
         response.addHeader("Cache-Control", "max-age=" + TimeUnit.DAYS.toSeconds(1));
 
