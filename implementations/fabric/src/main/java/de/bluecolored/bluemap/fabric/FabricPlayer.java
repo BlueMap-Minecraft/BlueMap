@@ -64,11 +64,11 @@ public class FabricPlayer implements Player {
 
     private final FabricMod mod;
 
-    public FabricPlayer(UUID playerUuid, FabricMod mod) {
-        this.uuid = playerUuid;
+    public FabricPlayer(ServerPlayerEntity player, FabricMod mod) {
+        this.uuid = player.getUuid();
         this.mod = mod;
 
-        update();
+        update(player);
     }
 
     @Override
@@ -131,6 +131,10 @@ public class FabricPlayer implements Player {
         ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
         if (player == null) return;
 
+        update(player);
+    }
+
+    public void update(ServerPlayerEntity player) {
         this.gamemode = GAMEMODE_MAP.get(player.interactionManager.getGameMode());
         if (this.gamemode == null) this.gamemode = Gamemode.SURVIVAL;
 
