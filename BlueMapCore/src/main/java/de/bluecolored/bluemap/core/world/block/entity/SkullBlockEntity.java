@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.core.world.block.entity;
 
+import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -31,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+@Getter
 public class SkullBlockEntity extends BlockEntity {
     private final @Nullable String noteBlockSound;
     private final @Nullable String extraType;
@@ -47,18 +49,6 @@ public class SkullBlockEntity extends BlockEntity {
         this.skullOwner = ownerData != null ? new SkullOwner(ownerData) : null;
     }
 
-    public @Nullable String getNoteBlockSound() {
-        return noteBlockSound;
-    }
-
-    public @Nullable String getExtraType() {
-        return extraType;
-    }
-
-    public SkullOwner getSkullOwner() {
-        return skullOwner;
-    }
-
     @Override
     public String toString() {
         return "SkullBlockEntity{" +
@@ -68,6 +58,7 @@ public class SkullBlockEntity extends BlockEntity {
                 "} " + super.toString();
     }
 
+    @Getter
     public static class SkullOwner {
         private final @Nullable UUID id;
         private final @Nullable String name;
@@ -75,8 +66,14 @@ public class SkullBlockEntity extends BlockEntity {
 
         @SuppressWarnings("unchecked")
         private SkullOwner(Map<String, Object> data) {
-            int[] uuidInts = (int[]) data.get("Id");
-            this.id = new UUID((long) uuidInts[0] << 32 | uuidInts[1], (long) uuidInts[2] << 32 | uuidInts[3]);
+            int @Nullable [] uuidInts = (int[]) data.get("Id");
+
+            if (uuidInts == null || uuidInts.length != 4) {
+                this.id = null;
+            } else {
+                this.id = new UUID((long) uuidInts[0] << 32 | uuidInts[1], (long) uuidInts[2] << 32 | uuidInts[3]);
+            }
+
             this.name = (String) data.get("Name");
 
             Map<String, Object> properties = (Map<String, Object>) data.getOrDefault("Properties", Map.of());
@@ -85,18 +82,6 @@ public class SkullBlockEntity extends BlockEntity {
             for (Map<String, Object> compound : textures) {
                 this.textures.add(new Texture(compound));
             }
-        }
-
-        public UUID getId() {
-            return id;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public List<Texture> getTextures() {
-            return textures;
         }
 
         @Override
@@ -109,6 +94,7 @@ public class SkullBlockEntity extends BlockEntity {
         }
     }
 
+    @Getter
     public static class Texture {
         private final @Nullable String signature;
         private final String value;
@@ -116,14 +102,6 @@ public class SkullBlockEntity extends BlockEntity {
         private Texture(Map<String, Object> data) {
             this.signature = (String) data.get("signature");
             this.value = (String) data.getOrDefault("value", "");
-        }
-
-        public String getSignature() {
-            return signature;
-        }
-
-        public String getValue() {
-            return value;
         }
 
         @Override
