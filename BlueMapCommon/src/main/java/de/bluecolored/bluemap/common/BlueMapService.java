@@ -184,7 +184,7 @@ public class BlueMapService implements Closeable {
 
         // if there is no world configured, we assume the map is static, or supplied from a different server
         if (worldFolder == null) {
-            Logger.global.logInfo("The map '" + name + "' has no world configured. The map will be displayed, but not updated!");
+            Logger.global.logInfo("The map '" + name + "' has no world configured. The map will be displayed, but it will not be updated by this bluemap instance!");
             return;
         }
 
