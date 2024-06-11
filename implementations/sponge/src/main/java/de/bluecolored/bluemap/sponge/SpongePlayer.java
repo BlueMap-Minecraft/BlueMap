@@ -37,6 +37,7 @@ import org.spongepowered.api.effect.potion.PotionEffectTypes;
 import org.spongepowered.api.entity.living.player.gamemode.GameMode;
 import org.spongepowered.api.entity.living.player.gamemode.GameModes;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
+import org.spongepowered.api.world.LightTypes;
 
 import java.util.*;
 
@@ -48,7 +49,6 @@ public class SpongePlayer implements Player {
         GAMEMODE_MAP.put(GameModes.SURVIVAL.get(), Gamemode.SURVIVAL);
         GAMEMODE_MAP.put(GameModes.CREATIVE.get(), Gamemode.CREATIVE);
         GAMEMODE_MAP.put(GameModes.SPECTATOR.get(), Gamemode.SPECTATOR);
-        GAMEMODE_MAP.put(GameModes.NOT_SET.get(), Gamemode.SURVIVAL);
     }
 
     private final UUID uuid;
@@ -130,7 +130,7 @@ public class SpongePlayer implements Player {
         ServerPlayer player = Sponge.server().player(uuid).orElse(null);
         if (player == null) return;
 
-        this.gamemode = GAMEMODE_MAP.get(player.get(Keys.GAME_MODE).orElse(GameModes.NOT_SET.get()));
+        this.gamemode = GAMEMODE_MAP.get(player.gameMode().get());
         if (this.gamemode == null) this.gamemode = Gamemode.SURVIVAL;
 
         boolean invis = false;
@@ -149,9 +149,8 @@ public class SpongePlayer implements Player {
         this.rotation = SpongePlugin.fromSpongePoweredVector(player.rotation());
         this.sneaking = player.get(Keys.IS_SNEAKING).orElse(false);
 
-        // not implemented in sponge
-        this.skyLight = 15; //player.world().light(LightTypes.SKY, player.blockPosition());
-        this.blockLight = 0; //player.world().light(LightTypes.BLOCK, player.blockPosition());
+        this.skyLight = player.world().light(LightTypes.SKY, player.blockPosition());
+        this.blockLight = player.world().light(LightTypes.BLOCK, player.blockPosition());
 
         this.world = SpongePlugin.getInstance().getServerWorld(player.world());
     }

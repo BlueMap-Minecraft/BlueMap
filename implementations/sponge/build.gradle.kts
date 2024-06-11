@@ -6,7 +6,7 @@ plugins {
 	id("com.diffplug.spotless") version "6.1.2"
 	id ("com.github.node-gradle.node") version "3.0.1"
 	id ("com.github.johnrengelman.shadow") version "8.1.1"
-	id ("org.spongepowered.gradle.plugin") version "2.0.0"
+	id ("org.spongepowered.gradle.plugin") version "2.2.0"
 	id ("com.modrinth.minotaur") version "2.+"
 	id("org.spongepowered.gradle.ore") version "2.2.0"
 }
@@ -14,11 +14,7 @@ plugins {
 group = "de.bluecolored.bluemap"
 version = System.getProperty("bluemap.version") ?: "?" // set by BlueMapCore
 
-val javaTarget = 16
-java {
-	sourceCompatibility = JavaVersion.toVersion(javaTarget)
-	targetCompatibility = JavaVersion.toVersion(javaTarget)
-}
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 repositories {
 	mavenCentral()
@@ -42,7 +38,7 @@ dependencies {
 }
 
 sponge {
-	apiVersion("8.2.0")
+	apiVersion("10.0.0")
 	license("MIT")
 	loader {
 		name(PluginLoaders.JAVA_PLAIN)
@@ -56,7 +52,7 @@ sponge {
 			description("Lead Developer")
 		}
 		dependency("spongeapi") {
-			version("8.2.0")
+			version("10.0.0")
 			optional(false)
 		}
 	}
@@ -135,7 +131,7 @@ modrinth {
 		.replace("{version}", project.version.toString()))
 	uploadFile.set(tasks.findByName("shadowJar"))
 	loaders.addAll("sponge")
-	gameVersions.addAll("1.16.5")
+	gameVersions.addAll("1.19.2", "1.19.3", "1.19.4")
 }
 
 tasks.register("publish") {
