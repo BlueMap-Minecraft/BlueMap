@@ -31,8 +31,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
+import java.nio.file.WatchService;
 import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
+import java.util.concurrent.TimeUnit;
 
 public class FileHelper {
 
@@ -111,6 +113,29 @@ public class FileHelper {
                 OutputStream out = Files.newOutputStream(target)
         ) {
             in.transferTo(out);
+        }
+    }
+
+    /**
+     * Uses file-watchers on the path-parent to wait until a specific file or folder exists
+     */
+    public static boolean awaitExistence(Path path, long timeout, TimeUnit unit) throws IOException, InterruptedException {
+        if (Files.exists(path)) return true;
+
+        long endTime = System.currentTimeMillis() + unit.toMillis(timeout);
+
+        Path parent = path.toAbsolutePath().normalize().getParent();
+        if (parent == null) throw new IOException("No parent directory exists that can be watched.");
+        if (!awaitExistence(parent, timeout, unit)) return false;
+
+        try (WatchService watchService = parent.getFileSystem().newWatchService()) {
+            parent.register(watchService, StandardWatchEventKinds.ENTRY_CREATE);
+            while (!Files.exists(path)) {
+                long now = System.currentTimeMillis();
+                if (now >= endTime) return false;
+                watchService.poll(endTime - now, TimeUnit.MILLISECONDS).reset();
+            }
+            return true;
         }
     }
 

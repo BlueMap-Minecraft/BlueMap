@@ -51,6 +51,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -162,6 +163,7 @@ public class MCAWorld implements World {
 
     @Override
     public Collection<Vector2i> listRegions() {
+        if (!Files.exists(regionFolder)) return Collections.emptyList();
         try (Stream<Path> stream = Files.list(regionFolder)) {
             return stream
                     .map(file -> {

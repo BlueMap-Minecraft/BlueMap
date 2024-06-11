@@ -101,8 +101,8 @@ public class BlueMapCLI {
                     watcher.start();
                     mapUpdateServices.add(watcher);
                 } catch (IOException ex) {
-                    Logger.global.logError("Failed to create file-watcher for map: " + map.getId() +
-                            " (This map might not automatically update)", ex);
+                    Logger.global.logError("Failed to create update-watcher for map: " + map.getId() +
+                            " (This means the map might not automatically update)", ex);
                 } catch (UnsupportedOperationException ex) {
                     Logger.global.logWarning("Update-watcher for map '" + map.getId() + "' is not supported for the world-type." +
                             " (This means the map might not automatically update)");

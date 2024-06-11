@@ -25,34 +25,31 @@
 package de.bluecolored.bluemap.core.world.mca;
 
 import com.flowpowered.math.vector.Vector2i;
+import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.util.WatchService;
 import de.bluecolored.bluemap.core.world.mca.region.RegionType;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.nio.file.ClosedWatchServiceException;
-import java.nio.file.Path;
-import java.nio.file.StandardWatchEventKinds;
-import java.nio.file.WatchKey;
+import java.nio.file.*;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class MCAWorldRegionWatchService implements WatchService<Vector2i> {
 
+    private final Path regionFolder;
     private final java.nio.file.WatchService watchService;
+    private boolean initialized;
 
     public MCAWorldRegionWatchService(Path regionFolder) throws IOException {
+        this.regionFolder = regionFolder;
         this.watchService = regionFolder.getFileSystem().newWatchService();
-        regionFolder.register(this.watchService,
-                StandardWatchEventKinds.ENTRY_CREATE,
-                StandardWatchEventKinds.ENTRY_MODIFY,
-                StandardWatchEventKinds.ENTRY_DELETE
-        );
     }
 
     @Override
-    public @Nullable List<Vector2i> poll() {
+    public @Nullable List<Vector2i> poll() throws IOException {
+        if (!ensureInitialization()) return null;
         try {
             WatchKey key = watchService.poll();
             if (key == null) return null;
@@ -63,9 +60,17 @@ public class MCAWorldRegionWatchService implements WatchService<Vector2i> {
     }
 
     @Override
-    public @Nullable List<Vector2i> poll(long timeout, TimeUnit unit) throws InterruptedException {
+    public @Nullable List<Vector2i> poll(long timeout, TimeUnit unit) throws IOException, InterruptedException {
+        long endTime = System.currentTimeMillis() + unit.toMillis(timeout);
+
+        FileHelper.awaitExistence(regionFolder, timeout, unit);
+        if (!ensureInitialization()) return null;
+
+        long now = System.currentTimeMillis();
+        if (now >= endTime) return null;
+
         try {
-            WatchKey key = watchService.poll(timeout, unit);
+            WatchKey key = watchService.poll(endTime - now, TimeUnit.MILLISECONDS);
             if (key == null) return null;
             return processWatchKey(key);
         } catch (ClosedWatchServiceException e) {
@@ -74,13 +79,30 @@ public class MCAWorldRegionWatchService implements WatchService<Vector2i> {
     }
 
     @Override
-    public List<Vector2i> take() throws InterruptedException {
+    public List<Vector2i> take() throws IOException, InterruptedException {
+        while (!ensureInitialization())
+            FileHelper.awaitExistence(regionFolder, 1, TimeUnit.HOURS);
+
         try {
             WatchKey key = watchService.take();
             return processWatchKey(key);
         } catch (ClosedWatchServiceException e) {
             throw new ClosedException(e);
         }
+    }
+
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    private synchronized boolean ensureInitialization() throws IOException {
+        if (initialized) return true;
+        if (!Files.exists(regionFolder)) return false;
+
+        regionFolder.register(this.watchService,
+                StandardWatchEventKinds.ENTRY_CREATE,
+                StandardWatchEventKinds.ENTRY_MODIFY,
+                StandardWatchEventKinds.ENTRY_DELETE
+        );
+        initialized = true;
+        return true;
     }
 
     @Override

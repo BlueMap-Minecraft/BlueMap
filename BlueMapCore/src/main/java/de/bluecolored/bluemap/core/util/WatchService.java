@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.core.util;
 import lombok.experimental.StandardException;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -41,7 +42,7 @@ public interface WatchService<T> extends AutoCloseable {
      * @throws ClosedException If the watch-service is closed
      */
     @Nullable
-    List<T> poll();
+    List<T> poll() throws IOException;
 
     /**
      * Retrieves and consumes the next batch of events,
@@ -49,7 +50,7 @@ public interface WatchService<T> extends AutoCloseable {
      * @throws ClosedException If the watch-service is closed, or it is closed while waiting for the next event
      * @throws InterruptedException If interrupted while waiting
      */
-    @Nullable List<T> poll(long timeout, TimeUnit unit) throws InterruptedException;
+    @Nullable List<T> poll(long timeout, TimeUnit unit) throws IOException, InterruptedException;
 
     /**
      * Retrieves and consumes the next batch of events,
@@ -57,7 +58,7 @@ public interface WatchService<T> extends AutoCloseable {
      * @throws ClosedException If the watch-service is closed, or it is closed while waiting for the next event
      * @throws InterruptedException If interrupted while waiting
      */
-    List<T> take() throws InterruptedException;
+    List<T> take() throws IOException, InterruptedException;
 
     /**
      * Thrown when the WatchService is closed or gets closed when polling or while waiting for events

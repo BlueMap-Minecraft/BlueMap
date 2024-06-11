@@ -67,6 +67,8 @@ public class MapUpdateService extends Thread {
             while (!closed)
                 this.watchService.take().forEach(this::updateRegion);
         } catch (WatchService.ClosedException ignore) {
+        } catch (IOException e) {
+            Logger.global.logError("Exception trying to watch map '" + map.getId() + "' for updates.", e);
         } catch (InterruptedException iex) {
             Thread.currentThread().interrupt();
         } finally {
