@@ -58,7 +58,7 @@ export class PopupMarker extends Marker {
 
         this.animation = null;
 
-        this.events.addEventListener('bluemapMapInteraction', this.onMapInteraction);
+        this.events.addEventListener('bluemapMapInteraction', evt => window.setTimeout(() => this.onMapInteraction(evt)));
 
         window.addEventListener("mousedown", this.removeHandler);
         window.addEventListener("touchstart", this.removeHandler, { passive: true });

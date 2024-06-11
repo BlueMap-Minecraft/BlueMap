@@ -139,10 +139,13 @@ export class LabelPopup extends CSS2DObject {
                 window.removeEventListener("mousewheel", removeHandler);
             };
 
-            window.addEventListener("mousedown", removeHandler);
-            window.addEventListener("touchstart", removeHandler, { passive: true });
-            window.addEventListener("keydown", removeHandler);
-            window.addEventListener("mousewheel", removeHandler);
+            // add listeners delayed to prevent closing
+            window.setTimeout(() => {
+                window.addEventListener("mousedown", removeHandler);
+                window.addEventListener("touchstart", removeHandler, { passive: true });
+                window.addEventListener("keydown", removeHandler);
+                window.addEventListener("mousewheel", removeHandler);
+            }, 100);
         }
     }
 
