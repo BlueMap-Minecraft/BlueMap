@@ -24,11 +24,7 @@
  */
 package de.bluecolored.bluemap.core.map;
 
-import com.google.gson.FieldNamingPolicy;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonIOException;
-import com.google.gson.JsonParseException;
+import com.google.gson.*;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
@@ -82,7 +78,12 @@ public class TextureGallery {
         this.put(ResourcePack.MISSING_TEXTURE); // put this first
         resourcePack.getTextures().keySet()
                 .stream()
-                .sorted(Comparator.comparing(Key::getFormatted))
+                .sorted(Comparator
+                        .comparing((ResourcePath<Texture> r) ->  {
+                            Texture texture = r.getResource(resourcePack::getTexture);
+                            return texture != null && texture.getColorPremultiplied().a < 1f;
+                        })
+                        .thenComparing(Key::getFormatted))
                 .forEach(this::put);
     }
 
