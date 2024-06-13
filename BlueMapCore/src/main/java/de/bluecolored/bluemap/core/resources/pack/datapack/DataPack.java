@@ -64,17 +64,17 @@ public class DataPack extends Pack {
 
     @Override
     public void loadResources(Iterable<Path> roots) throws IOException, InterruptedException {
-        Logger.global.logInfo("Loading datapack...");
+        Logger.global.logDebug("Loading datapack...");
 
         for (Path root : roots) {
             Logger.global.logDebug("Loading datapack from: " + root + " ...");
             loadResources(root);
         }
 
-        Logger.global.logInfo("Baking datapack...");
+        Logger.global.logDebug("Baking datapack...");
         bake();
 
-        Logger.global.logInfo("Datapack loaded.");
+        Logger.global.logDebug("Datapack loaded.");
     }
 
     private void loadResources(Path root) throws InterruptedException, IOException {

@@ -38,7 +38,10 @@ import lombok.NonNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Stream;
@@ -116,6 +119,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
                                 .setConditional("metrics", useMetricsConfig)
                                 .setVariable("timestamp", LocalDateTime.now().withNano(0).toString())
                                 .setVariable("version", BlueMap.VERSION)
+                                .setVariable("mcVersion", minecraftVersion)
                                 .setVariable("data", formatPath(defaultDataFolder))
                                 .setVariable("implementation", "bukkit")
                                 .setVariable("render-thread-count", Integer.toString(suggestRenderThreadCount()))
