@@ -48,10 +48,10 @@ dependencies {
 		exclude (group = "com.mojang", module = "brigadier")
 	}
 
-	minecraft ("com.mojang:minecraft:1.21")
-	mappings ("net.fabricmc:yarn:1.21+build.1")
-	modImplementation ("net.fabricmc:fabric-loader:0.15.11")
-	modImplementation ("net.fabricmc.fabric-api:fabric-api:0.100.1+1.21")
+	minecraft ("com.mojang:minecraft:1.20.5")
+	mappings ("net.fabricmc:yarn:1.20.5+build.1")
+	modImplementation ("net.fabricmc:fabric-loader:0.15.10")
+	modImplementation ("net.fabricmc.fabric-api:fabric-api:0.97.8+1.20.5")
 	modImplementation("me.lucko:fabric-permissions-api:0.1-SNAPSHOT")
 
 	testImplementation ("org.junit.jupiter:junit-jupiter:5.9.0")
@@ -135,7 +135,7 @@ modrinth {
 		.readText()
 		.replace("{version}", project.version.toString()))
 	uploadFile.set(tasks.findByName("remappedShadowJar"))
-	gameVersions.addAll("1.21")
+	gameVersions.addAll("1.20.5", "1.20.6")
 	dependencies {
 		required.project("P7dR8mSH") // Fabric API
 	}
@@ -155,7 +155,8 @@ curseforge {
 
 		addGameVersion("Java 21")
 
-		addGameVersion("1.21")
+		addGameVersion("1.20.5")
+		addGameVersion("1.20.6")
 
 		mainArtifact(tasks.findByName("remappedShadowJar"), closureOf<CurseArtifact> {
 			relations(closureOf<CurseRelation> {
