@@ -50,7 +50,7 @@ spotless {
 }
 
 node {
-    version.set("16.15.0")
+    version.set("20.14.0")
     download.set(true)
     nodeProjectDir.set(file("webapp/"))
 }
