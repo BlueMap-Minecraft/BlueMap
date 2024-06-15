@@ -378,7 +378,7 @@ public class BlueMapCLI {
                 Logger.global.logInfo("Generated default config files for you, here: " + cli.configFolder.toAbsolutePath().normalize() + "\n");
 
                 //create resourcepacks folder
-                FileHelper.createDirectories(cli.configFolder.resolve( "resourcepacks"));
+                FileHelper.createDirectories(cli.configFolder.resolve("packs"));
 
                 //print help
                 BlueMapCLI.printHelp();
