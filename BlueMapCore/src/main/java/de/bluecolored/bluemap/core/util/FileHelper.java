@@ -133,7 +133,8 @@ public class FileHelper {
             while (!Files.exists(path)) {
                 long now = System.currentTimeMillis();
                 if (now >= endTime) return false;
-                watchService.poll(endTime - now, TimeUnit.MILLISECONDS).reset();
+                WatchKey key = watchService.poll(endTime - now, TimeUnit.MILLISECONDS);
+                if (key != null) key.reset();
             }
             return true;
         }
