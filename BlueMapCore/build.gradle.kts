@@ -39,9 +39,9 @@ val commits = "git rev-list --count $lastTag..HEAD".runCommand()
 println("Git hash: $gitHash" + if (clean) "" else " (dirty)")
 
 group = "de.bluecolored.bluemap"
-version = lastVersion +
-        (if (commits == "0") "" else "-$commits") +
-        (if (clean) "" else "-dirty")
+version = lastVersion //+
+        //(if (commits == "0") "" else "-$commits") +
+        //(if (clean) "" else "-dirty")
 
 System.setProperty("bluemap.version", version.toString())
 System.setProperty("bluemap.lastVersion", lastVersion)
@@ -51,6 +51,7 @@ val javaTarget = 16
 java {
     sourceCompatibility = JavaVersion.toVersion(javaTarget)
     targetCompatibility = JavaVersion.toVersion(javaTarget)
+    withSourcesJar()
 }
 
 repositories {
@@ -127,9 +128,8 @@ tasks.register("zipResourceExtensions", type = Zip::class) {
 }
 
 //always update the zip before build
-tasks.processResources {
-    dependsOn("zipResourceExtensions")
-}
+tasks.processResources { dependsOn("zipResourceExtensions") }
+tasks.getByName("sourcesJar") { dependsOn("zipResourceExtensions") }
 
 publishing {
     repositories {

@@ -17,6 +17,7 @@ val javaTarget = 16
 java {
     sourceCompatibility = JavaVersion.toVersion(javaTarget)
     targetCompatibility = JavaVersion.toVersion(javaTarget)
+    withSourcesJar()
 }
 
 repositories {
@@ -96,9 +97,8 @@ tasks.register("zipWebapp", type = Zip::class) {
 }
 
 //always update the zip before build
-tasks.processResources {
-    dependsOn("zipWebapp")
-}
+tasks.processResources { dependsOn("zipWebapp") }
+tasks.getByName("sourcesJar") { dependsOn("zipWebapp") }
 
 publishing {
     repositories {
