@@ -33,7 +33,7 @@ import de.bluecolored.bluemap.common.config.BlueMapConfigManager;
 import de.bluecolored.bluemap.common.config.ConfigurationException;
 import de.bluecolored.bluemap.common.config.CoreConfig;
 import de.bluecolored.bluemap.common.config.WebserverConfig;
-import de.bluecolored.bluemap.common.debug.StateDumper;
+import de.bluecolored.bluemap.common.metrics.Metrics;
 import de.bluecolored.bluemap.common.plugin.MapUpdateService;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
@@ -45,7 +45,6 @@ import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.map.renderstate.TileState;
-import de.bluecolored.bluemap.common.metrics.Metrics;
 import de.bluecolored.bluemap.core.storage.MapStorage;
 import de.bluecolored.bluemap.core.util.FileHelper;
 import org.apache.commons.cli.*;
@@ -211,8 +210,6 @@ public class BlueMapCLI {
             Runtime.getRuntime().removeShutdownHook(shutdownHook);
             shutdown.run();
         }
-
-        StateDumper.global().dump(Path.of("teststate.json"));
     }
 
     public void startWebserver(BlueMapService blueMap, boolean verbose) throws IOException, ConfigurationException, InterruptedException {
