@@ -18,6 +18,7 @@ java {
     sourceCompatibility = JavaVersion.toVersion(javaTarget)
     targetCompatibility = JavaVersion.toVersion(javaTarget)
     withSourcesJar()
+    withJavadocJar()
 }
 
 repositories {
@@ -47,6 +48,20 @@ spotless {
         licenseHeaderFile("../HEADER")
         indentWithSpaces()
         trimTrailingWhitespace()
+    }
+}
+
+tasks.javadoc {
+    options {
+        (this as? StandardJavadocDocletOptions)?.apply {
+            links(
+                "https://docs.oracle.com/en/java/javase/16/docs/api/",
+                "https://javadoc.io/doc/com.flowpowered/flow-math/1.0.3/",
+                "https://javadoc.io/doc/com.google.code.gson/gson/2.8.0/",
+            )
+            addStringOption("Xdoclint:none", "-quiet")
+            addBooleanOption("html5", true)
+        }
     }
 }
 
