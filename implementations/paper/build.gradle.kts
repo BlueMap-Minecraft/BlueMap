@@ -116,7 +116,8 @@ modrinth {
 	uploadFile.set(tasks.findByName("shadowJar"))
 	loaders.addAll("paper","purpur","folia")
 	gameVersions.addAll(
-		"1.20.1", "1.20.2", "1.20.3", "1.20.4"
+		"1.20.1", "1.20.2", "1.20.3", "1.20.4", "1.20.5", "1.20.6",
+		"1.21"
 	)
 }
 
@@ -136,7 +137,8 @@ hangarPublish {
 			register(io.papermc.hangarpublishplugin.model.Platforms.PAPER) {
 				jar.set(tasks.shadowJar.flatMap { it.archiveFile })
 				platformVersions.set(listOf(
-					"1.20.1", "1.20.2", "1.20.3", "1.20.4"
+					"1.20.1", "1.20.2", "1.20.3", "1.20.4", "1.20.5", "1.20.6",
+					"1.21"
 				))
 			}
 		}
