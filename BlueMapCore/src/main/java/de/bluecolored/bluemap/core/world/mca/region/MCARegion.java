@@ -92,11 +92,11 @@ public class MCARegion implements Region {
             channel.position(xzChunk * 4);
             readFully(channel, header, 0, 4);
 
-            int offset = header[0] << 16;
+            int offset = (header[0] & 0xFF) << 16;
             offset |= (header[1] & 0xFF) << 8;
             offset |= header[2] & 0xFF;
             offset *= 4096;
-            int size = header[3] * 4096;
+            int size = (header[3] & 0xFF) * 4096;
 
             if (size == 0) return Chunk.EMPTY_CHUNK;
 
@@ -131,7 +131,7 @@ public class MCARegion implements Region {
                 for (int z = 0; z < 32; z++) {
                     int xzChunk = (z & 0b11111) << 5 | (x & 0b11111);
 
-                    int size = header[xzChunk * 4 + 3] * 4096;
+                    int size = (header[xzChunk * 4 + 3] & 0xFF) * 4096;
                     if (size == 0) continue;
 
                     int chunkX = chunkStartX + x;
@@ -146,7 +146,7 @@ public class MCARegion implements Region {
                     // load chunk only if consumers filter returns true
                     if (consumer.filter(chunkX, chunkZ, timestamp)) {
                         i = xzChunk * 4;
-                        int offset = header[i++] << 16;
+                        int offset = (header[i++] & 0xFF) << 16;
                         offset |= (header[i++] & 0xFF) << 8;
                         offset |= header[i] & 0xFF;
                         offset *= 4096;
