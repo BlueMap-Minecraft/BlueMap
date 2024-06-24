@@ -80,6 +80,11 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
             Matcher versionMatcher = Pattern.compile("(\\d+(?:\\.\\d+){1,2})[-_].*").matcher(versionString);
             if (!versionMatcher.matches()) throw new IllegalArgumentException();
             version = versionMatcher.group(1);
+
+            // minecraft omits .0 in its versions (e.g. 1.21 instead of 1.21.0) so we should remove it as well
+            if (version.endsWith(".0"))
+                version = version.substring(0, version.length() - 2);
+
         } catch (IllegalArgumentException e) {
             Logger.global.logWarning("Failed to detect the minecraft version of this server! Using latest version.");
         }
