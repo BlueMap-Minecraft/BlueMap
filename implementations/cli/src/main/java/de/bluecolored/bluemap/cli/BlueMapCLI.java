@@ -68,8 +68,11 @@ import java.util.regex.Pattern;
 
 public class BlueMapCLI {
 
+    private static boolean shutdownInProgress = false;
+
     private String minecraftVersion = null;
     private Path configFolder = Path.of("config");
+
 
     public void renderMaps(BlueMapService blueMap, boolean watch, Predicate<TileState> force, boolean forceGenerateWebapp,
                            @Nullable String mapsToRender) throws ConfigurationException, IOException, InterruptedException {
@@ -190,7 +193,10 @@ public class BlueMapCLI {
             Logger.global.logInfo("Stopped.");
         };
 
-        Thread shutdownHook = new Thread(shutdown, "BlueMap-CLI-ShutdownHook");
+        Thread shutdownHook = new Thread(() -> {
+            shutdownInProgress = true;
+            shutdown.run();
+        }, "BlueMap-CLI-ShutdownHook");
         Runtime.getRuntime().addShutdownHook(shutdownHook);
 
         //metrics report
@@ -201,6 +207,8 @@ public class BlueMapCLI {
 
         // wait until done, then shutdown if not watching
         renderManager.awaitIdle();
+        if (shutdownInProgress) return;
+
         Logger.global.logInfo("Your maps are now all up-to-date!");
 
         if (watch) {
