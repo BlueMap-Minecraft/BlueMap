@@ -52,8 +52,8 @@ public class MapPurgeTask implements RenderTask {
         }
         if (this.cancelled) return;
 
-        // save lowres-tile-manager to clear/flush any buffered data
-        this.map.getLowresTileManager().save();
+        // discard any pending lowres changes
+        this.map.getLowresTileManager().discard();
 
         // purge the map
         map.getStorage().delete(progress -> {

@@ -54,6 +54,12 @@ public class LowresTileManager implements TileMetaConsumer {
         }
     }
 
+    public synchronized void discard() {
+        for (LowresLayer layer : this.layers) {
+            layer.discard();
+        }
+    }
+
     public Grid getTileGrid() {
         return tileGrid;
     }

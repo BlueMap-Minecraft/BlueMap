@@ -27,8 +27,6 @@ package de.bluecolored.bluemap.core.map.lowres;
 import com.flowpowered.math.vector.Vector2i;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
-import com.github.benmanes.caffeine.cache.RemovalCause;
-import com.github.benmanes.caffeine.cache.Scheduler;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.storage.GridStorage;
@@ -40,9 +38,14 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class LowresLayer {
+
+    private static final int MAX_PENDING = 200;
+    private static final int DISCARD_THRESHOLD = MAX_PENDING / 2;
 
     private static final Vector2iCache VECTOR_2_I_CACHE = new Vector2iCache();
 
@@ -52,8 +55,11 @@ public class LowresLayer {
     private final int lodFactor;
 
     private final int lod;
+    private final LoadingCache<Vector2i, LowresTile> tileWeakInstanceCache;
     private final LoadingCache<Vector2i, LowresTile> tileCache;
     @Nullable private final LowresLayer nextLayer;
+
+    private final Map<Vector2i, LowresTile> pendingChanges;
 
     public LowresLayer(
             GridStorage storage, Grid tileGrid, int lodFactor,
@@ -69,23 +75,33 @@ public class LowresLayer {
 
         // this extra cache makes sure that a tile instance is reused as long as it is still referenced somewhere ..
         // so always only one instance of the same lowres-tile exists
-        LoadingCache<Vector2i, LowresTile> tileWeakInstanceCache = Caffeine.newBuilder()
+        this.tileWeakInstanceCache = Caffeine.newBuilder()
                 .executor(BlueMap.THREAD_POOL)
                 .weakValues()
                 .build(this::createTile);
 
         this.tileCache = Caffeine.newBuilder()
                 .executor(BlueMap.THREAD_POOL)
-                .scheduler(Scheduler.systemScheduler())
-                .expireAfterAccess(10, TimeUnit.SECONDS)
-                .expireAfterWrite(5, TimeUnit.MINUTES)
-                .removalListener((Vector2i key, LowresTile value, RemovalCause cause) -> saveTile(key, value))
+                .softValues()
+                .maximumSize(1000)
+                .expireAfterAccess(1, TimeUnit.MINUTES)
                 .build(tileWeakInstanceCache::get);
+
+        this.pendingChanges = new ConcurrentHashMap<>();
     }
 
     public void save() {
+        pendingChanges.entrySet().removeIf(entry -> saveTile(entry.getKey(), entry.getValue()));
+        if (pendingChanges.size() >= DISCARD_THRESHOLD) {
+            Logger.global.logDebug("Discarding changes of " + pendingChanges.size() + " lowres-tiles that failed to save!");
+            pendingChanges.clear();
+        }
+    }
+
+    public void discard() {
+        pendingChanges.clear();
         tileCache.invalidateAll();
-        tileCache.cleanUp();
+        tileWeakInstanceCache.invalidateAll();
     }
 
     private LowresTile createTile(Vector2i tilePos) {
@@ -99,13 +115,12 @@ public class LowresLayer {
         return new LowresTile(tileGrid.getGridSize());
     }
 
-    private void saveTile(Vector2i tilePos, @Nullable LowresTile tile) {
-        if (tile == null) return;
+    private boolean saveTile(Vector2i tilePos, LowresTile tile) {
 
         // check if storage is closed
         if (storage.isClosed()){
             Logger.global.logDebug("Tried to save tile " + tilePos + " (lod: " + lod + ") but storage is already closed.");
-            return;
+            return false;
         }
 
         // save the tile
@@ -113,11 +128,12 @@ public class LowresLayer {
             tile.save(out);
         } catch (IOException e) {
             Logger.global.logError("Failed to save tile " + tilePos + " (lod: " + lod + ")", e);
+            return false;
         }
 
-        // write to next LOD (prepare for the most confusing grid-math you will ever see)
-        if (this.nextLayer == null) return;
+        if (this.nextLayer == null) return true;
 
+        // write to next LOD (prepare for the most confusing grid-math you will ever see)
         Color averageColor = new Color();
         int averageHeight, averageBlockLight;
         int count;
@@ -160,29 +176,37 @@ public class LowresLayer {
                 );
             }
         }
+
+        return true;
     }
 
-    private LowresTile getTile(int x, int z) {
-        return tileCache.get(VECTOR_2_I_CACHE.get(x, z));
+    private LowresTile accessTile(int x, int z) {
+        Vector2i tilePos = VECTOR_2_I_CACHE.get(x, z);
+        LowresTile tile = tileCache.get(tilePos);
+
+        if (pendingChanges.size() >= MAX_PENDING) save();
+        pendingChanges.put(tilePos, tile);
+
+        return tile;
     }
 
     void set(int cellX, int cellZ, int pixelX, int pixelZ, Color color, int height, int blockLight) {
-        getTile(cellX, cellZ)
+        accessTile(cellX, cellZ)
                 .set(pixelX, pixelZ, color, height, blockLight);
 
         // for seamless edges
         if (pixelX == 0) {
-            getTile(cellX - 1, cellZ)
+            accessTile(cellX - 1, cellZ)
                     .set(tileGrid.getGridSize().getX(), pixelZ, color, height, blockLight);
         }
 
         if (pixelZ == 0) {
-            getTile(cellX, cellZ - 1)
+            accessTile(cellX, cellZ - 1)
                     .set(pixelX, tileGrid.getGridSize().getY(), color, height, blockLight);
         }
 
         if (pixelX == 0 && pixelZ == 0) {
-            getTile(cellX - 1, cellZ - 1)
+            accessTile(cellX - 1, cellZ - 1)
                     .set(tileGrid.getGridSize().getX(), tileGrid.getGridSize().getY(), color, height, blockLight);
         }
     }
