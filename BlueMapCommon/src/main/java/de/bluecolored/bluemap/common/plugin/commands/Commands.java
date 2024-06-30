@@ -644,7 +644,7 @@ public class Commands<S> {
         final CommandSource source = commandSourceInterface.apply(context.getSource());
 
         try {
-            Path file = plugin.getBlueMap().getConfig().getCoreConfig().getData().resolve("dump.json.gz");
+            Path file = plugin.getBlueMap().getConfig().getCoreConfig().getData().resolve("dump.json");
             StateDumper.global().dump(file);
 
             source.sendMessage(Text.of(TextColor.GREEN, "Dump created at: " + file));
