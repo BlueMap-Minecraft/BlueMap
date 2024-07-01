@@ -79,7 +79,7 @@ public class Chunk_1_13 extends MCAChunk {
         this.inhabitedTime = level.inhabitedTime;
 
         DimensionType dimensionType = getWorld().getDimensionType();
-        this.skyLight = dimensionType.hasSkylight() ? 16 : 0;
+        this.skyLight = dimensionType.hasSkylight() ? 15 : 0;
 
         this.worldSurfaceHeights = level.heightmaps.worldSurface;
         this.oceanFloorHeights = level.heightmaps.oceanFloor;

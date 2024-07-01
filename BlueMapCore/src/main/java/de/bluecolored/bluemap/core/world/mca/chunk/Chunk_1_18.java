@@ -74,7 +74,7 @@ public class Chunk_1_18 extends MCAChunk {
 
         DimensionType dimensionType = getWorld().getDimensionType();
         this.worldMinY = dimensionType.getMinY();
-        this.skyLight = dimensionType.hasSkylight() ? 16 : 0;
+        this.skyLight = dimensionType.hasSkylight() ? 15 : 0;
 
         int worldHeight = dimensionType.getHeight();
         int bitsPerHeightmapElement = MCAUtil.ceilLog2(worldHeight + 1);

@@ -75,7 +75,7 @@ public class Chunk_1_16 extends MCAChunk {
         this.inhabitedTime = level.inhabitedTime;
 
         DimensionType dimensionType = getWorld().getDimensionType();
-        this.skyLight = dimensionType.hasSkylight() ? 16 : 0;
+        this.skyLight = dimensionType.hasSkylight() ? 15 : 0;
 
         int worldHeight = dimensionType.getHeight();
         int bitsPerHeightmapElement = MCAUtil.ceilLog2(worldHeight + 1);
