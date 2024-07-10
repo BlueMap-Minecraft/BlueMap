@@ -52,13 +52,6 @@ export default {
       markers: this.$bluemap.mapViewer.markers.data,
     }
   },
-  mounted() {
-    // Update the map when the page is reloaded / refreshed because it's probably a troubleshooting step
-    const [entry] = performance.getEntriesByType("navigation");
-    if (entry.type === "reload") {
-      this.$bluemap.updateMap();
-    }
-  },
   methods: {
     goFullscreen() {
       document.body.requestFullscreen();
