@@ -408,7 +408,6 @@ export class BlueMapApp {
     async updateBrightness() {
         /*
         Fetch the brightness from the server and update the daylight cycle.
-        Returns timeout/1000 for the update loop.
         */
         return new Promise((resolve, reject) => {
             let loader = new FileLoader();
