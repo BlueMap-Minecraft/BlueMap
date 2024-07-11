@@ -11,6 +11,7 @@
               @update="mapViewer.uniforms.sunlightStrength.value = $event; $bluemap.mapViewer.redraw()">{{$t('lighting.sunlight')}}</Slider>
       <Slider :value="mapViewer.uniforms.ambientLight.value" :min="0" :max="1" :step="0.01"
               @update="mapViewer.uniforms.ambientLight.value = $event; $bluemap.mapViewer.redraw()">{{$t('lighting.ambientLight')}}</Slider>
+      <SwitchButton :on="appState.controls.liveDaylightCycle" @action="appState.controls.liveDaylightCycle = !appState.controls.liveDaylightCycle; $bluemap.saveUserSettings()">{{$t('lighting.liveDaylightCycle')}}</SwitchButton>
     </Group>
 
     <Group :title="$t('resolution.title')">

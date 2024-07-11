@@ -37,6 +37,7 @@ import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.sponge.SpongeCommands.SpongeCommandProxy;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
@@ -316,5 +317,24 @@ public class SpongePlugin implements Server {
 
     public static SpongePlugin getInstance() {
         return instance;
+    }
+
+    @Override
+    public Map<Key, Integer> getSkyBrightness() {
+        Map<Key, Integer> skyBrightness = new HashMap<>();
+        for (var world : Sponge.server().worldManager().worlds()) {
+            int darken = 0;
+            long time = world.properties().dayTime().asTicks().ticks() % 24000;
+
+            if (time >= 12100 && time <= 12800) darken = 3;
+            else if (time > 12800 && time <= 13200) darken = 6;
+            else if (time > 13200 && time <= 22700) darken = 11;
+            else if (time > 23000 && time <= 23400) darken = 6;
+            else if (time > 23400 && time <= 23850) darken = 3;
+            else darken = 0;
+
+            skyBrightness.put(worlds.get(world).getDimension(), darken);
+        }
+        return skyBrightness;
     }
 }

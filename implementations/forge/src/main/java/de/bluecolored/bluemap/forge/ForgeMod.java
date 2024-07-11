@@ -34,6 +34,7 @@ import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.util.Key;
 import net.minecraft.SharedConstants;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
@@ -257,6 +258,16 @@ public class ForgeMod implements Server {
                 onlinePlayerList.get(playerUpdateIndex).update();
             }
         }
+    }
+
+    @Override
+    public Map<Key, Integer> getSkyBrightness() {
+        Map<Key, Integer> skyBrightness = new HashMap<>();
+        Iterable<ServerLevel> levels = serverInstance.getAllLevels();
+        for (ServerLevel level : levels) {
+            skyBrightness.put(worlds.get(level).getDimension(), level.getSkyDarken());
+        }
+        return skyBrightness;
     }
 
 }

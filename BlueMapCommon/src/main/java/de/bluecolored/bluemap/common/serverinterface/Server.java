@@ -28,10 +28,12 @@ import de.bluecolored.bluemap.common.debug.DebugDump;
 import de.bluecolored.bluemap.core.util.Tristate;
 import de.bluecolored.bluemap.core.world.World;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
+import de.bluecolored.bluemap.core.util.Key;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
 
 public interface Server {
@@ -98,6 +100,9 @@ public interface Server {
      */
     @DebugDump
     Collection<Player> getOnlinePlayers();
+
+    @DebugDump
+    Map<Key, Integer> getSkyBrightness();
 
     /**
      * Registers a ServerEventListener, every method of this interface should be called on the specified events

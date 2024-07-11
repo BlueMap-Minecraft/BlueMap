@@ -97,7 +97,8 @@ export class BlueMapApp {
                 showZoomButtons: true,
                 invertMouse: false,
                 enableFreeFlight: false,
-                pauseTileLoading: false
+                pauseTileLoading: false,
+                liveDaylightCycle: false,
             },
             menu: this.mainMenu,
             maps: [],
@@ -120,6 +121,7 @@ export class BlueMapApp {
         this.mapViewer.markers.add(this.popupMarkerSet);
 
         this.updateLoop = null;
+        this.updateDaylightCycle = null;
 
         this.hashUpdateTimeout = null;
         this.viewAnimation = null;
@@ -182,6 +184,8 @@ export class BlueMapApp {
         // start app update loop
         if(this.updateLoop) clearTimeout(this.updateLoop);
         this.updateLoop = setTimeout(this.update, 1000);
+        if(this.updateDaylightCycle) clearTimeout(this.updateDaylightCycle);
+        this.updateDaylightCycle = setTimeout(this.updateDaylight, 1000);
 
         // save user settings
         this.saveUserSettings();
@@ -198,6 +202,24 @@ export class BlueMapApp {
     update = async () => {
         await this.followPlayerMarkerWorld();
         this.updateLoop = setTimeout(this.update, 1000);
+    }
+
+    updateDaylight = () => {
+        if (!this.appState.controls.liveDaylightCycle) {
+            this.updateDaylightCycle = setTimeout(this.updateDaylight, 4000);
+            return;
+        }
+        if (!this.appState || !this.mapViewer.map) {
+            this.updateDaylightCycle = setTimeout(this.updateDaylight, 2000);
+            return;
+        }
+        this.updateBrightness().then(t => {
+            let timeout = Math.max(t, 2000);
+            this.updateDaylightCycle = setTimeout(this.updateDaylight, timeout);
+        }).catch(e => {
+            console.error(e);
+            this.updateDaylightCycle = setTimeout(this.updateDaylight, 3000);
+        });
     }
 
     async followPlayerMarkerWorld() {
@@ -381,6 +403,35 @@ export class BlueMapApp {
                 alert(this.events, e, "warning");
                 this.playerMarkerManager.dispose();
             });
+    }
+
+    async updateBrightness() {
+        /*
+        Fetch the brightness from the server and update the daylight cycle.
+        Returns timeout/1000 for the update loop.
+        */
+        return new Promise((resolve, reject) => {
+            let loader = new FileLoader();
+            loader.setResponseType("json");
+            loader.load(this.mapViewer.map.data.dataUrl + "live/brightness.json?" + generateCacheHash(),
+                fileData => {
+                    if (!fileData || !fileData.brightness) {
+                        reject("Failed to parse brightness.json");
+                    }
+                    let world_name = this.mapViewer.map.data.name.match(/\(([^)]+)\)/)[1].toLowerCase();
+                    for (let idx=0; idx<fileData.brightness.length; idx++) {
+                        let key = fileData.brightness[idx]['dimension']
+                        if (key.toLowerCase() !== world_name) continue;
+                        let brightness = 1 - (fileData.brightness[idx]['val'] / 11) * 0.6;
+                        this.mapViewer.data.uniforms.sunlightStrength.value = brightness;
+                        break;
+                    }
+                    resolve(2000);
+                }, () => {}, () => {
+                    reject("Failed to load brightness.json");
+                }
+            )
+        });
     }
 
     initMarkerFileManager() {
@@ -612,6 +663,7 @@ export class BlueMapApp {
         this.appState.controls.mouseSensitivity = this.loadUserSetting("mouseSensitivity", this.appState.controls.mouseSensitivity);
         this.appState.controls.invertMouse = this.loadUserSetting("invertMouse", this.appState.controls.invertMouse);
         this.appState.controls.pauseTileLoading = this.loadUserSetting("pauseTileLoading", this.appState.controls.pauseTileLoading);
+        this.appState.controls.liveDaylightCycle = this.loadUserSetting("liveDaylightCycle", this.appState.controls.liveDaylightCycle);
         this.appState.controls.showZoomButtons = this.loadUserSetting("showZoomButtons", this.appState.controls.showZoomButtons);
         this.updateControlsSettings();
         this.setTheme(this.loadUserSetting("theme", this.appState.theme));
@@ -635,6 +687,7 @@ export class BlueMapApp {
         this.saveUserSetting("mouseSensitivity", this.appState.controls.mouseSensitivity);
         this.saveUserSetting("invertMouse", this.appState.controls.invertMouse);
         this.saveUserSetting("pauseTileLoading", this.appState.controls.pauseTileLoading);
+        this.saveUserSetting("liveDaylightCycle", this.appState.controls.liveDaylightCycle);
         this.saveUserSetting("showZoomButtons", this.appState.controls.showZoomButtons);
         this.saveUserSetting("theme", this.appState.theme);
         this.saveUserSetting("screenshotClipboard", this.appState.screenshot.clipboard);

@@ -34,6 +34,7 @@ import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.util.Key;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.command.v1.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
@@ -236,6 +237,15 @@ public class FabricMod implements ModInitializer, Server {
                 onlinePlayerList.get(playerUpdateIndex).update();
             }
         }
+    }
+
+    @Override
+    public Map<Key, Integer> getSkyBrightness() {
+        Map<Key, Integer> skyBrightness = new HashMap<>();
+        for (net.minecraft.server.world.ServerWorld world : serverInstance.getWorlds()) {
+            skyBrightness.put(worlds.get(world).getDimension(), world.getAmbientDarkness());
+        }
+        return skyBrightness;
     }
 
 }
