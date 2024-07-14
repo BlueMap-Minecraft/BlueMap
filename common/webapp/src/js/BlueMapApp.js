@@ -598,7 +598,12 @@ export class BlueMapApp {
             return;
         }
 
-        this.mapViewer.clearTileCache(this.loadUserSetting("tileCacheHash", this.mapViewer.tileCacheHash));
+        // Only reuse the user's tile cash hash if the current browser navigation event is not a reload.
+        // If it's a reload, we assume the user is troubleshooting and actually wants to refresh the map.
+        const [entry] = performance.getEntriesByType("navigation");
+        if (entry.type != "reload") {
+            this.mapViewer.clearTileCache(this.loadUserSetting("tileCacheHash", this.mapViewer.tileCacheHash));
+        }
 
         this.mapViewer.superSampling = this.loadUserSetting("superSampling", this.mapViewer.data.superSampling);
         this.mapViewer.data.loadedHiresViewDistance = this.loadUserSetting("hiresViewDistance", this.mapViewer.data.loadedHiresViewDistance);
