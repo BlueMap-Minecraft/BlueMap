@@ -26,7 +26,7 @@ fun Project.gitVersion(): String {
 
 private fun Project.runCommand(cmd: String, fallback: String? = null): String {
     ProcessBuilder(cmd.split("\\s(?=(?:[^'\"`]*(['\"`])[^'\"`]*\\1)*[^'\"`]*$)".toRegex()))
-        .directory(projectDir)
+        .directory(rootProject.projectDir)
         .redirectOutput(ProcessBuilder.Redirect.PIPE)
         .redirectError(ProcessBuilder.Redirect.PIPE)
         .start()
@@ -36,7 +36,8 @@ private fun Project.runCommand(cmd: String, fallback: String? = null): String {
         }
         .run {
             val error = errorStream.bufferedReader().readText().trim()
-            if (error.isEmpty()) inputStream.bufferedReader().readText().trim()
+            if (error.isEmpty()) return inputStream.bufferedReader().readText().trim()
+            logger.warn("Failed to execute command '$cmd': $error")
             if (fallback != null) return fallback
             throw IOException(error)
         }
