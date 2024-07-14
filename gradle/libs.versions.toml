@@ -1,0 +1,35 @@
+[versions]
+configurate = "4.1.2"
+junit = "5.8.2"
+bstats = "2.2.1"
+
+[libraries]
+aircompressor = { module = "io.airlift:aircompressor", version = "0.24" }
+bluenbt = { module = "de.bluecolored.bluenbt:BlueNBT", version = "2.3.0" }
+brigadier = { module = "com.mojang:brigadier", version = "1.0.17" }
+bstats-bukkit = { module = "org.bstats:bstats-bukkit", version.ref = "bstats" }
+bstats-sponge = { module = "org.bstats:bstats-sponge", version.ref = "bstats" }
+caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.1.8" }
+commons-cli = { module = "commons-cli:commons-cli", version = "1.5.0" }
+commons-dbcp2 = { module = "org.apache.commons:commons-dbcp2", version = "2.9.0" }
+configurate-hocon = { module = "org.spongepowered:configurate-hocon", version.ref = "configurate" }
+configurate-gson = { module = "org.spongepowered:configurate-gson", version.ref = "configurate" }
+fabric-permissions = { module = "me.lucko:fabric-permissions-api", version = "0.1-SNAPSHOT" }
+flow-math = { module = "com.flowpowered:flow-math", version = "1.0.3" }
+gson = { module = "com.google.code.gson:gson", version = "2.8.9" }
+jetbrains-annotations = { module = "org.jetbrains:annotations", version = "23.0.0" }
+junit-core = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
+junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
+lombok = { module = "org.projectlombok:lombok", version = "1.18.32" }
+lz4 = { module = "org.lz4:lz4-java", version = "1.8.0" }
+
+[plugins]
+forgegradle = { id = "net.minecraftforge.gradle", version = "[6.0.24,6.2)" }
+hangar = { id = "io.papermc.hangar-publish-plugin", version = "0.+" }
+loom = { id = "fabric-loom", version = "1.+" }
+minotaur = { id = "com.modrinth.minotaur", version = "2.+" }
+node-gradle = { id = "com.github.node-gradle.node", version = "7.+" }
+neoforge-gradle = { id = "net.neoforged.gradle.userdev", version = "7.0.142" }
+shadow = { id = "io.github.goooler.shadow", version = "8.+" }
+sponge-gradle = { id = "org.spongepowered.gradle.plugin", version = "2.2.0" }
+spotless = { id = "com.diffplug.spotless", version = "6.+" }

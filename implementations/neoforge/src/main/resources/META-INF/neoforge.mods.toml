@@ -1,23 +1,23 @@
 modLoader="javafml"
-loaderVersion="${loader_version_range}"
-license="${mod_license}"
+loaderVersion="[${loader_version},)"
+license="MIT"
 
 [[mods]]
-modId="${mod_id}"
-version="${mod_version}"
-displayName="${mod_name}"
-description='''${mod_description}'''
+modId="bluemap"
+version="${version}"
+displayName="BlueMap"
+description='''A 3d-map of your Minecraft worlds view-able in your browser using three.js (WebGL)'''
 displayTest="IGNORE_SERVER_VERSION"
 
-[[dependencies.${mod_id}]] #optional
+[[dependencies.bluemap]]
     modId="neoforge"
     mandatory=true
-    versionRange="${neo_version_range}"
+    versionRange="[${neo_version},)"
     ordering="NONE"
     side="BOTH"
-[[dependencies.${mod_id}]]
+[[dependencies.bluemap]]
     modId="minecraft"
     mandatory=true
-    versionRange="${minecraft_version_range}"
+    versionRange="[${minecraft_version},)"
     ordering="NONE"
     side="BOTH"
