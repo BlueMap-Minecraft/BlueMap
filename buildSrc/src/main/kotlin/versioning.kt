@@ -26,7 +26,7 @@ fun Project.gitVersion(): String {
 
 private fun Project.runCommand(cmd: String, fallback: String? = null): String {
     ProcessBuilder(cmd.split("\\s(?=(?:[^'\"`]*(['\"`])[^'\"`]*\\1)*[^'\"`]*$)".toRegex()))
-        .directory(rootProject.projectDir)
+        .directory(projectDir)
         .redirectOutput(ProcessBuilder.Redirect.PIPE)
         .redirectError(ProcessBuilder.Redirect.PIPE)
         .start()
