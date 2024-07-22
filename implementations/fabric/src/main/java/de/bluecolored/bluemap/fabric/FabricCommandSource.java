@@ -31,16 +31,12 @@ import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.world.World;
 import me.lucko.fabric.api.permissions.v0.Permissions;
-import net.minecraft.registry.BuiltinRegistries;
-import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.Optional;
 
 public class FabricCommandSource implements CommandSource {
-
-    private static final RegistryWrapper.WrapperLookup lookup = BuiltinRegistries.createWrapperLookup();
 
     private final FabricMod mod;
     private final Plugin plugin;
@@ -56,7 +52,7 @@ public class FabricCommandSource implements CommandSource {
     public void sendMessage(Text text) {
         delegate.sendFeedback(
                 () -> net.minecraft.text.Text.Serialization
-                        .fromJson(text.toJSONString(), lookup),
+                        .fromJson(text.toJSONString(), delegate.getRegistryManager()),
                 false
         );
     }

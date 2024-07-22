@@ -31,15 +31,11 @@ import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.world.World;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.core.HolderLookup;
-import net.minecraft.data.registries.VanillaRegistries;
 import net.minecraft.network.chat.Component;
 
 import java.util.Optional;
 
 public class ForgeCommandSource implements CommandSource {
-
-    private static final HolderLookup.Provider lookup = VanillaRegistries.createLookup();
 
     private final ForgeMod mod;
     private final Plugin plugin;
@@ -53,7 +49,7 @@ public class ForgeCommandSource implements CommandSource {
 
     @Override
     public void sendMessage(Text text) {
-        var component = Component.Serializer.fromJsonLenient(text.toJSONString(), lookup);
+        var component = Component.Serializer.fromJsonLenient(text.toJSONString(), delegate.registryAccess());
         if (component != null)
             delegate.sendSuccess(() -> component, false);
     }
