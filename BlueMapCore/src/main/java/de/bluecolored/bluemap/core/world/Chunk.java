@@ -28,6 +28,8 @@ import de.bluecolored.bluemap.core.world.biome.Biome;
 import de.bluecolored.bluemap.core.world.block.entity.BlockEntity;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.function.Consumer;
+
 public interface Chunk {
 
     Chunk EMPTY_CHUNK = new Chunk() {};
@@ -78,5 +80,7 @@ public interface Chunk {
     default int getOceanFloorY(int x, int z) { return 0; }
 
     default @Nullable BlockEntity getBlockEntity(int x, int y, int z) { return null; }
+
+    default void iterateBlockEntities(Consumer<BlockEntity> consumer) { }
 
 }
