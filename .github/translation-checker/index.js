@@ -80,7 +80,7 @@ function parse(str) {
     return nodes;
 }
 
-const langFolder = "../../BlueMapCommon/webapp/public/lang/";
+const langFolder = "../../common/webapp/public/lang/";
 const languageFiles = readdirSync(langFolder).filter(
     (f) => f.endsWith(".conf") && f !== "settings.conf"
 );

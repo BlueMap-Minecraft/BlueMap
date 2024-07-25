@@ -1,8 +1,8 @@
 {
   "pack": {
     "description": {
-      "text": "${mod_id} resources"
+      "text": "bluemap resources"
     },
-    "pack_format": ${pack_format_number}
+    "pack_format": 18
   }
 }

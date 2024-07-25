@@ -24,7 +24,7 @@ jobs:
             21
           cache: 'gradle'
       - name: Build with Gradle
-        run: ./gradlew clean :BlueMapCore:publish :BlueMapCommon:publish
+        run: ./gradlew clean :core:publish :common:publish
         env:
           BLUECOLORED_USERNAME: ${{ secrets.BLUECOLORED_USERNAME }}
           BLUECOLORED_PASSWORD: ${{ secrets.BLUECOLORED_PASSWORD }}

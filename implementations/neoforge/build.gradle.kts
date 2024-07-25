@@ -1,33 +1,25 @@
-import net.fabricmc.loom.task.RemapJarTask
-
 plugins {
     bluemap.implementation
-    alias ( libs.plugins.loom )
+    alias ( libs.plugins.neoforge.gradle )
 }
 
 val minecraftVersion = "1.21"
-val yarnMappings = "${minecraftVersion}+build.1"
-val fabricLoaderVersion = "0.15.11"
-val fabricApiVersion = "0.100.1+${minecraftVersion}"
+val neoVersion = "21.0.0-beta"
+val loaderVersion = "4"
 
 val shadowInclude: Configuration by configurations.creating
 configurations.api.get().extendsFrom(shadowInclude)
+jarJar.enable()
 
 dependencies {
-
     shadowInclude ( project( ":common" ) ) {
         exclude ( group = "com.google.code.gson", module = "gson" )
         exclude ( group = "com.mojang", module = "brigadier" )
     }
 
-    minecraft ("com.mojang:minecraft:${minecraftVersion}")
-    mappings ("net.fabricmc:yarn:${yarnMappings}")
-    modImplementation ("net.fabricmc:fabric-loader:${fabricLoaderVersion}")
-    modImplementation ("net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}")
-    modImplementation( libs.fabric.permissions )
+    implementation ( "net.neoforged", "neoforge", neoVersion )
 
-    // jarInJar
-    include ( libs.flow.math )
+    jarJar ( libs.flow.math.get().group, libs.flow.math.get().name , "[${libs.flow.math.get().version},)" )
 
 }
 
@@ -70,26 +62,36 @@ tasks.shadowJar {
 
 }
 
+tasks.jarJar.configure {
+    archiveFileName = "${project.name}-${project.version}-jarjar.jar"
+}
+
 tasks.withType(ProcessResources::class).configureEach {
     val replacements = mapOf(
         "version" to project.version,
-        "fabric_loader_version" to fabricLoaderVersion,
         "minecraft_version" to minecraftVersion,
-        "java_version" to java.toolchain.languageVersion.get()
+        "neo_version" to neoVersion,
+        "loader_version" to loaderVersion,
     )
     inputs.properties(replacements)
     filesMatching(listOf(
-        "fabric.mod.json",
+        "META-INF/neoforge.mods.toml",
+        "pack.mcmeta"
     )) { expand(replacements) }
 }
 
-val remappedShadowJar = tasks.register("remappedShadowJar", type = RemapJarTask::class) {
-    dependsOn (tasks.shadowJar)
-    inputFile.set(tasks.shadowJar.flatMap { it.destinationDirectory.file(it.archiveFileName) })
-    addNestedDependencies.set(true)
+val mergeShadowAndJarJar = tasks.create<Jar>("mergeShadowAndJarJar") {
+    dependsOn( tasks.shadowJar, tasks.jarJar )
+    from (
+        zipTree( tasks.shadowJar.map { it.outputs.files.singleFile } ),
+        zipTree( tasks.jarJar.map { it.outputs.files.singleFile } ).matching {
+            include("META-INF/jarjar/**")
+        }
+    )
+    archiveFileName = "${project.name}-${project.version}-merged.jar"
 }
 
 tasks.getByName<Copy>("release") {
-    dependsOn(remappedShadowJar)
-    from ( remappedShadowJar.map { it.outputs.files.singleFile } )
+    dependsOn( mergeShadowAndJarJar )
+    from ( mergeShadowAndJarJar.outputs.files.singleFile )
 }
