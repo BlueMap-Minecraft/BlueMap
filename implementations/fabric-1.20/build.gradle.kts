@@ -10,7 +10,7 @@ plugins {
 	id("com.diffplug.spotless") version "6.1.2"
 	id ("com.github.node-gradle.node") version "3.0.1"
 	id ("com.github.johnrengelman.shadow") version "8.1.1"
-	id ("fabric-loom") version "1.5-SNAPSHOT"
+	id ("fabric-loom") version "1.6-SNAPSHOT"
 	id ("com.modrinth.minotaur") version "2.+"
 	id ("com.matthewprenger.cursegradle") version "1.4.0"
 }
@@ -30,7 +30,6 @@ repositories {
 	mavenCentral()
 	maven ("https://libraries.minecraft.net")
 	maven ("https://maven.fabricmc.net/")
-	maven ("https://oss.sonatype.org/content/repositories/snapshots")
 	maven ("https://repo.bluecolored.de/releases")
 }
 
@@ -52,7 +51,7 @@ dependencies {
 	mappings ("net.fabricmc:yarn:1.20+build.1")
 	modImplementation ("net.fabricmc:fabric-loader:0.14.21")
 	modImplementation ("net.fabricmc.fabric-api:fabric-api:0.83.0+1.20")
-	modImplementation("me.lucko:fabric-permissions-api:0.1-SNAPSHOT")
+	modImplementation("me.lucko:fabric-permissions-api:0.3.1")
 
 	testImplementation ("org.junit.jupiter:junit-jupiter:5.9.0")
 	testRuntimeOnly ("org.junit.jupiter:junit-jupiter-engine:5.9.0")
