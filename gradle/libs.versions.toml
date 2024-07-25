@@ -1,7 +1,7 @@
 [versions]
+bstats = "2.2.1"
 configurate = "4.1.2"
 junit = "5.8.2"
-bstats = "2.2.1"
 
 [libraries]
 aircompressor = { module = "io.airlift:aircompressor", version = "0.24" }
@@ -14,7 +14,7 @@ commons-cli = { module = "commons-cli:commons-cli", version = "1.5.0" }
 commons-dbcp2 = { module = "org.apache.commons:commons-dbcp2", version = "2.9.0" }
 configurate-hocon = { module = "org.spongepowered:configurate-hocon", version.ref = "configurate" }
 configurate-gson = { module = "org.spongepowered:configurate-gson", version.ref = "configurate" }
-fabric-permissions = { module = "me.lucko:fabric-permissions-api", version = "0.1-SNAPSHOT" }
+fabric-permissions = { module = "me.lucko:fabric-permissions-api", version = "0.3.1" }
 flow-math = { module = "com.flowpowered:flow-math", version = "1.0.3" }
 gson = { module = "com.google.code.gson:gson", version = "2.8.9" }
 jetbrains-annotations = { module = "org.jetbrains:annotations", version = "23.0.0" }

@@ -168,7 +168,7 @@ public class BlueMapAPIImpl extends BlueMapAPI {
         try {
             BlueMapAPI.registerInstance(this);
         } catch (Exception ex) {
-            Logger.global.logError("BlueMapAPI: A BlueMapAPI listener threw an exception (onEnable)!", ex.getCause());
+            Logger.global.logError("BlueMapAPI: A BlueMapAPI listener threw an exception (onEnable)!", ex);
         }
     }
 
@@ -176,7 +176,7 @@ public class BlueMapAPIImpl extends BlueMapAPI {
         try {
             BlueMapAPI.unregisterInstance(this);
         } catch (Exception ex) {
-            Logger.global.logError("BlueMapAPI: A BlueMapAPI listener threw an exception (onDisable)!", ex.getCause());
+            Logger.global.logError("BlueMapAPI: A BlueMapAPI listener threw an exception (onDisable)!", ex);
         }
     }
 

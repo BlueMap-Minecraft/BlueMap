@@ -42,6 +42,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 public class Chunk_1_18 extends MCAChunk {
 
@@ -203,6 +204,11 @@ public class Chunk_1_18 extends MCAChunk {
     @Override
     public @Nullable BlockEntity getBlockEntity(int x, int y, int z) {
         return blockEntities.get((long) y << 8 | (x & 0xF) << 4 | z & 0xF);
+    }
+
+    @Override
+    public void iterateBlockEntities(Consumer<BlockEntity> consumer) {
+        blockEntities.values().forEach(consumer);
     }
 
     private @Nullable Section getSection(int y) {
