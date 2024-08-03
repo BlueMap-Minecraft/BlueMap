@@ -95,7 +95,6 @@ public class BmMap {
 
         Logger.global.logDebug("Loading render-state for map '" + id + "'");
         this.mapTileState = new MapTileState(storage.tileState());
-        this.mapTileState.load();
         this.mapChunkState = new MapChunkState(storage.chunkState());
 
         if (Thread.interrupted()) throw new InterruptedException();

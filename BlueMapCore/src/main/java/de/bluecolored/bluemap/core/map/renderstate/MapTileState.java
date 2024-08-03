@@ -24,16 +24,9 @@
  */
 package de.bluecolored.bluemap.core.map.renderstate;
 
-import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.storage.GridStorage;
 import de.bluecolored.bluemap.core.util.Grid;
 import lombok.Getter;
-
-import java.io.IOException;
-import java.util.Collections;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Stream;
 
 public class MapTileState extends CellStorage<TileInfoRegion> {
 
@@ -41,30 +34,9 @@ public class MapTileState extends CellStorage<TileInfoRegion> {
     public static final Grid GRID = new Grid(1 << SHIFT);
 
     @Getter private int lastRenderTime = -1;
-    private final Map<TileState, Integer> chunkStateCounts = new ConcurrentHashMap<>();
 
     public MapTileState(GridStorage storage) {
         super(storage, TileInfoRegion.class);
-    }
-
-    public synchronized void load() {
-        lastRenderTime = -1;
-        chunkStateCounts.clear();
-
-        try (Stream<GridStorage.Cell> stream = getStorage().stream()) {
-            stream.forEach(cell -> {
-                TileInfoRegion region = cell(cell.getX(), cell.getZ());
-                lastRenderTime = Math.max(lastRenderTime, region.findLatestRenderTime());
-                region.populateSummaryMap(chunkStateCounts);
-            });
-        } catch (IOException e) {
-            Logger.global.logError("Failed to load render-state regions", e);
-        }
-    }
-
-    public synchronized void reset() {
-        super.reset();
-        load();
     }
 
     public TileInfoRegion.TileInfo get(int x, int z) {
@@ -77,23 +49,12 @@ public class MapTileState extends CellStorage<TileInfoRegion> {
         if (info.getRenderTime() > lastRenderTime)
             lastRenderTime = info.getRenderTime();
 
-        if (old.getState() != info.getState()) {
-            chunkStateCounts.merge(old.getState(), -1, Integer::sum);
-            chunkStateCounts.merge(info.getState(), 1, Integer::sum);
-        }
-
         return old;
-    }
-
-    public Map<TileState, Integer> getChunkStateCounts() {
-        return Collections.unmodifiableMap(chunkStateCounts);
     }
 
     @Override
     protected synchronized TileInfoRegion createNewCell() {
-        TileInfoRegion region = TileInfoRegion.create();
-        region.populateSummaryMap(chunkStateCounts);
-        return region;
+        return TileInfoRegion.create();
     }
 
 }
