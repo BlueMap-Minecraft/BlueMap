@@ -35,11 +35,13 @@ import java.util.Map;
 public interface BlockEntityType extends Keyed, BlockEntityLoader {
 
     BlockEntityType SIGN = new Impl(Key.minecraft("sign"), SignBlockEntity::new);
+    BlockEntityType HANGING_SIGN = new Impl(Key.minecraft("hanging_sign"), SignBlockEntity::new);
     BlockEntityType SKULL = new Impl(Key.minecraft("skull"), SkullBlockEntity::new);
     BlockEntityType BANNER = new Impl(Key.minecraft("banner"), BannerBlockEntity::new);
 
     Registry<BlockEntityType> REGISTRY = new Registry<>(
             SIGN,
+            HANGING_SIGN,
             SKULL,
             BANNER
     );
