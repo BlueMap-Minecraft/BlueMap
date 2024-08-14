@@ -149,7 +149,10 @@ if (startsWith($path, "/maps/")) {
     try {
         $sql = new PDO("$driver:host=$hostname;port=$port;dbname=$database", $username, $password);
         $sql->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-    } catch (PDOException $e ) { error(500, "Failed to connect to database"); }
+    } catch (PDOException $e ) { 
+        error_log($e->getMessage(), 0); // Logs the detailed error message
+        error(500, "Failed to connect to database"); 
+    }
 
     // provide map-tiles
     if (startsWith($mapPath, "tiles/")) {
