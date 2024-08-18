@@ -150,8 +150,7 @@ if (startsWith($path, "/maps/")) {
         $sql = new PDO("$driver:host=$hostname;port=$port;dbname=$database", $username, $password);
         $sql->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     } catch (PDOException $e ) { 
-        error_log($e->getMessage(), 0); // Logs the detailed error message
-        error(500, "Failed to connect to database"); 
+        error(500, "Failed to connect to database: ".$e->getMessage());
     }
 
     // provide map-tiles
@@ -202,7 +201,7 @@ if (startsWith($path, "/maps/")) {
                 exit;
             }
 
-        } catch (PDOException $e) { error(500, "Failed to fetch data");  }
+        } catch (PDOException $e) { error(500, "Failed to fetch data: ".$e->getMessage()); }
 
         // no content if nothing found
         http_response_code(204);
@@ -241,7 +240,7 @@ if (startsWith($path, "/maps/")) {
                 send($line["data"]);
                 exit;
             }
-        } catch (PDOException $e) { error(500, "Failed to fetch data"); }
+        } catch (PDOException $e) { error(500, "Failed to fetch data: ".$e->getMessage()); }
     }
 
 }
