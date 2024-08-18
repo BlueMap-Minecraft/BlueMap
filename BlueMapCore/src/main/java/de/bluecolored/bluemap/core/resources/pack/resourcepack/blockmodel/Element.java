@@ -46,6 +46,7 @@ public class Element {
     private Vector3f from = FULL_BLOCK_MIN, to = FULL_BLOCK_MAX;
     private Rotation rotation = Rotation.ZERO;
     private boolean shade = true;
+    private int lightEmission = 0;
     private EnumMap<Direction, Face> faces = new EnumMap<>(Direction.class);
 
     @SuppressWarnings("unused")
@@ -56,6 +57,7 @@ public class Element {
         this.to = copyFrom.to;
         this.rotation = copyFrom.rotation;
         this.shade = copyFrom.shade;
+        this.lightEmission = copyFrom.lightEmission;
 
         copyFrom.faces.forEach((direction, face) -> this.faces.put(direction, face.copy()));
     }
@@ -130,6 +132,10 @@ public class Element {
 
     public boolean isShade() {
         return shade;
+    }
+
+    public int getLightEmission() {
+        return lightEmission;
     }
 
     public EnumMap<Direction, Face> getFaces() {

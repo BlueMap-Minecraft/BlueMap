@@ -305,8 +305,9 @@ public class ResourceModelBuilder {
         }
 
         // ####### blocklight
-        tileModel.setBlocklight(face1, blockLight);
-        tileModel.setBlocklight(face2, blockLight);
+        int emissiveBlockLight = Math.max(blockLight, element.getLightEmission());
+        tileModel.setBlocklight(face1, emissiveBlockLight);
+        tileModel.setBlocklight(face2, emissiveBlockLight);
 
         // ####### sunlight
         tileModel.setSunlight(face1, sunLight);
