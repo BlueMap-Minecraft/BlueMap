@@ -1,5 +1,3 @@
-rootProject.name = "bluemap"
-
 logger.lifecycle("""
 ## Building BlueMap ...
 Java: ${System.getProperty("java.version")}
@@ -17,10 +15,12 @@ pluginManagement {
     }
 }
 
+rootProject.name = "bluemap"
+
 includeBuild("api")
 
-include(":core")
-include(":common")
+module("core")
+module("common")
 
 implementation("cli")
 implementation("fabric")
@@ -30,8 +30,14 @@ implementation("paper")
 implementation("spigot")
 implementation("sponge")
 
+fun module(name: String) {
+    val project = ":${rootProject.name}-$name"
+    include(project)
+    project(project).projectDir = file(name)
+}
+
 fun implementation(name: String) {
-    val project = ":$name"
+    val project = ":${rootProject.name}-$name"
     include(project)
     project(project).projectDir = file("implementations/$name")
 }

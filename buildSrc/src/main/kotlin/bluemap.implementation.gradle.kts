@@ -10,13 +10,18 @@ tasks.shadowJar {
     archiveFileName = "${project.name}-${project.version}-shadow.jar"
 }
 
-tasks.register<Copy>("release") {
-    dependsOn(tasks.shadowJar)
-    from ( tasks.shadowJar.map { it.outputs.files.singleFile } )
-    into ( releaseDirectory )
-    rename { "bluemap-${version}-${project.name}.jar" }
+tasks.register<CopyFileTask>("release") {
+    group = "publishing"
+    dependsOn(tasks.shadowJar, tasks.spotlessCheck)
 
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    val prefix = "bluemap-"
+    var implementation = project.name
+    if (implementation.startsWith(prefix) ) {
+        implementation = implementation.substring(prefix.length)
+    }
+
+    inputFile = tasks.shadowJar.flatMap { it.archiveFile }
+    outputFile = releaseDirectory.resolve("bluemap-${version}-${implementation}.jar")
 }
 
 tasks.getByName<Delete>("clean") {

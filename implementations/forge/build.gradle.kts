@@ -1,9 +1,15 @@
 plugins {
     bluemap.implementation
+    bluemap.modrinth
+    bluemap.curseforge
     alias ( libs.plugins.forgegradle )
 }
 
-val minecraftVersion = "1.21"
+val supportedMinecraftVersions = listOf(
+    "1.21"
+)
+
+val minecraftVersion = supportedMinecraftVersions.first()
 val forgeVersion = "51.0.1"
 
 val shadowInclude: Configuration by configurations.creating
@@ -12,7 +18,7 @@ jarJar.enable()
 
 dependencies {
 
-    shadowInclude ( project( ":common" ) ) {
+    shadowInclude ( project( ":bluemap-common" ) ) {
         exclude ( group = "com.google.code.gson", module = "gson" )
         exclude ( group = "com.mojang", module = "brigadier" )
     }
@@ -21,10 +27,6 @@ dependencies {
 
     jarJar ( libs.flow.math.get().group, libs.flow.math.get().name , "[${libs.flow.math.get().version},)" )
 
-}
-
-java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
 minecraft {
@@ -95,7 +97,19 @@ val mergeShadowAndJarJar = tasks.create<Jar>("mergeShadowAndJarJar") {
     archiveFileName = "${project.name}-${project.version}-merged.jar"
 }
 
-tasks.getByName<Copy>("release") {
+tasks.getByName<CopyFileTask>("release") {
     dependsOn( mergeShadowAndJarJar )
-    from ( mergeShadowAndJarJar.outputs.files.singleFile )
+    inputFile = mergeShadowAndJarJar.outputs.files.singleFile
+}
+
+modrinth {
+    gameVersions.addAll(supportedMinecraftVersions)
+}
+
+curseforgeBlueMap {
+    addGameVersion("Forge")
+    addGameVersion("Java ${java.toolchain.languageVersion.get()}")
+    supportedMinecraftVersions.forEach {
+        addGameVersion(it)
+    }
 }

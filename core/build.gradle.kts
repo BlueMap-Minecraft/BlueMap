@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-    api ( "de.bluecolored.bluemap:bluemap-api" )
+    api ( "de.bluecolored:bluemap-api" )
 
     api ( libs.aircompressor )
     api ( libs.bluenbt )
@@ -27,8 +27,8 @@ dependencies {
 
 tasks.register("zipResourceExtensions", type = Zip::class) {
     from(fileTree("src/main/resourceExtensions"))
-    archiveFileName.set("resourceExtensions.zip")
-    destinationDirectory.set(file("src/main/resources/de/bluecolored/bluemap/"))
+    archiveFileName = "resourceExtensions.zip"
+    destinationDirectory = file("src/main/resources/de/bluecolored/bluemap/")
 }
 
 tasks.processResources {
@@ -47,4 +47,16 @@ tasks.processResources {
 
 tasks.getByName("sourcesJar") {
     dependsOn("zipResourceExtensions")
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = project.group.toString()
+            artifactId = project.name
+            version = project.version.toString()
+
+            from(components["java"])
+        }
+    }
 }

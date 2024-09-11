@@ -2,10 +2,16 @@ import net.fabricmc.loom.task.RemapJarTask
 
 plugins {
     bluemap.implementation
+    bluemap.modrinth
+    bluemap.curseforge
     alias ( libs.plugins.loom )
 }
 
-val minecraftVersion = "1.21"
+val supportedMinecraftVersions = listOf(
+    "1.21"
+)
+
+val minecraftVersion = supportedMinecraftVersions.first()
 val yarnMappings = "${minecraftVersion}+build.1"
 val fabricLoaderVersion = "0.15.11"
 val fabricApiVersion = "0.100.1+${minecraftVersion}"
@@ -15,7 +21,7 @@ configurations.api.get().extendsFrom(shadowInclude)
 
 dependencies {
 
-    shadowInclude ( project( ":common" ) ) {
+    shadowInclude ( project( ":bluemap-common" ) ) {
         exclude ( group = "com.google.code.gson", module = "gson" )
         exclude ( group = "com.mojang", module = "brigadier" )
     }
@@ -29,10 +35,6 @@ dependencies {
     // jarInJar
     include ( libs.flow.math )
 
-}
-
-java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
 tasks.shadowJar {
@@ -85,11 +87,25 @@ tasks.withType(ProcessResources::class).configureEach {
 
 val remappedShadowJar = tasks.register("remappedShadowJar", type = RemapJarTask::class) {
     dependsOn (tasks.shadowJar)
-    inputFile.set(tasks.shadowJar.flatMap { it.destinationDirectory.file(it.archiveFileName) })
-    addNestedDependencies.set(true)
+    archiveFileName = "${project.name}-${project.version}-shadow-remapped.jar"
+    inputFile = tasks.shadowJar.flatMap { it.archiveFile }
+    addNestedDependencies = true
 }
 
-tasks.getByName<Copy>("release") {
+tasks.getByName<CopyFileTask>("release") {
     dependsOn(remappedShadowJar)
-    from ( remappedShadowJar.map { it.outputs.files.singleFile } )
+    inputFile = remappedShadowJar.flatMap { it.archiveFile }
+}
+
+modrinth {
+    gameVersions.addAll(supportedMinecraftVersions)
+    dependencies { required.project("P7dR8mSH") } // Fabric API
+}
+
+curseforgeBlueMap {
+    addGameVersion("Fabric")
+    addGameVersion("Java ${java.toolchain.languageVersion.get()}")
+    supportedMinecraftVersions.forEach {
+        addGameVersion(it)
+    }
 }

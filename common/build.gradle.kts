@@ -7,7 +7,7 @@ plugins {
 }
 
 dependencies {
-    api ( project( ":core" ) )
+    api ( project( ":bluemap-core" ) )
 
     api ( libs.brigadier )
 
@@ -24,14 +24,14 @@ dependencies {
 }
 
 node {
-    version.set("20.14.0")
-    download.set(true)
-    nodeProjectDir.set(file("webapp/"))
+    version = "20.14.0"
+    download = true
+    nodeProjectDir = file("webapp/")
 }
 
 tasks.register("buildWebapp", type = NpmTask::class) {
     dependsOn ("npmInstall")
-    args.set(listOf("run", "build"))
+    args = listOf("run", "build")
 
     inputs.dir("webapp/")
     outputs.dir("webapp/dist/")
@@ -40,8 +40,8 @@ tasks.register("buildWebapp", type = NpmTask::class) {
 tasks.register("zipWebapp", type = Zip::class) {
     dependsOn ("buildWebapp")
     from (fileTree("webapp/dist/"))
-    archiveFileName.set("webapp.zip")
-    destinationDirectory.set(file("src/main/resources/de/bluecolored/bluemap/"))
+    archiveFileName = "webapp.zip"
+    destinationDirectory = file("src/main/resources/de/bluecolored/bluemap/")
 
     inputs.dir("webapp/dist/")
     outputs.file("src/main/resources/de/bluecolored/bluemap/webapp.zip")
@@ -59,5 +59,17 @@ tasks.clean {
     doFirst {
         if (!file("webapp/dist/").deleteRecursively())
             throw IOException("Failed to delete build directory!")
+    }
+}
+
+publishing {
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = project.group.toString()
+            artifactId = project.name
+            version = project.version.toString()
+
+            from(components["java"])
+        }
     }
 }

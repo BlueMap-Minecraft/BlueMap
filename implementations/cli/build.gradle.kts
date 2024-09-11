@@ -3,12 +3,8 @@ plugins {
 }
 
 dependencies {
-    api ( project( ":common" ) )
+    api ( project( ":bluemap-common" ) )
     api ( libs.commons.cli )
-}
-
-java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(16))
 }
 
 tasks.jar {

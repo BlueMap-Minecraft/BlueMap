@@ -1,21 +1,24 @@
 plugins {
     bluemap.implementation
+    bluemap.modrinth
+    bluemap.hangar
 }
 
-val minecraftVersion = "1.20.1"
+val supportedMinecraftVersions = listOf(
+    "1.20.1", "1.20.2", "1.20.3", "1.20.4", "1.20.5", "1.20.6",
+    "1.21"
+)
+
+val minecraftVersion = supportedMinecraftVersions.first()
 val paperVersion = "${minecraftVersion}-R0.1-SNAPSHOT"
 
 dependencies {
-    api ( project( ":common" ) ) {
+    api ( project( ":bluemap-common" ) ) {
         exclude( group = "com.google.code.gson", module = "gson" )
     }
 
     shadow ( "io.papermc.paper", "paper-api", paperVersion )
     api ( libs.bstats.bukkit )
-}
-
-java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
 }
 
 tasks.shadowJar {
@@ -65,5 +68,18 @@ tasks.processResources {
             "api_version" to minecraftVersion,
             "flow_math_version" to libs.flow.math.get().version
         )
+    }
+}
+
+modrinth {
+    loaders.addAll("paper", "purpur", "folia")
+    gameVersions.addAll(supportedMinecraftVersions)
+}
+
+hangarPublish {
+    publications.named("bluemap") {
+        platforms.paper {
+            platformVersions = supportedMinecraftVersions
+        }
     }
 }

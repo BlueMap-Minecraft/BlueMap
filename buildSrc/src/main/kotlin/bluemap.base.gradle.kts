@@ -1,10 +1,11 @@
 plugins {
     java
     `java-library`
+    `maven-publish`
     id ( "com.diffplug.spotless" )
 }
 
-group = "de.bluecolored.bluemap"
+group = "de.bluecolored"
 version = gitVersion()
 
 repositories {
@@ -31,7 +32,7 @@ tasks.withType(AbstractArchiveTask::class).configureEach {
 }
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(16))
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
     withSourcesJar()
     withJavadocJar()
 }
@@ -59,5 +60,19 @@ spotless {
         licenseHeaderFile(rootProject.file("LICENSE_HEADER"))
         indentWithSpaces()
         trimTrailingWhitespace()
+    }
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "bluecolored"
+            url = uri( "https://repo.bluecolored.de/releases" )
+
+            credentials {
+                username = project.findProperty("bluecoloredUsername") as String? ?: System.getenv("BLUECOLORED_USERNAME")
+                password = project.findProperty("bluecoloredPassword") as String? ?: System.getenv("BLUECOLORED_PASSWORD")
+            }
+        }
     }
 }

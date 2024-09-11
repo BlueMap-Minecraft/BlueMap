@@ -2,19 +2,21 @@ import org.spongepowered.gradle.plugin.config.PluginLoaders
 
 plugins {
     bluemap.implementation
-    alias ( libs.plugins.sponge.gradle )
+    bluemap.modrinth
+    bluemap.ore
+    id ( libs.plugins.sponge.plugin.get().pluginId )
 }
 
+val supportedMinecraftVersions = listOf(
+    "1.20", "1.20.1", "1.20.2", "1.20.3", "1.20.4", "1.20.5", "1.20.6"
+)
+
 dependencies {
-    api ( project( ":common" ) ) {
+    api ( project( ":bluemap-common" ) ) {
         exclude( group = "com.google.code.gson", module = "gson" )
     }
 
     api ( libs.bstats.sponge )
-}
-
-java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
 sponge {
@@ -67,4 +69,8 @@ tasks.shadowJar {
     // bstats
     relocate ("org.bstats", "de.bluecolored.shadow.bstats")
 
+}
+
+modrinth {
+    gameVersions.addAll(supportedMinecraftVersions)
 }
