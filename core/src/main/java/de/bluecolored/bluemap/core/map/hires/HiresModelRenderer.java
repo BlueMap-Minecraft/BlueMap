@@ -31,19 +31,21 @@ import de.bluecolored.bluemap.core.map.hires.blockmodel.BlockStateModelFactory;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.Chunk;
-import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 import de.bluecolored.bluemap.core.world.World;
+import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 
 public class HiresModelRenderer {
 
     private final ResourcePack resourcePack;
-    private final TextureGallery textureGallery;
     private final RenderSettings renderSettings;
+
+    private final ThreadLocal<BlockStateModelFactory> threadLocalModelFactory;
 
     public HiresModelRenderer(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
         this.resourcePack = resourcePack;
-        this.textureGallery = textureGallery;
         this.renderSettings = renderSettings;
+
+        this.threadLocalModelFactory = ThreadLocal.withInitial(() -> new BlockStateModelFactory(resourcePack, textureGallery, renderSettings));
     }
 
     public void render(World world, Vector3i modelMin, Vector3i modelMax, TileModel model) {
@@ -55,8 +57,7 @@ public class HiresModelRenderer {
         Vector3i max = modelMax.min(renderSettings.getMaxPos());
         Vector3i modelAnchor = new Vector3i(modelMin.getX(), 0, modelMin.getZ());
 
-        // create new for each tile-render since the factory is not threadsafe
-        BlockStateModelFactory modelFactory = new BlockStateModelFactory(resourcePack, textureGallery, renderSettings);
+        BlockStateModelFactory modelFactory = threadLocalModelFactory.get();
 
         int maxHeight, minY, maxY;
         double topBlockLight;

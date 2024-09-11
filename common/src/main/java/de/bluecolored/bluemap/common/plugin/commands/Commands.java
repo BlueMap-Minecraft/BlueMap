@@ -969,8 +969,12 @@ public class Commands<S> {
 
             lines.add(Text.of(TextColor.GRAY, "\u00A0\u00A0\u00A0World: ",
                     TextColor.DARK_GRAY, map.getWorld().getId()));
-            lines.add(Text.of(TextColor.GRAY, "\u00A0\u00A0\u00A0Last Update: ",
-                    TextColor.DARK_GRAY, helper.formatTime(map.getMapTileState().getLastRenderTime() * 1000L)));
+
+            int lastRenderTime = map.getMapTileState().getLastRenderTime();
+            if (lastRenderTime != -1) {
+                lines.add(Text.of(TextColor.GRAY, "\u00A0\u00A0\u00A0Last Update: ",
+                        TextColor.DARK_GRAY, helper.formatTime(lastRenderTime * 1000L)));
+            }
 
             if (frozen)
                 lines.add(Text.of(TextColor.AQUA, TextFormat.ITALIC, "\u00A0\u00A0\u00A0This map is frozen!"));

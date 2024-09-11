@@ -37,7 +37,6 @@ import lombok.Getter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Objects;
 
 import static de.bluecolored.bluemap.core.map.renderstate.MapTileState.SHIFT;
@@ -100,13 +99,6 @@ public class TileInfoRegion implements CellStorage.Cell {
         return Arrays.stream(lastRenderTimes)
                 .max()
                 .orElse(-1);
-    }
-
-    void populateSummaryMap(Map<TileState, Integer> map) {
-        for (int i = 0; i < TILES_PER_REGION; i++) {
-            TileState tileState = tileStates[i];
-            map.merge(tileState, 1, Integer::sum);
-        }
     }
 
     private static int index(int x, int z) {
