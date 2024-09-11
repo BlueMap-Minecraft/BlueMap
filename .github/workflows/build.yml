@@ -26,7 +26,7 @@ jobs:
           java-version: 21
           cache: 'gradle'
       - name: Build with Gradle
-        run: ./gradlew spotlessCheck test release
+        run: ./gradlew spotlessCheck test release --stacktrace
       - uses: actions/upload-artifact@v4
         with:
           name: artifacts
