@@ -19,8 +19,8 @@ rootProject.name = "bluemap"
 
 includeBuild("api")
 
-module("core")
-module("common")
+include(":core")
+include(":common")
 
 implementation("cli")
 implementation("fabric")
@@ -30,14 +30,8 @@ implementation("paper")
 implementation("spigot")
 implementation("sponge")
 
-fun module(name: String) {
-    val project = ":${rootProject.name}-$name"
-    include(project)
-    project(project).projectDir = file(name)
-}
-
 fun implementation(name: String) {
-    val project = ":${rootProject.name}-$name"
+    val project = ":$name"
     include(project)
     project(project).projectDir = file("implementations/$name")
 }

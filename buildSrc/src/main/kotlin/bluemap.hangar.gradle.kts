@@ -10,9 +10,7 @@ hangarPublish {
         id = "BlueMap"
         channel = "Release"
         version = project.version as String
-        changelog = rootProject.projectDir.resolve("release.md")
-            .readText()
-            .replace("{version}", project.version.toString())
+        changelog = project.releaseNotes()
 
         platforms.paper {
             jar = tasks.getByName("release").outputs.files.singleFile

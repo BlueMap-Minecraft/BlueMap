@@ -8,9 +8,7 @@ oreDeployment {
     defaultPublication {
         projectId = "bluemap"
         createForumPost = true
-        versionBody = rootProject.projectDir.resolve("release.md")
-                .readText()
-                .replace("{version}", project.version.toString())
+        versionBody = project.releaseNotes()
         publishArtifacts.setFrom(tasks.getByName("release").outputs.files.singleFile)
     }
 }

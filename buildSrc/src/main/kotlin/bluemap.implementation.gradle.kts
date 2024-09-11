@@ -14,14 +14,8 @@ tasks.register<CopyFileTask>("release") {
     group = "publishing"
     dependsOn(tasks.shadowJar, tasks.spotlessCheck)
 
-    val prefix = "bluemap-"
-    var implementation = project.name
-    if (implementation.startsWith(prefix) ) {
-        implementation = implementation.substring(prefix.length)
-    }
-
     inputFile = tasks.shadowJar.flatMap { it.archiveFile }
-    outputFile = releaseDirectory.resolve("bluemap-${version}-${implementation}.jar")
+    outputFile = releaseDirectory.resolve("bluemap-${project.version}-${project.name}.jar")
 }
 
 tasks.getByName<Delete>("clean") {

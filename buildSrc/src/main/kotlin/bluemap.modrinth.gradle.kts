@@ -8,9 +8,8 @@ modrinth {
     projectId = "swbUV1cr"
     uploadFile = tasks.getByName("release").outputs.files.singleFile
     versionNumber = "${project.version}-${project.name}"
-    changelog = rootProject.projectDir.resolve("release.md")
-            .readText()
-            .replace("{version}", project.version.toString())
+    changelog = project.releaseNotes()
+    debugMode = true
 }
 
 tasks.modrinth {

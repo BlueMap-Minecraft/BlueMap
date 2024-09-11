@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-    api ( "de.bluecolored:bluemap-api" )
+    api ( "de.bluecolored:api" )
 
     api ( libs.aircompressor )
     api ( libs.bluenbt )
@@ -53,7 +53,7 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             groupId = project.group.toString()
-            artifactId = project.name
+            artifactId = "bluemap-${project.name}"
             version = project.version.toString()
 
             from(components["java"])

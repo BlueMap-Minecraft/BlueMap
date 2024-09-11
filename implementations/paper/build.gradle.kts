@@ -13,7 +13,7 @@ val minecraftVersion = supportedMinecraftVersions.first()
 val paperVersion = "${minecraftVersion}-R0.1-SNAPSHOT"
 
 dependencies {
-    api ( project( ":bluemap-common" ) ) {
+    api ( project( ":common" ) ) {
         exclude( group = "com.google.code.gson", module = "gson" )
     }
 

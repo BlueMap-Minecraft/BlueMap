@@ -24,6 +24,15 @@ fun Project.gitVersion(): String {
     return gitVersion
 }
 
+fun Project.releaseNotes(): String {
+    val file = rootProject.projectDir.resolve("release.md")
+    if (!file.exists()) return ""
+
+    return file
+        .readText()
+        .replace("{version}", project.version.toString())
+}
+
 private fun Project.runCommand(cmd: String, fallback: String? = null): String {
     ProcessBuilder(cmd.split("\\s(?=(?:[^'\"`]*(['\"`])[^'\"`]*\\1)*[^'\"`]*$)".toRegex()))
         .directory(projectDir)

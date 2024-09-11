@@ -8,9 +8,7 @@ fun Project.curseforgeBlueMap (configuration: Action<CurseProject>) {
     curseforge.project(closureOf<CurseProject> {
         id = "406463"
         changelogType = "markdown"
-        changelog = rootProject.projectDir.resolve("release.md")
-            .readText()
-            .replace("{version}", version.toString())
+        changelog = project.releaseNotes()
         releaseType = "release"
         mainArtifact(tasks.getByName("release").outputs.files.singleFile)
 

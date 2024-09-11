@@ -12,7 +12,7 @@ val supportedMinecraftVersions = listOf(
 )
 
 dependencies {
-    api ( project( ":bluemap-common" ) ) {
+    api ( project( ":common" ) ) {
         exclude( group = "com.google.code.gson", module = "gson" )
     }
 

@@ -21,7 +21,7 @@ configurations.api.get().extendsFrom(shadowInclude)
 
 dependencies {
 
-    shadowInclude ( project( ":bluemap-common" ) ) {
+    shadowInclude ( project( ":common" ) ) {
         exclude ( group = "com.google.code.gson", module = "gson" )
         exclude ( group = "com.mojang", module = "brigadier" )
     }

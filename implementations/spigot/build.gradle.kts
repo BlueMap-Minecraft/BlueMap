@@ -16,7 +16,7 @@ val apiVersion = "1.16"
 val spigotVersion = "1.16.5-R0.1-SNAPSHOT"
 
 dependencies {
-    api ( project( ":bluemap-common" ) ) {
+    api ( project( ":common" ) ) {
         exclude( group = "com.google.code.gson", module = "gson" )
     }
 

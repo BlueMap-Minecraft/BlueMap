@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-    api ( project( ":bluemap-common" ) )
+    api ( project( ":common" ) )
     api ( libs.commons.cli )
 }
 
