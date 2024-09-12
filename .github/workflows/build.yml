@@ -23,13 +23,10 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: |
-            16
-            17
-            21
+          java-version: 21
           cache: 'gradle'
       - name: Build with Gradle
-        run: ./gradlew clean spotlessCheck test build
+        run: ./gradlew spotlessCheck test release --stacktrace
       - uses: actions/upload-artifact@v4
         with:
           name: artifacts

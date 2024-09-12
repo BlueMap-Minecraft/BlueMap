@@ -6,6 +6,7 @@ doc/
 logs/
 .run/
 run/
+runs/
 node_modules/
 
 .classpath
@@ -17,8 +18,8 @@ node_modules/
 release.md
 
 # exclude generated resource
-BlueMapCommon/src/main/resources/de/bluecolored/bluemap/webapp.zip
-BlueMapCore/src/main/resources/de/bluecolored/bluemap/resourceExtensions.zip
+common/src/main/resources/de/bluecolored/bluemap/webapp.zip
+core/src/main/resources/de/bluecolored/bluemap/resourceExtensions.zip
 
 #exclude-test-data
 data/test-render

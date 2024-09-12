@@ -1,29 +1,37 @@
-rootProject.name = "BlueMap"
+logger.lifecycle("""
+## Building BlueMap ...
+Java: ${System.getProperty("java.version")}
+JVM: ${System.getProperty("java.vm.version")} (${System.getProperty("java.vendor")})
+Arch: ${System.getProperty("os.arch")} 
+""")
 
-// setup workspace
-val releaseNotesFile = file("release.md")
-if (!releaseNotesFile.exists()) releaseNotesFile.createNewFile();
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+        maven ("https://maven.minecraftforge.net" )
+        maven ("https://maven.fabricmc.net/" )
+        maven ("https://maven.neoforged.net/releases" )
+    }
+}
 
-// bluemap
-includeBuild("BlueMapCore")
-includeBuild("BlueMapCommon")
+rootProject.name = "bluemap"
 
-// implementations
-includeBuild("implementations/cli")
-includeBuild("implementations/fabric")
-includeBuild("implementations/forge")
-includeBuild("implementations/neoforge")
-includeBuild("implementations/spigot")
-includeBuild("implementations/paper")
-includeBuild("implementations/sponge")
+includeBuild("api")
 
-// legacy support
-includeBuild("implementations/forge-1.18.1")
-includeBuild("implementations/forge-1.19.4")
-includeBuild("implementations/forge-1.20")
-includeBuild("implementations/forge-1.20.6")
+include(":core")
+include(":common")
 
-includeBuild("implementations/fabric-1.18")
-includeBuild("implementations/fabric-1.19.4")
-includeBuild("implementations/fabric-1.20")
-includeBuild("implementations/fabric-1.20.5")
+implementation("cli")
+implementation("fabric")
+implementation("forge")
+implementation("neoforge")
+implementation("paper")
+implementation("spigot")
+implementation("sponge")
+
+fun implementation(name: String) {
+    val project = ":$name"
+    include(project)
+    project(project).projectDir = file("implementations/$name")
+}
