@@ -15,7 +15,10 @@ val loaderVersion = "4"
 
 val shadowInclude: Configuration by configurations.creating
 configurations.api.get().extendsFrom(shadowInclude)
-jarJar.enable()
+
+neoForge {
+    version = neoVersion
+}
 
 dependencies {
     shadowInclude ( project( ":common" ) ) {
@@ -23,10 +26,7 @@ dependencies {
         exclude ( group = "com.mojang", module = "brigadier" )
     }
 
-    implementation ( "net.neoforged", "neoforge", neoVersion )
-
     jarJar ( libs.flow.math.get().group, libs.flow.math.get().name , "[${libs.flow.math.get().version},)" )
-
 }
 
 tasks.shadowJar {
@@ -64,10 +64,6 @@ tasks.shadowJar {
 
 }
 
-tasks.jarJar.configure {
-    archiveFileName = "${project.name}-${project.version}-jarjar.jar"
-}
-
 tasks.withType(ProcessResources::class).configureEach {
     val replacements = mapOf(
         "version" to project.version,
@@ -86,9 +82,7 @@ val mergeShadowAndJarJar = tasks.create<Jar>("mergeShadowAndJarJar") {
     dependsOn( tasks.shadowJar, tasks.jarJar )
     from (
         zipTree( tasks.shadowJar.map { it.outputs.files.singleFile } ),
-        zipTree( tasks.jarJar.map { it.outputs.files.singleFile } ).matching {
-            include("META-INF/jarjar/**")
-        }
+        tasks.jarJar.map { it.outputs.files }
     )
     archiveFileName = "${project.name}-${project.version}-merged.jar"
 }
