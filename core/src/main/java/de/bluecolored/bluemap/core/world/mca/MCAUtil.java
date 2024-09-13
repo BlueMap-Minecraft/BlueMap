@@ -24,13 +24,14 @@
  */
 package de.bluecolored.bluemap.core.world.mca;
 
-import com.google.gson.reflect.TypeToken;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.block.entity.BlockEntity;
 import de.bluecolored.bluemap.core.world.mca.data.BlockStateDeserializer;
 import de.bluecolored.bluemap.core.world.mca.data.KeyDeserializer;
 import de.bluecolored.bluenbt.BlueNBT;
+import de.bluecolored.bluenbt.NamingStrategy;
+import de.bluecolored.bluenbt.TypeToken;
 import org.jetbrains.annotations.Contract;
 
 public class MCAUtil {
@@ -39,24 +40,11 @@ public class MCAUtil {
 
     @Contract(value = "_ -> param1", mutates = "param1")
     public static BlueNBT addCommonNbtAdapters(BlueNBT nbt) {
-        nbt.register(TypeToken.get(BlockState.class), new BlockStateDeserializer());
-        nbt.register(TypeToken.get(Key.class), new KeyDeserializer());
-        nbt.register(TypeToken.get(BlockEntity.class), new BlockEntity.BlockEntityDeserializer(nbt));
+        nbt.setNamingStrategy(NamingStrategy.lowerCaseWithDelimiter("_"));
+        nbt.register(TypeToken.of(BlockState.class), new BlockStateDeserializer());
+        nbt.register(TypeToken.of(Key.class), new KeyDeserializer());
+        nbt.register(TypeToken.of(BlockEntity.class), new BlockEntity.BlockEntityDeserializer(nbt));
         return nbt;
-    }
-
-    /**
-     * Having a long array where each long contains as many values as fit in it without overflowing, returning the "valueIndex"-th value when each value has "bitsPerValue" bits.
-     */
-    public static long getValueFromLongArray(long[] data, int valueIndex, int bitsPerValue) {
-        int valuesPerLong = 64 / bitsPerValue;
-        int longIndex = valueIndex / valuesPerLong;
-        int bitIndex = (valueIndex % valuesPerLong) * bitsPerValue;
-
-        if (longIndex >= data.length) return 0;
-        long value = data[longIndex] >>> bitIndex;
-
-        return value & (0xFFFFFFFFFFFFFFFFL >>> -bitsPerValue);
     }
 
     /**

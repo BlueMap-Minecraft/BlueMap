@@ -24,11 +24,7 @@
  */
 package de.bluecolored.bluemap.core.util;
 
-import com.google.gson.reflect.TypeToken;
-import de.bluecolored.bluenbt.BlueNBT;
-import de.bluecolored.bluenbt.NBTReader;
-import de.bluecolored.bluenbt.NBTWriter;
-import de.bluecolored.bluenbt.TypeAdapter;
+import de.bluecolored.bluenbt.*;
 import de.bluecolored.bluenbt.adapter.ArrayAdapterFactory;
 import lombok.RequiredArgsConstructor;
 
@@ -45,7 +41,7 @@ public class PalettedArrayAdapter<T> implements TypeAdapter<T[]> {
     @SuppressWarnings("unchecked")
     public PalettedArrayAdapter(BlueNBT blueNBT, Class<T> type) {
         this.type = type;
-        this.paletteAdapter = ArrayAdapterFactory.INSTANCE.create((TypeToken<T[]>) TypeToken.getArray(type), blueNBT).orElseThrow();
+        this.paletteAdapter = ArrayAdapterFactory.INSTANCE.create((TypeToken<T[]>) TypeToken.array(type), blueNBT).orElseThrow();
     }
 
     @SuppressWarnings("unchecked")

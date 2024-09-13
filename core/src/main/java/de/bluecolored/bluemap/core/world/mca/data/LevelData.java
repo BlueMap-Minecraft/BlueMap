@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.core.world.mca.data;
 
 import de.bluecolored.bluemap.core.world.DimensionType;
+import de.bluecolored.bluenbt.NBTName;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -36,13 +37,27 @@ import java.util.Map;
 @SuppressWarnings("FieldMayBeFinal")
 public class LevelData {
 
+    @NBTName("Data")
     private Data data = new Data();
 
     @Getter
     public static class Data {
+
+        @NBTName("LevelName")
         private String levelName = "world";
-        private int spawnX = 0, spawnY = 0, spawnZ = 0;
+
+        @NBTName("SpawnX")
+        private int spawnX = 0;
+
+        @NBTName("SpawnY")
+        private int spawnY = 0;
+
+        @NBTName("SpawnZ")
+        private int spawnZ = 0;
+
+        @NBTName("WorldGenSettings")
         private WGSettings worldGenSettings = new WGSettings();
+
     }
 
     @Getter

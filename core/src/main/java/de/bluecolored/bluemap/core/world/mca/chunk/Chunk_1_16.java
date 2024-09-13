@@ -279,38 +279,68 @@ public class Chunk_1_16 extends MCAChunk {
     @Getter
     @SuppressWarnings("FieldMayBeFinal")
     public static class Data extends MCAChunk.Data {
+
+        @NBTName("Level")
         private Level level = new Level();
+
     }
 
     @Getter
     @SuppressWarnings("FieldMayBeFinal")
     public static class Level {
+
+        @NBTName("Status")
         private Key status = STATUS_EMPTY;
+
+        @NBTName("InhabitedTime")
         private long inhabitedTime = 0;
+
+        @NBTName("Heightmaps")
         private HeightmapsData heightmaps = new HeightmapsData();
+
+        @NBTName("Sections")
         private SectionData @Nullable [] sections = null;
+
+        @NBTName("Biomes")
         private int[] biomes = EMPTY_INT_ARRAY;
 
         @NBTName("TileEntities")
         @NBTDeserializer(LenientBlockEntityArrayDeserializer.class)
         private @Nullable BlockEntity [] blockEntities = EMPTY_BLOCK_ENTITIES_ARRAY;
+
     }
 
     @Getter
     @SuppressWarnings("FieldMayBeFinal")
     public static class HeightmapsData {
-        @NBTName("WORLD_SURFACE") private long[] worldSurface = EMPTY_LONG_ARRAY;
-        @NBTName("OCEAN_FLOOR") private long[] oceanFloor = EMPTY_LONG_ARRAY;
+
+        @NBTName("WORLD_SURFACE")
+        private long[] worldSurface = EMPTY_LONG_ARRAY;
+
+        @NBTName("OCEAN_FLOOR")
+        private long[] oceanFloor = EMPTY_LONG_ARRAY;
+
     }
 
     @Getter
     @SuppressWarnings("FieldMayBeFinal")
     public static class SectionData {
+
+        @NBTName("Y")
         private int y = 0;
+
+        @NBTName("BlockLight")
         private byte[] blockLight = EMPTY_BYTE_ARRAY;
+
+        @NBTName("SkyLight")
         private byte[] skyLight = EMPTY_BYTE_ARRAY;
+
+        @NBTName("Palette")
         private BlockState[] palette = EMPTY_BLOCKSTATE_ARRAY;
+
+        @NBTName("BlockStates")
         private long[] blockStates = EMPTY_LONG_ARRAY;
+
     }
 
 }

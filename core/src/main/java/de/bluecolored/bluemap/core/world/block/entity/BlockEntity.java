@@ -24,12 +24,8 @@
  */
 package de.bluecolored.bluemap.core.world.block.entity;
 
-import com.google.gson.reflect.TypeToken;
 import de.bluecolored.bluemap.core.util.Key;
-import de.bluecolored.bluenbt.BlueNBT;
-import de.bluecolored.bluenbt.NBTDeserializer;
-import de.bluecolored.bluenbt.NBTReader;
-import de.bluecolored.bluenbt.TypeDeserializer;
+import de.bluecolored.bluenbt.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -65,7 +61,7 @@ public abstract class BlockEntity {
         @Override
         @SuppressWarnings("unchecked")
         public @Nullable BlockEntity read(NBTReader reader) throws IOException {
-            Map<String, Object> raw = (Map<String, Object>) blueNBT.read(reader, TypeToken.getParameterized(Map.class, String.class, Object.class));
+            Map<String, Object> raw = (Map<String, Object>) blueNBT.read(reader, TypeToken.of(Map.class, String.class, Object.class));
 
             String id = (String) raw.get("id");
             if (id == null) return null;

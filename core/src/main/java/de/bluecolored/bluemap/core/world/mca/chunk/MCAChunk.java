@@ -29,6 +29,7 @@ import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.block.entity.BlockEntity;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
+import de.bluecolored.bluenbt.NBTName;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -58,7 +59,10 @@ public abstract class MCAChunk implements Chunk {
     @SuppressWarnings("FieldMayBeFinal")
     @Getter
     public static class Data {
+
+        @NBTName("DataVersion")
         private int dataVersion = 0;
+
     }
 
 }

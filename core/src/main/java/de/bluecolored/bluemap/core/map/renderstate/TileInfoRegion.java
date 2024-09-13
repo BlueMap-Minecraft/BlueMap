@@ -24,12 +24,9 @@
  */
 package de.bluecolored.bluemap.core.map.renderstate;
 
-import com.google.gson.reflect.TypeToken;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.RegistryAdapter;
-import de.bluecolored.bluenbt.BlueNBT;
-import de.bluecolored.bluenbt.NBTName;
-import de.bluecolored.bluenbt.NBTPostDeserialize;
+import de.bluecolored.bluenbt.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
@@ -132,7 +129,7 @@ public class TileInfoRegion implements CellStorage.Cell {
 
         private final static BlueNBT BLUE_NBT = new BlueNBT();
         static {
-            BLUE_NBT.register(TypeToken.get(TileState.class), new RegistryAdapter<>(TileState.REGISTRY, Key.BLUEMAP_NAMESPACE, TileState.UNKNOWN));
+            BLUE_NBT.register(TypeToken.of(TileState.class), new RegistryAdapter<>(TileState.REGISTRY, Key.BLUEMAP_NAMESPACE, TileState.UNKNOWN));
         }
 
         @NBTName("tile-states")

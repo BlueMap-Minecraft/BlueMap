@@ -294,45 +294,72 @@ public class Chunk_1_18 extends MCAChunk {
     @Getter
     @SuppressWarnings("FieldMayBeFinal")
     public static class Data extends MCAChunk.Data {
+
+        @NBTName("Status")
         private Key status = STATUS_EMPTY;
+
+        @NBTName("InhabitedTime")
         private long inhabitedTime = 0;
+
+        @NBTName("Heightmaps")
         private HeightmapsData heightmaps = new HeightmapsData();
+
         private SectionData @Nullable [] sections = null;
 
-        @NBTName("block_entities")
         @NBTDeserializer(LenientBlockEntityArrayDeserializer.class)
         private @Nullable BlockEntity [] blockEntities = EMPTY_BLOCK_ENTITIES_ARRAY;
+
     }
 
     @Getter
     @SuppressWarnings("FieldMayBeFinal")
     public static class HeightmapsData {
-        @NBTName("WORLD_SURFACE") private long[] worldSurface = EMPTY_LONG_ARRAY;
-        @NBTName("OCEAN_FLOOR") private long[] oceanFloor = EMPTY_LONG_ARRAY;
+
+        @NBTName("WORLD_SURFACE")
+        private long[] worldSurface = EMPTY_LONG_ARRAY;
+
+        @NBTName("OCEAN_FLOOR")
+        private long[] oceanFloor = EMPTY_LONG_ARRAY;
+
     }
 
     @Getter
     @SuppressWarnings("FieldMayBeFinal")
     public static class SectionData {
+
+        @NBTName("Y")
         private int y = 0;
+
+        @NBTName("BlockLight")
         private byte[] blockLight = EMPTY_BYTE_ARRAY;
+
+        @NBTName("SkyLight")
         private byte[] skyLight = EMPTY_BYTE_ARRAY;
-        @NBTName("block_states") private BlockStatesData blockStates = new BlockStatesData();
+
+        private BlockStatesData blockStates = new BlockStatesData();
+
         private BiomesData biomes = new BiomesData();
+
     }
 
     @Getter
     @SuppressWarnings("FieldMayBeFinal")
     public static class BlockStatesData {
+
         private BlockState[] palette = EMPTY_BLOCKSTATE_ARRAY;
+
         private long[] data = EMPTY_LONG_ARRAY;
+
     }
 
     @Getter
     @SuppressWarnings("FieldMayBeFinal")
     public static class BiomesData {
+
         private Key[] palette = EMPTY_KEY_ARRAY;
+
         private long[] data = EMPTY_LONG_ARRAY;
+
     }
 
 }

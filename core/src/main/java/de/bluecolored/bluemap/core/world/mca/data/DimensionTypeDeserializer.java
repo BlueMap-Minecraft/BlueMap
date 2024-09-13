@@ -24,16 +24,12 @@
  */
 package de.bluecolored.bluemap.core.world.mca.data;
 
-import com.google.gson.reflect.TypeToken;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.pack.datapack.DataPack;
 import de.bluecolored.bluemap.core.resources.pack.datapack.dimension.DimensionTypeData;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.DimensionType;
-import de.bluecolored.bluenbt.BlueNBT;
-import de.bluecolored.bluenbt.NBTReader;
-import de.bluecolored.bluenbt.TagType;
-import de.bluecolored.bluenbt.TypeDeserializer;
+import de.bluecolored.bluenbt.*;
 
 import java.io.IOException;
 
@@ -43,7 +39,7 @@ public class DimensionTypeDeserializer implements TypeDeserializer<DimensionType
     private final DataPack dataPack;
 
     public DimensionTypeDeserializer(BlueNBT blueNBT, DataPack dataPack) {
-        this.defaultTypeDeserializer = blueNBT.getTypeDeserializer(TypeToken.get(DimensionTypeData.class));
+        this.defaultTypeDeserializer = blueNBT.getTypeDeserializer(TypeToken.of(DimensionTypeData.class));
         this.dataPack = dataPack;
     }
 

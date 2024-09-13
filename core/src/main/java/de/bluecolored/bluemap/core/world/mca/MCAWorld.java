@@ -28,7 +28,6 @@ import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
-import com.google.gson.reflect.TypeToken;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.pack.datapack.DataPack;
@@ -43,6 +42,7 @@ import de.bluecolored.bluemap.core.world.mca.data.DimensionTypeDeserializer;
 import de.bluecolored.bluemap.core.world.mca.data.LevelData;
 import de.bluecolored.bluemap.core.world.mca.region.RegionType;
 import de.bluecolored.bluenbt.BlueNBT;
+import de.bluecolored.bluenbt.TypeToken;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -286,7 +286,7 @@ public class MCAWorld implements World {
 
     private static BlueNBT createBlueNBTForDataPack(DataPack dataPack) {
         BlueNBT blueNBT = MCAUtil.addCommonNbtAdapters(new BlueNBT());
-        blueNBT.register(TypeToken.get(DimensionType.class), new DimensionTypeDeserializer(blueNBT, dataPack));
+        blueNBT.register(TypeToken.of(DimensionType.class), new DimensionTypeDeserializer(blueNBT, dataPack));
         return blueNBT;
     }
 

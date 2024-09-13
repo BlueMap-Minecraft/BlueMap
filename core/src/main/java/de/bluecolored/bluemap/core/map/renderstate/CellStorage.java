@@ -25,7 +25,6 @@
 package de.bluecolored.bluemap.core.map.renderstate;
 
 import com.flowpowered.math.vector.Vector2i;
-import com.google.gson.reflect.TypeToken;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.storage.GridStorage;
 import de.bluecolored.bluemap.core.storage.compression.CompressedInputStream;
@@ -33,6 +32,7 @@ import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.PalettedArrayAdapter;
 import de.bluecolored.bluemap.core.util.RegistryAdapter;
 import de.bluecolored.bluenbt.BlueNBT;
+import de.bluecolored.bluenbt.TypeToken;
 import lombok.Getter;
 
 import java.io.IOException;
@@ -44,8 +44,8 @@ abstract class CellStorage<T extends CellStorage.Cell> {
 
     private static final BlueNBT BLUE_NBT = new BlueNBT();
     static {
-        BLUE_NBT.register(TypeToken.get(TileState.class), new RegistryAdapter<>(TileState.REGISTRY, Key.BLUEMAP_NAMESPACE, TileState.UNKNOWN));
-        BLUE_NBT.register(TypeToken.get(TileState[].class), new PalettedArrayAdapter<>(BLUE_NBT, TileState.class));
+        BLUE_NBT.register(TypeToken.of(TileState.class), new RegistryAdapter<>(TileState.REGISTRY, Key.BLUEMAP_NAMESPACE, TileState.UNKNOWN));
+        BLUE_NBT.register(TypeToken.of(TileState[].class), new PalettedArrayAdapter<>(BLUE_NBT, TileState.class));
     }
 
     private static final int CACHE_SIZE = 4;
