@@ -9,7 +9,6 @@ modrinth {
     uploadFile = tasks.getByName("release").outputs.files.singleFile
     versionNumber = "${project.version}-${project.name}"
     changelog = project.releaseNotes()
-    debugMode = true
 }
 
 tasks.modrinth {
