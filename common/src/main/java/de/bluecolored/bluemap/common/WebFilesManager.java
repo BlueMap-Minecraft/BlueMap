@@ -112,6 +112,7 @@ public class WebFilesManager {
         if (zippedWebapp == null) throw new IOException("Failed to open bundled webapp.");
 
         // extract zip to webroot
+        Files.createDirectories(webRoot);
         FileHelper.extractZipFile(zippedWebapp, webRoot, StandardCopyOption.REPLACE_EXISTING);
 
         // set version in index.html
