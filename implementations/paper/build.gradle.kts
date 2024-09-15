@@ -11,6 +11,7 @@ val supportedMinecraftVersions = listOf(
 
 val minecraftVersion = supportedMinecraftVersions.first()
 val paperVersion = "${minecraftVersion}-R0.1-SNAPSHOT"
+val apiVersion = "1.20" // paper-version but without minor
 
 dependencies {
     api ( project( ":common" ) ) {
@@ -65,7 +66,7 @@ tasks.processResources {
 
         expand (
             "version" to project.version,
-            "api_version" to minecraftVersion,
+            "api_version" to apiVersion,
             "flow_math_version" to libs.flow.math.get().version
         )
     }
