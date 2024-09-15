@@ -71,6 +71,12 @@ tasks.shadowJar {
 
 }
 
+oreDeployment {
+    defaultPublication {
+        publishArtifacts.setFrom( tasks.getByName("release").outputs.files.singleFile )
+    }
+}
+
 modrinth {
     gameVersions.addAll(supportedMinecraftVersions)
 }

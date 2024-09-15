@@ -9,10 +9,9 @@ oreDeployment {
         projectId = "bluemap"
         createForumPost = true
         versionBody = project.releaseNotes()
-        publishArtifacts.setFrom(tasks.getByName("release").outputs.files.singleFile)
     }
 }
 
-tasks.publishToOre {
+tasks.getByName("publishDefaultPublicationToOre") {
     dependsOn(tasks.getByName("release"))
 }
