@@ -39,7 +39,8 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Reader;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.security.DigestInputStream;
@@ -140,7 +141,7 @@ public class MinecraftVersion {
         FileHelper.createDirectories(file.toAbsolutePath().normalize().getParent());
 
         try (
-                DigestInputStream in = new DigestInputStream(new URL(download.getUrl()).openStream(), MessageDigest.getInstance("SHA-1"));
+                DigestInputStream in = new DigestInputStream(new URI(download.getUrl()).toURL().openStream(), MessageDigest.getInstance("SHA-1"));
                 OutputStream out = Files.newOutputStream(file, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW, StandardOpenOption.TRUNCATE_EXISTING)
         ) {
             in.transferTo(out);
@@ -154,7 +155,7 @@ public class MinecraftVersion {
             }
 
             downloadCompletedAndVerified = true;
-        } catch (NoSuchAlgorithmException | IOException ex) {
+        } catch (NoSuchAlgorithmException | IOException | URISyntaxException ex) {
             Logger.global.logWarning("Failed to download '" + download.getUrl() + "': " + ex);
         } finally {
             if (!downloadCompletedAndVerified)
@@ -200,7 +201,8 @@ public class MinecraftVersion {
                 }
             }
 
-            throw new IOException("'" + file + "' does not contain a 'version.json'");
+            // no version.json found, assume 1.13 - 1.14.4
+            return new VersionInfo(4, 4);
         }
     }
 
