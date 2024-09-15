@@ -92,7 +92,17 @@ abstract class CellStorage<T extends CellStorage.Cell> {
                 return BLUE_NBT.read(in.decompress(), type);
         } catch (IOException ex) {
             Logger.global.logError("Failed to load render-state cell " + pos, ex);
+        } catch (RuntimeException ex) { // E.g. NoSuchElementException thrown by BlueNBT if there is a format error
+            Logger.global.logError("Failed to load render-state cell " + pos, ex);
+
+            // try to delete the possibly corrupted file for self-healing
+            try {
+                storage.delete(pos.getX(), pos.getY());
+            } catch (IOException e) {
+                Logger.global.logError("Failed to delete render-state cell " + pos, e);
+            }
         }
+
         return createNewCell();
     }
 
