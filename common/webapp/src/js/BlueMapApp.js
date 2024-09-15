@@ -710,6 +710,18 @@ export class BlueMapApp {
         let hash = window.location.hash?.substring(1) || this.settings.startLocation || "";
         let values = hash.split(":");
 
+        // only world is provided
+        if (values.length === 1 && (!this.mapViewer.map || this.mapViewer.map.data.id !== values[0])) {
+            try {
+                await this.switchMap(values[0]);
+            } catch (e) {
+                return false;
+            }
+
+            return true;
+        }
+
+        // load full location
         if (values.length !== 10) return false;
 
         let controls = this.mapViewer.controlsManager;
