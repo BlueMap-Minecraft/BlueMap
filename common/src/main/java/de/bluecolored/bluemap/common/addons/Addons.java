@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.common.addons;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import de.bluecolored.bluemap.common.config.ConfigurationException;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import org.jetbrains.annotations.Nullable;
@@ -46,6 +47,10 @@ import java.util.stream.Stream;
 import static de.bluecolored.bluemap.common.addons.AddonInfo.ADDON_INFO_FILE;
 
 public final class Addons {
+
+    private static final String PLUGIN_YML = "plugin.yml";
+    private static final String MODS_TOML = "META-INF/mods.toml";
+    private static final String FABRIC_MOD_JSON = "fabric.mod.json";
 
     private static final Gson GSON = new GsonBuilder().create();
     private static final Map<String, LoadedAddon> LOADED_ADDONS = new ConcurrentHashMap<>();
@@ -73,13 +78,15 @@ public final class Addons {
     public static void tryLoadAddon(Path addonJarFile) {
         try {
             AddonInfo addonInfo = loadAddonInfo(addonJarFile);
-            if (addonInfo == null) throw new AddonException("No %s found in '%s'".formatted(ADDON_INFO_FILE, addonJarFile));
+            if (addonInfo == null) throw createRichExceptionForFile(addonJarFile);
 
             if (LOADED_ADDONS.containsKey(addonInfo.getId())) return;
 
             loadAddon(addonJarFile, addonInfo);
-        } catch (IOException | AddonException e) {
-            Logger.global.logError("Failed to load addon '%s'".formatted(addonJarFile), e);
+        } catch (ConfigurationException e) {
+            ConfigurationException e2 = new ConfigurationException("BlueMap failed to load the addon '%s'!".formatted(addonJarFile), e);
+            Logger.global.logWarning(e2.getFormattedExplanation());
+            Logger.global.logError(e2);
         }
     }
 
@@ -94,16 +101,19 @@ public final class Addons {
             if (LOADED_ADDONS.containsKey(addonInfo.getId())) return;
 
             loadAddon(addonJarFile, addonInfo);
-        } catch (IOException | AddonException e) {
-            Logger.global.logError("Failed to load addon '%s'".formatted(addonJarFile), e);
+        } catch (ConfigurationException e) {
+            ConfigurationException e2 = new ConfigurationException("BlueMap failed to load the addon '%s'!".formatted(addonJarFile), e);
+            Logger.global.logWarning(e2.getFormattedExplanation());
+            Logger.global.logError(e2);
         }
     }
 
-    public synchronized static void loadAddon(Path jarFile, AddonInfo addonInfo) throws AddonException {
+    public synchronized static void loadAddon(Path jarFile, AddonInfo addonInfo) throws ConfigurationException {
         Logger.global.logInfo("Loading BlueMap Addon: %s (%s)".formatted(addonInfo.getId(), jarFile));
 
         if (LOADED_ADDONS.containsKey(addonInfo.getId()))
-            throw new AddonException("Addon with id '%s' is already loaded".formatted(addonInfo.getId()));
+            throw new ConfigurationException("There is already an addon with same id ('%s') loaded!"
+                    .formatted(addonInfo.getId()));
 
         try {
             ClassLoader addonClassLoader = BlueMap.class.getClassLoader();
@@ -134,11 +144,11 @@ public final class Addons {
                 runnable.run();
 
         } catch (Exception e) {
-            throw new AddonException("Failed to load addon '%s'".formatted(jarFile), e);
+            throw new ConfigurationException("There was an exception trying to initialize the addon!", e);
         }
     }
 
-    public static @Nullable AddonInfo loadAddonInfo(Path addonJarFile) throws IOException, AddonException {
+    public static @Nullable AddonInfo loadAddonInfo(Path addonJarFile) throws ConfigurationException {
         try (FileSystem fileSystem = FileSystems.newFileSystem(addonJarFile, (ClassLoader) null)) {
             for (Path root : fileSystem.getRootDirectories()) {
                 Path addonInfoFile = root.resolve(ADDON_INFO_FILE);
@@ -148,17 +158,46 @@ public final class Addons {
                     AddonInfo addonInfo = GSON.fromJson(reader, AddonInfo.class);
 
                     if (addonInfo.getId() == null)
-                        throw new AddonException("'id' is missing");
+                        throw new ConfigurationException("'id' is missing");
 
                     if (addonInfo.getEntrypoint() == null)
-                        throw new AddonException("'entrypoint' is missing");
+                        throw new ConfigurationException("'entrypoint' is missing");
 
                     return addonInfo;
                 }
             }
+        } catch (IOException e) {
+            throw new ConfigurationException("There was an exception trying to access the file.", e);
         }
 
         return null;
+    }
+
+    private static ConfigurationException createRichExceptionForFile(Path jarFile) {
+        boolean isPlugin = false;
+        boolean isMod = false;
+
+        try (FileSystem fileSystem = FileSystems.newFileSystem(jarFile, (ClassLoader) null)) {
+            for (Path root : fileSystem.getRootDirectories()) {
+                if (Files.exists(root.resolve(PLUGIN_YML))) isPlugin = true;
+                if (Files.exists(root.resolve(MODS_TOML))) isMod = true;
+                if (Files.exists(root.resolve(FABRIC_MOD_JSON))) isMod = true;
+            }
+        } catch (IOException e) {
+            Logger.global.logError("Failed to log file-info for '%s'".formatted(jarFile), e);
+        }
+
+        if (!(isPlugin || isMod)) return new ConfigurationException("""
+        File '%s' does not seem to be a valid native bluemap addon.
+        """.strip().formatted(jarFile));
+
+        String type = isPlugin ? "plugin" : "mod";
+        String targetFolder = isPlugin ? "./plugins" : "./mods";
+
+        return new ConfigurationException("""
+        File '%s' seems to be a %s and not a native bluemap addon.
+        Try adding it to the '%s' folder of your server instead!
+        """.strip().formatted(jarFile, type, targetFolder));
     }
 
 }
