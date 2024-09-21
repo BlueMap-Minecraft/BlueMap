@@ -43,8 +43,17 @@ tasks.register("zipWebapp", type = Zip::class) {
     archiveFileName = "webapp.zip"
     destinationDirectory = file("src/main/resources/de/bluecolored/bluemap/")
 
+    val replacements = mapOf(
+        "version" to project.version
+    )
+
+    inputs.properties(replacements)
     inputs.dir("webapp/dist/")
     outputs.file("src/main/resources/de/bluecolored/bluemap/webapp.zip")
+
+    filesMatching(listOf(
+        "index.html",
+    )) { expand(properties) }
 }
 
 tasks.processResources {
@@ -53,6 +62,14 @@ tasks.processResources {
 
 tasks.getByName("sourcesJar") {
     dependsOn("zipWebapp")
+}
+
+tasks.register<CopyFileTask>("release") {
+    group = "publishing"
+    dependsOn("zipWebapp")
+
+    inputFile = tasks.getByName("zipWebapp").outputs.files.singleFile
+    outputFile = releaseDirectory.resolve("bluemap-${project.version}-webapp.zip")
 }
 
 tasks.clean {

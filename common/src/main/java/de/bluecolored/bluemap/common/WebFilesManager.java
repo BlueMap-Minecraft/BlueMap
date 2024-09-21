@@ -114,12 +114,6 @@ public class WebFilesManager {
         // extract zip to webroot
         Files.createDirectories(webRoot);
         FileHelper.extractZipFile(zippedWebapp, webRoot, StandardCopyOption.REPLACE_EXISTING);
-
-        // set version in index.html
-        Path indexFile = webRoot.resolve("index.html");
-        String indexContent = Files.readString(indexFile);
-        indexContent = indexContent.replace("%version%", BlueMap.VERSION);
-        Files.writeString(indexFile, indexContent);
     }
 
     @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal", "unused", "MismatchedQueryAndUpdateOfCollection"})
