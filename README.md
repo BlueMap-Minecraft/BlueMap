@@ -44,7 +44,7 @@ Here you can see how many servers are using BlueMap:
 If you have git installed, simply use the command `git clone --recursive https://github.com/BlueMap-Minecraft/BlueMap.git` to clone BlueMap.
 
 ### Build
-In order to build BlueMap you simply need to run the `./gradlew clean build` command in BlueMap's root directory.
+In order to build BlueMap you simply need to run the `./gradlew release` command in BlueMap's root directory.
 You can find the compiled JAR files in `./build/release`.
 
 ### Issues
