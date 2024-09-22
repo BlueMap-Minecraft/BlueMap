@@ -18,6 +18,6 @@ hangarPublish {
     }
 }
 
-tasks.publishAllPublicationsToHangar {
+tasks.getByName("publishBluemapPublicationToHangar") {
     dependsOn(tasks.getByName("release"))
 }
