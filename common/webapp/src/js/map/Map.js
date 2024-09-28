@@ -45,11 +45,12 @@ export class Map {
 
 	/**
 	 * @param id {string}
-	 * @param dataUrl {string}
+	 * @param mapDataRoot {string}
+	 * @param liveDataRoot {string}
 	 * @param loadBlocker {function: Promise<void>}
 	 * @param events {EventTarget}
 	 */
-	constructor(id, dataUrl, loadBlocker, events = null) {
+	constructor(id, mapDataRoot, liveDataRoot, loadBlocker, events = null) {
 		Object.defineProperty( this, 'isMap', { value: true } );
 
 		this.loadBlocker = loadBlocker;
@@ -58,9 +59,10 @@ export class Map {
 		this.data = reactive({
 			id: id,
 			sorting: 1000000,
-			dataUrl: dataUrl,
-			settingsUrl: dataUrl + "settings.json",
-			texturesUrl: dataUrl + "textures.json",
+			mapDataRoot: mapDataRoot,
+			liveDataRoot: liveDataRoot,
+			settingsUrl: mapDataRoot + "settings.json",
+			texturesUrl: mapDataRoot + "textures.json",
 			name: id,
 			startPos: {x: 0, z: 0},
 			skyColor: new Color(),
@@ -121,12 +123,12 @@ export class Map {
 
                 this.hiresMaterial = this.createHiresMaterial(hiresVertexShader, hiresFragmentShader, uniforms, textures);
 
-                this.hiresTileManager = new TileManager(new TileLoader(`${this.data.dataUrl}tiles/0/`, this.hiresMaterial, this.data.hires, this.loadBlocker, tileCacheHash), this.onTileLoad("hires"), this.onTileUnload("hires"), this.events);
+                this.hiresTileManager = new TileManager(new TileLoader(`${this.data.mapDataRoot}tiles/0/`, this.hiresMaterial, this.data.hires, this.loadBlocker, tileCacheHash), this.onTileLoad("hires"), this.onTileUnload("hires"), this.events);
 				this.hiresTileManager.scene.matrixWorldAutoUpdate = false;
 
                 this.lowresTileManager = [];
 				for (let i = 0; i < this.data.lowres.lodCount; i++) {
-					this.lowresTileManager[i] = new TileManager(new LowresTileLoader(`${this.data.dataUrl}tiles/`, this.data.lowres, i + 1, lowresVertexShader, lowresFragmentShader, uniforms, async () => {}, tileCacheHash), this.onTileLoad("lowres"), this.onTileUnload("lowres"), this.events);
+					this.lowresTileManager[i] = new TileManager(new LowresTileLoader(`${this.data.mapDataRoot}tiles/`, this.data.lowres, i + 1, lowresVertexShader, lowresFragmentShader, uniforms, async () => {}, tileCacheHash), this.onTileLoad("lowres"), this.onTileUnload("lowres"), this.events);
 					this.lowresTileManager[i].scene.matrixWorldAutoUpdate = false;
 				}
 

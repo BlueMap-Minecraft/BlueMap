@@ -141,6 +141,9 @@ public class WebFilesManager {
         private int lowresSliderDefault = 2000;
         private int lowresSliderMin = 500;
 
+        private String mapDataRoot = "maps/";
+        private String liveDataRoot = "maps/";
+
         private Set<String> maps = new HashSet<>();
         private Set<String> scripts = new HashSet<>();
         private Set<String> styles = new HashSet<>();
@@ -162,6 +165,9 @@ public class WebFilesManager {
             this.lowresSliderMax = config.getLowresSliderMax();
             this.lowresSliderDefault = config.getLowresSliderDefault();
             this.lowresSliderMin = config.getLowresSliderMin();
+
+            this.mapDataRoot = config.getMapDataRoot();
+            this.liveDataRoot = config.getLiveDataRoot();
 
             this.styles.clear();
             this.scripts.clear();
