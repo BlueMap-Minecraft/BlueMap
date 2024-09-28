@@ -71,6 +71,8 @@ export class BlueMapApp {
          *      lowresSliderDefault: number,
          *      lowresSliderMin: number,
          *      startLocation: string,
+         *      mapDataRoot: string,
+         *      liveDataRoot: string,
          *      maps: string[],
          *      scripts: string[],
          *      styles: string[]
@@ -85,8 +87,6 @@ export class BlueMapApp {
         this.mapsMap = new Map();
 
         this.lastCameraMove = 0;
-
-        this.dataUrl = "maps/";
 
         this.mainMenu = reactive(new MainMenu());
 
@@ -300,7 +300,7 @@ export class BlueMapApp {
         // create maps
         if (settings.maps !== undefined){
             let loadingPromises = settings.maps.map(mapId => {
-                let map = new BlueMapMap(mapId, this.dataUrl + mapId + "/", this.loadBlocker, this.mapViewer.events);
+                let map = new BlueMapMap(mapId, settings.mapDataRoot + mapId + "/", settings.liveDataRoot + mapId + "/", this.loadBlocker, this.mapViewer.events);
                 maps.push(map);
 
                 return map.loadSettings(this.mapViewer.tileCacheHash)
@@ -353,7 +353,7 @@ export class BlueMapApp {
         return new Promise((resolve, reject) => {
             let loader = new FileLoader();
             loader.setResponseType("json");
-            loader.load(map.data.dataUrl + "live/players.json?" + generateCacheHash(),
+            loader.load(map.data.liveDataRoot + "live/players.json?" + generateCacheHash(),
                 fileData => {
                     if (!fileData) reject(`Failed to parse '${this.fileUrl}'!`);
                     else resolve(fileData);
@@ -371,7 +371,7 @@ export class BlueMapApp {
         const map = this.mapViewer.map;
         if (!map) return;
 
-        this.playerMarkerManager = new PlayerMarkerManager(this.mapViewer.markers, map.data.dataUrl + "live/players.json", map.data.dataUrl + "assets/playerheads/", this.events);
+        this.playerMarkerManager = new PlayerMarkerManager(this.mapViewer.markers, map.data.liveDataRoot + "live/players.json", map.data.mapDataRoot + "assets/playerheads/", this.events);
         this.playerMarkerManager.setAutoUpdateInterval(0);
         return this.playerMarkerManager.update()
             .then(() => {
@@ -390,7 +390,7 @@ export class BlueMapApp {
         const map = this.mapViewer.map;
         if (!map) return;
 
-        this.markerFileManager = new NormalMarkerManager(this.mapViewer.markers, map.data.dataUrl + "live/markers.json", this.events);
+        this.markerFileManager = new NormalMarkerManager(this.mapViewer.markers, map.data.liveDataRoot + "live/markers.json", this.events);
         return this.markerFileManager.update()
             .then(() => {
                 this.markerFileManager.setAutoUpdateInterval(1000 * 10);

@@ -60,6 +60,9 @@ public class WebappConfig {
     private int lowresSliderDefault = 2000;
     private int lowresSliderMin = 500;
 
+    private String mapDataRoot = "maps/";
+    private String liveDataRoot = "maps/";
+
     private Set<String> scripts = new HashSet<>();
     private Set<String> styles = new HashSet<>();
     public boolean isEnabled() {
@@ -124,6 +127,14 @@ public class WebappConfig {
 
     public int getLowresSliderMin() {
         return lowresSliderMin;
+    }
+
+    public String getMapDataRoot() {
+        return mapDataRoot;
+    }
+
+    public String getLiveDataRoot() {
+        return liveDataRoot;
     }
 
     public Set<String> getScripts() {
