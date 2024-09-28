@@ -141,8 +141,8 @@ public class WebFilesManager {
         private int lowresSliderDefault = 2000;
         private int lowresSliderMin = 500;
 
-        private String mapDataRoot = "maps/";
-        private String liveDataRoot = "maps/";
+        private String mapDataRoot = "maps";
+        private String liveDataRoot = "maps";
 
         private Set<String> maps = new HashSet<>();
         private Set<String> scripts = new HashSet<>();

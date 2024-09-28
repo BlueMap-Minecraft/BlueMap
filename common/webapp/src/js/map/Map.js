@@ -123,12 +123,12 @@ export class Map {
 
                 this.hiresMaterial = this.createHiresMaterial(hiresVertexShader, hiresFragmentShader, uniforms, textures);
 
-                this.hiresTileManager = new TileManager(new TileLoader(`${this.data.mapDataRoot}tiles/0/`, this.hiresMaterial, this.data.hires, this.loadBlocker, tileCacheHash), this.onTileLoad("hires"), this.onTileUnload("hires"), this.events);
+                this.hiresTileManager = new TileManager(new TileLoader(`${this.data.mapDataRoot}/tiles/0/`, this.hiresMaterial, this.data.hires, this.loadBlocker, tileCacheHash), this.onTileLoad("hires"), this.onTileUnload("hires"), this.events);
 				this.hiresTileManager.scene.matrixWorldAutoUpdate = false;
 
                 this.lowresTileManager = [];
 				for (let i = 0; i < this.data.lowres.lodCount; i++) {
-					this.lowresTileManager[i] = new TileManager(new LowresTileLoader(`${this.data.mapDataRoot}tiles/`, this.data.lowres, i + 1, lowresVertexShader, lowresFragmentShader, uniforms, async () => {}, tileCacheHash), this.onTileLoad("lowres"), this.onTileUnload("lowres"), this.events);
+					this.lowresTileManager[i] = new TileManager(new LowresTileLoader(`${this.data.mapDataRoot}/tiles/`, this.data.lowres, i + 1, lowresVertexShader, lowresFragmentShader, uniforms, async () => {}, tileCacheHash), this.onTileLoad("lowres"), this.onTileUnload("lowres"), this.events);
 					this.lowresTileManager[i].scene.matrixWorldAutoUpdate = false;
 				}
 
