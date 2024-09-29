@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-    api ( "de.bluecolored:api" )
+    api ( "de.bluecolored:bluemap-api" )
 
     api ( libs.aircompressor )
     api ( libs.bluenbt )
@@ -57,6 +57,12 @@ publishing {
             version = project.version.toString()
 
             from(components["java"])
+
+            versionMapping {
+                usage("java-api") {
+                    fromResolutionResult()
+                }
+            }
         }
     }
 }
