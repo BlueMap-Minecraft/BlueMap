@@ -130,7 +130,7 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
         ) {
             response.addHeader("Content-Encoding", Compression.GZIP.getId());
             ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-            try (OutputStream os = Compression.GZIP.compress(byteOut)) {
+            try (data; OutputStream os = Compression.GZIP.compress(byteOut)) {
                 data.decompress().transferTo(os);
             }
             byte[] compressedData = byteOut.toByteArray();
