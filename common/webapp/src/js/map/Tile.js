@@ -66,6 +66,8 @@ export class Tile {
 
                 this.model = model;
                 this.onLoad(this);
+            }, () => {
+                this.unload();
             })
             .finally(() => {
                 this.loading = false;
