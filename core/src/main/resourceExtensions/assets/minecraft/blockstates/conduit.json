@@ -2,5 +2,5 @@
   "variants": {
     "": {"model": "minecraft:entity/conduit"},
     "active=true": {"model": "minecraft:entity/conduit_active"}
-    }
+  }
 }
