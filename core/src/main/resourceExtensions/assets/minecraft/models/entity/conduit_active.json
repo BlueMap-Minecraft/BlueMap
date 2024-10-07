@@ -1,0 +1,52 @@
+{
+  "credit": "Made by TyBraniff with Blockbench for Bluemap",
+  "texture_size": [32, 16],
+  "textures": {
+    "1": "entity/conduit/cage",
+    "2": "entity/conduit/open_eye",
+    "3": "entity/conduit/wind",
+    "4": "entity/conduit/wind_vertical"
+  },
+  "elements": [
+      {
+      "name": "cage",
+      "from": [4, 4, 4],
+      "to": [12, 12, 12],
+      "rotation": {"angle": 0, "axis": "z", "origin": [8, 8, 8]},
+      "faces": {
+        "north": {"uv": [0, 8, 4, 16], "texture": "#1"},
+        "east": {"uv": [4, 0, 8, 8], "texture": "#1"},
+        "south": {"uv": [8, 8, 12, 16], "texture": "#1"},
+        "west": {"uv": [4, 8, 8, 16], "texture": "#1"},
+        "up": {"uv": [8, 0, 12, 8], "rotation": 90, "texture": "#1"},
+        "down": {"uv": [12, 8, 16, 16], "rotation": 270, "texture": "#1"}
+      }
+    },
+      {
+      "name": "eye",
+      "from": [5, 5, 8],
+      "to": [11, 11, 8],
+      "faces": {
+        "north": {"uv": [0, 0, 8, 16], "texture": "#2"},
+        "east": {"uv": [0, 0, 0, 8], "texture": "#missing"},
+        "south": {"uv": [0, 0, 8, 16], "texture": "#2"},
+        "west": {"uv": [0, 0, 0, 8], "texture": "#missing"},
+        "up": {"uv": [0, 0, 4, 0], "texture": "#missing"},
+        "down": {"uv": [0, 0, 4, 0], "texture": "#missing"}
+      }
+    },
+      {
+      "name": "wind",
+      "from": [0, 0, 0],
+      "to": [16, 16, 16],
+      "faces": {
+        "north": {"uv": [0, 8, 4, 16], "texture": "#3"},
+        "east": {"uv": [4, 16, 8, 8], "rotation": 90, "texture": "#4"},
+        "south": {"uv": [12, 8, 16, 16], "texture": "#3"},
+        "west": {"uv": [4, 8, 12, 16], "texture": "#3"},
+        "up": {"uv": [0, 16, 4, 8], "texture": "#4"},
+        "down": {"uv": [12, 8, 8, 16], "texture": "#4"}
+      }
+    }
+  ]
+}
