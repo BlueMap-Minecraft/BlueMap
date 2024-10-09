@@ -32,6 +32,25 @@ export async function setLanguage(lang) {
 
 export async function loadLanguageSettings() {
 	let settings = await fetchHocon(`./lang/settings.conf`);
+	let selectedLanguage = null;
+
+	if (settings.useBrowserLanguage) {
+		const availableLanguages = settings.languages.map(lang => lang.locale);
+
+        for (let browserLanguage of navigator.languages) {
+            selectedLanguage = availableLanguages.find(lang => lang === browserLanguage);
+            if (selectedLanguage) break;
+
+            let baseBrowserLanguage = browserLanguage.split('-')[0];
+            selectedLanguage = availableLanguages.find(lang => lang.startsWith(baseBrowserLanguage));
+            if (selectedLanguage) break;
+        }
+	}
+
+	if (!selectedLanguage) {
+		selectedLanguage = settings.default;
+	}
+
 	i18n.languages = settings.languages;
-	await setLanguage(settings.default);
+	await setLanguage(selectedLanguage);
 }
