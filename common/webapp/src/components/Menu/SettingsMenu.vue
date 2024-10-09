@@ -52,7 +52,7 @@
     <Group v-if="languages.length > 1" :title="$t('language.title')">
       <SimpleButton v-for="lang of languages" :key="lang.locale"
                     :active="lang.locale === $i18n.locale"
-                    @action="changeLanguage(lang.locale); $bluemap.saveUserSettings();"
+                    @action="changeLanguage(lang.locale);"
       >{{lang.name}}</SimpleButton>
     </Group>
 
@@ -117,8 +117,9 @@ name: "SettingsMenu",
       let f = parseFloat(value);
       return f === 0 ? this.$t("renderDistance.off") : f.toFixed(0);
     },
-    changeLanguage(lang) {
-      setLanguage(lang)
+    async changeLanguage(lang) {
+        await setLanguage(lang);
+        this.$bluemap.saveUserSettings();
     }
   }
 }
