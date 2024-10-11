@@ -69,6 +69,6 @@ This means we always can decide to not accept a PR for any reason.
 
 ---
 
-[![JetBrainsLogo](https://bluecolored.de/paste/jetbrains-variant-4.svg)](https://www.jetbrains.com/?from=BlueMap)<br>
+[![JetBrainsLogo](https://bluemap.bluecolored.de/assets/jetbrains.svg)](https://www.jetbrains.com/?from=BlueMap)<br>
 <br>
 Special thanks to [JetBrains](https://www.jetbrains.com/?from=BlueMap) for giving out an OpenSource-Licence for BlueMap development!
