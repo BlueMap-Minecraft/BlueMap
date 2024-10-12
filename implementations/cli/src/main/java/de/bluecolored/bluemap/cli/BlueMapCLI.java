@@ -72,6 +72,7 @@ public class BlueMapCLI {
 
     private String minecraftVersion = null;
     private Path configFolder = Path.of("config");
+    private Path modsFolder = null;
 
 
     public void renderMaps(BlueMapService blueMap, boolean watch, Predicate<TileState> force, boolean forceGenerateWebapp,
@@ -318,6 +319,14 @@ public class BlueMapCLI {
                 FileHelper.createDirectories(cli.configFolder);
             }
 
+            //mods folder
+            if (cmd.hasOption("n")) {
+                cli.modsFolder = Path.of(cmd.getOptionValue("n"));
+                if (!Files.isDirectory(cli.modsFolder)) {
+                    throw new ConfigurationException("Mods folder does not exist: " + cli.modsFolder);
+                }
+            }
+
             //minecraft version
             if (cmd.hasOption("v")) {
                 cli.minecraftVersion = cmd.getOptionValue("v");
@@ -332,6 +341,7 @@ public class BlueMapCLI {
             BlueMapConfigManager configs = BlueMapConfigManager.builder()
                     .minecraftVersion(cli.minecraftVersion)
                     .configRoot(cli.configFolder)
+                    .modsFolder(cli.modsFolder)
                     .usePluginConfig(false)
                     .defaultDataFolder(Path.of("data"))
                     .defaultWebroot(Path.of("web"))
@@ -434,6 +444,15 @@ public class BlueMapCLI {
                 .desc("Sets path of the folder containing the configuration-files to use (configurations will be generated here if they don't exist)")
                 .build()
             );
+
+        options.addOption(
+            Option.builder("n")
+                .longOpt("mods")
+                .hasArg()
+                .argName("mods-folder")
+                .desc("Sets path of the folder containing the mods that contain extra resources for rendering.")
+                .build()
+        );
 
         options.addOption(
                 Option.builder("v")
