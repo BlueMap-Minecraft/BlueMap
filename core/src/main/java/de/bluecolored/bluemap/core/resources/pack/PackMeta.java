@@ -30,12 +30,15 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
+import de.bluecolored.bluemap.core.util.Key;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.Set;
 
 @Getter
 @SuppressWarnings({"FieldMayBeFinal", "unused"})
@@ -43,6 +46,7 @@ public class PackMeta {
 
     private Pack pack = new Pack();
     private Overlays overlays = new Overlays();
+    private Features features = new Features();
 
     @Getter
     public static class Pack {
@@ -59,6 +63,11 @@ public class PackMeta {
     public static class Overlay {
         private VersionRange formats = new VersionRange();
         private @Nullable String directory;
+    }
+
+    @Getter
+    public static class Features {
+        private Collection<Key> enabled = Set.of();
     }
 
     @Getter

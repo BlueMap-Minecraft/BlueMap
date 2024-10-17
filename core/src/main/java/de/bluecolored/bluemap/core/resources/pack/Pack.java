@@ -30,8 +30,10 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.util.Key;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -39,7 +41,9 @@ import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletionException;
 import java.util.stream.Stream;
 
@@ -48,6 +52,11 @@ import java.util.stream.Stream;
 public abstract class Pack {
 
     private final int packVersion;
+    private final @Nullable Set<Key> enabledFeatures;
+
+    public Pack(int packVersion) {
+        this(packVersion, null);
+    }
 
     public abstract void loadResources(Iterable<Path> roots) throws IOException, InterruptedException;
 
@@ -73,7 +82,13 @@ public abstract class Pack {
                 if (rootElement.has("jars")) {
                     for (JsonElement element : rootElement.getAsJsonArray("jars")) {
                         Path file = root.resolve(element.getAsJsonObject().get("file").getAsString());
-                        if (Files.exists(file)) loadResourcePath(file, resourceLoader);
+                        if (Files.exists(file)) {
+                            try {
+                                loadResourcePath(file, resourceLoader);
+                            } catch (Exception ex) {
+                                Logger.global.logDebug("Failed to read '" + root + "': " + ex);
+                            }
+                        }
                     }
                 }
             } catch (Exception ex) {
@@ -81,22 +96,58 @@ public abstract class Pack {
             }
         }
 
-        // load overlays
+        // load pack-meta
+        PackMeta packMeta;
         Path packMetaFile = root.resolve("pack.mcmeta");
         if (Files.isRegularFile(packMetaFile)) {
             try (BufferedReader reader = Files.newBufferedReader(packMetaFile)) {
-                PackMeta packMeta = ResourcesGson.INSTANCE.fromJson(reader, PackMeta.class);
-                PackMeta.Overlay[] overlays = packMeta.getOverlays().getEntries();
-                for (int i = overlays.length - 1; i >= 0; i--) {
-                    PackMeta.Overlay overlay = overlays[i];
-                    String dir = overlay.getDirectory();
-                    if (dir != null && overlay.getFormats().includes(this.packVersion)) {
-                        Path overlayRoot = root.resolve(dir);
-                        if (Files.exists(overlayRoot)) loadResourcePath(overlayRoot, resourceLoader);
-                    }
-                }
+                packMeta = ResourcesGson.INSTANCE.fromJson(reader, PackMeta.class);
             } catch (Exception ex) {
                 Logger.global.logDebug("Failed to read pack.mcmeta: " + ex);
+                packMeta = new PackMeta();
+            }
+        } else {
+            packMeta = new PackMeta();
+        }
+
+        // stop loading pack if feature is not enabled
+        if (enabledFeatures != null && !enabledFeatures.containsAll(packMeta.getFeatures().getEnabled())) {
+            Logger.global.logDebug("Skipping resources from '%s' because not all required features (%s) are enabled (%s)"
+                    .formatted(
+                            root,
+                            Arrays.toString(packMeta.getFeatures().getEnabled().toArray()),
+                            Arrays.toString(enabledFeatures.toArray())
+                    ));
+            return;
+        }
+
+        // load nested datapacks
+        list(root.resolve("data"))
+                .map(namespaceRoot -> namespaceRoot.resolve("datapacks"))
+                .filter(Files::isDirectory)
+                .flatMap(Pack::list)
+                .forEach(nestedPack -> {
+                    try {
+                        loadResourcePath(nestedPack, resourceLoader);
+                    } catch (Exception ex) {
+                        Logger.global.logDebug("Failed to load nested datapack '" + nestedPack + "': " + ex);
+                    }
+                });
+
+        // load overlays
+        PackMeta.Overlay[] overlays = packMeta.getOverlays().getEntries();
+        for (int i = overlays.length - 1; i >= 0; i--) {
+            PackMeta.Overlay overlay = overlays[i];
+            String dir = overlay.getDirectory();
+            if (dir != null && overlay.getFormats().includes(this.packVersion)) {
+                Path overlayRoot = root.resolve(dir);
+                if (Files.exists(overlayRoot)) {
+                    try {
+                        loadResourcePath(overlayRoot, resourceLoader);
+                    } catch (Exception ex) {
+                        Logger.global.logDebug("Failed to load overlay '" + overlayRoot + "': " + ex);
+                    }
+                }
             }
         }
 
