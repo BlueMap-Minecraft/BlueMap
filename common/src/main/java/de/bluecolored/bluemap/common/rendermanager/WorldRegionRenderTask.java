@@ -42,7 +42,6 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
 
 import static de.bluecolored.bluemap.core.map.renderstate.TileActionResolver.Action.DELETE;
 import static de.bluecolored.bluemap.core.map.renderstate.TileActionResolver.Action.RENDER;
@@ -51,7 +50,7 @@ public class WorldRegionRenderTask implements RenderTask {
 
     @Getter private final BmMap map;
     @Getter private final Vector2i regionPos;
-    @Getter private final Predicate<TileState> force;
+    @Getter private final TileUpdateStrategy force;
 
     private Grid regionGrid, chunkGrid, tileGrid;
     private Vector2i chunkMin, chunkMax, chunksSize;
@@ -69,10 +68,10 @@ public class WorldRegionRenderTask implements RenderTask {
     }
 
     public WorldRegionRenderTask(BmMap map, Vector2i regionPos, boolean force) {
-        this(map, regionPos, s -> force);
+        this(map, regionPos, TileUpdateStrategy.fixed(force));
     }
 
-    public WorldRegionRenderTask(BmMap map, Vector2i regionPos, Predicate<TileState> force) {
+    public WorldRegionRenderTask(BmMap map, Vector2i regionPos, TileUpdateStrategy force) {
         this.map = map;
         this.regionPos = regionPos;
         this.force = force;

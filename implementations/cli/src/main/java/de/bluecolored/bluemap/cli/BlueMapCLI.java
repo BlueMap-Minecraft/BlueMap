@@ -38,13 +38,13 @@ import de.bluecolored.bluemap.common.plugin.MapUpdateService;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.rendermanager.RenderTask;
+import de.bluecolored.bluemap.common.rendermanager.TileUpdateStrategy;
 import de.bluecolored.bluemap.common.web.*;
 import de.bluecolored.bluemap.common.web.http.HttpRequestHandler;
 import de.bluecolored.bluemap.common.web.http.HttpServer;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
-import de.bluecolored.bluemap.core.map.renderstate.TileState;
 import de.bluecolored.bluemap.core.storage.MapStorage;
 import de.bluecolored.bluemap.core.util.FileHelper;
 import org.apache.commons.cli.*;
@@ -75,7 +75,7 @@ public class BlueMapCLI {
     private Path modsFolder = null;
 
 
-    public void renderMaps(BlueMapService blueMap, boolean watch, Predicate<TileState> force, boolean forceGenerateWebapp,
+    public void renderMaps(BlueMapService blueMap, boolean watch, TileUpdateStrategy force, boolean forceGenerateWebapp,
                            @Nullable String mapsToRender) throws ConfigurationException, IOException, InterruptedException {
 
         if (blueMap.getConfig().getWebappConfig().isEnabled())
@@ -371,9 +371,9 @@ public class BlueMapCLI {
                 noActions = false;
 
                 boolean watch = cmd.hasOption("u");
-                Predicate<TileState> force = t -> false;
-                if (cmd.hasOption("f")) force = t -> true;
-                else if (cmd.hasOption("e")) force = t -> t == TileState.RENDERED_EDGE;
+                TileUpdateStrategy force = TileUpdateStrategy.FORCE_NONE;
+                if (cmd.hasOption("f")) force = TileUpdateStrategy.FORCE_ALL;
+                else if (cmd.hasOption("e")) force = TileUpdateStrategy.FORCE_EDGE;
                 boolean generateWebappFiles = cmd.hasOption("g");
                 String mapsToRender = cmd.getOptionValue("m", null);
                 cli.renderMaps(blueMap, watch, force, generateWebappFiles, mapsToRender);

@@ -40,6 +40,7 @@ import com.mojang.brigadier.builder.RequiredArgumentBuilder;
 import com.mojang.brigadier.context.CommandContext;
 import com.mojang.brigadier.tree.LiteralCommandNode;
 import de.bluecolored.bluemap.common.config.ConfigurationException;
+import de.bluecolored.bluemap.common.debug.StateDumper;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.plugin.PluginState;
 import de.bluecolored.bluemap.common.plugin.text.Text;
@@ -48,11 +49,9 @@ import de.bluecolored.bluemap.common.plugin.text.TextFormat;
 import de.bluecolored.bluemap.common.rendermanager.*;
 import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.core.BlueMap;
-import de.bluecolored.bluemap.common.debug.StateDumper;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.map.renderstate.TileInfoRegion;
-import de.bluecolored.bluemap.core.map.renderstate.TileState;
 import de.bluecolored.bluemap.core.storage.MapStorage;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.Grid;
@@ -770,18 +769,18 @@ public class Commands<S> {
     }
 
     public int forceUpdateCommand(CommandContext<S> context) {
-        return updateCommand(context, s -> true);
+        return updateCommand(context, TileUpdateStrategy.FORCE_ALL);
     }
 
     public int fixEdgesCommand(CommandContext<S> context) {
-        return updateCommand(context, s -> s == TileState.RENDERED_EDGE);
+        return updateCommand(context, TileUpdateStrategy.FORCE_EDGE);
     }
 
     public int updateCommand(CommandContext<S> context) {
-        return updateCommand(context, s -> false);
+        return updateCommand(context, TileUpdateStrategy.FORCE_NONE);
     }
 
-    public int updateCommand(CommandContext<S> context, Predicate<TileState> force) {
+    public int updateCommand(CommandContext<S> context, TileUpdateStrategy force) {
         final CommandSource source = commandSourceInterface.apply(context.getSource());
 
         // parse world/map argument

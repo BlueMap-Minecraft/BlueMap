@@ -49,7 +49,7 @@ public class MapUpdateTask extends CombinedRenderTask<RenderTask> {
         this(map, getRegions(map));
     }
 
-    public MapUpdateTask(BmMap map, Predicate<TileState> force) {
+    public MapUpdateTask(BmMap map, TileUpdateStrategy force) {
         this(map, getRegions(map), force);
     }
 
@@ -57,15 +57,15 @@ public class MapUpdateTask extends CombinedRenderTask<RenderTask> {
         this(map, getRegions(map, center, radius));
     }
 
-    public MapUpdateTask(BmMap map, Vector2i center, int radius, Predicate<TileState> force) {
+    public MapUpdateTask(BmMap map, Vector2i center, int radius, TileUpdateStrategy force) {
         this(map, getRegions(map, center, radius), force);
     }
 
     public MapUpdateTask(BmMap map, Collection<Vector2i> regions) {
-        this(map, regions, s -> false);
+        this(map, regions, TileUpdateStrategy.FORCE_NONE);
     }
 
-    public MapUpdateTask(BmMap map, Collection<Vector2i> regions, Predicate<TileState> force) {
+    public MapUpdateTask(BmMap map, Collection<Vector2i> regions, TileUpdateStrategy force) {
         super("Update map '" + map.getId() + "'", createTasks(map, regions, force));
         this.map = map;
         this.regions = Collections.unmodifiableCollection(new ArrayList<>(regions));
@@ -79,7 +79,7 @@ public class MapUpdateTask extends CombinedRenderTask<RenderTask> {
         return regions;
     }
 
-    private static Collection<RenderTask> createTasks(BmMap map, Collection<Vector2i> regions, Predicate<TileState> force) {
+    private static Collection<RenderTask> createTasks(BmMap map, Collection<Vector2i> regions, TileUpdateStrategy force) {
         ArrayList<WorldRegionRenderTask> regionTasks = new ArrayList<>(regions.size());
         regions.forEach(region -> regionTasks.add(new WorldRegionRenderTask(map, region, force)));
 
