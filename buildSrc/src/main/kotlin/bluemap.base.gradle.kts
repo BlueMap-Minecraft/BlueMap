@@ -16,6 +16,12 @@ repositories {
         content { includeGroup ("org.spigotmc") }
     }
 
+    // lwjgl-freetype-3.3.3-natives-macos-patch.jar is not available on Maven
+    // Central - pull it from the Minecraft library server instead.
+    maven ("https://libraries.minecraft.net") {
+        content { includeModule("org.lwjgl", "lwjgl-freetype") }
+    }
+
     mavenCentral()
     maven ("https://libraries.minecraft.net")
     maven ( "https://maven.minecraftforge.net" )
