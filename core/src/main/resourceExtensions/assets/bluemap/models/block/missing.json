@@ -1,4 +1,5 @@
 {
+  "renderer": "bluemap:missing",
   "parent": "block/cube_all",
   "textures": {
     "all": "bluemap:block/missing"

@@ -29,6 +29,7 @@ import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
+import de.bluecolored.bluemap.core.map.hires.blockmodel.BlockRendererType;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockmodel.Face;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.util.Key;
@@ -64,6 +65,11 @@ public class ResourcesGson {
                         GrassColorModifier.REGISTRY,
                         Key.MINECRAFT_NAMESPACE,
                         GrassColorModifier.NONE
+                ))
+                .registerTypeAdapter(BlockRendererType.class, new RegistryAdapter<>(
+                        BlockRendererType.REGISTRY,
+                        Key.BLUEMAP_NAMESPACE,
+                        BlockRendererType.DEFAULT
                 ));
     }
 

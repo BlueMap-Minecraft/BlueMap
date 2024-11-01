@@ -27,7 +27,7 @@ package de.bluecolored.bluemap.core.map.hires;
 import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.TileMetaConsumer;
-import de.bluecolored.bluemap.core.map.hires.blockmodel.BlockStateModelFactory;
+import de.bluecolored.bluemap.core.map.hires.blockmodel.BlockStateModelRenderer;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.Chunk;
@@ -39,31 +39,31 @@ public class HiresModelRenderer {
     private final ResourcePack resourcePack;
     private final RenderSettings renderSettings;
 
-    private final ThreadLocal<BlockStateModelFactory> threadLocalModelFactory;
+    private final ThreadLocal<BlockStateModelRenderer> threadLocalBlockRenderer;
 
     public HiresModelRenderer(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
         this.resourcePack = resourcePack;
         this.renderSettings = renderSettings;
 
-        this.threadLocalModelFactory = ThreadLocal.withInitial(() -> new BlockStateModelFactory(resourcePack, textureGallery, renderSettings));
+        this.threadLocalBlockRenderer = ThreadLocal.withInitial(() -> new BlockStateModelRenderer(resourcePack, textureGallery, renderSettings));
     }
 
     public void render(World world, Vector3i modelMin, Vector3i modelMax, TileModel model) {
         render(world, modelMin, modelMax, model, (x, z, c, h, l) -> {});
     }
 
-    public void render(World world, Vector3i modelMin, Vector3i modelMax, TileModel model, TileMetaConsumer tileMetaConsumer) {
+    public void render(World world, Vector3i modelMin, Vector3i modelMax, TileModel tileModel, TileMetaConsumer tileMetaConsumer) {
         Vector3i min = modelMin.max(renderSettings.getMinPos());
         Vector3i max = modelMax.min(renderSettings.getMaxPos());
         Vector3i modelAnchor = new Vector3i(modelMin.getX(), 0, modelMin.getZ());
 
-        BlockStateModelFactory modelFactory = threadLocalModelFactory.get();
+        BlockStateModelRenderer blockRenderer = threadLocalBlockRenderer.get();
 
         int maxHeight, minY, maxY;
         double topBlockLight;
         Color columnColor = new Color(), blockColor = new Color();
         BlockNeighborhood<?> block = new BlockNeighborhood<>(resourcePack, renderSettings, world, 0, 0, 0);
-        BlockModelView blockModel = new BlockModelView(model);
+        TileModelView blockModel = new TileModelView(tileModel);
 
         int x, y, z;
         for (x = modelMin.getX(); x <= modelMax.getX(); x++){
@@ -85,7 +85,7 @@ public class HiresModelRenderer {
 
                         blockModel.initialize();
 
-                        modelFactory.render(block, blockModel, blockColor);
+                        blockRenderer.render(block, blockModel, blockColor);
 
                         //update topBlockLight
                         topBlockLight = Math.max(topBlockLight, block.getBlockLightLevel() * (1 - columnColor.a));

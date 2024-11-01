@@ -24,27 +24,34 @@
  */
 package de.bluecolored.bluemap.core.resources.pack.resourcepack.blockmodel;
 
+import de.bluecolored.bluemap.core.map.hires.blockmodel.BlockRendererType;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
 public class BlockModel {
+
+    private BlockRendererType renderer = BlockRendererType.DEFAULT;
 
     private ResourcePath<BlockModel> parent;
     private Map<String, TextureVariable> textures = new HashMap<>();
     private Element[] elements;
     private boolean ambientocclusion = true;
 
-    private transient boolean liquid = false;
     private transient boolean culling = false;
     private transient boolean occluding = false;
 
     private BlockModel(){}
+
+    public BlockRendererType getRenderer() {
+        return renderer;
+    }
 
     @Nullable
     public ResourcePath<BlockModel> getParent() {
@@ -62,10 +69,6 @@ public class BlockModel {
 
     public boolean isAmbientocclusion() {
         return ambientocclusion;
-    }
-
-    public boolean isLiquid() {
-        return liquid;
     }
 
     public boolean isCulling() {
@@ -94,11 +97,6 @@ public class BlockModel {
         // set parent to null early to avoid trying to resolve reference-loops
         ResourcePath<BlockModel> parentPath = this.parent;
         this.parent = null;
-
-        if (parentPath.getFormatted().equals("bluemap:builtin/liquid")) {
-            this.liquid = true;
-            return;
-        }
 
         BlockModel parent = parentPath.getResource(resourcePack::getBlockModel);
         if (parent != null) {

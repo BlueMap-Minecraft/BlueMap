@@ -29,7 +29,7 @@ import com.flowpowered.math.vector.Vector3f;
 import com.flowpowered.math.vector.Vector3i;
 import com.flowpowered.math.vector.Vector4f;
 import de.bluecolored.bluemap.core.map.TextureGallery;
-import de.bluecolored.bluemap.core.map.hires.BlockModelView;
+import de.bluecolored.bluemap.core.map.hires.TileModelView;
 import de.bluecolored.bluemap.core.map.hires.TileModel;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.resources.BlockColorCalculatorFactory;
@@ -54,7 +54,7 @@ import de.bluecolored.bluemap.core.world.block.ExtendedBlock;
  * This model builder creates a BlockStateModel using the information from parsed resource-pack json files.
  */
 @SuppressWarnings("DuplicatedCode")
-public class ResourceModelBuilder {
+public class ResourceModelRenderer implements BlockRenderer {
     private static final float BLOCK_SCALE = 1f / 16f;
 
     private final ResourcePack resourcePack;
@@ -71,11 +71,11 @@ public class ResourceModelBuilder {
     private BlockNeighborhood<?> block;
     private Variant variant;
     private BlockModel modelResource;
-    private BlockModelView blockModel;
+    private TileModelView blockModel;
     private Color blockColor;
     private float blockColorOpacity;
 
-    public ResourceModelBuilder(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
+    public ResourceModelRenderer(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
         this.resourcePack = resourcePack;
         this.textureGallery = textureGallery;
         this.renderSettings = renderSettings;
@@ -86,7 +86,7 @@ public class ResourceModelBuilder {
     }
 
     private final MatrixM4f modelTransform = new MatrixM4f();
-    public void build(BlockNeighborhood<?> block, Variant variant, BlockModelView blockModel, Color color) {
+    public void render(BlockNeighborhood<?> block, Variant variant, TileModelView blockModel, Color color) {
         this.block = block;
         this.blockModel = blockModel;
         this.blockColor = color;
@@ -132,7 +132,7 @@ public class ResourceModelBuilder {
     }
 
     private final MatrixM4f modelElementTransform = new MatrixM4f();
-    private void buildModelElementResource(Element element, BlockModelView blockModel) {
+    private void buildModelElementResource(Element element, TileModelView blockModel) {
 
         //create faces
         Vector3f from = element.getFrom();
@@ -215,7 +215,7 @@ public class ResourceModelBuilder {
         blockModel.initialize();
         blockModel.add(2);
 
-        TileModel tileModel = blockModel.getHiresTile();
+        TileModel tileModel = blockModel.getTileModel();
         int face1 = blockModel.getStart();
         int face2 = face1 + 1;
 

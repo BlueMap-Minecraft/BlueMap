@@ -40,6 +40,9 @@ public class Block<T extends Block<T>> {
     private final LightData lightData = new LightData(-1, -1);
     private @Nullable Biome biome;
 
+    private boolean isBlockEntitySet;
+    private @Nullable BlockEntity blockEntity;
+
     public Block(World world, int x, int y, int z) {
         set(world, x, y, z);
     }
@@ -81,6 +84,8 @@ public class Block<T extends Block<T>> {
         this.blockState = null;
         this.lightData.set(-1, -1);
         this.biome = null;
+        this.isBlockEntitySet = false;
+        this.blockEntity = null;
     }
 
     public T add(int dx, int dy, int dz) {
@@ -148,7 +153,11 @@ public class Block<T extends Block<T>> {
     }
 
     public @Nullable BlockEntity getBlockEntity() {
-        return getChunk().getBlockEntity(x, y, z);
+        if (!isBlockEntitySet) {
+            blockEntity = getChunk().getBlockEntity(x, y, z);
+            isBlockEntitySet = true;
+        }
+        return blockEntity;
     }
 
     @Override

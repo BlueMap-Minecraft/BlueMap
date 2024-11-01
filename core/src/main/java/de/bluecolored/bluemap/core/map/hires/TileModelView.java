@@ -27,90 +27,90 @@ package de.bluecolored.bluemap.core.map.hires;
 import de.bluecolored.bluemap.core.util.math.MatrixM3f;
 import de.bluecolored.bluemap.core.util.math.MatrixM4f;
 
-public class BlockModelView {
+public class TileModelView {
 
-    private TileModel hiresTile;
+    private TileModel tileModel;
     private int start, size;
 
-    public BlockModelView(TileModel hiresTile) {
-        initialize(hiresTile);
+    public TileModelView(TileModel tileModel) {
+        initialize(tileModel);
     }
 
-    public BlockModelView initialize(TileModel hiresTile, int start) {
-        this.hiresTile = hiresTile;
+    public TileModelView initialize(TileModel hiresTile, int start) {
+        this.tileModel = hiresTile;
         this.start = start;
         this.size = hiresTile.size() - start;
 
         return this;
     }
 
-    public BlockModelView initialize(TileModel hiresTile) {
-        this.hiresTile = hiresTile;
+    public TileModelView initialize(TileModel hiresTile) {
+        this.tileModel = hiresTile;
         this.start = hiresTile.size();
         this.size = 0;
 
         return this;
     }
 
-    public BlockModelView initialize(int start) {
+    public TileModelView initialize(int start) {
         this.start = start;
-        this.size = hiresTile.size() - start;
+        this.size = tileModel.size() - start;
 
         return this;
     }
 
-    public BlockModelView initialize() {
-        this.start = hiresTile.size();
+    public TileModelView initialize() {
+        this.start = tileModel.size();
         this.size = 0;
 
         return this;
     }
 
-    public BlockModelView reset() {
-        hiresTile.reset(this.start);
+    public TileModelView reset() {
+        tileModel.reset(this.start);
         this.size = 0;
 
         return this;
     }
 
     public int add(int count) {
-        int s = hiresTile.add(count);
+        int s = tileModel.add(count);
         if (s != start + size) throw new IllegalStateException("Size of HiresTileModel had external changes since view-initialisation!");
         this.size += count;
         return s;
     }
 
-    public BlockModelView rotate(float angle, float axisX, float axisY, float axisZ) {
-        hiresTile.rotate(start, size, angle, axisX, axisY, axisZ);
+    public TileModelView rotate(float angle, float axisX, float axisY, float axisZ) {
+        tileModel.rotate(start, size, angle, axisX, axisY, axisZ);
         return this;
     }
 
-    public BlockModelView rotate(float pitch, float yaw, float roll) {
-        hiresTile.rotate(start, size, pitch, yaw, roll);
+    public TileModelView rotate(float pitch, float yaw, float roll) {
+        tileModel.rotate(start, size, pitch, yaw, roll);
         return this;
     }
 
-    public BlockModelView scale(float sx, float sy, float sz) {
-        hiresTile.scale(start, size, sx, sy, sz);
+    public TileModelView scale(float sx, float sy, float sz) {
+        tileModel.scale(start, size, sx, sy, sz);
         return this;
     }
 
-    public BlockModelView translate(float dx, float dy, float dz) {
-        hiresTile.translate(start, size, dx, dy, dz);
+    public TileModelView translate(float dx, float dy, float dz) {
+        tileModel.translate(start, size, dx, dy, dz);
         return this;
     }
 
-    public BlockModelView transform(MatrixM3f t) {
-        hiresTile.transform(start, size, t);
+    public TileModelView transform(MatrixM3f t) {
+        tileModel.transform(start, size, t);
         return this;
     }
 
-    public BlockModelView transform(
+    public TileModelView transform(
             float m00, float m01, float m02,
             float m10, float m11, float m12,
             float m20, float m21, float m22
     ) {
-        hiresTile.transform(start, size,
+        tileModel.transform(start, size,
                 m00, m01, m02,
                 m10, m11, m12,
                 m20, m21, m22
@@ -118,18 +118,18 @@ public class BlockModelView {
         return this;
     }
 
-    public BlockModelView transform(MatrixM4f t) {
-        hiresTile.transform(start, size, t);
+    public TileModelView transform(MatrixM4f t) {
+        tileModel.transform(start, size, t);
         return this;
     }
 
-    public BlockModelView transform(
+    public TileModelView transform(
             float m00, float m01, float m02, float m03,
             float m10, float m11, float m12, float m13,
             float m20, float m21, float m22, float m23,
             float m30, float m31, float m32, float m33
     ) {
-        hiresTile.transform(start, size,
+        tileModel.transform(start, size,
                 m00, m01, m02, m03,
                 m10, m11, m12, m13,
                 m20, m21, m22, m23,
@@ -138,8 +138,8 @@ public class BlockModelView {
         return this;
     }
 
-    public TileModel getHiresTile() {
-        return hiresTile;
+    public TileModel getTileModel() {
+        return tileModel;
     }
 
     public int getStart() {

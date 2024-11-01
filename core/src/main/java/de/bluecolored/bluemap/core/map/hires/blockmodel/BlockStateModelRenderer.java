@@ -24,8 +24,10 @@
  */
 package de.bluecolored.bluemap.core.map.hires.blockmodel;
 
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.core.map.TextureGallery;
-import de.bluecolored.bluemap.core.map.hires.BlockModelView;
+import de.bluecolored.bluemap.core.map.hires.TileModelView;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockmodel.BlockModel;
@@ -37,27 +39,25 @@ import de.bluecolored.bluemap.core.world.BlockState;
 import java.util.ArrayList;
 import java.util.List;
 
-public class BlockStateModelFactory {
+public class BlockStateModelRenderer {
 
     private final ResourcePack resourcePack;
-    private final ResourceModelBuilder resourceModelBuilder;
-    private final LiquidModelBuilder liquidModelBuilder;
+    private final LoadingCache<BlockRendererType, BlockRenderer> blockRenderers;
 
     private final List<Variant> variants = new ArrayList<>();
 
-    public BlockStateModelFactory(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
+    public BlockStateModelRenderer(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
         this.resourcePack = resourcePack;
-
-        this.resourceModelBuilder = new ResourceModelBuilder(resourcePack, textureGallery, renderSettings);
-        this.liquidModelBuilder = new LiquidModelBuilder(resourcePack, textureGallery, renderSettings);
+        this.blockRenderers = Caffeine.newBuilder()
+                .build(type -> type.create(resourcePack, textureGallery, renderSettings));
     }
 
-    public void render(BlockNeighborhood<?> block, BlockModelView blockModel, Color blockColor) {
+    public void render(BlockNeighborhood<?> block, TileModelView blockModel, Color blockColor) {
         render(block, block.getBlockState(), blockModel, blockColor);
     }
 
     private final Color waterloggedColor = new Color();
-    public void render(BlockNeighborhood<?> block, BlockState blockState, BlockModelView blockModel, Color blockColor) {
+    public void render(BlockNeighborhood<?> block, BlockState blockState, TileModelView blockModel, Color blockColor) {
         blockColor.set(0, 0, 0, 0, true);
 
         //shortcut for air
@@ -79,7 +79,7 @@ public class BlockStateModelFactory {
     }
 
     private final Color variantColor = new Color();
-    private void renderModel(BlockNeighborhood<?> block, BlockState blockState, BlockModelView blockModel, Color blockColor) {
+    private void renderModel(BlockNeighborhood<?> block, BlockState blockState, TileModelView blockModel, Color blockColor) {
         int modelStart = blockModel.getStart();
 
         var stateResource = resourcePack.getBlockState(blockState);
@@ -98,11 +98,8 @@ public class BlockStateModelFactory {
 
             variantColor.set(0f, 0f, 0f, 0f, true);
 
-            if (modelResource.isLiquid()) {
-                liquidModelBuilder.build(block, blockState, variant, blockModel.initialize(), variantColor);
-            } else {
-                resourceModelBuilder.build(block, variant, blockModel.initialize(), variantColor);
-            }
+            blockRenderers.get(modelResource.getRenderer())
+                    .render(block, variant, blockModel.initialize(), blockColor);
 
             if (variantColor.a > blockColorOpacity)
                 blockColorOpacity = variantColor.a;
