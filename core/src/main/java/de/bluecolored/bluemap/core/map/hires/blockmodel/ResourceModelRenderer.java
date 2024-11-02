@@ -82,7 +82,7 @@ public class ResourceModelRenderer implements BlockRenderer {
         this.blockColorCalculator = resourcePack.getColorCalculatorFactory().createCalculator();
 
         for (int i = 0; i < corners.length; i++) corners[i] = new VectorM3f(0, 0, 0);
-        for (int i = 0; i < uvs.length; i++) rawUvs[i] = new VectorM2f(0, 0);
+        for (int i = 0; i < rawUvs.length; i++) rawUvs[i] = new VectorM2f(0, 0);
     }
 
     private final MatrixM4f modelTransform = new MatrixM4f();
