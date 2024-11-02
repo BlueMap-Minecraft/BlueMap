@@ -98,6 +98,10 @@ public class Texture {
         return texture;
     }
 
+    public static Texture from(ResourcePath<Texture> resourcePath, BufferedImage image) throws IOException {
+        return from(resourcePath, image, null);
+    }
+
     public static Texture from(ResourcePath<Texture> resourcePath, BufferedImage image, @Nullable AnimationMeta animation) throws IOException {
 
         //check halfTransparency

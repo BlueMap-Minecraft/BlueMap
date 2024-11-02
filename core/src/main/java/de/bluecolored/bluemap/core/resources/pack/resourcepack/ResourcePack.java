@@ -70,6 +70,8 @@ public class ResourcePack extends Pack {
     private final BlockColorCalculatorFactory colorCalculatorFactory;
     private final BlockPropertiesConfig blockPropertiesConfig;
 
+    private final Map<ResourcePackExtensionType<?>, ResourcePackExtension> resourcePackExtensions;
+
     private final Map<String, ResourcePath<BlockState>> blockStatePaths;
     private final Map<String, ResourcePath<Texture>> texturePaths;
     private final LoadingCache<de.bluecolored.bluemap.core.world.BlockState, BlockProperties> blockPropertiesCache;
@@ -86,6 +88,10 @@ public class ResourcePack extends Pack {
 
         this.colorCalculatorFactory = new BlockColorCalculatorFactory();
         this.blockPropertiesConfig = new BlockPropertiesConfig();
+
+        this.resourcePackExtensions = new HashMap<>();
+        for (ResourcePackExtensionType<?> extensionType : ResourcePackExtensionType.REGISTRY.values())
+            resourcePackExtensions.put(extensionType, extensionType.create());
 
         this.blockPropertiesCache = Caffeine.newBuilder()
                 .executor(BlueMap.THREAD_POOL)
@@ -203,6 +209,12 @@ public class ResourcePack extends Pack {
             if (cause != null) throw new IOException(cause);
             throw new IOException(ex);
         }
+
+        // invoke extensions
+        for (ResourcePackExtension extension : resourcePackExtensions.values()) {
+            extension.loadResources(root);
+        }
+
     }
 
     private void loadTextures(Path root) throws IOException {
@@ -251,6 +263,13 @@ public class ResourcePack extends Pack {
             if (cause != null) throw new IOException(cause);
             throw new IOException(ex);
         }
+
+        // invoke extensions
+        for (ResourcePackExtension extension : resourcePackExtensions.values()) {
+            extension.loadTextures(root)
+                    .forEach(texture -> textures.put(texture.getResourcePath(), texture));
+        }
+
     }
 
     private void bake() throws IOException, InterruptedException {
@@ -286,33 +305,33 @@ public class ResourcePack extends Pack {
         if (grass == null) throw new IOException("Failed to bake resource-pack: No grass-colormap found!");
         this.colorCalculatorFactory.setGrassMap(grass);
 
+        // invoke extensions
+        for (ResourcePackExtension extension : resourcePackExtensions.values()) {
+            extension.bake();
+        }
+
     }
 
-    @Nullable
-    public BlockState getBlockState(de.bluecolored.bluemap.core.world.BlockState blockState) {
+    public @Nullable BlockState getBlockState(de.bluecolored.bluemap.core.world.BlockState blockState) {
         ResourcePath<BlockState> path = blockStatePaths.get(blockState.getFormatted());
         return path != null ? path.getResource(this::getBlockState) : MISSING_BLOCK_STATE.getResource(this::getBlockState);
     }
 
-    @Nullable
-    public BlockState getBlockState(ResourcePath<BlockState> path) {
+    public @Nullable BlockState getBlockState(ResourcePath<BlockState> path) {
         BlockState blockState = blockStates.get(path);
         return blockState != null ? blockState : MISSING_BLOCK_STATE.getResource(blockStates::get);
     }
 
-    @Nullable
-    public BlockModel getBlockModel(ResourcePath<BlockModel> path) {
+    public @Nullable BlockModel getBlockModel(ResourcePath<BlockModel> path) {
         BlockModel blockModel = blockModels.get(path);
         return blockModel != null ? blockModel : MISSING_BLOCK_MODEL.getResource(blockModels::get);
     }
 
-    @Nullable
-    public ResourcePath<Texture> getTexturePath(String formatted) {
+    public @Nullable ResourcePath<Texture> getTexturePath(String formatted) {
         return texturePaths.get(formatted);
     }
 
-    @Nullable
-    public Texture getTexture(ResourcePath<Texture> path) {
+    public @Nullable Texture getTexture(ResourcePath<Texture> path) {
         Texture texture = textures.get(path);
         return texture != null ? texture : MISSING_TEXTURE.getResource(textures::get);
     }
@@ -346,6 +365,11 @@ public class ResourcePack extends Pack {
         }
 
         return props.build();
+    }
+
+    @SuppressWarnings({"unchecked", "unused"})
+    public <T extends ResourcePackExtension> @Nullable T getResourcePackExtension(ResourcePackExtensionType<T> extensionType) {
+        return (T) resourcePackExtensions.get(extensionType);
     }
 
 }
