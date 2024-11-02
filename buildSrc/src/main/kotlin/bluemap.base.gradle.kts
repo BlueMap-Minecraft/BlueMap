@@ -73,7 +73,10 @@ publishing {
     repositories {
         maven {
             name = "bluecolored"
-            url = uri( "https://repo.bluecolored.de/releases" )
+            url = uri("https://repo.bluecolored.de/releases")
+
+            if (!gitIsRelease())
+                url = uri("https://repo.bluecolored.de/snapshots")
 
             credentials {
                 username = project.findProperty("bluecoloredUsername") as String? ?: System.getenv("BLUECOLORED_USERNAME")

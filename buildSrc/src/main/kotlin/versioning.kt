@@ -24,6 +24,12 @@ fun Project.gitVersion(): String {
     return gitVersion
 }
 
+fun Project.gitIsRelease(): Boolean {
+    val lastTag = if (runCommand("git tag", "").isEmpty()) "" else runCommand("git describe --tags --abbrev=0", "")
+    val commits = runCommand("git rev-list --count $lastTag..HEAD", "0")
+    return commits == "0" && gitClean()
+}
+
 fun Project.releaseNotes(): String {
     val file = rootProject.projectDir.resolve("release.md")
     if (!file.exists()) return ""
