@@ -333,15 +333,16 @@ public class BlueMapCLI {
             }
 
             // load addons
-            Path addonsFolder = cli.configFolder.resolve("addons");
-            Files.createDirectories(addonsFolder);
-            Addons.tryLoadAddons(cli.configFolder.resolve("addons"), true);
+            Path packsFolder = cli.configFolder.resolve("packs");
+            Files.createDirectories(packsFolder);
+            Addons.tryLoadAddons(packsFolder);
 
             // load configs
             BlueMapConfigManager configs = BlueMapConfigManager.builder()
                     .minecraftVersion(cli.minecraftVersion)
                     .configRoot(cli.configFolder)
                     .modsFolder(cli.modsFolder)
+                    .packsFolder(packsFolder)
                     .usePluginConfig(false)
                     .defaultDataFolder(Path.of("data"))
                     .defaultWebroot(Path.of("web"))

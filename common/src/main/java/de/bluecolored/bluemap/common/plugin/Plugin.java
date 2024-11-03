@@ -122,16 +122,15 @@ public class Plugin implements ServerEventListener {
                 unload(); //ensure nothing is left running (from a failed load or something)
 
                 //load addons
-                Path addonsFolder = serverInterface.getConfigFolder().resolve("addons");
-                Files.createDirectories(addonsFolder);
-                Addons.tryLoadAddons(addonsFolder, true);
-                //serverInterface.getModsFolder().ifPresent(Addons::tryLoadAddons);
+                Path packsFolder = serverInterface.getConfigFolder().resolve("packs");
+                Files.createDirectories(packsFolder);
+                Addons.tryLoadAddons(packsFolder);
 
                 //load configs
                 BlueMapConfigManager configManager = BlueMapConfigManager.builder()
                         .minecraftVersion(serverInterface.getMinecraftVersion())
                         .configRoot(serverInterface.getConfigFolder())
-                        .packsFolder(serverInterface.getConfigFolder().resolve("packs"))
+                        .packsFolder(packsFolder)
                         .modsFolder(serverInterface.getModsFolder().orElse(null))
                         .useMetricsConfig(serverInterface.isMetricsEnabled() == Tristate.UNDEFINED)
                         .autoConfigWorlds(serverInterface.getLoadedServerWorlds())
