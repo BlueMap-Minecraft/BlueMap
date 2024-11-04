@@ -29,7 +29,8 @@ import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.Keyed;
 import de.bluecolored.bluemap.core.util.Registry;
 import de.bluecolored.bluemap.core.world.Region;
-import de.bluecolored.bluemap.core.world.mca.MCAWorld;
+import de.bluecolored.bluemap.core.world.mca.ChunkLoader;
+import de.bluecolored.bluemap.core.world.mca.chunk.MCAChunkLoader;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Nullable;
@@ -53,7 +54,7 @@ public interface RegionType extends Keyed {
     /**
      * Creates a new {@link Region} from the given world and region-file
      */
-    Region createRegion(MCAWorld world, Path regionFile);
+    <T> Region<T> createRegion(ChunkLoader<T> chunkLoader, Path regionFile);
 
     /**
      * Converts region coordinates into the region-file name.
@@ -84,12 +85,12 @@ public interface RegionType extends Keyed {
         return null;
     }
 
-    static Region loadRegion(MCAWorld world, Path regionFolder, int regionX, int regionZ) {
+    static <T> Region<T> loadRegion(ChunkLoader<T> chunkLoader, Path regionFolder, int regionX, int regionZ) {
         for (RegionType regionType : REGISTRY.values()) {
             Path regionFile = regionFolder.resolve(regionType.getRegionFileName(regionX, regionZ));
-            if (Files.exists(regionFile)) return regionType.createRegion(world, regionFile);
+            if (Files.exists(regionFile)) return regionType.createRegion(chunkLoader, regionFile);
         }
-        return DEFAULT.createRegion(world, regionFolder.resolve(DEFAULT.getRegionFileName(regionX, regionZ)));
+        return DEFAULT.createRegion(chunkLoader, regionFolder.resolve(DEFAULT.getRegionFileName(regionX, regionZ)));
     }
 
     @RequiredArgsConstructor
@@ -100,8 +101,8 @@ public interface RegionType extends Keyed {
         private final RegionFileNameFunction regionFileNameFunction;
         private final Pattern regionFileNamePattern;
 
-        public Region createRegion(MCAWorld world, Path regionFile) {
-            return this.regionFactory.create(world, regionFile);
+        public <T> Region<T> createRegion(ChunkLoader<T> chunkLoader, Path regionFile) {
+            return this.regionFactory.create(chunkLoader, regionFile);
         }
 
         public String getRegionFileName(int regionX, int regionZ) {
@@ -122,7 +123,7 @@ public interface RegionType extends Keyed {
 
     @FunctionalInterface
     interface RegionFactory {
-        Region create(MCAWorld world, Path regionFile);
+        <T> Region<T> create(ChunkLoader<T> chunkLoader, Path regionFile);
     }
 
     @FunctionalInterface

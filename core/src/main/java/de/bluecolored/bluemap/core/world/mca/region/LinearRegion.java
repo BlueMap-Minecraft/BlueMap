@@ -28,8 +28,7 @@ import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.core.storage.compression.Compression;
 import de.bluecolored.bluemap.core.world.ChunkConsumer;
 import de.bluecolored.bluemap.core.world.Region;
-import de.bluecolored.bluemap.core.world.mca.MCAWorld;
-import de.bluecolored.bluemap.core.world.mca.chunk.MCAChunk;
+import de.bluecolored.bluemap.core.world.mca.ChunkLoader;
 import lombok.Getter;
 
 import java.io.*;
@@ -61,14 +60,14 @@ import java.util.regex.Pattern;
  */
 
 @Getter
-public class LinearRegion implements Region {
+public class LinearRegion<T> implements Region<T> {
 
     public static final String FILE_SUFFIX = ".linear";
     public static final Pattern FILE_PATTERN = Pattern.compile("^r\\.(-?\\d+)\\.(-?\\d+)\\.linear$");
 
     private static final long MAGIC = 0xc3ff13183cca9d9aL;
 
-    private final MCAWorld world;
+    private final ChunkLoader<T> chunkLoader;
     private final Path regionFile;
     private final Vector2i regionPos;
 
@@ -82,8 +81,8 @@ public class LinearRegion implements Region {
     private long dataHash;
     private byte[] compressedData;
 
-    public LinearRegion(MCAWorld world, Path regionFile) throws IllegalArgumentException {
-        this.world = world;
+    public LinearRegion(ChunkLoader<T> chunkLoader, Path regionFile) throws IllegalArgumentException {
+        this.chunkLoader = chunkLoader;
         this.regionFile = regionFile;
 
         String[] filenameParts = regionFile.getFileName().toString().split("\\.");
@@ -91,12 +90,6 @@ public class LinearRegion implements Region {
         int rZ = Integer.parseInt(filenameParts[2]);
 
         this.regionPos = new Vector2i(rX, rZ);
-    }
-
-    public LinearRegion(MCAWorld world, Vector2i regionPos) throws IllegalArgumentException {
-        this.world = world;
-        this.regionPos = regionPos;
-        this.regionFile = world.getRegionFolder().resolve(getRegionFileName(regionPos.getX(), regionPos.getY()));
     }
 
     private synchronized void init() throws IOException {
@@ -141,7 +134,7 @@ public class LinearRegion implements Region {
     }
 
     @Override
-    public void iterateAllChunks(ChunkConsumer consumer) throws IOException {
+    public void iterateAllChunks(ChunkConsumer<T> consumer) throws IOException {
         if (!initialized) init();
 
         int chunkStartX = regionPos.getX() * 32;
@@ -177,7 +170,7 @@ public class LinearRegion implements Region {
                                 chunkDataBuffer = new byte[length];
                             dIn.readFully(chunkDataBuffer, 0, length);
 
-                            MCAChunk chunk = world.getChunkLoader().load(chunkDataBuffer, 0, length, Compression.NONE);
+                            T chunk = chunkLoader.load(chunkDataBuffer, 0, length, Compression.NONE);
                             consumer.accept(chunkX, chunkZ, chunk);
                         } else {
                             // skip before reading the next chunk, but only if there is a next chunk
@@ -191,6 +184,11 @@ public class LinearRegion implements Region {
             }
 
         }
+    }
+
+    @Override
+    public T emptyChunk() {
+        return chunkLoader.emptyChunk();
     }
 
     public static String getRegionFileName(int regionX, int regionZ) {

@@ -26,15 +26,15 @@ package de.bluecolored.bluemap.core.world;
 
 import java.io.IOException;
 
-public interface Region {
+public interface Region<T> {
 
     /**
      * Directly loads and returns the specified chunk.<br>
      * (implementations should consider overriding this method for a faster implementation)
      */
-    default Chunk loadChunk(int chunkX, int chunkZ) throws IOException {
-        class SingleChunkConsumer implements ChunkConsumer {
-            private Chunk foundChunk = Chunk.EMPTY_CHUNK;
+    default T loadChunk(int chunkX, int chunkZ) throws IOException {
+        class SingleChunkConsumer implements ChunkConsumer<T> {
+            private T foundChunk = emptyChunk();
 
             @Override
             public boolean filter(int x, int z, int lastModified) {
@@ -42,7 +42,7 @@ public interface Region {
             }
 
             @Override
-            public void accept(int chunkX, int chunkZ, Chunk chunk) {
+            public void accept(int chunkX, int chunkZ, T chunk) {
                 this.foundChunk = chunk;
             }
         }
@@ -54,11 +54,13 @@ public interface Region {
 
     /**
      * Iterates over all chunks in this region and first calls {@link ChunkConsumer#filter(int, int, int)}.<br>
-     * And if (any only if) that method returned <code>true</code>, the chunk will be loaded and {@link ChunkConsumer#accept(int, int, Chunk)}
+     * And if (any only if) that method returned <code>true</code>, the chunk will be loaded and {@link ChunkConsumer#accept(int, int, T)}
      * will be called with the loaded chunk.
      * @param consumer the consumer choosing which chunks to load and accepting them
      * @throws IOException if an IOException occurred trying to read the region
      */
-    void iterateAllChunks(ChunkConsumer consumer) throws IOException;
+    void iterateAllChunks(ChunkConsumer<T> consumer) throws IOException;
+
+    T emptyChunk();
 
 }

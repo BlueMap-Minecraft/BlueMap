@@ -25,6 +25,8 @@
 package de.bluecolored.bluemap.core.world.mca.chunk;
 
 import de.bluecolored.bluemap.core.storage.compression.Compression;
+import de.bluecolored.bluemap.core.world.Chunk;
+import de.bluecolored.bluemap.core.world.mca.ChunkLoader;
 import de.bluecolored.bluemap.core.world.mca.MCAUtil;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 import lombok.Getter;
@@ -37,11 +39,11 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.function.BiFunction;
 
-public class ChunkLoader {
+public class MCAChunkLoader implements ChunkLoader<Chunk> {
 
     private final MCAWorld world;
 
-    public ChunkLoader(MCAWorld world) {
+    public MCAChunkLoader(MCAWorld world) {
         this.world = world;
     }
 
@@ -77,6 +79,11 @@ public class ChunkLoader {
         }
 
         return chunk;
+    }
+
+    @Override
+    public Chunk emptyChunk() {
+        return Chunk.EMPTY_CHUNK;
     }
 
     private @Nullable ChunkVersionLoader<?> findBestLoaderForVersion(int version) {

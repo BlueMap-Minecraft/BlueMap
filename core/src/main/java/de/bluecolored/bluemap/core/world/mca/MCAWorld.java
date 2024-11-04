@@ -37,7 +37,7 @@ import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.Vector2iCache;
 import de.bluecolored.bluemap.core.util.WatchService;
 import de.bluecolored.bluemap.core.world.*;
-import de.bluecolored.bluemap.core.world.mca.chunk.ChunkLoader;
+import de.bluecolored.bluemap.core.world.mca.chunk.MCAChunkLoader;
 import de.bluecolored.bluemap.core.world.mca.data.DimensionTypeDeserializer;
 import de.bluecolored.bluemap.core.world.mca.data.LevelData;
 import de.bluecolored.bluemap.core.world.mca.region.RegionType;
@@ -78,8 +78,8 @@ public class MCAWorld implements World {
     private final Path dimensionFolder;
     private final Path regionFolder;
 
-    private final ChunkLoader chunkLoader = new ChunkLoader(this);
-    private final LoadingCache<Vector2i, Region> regionCache = Caffeine.newBuilder()
+    private final MCAChunkLoader chunkLoader = new MCAChunkLoader(this);
+    private final LoadingCache<Vector2i, Region<Chunk>> regionCache = Caffeine.newBuilder()
             .executor(BlueMap.THREAD_POOL)
             .softValues()
             .maximumSize(32)
@@ -153,11 +153,11 @@ public class MCAWorld implements World {
     }
 
     @Override
-    public Region getRegion(int x, int z) {
+    public Region<Chunk> getRegion(int x, int z) {
         return getRegion(VECTOR_2_I_CACHE.get(x, z));
     }
 
-    private Region getRegion(Vector2i pos) {
+    private Region<Chunk> getRegion(Vector2i pos) {
         return regionCache.get(pos);
     }
 
@@ -191,7 +191,7 @@ public class MCAWorld implements World {
     @Override
     public void preloadRegionChunks(int x, int z, Predicate<Vector2i> chunkFilter) {
         try {
-            getRegion(x, z).iterateAllChunks(new ChunkConsumer() {
+            getRegion(x, z).iterateAllChunks(new ChunkConsumer<>() {
                 @Override
                 public boolean filter(int chunkX, int chunkZ, int lastModified) {
                     Vector2i chunkPos = VECTOR_2_I_CACHE.get(chunkX, chunkZ);
@@ -221,12 +221,12 @@ public class MCAWorld implements World {
         chunkCache.invalidate(VECTOR_2_I_CACHE.get(x, z));
     }
 
-    private Region loadRegion(Vector2i regionPos) {
+    private Region<Chunk> loadRegion(Vector2i regionPos) {
         return loadRegion(regionPos.getX(), regionPos.getY());
     }
 
-    private Region loadRegion(int x, int z) {
-        return RegionType.loadRegion(this, getRegionFolder(), x, z);
+    private Region<Chunk> loadRegion(int x, int z) {
+        return RegionType.loadRegion(chunkLoader, getRegionFolder(), x, z);
     }
 
     private Chunk loadChunk(Vector2i chunkPos) {

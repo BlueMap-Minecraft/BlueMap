@@ -29,7 +29,8 @@ import de.bluecolored.bluemap.core.storage.compression.Compression;
 import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.ChunkConsumer;
 import de.bluecolored.bluemap.core.world.Region;
-import de.bluecolored.bluemap.core.world.mca.MCAWorld;
+import de.bluecolored.bluemap.core.world.mca.ChunkLoader;
+import de.bluecolored.bluemap.core.world.mca.chunk.MCAChunkLoader;
 import de.bluecolored.bluemap.core.world.mca.chunk.MCAChunk;
 import lombok.Getter;
 
@@ -43,7 +44,7 @@ import java.nio.file.StandardOpenOption;
 import java.util.regex.Pattern;
 
 @Getter
-public class MCARegion implements Region {
+public class MCARegion<T> implements Region<T> {
 
     public static final String FILE_SUFFIX = ".mca";
     public static final Pattern FILE_PATTERN = Pattern.compile("^r\\.(-?\\d+)\\.(-?\\d+)\\.mca$");
@@ -57,12 +58,12 @@ public class MCARegion implements Region {
         CHUNK_COMPRESSION_MAP[4] = Compression.LZ4;
     }
 
-    private final MCAWorld world;
     private final Path regionFile;
+    private final ChunkLoader<T> chunkLoader;
     private final Vector2i regionPos;
 
-    public MCARegion(MCAWorld world, Path regionFile) throws IllegalArgumentException {
-        this.world = world;
+    public MCARegion(ChunkLoader<T> chunkLoader, Path regionFile) throws IllegalArgumentException {
+        this.chunkLoader = chunkLoader;
         this.regionFile = regionFile;
 
         String[] filenameParts = regionFile.getFileName().toString().split("\\.");
@@ -72,18 +73,12 @@ public class MCARegion implements Region {
         this.regionPos = new Vector2i(rX, rZ);
     }
 
-    public MCARegion(MCAWorld world, Vector2i regionPos) throws IllegalArgumentException {
-        this.world = world;
-        this.regionPos = regionPos;
-        this.regionFile = world.getRegionFolder().resolve(getRegionFileName(regionPos.getX(), regionPos.getY()));
-    }
-
     @Override
-    public Chunk loadChunk(int chunkX, int chunkZ) throws IOException {
-        if (Files.notExists(regionFile)) return Chunk.EMPTY_CHUNK;
+    public T loadChunk(int chunkX, int chunkZ) throws IOException {
+        if (Files.notExists(regionFile)) return chunkLoader.emptyChunk();
 
         long fileLength = Files.size(regionFile);
-        if (fileLength == 0) return Chunk.EMPTY_CHUNK;
+        if (fileLength == 0) return chunkLoader.emptyChunk();
 
         try (FileChannel channel = FileChannel.open(regionFile, StandardOpenOption.READ)) {
             int xzChunk = (chunkZ & 0b11111) << 5 | (chunkX & 0b11111);
@@ -98,7 +93,7 @@ public class MCARegion implements Region {
             offset *= 4096;
             int size = (header[3] & 0xFF) * 4096;
 
-            if (size == 0) return Chunk.EMPTY_CHUNK;
+            if (size == 0) return chunkLoader.emptyChunk();
 
             byte[] chunkDataBuffer = new byte[size];
 
@@ -110,7 +105,7 @@ public class MCARegion implements Region {
     }
 
     @Override
-    public void iterateAllChunks(ChunkConsumer consumer) throws IOException {
+    public void iterateAllChunks(ChunkConsumer<T> consumer) throws IOException {
         if (Files.notExists(regionFile)) return;
 
         long fileLength = Files.size(regionFile);
@@ -157,7 +152,7 @@ public class MCARegion implements Region {
                         channel.position(offset);
                         readFully(channel, chunkDataBuffer, 0, size);
 
-                        MCAChunk chunk = loadChunk(chunkDataBuffer, size);
+                        T chunk = loadChunk(chunkDataBuffer, size);
                         consumer.accept(chunkX, chunkZ, chunk);
                     }
                 }
@@ -165,13 +160,18 @@ public class MCARegion implements Region {
         }
     }
 
-    private MCAChunk loadChunk(byte[] data, int size) throws IOException {
+    @Override
+    public T emptyChunk() {
+        return chunkLoader.emptyChunk();
+    }
+
+    private T loadChunk(byte[] data, int size) throws IOException {
         int compressionTypeId = Byte.toUnsignedInt(data[4]);
         Compression compression = CHUNK_COMPRESSION_MAP[compressionTypeId];
         if (compression == null)
             throw new IOException("Unknown chunk compression-id: " + compressionTypeId);
 
-        return world.getChunkLoader().load(data, 5, size - 5, compression);
+        return chunkLoader.load(data, 5, size - 5, compression);
     }
 
     public static String getRegionFileName(int regionX, int regionZ) {

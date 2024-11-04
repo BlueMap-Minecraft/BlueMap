@@ -22,33 +22,16 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.world;
+package de.bluecolored.bluemap.core.world.mca;
 
-@FunctionalInterface
-public interface ChunkConsumer<T> {
+import de.bluecolored.bluemap.core.storage.compression.Compression;
 
-    default boolean filter(int chunkX, int chunkZ, int lastModified) {
-        return true;
-    }
+import java.io.IOException;
 
-    void accept(int chunkX, int chunkZ, T chunk);
+public interface ChunkLoader<T> {
 
-    @FunctionalInterface
-    interface ListOnly<T> extends ChunkConsumer<T> {
+    T load(byte[] data, int offset, int length, Compression compression) throws IOException;
 
-        void accept(int chunkX, int chunkZ, int lastModified);
-
-        @Override
-        default boolean filter(int chunkX, int chunkZ, int lastModified) {
-            accept(chunkX, chunkZ, lastModified);
-            return false;
-        }
-
-        @Override
-        default void accept(int chunkX, int chunkZ, T chunk) {
-            throw new IllegalStateException("Should never be called.");
-        }
-
-    }
+    T emptyChunk();
 
 }
