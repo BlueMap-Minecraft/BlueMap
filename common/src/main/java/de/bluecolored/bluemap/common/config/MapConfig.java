@@ -54,6 +54,7 @@ public class MapConfig implements MapSettings {
     private String voidColor = "#000000";
 
     private float ambientLight = 0;
+    private float skyLight = 1;
 
     private int removeCavesBelowY = 55;
     private int caveDetectionOceanFloor = 10000;

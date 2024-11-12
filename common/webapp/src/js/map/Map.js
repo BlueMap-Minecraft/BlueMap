@@ -68,6 +68,7 @@ export class Map {
 			skyColor: new Color(),
 			voidColor: new Color(0, 0, 0),
 			ambientLight: 0,
+			skyLight: 1,
 			hires: {
 				tileSize: {x: 32, z: 32},
 				scale: {x: 1, z: 1},
@@ -181,6 +182,7 @@ export class Map {
 				}
 
 				this.data.ambientLight = worldSettings.ambientLight ? worldSettings.ambientLight : this.data.ambientLight;
+				this.data.skyLight = worldSettings.skyLight ? worldSettings.skyLight : this.data.skyLight;
 
 				if (worldSettings.hires === undefined) worldSettings.hires = {};
 				if (worldSettings.lowres === undefined) worldSettings.lowres = {};

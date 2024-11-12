@@ -50,4 +50,6 @@ public interface MapSettings extends RenderSettings {
 
     int getLodFactor();
 
+    float getSkyLight();
+
 }

@@ -413,6 +413,7 @@ export class MapViewer {
 					this.data.uniforms.skyColor.value = map.data.skyColor;
 					this.data.uniforms.voidColor.value = map.data.voidColor;
 					this.data.uniforms.ambientLight.value = map.data.ambientLight;
+					this.data.uniforms.sunlightStrength.value = map.data.skyLight;
 					this.data.uniforms.hiresTileMap.value.map = map.hiresTileManager.tileMap.texture;
 					this.data.uniforms.hiresTileMap.value.scale.set(map.data.hires.tileSize.x, map.data.hires.tileSize.z);
 					this.data.uniforms.hiresTileMap.value.translate.set(map.data.hires.translate.x, map.data.hires.translate.z);

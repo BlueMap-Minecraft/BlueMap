@@ -79,8 +79,9 @@ public class MapSettingsSerializer implements JsonSerializer<BmMap> {
         Color voidColor = new Color().parse(map.getMapSettings().getVoidColor());
         root.add("voidColor", context.serialize(voidColor));
 
-        // ambientLight
+        // light
         root.addProperty("ambientLight", map.getMapSettings().getAmbientLight());
+        root.addProperty("skyLight", map.getMapSettings().getSkyLight());
 
         return root;
     }
