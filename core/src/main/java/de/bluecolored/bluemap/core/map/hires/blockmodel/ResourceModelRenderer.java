@@ -203,7 +203,7 @@ public class ResourceModelRenderer implements BlockRenderer {
         makeRotationRelative(faceRotationVector);
 
         // face culling
-        //if (faceRotationVector.y < 0.01) return;
+        if (renderSettings.isRenderTopOnly() && faceRotationVector.y < 0.01) return;
         if (face.getCullface() != null) {
             ExtendedBlock<?> b = getRotationRelativeBlock(face.getCullface());
             BlockProperties p = b.getProperties();

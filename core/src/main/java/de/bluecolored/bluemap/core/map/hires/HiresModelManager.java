@@ -68,16 +68,19 @@ public class HiresModelManager {
         Vector3i modelMin = new Vector3i(tileMin.getX(), Integer.MIN_VALUE, tileMin.getY());
         Vector3i modelMax = new Vector3i(tileMax.getX(), Integer.MAX_VALUE, tileMax.getY());
 
-        TileModel model = TileModel.instancePool().claimInstance();
+        if (save) {
+            ArrayTileModel model = ArrayTileModel.instancePool().claimInstance();
 
-        renderer.render(world, modelMin, modelMax, model, tileMetaConsumer);
+            renderer.render(world, modelMin, modelMax, model, tileMetaConsumer);
 
-        if (save){
             model.sort();
             save(model, tile);
+
+            ArrayTileModel.instancePool().recycleInstance(model);
+        } else {
+            renderer.render(world, modelMin, modelMax, VoidTileModel.INSTANCE, tileMetaConsumer);
         }
 
-        TileModel.instancePool().recycleInstance(model);
     }
 
     /**
@@ -97,7 +100,7 @@ public class HiresModelManager {
         );
     }
 
-    private void save(final TileModel model, Vector2i tile) {
+    private void save(final ArrayTileModel model, Vector2i tile) {
         try (
                 OutputStream out = storage.write(tile.getX(), tile.getY());
                 PRBMWriter modelWriter = new PRBMWriter(out)

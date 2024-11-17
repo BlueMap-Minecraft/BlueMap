@@ -52,4 +52,22 @@ public interface MapSettings extends RenderSettings {
 
     float getSkyLight();
 
+    boolean isEnablePerspectiveView();
+
+    boolean isEnableFlatView();
+
+    boolean isEnableFreeFlightView();
+
+    boolean isEnableHires();
+
+    @Override
+    default boolean isSaveHiresLayer() {
+        return isEnableHires();
+    }
+
+    @Override
+    default boolean isRenderTopOnly() {
+        return !isEnableHires() || (!isEnablePerspectiveView() && !isEnableFreeFlightView());
+    }
+
 }

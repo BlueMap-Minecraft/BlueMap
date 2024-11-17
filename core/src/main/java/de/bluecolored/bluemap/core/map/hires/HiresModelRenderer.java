@@ -90,9 +90,6 @@ public class HiresModelRenderer {
                         //update topBlockLight
                         topBlockLight = Math.max(topBlockLight, block.getBlockLightLevel() * (1 - columnColor.a));
 
-                        // skip empty blocks
-                        if (blockModel.getSize() <= 0) continue;
-
                         // move block-model to correct position
                         blockModel.translate(x - modelAnchor.getX(), y - modelAnchor.getY(), z - modelAnchor.getZ());
 
@@ -102,7 +99,8 @@ public class HiresModelRenderer {
                             columnColor.underlay(blockColor.premultiplied());
                         }
 
-                        //if (blockColor.a > 0.999 && block.getProperties().isCulling()) break;
+                        if (renderSettings.isRenderTopOnly() && blockColor.a > 0.999 && block.getProperties().isCulling())
+                            break;
                     }
                 }
 

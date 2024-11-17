@@ -59,7 +59,6 @@ export class BlueMapApp {
         /** @type {{
          *      version: string,
          *      useCookies: boolean,
-         *      enableFreeFlight: boolean,
          *      defaultToFlatView: boolean,
          *      resolutionDefault: number,
          *      minZoomDistance: number,
@@ -96,7 +95,6 @@ export class BlueMapApp {
                 mouseSensitivity: 1,
                 showZoomButtons: true,
                 invertMouse: false,
-                enableFreeFlight: false,
                 pauseTileLoading: false
             },
             menu: this.mainMenu,
@@ -139,7 +137,6 @@ export class BlueMapApp {
         await this.getSettings();
         this.mapControls.minDistance = this.settings.minZoomDistance;
         this.mapControls.maxDistance = this.settings.maxZoomDistance;
-        this.appState.controls.enableFreeFlight = this.settings.enableFreeFlight;
 
         // load settings-styles
         if (this.settings.styles) for (let styleUrl of this.settings.styles) {
@@ -259,7 +256,9 @@ export class BlueMapApp {
 
         await this.mapViewer.switchMap(map)
 
-        if (resetCamera) this.resetCamera();
+        if (resetCamera || !this.mapViewer.map.hasView(this.appState.controls.state))
+            this.resetCamera();
+
         this.updatePageAddress();
 
         await Promise.all([
@@ -283,8 +282,16 @@ export class BlueMapApp {
 
         controls.controls = this.mapControls;
         this.appState.controls.state = "perspective";
-        if (this.settings.defaultToFlatView) {
+
+        if (this.settings.defaultToFlatView && map.hasView("flat")) {
             this.setFlatView();
+        }
+
+        else if (!map.hasView("perspective")) {
+            if (map.hasView("flat"))
+                this.setFlatView();
+            else
+                this.setFreeFlight();
         }
 
         this.updatePageAddress();
@@ -328,7 +335,6 @@ export class BlueMapApp {
             this.settings = {
                 version: "?",
                 useCookies: false,
-                enableFreeFlight: true,
                 defaultToFlatView: false,
                 resolutionDefault: 1.0,
                 minZoomDistance: 5,
@@ -451,6 +457,7 @@ export class BlueMapApp {
 
     setPerspectiveView(transition = 0, minDistance = 5) {
         if (!this.mapViewer.map) return;
+        if (!this.mapViewer.map.data.perspectiveView) return;
         if (this.viewAnimation) this.viewAnimation.cancel();
 
         let cm = this.mapViewer.controlsManager;
@@ -488,6 +495,7 @@ export class BlueMapApp {
 
     setFlatView(transition = 0, minDistance = 5) {
         if (!this.mapViewer.map) return;
+        if (!this.mapViewer.map.data.flatView) return;
         if (this.viewAnimation) this.viewAnimation.cancel();
 
         let cm = this.mapViewer.controlsManager;
@@ -521,7 +529,7 @@ export class BlueMapApp {
 
     setFreeFlight(transition = 0, targetY = undefined) {
         if (!this.mapViewer.map) return;
-        if (!this.settings.enableFreeFlight) return this.setPerspectiveView(transition);
+        if (!this.mapViewer.map.data.freeFlightView) return;
         if (this.viewAnimation) this.viewAnimation.cancel();
 
         let cm = this.mapViewer.controlsManager;

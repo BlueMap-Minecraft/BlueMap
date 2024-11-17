@@ -99,7 +99,7 @@ public class BlockStateModelRenderer {
             variantColor.set(0f, 0f, 0f, 0f, true);
 
             blockRenderers.get(modelResource.getRenderer())
-                    .render(block, variant, blockModel.initialize(), blockColor);
+                    .render(block, variant, blockModel.initialize(), variantColor);
 
             if (variantColor.a > blockColorOpacity)
                 blockColorOpacity = variantColor.a;

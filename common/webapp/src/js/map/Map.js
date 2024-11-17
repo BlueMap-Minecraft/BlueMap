@@ -78,7 +78,11 @@ export class Map {
 				tileSize: {x: 32, z: 32},
 				lodFactor: 5,
 				lodCount: 3
-			}
+			},
+			perspectiveView: false,
+			flatView: false,
+			freeFlightView: false,
+			views: ["perspective", "flat", "free"]
 		});
 
 		this.raycaster = new Raycaster();
@@ -197,6 +201,15 @@ export class Map {
 					lodFactor: worldSettings.lowres.lodFactor !== undefined ? worldSettings.lowres.lodFactor : this.data.lowres.lodFactor,
 					lodCount: worldSettings.lowres.lodCount !== undefined ? worldSettings.lowres.lodCount : this.data.lowres.lodCount
 				};
+
+				this.data.perspectiveView = worldSettings.perspectiveView !== undefined ? worldSettings.perspectiveView : this.data.perspectiveView;
+				this.data.flatView = worldSettings.flatView !== undefined ? worldSettings.flatView : this.data.flatView;
+				this.data.freeFlightView = worldSettings.freeFlightView !== undefined ? worldSettings.freeFlightView : this.data.freeFlightView;
+
+				this.data.views = [];
+				if (this.data.perspectiveView) this.data.views.push("perspective");
+				if (this.data.flatView) this.data.views.push("flat");
+				if (this.data.freeFlightView) this.data.views.push("free");
 
 				alert(this.events, `Settings for map '${this.data.id}' loaded.`, "fine");
 			});
@@ -470,6 +483,10 @@ export class Map {
 		}
 
 		return false;
+	}
+
+	hasView(view) {
+		return this.data.views.some(v => v === view)
 	}
 
 	dispose() {

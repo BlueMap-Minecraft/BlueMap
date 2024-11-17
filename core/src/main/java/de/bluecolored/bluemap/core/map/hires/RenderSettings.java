@@ -46,7 +46,7 @@ public interface RenderSettings {
     int getCaveDetectionOceanFloor();
 
     /**
-     * If blocklight should be used instead of sky light to detect "caves"
+     * If blocklight should be used instead of skylight to detect "caves"
      */
     boolean isCaveDetectionUsesBlockLight();
 
@@ -124,5 +124,7 @@ public interface RenderSettings {
     }
 
     boolean isSaveHiresLayer();
+
+    boolean isRenderTopOnly();
 
 }

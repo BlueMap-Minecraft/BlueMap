@@ -5,7 +5,7 @@ junit = "5.8.2"
 spongegradle = "2.2.0"
 
 [libraries]
-aircompressor = { module = "io.airlift:aircompressor", version = "0.24" }
+aircompressor = { module = "io.airlift:aircompressor", version = "0.27" }
 bluenbt = { module = "de.bluecolored.bluenbt:BlueNBT", version = "3.0.1" }
 brigadier = { module = "com.mojang:brigadier", version = "1.0.17" }
 bstats-bukkit = { module = "org.bstats:bstats-bukkit", version.ref = "bstats" }

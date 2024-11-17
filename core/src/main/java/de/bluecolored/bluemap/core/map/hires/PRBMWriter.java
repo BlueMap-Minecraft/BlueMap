@@ -63,7 +63,7 @@ public class PRBMWriter implements Closeable {
         this.out = new CountingOutputStream(out);
     }
 
-    public void write(TileModel model) throws IOException {
+    public void write(ArrayTileModel model) throws IOException {
         out.write(FORMAT_VERSION); // version - 1 byte
         out.write(HEADER_BITS); // format info - 1 byte
         write3byteValue(model.size * 3); // number of values - 3 bytes
@@ -85,7 +85,7 @@ public class PRBMWriter implements Closeable {
         out.close();
     }
 
-    private void writePositionArray(TileModel model) throws IOException {
+    private void writePositionArray(ArrayTileModel model) throws IOException {
         float[] position = model.position;
 
         writeString("position");
@@ -98,13 +98,13 @@ public class PRBMWriter implements Closeable {
 
         writePadding();
 
-        int posSize = model.size * TileModel.FI_POSITION;
+        int posSize = model.size * ArrayTileModel.FI_POSITION;
         for (int i = 0; i < posSize; i++) {
             writeFloat(position[i]);
         }
     }
 
-    private void writeNormalArray(TileModel model) throws IOException {
+    private void writeNormalArray(ArrayTileModel model) throws IOException {
         VectorM3f normal = new VectorM3f(0, 0, 0);
         float[] position = model.position;
 
@@ -120,7 +120,7 @@ public class PRBMWriter implements Closeable {
 
         int pi, i, j;
         for (i = 0; i < model.size; i++) {
-            pi = i * TileModel.FI_POSITION;
+            pi = i * ArrayTileModel.FI_POSITION;
             calculateSurfaceNormal(
                     position[pi], position[pi + 1], position[pi + 2],
                     position[pi + 3], position[pi + 4], position[pi + 5],
@@ -136,7 +136,7 @@ public class PRBMWriter implements Closeable {
         }
     }
 
-    private void writeColorArray(TileModel model) throws IOException {
+    private void writeColorArray(ArrayTileModel model) throws IOException {
         float[] color = model.color;
 
         writeString("color");
@@ -149,7 +149,7 @@ public class PRBMWriter implements Closeable {
 
         writePadding();
 
-        int colorSize = model.size * TileModel.FI_COLOR, i, j;
+        int colorSize = model.size * ArrayTileModel.FI_COLOR, i, j;
         for (i = 0; i < colorSize; i += 3) {
             for (j = 0; j < 3; j++) {
                 writeNormalizedUnsignedByteValue(color[i]);
@@ -159,7 +159,7 @@ public class PRBMWriter implements Closeable {
         }
     }
 
-    private void writeUvArray(TileModel model) throws IOException {
+    private void writeUvArray(ArrayTileModel model) throws IOException {
         float[] uv = model.uv;
 
         writeString("uv");
@@ -172,13 +172,13 @@ public class PRBMWriter implements Closeable {
 
         writePadding();
 
-        int uvSize = model.size * TileModel.FI_UV;
+        int uvSize = model.size * ArrayTileModel.FI_UV;
         for (int i = 0; i < uvSize; i++) {
             writeFloat(uv[i]);
         }
     }
 
-    private void writeAoArray(TileModel model) throws IOException {
+    private void writeAoArray(ArrayTileModel model) throws IOException {
         float[] ao = model.ao;
 
         writeString("ao");
@@ -191,13 +191,13 @@ public class PRBMWriter implements Closeable {
 
         writePadding();
 
-        int uvSize = model.size * TileModel.FI_AO;
+        int uvSize = model.size * ArrayTileModel.FI_AO;
         for (int i = 0; i < uvSize; i++) {
             writeNormalizedUnsignedByteValue(ao[i]);
         }
     }
 
-    private void writeBlocklightArray(TileModel model) throws IOException {
+    private void writeBlocklightArray(ArrayTileModel model) throws IOException {
         byte[] blocklight = model.blocklight;
 
         writeString("blocklight");
@@ -210,7 +210,7 @@ public class PRBMWriter implements Closeable {
 
         writePadding();
 
-        int blSize = model.size * TileModel.FI_BLOCKLIGHT;
+        int blSize = model.size * ArrayTileModel.FI_BLOCKLIGHT;
         for (int i = 0; i < blSize; i++) {
             out.write(blocklight[i]);
             out.write(blocklight[i]);
@@ -218,7 +218,7 @@ public class PRBMWriter implements Closeable {
         }
     }
 
-    private void writeSunlightArray(TileModel model) throws IOException {
+    private void writeSunlightArray(ArrayTileModel model) throws IOException {
         byte[] sunlight = model.sunlight;
 
         writeString("sunlight");
@@ -231,7 +231,7 @@ public class PRBMWriter implements Closeable {
 
         writePadding();
 
-        int slSize = model.size * TileModel.FI_SUNLIGHT;
+        int slSize = model.size * ArrayTileModel.FI_SUNLIGHT;
         for (int i = 0; i < slSize; i++) {
             out.write(sunlight[i]);
             out.write(sunlight[i]);
@@ -239,14 +239,14 @@ public class PRBMWriter implements Closeable {
         }
     }
 
-    private void writeMaterialGroups(TileModel model) throws IOException {
+    private void writeMaterialGroups(ArrayTileModel model) throws IOException {
 
         writePadding();
 
         if (model.size > 0) {
             int[] materialIndex = model.materialIndex;
 
-            int     miSize = model.size * TileModel.FI_MATERIAL_INDEX,
+            int     miSize = model.size * ArrayTileModel.FI_MATERIAL_INDEX,
                     lastMaterial = materialIndex[0],
                     material = lastMaterial, groupStart = 0;
 

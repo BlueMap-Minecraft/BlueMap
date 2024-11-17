@@ -75,7 +75,10 @@ public class MapConfig implements MapSettings {
 
     private boolean renderEdges = true;
 
-    private boolean saveHiresLayer = true;
+    private boolean enablePerspectiveView = true;
+    private boolean enableFlatView = true;
+    private boolean enableFreeFlightView = true;
+    private boolean enableHires = true;
 
     private String storage = "file";
 

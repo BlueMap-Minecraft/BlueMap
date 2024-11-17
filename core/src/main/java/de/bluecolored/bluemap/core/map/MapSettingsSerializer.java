@@ -83,6 +83,11 @@ public class MapSettingsSerializer implements JsonSerializer<BmMap> {
         root.addProperty("ambientLight", map.getMapSettings().getAmbientLight());
         root.addProperty("skyLight", map.getMapSettings().getSkyLight());
 
+        // view settings
+        root.addProperty("perspectiveView", map.getMapSettings().isEnablePerspectiveView());
+        root.addProperty("flatView", map.getMapSettings().isEnableFlatView());
+        root.addProperty("freeFlightView", map.getMapSettings().isEnableFreeFlightView());
+
         return root;
     }
 
