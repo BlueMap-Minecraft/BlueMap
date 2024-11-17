@@ -307,7 +307,7 @@ export class BlueMapApp {
         // create maps
         if (settings.maps !== undefined){
             let loadingPromises = settings.maps.map(mapId => {
-                let map = new BlueMapMap(mapId, settings.mapDataRoot + "/" + mapId + "/", settings.liveDataRoot + "/" + mapId + "/", this.loadBlocker, this.mapViewer.events);
+                let map = new BlueMapMap(mapId, settings.mapDataRoot + "/" + mapId, settings.liveDataRoot + "/" + mapId, this.loadBlocker, this.mapViewer.events);
                 maps.push(map);
 
                 return map.loadSettings(this.mapViewer.tileCacheHash)
