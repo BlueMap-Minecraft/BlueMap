@@ -68,7 +68,7 @@ public interface World {
     /**
      * Returns the {@link Region} on the specified region-position
      */
-    Region getRegion(int x, int z);
+    Region<Chunk> getRegion(int x, int z);
 
     /**
      * Returns a collection of all regions in this world.
