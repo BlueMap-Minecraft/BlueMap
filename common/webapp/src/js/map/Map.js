@@ -34,7 +34,7 @@ import {
 	Texture,
 	Vector3
 } from "three";
-import {alert, dispatchEvent, generateCacheHash, getPixel, hashTile, stringToImage, vecArrToObj} from "../util/Utils";
+import {alert, dispatchEvent, getPixel, hashTile, stringToImage, vecArrToObj} from "../util/Utils";
 import {TileManager} from "./TileManager";
 import {TileLoader} from "./TileLoader";
 import {LowresTileLoader} from "./LowresTileLoader";
@@ -358,7 +358,6 @@ export class Map {
 						type: 't',
 						value: texture
 					},
-					transparent: { value: transparent },
 					...animationUniforms
 				},
 				vertexShader: vertexShader,

@@ -24,9 +24,14 @@
  */
 import { ShaderChunk } from 'three';
 
+// language=GLSL
 export const HIRES_VERTEX_SHADER = `
 #include <common>
 ${ShaderChunk.logdepthbuf_pars_vertex}
+
+const vec2 lightDirection = normalize(vec2(1.0, 0.5));
+
+uniform float distance;
 
 attribute float ao;
 attribute float sunlight;
@@ -51,6 +56,13 @@ void main() {
 	vAo = ao;
 	vSunlight = sunlight;
 	vBlocklight = blocklight;
+	
+	// apply directional lighting
+	if (vNormal.x * vNormal.z == 0.0) {
+        float distFac = smoothstep(1000.0, 50.0, distance);
+        vAo *= 1.0 - abs(dot(vNormal.xz, lightDirection)) * 0.4 * distFac;
+        vAo *= 1.0 - max(0.0, -vNormal.y) * 0.6 * distFac;
+    }
 	
 	gl_Position = projectionMatrix * (viewMatrix * modelMatrix * vec4(position, 1));
 	
