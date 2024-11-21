@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Group :title="$t('controls.title')">
+    <Group v-if="showViewControls" :title="$t('controls.title')" >
       <SimpleButton v-if="mapViewer.map.perspectiveView" :active="appState.controls.state === 'perspective'" @action="$bluemap.setPerspectiveView(500, appState.controls.state === 'free' ? 100 : 0)">{{$t('controls.perspective.button')}}</SimpleButton>
       <SimpleButton v-if="mapViewer.map.flatView" :active="appState.controls.state === 'flat'" @action="$bluemap.setFlatView(500, appState.controls.state === 'free' ? 100 : 0)">{{$t('controls.flatView.button')}}</SimpleButton>
       <SimpleButton v-if="mapViewer.map.freeFlightView" :active="appState.controls.state === 'free'" @action="$bluemap.setFreeFlight(500)">{{$t('controls.freeFlight.button')}}</SimpleButton>
@@ -104,6 +104,12 @@ name: "SettingsMenu",
 
       qualityStages: qualityStages,
       themes: themes,
+    }
+  },
+  computed: {
+    showViewControls() {
+      if (!this.mapViewer.map) return false;
+      return this.mapViewer.map.views.length > 1;
     }
   },
   methods: {
