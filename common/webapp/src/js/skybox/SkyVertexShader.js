@@ -22,6 +22,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+
+// language=GLSL
 export const SKY_VERTEX_SHADER = `
 varying vec3 vPosition;
 void main() {
