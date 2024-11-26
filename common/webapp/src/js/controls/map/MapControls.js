@@ -28,7 +28,7 @@ import {MouseZoomControls} from "./mouse/MouseZoomControls";
 import {MouseRotateControls} from "./mouse/MouseRotateControls";
 import {MouseAngleControls} from "./mouse/MouseAngleControls";
 import {MathUtils, Vector2, Vector3} from "three";
-import {Manager, Pan, Pinch, Rotate, Tap, DIRECTION_ALL, DIRECTION_VERTICAL} from "hammerjs";
+import {DIRECTION_ALL, DIRECTION_VERTICAL, Manager, Pan, Pinch, Rotate, Tap} from "hammerjs";
 import {softClamp} from "../../util/Utils";
 import {MapHeightControls} from "./MapHeightControls";
 import {KeyMoveControls} from "./keyboard/KeyMoveControls";
@@ -39,10 +39,10 @@ import {TouchMoveControls} from "./touch/TouchMoveControls";
 import {TouchRotateControls} from "./touch/TouchRotateControls";
 import {TouchAngleControls} from "./touch/TouchAngleControls";
 import {TouchZoomControls} from "./touch/TouchZoomControls";
-import {PlayerMarker} from "../../markers/PlayerMarker";
 import {reactive} from "vue";
 
 const HALF_PI = Math.PI * 0.5;
+const HALF_PI_DIV = 1 / HALF_PI;
 
 export class MapControls {
 
@@ -173,7 +173,7 @@ export class MapControls {
         this.manager.distance = softClamp(this.manager.distance, this.minDistance, this.maxDistance, 0.8);
 
         // max angle for current distance
-        let maxAngleForZoom = this.getMaxPerspectiveAngleForDistance(this.manager.distance);
+        let maxAngleForZoom = MapControls.getMaxPerspectiveAngleForDistance(this.manager.distance);
 
         // rotation
         this.mouseRotate.update(delta, map);
@@ -215,8 +215,13 @@ export class MapControls {
         this.touchZoom.reset();
     }
 
-    getMaxPerspectiveAngleForDistance(distance) {
+    static getMaxPerspectiveAngleForDistance(distance) {
         return MathUtils.clamp((1 - Math.pow(Math.max(distance - 5, 0.001) * 0.0005, 0.5)) * HALF_PI,0, HALF_PI)
+    }
+
+    // getMaxPerspectiveAngleForDistance but in reverse (its simple maths, they said)
+    static getMaxDistanceForPerspectiveAngle(angle) {
+        return Math.pow(-(angle * HALF_PI_DIV) + 1, 2) * 2000 + 5;
     }
 
     initializeHammer() {
