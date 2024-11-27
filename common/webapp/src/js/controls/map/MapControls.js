@@ -96,7 +96,6 @@ export class MapControls {
      */
     start(manager) {
         this.manager = manager;
-        this.snapDistance = manager.distance;
 
         this.rootElement.addEventListener("contextmenu", this.onContextMenu);
         this.hammer.on("tap", this.onTap);
