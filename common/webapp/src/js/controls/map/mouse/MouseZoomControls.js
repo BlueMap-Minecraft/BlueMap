@@ -24,6 +24,7 @@
  */
 
 import {MathUtils} from "three";
+import {MapControls} from "../MapControls";
 
 export class MouseZoomControls {
 
@@ -66,6 +67,7 @@ export class MouseZoomControls {
         smoothing = MathUtils.clamp(smoothing, 0, 1);
 
         this.manager.distance *= Math.pow(1.5, this.deltaZoom * smoothing * this.speed);
+        this.manager.angle = Math.min(this.manager.angle, MapControls.getMaxPerspectiveAngleForDistance(this.manager.distance));
 
         this.deltaZoom *= 1 - smoothing;
         if (Math.abs(this.deltaZoom) < 0.0001) {

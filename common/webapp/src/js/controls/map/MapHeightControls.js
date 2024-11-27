@@ -24,6 +24,7 @@
  */
 
 import {MathUtils, Vector2} from "three";
+import {MapControls} from "./MapControls";
 
 export class MapHeightControls {
 
@@ -36,7 +37,6 @@ export class MapHeightControls {
 
         this.cameraHeightStiffness = cameraHeightStiffness;
         this.targetHeightStiffness = targetHeightStiffness;
-        this.maxAngle = Math.PI / 2;
 
         this.targetHeight = 0;
         this.cameraHeight = 0;
@@ -78,7 +78,8 @@ export class MapHeightControls {
 
         // camera height
         this.minCameraHeight = 0;
-        if (this.maxAngle >= 0.1) {
+        let maxAngle = MapControls.getMaxPerspectiveAngleForDistance(this.manager.distance);
+        if (maxAngle >= 0.1) {
             let cameraSmoothing = this.cameraHeightStiffness / (16.666 / delta);
             cameraSmoothing = MathUtils.clamp(cameraSmoothing, 0, 1);
 
@@ -88,7 +89,7 @@ export class MapHeightControls {
             this.cameraHeight += cameraDelta * cameraSmoothing;
             if (Math.abs(cameraDelta) < 0.001) this.cameraHeight = cameraTerrainHeight;
 
-            let maxAngleHeight = Math.cos(this.maxAngle) * this.manager.distance;
+            let maxAngleHeight = Math.cos(maxAngle) * this.manager.distance;
             this.minCameraHeight = this.cameraHeight - maxAngleHeight + 1;
         }
 

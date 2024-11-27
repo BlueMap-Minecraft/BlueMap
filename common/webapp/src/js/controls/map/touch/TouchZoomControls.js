@@ -23,6 +23,8 @@
  * THE SOFTWARE.
  */
 
+import {MapControls} from "../MapControls";
+
 export class TouchZoomControls {
 
     /**
@@ -87,6 +89,7 @@ export class TouchZoomControls {
     onTouchMove = evt => {
         if(this.moving){
             this.deltaZoom *= evt.scale / this.lastZoom;
+            this.manager.angle = Math.min(this.manager.angle, MapControls.getMaxPerspectiveAngleForDistance(this.manager.distance));
         }
 
         this.lastZoom = evt.scale;

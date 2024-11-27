@@ -96,6 +96,7 @@ export class MapControls {
      */
     start(manager) {
         this.manager = manager;
+        this.snapDistance = manager.distance;
 
         this.rootElement.addEventListener("contextmenu", this.onContextMenu);
         this.hammer.on("tap", this.onTap);
@@ -172,9 +173,6 @@ export class MapControls {
 
         this.manager.distance = softClamp(this.manager.distance, this.minDistance, this.maxDistance, 0.8);
 
-        // max angle for current distance
-        let maxAngleForZoom = MapControls.getMaxPerspectiveAngleForDistance(this.manager.distance);
-
         // rotation
         this.mouseRotate.update(delta, map);
         this.keyRotate.update(delta, map);
@@ -193,12 +191,11 @@ export class MapControls {
             this.mouseAngle.update(delta, map);
             this.keyAngle.update(delta, map);
             this.touchAngle.update(delta, map);
-            this.manager.angle = softClamp(this.manager.angle, 0, maxAngleForZoom, 0.8);
+            this.manager.angle = softClamp(this.manager.angle, 0, HALF_PI, 0.8);
         }
 
         // target height
         if (this.manager.ortho === 0 || this.manager.angle === 0) {
-            this.mapHeight.maxAngle = maxAngleForZoom;
             this.mapHeight.update(delta, map);
         }
     }

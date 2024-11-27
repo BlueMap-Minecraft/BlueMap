@@ -24,6 +24,8 @@
  */
 
 import {MathUtils} from "three";
+import {MapControls} from "../MapControls";
+import {softMax, softSet} from "../../../util/Utils";
 
 export class MouseAngleControls {
 
@@ -39,6 +41,9 @@ export class MouseAngleControls {
         this.moving = false;
         this.lastY = 0;
         this.deltaAngle = 0;
+
+        this.dynamicDistance = false;
+        this.startDistance = 0;
 
         this.speed = speed;
         this.stiffness = stiffness;
@@ -56,6 +61,7 @@ export class MouseAngleControls {
         this.target.addEventListener("mousedown", this.onMouseDown);
         window.addEventListener("mousemove", this.onMouseMove);
         window.addEventListener("mouseup", this.onMouseUp);
+        window.addEventListener("wheel", this.onWheel);
 
         window.addEventListener("resize", this.updatePixelToSpeedMultiplier);
     }
@@ -64,6 +70,7 @@ export class MouseAngleControls {
         this.target.removeEventListener("mousedown", this.onMouseDown);
         window.removeEventListener("mousemove", this.onMouseMove);
         window.removeEventListener("mouseup", this.onMouseUp);
+        window.removeEventListener("wheel", this.onWheel);
 
         window.removeEventListener("resize", this.updatePixelToSpeedMultiplier);
     }
@@ -79,6 +86,12 @@ export class MouseAngleControls {
         smoothing = MathUtils.clamp(smoothing, 0, 1);
 
         this.manager.angle += this.deltaAngle * smoothing * this.speed * this.pixelToSpeedMultiplierY;
+
+        if (this.dynamicDistance) {
+            this.manager.distance = softSet(this.manager.distance, Math.min(MapControls.getMaxDistanceForPerspectiveAngle(this.manager.angle), this.startDistance), 0.4);
+        } else {
+            this.manager.angle = softMax(this.manager.angle, MapControls.getMaxPerspectiveAngleForDistance(this.manager.distance), 0.8);
+        }
 
         this.deltaAngle *= 1 - smoothing;
         if (Math.abs(this.deltaAngle) < 0.0001) {
@@ -100,6 +113,9 @@ export class MouseAngleControls {
             this.moving = true;
             this.deltaAngle = 0;
             this.lastY = evt.y;
+
+            this.startDistance = this.manager.distance;
+            this.dynamicDistance = this.manager.distance < 1000;
         }
     }
 
@@ -121,6 +137,10 @@ export class MouseAngleControls {
      */
     onMouseUp = evt => {
         this.moving = false;
+    }
+
+    onWheel = evt => {
+        this.dynamicDistance = false;
     }
 
     updatePixelToSpeedMultiplier = () => {

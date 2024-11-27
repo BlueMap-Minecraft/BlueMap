@@ -377,6 +377,17 @@ export const softClamp = (value, min, max, stiffness) => {
     return softMax(softMin(value, min, stiffness), max, stiffness);
 }
 
+/**
+ * Softly sets a value
+ * @param value {number}
+ * @param target {number}
+ * @param stiffness {number}
+ * @returns {number}
+ */
+export const softSet = (value, target, stiffness) => {
+    return softClamp(value, target, target, stiffness);
+}
+
 export const vecArrToObj = (val, useZ = false) => {
     if (val && val.length >= 2) {
         if (useZ) return {x: val[0], z: val[1]};
