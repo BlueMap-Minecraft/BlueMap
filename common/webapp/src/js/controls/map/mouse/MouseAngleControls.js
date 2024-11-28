@@ -87,7 +87,7 @@ export class MouseAngleControls {
 
         this.manager.angle += this.deltaAngle * smoothing * this.speed * this.pixelToSpeedMultiplierY;
 
-        if (this.dynamicDistance && this.manager.distance > this.manager.controls.minDistance) {
+        if (this.dynamicDistance) {
             let targetDistance = this.startDistance
             targetDistance = Math.min(targetDistance, MapControls.getMaxDistanceForPerspectiveAngle(this.manager.angle));
             targetDistance = Math.max(targetDistance, this.manager.controls.minDistance);
