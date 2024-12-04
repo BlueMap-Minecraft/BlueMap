@@ -49,7 +49,7 @@ public class ForgeCommandSource implements CommandSource {
 
     @Override
     public void sendMessage(Text text) {
-        var component = Component.Serializer.fromJsonLenient(text.toJSONString(), delegate.registryAccess());
+        var component = Component.Serializer.fromJsonLenient(text.toJSONString());
         if (component != null)
             delegate.sendSuccess(() -> component, false);
     }

@@ -6,11 +6,11 @@ plugins {
 }
 
 val supportedMinecraftVersions = listOf(
-    "1.21", "1.21.1", "1.21.2", "1.21.3"
+    "1.20", "1.20.1", "1.20.2", "1.20.3", "1.20.4"
 )
 
 val minecraftVersion = supportedMinecraftVersions.first()
-val forgeVersion = "51.0.1"
+val forgeVersion = "46.0.1"
 
 val shadowInclude: Configuration by configurations.creating
 configurations.api.get().extendsFrom(shadowInclude)
@@ -31,7 +31,7 @@ dependencies {
 
 minecraft {
     mappings( "official", minecraftVersion )
-    reobf = false
+    reobf = true
 }
 
 tasks.shadowJar {
@@ -97,8 +97,15 @@ val mergeShadowAndJarJar = tasks.create<Jar>("mergeShadowAndJarJar") {
     archiveFileName = "${project.name}-${project.version}-merged.jar"
 }
 
+reobf {
+    create("mergeShadowAndJarJar") {
+        mappings = tasks.createMcpToSrg.map { it.output.get() }
+    }
+}
+
+val reobfMergeShadowAndJarJar = tasks.getByName("reobfMergeShadowAndJarJar")
 tasks.getByName<CopyFileTask>("release") {
-    dependsOn( mergeShadowAndJarJar )
+    dependsOn( reobfMergeShadowAndJarJar )
     inputFile = mergeShadowAndJarJar.outputs.files.singleFile
 }
 

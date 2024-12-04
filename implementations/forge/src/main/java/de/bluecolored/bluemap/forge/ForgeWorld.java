@@ -48,7 +48,7 @@ public class ForgeWorld implements ServerWorld {
         this.delegate = new WeakReference<>(delegate);
 
         MinecraftServer server = delegate.getServer();
-        this.worldFolder = delegate.getServer().getServerDirectory()
+        this.worldFolder = delegate.getServer().getServerDirectory().toPath()
                 .resolve(server.getWorldPath(LevelResource.ROOT));
 
         ResourceLocation id = delegate.dimension().location();
