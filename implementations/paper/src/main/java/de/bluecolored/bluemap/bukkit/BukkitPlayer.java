@@ -38,7 +38,7 @@ import org.bukkit.potion.PotionEffectType;
 
 import java.util.*;
 
-public class BukkitPlayer implements Player {
+public class BukkitPlayer extends Player {
 
     private static final Map<GameMode, Gamemode> GAMEMODE_MAP = new EnumMap<>(GameMode.class);
     static {

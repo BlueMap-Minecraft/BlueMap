@@ -41,7 +41,7 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class FabricPlayer implements Player {
+public class FabricPlayer extends Player {
 
     private static final Map<GameMode, Gamemode> GAMEMODE_MAP = new EnumMap<>(GameMode.class);
     static {
