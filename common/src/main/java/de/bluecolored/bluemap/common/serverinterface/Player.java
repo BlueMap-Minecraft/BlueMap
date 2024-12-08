@@ -29,42 +29,42 @@ import de.bluecolored.bluemap.common.plugin.text.Text;
 
 import java.util.UUID;
 
-public interface Player {
+public abstract class Player {
 
-    UUID getUuid();
+    public abstract UUID getUuid();
 
-    Text getName();
+    public abstract Text getName();
 
-    ServerWorld getWorld();
+    public abstract ServerWorld getWorld();
 
-    Vector3d getPosition();
+    public abstract Vector3d getPosition();
 
     /**
      * x -> pitch, y -> yaw, z -> roll
      */
-    Vector3d getRotation();
+    public abstract Vector3d getRotation();
 
-    int getSkyLight();
+    public abstract int getSkyLight();
 
-    int getBlockLight();
+    public abstract int getBlockLight();
 
     /**
      * Return <code>true</code> if the player is sneaking.
      * <p><i>If the player is offline the value of this method is undetermined.</i></p>
      */
-    boolean isSneaking();
+    public abstract boolean isSneaking();
 
     /**
      * Returns <code>true</code> if the player has an invisibillity effect
      * <p><i>If the player is offline the value of this method is undetermined.</i></p>
      */
-    boolean isInvisible();
+    public abstract boolean isInvisible();
 
     /**
      * Returns <code>true</code> if the player is vanished
      * <p><i>If the player is offline the value of this method is undetermined.</i></p>
      */
-    default boolean isVanished() {
+    public boolean isVanished() {
         return false;
     }
 
@@ -72,6 +72,17 @@ public interface Player {
      * Returns the {@link Gamemode} this player is in
      * <p><i>If the player is offline the value of this method is undetermined.</i></p>
      */
-    Gamemode getGamemode();
+    public abstract Gamemode getGamemode();
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        Player other = (Player) o;
+        return getUuid().equals(other.getUuid());
+    }
+
+    @Override
+    public int hashCode() {
+        return getUuid().hashCode();
+    }
 }

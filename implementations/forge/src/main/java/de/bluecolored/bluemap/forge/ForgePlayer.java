@@ -42,7 +42,7 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class ForgePlayer implements Player {
+public class ForgePlayer extends Player {
 
     private static final Map<GameType, Gamemode> GAMEMODE_MAP = new EnumMap<>(GameType.class);
     static {

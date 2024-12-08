@@ -41,7 +41,7 @@ import org.spongepowered.api.world.LightTypes;
 
 import java.util.*;
 
-public class SpongePlayer implements Player {
+public class SpongePlayer extends Player {
 
     private static final Map<GameMode, Gamemode> GAMEMODE_MAP = new HashMap<>(5);
     static {
