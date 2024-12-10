@@ -17,7 +17,7 @@ fun Project.gitVersion(): String {
     val commits = runCommand("git rev-list --count $lastTag..HEAD", "0")
     val branch = runCommand("git branch --show-current", "master")
     val gitVersion = lastVersion +
-            (if (branch == "master") "" else "-${branch.replace('/', '.')}") +
+            (if (branch == "master" || branch.isEmpty()) "" else "-${branch.replace('/', '.')}") +
             (if (commits == "0") "" else "-$commits") +
             (if (gitClean()) "" else "-dirty")
 
