@@ -134,32 +134,41 @@ public class MinecraftVersion {
     }
 
     private static void download(VersionManifest.Version version, Path file) throws IOException {
-        boolean downloadCompletedAndVerified = false;
         VersionManifest.Download download = version.fetchDetail().getDownloads().getClient();
         Logger.global.logInfo("Downloading '" + download.getUrl() + "' to '" + file + "'...");
 
         FileHelper.createDirectories(file.toAbsolutePath().normalize().getParent());
+        Path unverifiedFile = file.getParent().resolve(file.getFileName().toString() + ".unverified");
 
-        try (
-                DigestInputStream in = new DigestInputStream(new URI(download.getUrl()).toURL().openStream(), MessageDigest.getInstance("SHA-1"));
-                OutputStream out = Files.newOutputStream(file, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW, StandardOpenOption.TRUNCATE_EXISTING)
-        ) {
-            in.transferTo(out);
+        try {
+            try (
+                    DigestInputStream in = new DigestInputStream(
+                            new URI(download.getUrl()).toURL().openStream(),
+                            MessageDigest.getInstance("SHA-1")
+                    );
+                    OutputStream out = Files.newOutputStream(unverifiedFile)
+            ) {
 
-            // verify sha-1
-            if (!Arrays.equals(
-                    in.getMessageDigest().digest(),
-                    hexStringToByteArray(download.getSha1())
-            )) {
-                throw new IOException("SHA-1 of the downloaded file does not match!");
+                // download
+                in.transferTo(out);
+
+                // verify sha-1
+                if (!Arrays.equals(
+                        in.getMessageDigest().digest(),
+                        hexStringToByteArray(download.getSha1())
+                )) {
+                    throw new IOException("SHA-1 of the downloaded file does not match!");
+                }
+
             }
 
-            downloadCompletedAndVerified = true;
+            // rename once verified
+            FileHelper.atomicMove(unverifiedFile, file);
+
         } catch (NoSuchAlgorithmException | IOException | URISyntaxException ex) {
             Logger.global.logWarning("Failed to download '" + download.getUrl() + "': " + ex);
         } finally {
-            if (!downloadCompletedAndVerified)
-                Files.deleteIfExists(file);
+            Files.deleteIfExists(unverifiedFile);
         }
 
     }
