@@ -28,9 +28,7 @@ import de.bluecolored.bluemap.core.util.Key;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.*;
 
 @RequiredArgsConstructor
 public class NoCompression implements Compression {
@@ -41,12 +39,12 @@ public class NoCompression implements Compression {
 
     @Override
     public OutputStream compress(OutputStream out) throws IOException {
-        return out;
+        return new BufferedOutputStream(out);
     }
 
     @Override
     public InputStream decompress(InputStream in) throws IOException {
-        return in;
+        return new BufferedInputStream(in);
     }
 
 }
