@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.core.map.hires.blockmodel;
 
+import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
@@ -34,11 +35,14 @@ import de.bluecolored.bluemap.core.world.BlockState;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.HashSet;
+
 public interface BlockRendererType extends Keyed, BlockRendererFactory {
 
     BlockRendererType DEFAULT = new Impl(Key.bluemap("default"), ResourceModelRenderer::new);
     BlockRendererType LIQUID = new Impl(Key.bluemap("liquid"), LiquidModelRenderer::new);
     BlockRendererType MISSING = new Impl(Key.bluemap("missing"), MissingModelRenderer::new);
+    HashSet<BlockState> missingBlockStates = new HashSet<>();
 
     Registry<BlockRendererType> REGISTRY = new Registry<>(
             DEFAULT,
@@ -61,6 +65,9 @@ public interface BlockRendererType extends Keyed, BlockRendererFactory {
      * @return true if this renderer-type can render the provided {@link BlockState} despite missing resources.
      */
     default boolean isFallbackFor(BlockState blockState) {
+        if (missingBlockStates.contains(blockState)) return false;
+        missingBlockStates.add(blockState);
+        Logger.global.logDebug("Missing resources for blockState: " + blockState);
         return false;
     }
 
