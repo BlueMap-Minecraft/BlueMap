@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.core.map.hires.blockmodel;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.map.hires.TileModelView;
@@ -42,6 +43,8 @@ public class MissingModelRenderer implements BlockRenderer {
             .build(blockState -> {
                 for (BlockRendererType type : BlockRendererType.REGISTRY.values())
                     if (type.isFallbackFor(blockState)) return type;
+
+                Logger.global.logDebug("No renderer found for block state: " + blockState);
                 return BlockRendererType.DEFAULT;
             });
 
