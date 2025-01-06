@@ -113,10 +113,17 @@ public interface RegionType extends Keyed {
         public @Nullable Vector2i getRegionFromFileName(String fileName) {
             Matcher matcher = regionFileNamePattern.matcher(fileName);
             if (!matcher.matches()) return null;
-            return new Vector2i(
-                    Integer.parseInt(matcher.group(1)),
-                    Integer.parseInt(matcher.group(2))
-            );
+
+            int regionX = Integer.parseInt(matcher.group(1));
+            int regionZ = Integer.parseInt(matcher.group(2));
+
+            // sanity-check for roughly minecraft max boundaries (-30 000 000 to 30 000 000)
+            if (
+                    regionX < -100000 || regionX > 100000 ||
+                    regionZ < -100000 || regionZ > 100000
+            ) return null;
+
+            return new Vector2i(regionX, regionZ);
         }
 
     }
