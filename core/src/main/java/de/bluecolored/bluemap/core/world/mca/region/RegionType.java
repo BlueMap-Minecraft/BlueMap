@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.core.world.mca.region;
 
 import com.flowpowered.math.vector.Vector2i;
+import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.Keyed;
 import de.bluecolored.bluemap.core.util.Registry;
@@ -114,16 +115,24 @@ public interface RegionType extends Keyed {
             Matcher matcher = regionFileNamePattern.matcher(fileName);
             if (!matcher.matches()) return null;
 
-            int regionX = Integer.parseInt(matcher.group(1));
-            int regionZ = Integer.parseInt(matcher.group(2));
+            try {
 
-            // sanity-check for roughly minecraft max boundaries (-30 000 000 to 30 000 000)
-            if (
-                    regionX < -100000 || regionX > 100000 ||
-                    regionZ < -100000 || regionZ > 100000
-            ) return null;
+                int regionX = Integer.parseInt(matcher.group(1));
+                int regionZ = Integer.parseInt(matcher.group(2));
 
-            return new Vector2i(regionX, regionZ);
+                // sanity-check for roughly minecraft max boundaries (-30 000 000 to 30 000 000)
+                if (
+                        regionX < -100000 || regionX > 100000 ||
+                        regionZ < -100000 || regionZ > 100000
+                ) {
+                    return null;
+                }
+
+                return new Vector2i(regionX, regionZ);
+
+            } catch (NumberFormatException ex) {
+                return null;
+            }
         }
 
     }
