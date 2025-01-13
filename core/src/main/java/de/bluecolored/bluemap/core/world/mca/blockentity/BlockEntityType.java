@@ -22,12 +22,38 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.world.block.entity;
+package de.bluecolored.bluemap.core.world.mca.blockentity;
 
-import java.util.Map;
+import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluemap.core.util.Keyed;
+import de.bluecolored.bluemap.core.util.Registry;
+import de.bluecolored.bluemap.core.world.BlockEntity;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-public interface BlockEntityLoader {
+public interface BlockEntityType extends Keyed {
 
-    BlockEntity load(Map<String, Object> raw);
+    BlockEntityType SIGN = new Impl(Key.minecraft("sign"), SignBlockEntity.class);
+    BlockEntityType HANGING_SIGN = new Impl(Key.minecraft("hanging_sign"), SignBlockEntity.class);
+    BlockEntityType SKULL = new Impl(Key.minecraft("skull"), SkullBlockEntity.class);
+    BlockEntityType BANNER = new Impl(Key.minecraft("banner"), BannerBlockEntity.class);
+
+    Registry<BlockEntityType> REGISTRY = new Registry<>(
+            SIGN,
+            HANGING_SIGN,
+            SKULL,
+            BANNER
+    );
+
+    Class<? extends BlockEntity> getBlockEntityClass();
+
+    @RequiredArgsConstructor
+    @Getter
+    class Impl implements BlockEntityType {
+
+        private final Key key;
+        private final Class<? extends BlockEntity> blockEntityClass;
+
+    }
 
 }

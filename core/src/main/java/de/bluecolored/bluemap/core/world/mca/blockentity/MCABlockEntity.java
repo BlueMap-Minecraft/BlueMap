@@ -22,33 +22,25 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.world.mca.data;
+package de.bluecolored.bluemap.core.world.mca.blockentity;
 
+import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.BlockEntity;
-import de.bluecolored.bluenbt.*;
+import de.bluecolored.bluenbt.NBTName;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 
-import java.io.IOException;
+@Getter
+@EqualsAndHashCode
+@ToString
+@SuppressWarnings("FieldMayBeFinal")
+public class MCABlockEntity implements BlockEntity {
 
-/**
- * TypeSerializer that returns a default value instead of failing when the serialized field is of the wrong type
- */
-public class LenientBlockEntityArrayDeserializer implements TypeDeserializer<BlockEntity[]> {
+    Key id;
+    int x, y, z;
 
-    private static final BlockEntity[] EMPTY_BLOCK_ENTITIES_ARRAY = new BlockEntity[0];
-
-    private final TypeDeserializer<BlockEntity[]> delegate;
-
-    public LenientBlockEntityArrayDeserializer(BlueNBT blueNBT) {
-        delegate = blueNBT.getTypeDeserializer(new TypeToken<>(){});
-    }
-
-    @Override
-    public BlockEntity[] read(NBTReader reader) throws IOException {
-        if (reader.peek() != TagType.LIST) {
-            reader.skip();
-            return EMPTY_BLOCK_ENTITIES_ARRAY;
-        }
-        return delegate.read(reader);
-    }
+    @NBTName("keepPacked")
+    boolean keepPacked;
 
 }

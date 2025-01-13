@@ -27,7 +27,7 @@ package de.bluecolored.bluemap.core.world.mca.chunk;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.Chunk;
-import de.bluecolored.bluemap.core.world.block.entity.BlockEntity;
+import de.bluecolored.bluemap.core.world.BlockEntity;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 import de.bluecolored.bluenbt.NBTName;
 import lombok.Getter;

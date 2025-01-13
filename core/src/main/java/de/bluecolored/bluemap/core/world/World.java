@@ -33,6 +33,7 @@ import de.bluecolored.bluemap.core.util.WatchService;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
@@ -106,6 +107,8 @@ public interface World {
      * Invalidates the chunk from the chunk-cache (if there is a cache), so that the chunk has to be reloaded from disk
      */
     void invalidateChunkCache(int x, int z);
+
+    void iterateEntities(int minX, int minZ, int maxX, int maxZ, Consumer<Entity> entityConsumer);
 
     /**
      * Generates a unique world-id based on a world-folder and a dimension

@@ -24,26 +24,38 @@
  */
 package de.bluecolored.bluemap.core.world.mca;
 
+import com.flowpowered.math.vector.Vector3d;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.BlockState;
-import de.bluecolored.bluemap.core.world.block.entity.BlockEntity;
-import de.bluecolored.bluemap.core.world.mca.data.BlockStateDeserializer;
-import de.bluecolored.bluemap.core.world.mca.data.KeyDeserializer;
+import de.bluecolored.bluemap.core.world.BlockEntity;
+import de.bluecolored.bluemap.core.world.Entity;
+import de.bluecolored.bluemap.core.world.mca.blockentity.SignBlockEntity;
+import de.bluecolored.bluemap.core.world.mca.data.*;
 import de.bluecolored.bluenbt.BlueNBT;
 import de.bluecolored.bluenbt.NamingStrategy;
 import de.bluecolored.bluenbt.TypeToken;
 import org.jetbrains.annotations.Contract;
 
+import java.util.UUID;
+
 public class MCAUtil {
 
-    public static final BlueNBT BLUENBT = addCommonNbtAdapters(new BlueNBT());
+    public static final BlueNBT BLUENBT = addCommonNbtSettings(new BlueNBT());
 
     @Contract(value = "_ -> param1", mutates = "param1")
-    public static BlueNBT addCommonNbtAdapters(BlueNBT nbt) {
+    public static BlueNBT addCommonNbtSettings(BlueNBT nbt) {
+
         nbt.setNamingStrategy(NamingStrategy.lowerCaseWithDelimiter("_"));
+
         nbt.register(TypeToken.of(BlockState.class), new BlockStateDeserializer());
         nbt.register(TypeToken.of(Key.class), new KeyDeserializer());
-        nbt.register(TypeToken.of(BlockEntity.class), new BlockEntity.BlockEntityDeserializer(nbt));
+        nbt.register(TypeToken.of(UUID.class), new UUIDDeserializer());
+        nbt.register(TypeToken.of(Vector3d.class), new Vector3dDeserializer());
+
+        nbt.register(TypeToken.of(BlockEntity.class), new BlockEntityTypeResolver());
+        nbt.register(TypeToken.of(SignBlockEntity.class), new SignBlockEntityTypeResolver());
+        nbt.register(TypeToken.of(Entity.class), new EntityTypeResolver());
+
         return nbt;
     }
 

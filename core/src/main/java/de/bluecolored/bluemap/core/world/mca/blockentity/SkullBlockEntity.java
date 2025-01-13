@@ -22,64 +22,51 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.world;
+package de.bluecolored.bluemap.core.world.mca.blockentity;
 
-import de.bluecolored.bluemap.core.world.biome.Biome;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.ToString;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.function.Consumer;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-public interface Chunk {
+@Getter
+@EqualsAndHashCode(callSuper = true)
+@ToString
+@SuppressWarnings({"FieldMayBeFinal", "unused"})
+public class SkullBlockEntity extends MCABlockEntity {
 
-    Chunk EMPTY_CHUNK = new Chunk() {};
-    Chunk ERRORED_CHUNK = new Chunk() {};
+    @Nullable String customName;
+    @Nullable String noteBlockSound;
+    @Nullable Profile profile;
 
-    default boolean isGenerated() {
-        return false;
+    @Getter
+    @EqualsAndHashCode
+    @ToString
+    public static class Profile {
+
+        @Nullable UUID id;
+        @Nullable String name;
+        List<Property> properties = List.of();
+
     }
 
-    default boolean hasLightData() {
-        return false;
+    @Getter
+    @EqualsAndHashCode
+    @ToString
+    public static class Property {
+
+        String name;
+        String value;
+        @Nullable String signature;
+
+        private Property(Map<String, Object> data) {
+            this.signature = (String) data.get("signature");
+            this.value = (String) data.getOrDefault("value", "");
+        }
+
     }
-
-    default long getInhabitedTime() {
-        return 0;
-    }
-
-    default BlockState getBlockState(int x, int y, int z) {
-        return BlockState.AIR;
-    }
-
-    default LightData getLightData(int x, int y, int z, LightData target) {
-        return target.set(0, 0);
-    }
-
-    default Biome getBiome(int x, int y, int z) {
-        return Biome.DEFAULT;
-    }
-
-    default int getMaxY(int x, int z) {
-        return 255;
-    }
-
-    default int getMinY(int x, int z) {
-        return 0;
-    }
-
-    default boolean hasWorldSurfaceHeights() {
-        return false;
-    }
-
-    default int getWorldSurfaceY(int x, int z) { return 0; }
-
-    default boolean hasOceanFloorHeights() {
-        return false;
-    }
-
-    default int getOceanFloorY(int x, int z) { return 0; }
-
-    default @Nullable BlockEntity getBlockEntity(int x, int y, int z) { return null; }
-
-    default void iterateBlockEntities(Consumer<BlockEntity> consumer) { }
-
 }

@@ -22,64 +22,55 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.world;
+package de.bluecolored.bluemap.core.world.mca.blockentity;
 
-import de.bluecolored.bluemap.core.world.biome.Biome;
+import de.bluecolored.bluenbt.NBTName;
+import lombok.*;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.function.Consumer;
+import java.util.List;
 
-public interface Chunk {
+@Getter
+@EqualsAndHashCode(callSuper = true)
+@ToString
+@SuppressWarnings({"FieldMayBeFinal", "unused"})
+public class SignBlockEntity extends MCABlockEntity {
 
-    Chunk EMPTY_CHUNK = new Chunk() {};
-    Chunk ERRORED_CHUNK = new Chunk() {};
+    @Nullable TextData frontText;
+    @Nullable TextData backText;
 
-    default boolean isGenerated() {
-        return false;
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Getter
+    @EqualsAndHashCode
+    @ToString
+    public static class TextData {
+
+        boolean hasGlowingText;
+        String color = "black";
+        List<String> messages = List.of();
+
     }
 
-    default boolean hasLightData() {
-        return false;
+    @Getter
+    @EqualsAndHashCode(callSuper = true)
+    @ToString
+    public static class LegacySignBlockEntity extends SignBlockEntity {
+
+        @NBTName("GlowingText") boolean hasGlowingText;
+        @NBTName("Color") String color = "black";
+        @NBTName("Text1") String text1;
+        @NBTName("Text2") String text2;
+        @NBTName("Text3") String text3;
+        @NBTName("Text4") String text4;
+
+        @Override
+        public TextData getFrontText() {
+            if (frontText == null)
+                frontText = new TextData(hasGlowingText, color, List.of(text1, text2, text3, text4));
+            return frontText;
+        }
+
     }
-
-    default long getInhabitedTime() {
-        return 0;
-    }
-
-    default BlockState getBlockState(int x, int y, int z) {
-        return BlockState.AIR;
-    }
-
-    default LightData getLightData(int x, int y, int z, LightData target) {
-        return target.set(0, 0);
-    }
-
-    default Biome getBiome(int x, int y, int z) {
-        return Biome.DEFAULT;
-    }
-
-    default int getMaxY(int x, int z) {
-        return 255;
-    }
-
-    default int getMinY(int x, int z) {
-        return 0;
-    }
-
-    default boolean hasWorldSurfaceHeights() {
-        return false;
-    }
-
-    default int getWorldSurfaceY(int x, int z) { return 0; }
-
-    default boolean hasOceanFloorHeights() {
-        return false;
-    }
-
-    default int getOceanFloorY(int x, int z) { return 0; }
-
-    default @Nullable BlockEntity getBlockEntity(int x, int y, int z) { return null; }
-
-    default void iterateBlockEntities(Consumer<BlockEntity> consumer) { }
 
 }

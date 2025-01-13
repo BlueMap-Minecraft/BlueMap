@@ -22,42 +22,46 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.world.block.entity;
+package de.bluecolored.bluemap.core.world.mca.blockentity;
 
-import de.bluecolored.bluemap.core.util.Key;
-import de.bluecolored.bluemap.core.util.Keyed;
-import de.bluecolored.bluemap.core.util.Registry;
+import de.bluecolored.bluenbt.NBTName;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.ToString;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
-public interface BlockEntityType extends Keyed, BlockEntityLoader {
+@Getter
+@EqualsAndHashCode(callSuper = true)
+@ToString
+@SuppressWarnings("FieldMayBeFinal")
+public class BannerBlockEntity extends MCABlockEntity {
 
-    BlockEntityType SIGN = new Impl(Key.minecraft("sign"), SignBlockEntity::new);
-    BlockEntityType HANGING_SIGN = new Impl(Key.minecraft("hanging_sign"), SignBlockEntity::new);
-    BlockEntityType SKULL = new Impl(Key.minecraft("skull"), SkullBlockEntity::new);
-    BlockEntityType BANNER = new Impl(Key.minecraft("banner"), BannerBlockEntity::new);
+    @NBTName("CustomName")
+    @Nullable String customName;
 
-    Registry<BlockEntityType> REGISTRY = new Registry<>(
-            SIGN,
-            HANGING_SIGN,
-            SKULL,
-            BANNER
-    );
+    List<Pattern> patterns = List.of();
 
-    @RequiredArgsConstructor
-    class Impl implements BlockEntityType {
+    @Getter
+    @EqualsAndHashCode
+    @ToString
+    @SuppressWarnings("FieldMayBeFinal")
+    public static class Pattern {
 
-        @Getter
-        private final Key key;
-        private final BlockEntityLoader loader;
-
-        @Override
-        public BlockEntity load(Map<String, Object> raw) {
-            return loader.load(raw);
-        }
+        // TODO: proper pattern-data implementation
+        Object pattern;
+        Object color;
 
     }
+
+    /*
+    public enum Color {
+        WHITE, ORANGE, MAGENTA, LIGHT_BLUE, YELLOW, LIME, PINK, GRAY, LIGHT_GRAY, CYAN, PURPLE, BLUE, BROWN, GREEN,
+        RED, BLACK
+    }
+    */
 
 }

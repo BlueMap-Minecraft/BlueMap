@@ -285,7 +285,7 @@ public class MCAWorld implements World {
     }
 
     private static BlueNBT createBlueNBTForDataPack(DataPack dataPack) {
-        BlueNBT blueNBT = MCAUtil.addCommonNbtAdapters(new BlueNBT());
+        BlueNBT blueNBT = MCAUtil.addCommonNbtSettings(new BlueNBT());
         blueNBT.register(TypeToken.of(DimensionType.class), new DimensionTypeDeserializer(blueNBT, dataPack));
         return blueNBT;
     }

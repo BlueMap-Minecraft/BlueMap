@@ -59,7 +59,7 @@ import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.ChunkConsumer;
 import de.bluecolored.bluemap.core.world.World;
 import de.bluecolored.bluemap.core.world.block.Block;
-import de.bluecolored.bluemap.core.world.block.entity.BlockEntity;
+import de.bluecolored.bluemap.core.world.BlockEntity;
 
 import java.io.IOException;
 import java.nio.file.Path;

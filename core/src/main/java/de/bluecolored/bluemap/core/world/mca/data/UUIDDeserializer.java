@@ -24,31 +24,31 @@
  */
 package de.bluecolored.bluemap.core.world.mca.data;
 
-import de.bluecolored.bluemap.core.world.BlockEntity;
-import de.bluecolored.bluenbt.*;
+import de.bluecolored.bluenbt.NBTReader;
+import de.bluecolored.bluenbt.TagType;
+import de.bluecolored.bluenbt.TypeDeserializer;
 
 import java.io.IOException;
+import java.util.UUID;
 
-/**
- * TypeSerializer that returns a default value instead of failing when the serialized field is of the wrong type
- */
-public class LenientBlockEntityArrayDeserializer implements TypeDeserializer<BlockEntity[]> {
-
-    private static final BlockEntity[] EMPTY_BLOCK_ENTITIES_ARRAY = new BlockEntity[0];
-
-    private final TypeDeserializer<BlockEntity[]> delegate;
-
-    public LenientBlockEntityArrayDeserializer(BlueNBT blueNBT) {
-        delegate = blueNBT.getTypeDeserializer(new TypeToken<>(){});
-    }
+public class UUIDDeserializer implements TypeDeserializer<UUID> {
 
     @Override
-    public BlockEntity[] read(NBTReader reader) throws IOException {
-        if (reader.peek() != TagType.LIST) {
-            reader.skip();
-            return EMPTY_BLOCK_ENTITIES_ARRAY;
+    public UUID read(NBTReader reader) throws IOException {
+        TagType tagType = reader.peek();
+
+        if (tagType == TagType.STRING)
+            return UUID.fromString(reader.nextString());
+
+        if (tagType == TagType.INT_ARRAY) {
+            int[] ints = reader.nextIntArray();
+            if (ints.length != 4) throw new IOException("Unexpected number of UUID-ints, expected 4, got " + ints.length);
+            return new UUID((long) ints[0] << 32 | ints[1], (long) ints[2] << 32 | ints[3]);
         }
-        return delegate.read(reader);
+
+        long[] longs = reader.nextLongArray();
+        if (longs.length != 2) throw new IOException("Unexpected number of UUID-longs, expected 2, got " + longs.length);
+        return new UUID(longs[0], longs[1]);
     }
 
 }
