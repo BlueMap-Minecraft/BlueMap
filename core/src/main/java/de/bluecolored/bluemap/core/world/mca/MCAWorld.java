@@ -55,6 +55,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -219,6 +220,11 @@ public class MCAWorld implements World {
     public void invalidateChunkCache(int x, int z) {
         regionCache.invalidate(VECTOR_2_I_CACHE.get(x >> 5, z >> 5));
         chunkCache.invalidate(VECTOR_2_I_CACHE.get(x, z));
+    }
+
+    @Override
+    public void iterateEntities(int minX, int minZ, int maxX, int maxZ, Consumer<Entity> entityConsumer) {
+        //TODO
     }
 
     private Region<Chunk> loadRegion(Vector2i regionPos) {

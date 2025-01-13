@@ -46,6 +46,6 @@ public interface BlockRenderer {
      * @param blockModel The model(-view) where the block should be rendered to.
      * @param blockColor The color that should be set to the color that represents the rendered block.
      */
-    void render(BlockNeighborhood<?> block, Variant variant, TileModelView blockModel, Color blockColor);
+    void render(BlockNeighborhood block, Variant variant, TileModelView blockModel, Color blockColor);
 
 }

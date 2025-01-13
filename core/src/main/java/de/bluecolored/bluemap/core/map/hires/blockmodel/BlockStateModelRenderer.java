@@ -27,14 +27,14 @@ package de.bluecolored.bluemap.core.map.hires.blockmodel;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.core.map.TextureGallery;
-import de.bluecolored.bluemap.core.map.hires.TileModelView;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
+import de.bluecolored.bluemap.core.map.hires.TileModelView;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockmodel.BlockModel;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.Variant;
 import de.bluecolored.bluemap.core.util.math.Color;
-import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 import de.bluecolored.bluemap.core.world.BlockState;
+import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,12 +52,12 @@ public class BlockStateModelRenderer {
                 .build(type -> type.create(resourcePack, textureGallery, renderSettings));
     }
 
-    public void render(BlockNeighborhood<?> block, TileModelView blockModel, Color blockColor) {
+    public void render(BlockNeighborhood block, TileModelView blockModel, Color blockColor) {
         render(block, block.getBlockState(), blockModel, blockColor);
     }
 
     private final Color waterloggedColor = new Color();
-    public void render(BlockNeighborhood<?> block, BlockState blockState, TileModelView blockModel, Color blockColor) {
+    public void render(BlockNeighborhood block, BlockState blockState, TileModelView blockModel, Color blockColor) {
         blockColor.set(0, 0, 0, 0, true);
 
         //shortcut for air
@@ -79,7 +79,7 @@ public class BlockStateModelRenderer {
     }
 
     private final Color variantColor = new Color();
-    private void renderModel(BlockNeighborhood<?> block, BlockState blockState, TileModelView blockModel, Color blockColor) {
+    private void renderModel(BlockNeighborhood block, BlockState blockState, TileModelView blockModel, Color blockColor) {
         int modelStart = blockModel.getStart();
 
         var stateResource = resourcePack.getBlockState(blockState);

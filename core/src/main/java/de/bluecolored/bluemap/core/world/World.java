@@ -29,6 +29,7 @@ import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.WatchService;
+import de.bluecolored.bluemap.core.world.block.BlockAccess;
 
 import java.io.IOException;
 import java.nio.file.Path;

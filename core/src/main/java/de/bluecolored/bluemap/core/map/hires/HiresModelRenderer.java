@@ -32,6 +32,7 @@ import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.World;
+import de.bluecolored.bluemap.core.world.block.Block;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 
 public class HiresModelRenderer {
@@ -62,7 +63,7 @@ public class HiresModelRenderer {
         int maxHeight, minY, maxY;
         double topBlockLight;
         Color columnColor = new Color(), blockColor = new Color();
-        BlockNeighborhood<?> block = new BlockNeighborhood<>(resourcePack, renderSettings, world, 0, 0, 0);
+        BlockNeighborhood block = new BlockNeighborhood(new Block(world, 0, 0, 0), resourcePack, renderSettings, world.getDimensionType());
         TileModelView blockModel = new TileModelView(tileModel);
 
         int x, y, z;

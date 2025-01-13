@@ -27,69 +27,116 @@ package de.bluecolored.bluemap.core.world.block;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.world.*;
+import de.bluecolored.bluemap.core.world.biome.Biome;
+import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
 
-public class ExtendedBlock<T extends ExtendedBlock<T>> extends Block<T> {
-    private final ResourcePack resourcePack;
-    private final RenderSettings renderSettings;
+public class ExtendedBlock implements BlockAccess {
+
+    private int x, y, z;
+    private BlockAccess blockAccess;
+
+    @Getter private ResourcePack resourcePack;
+    @Getter private RenderSettings renderSettings;
+    @Getter private DimensionType dimensionType;
 
     private @Nullable BlockProperties properties;
 
     private boolean insideRenderBoundsCalculated, insideRenderBounds;
     private boolean isCaveCalculated, isCave;
 
-    public ExtendedBlock(ResourcePack resourcePack, RenderSettings renderSettings, World world, int x, int y, int z) {
-        super(world, x, y, z);
+    public ExtendedBlock(BlockAccess blockAccess, ResourcePack resourcePack, RenderSettings renderSettings, DimensionType dimensionType) {
+        this.blockAccess = Objects.requireNonNull(blockAccess);
         this.resourcePack = Objects.requireNonNull(resourcePack);
-        this.renderSettings = renderSettings;
+        this.renderSettings = Objects.requireNonNull(renderSettings);
+        this.dimensionType = Objects.requireNonNull(dimensionType);
     }
 
     @Override
-    protected void reset() {
-        super.reset();
+    public void set(int x, int y, int z) {
+        if (this.y == y && this.x == x && this.z == z)
+            return;
 
+        this.x = x;
+        this.y = y;
+        this.z = z;
         this.properties = null;
-
         this.insideRenderBoundsCalculated = false;
         this.isCaveCalculated = false;
+
+        blockAccess.set(x, y, z);
     }
 
-    public T copy(ExtendedBlock<?> source) {
-        super.copy(source);
+    @Override
+    public ExtendedBlock copy() {
+        return new ExtendedBlock(blockAccess.copy(), resourcePack, renderSettings, dimensionType);
+    }
 
-        this.properties = source.properties;
+    protected void copyFrom(ExtendedBlock extendedBlock) {
+        this.blockAccess = extendedBlock.blockAccess;
+        this.resourcePack = extendedBlock.resourcePack;
+        this.renderSettings = extendedBlock.renderSettings;
+        this.dimensionType = extendedBlock.dimensionType;
+        this.properties = extendedBlock.properties;
+        this.insideRenderBoundsCalculated = extendedBlock.insideRenderBoundsCalculated;
+        this.insideRenderBounds = extendedBlock.insideRenderBounds;
+        this.isCaveCalculated = extendedBlock.isCaveCalculated;
+        this.isCave = extendedBlock.isCave;
+    }
 
-        this.insideRenderBoundsCalculated = source.insideRenderBoundsCalculated;
-        this.insideRenderBounds = source.insideRenderBounds;
+    @Override
+    public int getX() {
+        return blockAccess.getX();
+    }
 
-        this.isCaveCalculated = source.isCaveCalculated;
-        this.isCave = source.isCave;
+    @Override
+    public int getY() {
+        return blockAccess.getY();
+    }
 
-        return self();
+    @Override
+    public int getZ() {
+        return blockAccess.getZ();
     }
 
     @Override
     public BlockState getBlockState() {
         if (renderSettings.isRenderEdges() && !isInsideRenderBounds()) return BlockState.AIR;
-        return super.getBlockState();
+        return blockAccess.getBlockState();
     }
 
     @Override
     public LightData getLightData() {
-        LightData ld = super.getLightData();
-        if (renderSettings.isRenderEdges() && !isInsideRenderBounds()) ld.set(getWorld().getDimensionType().hasSkylight() ? 16 : 0, ld.getBlockLight());
+        LightData ld = blockAccess.getLightData();
+        if (renderSettings.isRenderEdges() && !isInsideRenderBounds()) ld.set(dimensionType.hasSkylight() ? 16 : 0, ld.getBlockLight());
         return ld;
+    }
+
+    @Override
+    public Biome getBiome() {
+        return blockAccess.getBiome();
+    }
+
+    @Override
+    public @Nullable BlockEntity getBlockEntity() {
+        return blockAccess.getBlockEntity();
+    }
+
+    @Override
+    public boolean hasOceanFloorY() {
+        return blockAccess.hasOceanFloorY();
+    }
+
+    @Override
+    public int getOceanFloorY() {
+        return blockAccess.getOceanFloorY();
     }
 
     public BlockProperties getProperties() {
         if (properties == null) properties = resourcePack.getBlockProperties(getBlockState());
         return properties;
-    }
-
-    public RenderSettings getRenderSettings() {
-        return renderSettings;
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
@@ -106,18 +153,14 @@ public class ExtendedBlock<T extends ExtendedBlock<T>> extends Block<T> {
         if (!isCaveCalculated) {
             isCave = getY() < renderSettings.getRemoveCavesBelowY() &&
                     (
-                            !getChunk().hasOceanFloorHeights() ||
-                            getY() < getChunk().getOceanFloorY(getX(), getZ()) +
+                            !hasOceanFloorY() ||
+                            getY() < getOceanFloorY() +
                                     renderSettings.getCaveDetectionOceanFloor()
                     );
             isCaveCalculated = true;
         }
 
         return isCave;
-    }
-
-    public ResourcePack getResourcePack() {
-        return resourcePack;
     }
 
 }

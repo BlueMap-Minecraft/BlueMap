@@ -28,7 +28,7 @@ import com.flowpowered.math.GenericMath;
 import com.google.gson.stream.JsonReader;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.biome.Biome;
-import de.bluecolored.bluemap.core.world.block.Block;
+import de.bluecolored.bluemap.core.world.block.BlockAccess;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 
 import java.awt.image.BufferedImage;
@@ -114,7 +114,7 @@ public class BlockColorCalculatorFactory {
 
     @FunctionalInterface
     private interface ColorFunction {
-        Color invoke(BlockColorCalculator calculator, BlockNeighborhood<?> block, Color target);
+        Color invoke(BlockColorCalculator calculator, BlockNeighborhood block, Color target);
     }
 
     public class BlockColorCalculator {
@@ -122,7 +122,7 @@ public class BlockColorCalculatorFactory {
         private final Color tempColor = new Color();
 
         @SuppressWarnings("UnusedReturnValue")
-        public Color getBlockColor(BlockNeighborhood<?> block, Color target) {
+        public Color getBlockColor(BlockNeighborhood block, Color target) {
             String blockId = block.getBlockState().getFormatted();
 
             ColorFunction colorFunction = blockColorMap.get(blockId);
@@ -132,7 +132,7 @@ public class BlockColorCalculatorFactory {
             return colorFunction.invoke(this, block, target);
         }
 
-        public Color getRedstoneColor(Block<?> block, Color target) {
+        public Color getRedstoneColor(BlockAccess block, Color target) {
             int power = block.getBlockState().getRedstonePower();
             return target.set(
                     (power + 5f) / 20f, 0f, 0f,
@@ -140,7 +140,7 @@ public class BlockColorCalculatorFactory {
             );
         }
 
-        public Color getBlendedWaterColor(BlockNeighborhood<?> block, Color target) {
+        public Color getBlendedWaterColor(BlockNeighborhood block, Color target) {
             target.set(0, 0, 0, 0, true);
 
             int x, y, z;
@@ -158,7 +158,7 @@ public class BlockColorCalculatorFactory {
             return target.flatten();
         }
 
-        public Color getBlendedFoliageColor(BlockNeighborhood<?> block, Color target) {
+        public Color getBlendedFoliageColor(BlockNeighborhood block, Color target) {
             target.set(0, 0, 0, 0, true);
 
             int x, y, z;
@@ -181,7 +181,7 @@ public class BlockColorCalculatorFactory {
             return target.overlay(biome.getOverlayFoliageColor());
         }
 
-        public Color getBlendedGrassColor(BlockNeighborhood<?> block, Color target) {
+        public Color getBlendedGrassColor(BlockNeighborhood block, Color target) {
             target.set(0, 0, 0, 0, true);
 
             int x, y, z;
@@ -197,7 +197,7 @@ public class BlockColorCalculatorFactory {
             return target.flatten();
         }
 
-        public Color getGrassColor(Block<?> block, Color target) {
+        public Color getGrassColor(BlockAccess block, Color target) {
             Biome biome = block.getBiome();
             getColorFromMap(biome, grassMap, 0xff52952f, target);
             target.overlay(biome.getOverlayGrassColor());

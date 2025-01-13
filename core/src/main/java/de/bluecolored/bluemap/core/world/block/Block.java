@@ -26,13 +26,13 @@ package de.bluecolored.bluemap.core.world.block;
 
 import de.bluecolored.bluemap.core.world.*;
 import de.bluecolored.bluemap.core.world.biome.Biome;
-import de.bluecolored.bluemap.core.world.block.entity.BlockEntity;
+import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 
-public class Block<T extends Block<T>> {
+public class Block implements BlockAccess {
 
-    private World world;
-    private int x, y, z;
+    @Getter private final World world;
+    @Getter private int x, y, z;
 
     private @Nullable Chunk chunk;
 
@@ -44,29 +44,14 @@ public class Block<T extends Block<T>> {
     private @Nullable BlockEntity blockEntity;
 
     public Block(World world, int x, int y, int z) {
-        set(world, x, y, z);
-    }
-
-    public T set(World world, int x, int y, int z) {
-        if (this.x == x && this.z == z && this.world == world){
-            if (this.y == y) return self();
-        } else {
-            this.chunk = null; //only reset the chunk if x or z have changed
-        }
-
         this.world = world;
-        this.x = x;
-        this.y = y;
-        this.z = z;
-
-        reset();
-
-        return self();
+        set(x, y, z);
     }
 
-    public T set(int x, int y, int z) {
+    @Override
+    public void set(int x, int y, int z) {
         if (this.x == x && this.z == z){
-            if (this.y == y) return self();
+            if (this.y == y) return;
         } else {
             this.chunk = null; //only reset the chunk if x or z have changed
         }
@@ -75,12 +60,6 @@ public class Block<T extends Block<T>> {
         this.y = y;
         this.z = z;
 
-        reset();
-
-        return self();
-    }
-
-    protected void reset() {
         this.blockState = null;
         this.lightData.set(-1, -1);
         this.biome = null;
@@ -88,40 +67,9 @@ public class Block<T extends Block<T>> {
         this.blockEntity = null;
     }
 
-    public T add(int dx, int dy, int dz) {
-        return set(x + dx, y + dy, z + dz);
-    }
-
-    public T copy(Block<?> source) {
-        this.world = source.world;
-        this.chunk = source.chunk;
-        this.x = source.x;
-        this.y = source.y;
-        this.z = source.z;
-
-        reset();
-
-        this.blockState = source.blockState;
-        this.lightData.set(source.lightData.getSkyLight(), source.lightData.getBlockLight());
-        this.biome = source.biome;
-
-        return self();
-    }
-
-    public World getWorld() {
-        return world;
-    }
-
-    public int getX() {
-        return x;
-    }
-
-    public int getY() {
-        return y;
-    }
-
-    public int getZ() {
-        return z;
+    @Override
+    public BlockAccess copy() {
+        return new Block(world, x, y, z);
     }
 
     public Chunk getChunk() {
@@ -129,27 +77,22 @@ public class Block<T extends Block<T>> {
         return chunk;
     }
 
+    @Override
     public BlockState getBlockState() {
         if (blockState == null) blockState = getChunk().getBlockState(x, y, z);
         return blockState;
     }
 
+    @Override
     public LightData getLightData() {
         if (lightData.getSkyLight() < 0) getChunk().getLightData(x, y, z, lightData);
         return lightData;
     }
 
+    @Override
     public Biome getBiome() {
         if (biome == null) biome = getChunk().getBiome(x, y, z);
         return biome;
-    }
-
-    public int getSunLightLevel() {
-        return getLightData().getSkyLight();
-    }
-
-    public int getBlockLightLevel() {
-        return getLightData().getBlockLight();
     }
 
     public @Nullable BlockEntity getBlockEntity() {
@@ -161,30 +104,13 @@ public class Block<T extends Block<T>> {
     }
 
     @Override
-    public String toString() {
-        if (world != null) {
-            return "Block{" +
-                   "world=" + world +
-                   ", x=" + x +
-                   ", y=" + y +
-                   ", z=" + z +
-                   ", chunk=" + getChunk() +
-                   ", blockState=" + getBlockState() +
-                   ", lightData=" + getLightData() +
-                   ", biome=" + getBiome() +
-                   '}';
-        } else {
-            return "Block{" +
-                   "world=null" +
-                   ", x=" + x +
-                   ", y=" + y +
-                   ", z=" + z +
-                   '}';
-        }
+    public boolean hasOceanFloorY() {
+        return getChunk().hasOceanFloorHeights();
     }
 
-    @SuppressWarnings("unchecked")
-    protected T self() {
-        return (T) this;
+    @Override
+    public int getOceanFloorY() {
+        return getChunk().getOceanFloorY(x, z);
     }
+
 }

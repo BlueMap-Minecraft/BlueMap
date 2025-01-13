@@ -27,9 +27,9 @@ package de.bluecolored.bluemap.core.map.hires.blockmodel;
 import com.flowpowered.math.TrigMath;
 import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.map.TextureGallery;
-import de.bluecolored.bluemap.core.map.hires.TileModelView;
-import de.bluecolored.bluemap.core.map.hires.TileModel;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
+import de.bluecolored.bluemap.core.map.hires.TileModel;
+import de.bluecolored.bluemap.core.map.hires.TileModelView;
 import de.bluecolored.bluemap.core.resources.BlockColorCalculatorFactory;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
@@ -42,8 +42,8 @@ import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.util.math.MatrixM3f;
 import de.bluecolored.bluemap.core.util.math.VectorM2f;
 import de.bluecolored.bluemap.core.util.math.VectorM3f;
-import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 import de.bluecolored.bluemap.core.world.BlockState;
+import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 import de.bluecolored.bluemap.core.world.block.ExtendedBlock;
 
 /**
@@ -66,7 +66,7 @@ public class LiquidModelRenderer implements BlockRenderer {
     private final VectorM3f[] corners;
     private final VectorM2f[] uvs = new VectorM2f[4];
 
-    private BlockNeighborhood<?> block;
+    private BlockNeighborhood block;
     private BlockState blockState;
     private boolean isWaterlogged, isWaterLike;
     private BlockModel modelResource;
@@ -93,7 +93,7 @@ public class LiquidModelRenderer implements BlockRenderer {
         for (int i = 0; i < uvs.length; i++) uvs[i] = new VectorM2f(0, 0);
     }
 
-    public void render(BlockNeighborhood<?> block, Variant variant, TileModelView blockModel, Color color) {
+    public void render(BlockNeighborhood block, Variant variant, TileModelView blockModel, Color color) {
         this.block = block;
         this.blockState = block.getBlockState();
         this.isWaterlogged = blockState.isWaterlogged() || block.getProperties().isAlwaysWaterlogged();
@@ -191,7 +191,7 @@ public class LiquidModelRenderer implements BlockRenderer {
 
         float sumHeight = 0f;
         int count = 0;
-        ExtendedBlock<?> neighbor;
+        ExtendedBlock neighbor;
         BlockState neighborBlockState;
 
         for (ix = x; ix <= x+1; ix++){
@@ -223,7 +223,7 @@ public class LiquidModelRenderer implements BlockRenderer {
     }
 
     @SuppressWarnings("StringEquality")
-    private boolean isSameLiquid(ExtendedBlock<?> block){
+    private boolean isSameLiquid(ExtendedBlock block){
         BlockState blockState = block.getBlockState();
 
         if (this.isWaterlogged)
@@ -245,7 +245,7 @@ public class LiquidModelRenderer implements BlockRenderer {
         Vector3i faceDirVector = faceDir.toVector();
 
         //face culling
-        ExtendedBlock<?> bl = block.getNeighborBlock(
+        ExtendedBlock bl = block.getNeighborBlock(
                 faceDirVector.getX(),
                 faceDirVector.getY(),
                 faceDirVector.getZ()
@@ -369,7 +369,7 @@ public class LiquidModelRenderer implements BlockRenderer {
     }
 
     private float compareLiquidHeights(float ownHeight, int dx, int dz) {
-        ExtendedBlock<?> neighbor = block.getNeighborBlock(dx, 0,  dz);
+        ExtendedBlock neighbor = block.getNeighborBlock(dx, 0,  dz);
         if (neighbor.getBlockState().isAir()) return 0;
         if (!isSameLiquid(neighbor)) return 0;
 

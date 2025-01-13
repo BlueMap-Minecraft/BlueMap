@@ -55,11 +55,11 @@ import de.bluecolored.bluemap.core.map.renderstate.TileInfoRegion;
 import de.bluecolored.bluemap.core.storage.MapStorage;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.Grid;
+import de.bluecolored.bluemap.core.world.BlockEntity;
 import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.ChunkConsumer;
 import de.bluecolored.bluemap.core.world.World;
 import de.bluecolored.bluemap.core.world.block.Block;
-import de.bluecolored.bluemap.core.world.BlockEntity;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -594,8 +594,8 @@ public class Commands<S> {
         new Thread(() -> {
             // collect and output debug info
             Vector3i blockPos = position.floor().toInt();
-            Block<?> block = new Block<>(world, blockPos.getX(), blockPos.getY(), blockPos.getZ());
-            Block<?> blockBelow = new Block<>(world, blockPos.getX(), blockPos.getY() - 1, blockPos.getZ());
+            Block block = new Block(world, blockPos.getX(), blockPos.getY(), blockPos.getZ());
+            Block blockBelow = new Block(world, blockPos.getX(), blockPos.getY() - 1, blockPos.getZ());
 
             source.sendMessages(Arrays.asList(
                     Text.of(TextColor.GOLD, "Block at you: \n", formatBlock(block)),
@@ -606,7 +606,7 @@ public class Commands<S> {
         return 1;
     }
 
-    private Text formatBlock(Block<?> block) {
+    private Text formatBlock(Block block) {
         World world = block.getWorld();
         Chunk chunk = block.getChunk();
 

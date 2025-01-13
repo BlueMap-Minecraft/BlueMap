@@ -29,9 +29,9 @@ import com.flowpowered.math.vector.Vector3f;
 import com.flowpowered.math.vector.Vector3i;
 import com.flowpowered.math.vector.Vector4f;
 import de.bluecolored.bluemap.core.map.TextureGallery;
-import de.bluecolored.bluemap.core.map.hires.TileModelView;
-import de.bluecolored.bluemap.core.map.hires.TileModel;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
+import de.bluecolored.bluemap.core.map.hires.TileModel;
+import de.bluecolored.bluemap.core.map.hires.TileModelView;
 import de.bluecolored.bluemap.core.resources.BlockColorCalculatorFactory;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
@@ -68,7 +68,7 @@ public class ResourceModelRenderer implements BlockRenderer {
     private final Color tintColor = new Color();
     private final Color mapColor = new Color();
 
-    private BlockNeighborhood<?> block;
+    private BlockNeighborhood block;
     private Variant variant;
     private BlockModel modelResource;
     private TileModelView blockModel;
@@ -86,7 +86,7 @@ public class ResourceModelRenderer implements BlockRenderer {
     }
 
     private final MatrixM4f modelTransform = new MatrixM4f();
-    public void render(BlockNeighborhood<?> block, Variant variant, TileModelView blockModel, Color color) {
+    public void render(BlockNeighborhood block, Variant variant, TileModelView blockModel, Color color) {
         this.block = block;
         this.blockModel = blockModel;
         this.blockColor = color;
@@ -180,7 +180,7 @@ public class ResourceModelRenderer implements BlockRenderer {
         Vector3i faceDirVector = faceDir.toVector();
 
         // light calculation
-        ExtendedBlock<?> facedBlockNeighbor = getRotationRelativeBlock(faceDir);
+        ExtendedBlock facedBlockNeighbor = getRotationRelativeBlock(faceDir);
         LightData blockLightData = block.getLightData();
         LightData facedLightData = facedBlockNeighbor.getLightData();
 
@@ -205,7 +205,7 @@ public class ResourceModelRenderer implements BlockRenderer {
         // face culling
         if (renderSettings.isRenderTopOnly() && faceRotationVector.y < 0.01) return;
         if (face.getCullface() != null) {
-            ExtendedBlock<?> b = getRotationRelativeBlock(face.getCullface());
+            ExtendedBlock b = getRotationRelativeBlock(face.getCullface());
             BlockProperties p = b.getProperties();
             if (p.isCulling()) return;
             if (p.getCullingIdentical() && b.getBlockState().equals(block.getBlockState())) return;
@@ -350,11 +350,11 @@ public class ResourceModelRenderer implements BlockRenderer {
         }
     }
 
-    private ExtendedBlock<?> getRotationRelativeBlock(Direction direction){
+    private ExtendedBlock getRotationRelativeBlock(Direction direction){
         return getRotationRelativeBlock(direction.toVector());
     }
 
-    private ExtendedBlock<?> getRotationRelativeBlock(Vector3i direction){
+    private ExtendedBlock getRotationRelativeBlock(Vector3i direction){
         return getRotationRelativeBlock(
                 direction.getX(),
                 direction.getY(),
@@ -363,7 +363,7 @@ public class ResourceModelRenderer implements BlockRenderer {
     }
 
     private final VectorM3f rotationRelativeBlockDirection = new VectorM3f(0, 0, 0);
-    private ExtendedBlock<?> getRotationRelativeBlock(int dx, int dy, int dz){
+    private ExtendedBlock getRotationRelativeBlock(int dx, int dy, int dz){
         rotationRelativeBlockDirection.set(dx, dy, dz);
         makeRotationRelative(rotationRelativeBlockDirection);
 

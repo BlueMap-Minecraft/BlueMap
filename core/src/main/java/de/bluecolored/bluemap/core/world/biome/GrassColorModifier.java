@@ -28,17 +28,17 @@ import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.Keyed;
 import de.bluecolored.bluemap.core.util.Registry;
 import de.bluecolored.bluemap.core.util.math.Color;
-import de.bluecolored.bluemap.core.world.block.Block;
+import de.bluecolored.bluemap.core.world.block.BlockAccess;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 public interface GrassColorModifier extends Keyed, ColorModifier {
 
-    GrassColorModifier NONE = new Impl(Key.minecraft("none"), (Block<?> block, Color color) -> {});
-    GrassColorModifier DARK_FOREST = new Impl(Key.minecraft("dark_forest"), (Block<?> block, Color color) ->
+    GrassColorModifier NONE = new Impl(Key.minecraft("none"), (BlockAccess block, Color color) -> {});
+    GrassColorModifier DARK_FOREST = new Impl(Key.minecraft("dark_forest"), (BlockAccess block, Color color) ->
             color.set(((color.getInt() & 0xfefefe) + 0x28340a >> 1) | 0xff000000, true)
     );
-    GrassColorModifier SWAMP = new Impl(Key.minecraft("swamp"), (Block<?> block, Color color) -> {
+    GrassColorModifier SWAMP = new Impl(Key.minecraft("swamp"), (BlockAccess block, Color color) -> {
         color.set(0xff6a7039, true);
 
         /* Vanilla code with noise:
@@ -63,7 +63,7 @@ public interface GrassColorModifier extends Keyed, ColorModifier {
         private final ColorModifier modifier;
 
         @Override
-        public void apply(Block<?> block, Color color) {
+        public void apply(BlockAccess block, Color color) {
             modifier.apply(block, color);
         }
 

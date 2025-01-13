@@ -56,7 +56,7 @@ public class MissingModelRenderer implements BlockRenderer {
     }
 
     @Override
-    public void render(BlockNeighborhood<?> block, Variant variant, TileModelView blockModel, Color blockColor) {
+    public void render(BlockNeighborhood block, Variant variant, TileModelView blockModel, Color blockColor) {
         blockRenderers.get(BLOCK_RENDERER_TYPES.get(block.getBlockState()))
                 .render(block, variant, blockModel, blockColor);
     }
