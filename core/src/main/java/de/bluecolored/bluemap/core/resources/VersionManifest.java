@@ -33,7 +33,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
-import java.net.URL;
+import java.net.*;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Arrays;
@@ -47,6 +47,8 @@ public class VersionManifest {
 
     public static final String DOMAIN = "https://piston-meta.mojang.com/";
     public static final String MANIFEST_URL = DOMAIN + "mc/game/version_manifest.json";
+
+    private static final int CONNECTION_TIMEOUT = 10000;
 
     private static final Gson GSON = new GsonBuilder()
             .registerTypeAdapter(LocalDateTime.class, new LocalDateTimeAdapter())
@@ -71,7 +73,7 @@ public class VersionManifest {
 
     public static VersionManifest fetch() throws IOException {
         try (
-                InputStream in = new URL(MANIFEST_URL).openStream();
+                InputStream in = openInputStream(MANIFEST_URL);
                 Reader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))
         ) {
             instance = GSON.fromJson(reader, VersionManifest.class);
@@ -118,7 +120,7 @@ public class VersionManifest {
         public synchronized VersionDetail fetchDetail() throws IOException {
             if (detail == null) {
                 try (
-                        InputStream in = new URL(url).openStream();
+                        InputStream in = openInputStream(url);
                         Reader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))
                 ) {
                     detail = GSON.fromJson(reader, VersionDetail.class);
@@ -153,6 +155,23 @@ public class VersionManifest {
         private String url;
         private long size;
         private String sha1;
+
+        public InputStream createInputStream() throws IOException {
+            return openInputStream(url);
+        }
+
+    }
+
+    private static InputStream openInputStream(String urlPath) throws IOException {
+        try {
+            URL downloadUrl = new URI(urlPath).toURL();
+            URLConnection connection = downloadUrl.openConnection();
+            connection.setConnectTimeout(CONNECTION_TIMEOUT);
+            connection.setReadTimeout(CONNECTION_TIMEOUT);
+            return connection.getInputStream();
+        } catch (URISyntaxException e) {
+            throw new IOException(e);
+        }
     }
 
 }
