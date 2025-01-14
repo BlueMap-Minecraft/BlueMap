@@ -119,7 +119,7 @@ public class Chunk_1_18 extends MCAChunk {
         }
 
         // load block-entities
-        this.blockEntities = new HashMap<>();
+        this.blockEntities = new HashMap<>(data.blockEntities.length);
         for (int i = 0; i < data.blockEntities.length; i++) {
             BlockEntity be = data.blockEntities[i];
             if (be == null) continue;
