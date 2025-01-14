@@ -39,10 +39,11 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Reader;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -53,7 +54,7 @@ import java.util.Arrays;
 public class MinecraftVersion {
     private static final Gson GSON = new Gson();
 
-    private static final String LATEST_KNOWN_VERSION = "1.20.6";
+    private static final String LATEST_KNOWN_VERSION = "1.21.4";
     private static final String EARLIEST_RESOURCEPACK_VERSION = "1.13";
     private static final String EARLIEST_DATAPACK_VERSION = "1.19.4";
 
@@ -143,7 +144,7 @@ public class MinecraftVersion {
         try {
             try (
                     DigestInputStream in = new DigestInputStream(
-                            new URI(download.getUrl()).toURL().openStream(),
+                            download.createInputStream(),
                             MessageDigest.getInstance("SHA-1")
                     );
                     OutputStream out = Files.newOutputStream(unverifiedFile)
@@ -165,7 +166,7 @@ public class MinecraftVersion {
             // rename once verified
             FileHelper.atomicMove(unverifiedFile, file);
 
-        } catch (NoSuchAlgorithmException | IOException | URISyntaxException ex) {
+        } catch (NoSuchAlgorithmException | IOException ex) {
             Logger.global.logWarning("Failed to download '" + download.getUrl() + "': " + ex);
         } finally {
             Files.deleteIfExists(unverifiedFile);
