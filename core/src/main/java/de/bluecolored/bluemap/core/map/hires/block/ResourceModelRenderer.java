@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.map.hires.blockmodel;
+package de.bluecolored.bluemap.core.map.hires.block;
 
 import com.flowpowered.math.TrigMath;
 import com.flowpowered.math.vector.Vector3f;

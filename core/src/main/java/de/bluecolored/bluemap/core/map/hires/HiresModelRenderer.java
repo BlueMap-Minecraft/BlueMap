@@ -27,7 +27,7 @@ package de.bluecolored.bluemap.core.map.hires;
 import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.TileMetaConsumer;
-import de.bluecolored.bluemap.core.map.hires.blockmodel.BlockStateModelRenderer;
+import de.bluecolored.bluemap.core.map.hires.block.BlockStateModelRenderer;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.Chunk;
@@ -58,6 +58,7 @@ public class HiresModelRenderer {
         Vector3i max = modelMax.min(renderSettings.getMaxPos());
         Vector3i modelAnchor = new Vector3i(modelMin.getX(), 0, modelMin.getZ());
 
+        // render blocks
         BlockStateModelRenderer blockRenderer = threadLocalBlockRenderer.get();
 
         int maxHeight, minY, maxY;
@@ -111,5 +112,9 @@ public class HiresModelRenderer {
                 tileMetaConsumer.set(x, z, columnColor, maxHeight, (int) topBlockLight);
             }
         }
+
+        // render entities
+        world.iterateEntities(min.getX(), min.getZ(), max.getX(), max.getZ(), entity -> {});
+
     }
 }
