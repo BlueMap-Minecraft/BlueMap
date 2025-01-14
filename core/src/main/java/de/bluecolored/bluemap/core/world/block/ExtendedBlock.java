@@ -35,7 +35,7 @@ import java.util.Objects;
 
 public class ExtendedBlock implements BlockAccess {
 
-    private int x, y, z;
+    @Getter private int x, y, z;
     private BlockAccess blockAccess;
 
     @Getter private ResourcePack resourcePack;
@@ -62,11 +62,11 @@ public class ExtendedBlock implements BlockAccess {
         this.x = x;
         this.y = y;
         this.z = z;
+        this.blockAccess.set(x, y, z);
+
         this.properties = null;
         this.insideRenderBoundsCalculated = false;
         this.isCaveCalculated = false;
-
-        blockAccess.set(x, y, z);
     }
 
     @Override
@@ -84,21 +84,6 @@ public class ExtendedBlock implements BlockAccess {
         this.insideRenderBounds = extendedBlock.insideRenderBounds;
         this.isCaveCalculated = extendedBlock.isCaveCalculated;
         this.isCave = extendedBlock.isCave;
-    }
-
-    @Override
-    public int getX() {
-        return blockAccess.getX();
-    }
-
-    @Override
-    public int getY() {
-        return blockAccess.getY();
-    }
-
-    @Override
-    public int getZ() {
-        return blockAccess.getZ();
     }
 
     @Override
