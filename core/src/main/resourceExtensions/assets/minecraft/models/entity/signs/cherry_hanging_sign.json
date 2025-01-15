@@ -1,0 +1,7 @@
+{
+  "credit": "Made with Blockbench by TyBraniff for Bluemaps support.",
+  "parent": "minecraft:entity/signs/hanging_sign",
+  "textures": {
+    "wood": "minecraft:entity/signs/hanging/cherry"
+  }
+}

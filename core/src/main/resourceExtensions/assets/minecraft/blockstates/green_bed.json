@@ -1,12 +1,12 @@
 {
   "variants": {
-    "part=head,facing=north": { "model": "block/bed/green_head" },
-    "part=head,facing=east": { "model": "block/bed/green_head", "y": 90 },
-    "part=head,facing=south": { "model": "block/bed/green_head", "y": 180 },
-    "part=head,facing=west": { "model": "block/bed/green_head", "y": 270 },
-    "part=foot,facing=north": { "model": "block/bed/green_foot" },
-    "part=foot,facing=east": { "model": "block/bed/green_foot", "y": 90 },
-    "part=foot,facing=south": { "model": "block/bed/green_foot", "y": 180 },
-    "part=foot,facing=west": { "model": "block/bed/green_foot", "y": 270 }
+    "part=head,facing=north": { "model": "entity/bed/green_head" },
+    "part=head,facing=east": { "model": "entity/bed/green_head", "y": 90 },
+    "part=head,facing=south": { "model": "entity/bed/green_head", "y": 180 },
+    "part=head,facing=west": { "model": "entity/bed/green_head", "y": 270 },
+    "part=foot,facing=north": { "model": "entity/bed/green_foot" },
+    "part=foot,facing=east": { "model": "entity/bed/green_foot", "y": 90 },
+    "part=foot,facing=south": { "model": "entity/bed/green_foot", "y": 180 },
+    "part=foot,facing=west": { "model": "entity/bed/green_foot", "y": 270 }
   }
 }
