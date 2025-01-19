@@ -22,15 +22,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.resources.pack.resourcepack.blockmodel;
+package de.bluecolored.bluemap.core.resources.pack.resourcepack.model;
 
 import com.flowpowered.math.vector.Vector4f;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.Direction;
+import lombok.Getter;
 
 import java.util.function.Function;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
+@Getter
 public class Face {
 
     private static final TextureVariable DEFAULT_TEXTURE = new TextureVariable(ResourcePack.MISSING_TEXTURE);
@@ -55,26 +57,6 @@ public class Face {
     void init(Direction direction, Function<Direction, Vector4f> defaultUvCalculator, Function<Direction, Direction> defaultCullfaceCalculator) {
         if (cullface == null) cullface = defaultCullfaceCalculator.apply(direction);
         if (uv == null) uv = defaultUvCalculator.apply(direction);
-    }
-
-    public Vector4f getUv() {
-        return uv;
-    }
-
-    public TextureVariable getTexture() {
-        return texture;
-    }
-
-    public Direction getCullface() {
-        return cullface;
-    }
-
-    public int getRotation() {
-        return rotation;
-    }
-
-    public int getTintindex() {
-        return tintindex;
     }
 
     public Face copy() {

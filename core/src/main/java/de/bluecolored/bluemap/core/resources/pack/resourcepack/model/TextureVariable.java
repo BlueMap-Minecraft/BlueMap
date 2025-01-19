@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.resources.pack.resourcepack.blockmodel;
+package de.bluecolored.bluemap.core.resources.pack.resourcepack.model;
 
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
@@ -31,6 +31,8 @@ import com.google.gson.stream.JsonWriter;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
+import lombok.Getter;
+import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -40,7 +42,10 @@ import java.util.function.Function;
 @JsonAdapter(TextureVariable.Adapter.class)
 public class TextureVariable {
 
-    private String referenceName;
+    @Getter @Setter
+    private @Nullable String referenceName;
+
+    @Getter @Setter
     private ResourcePath<Texture> texturePath;
 
     private transient volatile boolean isReference, isResolving;
@@ -67,20 +72,6 @@ public class TextureVariable {
     }
 
     @Nullable
-    public String getReferenceName() {
-        return referenceName;
-    }
-
-    public void setReferenceName(String referenceName) {
-        this.referenceName = referenceName;
-    }
-
-    @Nullable
-    public ResourcePath<Texture> getTexturePath() {
-        return texturePath;
-    }
-
-    @Nullable
     public ResourcePath<Texture> getTexturePath(Function<String, TextureVariable> supplier) {
         if (this.isReference) return resolveTexturePath(supplier);
         return this.texturePath;
@@ -103,10 +94,6 @@ public class TextureVariable {
             }
             return this.texturePath;
         }
-    }
-
-    public void setTexturePath(ResourcePath<Texture> texturePath) {
-        this.texturePath = texturePath;
     }
 
     public boolean isReference() {

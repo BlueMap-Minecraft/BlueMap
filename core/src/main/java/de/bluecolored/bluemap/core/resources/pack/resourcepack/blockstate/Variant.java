@@ -28,59 +28,39 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
+import de.bluecolored.bluemap.core.map.hires.block.BlockRendererType;
 import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockmodel.BlockModel;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.math.MatrixM3f;
+import de.bluecolored.bluemap.core.util.math.MatrixM4f;
+import lombok.Getter;
 
 import java.io.IOException;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
 @JsonAdapter(Variant.Adapter.class)
+@Getter
 public class Variant {
 
-    private ResourcePath<BlockModel> model = ResourcePack.MISSING_BLOCK_MODEL;
+    private BlockRendererType renderer = BlockRendererType.DEFAULT;
+    private ResourcePath<Model> model = ResourcePack.MISSING_BLOCK_MODEL;
     private float x = 0, y = 0;
     private boolean uvlock = false;
     private double weight = 1;
 
-    private transient boolean rotated;
-    private transient MatrixM3f rotationMatrix;
+    private transient boolean transformed;
+    private transient MatrixM4f transformMatrix;
 
     private Variant(){}
 
     private void init() {
-        this.rotated = x != 0 || y != 0;
-        this.rotationMatrix = new MatrixM3f().rotate(-x, -y, 0);
-    }
-
-    public ResourcePath<BlockModel> getModel() {
-        return model;
-    }
-
-    public float getX() {
-        return x;
-    }
-
-    public float getY() {
-        return y;
-    }
-
-    public boolean isUvlock() {
-        return uvlock;
-    }
-
-    public double getWeight() {
-        return weight;
-    }
-
-    public boolean isRotated() {
-        return rotated;
-    }
-
-    public MatrixM3f getRotationMatrix() {
-        return rotationMatrix;
+        this.transformed = x != 0 || y != 0;
+        this.transformMatrix = new MatrixM4f()
+                .translate(-0.5f, -0.5f, -0.5f)
+                .rotate(-x, -y, 0)
+                .translate(0.5f, 0.5f, 0.5f);
     }
 
     static class Adapter extends AbstractTypeAdapterFactory<Variant> {

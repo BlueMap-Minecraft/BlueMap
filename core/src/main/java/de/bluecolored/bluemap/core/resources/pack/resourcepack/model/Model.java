@@ -22,62 +22,31 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.resources.pack.resourcepack.blockmodel;
+package de.bluecolored.bluemap.core.resources.pack.resourcepack.model;
 
-import de.bluecolored.bluemap.core.map.hires.block.BlockRendererType;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
+import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
-public class BlockModel {
+@Getter
+public class Model {
 
-    private BlockRendererType renderer = BlockRendererType.DEFAULT;
-
-    private ResourcePath<BlockModel> parent;
+    private @Nullable ResourcePath<Model> parent;
     private Map<String, TextureVariable> textures = new HashMap<>();
-    private Element[] elements;
+    private Element @Nullable [] elements;
     private boolean ambientocclusion = true;
 
     private transient boolean culling = false;
     private transient boolean occluding = false;
 
-    private BlockModel(){}
-
-    public BlockRendererType getRenderer() {
-        return renderer;
-    }
-
-    @Nullable
-    public ResourcePath<BlockModel> getParent() {
-        return parent;
-    }
-
-    public Map<String, TextureVariable> getTextures() {
-        return textures;
-    }
-
-    @Nullable
-    public Element[] getElements() {
-        return elements;
-    }
-
-    public boolean isAmbientocclusion() {
-        return ambientocclusion;
-    }
-
-    public boolean isCulling() {
-        return culling;
-    }
-
-    public boolean isOccluding() {
-        return occluding;
-    }
+    private Model(){}
 
     public synchronized void optimize(ResourcePack resourcePack) {
         for (var variable : this.textures.values()) {
@@ -95,10 +64,10 @@ public class BlockModel {
         if (this.parent == null) return;
 
         // set parent to null early to avoid trying to resolve reference-loops
-        ResourcePath<BlockModel> parentPath = this.parent;
+        ResourcePath<Model> parentPath = this.parent;
         this.parent = null;
 
-        BlockModel parent = parentPath.getResource(resourcePack::getBlockModel);
+        Model parent = parentPath.getResource(resourcePack::getModel);
         if (parent != null) {
             parent.applyParent(resourcePack);
 

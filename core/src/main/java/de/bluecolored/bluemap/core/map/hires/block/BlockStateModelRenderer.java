@@ -30,7 +30,6 @@ import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.map.hires.TileModelView;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockmodel.BlockModel;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.Variant;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.BlockState;
@@ -57,30 +56,30 @@ public class BlockStateModelRenderer {
     }
 
     private final Color waterloggedColor = new Color();
-    public void render(BlockNeighborhood block, BlockState blockState, TileModelView blockModel, Color blockColor) {
+    public void render(BlockNeighborhood block, BlockState blockState, TileModelView tileModel, Color blockColor) {
         blockColor.set(0, 0, 0, 0, true);
 
         //shortcut for air
         if (blockState.isAir()) return;
 
-        int modelStart = blockModel.getStart();
+        int modelStart = tileModel.getStart();
 
         // render block
-        renderModel(block, blockState, blockModel.initialize(), blockColor);
+        renderModel(block, blockState, tileModel.initialize(), blockColor);
 
         // add water if block is waterlogged
         if (blockState.isWaterlogged() || block.getProperties().isAlwaysWaterlogged()) {
             waterloggedColor.set(0f, 0f, 0f, 0f, true);
-            renderModel(block, WATERLOGGED_BLOCKSTATE, blockModel.initialize(), waterloggedColor);
+            renderModel(block, WATERLOGGED_BLOCKSTATE, tileModel.initialize(), waterloggedColor);
             blockColor.set(waterloggedColor.overlay(blockColor.premultiplied()));
         }
 
-        blockModel.initialize(modelStart);
+        tileModel.initialize(modelStart);
     }
 
     private final Color variantColor = new Color();
-    private void renderModel(BlockNeighborhood block, BlockState blockState, TileModelView blockModel, Color blockColor) {
-        int modelStart = blockModel.getStart();
+    private void renderModel(BlockNeighborhood block, BlockState blockState, TileModelView tileModel, Color blockColor) {
+        int modelStart = tileModel.getStart();
 
         var stateResource = resourcePack.getBlockState(blockState);
         if (stateResource == null) return;
@@ -91,19 +90,14 @@ public class BlockStateModelRenderer {
 
         //noinspection ForLoopReplaceableByForEach
         for (int i = 0; i < variants.size(); i++) {
-            Variant variant = variants.get(i);
-
-            BlockModel modelResource = variant.getModel().getResource(resourcePack::getBlockModel);
-            if (modelResource == null) continue;
-
             variantColor.set(0f, 0f, 0f, 0f, true);
 
-            blockRenderers.get(modelResource.getRenderer())
-                    .render(block, variant, blockModel.initialize(), variantColor);
+            Variant variant = variants.get(i);
+            blockRenderers.get(variant.getRenderer())
+                    .render(block, variant, tileModel.initialize(), variantColor);
 
             if (variantColor.a > blockColorOpacity)
                 blockColorOpacity = variantColor.a;
-
             blockColor.add(variantColor.premultiplied());
         }
 
@@ -112,7 +106,7 @@ public class BlockStateModelRenderer {
             blockColor.a = blockColorOpacity;
         }
 
-        blockModel.initialize(modelStart);
+        tileModel.initialize(modelStart);
     }
 
     private final static BlockState WATERLOGGED_BLOCKSTATE = new BlockState("minecraft:water");

@@ -30,7 +30,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import de.bluecolored.bluemap.core.map.hires.block.BlockRendererType;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockmodel.Face;
+import de.bluecolored.bluemap.core.map.hires.entity.EntityRendererType;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Face;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.math.Axis;
@@ -70,6 +71,11 @@ public class ResourcesGson {
                         BlockRendererType.REGISTRY,
                         Key.BLUEMAP_NAMESPACE,
                         BlockRendererType.DEFAULT
+                ))
+                .registerTypeAdapter(EntityRendererType.class, new RegistryAdapter<>(
+                        EntityRendererType.REGISTRY,
+                        Key.BLUEMAP_NAMESPACE,
+                        EntityRendererType.DEFAULT
                 ));
     }
 

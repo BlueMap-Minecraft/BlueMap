@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.resources.pack.resourcepack.blockmodel;
+package de.bluecolored.bluemap.core.resources.pack.resourcepack.model;
 
 import com.flowpowered.math.TrigMath;
 import com.flowpowered.math.vector.Vector3f;
@@ -34,19 +34,19 @@ import com.google.gson.stream.JsonReader;
 import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
 import de.bluecolored.bluemap.core.util.math.Axis;
 import de.bluecolored.bluemap.core.util.math.MatrixM4f;
+import lombok.Getter;
 
 import java.io.IOException;
 
 @SuppressWarnings("FieldMayBeFinal")
 @JsonAdapter(Rotation.Adapter.class)
+@Getter
 public class Rotation {
     private static final Vector3f DEFAULT_ORIGIN = new Vector3f(8, 8, 8);
     private static final double FIT_TO_BLOCK_SCALE_MULTIPLIER = 2 - Math.sqrt(2);
 
     public static final Rotation ZERO = new Rotation();
-    static {
-        ZERO.init();
-    }
+    static { ZERO.init(); }
 
     private Vector3f origin = DEFAULT_ORIGIN;
     private Axis axis = Axis.Y;
@@ -81,26 +81,6 @@ public class Rotation {
 
             matrix.translate(origin.getX(), origin.getY(), origin.getZ());
         }
-    }
-
-    public Vector3f getOrigin() {
-        return origin;
-    }
-
-    public Axis getAxis() {
-        return axis;
-    }
-
-    public double getAngle() {
-        return angle;
-    }
-
-    public boolean isRescale() {
-        return rescale;
-    }
-
-    public MatrixM4f getMatrix() {
-        return matrix;
     }
 
     static class Adapter extends AbstractTypeAdapterFactory<Rotation> {

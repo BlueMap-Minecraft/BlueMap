@@ -33,8 +33,8 @@ import de.bluecolored.bluemap.core.map.hires.TileModelView;
 import de.bluecolored.bluemap.core.resources.BlockColorCalculatorFactory;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockmodel.BlockModel;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockmodel.TextureVariable;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.TextureVariable;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.Variant;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
@@ -69,7 +69,7 @@ public class LiquidModelRenderer implements BlockRenderer {
     private BlockNeighborhood block;
     private BlockState blockState;
     private boolean isWaterlogged, isWaterLike;
-    private BlockModel modelResource;
+    private Model modelResource;
     private TileModelView blockModel;
     private Color blockColor;
 
@@ -98,9 +98,11 @@ public class LiquidModelRenderer implements BlockRenderer {
         this.blockState = block.getBlockState();
         this.isWaterlogged = blockState.isWaterlogged() || block.getProperties().isAlwaysWaterlogged();
         this.isWaterLike = blockState.isWater() || isWaterlogged;
-        this.modelResource = variant.getModel().getResource();
+        this.modelResource = variant.getModel().getResource(resourcePack::getModel);
         this.blockModel = blockModel;
         this.blockColor = color;
+
+        if (this.modelResource == null) return;
 
         build();
     }

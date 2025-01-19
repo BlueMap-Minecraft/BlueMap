@@ -35,10 +35,10 @@ import de.bluecolored.bluemap.core.map.hires.TileModelView;
 import de.bluecolored.bluemap.core.resources.BlockColorCalculatorFactory;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockmodel.BlockModel;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockmodel.Element;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockmodel.Face;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.Variant;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Element;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Face;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.util.math.Color;
@@ -70,7 +70,7 @@ public class ResourceModelRenderer implements BlockRenderer {
 
     private BlockNeighborhood block;
     private Variant variant;
-    private BlockModel modelResource;
+    private Model modelResource;
     private TileModelView blockModel;
     private Color blockColor;
     private float blockColorOpacity;
@@ -85,14 +85,15 @@ public class ResourceModelRenderer implements BlockRenderer {
         for (int i = 0; i < rawUvs.length; i++) rawUvs[i] = new VectorM2f(0, 0);
     }
 
-    private final MatrixM4f modelTransform = new MatrixM4f();
     public void render(BlockNeighborhood block, Variant variant, TileModelView blockModel, Color color) {
         this.block = block;
         this.blockModel = blockModel;
         this.blockColor = color;
         this.blockColorOpacity = 0f;
         this.variant = variant;
-        this.modelResource = variant.getModel().getResource();
+        this.modelResource = variant.getModel().getResource(resourcePack::getModel);
+
+        if (this.modelResource == null) return;
 
         this.tintColor.set(0, 0, 0, -1, true);
 
@@ -113,14 +114,9 @@ public class ResourceModelRenderer implements BlockRenderer {
 
         blockModel.initialize(modelStart);
 
-        // apply model-rotation
-        if (variant.isRotated()) {
-            blockModel.transform(modelTransform.identity()
-                    .translate(-0.5f, -0.5f, -0.5f)
-                    .multiplyTo(variant.getRotationMatrix())
-                    .translate(0.5f, 0.5f, 0.5f)
-            );
-        }
+        // apply model-transform
+        if (variant.isTransformed())
+            blockModel.transform(variant.getTransformMatrix());
 
         //random offset
         if (block.getProperties().isRandomOffset()){
@@ -258,7 +254,7 @@ public class ResourceModelRenderer implements BlockRenderer {
 
         // UV-Lock counter-rotation
         float uvRotation = 0f;
-        if (variant.isUvlock() && variant.isRotated()) {
+        if (variant.isUvlock() && variant.isTransformed()) {
             float xRotSin = TrigMath.sin(variant.getX() * TrigMath.DEG_TO_RAD);
             float xRotCos = TrigMath.cos(variant.getX() * TrigMath.DEG_TO_RAD);
 
@@ -300,8 +296,8 @@ public class ResourceModelRenderer implements BlockRenderer {
             tileModel.setColor(face1, tintColor.r, tintColor.g, tintColor.b);
             tileModel.setColor(face2, tintColor.r, tintColor.g, tintColor.b);
         } else {
-            tileModel.setColor(face1, 1, 1, 1);
-            tileModel.setColor(face2, 1, 1, 1);
+            tileModel.setColor(face1, 1f, 1f, 1f);
+            tileModel.setColor(face2, 1f, 1f, 1f);
         }
 
         // ####### blocklight
@@ -375,8 +371,8 @@ public class ResourceModelRenderer implements BlockRenderer {
     }
 
     private void makeRotationRelative(VectorM3f direction){
-        if (variant.isRotated())
-            direction.transform(variant.getRotationMatrix());
+        if (variant.isTransformed())
+            direction.rotateAndScale(variant.getTransformMatrix());
     }
 
     private float testAo(VectorM3f vertex, Direction dir){

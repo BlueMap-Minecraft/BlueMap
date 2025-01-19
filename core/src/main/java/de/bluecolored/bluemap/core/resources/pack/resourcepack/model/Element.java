@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.resources.pack.resourcepack.blockmodel;
+package de.bluecolored.bluemap.core.resources.pack.resourcepack.model;
 
 import com.flowpowered.math.vector.Vector3f;
 import com.flowpowered.math.vector.Vector4f;
@@ -33,12 +33,14 @@ import com.google.gson.stream.JsonReader;
 import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.Direction;
+import lombok.Getter;
 
 import java.io.IOException;
 import java.util.EnumMap;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
 @JsonAdapter(Element.Adapter.class)
+@Getter
 public class Element {
     private static final Vector3f FULL_BLOCK_MIN = Vector3f.ZERO;
     private static final Vector3f FULL_BLOCK_MAX = new Vector3f(16, 16, 16);
@@ -67,79 +69,31 @@ public class Element {
     }
 
     private Vector4f calculateDefaultUV(Direction face) {
-        switch (face){
-
-            case DOWN :
-            case UP :
-                return new Vector4f(
-                        from.getX(), from.getZ(),
-                        to.getX(),   to.getZ()
-                );
-
-            case NORTH :
-            case SOUTH :
-                return new Vector4f(
-                        from.getX(), from.getY(),
-                        to.getX(),   to.getY()
-                );
-
-            case WEST :
-            case EAST :
-                return new Vector4f(
-                        from.getZ(), from.getY(),
-                        to.getZ(),   to.getY()
-                );
-
-            default :
-                return new Vector4f(
-                        0, 0,
-                        16, 16
-                );
-
-        }
+        return switch (face) {
+            case DOWN, UP -> new Vector4f(
+                    from.getX(), from.getZ(),
+                    to.getX(), to.getZ()
+            );
+            case NORTH, SOUTH -> new Vector4f(
+                    from.getX(), from.getY(),
+                    to.getX(), to.getY()
+            );
+            case WEST, EAST -> new Vector4f(
+                    from.getZ(), from.getY(),
+                    to.getZ(), to.getY()
+            );
+        };
     }
 
     private Direction calculateDefaultCullface(Direction face) {
-        switch (face) {
-            case DOWN:
-                return from.getY() == 0f ? Direction.DOWN : null;
-            case UP:
-                return to.getY() == 1f ? Direction.UP : null;
-            case NORTH:
-                return from.getZ() == 0f ? Direction.NORTH : null;
-            case SOUTH:
-                return to.getZ() == 1f ? Direction.SOUTH : null;
-            case EAST:
-                return to.getX() == 1f ? Direction.EAST : null;
-            case WEST:
-                return from.getX() == 0f ? Direction.WEST : null;
-            default:
-                return null;
-        }
-    }
-
-    public Vector3f getFrom() {
-        return from;
-    }
-
-    public Vector3f getTo() {
-        return to;
-    }
-
-    public Rotation getRotation() {
-        return rotation;
-    }
-
-    public boolean isShade() {
-        return shade;
-    }
-
-    public int getLightEmission() {
-        return lightEmission;
-    }
-
-    public EnumMap<Direction, Face> getFaces() {
-        return faces;
+        return switch (face) {
+            case DOWN -> from.getY() == 0f ? Direction.DOWN : null;
+            case UP -> to.getY() == 1f ? Direction.UP : null;
+            case NORTH -> from.getZ() == 0f ? Direction.NORTH : null;
+            case SOUTH -> to.getZ() == 1f ? Direction.SOUTH : null;
+            case EAST -> to.getX() == 1f ? Direction.EAST : null;
+            case WEST -> from.getX() == 0f ? Direction.WEST : null;
+        };
     }
 
     public Element copy() {

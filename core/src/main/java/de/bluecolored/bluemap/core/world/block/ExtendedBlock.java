@@ -75,6 +75,9 @@ public class ExtendedBlock implements BlockAccess {
     }
 
     protected void copyFrom(ExtendedBlock extendedBlock) {
+        this.x = extendedBlock.x;
+        this.y = extendedBlock.y;
+        this.z = extendedBlock.z;
         this.blockAccess = extendedBlock.blockAccess;
         this.resourcePack = extendedBlock.resourcePack;
         this.renderSettings = extendedBlock.renderSettings;
