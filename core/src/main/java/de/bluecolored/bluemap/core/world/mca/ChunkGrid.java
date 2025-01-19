@@ -5,6 +5,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.util.Vector2iCache;
 import de.bluecolored.bluemap.core.util.WatchService;
 import de.bluecolored.bluemap.core.world.ChunkConsumer;
@@ -25,6 +26,9 @@ import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 public class ChunkGrid<T> {
+    private static final Grid CHUNK_GRID = new Grid(16);
+    private static final Grid REGION_GRID = new Grid(32).multiply(CHUNK_GRID);
+
     private static final Vector2iCache VECTOR_2_I_CACHE = new Vector2iCache();
 
     private final ChunkLoader<T> chunkLoader;
@@ -45,6 +49,14 @@ public class ChunkGrid<T> {
             .expireAfterAccess(1, TimeUnit.MINUTES)
             .build(this::loadChunk);
 
+    public Grid getChunkGrid() {
+        return CHUNK_GRID;
+    }
+
+    public Grid getRegionGrid() {
+        return REGION_GRID;
+    }
+
     public T getChunk(int x, int z) {
         return getChunk(VECTOR_2_I_CACHE.get(x, z));
     }
@@ -59,10 +71,6 @@ public class ChunkGrid<T> {
 
     private Region<T> getRegion(Vector2i pos) {
         return regionCache.get(pos);
-    }
-
-    public void iterateChunks(int minX, int minZ, int maxX, int maxZ, ChunkConsumer<T> chunkConsumer) {
-
     }
 
     public void preloadRegionChunks(int x, int z, Predicate<Vector2i> chunkFilter) {
@@ -81,7 +89,7 @@ public class ChunkGrid<T> {
                 }
             });
         } catch (IOException ex) {
-            Logger.global.logDebug("Unexpected exception trying to load preload region (x:" + x + ", z:" + z + "): " + ex);
+            Logger.global.logDebug("Unexpected exception trying to load preload region ('%s' -> x:%d, z:%d): %s".formatted(regionFolder, x, z, ex));
         }
     }
 
@@ -101,7 +109,7 @@ public class ChunkGrid<T> {
                     .filter(Objects::nonNull)
                     .toList();
         } catch (IOException ex) {
-            Logger.global.logError("Failed to list regions for folder: '" + regionFolder + "'", ex);
+            Logger.global.logError("Failed to list regions from: '%s'".formatted(regionFolder), ex);
             return List.of();
         }
     }
@@ -158,7 +166,7 @@ public class ChunkGrid<T> {
             }
         }
 
-        Logger.global.logDebug("Unexpected exception trying to load chunk (x:" + x + ", z:" + z + "): " + loadException);
+        Logger.global.logDebug("Unexpected exception trying to load chunk ('%s' -> x:%d, z:%d): %s".formatted(regionFolder, x, z, loadException));
         return chunkLoader.erroredChunk();
     }
 

@@ -63,9 +63,6 @@ import java.util.stream.Stream;
 @ToString
 public class MCAWorld implements World {
 
-    private static final Grid CHUNK_GRID = new Grid(16);
-    private static final Grid REGION_GRID = new Grid(32).multiply(CHUNK_GRID);
-
     private final String id;
     private final Path worldFolder;
     private final Key dimension;
@@ -116,12 +113,12 @@ public class MCAWorld implements World {
 
     @Override
     public Grid getChunkGrid() {
-        return CHUNK_GRID;
+        return blockChunkGrid.getChunkGrid();
     }
 
     @Override
     public Grid getRegionGrid() {
-        return REGION_GRID;
+        return blockChunkGrid.getRegionGrid();
     }
 
     @Override
