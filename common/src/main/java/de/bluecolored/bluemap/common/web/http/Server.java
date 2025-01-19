@@ -55,7 +55,7 @@ public abstract class Server extends Thread implements Closeable, Runnable {
         this.server.add(server);
 
         if (checkIfBoundToAllInterfaces(address)) {
-            Logger.global.logInfo("WebServer bound to all network interfaces on port " + ((InetSocketAddress) address).getPort());
+            Logger.global.logInfo("WebServer bound to all network interfaces on port " + ((InetSocketAddress) server.getLocalAddress()).getPort());
         } else {
             Logger.global.logInfo("WebServer bound to: " + server.getLocalAddress());
         }
