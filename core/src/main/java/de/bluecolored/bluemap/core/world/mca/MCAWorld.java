@@ -66,8 +66,6 @@ public class MCAWorld implements World {
     private static final Grid CHUNK_GRID = new Grid(16);
     private static final Grid REGION_GRID = new Grid(32).multiply(CHUNK_GRID);
 
-    private static final Vector2iCache VECTOR_2_I_CACHE = new Vector2iCache();
-
     private final String id;
     private final Path worldFolder;
     private final Key dimension;
@@ -77,23 +75,8 @@ public class MCAWorld implements World {
     private final DimensionType dimensionType;
     private final Vector3i spawnPoint;
     private final Path dimensionFolder;
-    private final Path regionFolder;
 
-    private final MCAChunkLoader chunkLoader = new MCAChunkLoader(this);
-    private final LoadingCache<Vector2i, Region<Chunk>> regionCache = Caffeine.newBuilder()
-            .executor(BlueMap.THREAD_POOL)
-            .softValues()
-            .maximumSize(32)
-            .expireAfterWrite(10, TimeUnit.MINUTES)
-            .expireAfterAccess(1, TimeUnit.MINUTES)
-            .build(this::loadRegion);
-    private final LoadingCache<Vector2i, Chunk> chunkCache = Caffeine.newBuilder()
-            .executor(BlueMap.THREAD_POOL)
-            .softValues()
-            .maximumSize(10240) // 10 regions worth of chunks
-            .expireAfterWrite(10, TimeUnit.MINUTES)
-            .expireAfterAccess(1, TimeUnit.MINUTES)
-            .build(this::loadChunk);
+    private final ChunkGrid<Chunk> blockChunkGrid;
 
     private MCAWorld(Path worldFolder, Key dimension, DataPack dataPack, LevelData levelData) {
         this.id = World.id(worldFolder, dimension);
@@ -121,7 +104,9 @@ public class MCAWorld implements World {
                 levelData.getData().getSpawnZ()
         );
         this.dimensionFolder = resolveDimensionFolder(worldFolder, dimension);
-        this.regionFolder = dimensionFolder.resolve("region");
+
+        this.blockChunkGrid = new ChunkGrid<>(new MCAChunkLoader(this), dimensionFolder.resolve("region"));
+
     }
 
     @Override
@@ -146,127 +131,42 @@ public class MCAWorld implements World {
 
     @Override
     public Chunk getChunk(int x, int z) {
-        return getChunk(VECTOR_2_I_CACHE.get(x, z));
-    }
-
-    private Chunk getChunk(Vector2i pos) {
-        return chunkCache.get(pos);
+        return blockChunkGrid.getChunk(x, z);
     }
 
     @Override
     public Region<Chunk> getRegion(int x, int z) {
-        return getRegion(VECTOR_2_I_CACHE.get(x, z));
-    }
-
-    private Region<Chunk> getRegion(Vector2i pos) {
-        return regionCache.get(pos);
+        return blockChunkGrid.getRegion(x, z);
     }
 
     @Override
     public Collection<Vector2i> listRegions() {
-        if (!Files.exists(regionFolder)) return Collections.emptyList();
-        try (Stream<Path> stream = Files.list(regionFolder)) {
-            return stream
-                    .map(file -> {
-                        try {
-                            if (Files.size(file) <= 0) return null;
-                            return RegionType.regionForFileName(file.getFileName().toString());
-                        } catch (IOException ex) {
-                            Logger.global.logError("Failed to read region-file: " + file, ex);
-                            return null;
-                        }
-                    })
-                    .filter(Objects::nonNull)
-                    .toList();
-        } catch (IOException ex) {
-            Logger.global.logError("Failed to list regions for world: '" + getId() + "'", ex);
-            return List.of();
-        }
+        return blockChunkGrid.listRegions();
     }
 
     @Override
     public WatchService<Vector2i> createRegionWatchService() throws IOException {
-        return new MCAWorldRegionWatchService(this.regionFolder);
+        return blockChunkGrid.createRegionWatchService();
     }
 
     @Override
     public void preloadRegionChunks(int x, int z, Predicate<Vector2i> chunkFilter) {
-        try {
-            getRegion(x, z).iterateAllChunks(new ChunkConsumer<>() {
-                @Override
-                public boolean filter(int chunkX, int chunkZ, int lastModified) {
-                    Vector2i chunkPos = VECTOR_2_I_CACHE.get(chunkX, chunkZ);
-                    return chunkFilter.test(chunkPos);
-                }
-
-                @Override
-                public void accept(int chunkX, int chunkZ, Chunk chunk) {
-                    Vector2i chunkPos = VECTOR_2_I_CACHE.get(chunkX, chunkZ);
-                    chunkCache.put(chunkPos, chunk);
-                }
-            });
-        } catch (IOException ex) {
-            Logger.global.logDebug("Unexpected exception trying to load preload region (x:" + x + ", z:" + z + "): " + ex);
-        }
+        blockChunkGrid.preloadRegionChunks(x, z, chunkFilter);
     }
 
     @Override
     public void invalidateChunkCache() {
-        regionCache.invalidateAll();
-        chunkCache.invalidateAll();
+        blockChunkGrid.invalidateChunkCache();
     }
 
     @Override
     public void invalidateChunkCache(int x, int z) {
-        regionCache.invalidate(VECTOR_2_I_CACHE.get(x >> 5, z >> 5));
-        chunkCache.invalidate(VECTOR_2_I_CACHE.get(x, z));
+        blockChunkGrid.invalidateChunkCache(x, z);
     }
 
     @Override
     public void iterateEntities(int minX, int minZ, int maxX, int maxZ, Consumer<Entity> entityConsumer) {
         //TODO
-    }
-
-    private Region<Chunk> loadRegion(Vector2i regionPos) {
-        return loadRegion(regionPos.getX(), regionPos.getY());
-    }
-
-    private Region<Chunk> loadRegion(int x, int z) {
-        return RegionType.loadRegion(chunkLoader, getRegionFolder(), x, z);
-    }
-
-    private Chunk loadChunk(Vector2i chunkPos) {
-        return loadChunk(chunkPos.getX(), chunkPos.getY());
-    }
-
-    private Chunk loadChunk(int x, int z) {
-        final int tries = 3;
-        final int tryInterval = 1000;
-
-        Exception loadException = null;
-        for (int i = 0; i < tries; i++) {
-            try {
-                return getRegion(x >> 5, z >> 5)
-                        .loadChunk(x, z);
-            } catch (IOException | RuntimeException e) {
-                if (loadException != null && loadException != e)
-                    e.addSuppressed(loadException);
-
-                loadException = e;
-
-                if (i + 1 < tries) {
-                    try {
-                        Thread.sleep(tryInterval);
-                    } catch (InterruptedException ex) {
-                        Thread.currentThread().interrupt();
-                        break;
-                    }
-                }
-            }
-        }
-
-        Logger.global.logDebug("Unexpected exception trying to load chunk (x:" + x + ", z:" + z + "): " + loadException);
-        return Chunk.ERRORED_CHUNK;
     }
 
     public static MCAWorld load(Path worldFolder, Key dimension, DataPack dataPack) throws IOException, InterruptedException {

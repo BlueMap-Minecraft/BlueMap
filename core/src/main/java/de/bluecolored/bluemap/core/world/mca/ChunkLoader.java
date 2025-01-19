@@ -34,4 +34,6 @@ public interface ChunkLoader<T> {
 
     T emptyChunk();
 
+    T erroredChunk();
+
 }
