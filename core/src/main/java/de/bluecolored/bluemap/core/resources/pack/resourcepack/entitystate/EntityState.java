@@ -24,15 +24,7 @@
  */
 package de.bluecolored.bluemap.core.resources.pack.resourcepack.entitystate;
 
-import de.bluecolored.bluemap.core.resources.ResourcePath;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.Multipart;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.Variant;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.Variants;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model;
 import lombok.Getter;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.function.Consumer;
 
 @SuppressWarnings("FieldMayBeFinal")
 @Getter
