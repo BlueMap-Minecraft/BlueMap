@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.core.world.mca;
 
 import com.flowpowered.math.vector.Vector2i;
+import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.pack.datapack.DataPack;
@@ -143,16 +144,19 @@ public class MCAWorld implements World {
     @Override
     public void preloadRegionChunks(int x, int z, Predicate<Vector2i> chunkFilter) {
         blockChunkGrid.preloadRegionChunks(x, z, chunkFilter);
+        entityChunkGrid.preloadRegionChunks(x, z, chunkFilter);
     }
 
     @Override
     public void invalidateChunkCache() {
         blockChunkGrid.invalidateChunkCache();
+        entityChunkGrid.invalidateChunkCache();
     }
 
     @Override
     public void invalidateChunkCache(int x, int z) {
         blockChunkGrid.invalidateChunkCache(x, z);
+        entityChunkGrid.invalidateChunkCache(x, z);
     }
 
     @Override
@@ -165,7 +169,17 @@ public class MCAWorld implements World {
                 Entity[] entities = entityChunkGrid.getChunk(x, z).getEntities();
                 //noinspection ForLoopReplaceableByForEach
                 for (int i = 0; i < entities.length; i++) {
-                    entityConsumer.accept(entities[i]);
+                    Entity entity = entities[i];
+                    Vector3d pos = entity.getPos();
+                    int pX = pos.getFloorX();
+                    int pZ = pos.getFloorZ();
+
+                    if (
+                            pX >= minX && pX <= maxX &&
+                            pZ >= minZ && pZ <= maxZ
+                    ) {
+                        entityConsumer.accept(entities[i]);
+                    }
                 }
             }
         }
