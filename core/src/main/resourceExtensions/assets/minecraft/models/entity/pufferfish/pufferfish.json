@@ -1,0 +1,131 @@
+{
+  "credit": "Model by Miraculixx",
+  "texture_size": [32, 32],
+  "textures": {
+    "0": "entity/fish/pufferfish"
+  },
+  "elements": [
+    {
+      "name": "body",
+      "from": [6.5, 0, 6.5],
+      "to": [9.5, 2, 9.5],
+      "rotation": {"angle": 0, "axis": "y", "origin": [8, 0, 8]},
+      "faces": {
+        "north": {"uv": [1.5, 15, 3, 16], "texture": "#0"},
+        "east": {"uv": [0, 15, 1.5, 16], "texture": "#0"},
+        "south": {"uv": [4.5, 15, 6, 16], "texture": "#0"},
+        "west": {"uv": [3, 15, 4.5, 16], "texture": "#0"},
+        "up": {"uv": [3, 15, 1.5, 13.5], "texture": "#0"},
+        "down": {"uv": [4.5, 13.5, 3, 15], "texture": "#0"}
+      }
+    },
+    {
+      "name": "tail",
+      "from": [6.5, 1, 9.5],
+      "to": [9.5, 1, 12.5],
+      "rotation": {"angle": 0, "axis": "y", "origin": [8, 0, 8]},
+      "faces": {
+        "north": {"uv": [0, 1.5, 1.5, 1.5], "texture": "#0"},
+        "east": {"uv": [-1.5, 1.5, 0, 1.5], "texture": "#0"},
+        "south": {"uv": [3, 1.5, 4.5, 1.5], "texture": "#0"},
+        "west": {"uv": [1.5, 1.5, 3, 1.5], "texture": "#0"},
+        "up": {"uv": [1.5, 1.5, 0, 0], "texture": "#0"},
+        "down": {"uv": [0, 0, 1.5, 1.5], "texture": "#0"}
+      }
+    },
+    {
+      "name": "fin_right",
+      "from": [9.5, 1, 6.51],
+      "to": [10.5, 1, 8.51],
+      "rotation": {"angle": 0, "axis": "y", "origin": [8, 0, 8]},
+      "faces": {
+        "north": {"uv": [13.5, 1, 14, 1], "texture": "#0"},
+        "east": {"uv": [12.5, 1, 13.5, 1], "texture": "#0"},
+        "south": {"uv": [15, 1, 15.5, 1], "texture": "#0"},
+        "west": {"uv": [14, 1, 15, 1], "texture": "#0"},
+        "up": {"uv": [14, 1, 13.5, 0], "texture": "#0"},
+        "down": {"uv": [13, 0, 13.5, 1], "texture": "#0"}
+      }
+    },
+    {
+      "name": "fin_left",
+      "from": [5.5, 1, 6.51],
+      "to": [6.5, 1, 8.51],
+      "rotation": {"angle": 0, "axis": "y", "origin": [8, 0, 8]},
+      "faces": {
+        "north": {"uv": [13.5, 1, 14, 1], "texture": "#0"},
+        "east": {"uv": [12.5, 1, 13.5, 1], "texture": "#0"},
+        "south": {"uv": [15, 1, 15.5, 1], "texture": "#0"},
+        "west": {"uv": [14, 1, 15, 1], "texture": "#0"},
+        "up": {"uv": [14, 1, 13.5, 0], "texture": "#0"},
+        "down": {"uv": [13.5, 0, 13, 1], "texture": "#0"}
+      }
+    },
+    {
+      "name": "eye_right",
+      "from": [6.5, 2, 6.5],
+      "to": [7.5, 3, 7.5],
+      "rotation": {"angle": 0, "axis": "y", "origin": [8, 0, 8]},
+      "faces": {
+        "north": {"uv": [14.5, 3.5, 15, 4], "texture": "#0"},
+        "east": {"uv": [14, 3.5, 14.5, 4], "texture": "#0"},
+        "south": {"uv": [15.5, 3.5, 16, 4], "texture": "#0"},
+        "west": {"uv": [15, 3.5, 15.5, 4], "texture": "#0"},
+        "up": {"uv": [15, 3.5, 14.5, 3], "texture": "#0"},
+        "down": {"uv": [15.5, 3, 15, 3.5], "texture": "#0"}
+      }
+    },
+    {
+      "name": "eye_left",
+      "from": [8.5, 2, 6.5],
+      "to": [9.5, 3, 7.5],
+      "rotation": {"angle": 0, "axis": "y", "origin": [8, 0, 8]},
+      "faces": {
+        "north": {"uv": [12.5, 3.5, 13, 4], "texture": "#0"},
+        "east": {"uv": [12, 3.5, 12.5, 4], "texture": "#0"},
+        "south": {"uv": [13.5, 3.5, 14, 4], "texture": "#0"},
+        "west": {"uv": [13, 3.5, 13.5, 4], "texture": "#0"},
+        "up": {"uv": [13, 3.5, 12.5, 3], "texture": "#0"},
+        "down": {"uv": [13.5, 3, 13, 3.5], "texture": "#0"}
+      }
+    }
+  ],
+  "groups": [
+    {
+      "name": "body",
+      "origin": [8, 0, 8],
+      "color": 0,
+      "children": [0]
+    },
+    {
+      "name": "tail",
+      "origin": [8, 1, 9.5],
+      "color": 0,
+      "children": [1]
+    },
+    {
+      "name": "fin_right",
+      "origin": [9.5, 1, 6.5],
+      "color": 0,
+      "children": [2]
+    },
+    {
+      "name": "fin_left",
+      "origin": [6.5, 1, 6.5],
+      "color": 0,
+      "children": [3]
+    },
+    {
+      "name": "eye_right",
+      "origin": [8, 3, 8],
+      "color": 0,
+      "children": [4]
+    },
+    {
+      "name": "eye_left",
+      "origin": [8, 3, 8],
+      "color": 0,
+      "children": [5]
+    }
+  ]
+}
