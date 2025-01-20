@@ -23,12 +23,13 @@ public class EntityModelRenderer {
     }
 
     public void render(Entity entity, BlockNeighborhood block, TileModelView tileModel) {
-        int modelStart = tileModel.getStart();
-
         EntityState stateResource = resourcePack.getEntityState(entity.getId());
         if (stateResource == null) return;
 
         Part[] parts = stateResource.getParts();
+        if (parts.length == 0) return;
+
+        int modelStart = tileModel.getStart();
 
         //noinspection ForLoopReplaceableByForEach
         for (int i = 0; i < parts.length; i++) {
@@ -38,6 +39,9 @@ public class EntityModelRenderer {
         }
 
         tileModel.initialize(modelStart);
+
+        // apply entity rotation
+        tileModel.rotate(entity.getRotation().getY(), entity.getRotation().getX(), 0f);
     }
 
 }

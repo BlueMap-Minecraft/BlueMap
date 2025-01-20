@@ -32,9 +32,6 @@ tasks.shadowJar {
     // airlift
     relocate ("io.airlift", "de.bluecolored.shadow.airlift")
 
-    // bluenbt
-    relocate ("de.bluecolored.bluenbt", "de.bluecolored.shadow.bluenbt")
-
     // brigadier
     relocate ("com.mojang.brigadier", "de.bluecolored.shadow.brigadier")
 

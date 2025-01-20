@@ -26,21 +26,18 @@ package de.bluecolored.bluemap.core.world.mca;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3i;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.LoadingCache;
-import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.pack.datapack.DataPack;
 import de.bluecolored.bluemap.core.storage.compression.Compression;
 import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.util.Key;
-import de.bluecolored.bluemap.core.util.Vector2iCache;
 import de.bluecolored.bluemap.core.util.WatchService;
 import de.bluecolored.bluemap.core.world.*;
 import de.bluecolored.bluemap.core.world.mca.chunk.MCAChunkLoader;
 import de.bluecolored.bluemap.core.world.mca.data.DimensionTypeDeserializer;
 import de.bluecolored.bluemap.core.world.mca.data.LevelData;
-import de.bluecolored.bluemap.core.world.mca.region.RegionType;
+import de.bluecolored.bluemap.core.world.mca.entity.chunk.MCAEntityChunk;
+import de.bluecolored.bluemap.core.world.mca.entity.chunk.MCAEntityChunkLoader;
 import de.bluecolored.bluenbt.BlueNBT;
 import de.bluecolored.bluenbt.TypeToken;
 import lombok.Getter;
@@ -51,13 +48,8 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 @Getter
 @ToString
@@ -74,6 +66,7 @@ public class MCAWorld implements World {
     private final Path dimensionFolder;
 
     private final ChunkGrid<Chunk> blockChunkGrid;
+    private final ChunkGrid<MCAEntityChunk> entityChunkGrid;
 
     private MCAWorld(Path worldFolder, Key dimension, DataPack dataPack, LevelData levelData) {
         this.id = World.id(worldFolder, dimension);
@@ -103,6 +96,7 @@ public class MCAWorld implements World {
         this.dimensionFolder = resolveDimensionFolder(worldFolder, dimension);
 
         this.blockChunkGrid = new ChunkGrid<>(new MCAChunkLoader(this), dimensionFolder.resolve("region"));
+        this.entityChunkGrid = new ChunkGrid<>(new MCAEntityChunkLoader(), dimensionFolder.resolve("entities"));
 
     }
 
@@ -163,7 +157,18 @@ public class MCAWorld implements World {
 
     @Override
     public void iterateEntities(int minX, int minZ, int maxX, int maxZ, Consumer<Entity> entityConsumer) {
-        //TODO
+        int minChunkX = minX >> 4, minChunkZ = minZ >> 4;
+        int maxChunkX = maxX >> 4, maxChunkZ = maxZ >> 4;
+
+        for (int x = minChunkX; x <= maxChunkX; x++) {
+            for (int z = minChunkZ; z <= maxChunkZ; z++) {
+                Entity[] entities = entityChunkGrid.getChunk(x, z).getEntities();
+                //noinspection ForLoopReplaceableByForEach
+                for (int i = 0; i < entities.length; i++) {
+                    entityConsumer.accept(entities[i]);
+                }
+            }
+        }
     }
 
     public static MCAWorld load(Path worldFolder, Key dimension, DataPack dataPack) throws IOException, InterruptedException {

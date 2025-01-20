@@ -28,9 +28,6 @@ tasks.shadowJar {
     // brigadier
     relocate ("com.mojang.brigadier", "de.bluecolored.shadow.brigadier")
 
-    // bluenbt
-    relocate ("de.bluecolored.bluenbt", "de.bluecolored.shadow.bluenbt")
-
     // caffeine
     relocate ("com.github.benmanes.caffeine", "de.bluecolored.shadow.caffeine")
     relocate ("org.checkerframework", "de.bluecolored.shadow.checkerframework")

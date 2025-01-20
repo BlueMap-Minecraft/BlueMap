@@ -125,7 +125,12 @@ public class HiresModelRenderer {
         world.iterateEntities(min.getX(), min.getZ(), max.getX(), max.getZ(), entity -> {
             Vector3d pos = entity.getPos();
             block.set(pos.getFloorX(), pos.getFloorY(), pos.getFloorZ());
-            entityRenderer.render(entity, block, tileModelView);
+            entityRenderer.render(entity, block, tileModelView.initialize());
+            tileModelView.translate(
+                    (float) pos.getX() - modelAnchor.getX(),
+                    (float) pos.getY() - modelAnchor.getY(),
+                    (float) pos.getZ() - modelAnchor.getZ()
+            );
         });
 
     }

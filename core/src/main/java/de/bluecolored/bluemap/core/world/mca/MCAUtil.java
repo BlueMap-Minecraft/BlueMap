@@ -24,6 +24,8 @@
  */
 package de.bluecolored.bluemap.core.world.mca;
 
+import com.flowpowered.math.vector.Vector2f;
+import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3d;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.BlockState;
@@ -51,6 +53,8 @@ public class MCAUtil {
         nbt.register(TypeToken.of(Key.class), new KeyDeserializer());
         nbt.register(TypeToken.of(UUID.class), new UUIDDeserializer());
         nbt.register(TypeToken.of(Vector3d.class), new Vector3dDeserializer());
+        nbt.register(TypeToken.of(Vector2i.class), new Vector2iDeserializer());
+        nbt.register(TypeToken.of(Vector2f.class), new Vector2fDeserializer());
 
         nbt.register(TypeToken.of(BlockEntity.class), new BlockEntityTypeResolver());
         nbt.register(TypeToken.of(SignBlockEntity.class), new SignBlockEntityTypeResolver());

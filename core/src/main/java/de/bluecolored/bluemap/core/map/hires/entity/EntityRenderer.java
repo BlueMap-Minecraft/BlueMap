@@ -35,11 +35,10 @@ import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 public interface EntityRenderer {
 
     /**
-     * Renders the given entities part into the given model, and sets the given blockColor to the
-     * color that represents the rendered block.
+     * Renders the given entities part into the given model.
      * <p>
      *  <b>Implementation Note:</b><br>
-     *  This method is guaranteed to be called only on <b>one thread per BlockRenderer instance</b>, so you can use this
+     *  This method is guaranteed to be called only on <b>one thread per EntityRenderer instance</b>, so you can use this
      *  for optimizations.<br>
      *  Keep in mind this method will be called once for every block that is being rendered, so be very careful
      *  about performance and instance-creations.
