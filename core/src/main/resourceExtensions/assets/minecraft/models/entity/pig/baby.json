@@ -2,14 +2,14 @@
   "credit": "Model by Miraculixx",
   "texture_size": [64, 32],
   "textures": {
-    "0": "entity    "
+    "0": "entity/pig/pig"
   },
   "elements": [
     {
       "name": "body",
-      "from": [5.5, 3, 7],
-      "to": [10.5, 7, 15],
-      "rotation": {"angle": 0, "axis": "x", "origin": [8.5, -4, 12]},
+      "from": [-2.5, 3, -4],
+      "to": [2.5, 7, 4],
+      "rotation": {"angle": 0, "axis": "x", "origin": [0.5, -4, 1]},
       "faces": {
         "north": {"uv": [9, 4, 11.5, 8], "texture": "#0"},
         "east": {"uv": [7, 8, 9, 16], "rotation": 90, "texture": "#0"},
@@ -21,9 +21,9 @@
     },
     {
       "name": "head",
-      "from": [4, 4, 1],
-      "to": [12, 12, 9],
-      "rotation": {"angle": 0, "axis": "y", "origin": [8, -4, 15]},
+      "from": [-4, 4, -10],
+      "to": [4, 12, -2],
+      "rotation": {"angle": 0, "axis": "y", "origin": [0, -4, 4]},
       "faces": {
         "north": {"uv": [2, 4, 4, 8], "texture": "#0"},
         "east": {"uv": [0, 4, 2, 8], "texture": "#0"},
@@ -35,9 +35,9 @@
     },
     {
       "name": "head",
-      "from": [6, 5, 0],
-      "to": [10, 8, 1],
-      "rotation": {"angle": 0, "axis": "y", "origin": [8, -4, 15]},
+      "from": [-2, 5, -11],
+      "to": [2, 8, -10],
+      "rotation": {"angle": 0, "axis": "y", "origin": [0, -4, 4]},
       "faces": {
         "north": {"uv": [4.25, 8.5, 5.25, 10], "texture": "#0"},
         "east": {"uv": [4, 8.5, 4.25, 10], "texture": "#0"},
@@ -49,9 +49,9 @@
     },
     {
       "name": "leg1",
-      "from": [8.5, 0, 13.5],
-      "to": [10.5, 3, 15.5],
-      "rotation": {"angle": 0, "axis": "y", "origin": [7.5, 0, 8.5]},
+      "from": [0.5, 0, 2.5],
+      "to": [2.5, 3, 4.5],
+      "rotation": {"angle": 0, "axis": "y", "origin": [-0.5, 0, -2.5]},
       "faces": {
         "north": {"uv": [1, 10, 2, 13], "texture": "#0"},
         "east": {"uv": [0, 10, 1, 13], "texture": "#0"},
@@ -63,9 +63,9 @@
     },
     {
       "name": "leg2",
-      "from": [5.5, 0, 13.5],
-      "to": [7.5, 3, 15.5],
-      "rotation": {"angle": 0, "axis": "y", "origin": [10.5, 0, 8.5]},
+      "from": [-2.5, 0, 2.5],
+      "to": [-0.5, 3, 4.5],
+      "rotation": {"angle": 0, "axis": "y", "origin": [2.5, 0, -2.5]},
       "faces": {
         "north": {"uv": [1, 10, 2, 13], "texture": "#0"},
         "east": {"uv": [0, 10, 1, 13], "texture": "#0"},
@@ -77,9 +77,9 @@
     },
     {
       "name": "leg3",
-      "from": [8.5, 0, 7.5],
-      "to": [10.5, 3, 9.5],
-      "rotation": {"angle": 0, "axis": "y", "origin": [7.5, 0, 14.5]},
+      "from": [0.5, 0, -3.5],
+      "to": [2.5, 3, -1.5],
+      "rotation": {"angle": 0, "axis": "y", "origin": [-0.5, 0, 3.5]},
       "faces": {
         "north": {"uv": [1, 10, 2, 13], "texture": "#0"},
         "east": {"uv": [0, 10, 1, 13], "texture": "#0"},
@@ -91,9 +91,9 @@
     },
     {
       "name": "leg4",
-      "from": [5.5, 0, 7.5],
-      "to": [7.5, 3, 9.5],
-      "rotation": {"angle": 0, "axis": "y", "origin": [10.5, 0, 14.5]},
+      "from": [-2.5, 0, -3.5],
+      "to": [-0.5, 3, -1.5],
+      "rotation": {"angle": 0, "axis": "y", "origin": [2.5, 0, 3.5]},
       "faces": {
         "north": {"uv": [1, 10, 2, 13], "texture": "#0"},
         "east": {"uv": [0, 10, 1, 13], "texture": "#0"},

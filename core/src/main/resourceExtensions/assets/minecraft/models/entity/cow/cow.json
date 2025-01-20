@@ -8,9 +8,9 @@
   "elements": [
     {
       "name": "head",
-      "from": [4, 16, -6],
-      "to": [12, 24, 0],
-      "rotation": {"angle": 0, "axis": "x", "origin": [10, 22, -6]},
+      "from": [-2, 16, -14],
+      "to": [6, 24, -8],
+      "rotation": {"angle": 0, "axis": "x", "origin": [4, 22, -14]},
       "faces": {
         "north": {"uv": [1.5, 3, 3.5, 7], "texture": "#body"},
         "east": {"uv": [0, 3, 1.5, 7], "texture": "#body"},
@@ -22,9 +22,9 @@
     },
     {
       "name": "body",
-      "from": [2, 12, 0],
-      "to": [14, 22, 18],
-      "rotation": {"angle": 0, "axis": "y", "origin": [2, 12, 0]},
+      "from": [-4, 12, -8],
+      "to": [8, 22, 10],
+      "rotation": {"angle": 0, "axis": "y", "origin": [-4, 12, -8]},
       "faces": {
         "north": {"uv": [7, 2, 10, 7], "texture": "#body"},
         "east": {"uv": [4.5, 7, 7, 16], "rotation": 90, "texture": "#body"},
@@ -36,9 +36,9 @@
     },
     {
       "name": "horn_right",
-      "from": [12, 22, -4],
-      "to": [13, 25, -3],
-      "rotation": {"angle": 0, "axis": "y", "origin": [14, 22, -5]},
+      "from": [6, 22, -12],
+      "to": [7, 25, -11],
+      "rotation": {"angle": 0, "axis": "y", "origin": [8, 22, -13]},
       "faces": {
         "north": {"uv": [6.25, 0.5, 6.5, 2], "texture": "#body"},
         "east": {"uv": [6, 0.5, 6.25, 2], "texture": "#body"},
@@ -50,9 +50,9 @@
     },
     {
       "name": "horn_left",
-      "from": [3, 22, -4],
-      "to": [4, 25, -3],
-      "rotation": {"angle": 0, "axis": "x", "origin": [2, 22, -5]},
+      "from": [-3, 22, -12],
+      "to": [-2, 25, -11],
+      "rotation": {"angle": 0, "axis": "x", "origin": [-4, 22, -13]},
       "faces": {
         "north": {"uv": [6.5, 0.5, 6.25, 2], "texture": "#body"},
         "east": {"uv": [5.75, 0.5, 5.5, 2], "texture": "#body"},
@@ -64,9 +64,9 @@
     },
     {
       "name": "leg_front_right",
-      "from": [10, 0, 0],
-      "to": [14, 12, 4],
-      "rotation": {"angle": 0, "axis": "y", "origin": [12, 0, 2]},
+      "from": [4, 0, -8],
+      "to": [8, 12, -4],
+      "rotation": {"angle": 0, "axis": "y", "origin": [6, 0, -6]},
       "faces": {
         "north": {"uv": [1, 10, 2, 16], "texture": "#body"},
         "east": {"uv": [0, 10, 1, 16], "texture": "#body"},
@@ -78,9 +78,9 @@
     },
     {
       "name": "leg_front_left",
-      "from": [2, 0, 0],
-      "to": [6, 12, 4],
-      "rotation": {"angle": 0, "axis": "y", "origin": [4, 0, 2]},
+      "from": [-4, 0, -8],
+      "to": [0, 12, -4],
+      "rotation": {"angle": 0, "axis": "y", "origin": [-2, 0, -6]},
       "faces": {
         "north": {"uv": [1, 10, 2, 16], "texture": "#body"},
         "east": {"uv": [0, 10, 1, 16], "texture": "#body"},
@@ -92,9 +92,9 @@
     },
     {
       "name": "leg_back_left",
-      "from": [2, 0, 13],
-      "to": [6, 12, 17],
-      "rotation": {"angle": 0, "axis": "y", "origin": [4, 0, 15]},
+      "from": [-4, 0, 5],
+      "to": [0, 12, 9],
+      "rotation": {"angle": 0, "axis": "y", "origin": [-2, 0, 7]},
       "faces": {
         "north": {"uv": [1, 10, 2, 16], "texture": "#body"},
         "east": {"uv": [0, 10, 1, 16], "texture": "#body"},
@@ -106,9 +106,9 @@
     },
     {
       "name": "leg_back_right",
-      "from": [10, 0, 13],
-      "to": [14, 12, 17],
-      "rotation": {"angle": 0, "axis": "y", "origin": [12, 0, 15]},
+      "from": [4, 0, 5],
+      "to": [8, 12, 9],
+      "rotation": {"angle": 0, "axis": "y", "origin": [6, 0, 7]},
       "faces": {
         "north": {"uv": [1, 10, 2, 16], "texture": "#body"},
         "east": {"uv": [0, 10, 1, 16], "texture": "#body"},
@@ -120,9 +120,9 @@
     },
     {
       "name": "udder",
-      "from": [6, 11, 12],
-      "to": [10, 12, 18],
-      "rotation": {"angle": 0, "axis": "y", "origin": [8, 11, 13]},
+      "from": [0, 11, 4],
+      "to": [4, 12, 10],
+      "rotation": {"angle": 0, "axis": "y", "origin": [2, 11, 5]},
       "faces": {
         "north": {"uv": [13.25, 0, 14.25, 0.5], "texture": "#body"},
         "east": {"uv": [14.25, 0.5, 14.5, 3.5], "rotation": 90, "texture": "#body"},
