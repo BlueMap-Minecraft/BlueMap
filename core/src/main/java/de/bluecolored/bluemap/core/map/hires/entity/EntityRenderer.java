@@ -25,11 +25,8 @@
 package de.bluecolored.bluemap.core.map.hires.entity;
 
 import de.bluecolored.bluemap.core.map.hires.TileModelView;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.Variant;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.entitystate.Part;
-import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.Entity;
-import de.bluecolored.bluemap.core.world.block.BlockAccess;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 
 public interface EntityRenderer {

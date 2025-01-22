@@ -25,7 +25,6 @@
 package de.bluecolored.bluemap.core.map.hires.entity;
 
 import com.flowpowered.math.vector.Vector3f;
-import com.flowpowered.math.vector.Vector3i;
 import com.flowpowered.math.vector.Vector4f;
 import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
@@ -39,6 +38,7 @@ import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Face;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
+import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.util.math.MatrixM4f;
 import de.bluecolored.bluemap.core.util.math.VectorM2f;
 import de.bluecolored.bluemap.core.util.math.VectorM3f;
@@ -53,18 +53,19 @@ import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 public class ResourceModelRenderer implements EntityRenderer {
     private static final float SCALE = 1f / 16f;
 
-    private final ResourcePack resourcePack;
-    private final TextureGallery textureGallery;
-    private final RenderSettings renderSettings;
+    final ResourcePack resourcePack;
+    final TextureGallery textureGallery;
+    final RenderSettings renderSettings;
 
     private final VectorM3f[] corners = new VectorM3f[8];
     private final VectorM2f[] rawUvs = new VectorM2f[4];
     private final VectorM2f[] uvs = new VectorM2f[4];
+    private final Color tintColor = new Color();
 
-    private Part part;
     private Model modelResource;
     private TileModelView tileModel;
     private int sunLight, blockLight;
+    private TintColorProvider tintProvider;
 
     @SuppressWarnings("unused")
     public ResourceModelRenderer(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
@@ -78,9 +79,23 @@ public class ResourceModelRenderer implements EntityRenderer {
 
     @Override
     public void render(Entity entity, BlockNeighborhood block, Part part, TileModelView tileModel) {
-        this.part = part;
+        render(
+                entity,
+                block,
+                part.getModel().getResource(resourcePack::getModel),
+                (index, color) -> color.set(1f, 1f, 1f, 1f, true),
+                tileModel
+        );
+
+        // apply transform
+        if (part.isTransformed())
+            tileModel.transform(part.getTransformMatrix());
+    }
+
+    void render(Entity entity, BlockNeighborhood block, Model model, TintColorProvider tintProvider, TileModelView tileModel) {
+        this.modelResource = model;
         this.tileModel = tileModel;
-        this.modelResource = part.getModel().getResource(resourcePack::getModel);
+        this.tintProvider = tintProvider;
 
         // light calculation
         LightData blockLightData = block.getLightData();
@@ -104,10 +119,6 @@ public class ResourceModelRenderer implements EntityRenderer {
         }
 
         this.tileModel.initialize(modelStart);
-
-        // apply model-transform
-        if (part.isTransformed())
-            this.tileModel.transform(part.getTransformMatrix());
 
     }
 
@@ -152,24 +163,9 @@ public class ResourceModelRenderer implements EntityRenderer {
         );
     }
 
-    private final VectorM3f faceRotationVector = new VectorM3f(0, 0, 0);
     private void createElementFace(Element element, Direction faceDir, VectorM3f c0, VectorM3f c1, VectorM3f c2, VectorM3f c3) {
         Face face = element.getFaces().get(faceDir);
         if (face == null) return;
-
-        Vector3i faceDirVector = faceDir.toVector();
-
-        // calculate faceRotationVector
-        faceRotationVector.set(
-                faceDirVector.getX(),
-                faceDirVector.getY(),
-                faceDirVector.getZ()
-        );
-        faceRotationVector.rotateAndScale(element.getRotation().getMatrix());
-        makeRotationRelative(faceRotationVector);
-
-        // face culling
-        if (renderSettings.isRenderTopOnly() && faceRotationVector.y < 0.01) return;
 
         // initialize the faces
         tileModel.initialize();
@@ -228,9 +224,15 @@ public class ResourceModelRenderer implements EntityRenderer {
                 uvs[3].x, uvs[3].y
         );
 
-        // ####### color
-        tileModel.setColor(face1, 1f, 1f, 1f);
-        tileModel.setColor(face2, 1f, 1f, 1f);
+        // ####### face-tint
+        if (face.getTintindex() >= 0) {
+            tintProvider.setTintColor(face.getTintindex(), tintColor);
+            tileModel.setColor(face1, tintColor.r, tintColor.g, tintColor.b);
+            tileModel.setColor(face2, tintColor.r, tintColor.g, tintColor.b);
+        } else {
+            tileModel.setColor(face1, 1f, 1f, 1f);
+            tileModel.setColor(face2, 1f, 1f, 1f);
+        }
 
         // ####### blocklight
         int emissiveBlockLight = Math.max(blockLight, element.getLightEmission());
@@ -247,9 +249,8 @@ public class ResourceModelRenderer implements EntityRenderer {
 
     }
 
-    private void makeRotationRelative(VectorM3f direction){
-        if (part.isTransformed())
-            direction.rotateAndScale(part.getTransformMatrix());
+    interface TintColorProvider {
+        void setTintColor(int tintIndex, Color target);
     }
 
 }
