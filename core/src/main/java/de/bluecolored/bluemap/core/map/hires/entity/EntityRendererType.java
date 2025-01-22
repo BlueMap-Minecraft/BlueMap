@@ -40,9 +40,12 @@ public interface EntityRendererType extends Keyed, EntityRendererFactory {
     EntityRendererType DEFAULT = new Impl(Key.bluemap("default"), ResourceModelRenderer::new);
     EntityRendererType MISSING = new Impl(Key.bluemap("missing"), MissingModelRenderer::new);
 
+    EntityRendererType LLAMA = new Impl(Key.minecraft("llama"), LlamaRenderer::new);
+
     Registry<EntityRendererType> REGISTRY = new Registry<>(
             DEFAULT,
-            MISSING
+            MISSING,
+            LLAMA
     );
 
     /**

@@ -33,7 +33,11 @@ import lombok.RequiredArgsConstructor;
 
 public interface EntityType extends Keyed {
 
-    Registry<EntityType> REGISTRY = new Registry<>();
+    EntityType LLAMA = new Impl(Key.minecraft("llama"), Llama.class);
+
+    Registry<EntityType> REGISTRY = new Registry<>(
+            LLAMA
+    );
 
     Class<? extends Entity> getEntityClass();
 
