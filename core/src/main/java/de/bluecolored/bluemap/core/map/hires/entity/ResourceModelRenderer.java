@@ -83,7 +83,7 @@ public class ResourceModelRenderer implements EntityRenderer {
                 entity,
                 block,
                 part.getModel().getResource(resourcePack::getModel),
-                (index, color) -> color.set(1f, 1f, 1f, 1f, true),
+                TintColorProvider.NO_TINT,
                 tileModel
         );
 
@@ -250,6 +250,7 @@ public class ResourceModelRenderer implements EntityRenderer {
     }
 
     interface TintColorProvider {
+        TintColorProvider NO_TINT = (index, color) -> color.set(1f, 1f, 1f, 1f, true);
         void setTintColor(int tintIndex, Color target);
     }
 
