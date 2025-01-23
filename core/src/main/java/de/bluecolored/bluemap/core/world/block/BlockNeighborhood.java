@@ -26,61 +26,36 @@ package de.bluecolored.bluemap.core.world.block;
 
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.world.World;
+import de.bluecolored.bluemap.core.world.DimensionType;
 
-public class BlockNeighborhood<T extends BlockNeighborhood<T>> extends ExtendedBlock<T> {
+public class BlockNeighborhood extends ExtendedBlock {
 
-    private static final int DIAMETER = 8;
+    private static final int DIAMETER = 8; // must be a power of 2
     private static final int DIAMETER_MASK = DIAMETER - 1;
     private static final int DIAMETER_SQUARED = DIAMETER * DIAMETER;
 
-    private final ExtendedBlock<?>[] neighborhood;
+    private final ExtendedBlock[] neighborhood;
 
-    private int thisIndex;
+    private int thisIndex = -1;
 
-    public BlockNeighborhood(ExtendedBlock<?> center) {
-        super(center.getResourcePack(), center.getRenderSettings(), null, 0, 0, 0);
-        copy(center);
+    public BlockNeighborhood(BlockAccess blockAccess, ResourcePack resourcePack, RenderSettings renderSettings, DimensionType dimensionType) {
+        super(blockAccess, resourcePack, renderSettings, dimensionType);
 
-        neighborhood = new ExtendedBlock[DIAMETER * DIAMETER * DIAMETER];
-        init();
-    }
-
-    public BlockNeighborhood(ResourcePack resourcePack, RenderSettings renderSettings, World world, int x, int y, int z) {
-        super(resourcePack, renderSettings, world, x, y, z);
-
-        neighborhood = new ExtendedBlock[DIAMETER * DIAMETER * DIAMETER];
-        init();
+        this.neighborhood = new ExtendedBlock[DIAMETER * DIAMETER * DIAMETER];
     }
 
     @Override
-    public T set(int x, int y, int z) {
-        return copy(getBlock(x, y, z));
+    public void set(int x, int y, int z) {
+        int i = index(x, y, z);
+        if (i == thisIndex()) return;
+
+        if (neighborhood[i] == null) neighborhood[i] = copy();
+        neighborhood[i].set(x, y, z);
+        copyFrom(neighborhood[i]);
+        this.thisIndex = i;
     }
 
-    @Override
-    public T set(World world, int x, int y, int z) {
-        if (getWorld() == world)
-            return copy(getBlock(x, y, z));
-        else
-            return super.set(world, x, y, z);
-    }
-
-    @Override
-    protected void reset() {
-        super.reset();
-
-        this.thisIndex = -1;
-    }
-
-    private void init() {
-        this.thisIndex = -1;
-        for (int i = 0; i < neighborhood.length; i++) {
-            neighborhood[i] = new ExtendedBlock<>(this.getResourcePack(), this.getRenderSettings(), null, 0, 0, 0);
-        }
-    }
-
-    public ExtendedBlock<?> getNeighborBlock(int dx, int dy, int dz) {
+    public ExtendedBlock getNeighborBlock(int dx, int dy, int dz) {
         return getBlock(
                 getX() + dx,
                 getY() + dy,
@@ -88,10 +63,13 @@ public class BlockNeighborhood<T extends BlockNeighborhood<T>> extends ExtendedB
         );
     }
 
-    private ExtendedBlock<?> getBlock(int x, int y, int z) {
+    private ExtendedBlock getBlock(int x, int y, int z) {
         int i = index(x, y, z);
         if (i == thisIndex()) return this;
-        return neighborhood[i].set(getWorld(), x, y, z);
+
+        if (neighborhood[i] == null) neighborhood[i] = copy();
+        neighborhood[i].set(x, y, z);
+        return neighborhood[i];
     }
 
     private int thisIndex() {

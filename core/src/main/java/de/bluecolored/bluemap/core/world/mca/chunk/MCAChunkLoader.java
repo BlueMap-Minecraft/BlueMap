@@ -86,6 +86,11 @@ public class MCAChunkLoader implements ChunkLoader<Chunk> {
         return Chunk.EMPTY_CHUNK;
     }
 
+    @Override
+    public Chunk erroredChunk() {
+        return Chunk.ERRORED_CHUNK;
+    }
+
     private @Nullable ChunkVersionLoader<?> findBestLoaderForVersion(int version) {
         for (ChunkVersionLoader<?> loader : CHUNK_VERSION_LOADERS) {
             if (loader.mightSupport(version)) return loader;

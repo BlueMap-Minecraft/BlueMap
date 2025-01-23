@@ -1,16 +1,16 @@
 {
     "variants": {
-        "type=single,facing=north": { "model": "block/chest/trapped", "y": 90 },
-        "type=single,facing=east": { "model": "block/chest/trapped", "y": 180 },
-        "type=single,facing=south": { "model": "block/chest/trapped", "y":270 },
-        "type=single,facing=west": { "model": "block/chest/trapped"},
-        "type=right,facing=north": { "model": "block/chest/trapped_double_right", "y": 90 },
-        "type=right,facing=east": { "model": "block/chest/trapped_double_right", "y": 180 },
-        "type=right,facing=south": { "model": "block/chest/trapped_double_right", "y":270 },
-        "type=right,facing=west": { "model": "block/chest/trapped_double_right"},
-		"type=left,facing=north": { "model": "block/chest/trapped_double_left", "y": 90 },
-        "type=left,facing=east": { "model": "block/chest/trapped_double_left", "y": 180 },
-        "type=left,facing=south": { "model": "block/chest/trapped_double_left", "y":270 },
-        "type=left,facing=west": { "model": "block/chest/trapped_double_left"}
+        "type=single,facing=north": { "model": "entity/chest/trapped", "y": 90 },
+        "type=single,facing=east": { "model": "entity/chest/trapped", "y": 180 },
+        "type=single,facing=south": { "model": "entity/chest/trapped", "y":270 },
+        "type=single,facing=west": { "model": "entity/chest/trapped"},
+        "type=right,facing=north": { "model": "entity/chest/trapped_double_right", "y": 90 },
+        "type=right,facing=east": { "model": "entity/chest/trapped_double_right", "y": 180 },
+        "type=right,facing=south": { "model": "entity/chest/trapped_double_right", "y":270 },
+        "type=right,facing=west": { "model": "entity/chest/trapped_double_right"},
+		"type=left,facing=north": { "model": "entity/chest/trapped_double_left", "y": 90 },
+        "type=left,facing=east": { "model": "entity/chest/trapped_double_left", "y": 180 },
+        "type=left,facing=south": { "model": "entity/chest/trapped_double_left", "y":270 },
+        "type=left,facing=west": { "model": "entity/chest/trapped_double_left"}
     }
 }

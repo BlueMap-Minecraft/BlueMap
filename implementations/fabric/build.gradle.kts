@@ -34,6 +34,7 @@ dependencies {
 
     // jarInJar
     include ( libs.flow.math )
+    include ( libs.bluenbt )
 
 }
 
@@ -43,13 +44,11 @@ tasks.shadowJar {
     // exclude jarInJar
     dependencies {
         exclude( dependency ( libs.flow.math.get() ) )
+        exclude( dependency ( libs.bluenbt.get() ) )
     }
 
     // airlift
     relocate ("io.airlift", "de.bluecolored.shadow.airlift")
-
-    // bluenbt
-    relocate ("de.bluecolored.bluenbt", "de.bluecolored.shadow.bluenbt")
 
     // caffeine
     relocate ("com.github.benmanes.caffeine", "de.bluecolored.shadow.caffeine")

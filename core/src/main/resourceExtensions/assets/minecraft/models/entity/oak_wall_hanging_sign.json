@@ -1,7 +1,0 @@
-{
-  "credit": "Made with Blockbench by TyBraniff for Bluemaps support.",
-  "parent": "minecraft:entity/wall_hanging_sign",
-  "textures": {
-    "wood": "minecraft:entity/signs/hanging/oak"
-  }
-}

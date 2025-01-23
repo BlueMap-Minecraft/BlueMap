@@ -24,7 +24,7 @@
  */
 package de.bluecolored.bluemap.core.world.mca.data;
 
-import de.bluecolored.bluemap.core.world.block.entity.BlockEntity;
+import de.bluecolored.bluemap.core.world.BlockEntity;
 import de.bluecolored.bluenbt.*;
 
 import java.io.IOException;

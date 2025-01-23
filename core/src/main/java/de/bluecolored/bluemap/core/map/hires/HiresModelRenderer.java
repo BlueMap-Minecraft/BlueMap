@@ -24,14 +24,17 @@
  */
 package de.bluecolored.bluemap.core.map.hires;
 
+import com.flowpowered.math.vector.Vector3d;
 import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.TileMetaConsumer;
-import de.bluecolored.bluemap.core.map.hires.blockmodel.BlockStateModelRenderer;
+import de.bluecolored.bluemap.core.map.hires.block.BlockStateModelRenderer;
+import de.bluecolored.bluemap.core.map.hires.entity.EntityModelRenderer;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.World;
+import de.bluecolored.bluemap.core.world.block.Block;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 
 public class HiresModelRenderer {
@@ -40,12 +43,14 @@ public class HiresModelRenderer {
     private final RenderSettings renderSettings;
 
     private final ThreadLocal<BlockStateModelRenderer> threadLocalBlockRenderer;
+    private final ThreadLocal<EntityModelRenderer> threadLocalEntityRenderer;
 
     public HiresModelRenderer(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
         this.resourcePack = resourcePack;
         this.renderSettings = renderSettings;
 
         this.threadLocalBlockRenderer = ThreadLocal.withInitial(() -> new BlockStateModelRenderer(resourcePack, textureGallery, renderSettings));
+        this.threadLocalEntityRenderer = ThreadLocal.withInitial(() -> new EntityModelRenderer(resourcePack, textureGallery, renderSettings));
     }
 
     public void render(World world, Vector3i modelMin, Vector3i modelMax, TileModel model) {
@@ -57,13 +62,15 @@ public class HiresModelRenderer {
         Vector3i max = modelMax.min(renderSettings.getMaxPos());
         Vector3i modelAnchor = new Vector3i(modelMin.getX(), 0, modelMin.getZ());
 
+        // render blocks
         BlockStateModelRenderer blockRenderer = threadLocalBlockRenderer.get();
+        EntityModelRenderer entityRenderer = threadLocalEntityRenderer.get();
 
         int maxHeight, minY, maxY;
         double topBlockLight;
         Color columnColor = new Color(), blockColor = new Color();
-        BlockNeighborhood<?> block = new BlockNeighborhood<>(resourcePack, renderSettings, world, 0, 0, 0);
-        TileModelView blockModel = new TileModelView(tileModel);
+        BlockNeighborhood block = new BlockNeighborhood(new Block(world, 0, 0, 0), resourcePack, renderSettings, world.getDimensionType());
+        TileModelView tileModelView = new TileModelView(tileModel);
 
         int x, y, z;
         for (x = modelMin.getX(); x <= modelMax.getX(); x++){
@@ -80,18 +87,21 @@ public class HiresModelRenderer {
                     maxY = Math.min(max.getY(), chunk.getMaxY(x, z));
 
                     for (y = maxY; y >= minY; y--) {
+                        if (x == -1743 && y == 64 && z == 1393)
+                            System.out.println();
+
                         block.set(x, y, z);
                         if (!block.isInsideRenderBounds()) continue;
 
-                        blockModel.initialize();
+                        tileModelView.initialize();
 
-                        blockRenderer.render(block, blockModel, blockColor);
+                        blockRenderer.render(block, tileModelView, blockColor);
 
                         //update topBlockLight
                         topBlockLight = Math.max(topBlockLight, block.getBlockLightLevel() * (1 - columnColor.a));
 
                         // move block-model to correct position
-                        blockModel.translate(x - modelAnchor.getX(), y - modelAnchor.getY(), z - modelAnchor.getZ());
+                        tileModelView.translate(x - modelAnchor.getX(), y - modelAnchor.getY(), z - modelAnchor.getZ());
 
                         //update color and height (only if not 100% translucent)
                         if (blockColor.a > 0) {
@@ -110,5 +120,18 @@ public class HiresModelRenderer {
                 tileMetaConsumer.set(x, z, columnColor, maxHeight, (int) topBlockLight);
             }
         }
+
+        // render entities
+        world.iterateEntities(min.getX(), min.getZ(), max.getX(), max.getZ(), entity -> {
+            Vector3d pos = entity.getPos();
+            block.set(pos.getFloorX(), pos.getFloorY(), pos.getFloorZ());
+            entityRenderer.render(entity, block, tileModelView.initialize());
+            tileModelView.translate(
+                    (float) pos.getX() - modelAnchor.getX(),
+                    (float) pos.getY() - modelAnchor.getY(),
+                    (float) pos.getZ() - modelAnchor.getZ()
+            );
+        });
+
     }
 }

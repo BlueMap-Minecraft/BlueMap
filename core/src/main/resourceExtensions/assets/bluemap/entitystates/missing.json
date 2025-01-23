@@ -1,0 +1,8 @@
+{
+  "parts": [
+    {
+      "renderer": "bluemap:missing",
+      "model": "bluemap:entity/missing"
+    }
+  ]
+}

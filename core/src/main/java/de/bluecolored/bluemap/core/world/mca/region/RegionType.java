@@ -25,13 +25,11 @@
 package de.bluecolored.bluemap.core.world.mca.region;
 
 import com.flowpowered.math.vector.Vector2i;
-import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.Keyed;
 import de.bluecolored.bluemap.core.util.Registry;
 import de.bluecolored.bluemap.core.world.Region;
 import de.bluecolored.bluemap.core.world.mca.ChunkLoader;
-import de.bluecolored.bluemap.core.world.mca.chunk.MCAChunkLoader;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Nullable;

@@ -1,8 +1,8 @@
 {
   "variants": {
-    "facing=east": { "model": "minecraft:entity/crimson_wall_hanging_sign", "y": 90 },
-    "facing=south": { "model": "minecraft:entity/crimson_wall_hanging_sign", "y": 180 },
-    "facing=west": { "model": "minecraft:entity/crimson_wall_hanging_sign", "y": 270 },
-    "facing=north": { "model": "minecraft:entity/crimson_wall_hanging_sign" }
+    "facing=east": { "model": "minecraft:entity/signs/crimson_wall_hanging_sign", "y": 90 },
+    "facing=south": { "model": "minecraft:entity/signs/crimson_wall_hanging_sign", "y": 180 },
+    "facing=west": { "model": "minecraft:entity/signs/crimson_wall_hanging_sign", "y": 270 },
+    "facing=north": { "model": "minecraft:entity/signs/crimson_wall_hanging_sign" }
   }
 }

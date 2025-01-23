@@ -25,7 +25,6 @@
 package de.bluecolored.bluemap.core.world;
 
 import de.bluecolored.bluemap.core.world.biome.Biome;
-import de.bluecolored.bluemap.core.world.block.entity.BlockEntity;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
