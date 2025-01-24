@@ -40,6 +40,7 @@ public interface EntityType extends Keyed {
     EntityType CHICKEN = new Impl(Key.minecraft("chicken"), AgeEntity.class);
     EntityType FOX = new Impl(Key.minecraft("fox"), Fox.class);
     EntityType PIG = new Impl(Key.minecraft("pig"), Pig.class);
+    EntityType TROPICAL_FISH = new Impl(Key.minecraft("tropical_fish"), TropicalFish.class);
 
     Registry<EntityType> REGISTRY = new Registry<>(
             LLAMA,
@@ -48,7 +49,8 @@ public interface EntityType extends Keyed {
             OCELOT,
             CHICKEN,
             FOX,
-            PIG
+            PIG,
+            TROPICAL_FISH
     );
 
     Class<? extends Entity> getEntityClass();
