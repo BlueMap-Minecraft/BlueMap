@@ -43,6 +43,7 @@ public interface EntityRendererType extends Keyed, EntityRendererFactory {
     EntityRendererType CAT = new Impl(Key.minecraft("cat"), CatRenderer::new);
     EntityRendererType OCELOT = new Impl(Key.minecraft("ocelot"), OcelotRenderer::new);
     EntityRendererType CHICKEN = new Impl(Key.minecraft("chicken"), ChickenRenderer::new);
+    EntityRendererType FOX = new Impl(Key.minecraft("fox"), FoxRenderer::new);
 
     Registry<EntityRendererType> REGISTRY = new Registry<>(
             DEFAULT,
@@ -51,7 +52,8 @@ public interface EntityRendererType extends Keyed, EntityRendererFactory {
             BEE,
             CAT,
             OCELOT,
-            CHICKEN
+            CHICKEN,
+            FOX
     );
 
     /**
