@@ -47,9 +47,9 @@ public interface EntityRendererType extends Keyed, EntityRendererFactory {
             DEFAULT,
             MISSING,
             LLAMA,
-            BEE
             BEE,
             CAT,
+            OCELOT
     );
 
     /**

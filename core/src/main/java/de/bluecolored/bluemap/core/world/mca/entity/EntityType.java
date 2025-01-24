@@ -40,9 +40,9 @@ public interface EntityType extends Keyed {
 
     Registry<EntityType> REGISTRY = new Registry<>(
             LLAMA,
-            BEE
             BEE,
             CAT,
+            OCELOT
     );
 
     Class<? extends Entity> getEntityClass();
