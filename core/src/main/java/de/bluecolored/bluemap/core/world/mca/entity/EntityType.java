@@ -35,10 +35,14 @@ public interface EntityType extends Keyed {
 
     EntityType LLAMA = new Impl(Key.minecraft("llama"), Llama.class);
     EntityType BEE = new Impl(Key.minecraft("bee"), Bee.class);
+    EntityType CAT = new Impl(Key.minecraft("cat"), Cat.class);
+    EntityType OCELOT = new Impl(Key.minecraft("ocelot"), Ocelot.class);
 
     Registry<EntityType> REGISTRY = new Registry<>(
             LLAMA,
             BEE
+            BEE,
+            CAT,
     );
 
     Class<? extends Entity> getEntityClass();

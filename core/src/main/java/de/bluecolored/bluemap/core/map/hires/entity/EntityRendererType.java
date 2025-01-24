@@ -40,12 +40,16 @@ public interface EntityRendererType extends Keyed, EntityRendererFactory {
 
     EntityRendererType LLAMA = new Impl(Key.minecraft("llama"), LlamaRenderer::new);
     EntityRendererType BEE = new Impl(Key.minecraft("bee"), BeeRenderer::new);
+    EntityRendererType CAT = new Impl(Key.minecraft("cat"), CatRenderer::new);
+    EntityRendererType OCELOT = new Impl(Key.minecraft("ocelot"), OcelotRenderer::new);
 
     Registry<EntityRendererType> REGISTRY = new Registry<>(
             DEFAULT,
             MISSING,
             LLAMA,
             BEE
+            BEE,
+            CAT,
     );
 
     /**
