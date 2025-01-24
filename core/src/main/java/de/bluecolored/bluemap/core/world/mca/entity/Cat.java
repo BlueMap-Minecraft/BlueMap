@@ -11,7 +11,7 @@ import lombok.ToString;
 @SuppressWarnings("FieldMayBeFinal")
 public class Cat extends AgeEntity {
 
-    @NBTName("Sitting") int sitting;
+    @NBTName("Sitting") boolean sitting;
     @NBTName("variant") Variant variant;
 
     public enum Variant {
