@@ -26,12 +26,10 @@ package de.bluecolored.bluemap.core.map.hires.entity;
 
 import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
-import de.bluecolored.bluemap.core.map.hires.block.LiquidModelRenderer;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.Keyed;
 import de.bluecolored.bluemap.core.util.Registry;
-import de.bluecolored.bluemap.core.world.BlockState;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -41,11 +39,13 @@ public interface EntityRendererType extends Keyed, EntityRendererFactory {
     EntityRendererType MISSING = new Impl(Key.bluemap("missing"), MissingModelRenderer::new);
 
     EntityRendererType LLAMA = new Impl(Key.minecraft("llama"), LlamaRenderer::new);
+    EntityRendererType BEE = new Impl(Key.minecraft("bee"), BeeRenderer::new);
 
     Registry<EntityRendererType> REGISTRY = new Registry<>(
             DEFAULT,
             MISSING,
-            LLAMA
+            LLAMA,
+            BEE
     );
 
     /**
