@@ -264,15 +264,6 @@ public class Plugin implements ServerEventListener {
                 //initialize render manager
                 renderManager = new RenderManager();
 
-                //update all maps
-                maps.values().stream()
-                        .sorted(Comparator.comparing(bmMap -> bmMap.getMapSettings().getSorting()))
-                        .forEach(map -> {
-                    if (pluginState.getMapState(map).isUpdateEnabled()) {
-                        renderManager.scheduleRenderTask(new MapUpdateTask(map));
-                    }
-                });
-
                 //update webapp and settings
                 if (webappConfig.isEnabled())
                     blueMap.createOrUpdateWebApp(false);
@@ -336,14 +327,16 @@ public class Plugin implements ServerEventListener {
                     TimerTask updateAllMapsTask = new TimerTask() {
                         @Override
                         public void run() {
-                            for (BmMap map : maps.values()) {
-                                if (pluginState.getMapState(map).isUpdateEnabled()) {
-                                    renderManager.scheduleRenderTask(new MapUpdateTask(map));
-                                }
-                            }
+                            maps.values().stream()
+                                    .sorted(Comparator.comparing(bmMap -> bmMap.getMapSettings().getSorting()))
+                                    .forEach(map -> {
+                                        if (pluginState.getMapState(map).isUpdateEnabled()) {
+                                            renderManager.scheduleRenderTask(new MapUpdateTask(map));
+                                        }
+                                    });
                         }
                     };
-                    daemonTimer.scheduleAtFixedRate(updateAllMapsTask, fullUpdateTime, fullUpdateTime);
+                    daemonTimer.scheduleAtFixedRate(updateAllMapsTask, 0, fullUpdateTime);
                 }
 
                 //metrics
