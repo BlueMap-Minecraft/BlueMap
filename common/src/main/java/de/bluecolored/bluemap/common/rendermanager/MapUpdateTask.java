@@ -133,33 +133,35 @@ public class MapUpdateTask extends CombinedRenderTask<RenderTask> {
 
         // also update regions that are present as map-tile-state files (they might have been rendered before but deleted now)
         // (a little hacky as we are operating on raw tile-state files -> maybe find a better way?)
-        Grid tileGrid = map.getHiresModelManager().getTileGrid();
-        Grid cellGrid = MapTileState.GRID.multiply(tileGrid);
-        try (Stream<GridStorage.Cell> stream = map.getStorage().tileState().stream()) {
-            stream
-                    .filter(c -> {
-                        // filter out files that are fully UNKNOWN/NOT_GENERATED
-                        // this avoids unnecessarily converting UNKNOWN tiles into NOT_GENERATED tiles on force-updates
-                        try (CompressedInputStream in = c.read()) {
-                            if (in == null) return false;
-                            TileState[] states = TileInfoRegion.loadPalette(in.decompress());
-                            for (TileState state : states) {
-                                if (
-                                        state != TileState.UNKNOWN &&
-                                        state != TileState.NOT_GENERATED
-                                ) return true;
+        if (map.getMapSettings().isCheckForRemovedRegions()) {
+            Grid tileGrid = map.getHiresModelManager().getTileGrid();
+            Grid cellGrid = MapTileState.GRID.multiply(tileGrid);
+            try (Stream<GridStorage.Cell> stream = map.getStorage().tileState().stream()) {
+                stream
+                        .filter(c -> {
+                            // filter out files that are fully UNKNOWN/NOT_GENERATED
+                            // this avoids unnecessarily converting UNKNOWN tiles into NOT_GENERATED tiles on force-updates
+                            try (CompressedInputStream in = c.read()) {
+                                if (in == null) return false;
+                                TileState[] states = TileInfoRegion.loadPalette(in.decompress());
+                                for (TileState state : states) {
+                                    if (
+                                            state != TileState.UNKNOWN &&
+                                                    state != TileState.NOT_GENERATED
+                                    ) return true;
+                                }
+                                return false;
+                            } catch (IOException ignore) {
+                                return true;
                             }
-                            return false;
-                        } catch (IOException ignore) {
-                            return true;
-                        }
-                    })
-                    .map(c -> new Vector2i(c.getX(), c.getZ()))
-                    .flatMap(v -> cellGrid.getIntersecting(v, regionGrid).stream())
-                    .filter(regionRadiusFilter)
-                    .forEach(regions::add);
-        } catch (IOException ex) {
-            Logger.global.logError("Failed to load map tile state!", ex);
+                        })
+                        .map(c -> new Vector2i(c.getX(), c.getZ()))
+                        .flatMap(v -> cellGrid.getIntersecting(v, regionGrid).stream())
+                        .filter(regionRadiusFilter)
+                        .forEach(regions::add);
+            } catch (IOException ex) {
+                Logger.global.logError("Failed to load map tile state!", ex);
+            }
         }
 
         return regions;
