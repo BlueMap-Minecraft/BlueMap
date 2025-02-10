@@ -25,10 +25,13 @@
 package de.bluecolored.bluemap.common.config;
 
 import com.flowpowered.math.vector.Vector2i;
+import de.bluecolored.bluemap.common.config.storage.StorageConfig;
 import de.bluecolored.bluemap.common.config.typeserializer.KeyTypeSerializer;
+import de.bluecolored.bluemap.common.config.typeserializer.ObjectMapperSerializer;
 import de.bluecolored.bluemap.common.config.typeserializer.Vector2iTypeSerializer;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluenbt.TypeToken;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.loader.AbstractConfigurationLoader;
@@ -159,6 +162,10 @@ public class ConfigManager {
                 .defaultOptions(o -> o.serializers(b -> {
                     b.register(Vector2i.class, new Vector2iTypeSerializer());
                     b.register(Key.class, new KeyTypeSerializer());
+
+                    // try parse any StorageConfig type, even without the @ConfigSerializable annotation
+                    b.register(type -> TypeToken.of(type).is(StorageConfig.class), new ObjectMapperSerializer());
+
                 }))
                 .build();
     }
