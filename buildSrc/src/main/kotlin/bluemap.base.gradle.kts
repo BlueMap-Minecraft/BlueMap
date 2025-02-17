@@ -12,6 +12,9 @@ repositories {
     maven ("https://repo.bluecolored.de/releases") {
         content { includeGroupByRegex ("de\\.bluecolored.*") }
     }
+    maven ("https://repo.bluecolored.de/snapshots") {
+        content { includeGroupByRegex ("de\\.bluecolored.*") }
+    }
     maven ("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") {
         content { includeGroup ("org.spigotmc") }
     }

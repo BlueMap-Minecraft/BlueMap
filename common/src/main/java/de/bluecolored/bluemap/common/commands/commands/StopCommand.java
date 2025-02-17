@@ -22,35 +22,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.plugin.commands;
+package de.bluecolored.bluemap.common.commands.commands;
 
-import com.mojang.brigadier.arguments.StringArgumentType;
-import com.mojang.brigadier.context.CommandContext;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.brigadier.suggestion.SuggestionProvider;
-import com.mojang.brigadier.suggestion.Suggestions;
-import com.mojang.brigadier.suggestion.SuggestionsBuilder;
+import de.bluecolored.bluecommands.annotations.Command;
+import de.bluecolored.bluemap.common.commands.Permission;
+import de.bluecolored.bluemap.common.plugin.Plugin;
+import de.bluecolored.bluemap.common.serverinterface.CommandSource;
+import lombok.RequiredArgsConstructor;
 
-import java.util.Collection;
-import java.util.concurrent.CompletableFuture;
+import static de.bluecolored.bluemap.common.commands.TextFormat.*;
+import static net.kyori.adventure.text.Component.text;
 
-public abstract class AbstractSuggestionProvider<S> implements SuggestionProvider<S> {
+@RequiredArgsConstructor
+public class StopCommand {
 
-    @Override
-    public CompletableFuture<Suggestions> getSuggestions(CommandContext<S> context, SuggestionsBuilder builder) throws CommandSyntaxException {
-        Collection<String> possibleValues = getPossibleValues();
-        if(possibleValues.isEmpty()) return Suggestions.empty();
+    private final Plugin plugin;
 
-        String remaining = builder.getRemaining().toLowerCase();
-        for (String str : possibleValues) {
-            if (str.toLowerCase().startsWith(remaining)) {
-                builder.suggest(str = StringArgumentType.escapeIfRequired(str));
-            }
-        }
+    @Command("stop")
+    @Permission("bluemap.stop")
+    public void stop(CommandSource source) {
+        plugin.getPluginState().setRenderThreadsEnabled(false);
+        plugin.getRenderManager().stop();
 
-        return builder.buildFuture();
+        source.sendMessage(format("% Render-Threads are now %",
+                ICON_STOPPED.color(NEGATIVE_COLOR),
+                text("stopped").color(NEGATIVE_COLOR)
+        ).color(BASE_COLOR));
+
+        plugin.save();
     }
-
-    public abstract Collection<String> getPossibleValues();
 
 }

@@ -34,16 +34,18 @@ import de.bluecolored.bluemap.core.storage.GridStorage;
 import de.bluecolored.bluemap.core.storage.compression.CompressedInputStream;
 import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.world.World;
+import lombok.Getter;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-public class MapUpdateTask extends CombinedRenderTask<RenderTask> {
+public class MapUpdateTask extends CombinedRenderTask<RenderTask> implements MapRenderTask {
 
-    private final BmMap map;
-    private final Collection<Vector2i> regions;
+    @Getter private final BmMap map;
+    @Getter private final Collection<Vector2i> regions;
 
     public MapUpdateTask(BmMap map) {
         this(map, getRegions(map));
@@ -53,11 +55,11 @@ public class MapUpdateTask extends CombinedRenderTask<RenderTask> {
         this(map, getRegions(map), force);
     }
 
-    public MapUpdateTask(BmMap map, Vector2i center, int radius) {
+    public MapUpdateTask(BmMap map, @Nullable Vector2i center, @Nullable Integer radius) {
         this(map, getRegions(map, center, radius));
     }
 
-    public MapUpdateTask(BmMap map, Vector2i center, int radius, TileUpdateStrategy force) {
+    public MapUpdateTask(BmMap map, @Nullable Vector2i center, @Nullable Integer radius, TileUpdateStrategy force) {
         this(map, getRegions(map, center, radius), force);
     }
 
@@ -66,17 +68,9 @@ public class MapUpdateTask extends CombinedRenderTask<RenderTask> {
     }
 
     public MapUpdateTask(BmMap map, Collection<Vector2i> regions, TileUpdateStrategy force) {
-        super("Update map '" + map.getId() + "'", createTasks(map, regions, force));
+        super("updating map '%s'".formatted(map.getId()), createTasks(map, regions, force));
         this.map = map;
         this.regions = Collections.unmodifiableCollection(new ArrayList<>(regions));
-    }
-
-    public BmMap getMap() {
-        return map;
-    }
-
-    public Collection<Vector2i> getRegions() {
-        return regions;
     }
 
     private static Collection<RenderTask> createTasks(BmMap map, Collection<Vector2i> regions, TileUpdateStrategy force) {
@@ -102,16 +96,16 @@ public class MapUpdateTask extends CombinedRenderTask<RenderTask> {
     }
 
     private static Collection<Vector2i> getRegions(BmMap map) {
-        return getRegions(map, null, -1);
+        return getRegions(map, null, null);
     }
 
-    private static Collection<Vector2i> getRegions(BmMap map, Vector2i center, int radius) {
+    private static Collection<Vector2i> getRegions(BmMap map, @Nullable Vector2i center, @Nullable Integer radius) {
         World world = map.getWorld();
         Grid regionGrid = world.getRegionGrid();
 
         Predicate<Vector2i> regionBoundsFilter = map.getMapSettings().getCellRenderBoundariesFilter(regionGrid, true);
         Predicate<Vector2i> regionRadiusFilter;
-        if (center == null || radius < 0) {
+        if (center == null || radius == null || radius < 0) {
             regionRadiusFilter = r -> true;
         } else {
             Vector2i halfCell = regionGrid.getGridSize().div(2);

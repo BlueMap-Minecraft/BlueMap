@@ -26,8 +26,10 @@ package de.bluecolored.bluemap.forge;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import de.bluecolored.bluecommands.brigadier.BrigadierBridge;
+import de.bluecolored.bluemap.common.commands.BrigadierExecutionHandler;
+import de.bluecolored.bluemap.common.commands.Commands;
 import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.common.plugin.commands.Commands;
 import de.bluecolored.bluemap.common.serverinterface.Player;
 import de.bluecolored.bluemap.common.serverinterface.Server;
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
@@ -35,6 +37,7 @@ import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import net.minecraft.SharedConstants;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -110,9 +113,11 @@ public class ForgeMod implements Server {
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
         //register commands
-        new Commands<>(pluginInstance, event.getDispatcher(), forgeSource ->
-                new ForgeCommandSource(this, pluginInstance, forgeSource)
-        );
+        BrigadierBridge.createCommandNodes(
+                Commands.create(pluginInstance),
+                new BrigadierExecutionHandler(pluginInstance),
+                (CommandSourceStack forgeSource) -> new ForgeCommandSource(this, forgeSource)
+        ).forEach(event.getDispatcher().getRoot()::addChild);
     }
 
     @SubscribeEvent

@@ -22,23 +22,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.plugin.commands;
+package de.bluecolored.bluemap.common.commands;
 
-import de.bluecolored.bluemap.common.plugin.Plugin;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import java.util.Collection;
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface Permission {
 
-public class StorageSuggestionProvider<S> extends AbstractSuggestionProvider<S> {
-
-    private final Plugin plugin;
-
-    public StorageSuggestionProvider(Plugin plugin) {
-        this.plugin = plugin;
-    }
-
-    @Override
-    public Collection<String> getPossibleValues() {
-        return plugin.getBlueMap().getConfig().getStorageConfigs().keySet();
-    }
+    String value();
 
 }

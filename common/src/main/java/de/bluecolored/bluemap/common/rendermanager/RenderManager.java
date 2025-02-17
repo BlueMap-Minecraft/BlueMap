@@ -24,10 +24,15 @@
  */
 package de.bluecolored.bluemap.common.rendermanager;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.Scheduler;
+import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
@@ -47,6 +52,7 @@ public class RenderManager {
     private volatile boolean newTask;
 
     private final LinkedList<RenderTask> renderTasks;
+    private final Cache<RenderTask, Long> completedTasks;
 
     public RenderManager() {
         this.id = nextRenderManagerIndex.getAndIncrement();
@@ -62,6 +68,10 @@ public class RenderManager {
         this.newTask = true;
 
         this.renderTasks = new LinkedList<>();
+        this.completedTasks = Caffeine.newBuilder()
+                .expireAfterWrite(15, TimeUnit.MINUTES)
+                .maximumSize(10)
+                .build();
     }
 
     public void start(int threadCount) throws IllegalStateException {
@@ -270,6 +280,10 @@ public class RenderManager {
         return lastTimeBusy;
     }
 
+    public Map<RenderTask, Long> getCompletedTasks() {
+        return Map.copyOf(completedTasks.asMap());
+    }
+
     private void removeTasksThatAreContainedIn(RenderTask containingTask) {
         synchronized (this.renderTasks) {
             if (renderTasks.size() < 2) return;
@@ -297,7 +311,10 @@ public class RenderManager {
             // before continuing working on the next RenderTask
             if (!task.hasMoreWork()) {
                 if (busyCount.get() <= 0) {
-                    this.renderTasks.removeFirst();
+                    this.completedTasks.put(
+                            this.renderTasks.removeFirst(),
+                            System.currentTimeMillis()
+                    );
                     this.renderTasks.notifyAll();
 
                     this.newTask = true;

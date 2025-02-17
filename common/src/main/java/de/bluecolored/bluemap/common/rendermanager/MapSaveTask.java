@@ -25,12 +25,13 @@
 package de.bluecolored.bluemap.common.rendermanager;
 
 import de.bluecolored.bluemap.core.map.BmMap;
+import lombok.Getter;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class MapSaveTask implements RenderTask {
+public class MapSaveTask implements MapRenderTask {
 
-    private final BmMap map;
+    @Getter private final BmMap map;
     private final AtomicBoolean saved;
 
     public MapSaveTask(BmMap map) {
@@ -57,7 +58,7 @@ public class MapSaveTask implements RenderTask {
 
     @Override
     public String getDescription() {
-        return "Save map '" + map.getId() + "'";
+        return "saving map '%s'".formatted(map.getId());
     }
 
     @Override

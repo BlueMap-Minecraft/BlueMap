@@ -22,21 +22,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.plugin.commands;
+package de.bluecolored.bluemap.common.commands.commands;
 
-import java.util.Collection;
+import de.bluecolored.bluecommands.annotations.Command;
+import de.bluecolored.bluemap.common.commands.Permission;
+import de.bluecolored.bluemap.common.plugin.Plugin;
+import de.bluecolored.bluemap.common.serverinterface.CommandSource;
+import lombok.RequiredArgsConstructor;
 
-public class TaskRefSuggestionProvider<S> extends AbstractSuggestionProvider<S> {
+import static de.bluecolored.bluemap.common.commands.TextFormat.*;
+import static net.kyori.adventure.text.Component.text;
 
-    private final CommandHelper helper;
+@RequiredArgsConstructor
+public class StartCommand {
 
-    public TaskRefSuggestionProvider(CommandHelper helper) {
-        this.helper = helper;
-    }
+    private final Plugin plugin;
 
-    @Override
-    public Collection<String> getPossibleValues() {
-        return helper.getTaskRefs();
+    @Command("start")
+    @Permission("bluemap.start")
+    public void start(CommandSource source) {
+        plugin.getPluginState().setRenderThreadsEnabled(true);
+        plugin.checkPausedByPlayerCount();
+
+        source.sendMessage(format("% Render-Threads are now %",
+                ICON_IN_PROGRESS.color(POSITIVE_COLOR),
+                text("running").color(POSITIVE_COLOR)
+        ).color(BASE_COLOR));
+
+        plugin.save();
     }
 
 }

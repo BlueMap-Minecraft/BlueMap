@@ -128,7 +128,7 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
             CommandMap commandMap = (CommandMap) bukkitCommandMap.get(Bukkit.getServer());
 
             for (BukkitCommand command : commands.getRootCommands()) {
-                commandMap.register(command.getLabel(), command);
+                commandMap.register("bluemap", command);
             }
         } catch(NoSuchFieldException | SecurityException | IllegalAccessException e) {
             Logger.global.logError("Failed to register commands!", e);

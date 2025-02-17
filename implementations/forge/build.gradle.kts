@@ -6,7 +6,7 @@ plugins {
 }
 
 val supportedMinecraftVersions = listOf(
-    "1.21", "1.21.1", "1.21.2", "1.21.3"
+    "1.21", "1.21.1", "1.21.2", "1.21.3", "1.21.4"
 )
 
 val minecraftVersion = supportedMinecraftVersions.first()
@@ -20,10 +20,16 @@ dependencies {
 
     shadowInclude ( project( ":common" ) ) {
         exclude ( group = "com.google.code.gson", module = "gson" )
-        exclude ( group = "com.mojang", module = "brigadier" )
     }
 
     minecraft ( "net.minecraftforge", "forge", "$minecraftVersion-$forgeVersion" )
+
+    shadowInclude ( libs.bluecommands.brigadier ) {
+        exclude ( group = "com.mojang", module = "brigadier" )
+    }
+    shadowInclude ( libs.adventure.gson ) {
+        exclude ( group = "com.google.code.gson", module = "gson" )
+    }
 
     jarJar ( libs.flow.math.get().group, libs.flow.math.get().name , "[${libs.flow.math.get().version},)" )
     jarJar ( libs.bluenbt.get().group, libs.bluenbt.get().name , "[${libs.bluenbt.get().version},)" )
@@ -43,6 +49,9 @@ tasks.shadowJar {
         exclude( dependency ( libs.flow.math.get() ) )
         exclude( dependency ( libs.bluenbt.get() ) )
     }
+
+    // adventure
+    relocate ("net.kyori", "de.bluecolored.shadow.adventure")
 
     // airlift
     relocate ("io.airlift", "de.bluecolored.shadow.airlift")

@@ -417,7 +417,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
                 .setVariable("max-y", "100");
     }
 
-    private String formatPath(Path path) {
+    public static String formatPath(Path path) {
         // normalize path
         path = Path.of("")
                 .toAbsolutePath()

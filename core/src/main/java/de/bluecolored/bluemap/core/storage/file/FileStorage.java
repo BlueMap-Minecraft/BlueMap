@@ -28,6 +28,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.storage.compression.Compression;
+import lombok.Getter;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -36,7 +37,7 @@ import java.util.stream.Stream;
 
 public class FileStorage implements Storage {
 
-    private final Path root;
+    @Getter private final Path root;
     private final LoadingCache<String, FileMapStorage> mapStorages;
 
     public FileStorage(Path root, Compression compression, boolean atomic) {

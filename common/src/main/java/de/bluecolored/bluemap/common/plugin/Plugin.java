@@ -645,4 +645,8 @@ public class Plugin implements ServerEventListener {
         }
     }
 
+    public boolean isLoading() {
+        return loadingLock.isLocked();
+    }
+
 }

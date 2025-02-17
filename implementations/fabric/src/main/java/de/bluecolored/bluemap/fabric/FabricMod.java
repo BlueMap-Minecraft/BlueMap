@@ -26,8 +26,10 @@ package de.bluecolored.bluemap.fabric;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import de.bluecolored.bluecommands.brigadier.BrigadierBridge;
+import de.bluecolored.bluemap.common.commands.BrigadierExecutionHandler;
+import de.bluecolored.bluemap.common.commands.Commands;
 import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.common.plugin.commands.Commands;
 import de.bluecolored.bluemap.common.serverinterface.Player;
 import de.bluecolored.bluemap.common.serverinterface.Server;
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
@@ -39,10 +41,12 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
+import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import net.minecraft.SharedConstants;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.util.Identifier;
 import net.minecraft.world.World;
@@ -88,15 +92,17 @@ public class FabricMod implements ModInitializer, Server {
 
         //register commands
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) ->
-                new Commands<>(pluginInstance, dispatcher, fabricSource ->
-                        new FabricCommandSource(this, pluginInstance, fabricSource)
-                )
+                BrigadierBridge.createCommandNodes(
+                        Commands.create(pluginInstance),
+                        new BrigadierExecutionHandler(pluginInstance),
+                        (ServerCommandSource fabricSource) -> new FabricCommandSource(this, fabricSource)
+                ).forEach(dispatcher.getRoot()::addChild)
         );
 
         ServerLifecycleEvents.SERVER_STARTED.register((MinecraftServer server) -> {
             this.serverInstance = server;
 
-            new Thread(()->{
+            new Thread(() -> {
                 Logger.global.logInfo("Loading BlueMap...");
 
                 try {
