@@ -45,7 +45,7 @@ public class BukkitCommandSource implements CommandSource {
 
     @Override
     public void sendMessage(Component text) {
-        delegate.getSender().sendMessage(text);
+        delegate.getSender().sendMessage(text.compact());
     }
 
     @Override

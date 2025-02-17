@@ -50,7 +50,7 @@ public class SpongeCommandSource implements CommandSource {
         if (TextFormat.lineCount(text) > 1)
             text = Component.newline().append(text).appendNewline();
 
-        audience.sendMessage(text);
+        audience.sendMessage(text.compact());
     }
 
     @Override
