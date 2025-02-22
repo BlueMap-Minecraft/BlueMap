@@ -131,6 +131,9 @@ public class FabricMod implements ModInitializer, Server {
         ServerTickEvents.END_SERVER_TICK.register((MinecraftServer server) -> {
             if (server == this.serverInstance) this.updateSomePlayers();
         });
+
+        this.eventForwarder.init();
+
     }
 
     @Override
