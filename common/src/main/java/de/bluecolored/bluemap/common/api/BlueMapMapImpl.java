@@ -30,6 +30,7 @@ import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.BlueMapWorld;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
 import de.bluecolored.bluemap.common.plugin.Plugin;
+import de.bluecolored.bluemap.common.rendermanager.MapUpdatePreparationTask;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
 import de.bluecolored.bluemap.core.map.BmMap;
@@ -117,7 +118,8 @@ public class BlueMapMapImpl implements BlueMapMap {
         BmMap map = unpack(this.map);
         plugin.startWatchingMap(map);
         plugin.getPluginState().getMapState(map).setUpdateEnabled(true);
-        plugin.getRenderManager().scheduleRenderTask(new MapUpdateTask(map));
+        plugin.getRenderManager().scheduleRenderTaskNext(MapUpdatePreparationTask
+                .updateMap(map, plugin.getRenderManager()));
     }
 
     private synchronized void freeze() {

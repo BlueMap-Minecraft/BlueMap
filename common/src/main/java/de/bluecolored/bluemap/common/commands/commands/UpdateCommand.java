@@ -32,7 +32,9 @@ import de.bluecolored.bluemap.common.commands.Permission;
 import de.bluecolored.bluemap.common.commands.WithPosition;
 import de.bluecolored.bluemap.common.commands.WithWorld;
 import de.bluecolored.bluemap.common.plugin.Plugin;
+import de.bluecolored.bluemap.common.rendermanager.MapUpdatePreparationTask;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
+import de.bluecolored.bluemap.common.rendermanager.RenderTask;
 import de.bluecolored.bluemap.common.rendermanager.TileUpdateStrategy;
 import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.core.map.BmMap;
@@ -157,12 +159,18 @@ public class UpdateCommand {
     ) throws IOException {
         source.sendMessage(text("Creating update-tasks ...").color(INFO_COLOR));
         plugin.flushWorldUpdates(world);
-        for (BmMap map : maps) {
-            plugin.getRenderManager().scheduleRenderTask(new MapUpdateTask(map, center, radius, updateStrategy));
-            source.sendMessage(format("Created new update-task for map %",
-                    formatMap(map).color(HIGHLIGHT_COLOR)
-            ).color(POSITIVE_COLOR));
-        }
+        plugin.getRenderManager().scheduleRenderTasksNext(maps.stream()
+                .map(map -> MapUpdatePreparationTask.builder()
+                        .map(map)
+                        .center(center)
+                        .radius(radius)
+                        .force(updateStrategy)
+                        .taskConsumer(plugin.getRenderManager()::scheduleRenderTask)
+                        .build())
+                .peek(task -> source.sendMessage(format("Created new update-task for map %",
+                        formatMap(task.getMap()).color(HIGHLIGHT_COLOR)
+                ).color(POSITIVE_COLOR)))
+                .toArray(RenderTask[]::new));
         source.sendMessage(format("Use % to see the progress",
                 command("/bluemap").color(HIGHLIGHT_COLOR)
         ).color(BASE_COLOR));

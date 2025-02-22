@@ -24,15 +24,10 @@
  */
 package de.bluecolored.bluemap.common.rendermanager;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.Scheduler;
-import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedDeque;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
@@ -52,7 +47,7 @@ public class RenderManager {
     private volatile boolean newTask;
 
     private final LinkedList<RenderTask> renderTasks;
-    private final Cache<RenderTask, Long> completedTasks;
+    private final Map<RenderTask, Long> completedTasks;
 
     public RenderManager() {
         this.id = nextRenderManagerIndex.getAndIncrement();
@@ -68,10 +63,12 @@ public class RenderManager {
         this.newTask = true;
 
         this.renderTasks = new LinkedList<>();
-        this.completedTasks = Caffeine.newBuilder()
-                .expireAfterWrite(15, TimeUnit.MINUTES)
-                .maximumSize(10)
-                .build();
+        this.completedTasks = new LinkedHashMap<>() {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<RenderTask, Long> eldest) {
+                return size() > 10;
+            }
+        };
     }
 
     public void start(int threadCount) throws IllegalStateException {
@@ -153,20 +150,6 @@ public class RenderManager {
         }
     }
 
-    public int scheduleRenderTasks(RenderTask... tasks) {
-        return scheduleRenderTasks(Arrays.asList(tasks));
-    }
-
-    public int scheduleRenderTasks(Collection<RenderTask> tasks) {
-        synchronized (this.renderTasks) {
-            int count = 0;
-            for (RenderTask task : tasks) {
-                if (scheduleRenderTask(task)) count++;
-            }
-            return count;
-        }
-    }
-
     public boolean scheduleRenderTaskNext(RenderTask task) {
         synchronized (this.renderTasks) {
             if (renderTasks.size() <= 1) return scheduleRenderTask(task);
@@ -176,6 +159,16 @@ public class RenderManager {
             renderTasks.add(1, task);
             renderTasks.notifyAll();
             return true;
+        }
+    }
+
+    public int scheduleRenderTasksNext(RenderTask... tasks) {
+        synchronized (this.renderTasks) {
+            int count = 0;
+            for (int i = tasks.length - 1; i >= 0; i--) {
+                if (scheduleRenderTaskNext(tasks[i])) count++;
+            }
+            return count;
         }
     }
 
@@ -281,7 +274,7 @@ public class RenderManager {
     }
 
     public Map<RenderTask, Long> getCompletedTasks() {
-        return Map.copyOf(completedTasks.asMap());
+        return Map.copyOf(completedTasks);
     }
 
     private void removeTasksThatAreContainedIn(RenderTask containingTask) {

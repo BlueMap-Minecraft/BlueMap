@@ -28,7 +28,7 @@ import de.bluecolored.bluecommands.annotations.Argument;
 import de.bluecolored.bluecommands.annotations.Command;
 import de.bluecolored.bluemap.common.commands.Permission;
 import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
+import de.bluecolored.bluemap.common.rendermanager.MapUpdatePreparationTask;
 import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.core.map.BmMap;
 import lombok.RequiredArgsConstructor;
@@ -51,7 +51,8 @@ public class UnfreezeCommand {
                 formatMap(map).color(HIGHLIGHT_COLOR),
                 text("frozen").color(FROZEN_COLOR)
         ).color(BASE_COLOR));
-        plugin.getRenderManager().scheduleRenderTask(new MapUpdateTask(map));
+        plugin.getRenderManager().scheduleRenderTask(MapUpdatePreparationTask
+                .updateMap(map, plugin.getRenderManager()));
         plugin.save();
     }
 

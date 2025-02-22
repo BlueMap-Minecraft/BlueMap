@@ -28,10 +28,7 @@ import de.bluecolored.bluecommands.annotations.Argument;
 import de.bluecolored.bluecommands.annotations.Command;
 import de.bluecolored.bluemap.common.commands.Permission;
 import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.common.rendermanager.MapPurgeTask;
-import de.bluecolored.bluemap.common.rendermanager.MapRenderTask;
-import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
-import de.bluecolored.bluemap.common.rendermanager.RenderTask;
+import de.bluecolored.bluemap.common.rendermanager.*;
 import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
@@ -85,8 +82,8 @@ public class PurgeCommand {
             source.sendMessage(lines(lines));
 
             if (updateMap) {
-                RenderTask updateTask = new MapUpdateTask(map);
-                plugin.getRenderManager().scheduleRenderTask(updateTask);
+                plugin.getRenderManager().scheduleRenderTask(MapUpdatePreparationTask
+                        .updateMap(map, plugin.getRenderManager()));
             }
 
             return true;

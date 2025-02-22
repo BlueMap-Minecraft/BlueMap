@@ -62,8 +62,8 @@ public class TasksCommand {
                 .sorted(Map.Entry.comparingByValue())
                 .map(entry -> format("% % %",
                         ICON_UPDATED,
-                        entry.getKey().getDescription(),
-                        text("(done)").decorate(TextDecoration.ITALIC)
+                        text("(done)").decorate(TextDecoration.ITALIC),
+                        entry.getKey().getDescription()
                 ).color(BASE_COLOR))
                 .forEach(tasks::add);
 
