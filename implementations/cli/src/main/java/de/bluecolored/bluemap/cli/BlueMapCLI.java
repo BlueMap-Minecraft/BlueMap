@@ -368,7 +368,7 @@ public class BlueMapCLI {
                 Thread.sleep(1000); //wait a second to let the webserver start, looks nicer in the log if anything comes after that
             }
 
-            if (cmd.hasOption("r")) {
+            if (cmd.hasOption("r") || cmd.hasOption("f") || cmd.hasOption("u") || cmd.hasOption("e")) {
                 noActions = false;
 
                 boolean watch = cmd.hasOption("u");
