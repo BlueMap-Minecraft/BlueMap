@@ -51,8 +51,9 @@ public class BlockColorCalculatorFactory {
             BLEND_MIN_Z = - BLEND_RADIUS_H,
             BLEND_MAX_Z =   BLEND_RADIUS_H;
 
-    private final int[] foliageMap = new int[65536];
-    private final int[] grassMap = new int[65536];
+    private int[] foliageMap = new int[0];
+    private int[] dryFoliageMap = new int[0];
+    private int[] grassMap = new int[0];
 
     private final Map<String, ColorFunction> blockColorMap;
 
@@ -75,6 +76,9 @@ public class BlockColorCalculatorFactory {
                 switch (value) {
                     case "@foliage":
                         colorFunction = BlockColorCalculator::getBlendedFoliageColor;
+                        break;
+                    case "@dry_foliage":
+                        colorFunction = BlockColorCalculator::getBlendedDryFoliageColor;
                         break;
                     case "@grass":
                         colorFunction = BlockColorCalculator::getBlendedGrassColor;
@@ -100,12 +104,19 @@ public class BlockColorCalculatorFactory {
         }
     }
 
-    public void setFoliageMap(BufferedImage foliageMap) {
-        foliageMap.getRGB(0, 0, 256, 256, this.foliageMap, 0, 256);
+    public void setFoliageMap(BufferedImage map) {
+        this.foliageMap = new int[65536];
+        map.getRGB(0, 0, 256, 256, this.foliageMap, 0, 256);
     }
 
-    public void setGrassMap(BufferedImage grassMap) {
-        grassMap.getRGB(0, 0, 256, 256, this.grassMap, 0, 256);
+    public void setDryFoliageMap(BufferedImage map) {
+        this.dryFoliageMap = new int[65536];
+        map.getRGB(0, 0, 256, 256, this.dryFoliageMap, 0, 256);
+    }
+
+    public void setGrassMap(BufferedImage map) {
+        this.grassMap = new int[65536];
+        map.getRGB(0, 0, 256, 256, this.grassMap, 0, 256);
     }
 
     public BlockColorCalculator createCalculator() {
@@ -178,6 +189,29 @@ public class BlockColorCalculatorFactory {
 
         public Color getFoliageColor(Biome biome, Color target) {
             getColorFromMap(biome, foliageMap, 4764952, target);
+            return target.overlay(biome.getOverlayFoliageColor());
+        }
+
+        public Color getBlendedDryFoliageColor(BlockNeighborhood block, Color target) {
+            target.set(0, 0, 0, 0, true);
+
+            int x, y, z;
+
+            Biome biome;
+            for (y = BLEND_MIN_Y; y <= BLEND_MAX_Y; y++) {
+                for (x = BLEND_MIN_X; x <= BLEND_MAX_X; x++) {
+                    for (z = BLEND_MIN_Z; z <= BLEND_MAX_Z; z++) {
+                        biome = block.getNeighborBlock(x, y, z).getBiome();
+                        target.add(getDryFoliageColor(biome, tempColor));
+                    }
+                }
+            }
+
+            return target.flatten();
+        }
+
+        public Color getDryFoliageColor(Biome biome, Color target) {
+            getColorFromMap(biome, dryFoliageMap, 0xff8f5f33, target);
             return target.overlay(biome.getOverlayFoliageColor());
         }
 

@@ -65,5 +65,6 @@
     "minecraft:purple_shulker_box": "#8932b8",
     "minecraft:magenta_shulker_box": "#c74ebd",
     "minecraft:pink_shulker_box": "#f38baa",
-    "minecraft:pale_oak_leaves": "#ffffff"
+    "minecraft:pale_oak_leaves": "#ffffff",
+    "minecraft:leaf_litter": "@dry_foliage"
 }

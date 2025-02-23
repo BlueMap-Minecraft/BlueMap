@@ -322,12 +322,16 @@ public class ResourcePack extends Pack {
         }
 
         BufferedImage foliage = new ResourcePath<BufferedImage>("minecraft:colormap/foliage").getResource(colormaps::get);
-        if (foliage == null) throw new IOException("Failed to bake resource-pack: No foliage-colormap found!");
-        this.colorCalculatorFactory.setFoliageMap(foliage);
+        if (foliage != null)
+            this.colorCalculatorFactory.setFoliageMap(foliage);
+
+        BufferedImage dryFoliage = new ResourcePath<BufferedImage>("minecraft:colormap/dry_foliage").getResource(colormaps::get);
+        if (dryFoliage != null)
+            this.colorCalculatorFactory.setDryFoliageMap(dryFoliage);
 
         BufferedImage grass = new ResourcePath<BufferedImage>("minecraft:colormap/grass").getResource(colormaps::get);
-        if (grass == null) throw new IOException("Failed to bake resource-pack: No grass-colormap found!");
-        this.colorCalculatorFactory.setGrassMap(grass);
+        if (grass != null)
+            this.colorCalculatorFactory.setGrassMap(grass);
 
         // invoke extensions
         for (ResourcePackExtension extension : resourcePackExtensions.values()) {
