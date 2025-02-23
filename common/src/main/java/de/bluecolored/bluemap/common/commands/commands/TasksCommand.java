@@ -87,7 +87,7 @@ public class TasksCommand {
     }
 
     @Command("tasks cancel <task-ref>")
-    @Permission("bluemap.tasks")
+    @Permission("bluemap.tasks.cancel")
     public Component cancelTask(@Argument("task-ref") RenderTask renderTask) {
         boolean removed = plugin.getRenderManager().removeRenderTask(renderTask);
         if (!removed)
