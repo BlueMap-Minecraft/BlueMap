@@ -91,6 +91,7 @@ public class ForgeMod implements Server {
                 .build(ForgeWorld::new);
 
         NeoForge.EVENT_BUS.register(this);
+        NeoForge.EVENT_BUS.register(this.eventForwarder);
     }
 
     @SubscribeEvent

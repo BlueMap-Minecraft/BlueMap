@@ -94,6 +94,7 @@ public class ForgeMod implements Server {
                 .build(ForgeWorld::new);
 
         MinecraftForge.EVENT_BUS.register(this);
+        MinecraftForge.EVENT_BUS.register(this.eventForwarder);
 
         //Make sure the mod being absent on the other network side does not cause the client to display the server as incompatible
         ModLoadingContext.get().registerExtensionPoint(

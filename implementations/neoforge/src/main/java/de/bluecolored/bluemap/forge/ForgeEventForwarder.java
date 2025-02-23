@@ -39,8 +39,6 @@ public class ForgeEventForwarder  {
 
     public ForgeEventForwarder() {
         this.eventListeners = new ArrayList<>(1);
-
-        NeoForge.EVENT_BUS.register(this);
     }
 
     public synchronized void addEventListener(ServerEventListener listener) {
