@@ -150,6 +150,16 @@ public class RenderManager {
         }
     }
 
+    public int scheduleRenderTasks(RenderTask... tasks) {
+        synchronized (this.renderTasks) {
+            int count = 0;
+            for (RenderTask task : tasks) {
+                if (scheduleRenderTask(task)) count++;
+            }
+            return count;
+        }
+    }
+
     public boolean scheduleRenderTaskNext(RenderTask task) {
         synchronized (this.renderTasks) {
             if (renderTasks.size() <= 1) return scheduleRenderTask(task);
@@ -164,6 +174,9 @@ public class RenderManager {
 
     public int scheduleRenderTasksNext(RenderTask... tasks) {
         synchronized (this.renderTasks) {
+            if (renderTasks.size() <= 1)
+                return scheduleRenderTasks(tasks);
+
             int count = 0;
             for (int i = tasks.length - 1; i >= 0; i--) {
                 if (scheduleRenderTaskNext(tasks[i])) count++;
