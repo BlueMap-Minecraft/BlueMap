@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.common.commands;
 
+import com.mojang.brigadier.Message;
 import com.mojang.brigadier.exceptions.CommandSyntaxException;
 import com.mojang.brigadier.exceptions.SimpleCommandExceptionType;
 import de.bluecolored.bluecommands.ParseFailure;
@@ -35,6 +36,7 @@ import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import java.util.Comparator;
 
 public class BrigadierExecutionHandler extends CommandExecutor implements CommandExecutionHandler<CommandSource, Object> {
+    private static final Message DEFAULT_FAILURE_MESSAGE = () -> "Unknown or incomplete command!";
 
     public BrigadierExecutionHandler(Plugin plugin) {
         super(plugin);
@@ -51,7 +53,10 @@ public class BrigadierExecutionHandler extends CommandExecutor implements Comman
     private int parseFailure(ParseResult<CommandSource, Object> result) throws CommandSyntaxException {
         ParseFailure<CommandSource, Object> failure = result.getFailures().stream()
                 .max(Comparator.comparing(ParseFailure::getPosition))
-                .orElseThrow(IllegalAccessError::new);
+                .orElseThrow(() -> new CommandSyntaxException(
+                        new SimpleCommandExceptionType(DEFAULT_FAILURE_MESSAGE),
+                        DEFAULT_FAILURE_MESSAGE
+                ));
         throw new CommandSyntaxException(
                 new SimpleCommandExceptionType(failure::getReason),
                 failure::getReason,

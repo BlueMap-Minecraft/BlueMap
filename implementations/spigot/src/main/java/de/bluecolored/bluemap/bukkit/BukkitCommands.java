@@ -114,10 +114,9 @@ public class BukkitCommands implements Listener {
             CommandExecutor.ExecutionResult executionResult = commandExecutor.execute(result);
 
             if (executionResult.parseFailure()) {
-                ParseFailure<CommandSource, Object> failure = result.getFailures().stream()
+                result.getFailures().stream()
                         .max(Comparator.comparing(ParseFailure::getPosition))
-                        .orElseThrow(IllegalAccessError::new);
-                context.sendMessage(text(failure.getReason()).color(NEGATIVE_COLOR));
+                        .ifPresent(failure -> context.sendMessage(text(failure.getReason()).color(NEGATIVE_COLOR)));
                 return false;
             }
 
