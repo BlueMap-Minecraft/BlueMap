@@ -36,10 +36,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.server.TabCompleteEvent;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 
 import static de.bluecolored.bluemap.common.commands.TextFormat.NEGATIVE_COLOR;
 import static net.kyori.adventure.text.Component.text;
@@ -114,9 +111,15 @@ public class BukkitCommands implements Listener {
             CommandExecutor.ExecutionResult executionResult = commandExecutor.execute(result);
 
             if (executionResult.parseFailure()) {
-                result.getFailures().stream()
-                        .max(Comparator.comparing(ParseFailure::getPosition))
-                        .ifPresent(failure -> context.sendMessage(text(failure.getReason()).color(NEGATIVE_COLOR)));
+                Optional<ParseFailure<CommandSource, Object>> failure = result.getFailures().stream()
+                        .max(Comparator.comparing(ParseFailure::getPosition));
+
+                if (failure.isPresent()) {
+                    context.sendMessage(text(failure.get().getReason()).color(NEGATIVE_COLOR));
+                } else {
+                    context.sendMessage(text("Unknown command!").color(NEGATIVE_COLOR));
+                }
+
                 return false;
             }
 

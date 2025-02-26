@@ -78,9 +78,15 @@ public class SpongeCommands {
             CommandExecutor.ExecutionResult executionResult = commandExecutor.execute(result);
 
             if (executionResult.parseFailure()) {
-                result.getFailures().stream()
-                        .max(Comparator.comparing(ParseFailure::getPosition))
-                        .ifPresent(failure -> context.sendMessage(text(failure.getReason()).color(NEGATIVE_COLOR)));
+                Optional<ParseFailure<CommandSource, Object>> failure = result.getFailures().stream()
+                        .max(Comparator.comparing(ParseFailure::getPosition));
+
+                if (failure.isPresent()) {
+                    context.sendMessage(text(failure.get().getReason()).color(NEGATIVE_COLOR));
+                } else {
+                    context.sendMessage(text("Unknown command!").color(NEGATIVE_COLOR));
+                }
+
                 return CommandResult.builder()
                         .result(0)
                         .build();
