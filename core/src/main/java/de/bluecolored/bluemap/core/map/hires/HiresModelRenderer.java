@@ -136,7 +136,7 @@ public class HiresModelRenderer {
             });
         } catch (MaxCapacityReachedException ex) {
             Logger.global.noFloodWarning("max-capacity-reached",
-                    "One or more map-tiles are too complex to be completed: " + ex);
+                    "One or more map-tiles are too complex to be completed (@~ %s to %s): %s".formatted(modelMin, modelMax, ex));
         }
     }
 }
