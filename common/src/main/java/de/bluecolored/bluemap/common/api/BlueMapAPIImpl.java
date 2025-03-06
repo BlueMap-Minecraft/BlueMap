@@ -36,6 +36,7 @@ import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.world.World;
+import lombok.NonNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
@@ -98,7 +99,7 @@ public class BlueMapAPIImpl extends BlueMapAPI {
     }
 
     @Override
-    public Optional<BlueMapWorld> getWorld(Object world) {
+    public Optional<BlueMapWorld> getWorld(@NonNull Object world) {
         return worldCache.get(world);
     }
 
@@ -126,7 +127,7 @@ public class BlueMapAPIImpl extends BlueMapAPI {
     }
 
     @Override
-    public Optional<BlueMapMap> getMap(String id) {
+    public Optional<BlueMapMap> getMap(@NonNull String id) {
         return mapCache.get(id);
     }
 

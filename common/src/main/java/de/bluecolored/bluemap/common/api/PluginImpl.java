@@ -28,6 +28,7 @@ package de.bluecolored.bluemap.common.api;
 import de.bluecolored.bluemap.api.plugin.PlayerIconFactory;
 import de.bluecolored.bluemap.api.plugin.SkinProvider;
 import de.bluecolored.bluemap.common.plugin.Plugin;
+import lombok.NonNull;
 
 public class PluginImpl implements de.bluecolored.bluemap.api.plugin.Plugin {
 
@@ -43,7 +44,7 @@ public class PluginImpl implements de.bluecolored.bluemap.api.plugin.Plugin {
     }
 
     @Override
-    public void setSkinProvider(SkinProvider skinProvider) {
+    public void setSkinProvider(@NonNull SkinProvider skinProvider) {
         plugin.getSkinUpdater().setSkinProvider(skinProvider);
     }
 

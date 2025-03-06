@@ -34,6 +34,7 @@ import de.bluecolored.bluemap.common.rendermanager.MapUpdatePreparationTask;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
 import de.bluecolored.bluemap.core.map.BmMap;
+import lombok.NonNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.WeakReference;
@@ -91,7 +92,7 @@ public class BlueMapMapImpl implements BlueMapMap {
     }
 
     @Override
-    public void setTileFilter(Predicate<Vector2i> filter) {
+    public void setTileFilter(@NonNull Predicate<Vector2i> filter) {
         unpack(map).setTileFilter(filter);
     }
 
