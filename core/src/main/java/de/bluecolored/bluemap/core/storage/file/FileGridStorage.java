@@ -28,6 +28,7 @@ import de.bluecolored.bluemap.core.storage.GridStorage;
 import de.bluecolored.bluemap.core.storage.ItemStorage;
 import de.bluecolored.bluemap.core.storage.compression.CompressedInputStream;
 import de.bluecolored.bluemap.core.storage.compression.Compression;
+import de.bluecolored.bluemap.core.util.FileHelper;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Nullable;
@@ -77,11 +78,10 @@ class FileGridStorage implements GridStorage {
         return new FileItemStorage(getItemPath(x, z), compression, atomic);
     }
 
-    @SuppressWarnings("resource")
     @Override
     public Stream<Cell> stream() throws IOException {
         if (!Files.exists(root)) return Stream.empty();
-        return Files.walk(root)
+        return FileHelper.walk(root)
                 .filter(Files::isRegularFile)
                 .<Cell>map(itemPath -> {
                     Path path = itemPath;

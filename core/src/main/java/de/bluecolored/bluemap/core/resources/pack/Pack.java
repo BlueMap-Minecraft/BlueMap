@@ -30,6 +30,7 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.util.Key;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -182,7 +183,7 @@ public abstract class Pack {
         if (!Files.exists(root)) return Stream.empty();
         if (Files.isRegularFile(root)) return Stream.of(root);
         try {
-            return Files.walk(root);
+            return FileHelper.walk(root);
         } catch (IOException ex) {
             throw new CompletionException(ex);
         }
