@@ -76,8 +76,10 @@ class FileTreeIterator implements Iterator<FileTreeWalker.Event>, Closeable {
             while (ev != null) {
                 IOException ioe = ev.ioeException();
                 if (ioe != null) {
-                    if (ioe instanceof NoSuchFileException)
-                        continue; // ignore NoSuchFileExceptions, and just continue iterating
+                    if (ioe instanceof NoSuchFileException) {
+                        ev = walker.next(); // ignore NoSuchFileExceptions, and just continue iterating
+                        continue;
+                    }
                     throw new UncheckedIOException(ioe);
                 }
 
