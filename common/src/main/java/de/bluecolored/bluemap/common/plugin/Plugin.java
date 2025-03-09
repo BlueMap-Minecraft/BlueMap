@@ -539,12 +539,10 @@ public class Plugin implements ServerEventListener {
 
         var maps = blueMap.getMaps();
         for (BmMap map : maps.values()) {
-            var serverWorld = serverInterface.getServerWorld(map.getWorld()).orElse(null);
-            if (serverWorld == null) continue;
             var dataSupplier = new LivePlayersDataSupplier(
                     serverInterface,
                     getBlueMap().getConfig().getPluginConfig(),
-                    serverWorld,
+                    map.getWorld(),
                     Predicate.not(pluginState::isPlayerHidden)
             );
             try (

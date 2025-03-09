@@ -24,6 +24,9 @@
  */
 package de.bluecolored.bluemap.common.serverinterface;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.common.debug.DebugDump;
 import de.bluecolored.bluemap.core.util.Tristate;
 import de.bluecolored.bluemap.core.world.World;
@@ -33,8 +36,15 @@ import org.jetbrains.annotations.Nullable;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 public interface Server {
+
+    Cache<World, Optional<ServerWorld>> SERVER_WORLD_CACHE = Caffeine.newBuilder()
+            .expireAfterWrite(10, TimeUnit.SECONDS)
+            .weakKeys()
+            .weakValues()
+            .build();
 
     @DebugDump
     @Nullable String getMinecraftVersion();
@@ -63,17 +73,18 @@ public interface Server {
      * Returns the correct {@link ServerWorld} for a {@link World} if there is any.
      */
     default Optional<ServerWorld> getServerWorld(World world) {
-        if (world instanceof MCAWorld) {
-            MCAWorld mcaWorld = (MCAWorld) world;
-            return getLoadedServerWorlds().stream()
-                    .filter(serverWorld ->
-                            serverWorld.getWorldFolder().toAbsolutePath().normalize()
-                                    .equals(mcaWorld.getWorldFolder().toAbsolutePath().normalize()) &&
-                            serverWorld.getDimension().equals(mcaWorld.getDimension())
-                    )
-                    .findAny();
-        }
-        return Optional.empty();
+        return SERVER_WORLD_CACHE.get(world, w -> {
+            if (w instanceof MCAWorld mcaWorld) {
+                return getLoadedServerWorlds().stream()
+                        .filter(serverWorld ->
+                                serverWorld.getWorldFolder().toAbsolutePath().normalize()
+                                        .equals(mcaWorld.getWorldFolder().toAbsolutePath().normalize()) &&
+                                        serverWorld.getDimension().equals(mcaWorld.getDimension())
+                        )
+                        .findAny();
+            }
+            return Optional.empty();
+        });
     }
 
     /**

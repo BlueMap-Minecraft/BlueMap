@@ -30,6 +30,8 @@ import de.bluecolored.bluemap.common.serverinterface.Player;
 import de.bluecolored.bluemap.common.serverinterface.Server;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.world.World;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -41,10 +43,12 @@ public class LivePlayersDataSupplier implements Supplier<String> {
 
     private final Server server;
     private final PluginConfig config;
-    private final ServerWorld world;
+    private final World world;
     private final Predicate<UUID> playerFilter;
 
-    public LivePlayersDataSupplier(Server server, PluginConfig config, ServerWorld world, Predicate<UUID> playerFilter) {
+    private transient @Nullable ServerWorld serverWorld;
+
+    public LivePlayersDataSupplier(Server server, PluginConfig config, World world, Predicate<UUID> playerFilter) {
         this.server = server;
         this.config = config;
         this.world = world;
@@ -53,6 +57,9 @@ public class LivePlayersDataSupplier implements Supplier<String> {
 
     @Override
     public String get() {
+        if (serverWorld == null)
+            serverWorld = server.getServerWorld(world).orElse(null);
+
         try (StringWriter jsonString = new StringWriter();
             JsonWriter json = new JsonWriter(jsonString)) {
 
@@ -61,7 +68,7 @@ public class LivePlayersDataSupplier implements Supplier<String> {
 
             if (config.isLivePlayerMarkers()) {
                 for (Player player : this.server.getOnlinePlayers()) {
-                    boolean isCorrectWorld = player.getWorld().equals(this.world);
+                    boolean isCorrectWorld = player.getWorld().equals(serverWorld);
 
                     if (config.isHideInvisible() && player.isInvisible()) continue;
                     if (config.isHideVanished() && player.isVanished()) continue;
