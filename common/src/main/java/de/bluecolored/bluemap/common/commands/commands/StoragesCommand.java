@@ -37,13 +37,10 @@ import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.rendermanager.StorageDeleteTask;
 import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.core.map.BmMap;
-import de.bluecolored.bluemap.core.storage.MapStorage;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.storage.file.FileStorage;
 import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.ClickEvent;
-import net.kyori.adventure.text.format.TextDecoration;
 
 import java.io.IOException;
 import java.util.LinkedList;
@@ -84,14 +81,8 @@ public class StoragesCommand {
     public Component storage(CommandSource source, @Argument("storage") @Parser("storage-id") String storageId)
             throws ConfigurationException, InterruptedException, IOException {
 
-        Map<String, Storage> loadedStorages = plugin.getBlueMap().getLoadedStorages();
-        Storage storage = loadedStorages.get(storageId);
         StorageConfig storageConfig = plugin.getBlueMap().getConfig().getStorageConfigs().get(storageId);
-
-        if (storage == null) {
-            source.sendMessage(format("Initializing storage '%'...", storageId).color(BASE_COLOR));
-            storage = plugin.getBlueMap().getOrLoadStorage(storageId);
-        }
+        Storage storage = getOrLoadStorage(storageId, source);
 
         List<Component> lines = new LinkedList<>();
 
@@ -124,23 +115,10 @@ public class StoragesCommand {
         lines.add(text("Maps:").color(BASE_COLOR));
         storage.mapIds()
                 .limit(20)
-                .map(this::formatMapEntry)
+                .map(mapId -> formatMapEntry(mapId, storage))
                 .forEach(lines::add);
 
         return paragraph("Storage '%s'".formatted(storageId), lines(lines));
-    }
-
-    private Component formatMapEntry(String id) {
-        BmMap map = plugin.getBlueMap().getMaps().get(id);
-
-        Component loadedIcon = map != null ?
-                text("✔").color(POSITIVE_COLOR):
-                text("❌").color(BASE_COLOR);
-
-        return format("% %",
-                loadedIcon,
-                text(id).color(HIGHLIGHT_COLOR)
-        ).color(BASE_COLOR);
     }
 
     @Command("storages <storage> delete <map>")
@@ -150,15 +128,9 @@ public class StoragesCommand {
             @Argument("storage") @Parser("storage-id") String storageId,
             @Argument("map") String mapId
     ) throws ConfigurationException, InterruptedException {
-        Map<String, Storage> loadedStorages = plugin.getBlueMap().getLoadedStorages();
-        Storage storage = loadedStorages.get(storageId);
+        Storage storage = getOrLoadStorage(storageId, source);
 
-        if (storage == null) {
-            source.sendMessage(format("Initializing storage %...", storageId).color(BASE_COLOR));
-            storage = plugin.getBlueMap().getOrLoadStorage(storageId);
-        }
-
-        if (plugin.getBlueMap().getMaps().containsKey(mapId)) {
+        if (isMapLoaded(mapId, storage)) {
             source.sendMessage(text("Can't delete a loaded map!").color(NEGATIVE_COLOR)
                     .append(format("""
                             Unload the map by removing it's config-file first,
@@ -181,6 +153,31 @@ public class StoragesCommand {
                         command("/bluemap").color(HIGHLIGHT_COLOR)
                 ).color(BASE_COLOR)
         ));
+    }
+
+    private Storage getOrLoadStorage(String storageId, CommandSource source) throws ConfigurationException, InterruptedException {
+        Map<String, Storage> loadedStorages = plugin.getBlueMap().getLoadedStorages();
+        Storage storage = loadedStorages.get(storageId);
+        if (storage != null) return storage;
+
+        source.sendMessage(format("Initializing storage '%'...", storageId).color(BASE_COLOR));
+        return plugin.getBlueMap().getOrLoadStorage(storageId);
+    }
+
+    private boolean isMapLoaded(String mapId, Storage storage) {
+        BmMap map = plugin.getBlueMap().getMaps().get(mapId);
+        return map != null && map.getStorage().equals(storage.map(mapId));
+    }
+
+    private Component formatMapEntry(String id, Storage storage) {
+        Component loadedIcon = isMapLoaded(id, storage) ?
+                text("✔").color(POSITIVE_COLOR):
+                text("❌").color(BASE_COLOR);
+
+        return format("% %",
+                loadedIcon,
+                text(id).color(HIGHLIGHT_COLOR)
+        ).color(BASE_COLOR);
     }
 
 }
