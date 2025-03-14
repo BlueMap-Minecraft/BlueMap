@@ -89,9 +89,6 @@ public class HiresModelRenderer {
                         maxY = Math.min(max.getY(), chunk.getMaxY(x, z));
 
                         for (y = maxY; y >= minY; y--) {
-                            if (x == -1743 && y == 64 && z == 1393)
-                                System.out.println();
-
                             block.set(x, y, z);
                             if (!block.isInsideRenderBounds()) continue;
 
