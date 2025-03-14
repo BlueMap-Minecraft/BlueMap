@@ -30,10 +30,7 @@ import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluecommands.annotations.Argument;
 import de.bluecolored.bluecommands.annotations.Command;
 import de.bluecolored.bluemap.common.BlueMapService;
-import de.bluecolored.bluemap.common.commands.Permission;
-import de.bluecolored.bluemap.common.commands.Unloaded;
-import de.bluecolored.bluemap.common.commands.WithPosition;
-import de.bluecolored.bluemap.common.commands.WithWorld;
+import de.bluecolored.bluemap.common.commands.*;
 import de.bluecolored.bluemap.common.config.BlueMapConfigManager;
 import de.bluecolored.bluemap.common.debug.StateDumper;
 import de.bluecolored.bluemap.common.plugin.Plugin;
@@ -45,6 +42,7 @@ import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.ChunkConsumer;
 import de.bluecolored.bluemap.core.world.LightData;
 import de.bluecolored.bluemap.core.world.World;
+import de.bluecolored.bluemap.core.world.mca.chunk.MCAChunk;
 import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.text.Component;
 
@@ -126,11 +124,14 @@ public class DebugCommand {
                         text(chunkPos.getY()).color(HIGHLIGHT_COLOR)
                         )
                         .appendNewline()
-                        .append(details(BASE_COLOR,
+                        .append(details(BASE_COLOR, TextFormat.stripNulls(
                                 item("is generated", chunk.isGenerated()),
                                 item("has lightdata", chunk.hasLightData()),
+                                chunk instanceof MCAChunk mcaChunk ?
+                                        item("data-version", mcaChunk.getDataVersion()) :
+                                        null,
                                 item("inhabited-time", chunk.getInhabitedTime())
-                        ))
+                        )))
                 ),
                 item("world", text(world.getId()).color(HIGHLIGHT_COLOR)
                         .appendNewline()
