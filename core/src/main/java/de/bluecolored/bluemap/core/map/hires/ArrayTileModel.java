@@ -498,7 +498,7 @@ public class ArrayTileModel implements TileModel {
         materialIndex[face2] = vi;
     }
 
-    static InstancePool<ArrayTileModel> instancePool() {
+    public static InstancePool<ArrayTileModel> instancePool() {
         return INSTANCE_POOL;
     }
 

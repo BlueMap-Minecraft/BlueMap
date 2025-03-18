@@ -33,6 +33,7 @@ import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.config.*;
 import de.bluecolored.bluemap.common.debug.StateDumper;
 import de.bluecolored.bluemap.common.live.LivePlayersDataSupplier;
+import de.bluecolored.bluemap.common.metrics.Metrics;
 import de.bluecolored.bluemap.common.plugin.skins.PlayerSkinUpdater;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdatePreparationTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
@@ -42,9 +43,9 @@ import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.common.web.*;
 import de.bluecolored.bluemap.common.web.http.HttpServer;
-import de.bluecolored.bluemap.common.metrics.Metrics;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
+import de.bluecolored.bluemap.core.map.hires.ArrayTileModel;
 import de.bluecolored.bluemap.core.resources.MinecraftVersion;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.storage.Storage;
@@ -278,11 +279,15 @@ public class Plugin implements ServerEventListener {
                 //init timer
                 daemonTimer = new Timer("BlueMap-Plugin-DaemonTimer", true);
 
-                //periodically save
+                //periodically save and release memory
                 TimerTask saveTask = new TimerTask() {
                     @Override
                     public void run() {
                         save();
+
+                        // if nothing is being actively rendered, clear caches and pools to release some heap-space
+                        if (!renderManager.isRunning() || renderManager.getCurrentRenderTask() == null)
+                            ArrayTileModel.instancePool().clear();
                     }
                 };
                 daemonTimer.schedule(saveTask, TimeUnit.MINUTES.toMillis(10), TimeUnit.MINUTES.toMillis(10));

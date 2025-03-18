@@ -58,4 +58,8 @@ public class InstancePool<T> {
             pool.offer(instance);
     }
 
+    public void clear() {
+        pool.clear();
+    }
+
 }
