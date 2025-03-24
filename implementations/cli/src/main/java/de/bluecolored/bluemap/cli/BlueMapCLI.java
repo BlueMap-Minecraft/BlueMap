@@ -29,6 +29,7 @@ import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.MissingResourcesException;
 import de.bluecolored.bluemap.common.addons.Addons;
 import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
+import de.bluecolored.bluemap.common.commands.TextFormat;
 import de.bluecolored.bluemap.common.config.BlueMapConfigManager;
 import de.bluecolored.bluemap.common.config.ConfigurationException;
 import de.bluecolored.bluemap.common.config.CoreConfig;
@@ -141,11 +142,7 @@ public class BlueMapCLI {
                 String eta = "";
                 if (etaMs > 0) {
                     Duration duration = Duration.of(etaMs, ChronoUnit.MILLIS);
-                    eta = " (ETA: %d:%02d:%02d)".formatted(
-                            duration.toHours(),
-                            duration.toMinutesPart(),
-                            duration.toSecondsPart()
-                    );
+                    eta = " (ETA: %s)".formatted(TextFormat.duration(duration));
                 }
                 Logger.global.logInfo(task.getDescription() + ": " + (Math.round(progress * 100000) / 1000.0) + "%" + eta);
             }
