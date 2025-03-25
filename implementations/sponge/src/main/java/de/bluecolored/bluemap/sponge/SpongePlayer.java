@@ -41,7 +41,7 @@ import org.spongepowered.api.world.LightTypes;
 
 import java.util.*;
 
-public class SpongePlayer implements Player {
+public class SpongePlayer extends Player {
 
     private static final Map<GameMode, Gamemode> GAMEMODE_MAP = new HashMap<>(5);
     static {
@@ -145,8 +145,8 @@ public class SpongePlayer implements Player {
         this.vanished = player.get(Keys.VANISH_STATE).orElse(VanishState.unvanished()).invisible();
 
         this.name = Text.of(player.name());
-        this.position = SpongePlugin.fromSpongePoweredVector(player.position());
-        this.rotation = SpongePlugin.fromSpongePoweredVector(player.rotation());
+        this.position = SpongePlugin.fromSpongeVector(player.position());
+        this.rotation = SpongePlugin.fromSpongeVector(player.rotation());
         this.sneaking = player.get(Keys.IS_SNEAKING).orElse(false);
 
         this.skyLight = player.world().light(LightTypes.SKY, player.blockPosition());

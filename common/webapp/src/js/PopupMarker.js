@@ -70,6 +70,10 @@ export class PopupMarker extends Marker {
         return true;
     }
 
+    static blockClipboardFormat  = (pos, isHires) => isHires ? `${pos.x} ${pos.y} ${pos.z}` : `${pos.x} ${pos.z}`;
+    static chunkClipboardFormat  = (pos, isHires) => isHires ? `${pos.x} ${pos.y} ${pos.z}` : `${pos.x} ${pos.z}`;
+    static regionClipboardFormat = pos => `r.${pos.x}.${pos.z}.mca`
+
     onMapInteraction = evt => {
         let isHires = true;
         let int = evt.detail.hiresHit;
@@ -96,7 +100,9 @@ export class PopupMarker extends Marker {
 
         if (isHires) {
             this.element.innerHTML = `
-                <div class="group">
+                <div class="group" 
+                     data-tooltip="${i18n.t("blockTooltip.clipboard")}"
+                     onclick="navigator.clipboard.writeText('${PopupMarker.blockClipboardFormat(this.position, true)}')" >
                     <div class="label">${i18n.t("blockTooltip.block")}:</div>
                     <div class="content">
                         <div class="entry"><span class="label">x: </span><span class="value">${this.position.x}</span></div>
@@ -107,7 +113,9 @@ export class PopupMarker extends Marker {
             `;
         } else {
             this.element.innerHTML = `
-                <div class="group">
+                <div class="group"
+                     data-tooltip="${i18n.t("blockTooltip.clipboard")}"
+                     onclick="navigator.clipboard.writeText('${PopupMarker.blockClipboardFormat(this.position, false)}')" >
                     <div class="label">${i18n.t("blockTooltip.position")}:</div>
                     <div class="content">
                         <div class="entry"><span class="label">x: </span><span class="value">${this.position.x}</span></div>
@@ -122,18 +130,40 @@ export class PopupMarker extends Marker {
             let regionCoords = new Vector2(this.position.x, this.position.z).divideScalar(512).floor();
             let regionFile = `r.${regionCoords.x}.${regionCoords.y}.mca`;
 
+            if (isHires) {
+                this.element.innerHTML += `
+                    <hr>
+                    <div class="group"
+                         data-tooltip="${i18n.t("blockTooltip.clipboard")}"
+                         onclick="navigator.clipboard.writeText('${PopupMarker.chunkClipboardFormat(chunkCoords, true)}')" >
+                        <div class="label">${i18n.t("blockTooltip.chunk")}:</div>
+                        <div class="content">
+                            <div class="entry"><span class="label">x: </span><span class="value">${chunkCoords.x}</span></div>
+                            <div class="entry"><span class="label">y: </span><span class="value">${chunkCoords.y}</span></div>
+                            <div class="entry"><span class="label">z: </span><span class="value">${chunkCoords.z}</span></div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                this.element.innerHTML += `
+                    <hr>
+                    <div class="group"
+                         data-tooltip="${i18n.t("blockTooltip.clipboard")}"
+                         onclick="navigator.clipboard.writeText('${PopupMarker.chunkClipboardFormat(chunkCoords, false)}')" >
+                        <div class="label">${i18n.t("blockTooltip.chunk")}:</div>
+                        <div class="content">
+                            <div class="entry"><span class="label">x: </span><span class="value">${chunkCoords.x}</span></div>
+                            <div class="entry"><span class="label">z: </span><span class="value">${chunkCoords.z}</span></div>
+                        </div>
+                    </div>
+                `;
+            }
+
             this.element.innerHTML += `
                 <hr>
-                <div class="group">
-                    <div class="label">${i18n.t("blockTooltip.chunk")}:</div>
-                    <div class="content">
-                        <div class="entry"><span class="label">x: </span><span class="value">${chunkCoords.x}</span></div>
-                        <div class="entry"><span class="label">y: </span><span class="value">${chunkCoords.y}</span></div>
-                        <div class="entry"><span class="label">z: </span><span class="value">${chunkCoords.z}</span></div>
-                    </div>
-                </div>
-                <hr>
-                <div class="group">
+                <div class="group"
+                     data-tooltip="${i18n.t("blockTooltip.clipboard")}"
+                     onclick="navigator.clipboard.writeText('${PopupMarker.regionClipboardFormat(regionCoords)}')" >
                     <div class="label">${i18n.t("blockTooltip.region.region")}:</div>
                     <div class="content">
                         <div class="entry"><span class="label">x: </span><span class="value">${regionCoords.x}</span></div>

@@ -80,7 +80,7 @@ public class AnimationMeta {
                         case "interpolate" : animationMeta.interpolate = in.nextBoolean(); break;
                         case "width" : animationMeta.width = in.nextInt(); break;
                         case "height" : animationMeta.height = in.nextInt(); break;
-                        case "frametime" : animationMeta.frametime = in.nextInt(); break;
+                        case "frametime" : animationMeta.frametime = (int) in.nextDouble(); break;
                         case "frames" : readFramesList(in, animationMeta); break;
                         default: in.skipValue(); break;
                     }
@@ -115,7 +115,7 @@ public class AnimationMeta {
                     while (in.hasNext()) {
                         switch (in.nextName()) {
                             case "index" : index = in.nextInt(); break;
-                            case "time" : time = in.nextInt(); break;
+                            case "time" : time = (int) in.nextDouble(); break;
                             default: in.skipValue(); break;
                         }
                     }

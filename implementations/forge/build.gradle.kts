@@ -20,12 +20,19 @@ dependencies {
 
     shadowInclude ( project( ":common" ) ) {
         exclude ( group = "com.google.code.gson", module = "gson" )
-        exclude ( group = "com.mojang", module = "brigadier" )
     }
 
     minecraft ( "net.minecraftforge", "forge", "$minecraftVersion-$forgeVersion" )
 
+    shadowInclude ( libs.bluecommands.brigadier ) {
+        exclude ( group = "com.mojang", module = "brigadier" )
+    }
+    shadowInclude ( libs.adventure.gson ) {
+        exclude ( group = "com.google.code.gson", module = "gson" )
+    }
+
     jarJar ( libs.flow.math.get().group, libs.flow.math.get().name , "[${libs.flow.math.get().version},)" )
+    jarJar ( libs.bluenbt.get().group, libs.bluenbt.get().name , "[${libs.bluenbt.get().version},)" )
 
 }
 
@@ -40,13 +47,14 @@ tasks.shadowJar {
     // exclude jarInJar
     dependencies {
         exclude( dependency ( libs.flow.math.get() ) )
+        exclude( dependency ( libs.bluenbt.get() ) )
     }
+
+    // adventure
+    relocate ("net.kyori", "de.bluecolored.shadow.adventure")
 
     // airlift
     relocate ("io.airlift", "de.bluecolored.shadow.airlift")
-
-    // bluenbt
-    relocate ("de.bluecolored.bluenbt", "de.bluecolored.shadow.bluenbt")
 
     // caffeine
     relocate ("com.github.benmanes.caffeine", "de.bluecolored.shadow.caffeine")

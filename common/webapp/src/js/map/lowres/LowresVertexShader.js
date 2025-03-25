@@ -24,6 +24,7 @@
  */
 import { ShaderChunk } from 'three';
 
+// language=GLSL
 export const LOWRES_VERTEX_SHADER = `
 #include <common>
 ${ShaderChunk.logdepthbuf_pars_vertex}

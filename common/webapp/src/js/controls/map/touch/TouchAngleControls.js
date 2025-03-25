@@ -24,6 +24,8 @@
  */
 
 import {MathUtils} from "three";
+import {softMax} from "../../../util/Utils";
+import {MapControls} from "../MapControls";
 
 export class TouchAngleControls {
 
@@ -83,6 +85,7 @@ export class TouchAngleControls {
         smoothing = MathUtils.clamp(smoothing, 0, 1);
 
         this.manager.angle += this.deltaAngle * smoothing * this.speed * this.pixelToSpeedMultiplierY;
+        this.manager.angle = softMax(this.manager.angle, MapControls.getMaxPerspectiveAngleForDistance(this.manager.distance), 0.8);
 
         this.deltaAngle *= 1 - smoothing;
         if (Math.abs(this.deltaAngle) < 0.0001) {

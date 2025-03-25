@@ -29,6 +29,7 @@ import de.bluecolored.bluemap.api.BlueMapMap;
 import de.bluecolored.bluemap.api.RenderManager;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.rendermanager.MapPurgeTask;
+import de.bluecolored.bluemap.common.rendermanager.MapUpdatePreparationTask;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.TileUpdateStrategy;
 
@@ -49,7 +50,8 @@ public class RenderManagerImpl implements RenderManager {
     @Override
     public boolean scheduleMapUpdateTask(BlueMapMap map, boolean force) {
         BlueMapMapImpl cmap = castMap(map);
-        return renderManager.scheduleRenderTask(new MapUpdateTask(cmap.map(), TileUpdateStrategy.fixed(force)));
+        return renderManager.scheduleRenderTask(MapUpdatePreparationTask
+                .updateMap(cmap.map(), TileUpdateStrategy.fixed(force), renderManager));
     }
 
     @Override

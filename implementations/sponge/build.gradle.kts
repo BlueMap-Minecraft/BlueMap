@@ -9,12 +9,13 @@ plugins {
 
 val supportedMinecraftVersions = listOf(
     "1.20", "1.20.1", "1.20.2", "1.20.3", "1.20.4", "1.20.5", "1.20.6",
-    "1.21", "1.21.1", "1.21.2", "1.21.3"
+    "1.21", "1.21.1", "1.21.2", "1.21.3", "1.21.4"
 )
 
 dependencies {
     api ( project( ":common" ) ) {
         exclude( group = "com.google.code.gson", module = "gson" )
+        exclude( group = "net.kyori", module = "adventure-api" )
     }
 
     api ( libs.bstats.sponge )
@@ -44,12 +45,6 @@ tasks.shadowJar {
 
     // airlift
     relocate ("io.airlift", "de.bluecolored.shadow.airlift")
-
-    // brigadier
-    relocate ("com.mojang.brigadier", "de.bluecolored.shadow.brigadier")
-
-    // bluenbt
-    relocate ("de.bluecolored.bluenbt", "de.bluecolored.shadow.bluenbt")
 
     // caffeine
     relocate ("com.github.benmanes.caffeine", "de.bluecolored.shadow.caffeine")

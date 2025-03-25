@@ -39,7 +39,7 @@ import java.util.EnumMap;
 import java.util.Map;
 import java.util.UUID;
 
-public class BukkitPlayer implements Player {
+public class BukkitPlayer extends Player {
 
     private static final Map<GameMode, Gamemode> GAMEMODE_MAP = new EnumMap<>(GameMode.class);
     static {

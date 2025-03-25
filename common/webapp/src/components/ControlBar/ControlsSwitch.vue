@@ -1,5 +1,5 @@
 <template>
-  <div class="controls-switch" v-if="showViewControls">
+  <div class="controls-switch">
     <SvgButton v-if="mapViewer.map.perspectiveView" :active="isPerspectiveView" @action="setPerspectiveView" :title="$t('controls.perspective.tooltip')">
       <svg viewBox="0 0 30 30">
         <path d="M19.475,10.574c-0.166-0.021-0.337-0.036-0.51-0.045c-0.174-0.009-0.35-0.013-0.525-0.011
@@ -52,10 +52,6 @@
       },
       isFreeFlight() {
         return this.controls.state === "free";
-      },
-      showViewControls() {
-        if (!this.mapViewer.map) return 0;
-        return this.mapViewer.map.views.length > 1;
       }
     },
     methods: {

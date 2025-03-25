@@ -25,72 +25,48 @@
 package de.bluecolored.bluemap.bukkit;
 
 import com.flowpowered.math.vector.Vector3d;
-import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
-import de.bluecolored.bluemap.core.world.World;
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
-import org.bukkit.command.BlockCommandSender;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Entity;
+import org.bukkit.command.ConsoleCommandSender;
 
 import java.util.Optional;
 
+@SuppressWarnings("UnstableApiUsage")
 public class BukkitCommandSource implements CommandSource {
 
-    private final Plugin plugin;
-    private final CommandSender delegate;
+    private final CommandSourceStack delegate;
 
-    public BukkitCommandSource(Plugin plugin, CommandSender delegate) {
-        this.plugin = plugin;
+    public BukkitCommandSource(CommandSourceStack delegate) {
         this.delegate = delegate;
     }
 
     @Override
-    public void sendMessage(Text text) {
-        delegate.sendMessage(GsonComponentSerializer.gson().deserialize(text.toJSONString()));
+    public void sendMessage(Component text) {
+        delegate.getSender().sendMessage(text.compact());
     }
 
     @Override
     public boolean hasPermission(String permission) {
-        return delegate.hasPermission(permission);
+        return delegate.getSender().hasPermission(permission);
     }
 
     @Override
     public Optional<Vector3d> getPosition() {
-        Location location = getLocation();
+        if (delegate.getSender() instanceof ConsoleCommandSender) return Optional.empty();
 
-        if (location != null) {
-            return Optional.of(new Vector3d(location.getX(), location.getY(), location.getZ()));
-        }
-
-        return Optional.empty();
+        Location location = delegate.getLocation();
+        return Optional.of(new Vector3d(location.getX(), location.getY(), location.getZ()));
     }
 
     @Override
-    public Optional<World> getWorld() {
-        Location location = getLocation();
+    public Optional<ServerWorld> getWorld() {
+        if (delegate.getSender() instanceof ConsoleCommandSender) return Optional.empty();
 
-        if (location != null) {
-            ServerWorld serverWorld = BukkitPlugin.getInstance().getServerWorld(location.getWorld());
-            return Optional.ofNullable(plugin.getWorld(serverWorld));
-        }
-
-        return Optional.empty();
-    }
-
-    private Location getLocation() {
-        Location location = null;
-        if (delegate instanceof Entity) {
-            location = ((Entity) delegate).getLocation();
-        }
-        if (delegate instanceof BlockCommandSender) {
-            location = ((BlockCommandSender) delegate).getBlock().getLocation();
-        }
-
-        return location;
+        ServerWorld serverWorld = BukkitPlugin.getInstance().getServerWorld(delegate.getLocation().getWorld());
+        return Optional.ofNullable(serverWorld);
     }
 
 }

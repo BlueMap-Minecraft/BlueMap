@@ -1,12 +1,19 @@
 [versions]
+adventure = "4.17.0"
+bluecommands = "1.3.4"
 bstats = "2.2.1"
 configurate = "4.1.2"
 junit = "5.8.2"
 spongegradle = "2.2.0"
 
 [libraries]
+adventure-api = { module = "net.kyori:adventure-api", version.ref = "adventure" }
+adventure-gson = { module = "net.kyori:adventure-text-serializer-gson", version.ref = "adventure" }
+adventure-ansi = { module = "net.kyori:adventure-text-serializer-ansi", version.ref = "adventure" }
 aircompressor = { module = "io.airlift:aircompressor", version = "0.27" }
-bluenbt = { module = "de.bluecolored.bluenbt:BlueNBT", version = "3.0.2" }
+bluecommands-core = { module = "de.bluecolored:bluecommands-core", version.ref = "bluecommands" }
+bluecommands-brigadier = { module = "de.bluecolored:bluecommands-brigadier", version.ref = "bluecommands" }
+bluenbt = { module = "de.bluecolored:bluenbt", version = "3.3.0" }
 brigadier = { module = "com.mojang:brigadier", version = "1.0.17" }
 bstats-bukkit = { module = "org.bstats:bstats-bukkit", version.ref = "bstats" }
 bstats-sponge = { module = "org.bstats:bstats-sponge", version.ref = "bstats" }
@@ -29,7 +36,7 @@ lz4 = { module = "org.lz4:lz4-java", version = "1.8.0" }
 cursegradle = { id = "com.matthewprenger.cursegradle", version = "1.4.0" }
 forgegradle = { id = "net.minecraftforge.gradle", version = "[6.0.24,6.2)" }
 hangar = { id = "io.papermc.hangar-publish-plugin", version = "0.1.2" }
-loom = { id = "fabric-loom", version = "1.7.2" }
+loom = { id = "fabric-loom", version = "1.9.2" }
 minotaur = { id = "com.modrinth.minotaur", version = "2.8.7" }
 node-gradle = { id = "com.github.node-gradle.node", version = "7.0.2" }
 neoforge-gradle = { id = "net.neoforged.moddev", version = "2.0.28-beta" }

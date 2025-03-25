@@ -80,6 +80,8 @@ public class MapConfig implements MapSettings {
     private boolean enableFreeFlightView = true;
     private boolean enableHires = true;
 
+    private boolean checkForRemovedRegions = true;
+
     private String storage = "file";
 
     private boolean ignoreMissingLightData = false;

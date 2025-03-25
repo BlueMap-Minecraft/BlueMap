@@ -1,8 +1,8 @@
 {
     "variants": {
-        "facing=south": { "model": "block/sign/wall_warped" },
-        "facing=west": { "model": "block/sign/wall_warped", "y": 90 },
-        "facing=north": { "model": "block/sign/wall_warped", "y": 180 },
-        "facing=east": { "model": "block/sign/wall_warped", "y": 270 }
+        "facing=south": { "model": "entity/signs/wall_warped" },
+        "facing=west": { "model": "entity/signs/wall_warped", "y": 90 },
+        "facing=north": { "model": "entity/signs/wall_warped", "y": 180 },
+        "facing=east": { "model": "entity/signs/wall_warped", "y": 270 }
     }
 }

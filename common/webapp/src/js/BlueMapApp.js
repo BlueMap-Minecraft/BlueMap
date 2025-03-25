@@ -470,7 +470,7 @@ export class BlueMapApp {
         let targetY = MathUtils.lerp(this.mapViewer.map.terrainHeightAt(cm.position.x, cm.position.z) + 3, 0, targetDistance / 500);
 
         let startAngle = cm.angle;
-        let targetAngle = Math.min(Math.PI / 2, startAngle, this.mapControls.getMaxPerspectiveAngleForDistance(targetDistance));
+        let targetAngle = Math.min(Math.PI / 2, startAngle, MapControls.getMaxPerspectiveAngleForDistance(targetDistance));
 
         let startOrtho = cm.ortho;
         let startTilt = cm.tilt;

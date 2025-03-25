@@ -41,7 +41,9 @@ public class FabricEventForwarder {
     public FabricEventForwarder(FabricMod mod) {
         this.mod = mod;
         this.eventListeners = new ArrayList<>(1);
+    }
 
+    public void init() {
         ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
             this.onPlayerJoin(server, handler.getPlayer());
         });

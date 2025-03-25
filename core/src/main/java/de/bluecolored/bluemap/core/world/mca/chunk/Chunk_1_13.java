@@ -30,7 +30,7 @@ import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.DimensionType;
 import de.bluecolored.bluemap.core.world.LightData;
 import de.bluecolored.bluemap.core.world.biome.Biome;
-import de.bluecolored.bluemap.core.world.block.entity.BlockEntity;
+import de.bluecolored.bluemap.core.world.BlockEntity;
 import de.bluecolored.bluemap.core.world.mca.MCAUtil;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 import de.bluecolored.bluemap.core.world.mca.data.LenientBlockEntityArrayDeserializer;
@@ -123,7 +123,7 @@ public class Chunk_1_13 extends MCAChunk {
         }
 
         // load block-entities
-        this.blockEntities = new HashMap<>();
+        this.blockEntities = new HashMap<>(level.blockEntities.length);
         for (int i = 0; i < level.blockEntities.length; i++) {
             BlockEntity be = level.blockEntities[i];
             if (be == null) continue;

@@ -25,11 +25,11 @@
 package de.bluecolored.bluemap.bukkit;
 
 import com.flowpowered.math.vector.Vector3d;
-import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.common.plugin.text.Text;
+import de.bluecolored.bluemap.common.commands.TextFormat;
 import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
-import de.bluecolored.bluemap.core.world.World;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.md_5.bungee.chat.ComponentSerializer;
 import org.bukkit.Location;
 import org.bukkit.command.BlockCommandSender;
@@ -40,17 +40,18 @@ import java.util.Optional;
 
 public class BukkitCommandSource implements CommandSource {
 
-    private final Plugin plugin;
     private final CommandSender delegate;
 
-    public BukkitCommandSource(Plugin plugin, CommandSender delegate) {
-        this.plugin = plugin;
+    public BukkitCommandSource(CommandSender delegate) {
         this.delegate = delegate;
     }
 
     @Override
-    public void sendMessage(Text text) {
-        delegate.spigot().sendMessage(ComponentSerializer.parse(text.toJSONString()));
+    public void sendMessage(Component text) {
+        if (TextFormat.lineCount(text) > 1)
+            text = Component.newline().append(text).appendNewline();
+
+        delegate.spigot().sendMessage(ComponentSerializer.parse(GsonComponentSerializer.gson().serialize(text.compact())));
     }
 
     @Override
@@ -70,12 +71,12 @@ public class BukkitCommandSource implements CommandSource {
     }
 
     @Override
-    public Optional<World> getWorld() {
+    public Optional<ServerWorld> getWorld() {
         Location location = getLocation();
 
         if (location != null) {
             ServerWorld serverWorld = BukkitPlugin.getInstance().getServerWorld(location.getWorld());
-            return Optional.ofNullable(plugin.getWorld(serverWorld));
+            return Optional.ofNullable(serverWorld);
         }
 
         return Optional.empty();

@@ -313,6 +313,10 @@ public class BlueMapService implements Closeable {
         return storage;
     }
 
+    public Map<String, Storage> getLoadedStorages() {
+        return Collections.unmodifiableMap(storages);
+    }
+
     public @Nullable ResourcePack getResourcePack() {
         return resourcePack;
     }

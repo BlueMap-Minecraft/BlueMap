@@ -33,11 +33,13 @@ import de.bluecolored.bluemap.core.resources.BlockPropertiesConfig;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.pack.Pack;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockmodel.BlockModel;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockmodel.TextureVariable;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.BlockState;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.entitystate.EntityState;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.TextureVariable;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.AnimationMeta;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
+import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.Tristate;
 import de.bluecolored.bluemap.core.world.BlockProperties;
 import org.jetbrains.annotations.Nullable;
@@ -59,11 +61,14 @@ import java.util.concurrent.CompletableFuture;
 
 public class ResourcePack extends Pack {
     public static final ResourcePath<BlockState> MISSING_BLOCK_STATE = new ResourcePath<>("bluemap", "missing");
-    public static final ResourcePath<BlockModel> MISSING_BLOCK_MODEL = new ResourcePath<>("bluemap", "block/missing");
+    public static final ResourcePath<EntityState> MISSING_ENTITY_STATE = new ResourcePath<>("bluemap", "missing");
+    public static final ResourcePath<Model> MISSING_BLOCK_MODEL = new ResourcePath<>("bluemap", "block/missing");
+    public static final ResourcePath<Model> MISSING_ENTITY_MODEL = new ResourcePath<>("bluemap", "entity/missing");
     public static final ResourcePath<Texture> MISSING_TEXTURE = new ResourcePath<>("bluemap", "block/missing");
 
     private final Map<ResourcePath<BlockState>, BlockState> blockStates;
-    private final Map<ResourcePath<BlockModel>, BlockModel> blockModels;
+    private final Map<ResourcePath<EntityState>, EntityState> entityStates;
+    private final Map<ResourcePath<Model>, Model> models;
     private final Map<ResourcePath<Texture>, Texture> textures;
 
     private final Map<ResourcePath<BufferedImage>, BufferedImage> colormaps;
@@ -73,19 +78,19 @@ public class ResourcePack extends Pack {
     private final Map<ResourcePackExtensionType<?>, ResourcePackExtension> resourcePackExtensions;
 
     private final Map<String, ResourcePath<BlockState>> blockStatePaths;
+    private final Map<Key, ResourcePath<EntityState>> entityStatePaths;
     private final Map<String, ResourcePath<Texture>> texturePaths;
     private final LoadingCache<de.bluecolored.bluemap.core.world.BlockState, BlockProperties> blockPropertiesCache;
 
     public ResourcePack(int packVersion) {
         super(packVersion);
 
-        this.blockStatePaths = new HashMap<>();
         this.blockStates = new HashMap<>();
-        this.blockModels = new HashMap<>();
-        this.texturePaths = new HashMap<>();
+        this.entityStates = new HashMap<>();
+        this.models = new HashMap<>();
         this.textures = new HashMap<>();
-        this.colormaps = new HashMap<>();
 
+        this.colormaps = new HashMap<>();
         this.colorCalculatorFactory = new BlockColorCalculatorFactory();
         this.blockPropertiesConfig = new BlockPropertiesConfig();
 
@@ -93,6 +98,9 @@ public class ResourcePack extends Pack {
         for (ResourcePackExtensionType<?> extensionType : ResourcePackExtensionType.REGISTRY.values())
             resourcePackExtensions.put(extensionType, extensionType.create());
 
+        this.blockStatePaths = new HashMap<>();
+        this.entityStatePaths = new HashMap<>();
+        this.texturePaths = new HashMap<>();
         this.blockPropertiesCache = Caffeine.newBuilder()
                 .executor(BlueMap.THREAD_POOL)
                 .maximumSize(10000)
@@ -145,7 +153,22 @@ public class ResourcePack extends Pack {
                                 }, blockStates));
                     }, BlueMap.THREAD_POOL),
 
-                    // load blockmodels
+                    // load entitystates
+                    CompletableFuture.runAsync(() -> {
+                        list(root.resolve("assets"))
+                                .map(path -> path.resolve("entitystates"))
+                                .filter(Files::isDirectory)
+                                .flatMap(ResourcePack::walk)
+                                .filter(path -> path.getFileName().toString().endsWith(".json"))
+                                .filter(Files::isRegularFile)
+                                .forEach(file -> loadResource(root, file, 1, 3, key -> {
+                                    try (BufferedReader reader = Files.newBufferedReader(file)) {
+                                        return ResourcesGson.INSTANCE.fromJson(reader, EntityState.class);
+                                    }
+                                }, entityStates));
+                    }, BlueMap.THREAD_POOL),
+
+                    // load models
                     CompletableFuture.runAsync(() -> {
                         list(root.resolve("assets"))
                                 .map(path -> path.resolve("models"))
@@ -156,9 +179,9 @@ public class ResourcePack extends Pack {
                                 .filter(Files::isRegularFile)
                                 .forEach(file -> loadResource(root, file, 1, 3, key -> {
                                     try (BufferedReader reader = Files.newBufferedReader(file)) {
-                                        return ResourcesGson.INSTANCE.fromJson(reader, BlockModel.class);
+                                        return ResourcesGson.INSTANCE.fromJson(reader, Model.class);
                                     }
-                                }, blockModels));
+                                }, models));
                     }, BlueMap.THREAD_POOL),
 
                     // load colormaps
@@ -223,7 +246,7 @@ public class ResourcePack extends Pack {
             // collect all used textures
             Set<ResourcePath<Texture>> usedTextures = new HashSet<>();
             usedTextures.add(MISSING_TEXTURE);
-            for (BlockModel model : blockModels.values()) {
+            for (Model model : models.values()) {
                 for (TextureVariable textureVariable : model.getTextures().values()) {
                     if (textureVariable.isReference()) continue;
                     usedTextures.add(textureVariable.getTexturePath());
@@ -276,34 +299,39 @@ public class ResourcePack extends Pack {
 
         // fill path maps
         blockStates.keySet().forEach(path -> blockStatePaths.put(path.getFormatted(), path));
+        entityStates.keySet().forEach(path -> entityStatePaths.put(path, path));
         textures.keySet().forEach(path -> texturePaths.put(path.getFormatted(), path));
 
         // optimize references
-        for (BlockModel model : blockModels.values()) {
+        for (Model model : models.values()) {
             model.optimize(this);
         }
 
         if (Thread.interrupted()) throw new InterruptedException();
 
         // apply model parents
-        for (BlockModel model : blockModels.values()) {
+        for (Model model : models.values()) {
             model.applyParent(this);
         }
 
         if (Thread.interrupted()) throw new InterruptedException();
 
         // calculate model properties
-        for (BlockModel model : blockModels.values()) {
+        for (Model model : models.values()) {
             model.calculateProperties(this);
         }
 
         BufferedImage foliage = new ResourcePath<BufferedImage>("minecraft:colormap/foliage").getResource(colormaps::get);
-        if (foliage == null) throw new IOException("Failed to bake resource-pack: No foliage-colormap found!");
-        this.colorCalculatorFactory.setFoliageMap(foliage);
+        if (foliage != null)
+            this.colorCalculatorFactory.setFoliageMap(foliage);
+
+        BufferedImage dryFoliage = new ResourcePath<BufferedImage>("minecraft:colormap/dry_foliage").getResource(colormaps::get);
+        if (dryFoliage != null)
+            this.colorCalculatorFactory.setDryFoliageMap(dryFoliage);
 
         BufferedImage grass = new ResourcePath<BufferedImage>("minecraft:colormap/grass").getResource(colormaps::get);
-        if (grass == null) throw new IOException("Failed to bake resource-pack: No grass-colormap found!");
-        this.colorCalculatorFactory.setGrassMap(grass);
+        if (grass != null)
+            this.colorCalculatorFactory.setGrassMap(grass);
 
         // invoke extensions
         for (ResourcePackExtension extension : resourcePackExtensions.values()) {
@@ -322,9 +350,19 @@ public class ResourcePack extends Pack {
         return blockState != null ? blockState : MISSING_BLOCK_STATE.getResource(blockStates::get);
     }
 
-    public @Nullable BlockModel getBlockModel(ResourcePath<BlockModel> path) {
-        BlockModel blockModel = blockModels.get(path);
-        return blockModel != null ? blockModel : MISSING_BLOCK_MODEL.getResource(blockModels::get);
+    public @Nullable EntityState getEntityState(Key entityId) {
+        ResourcePath<EntityState> path = entityStatePaths.get(entityId);
+        return path != null ? path.getResource(this::getEntityState) : MISSING_ENTITY_STATE.getResource(this::getEntityState);
+    }
+
+    public @Nullable EntityState getEntityState(ResourcePath<EntityState> path) {
+        EntityState entityState = entityStates.get(path);
+        return entityState != null ? entityState : MISSING_ENTITY_STATE.getResource(entityStates::get);
+    }
+
+    public @Nullable Model getModel(ResourcePath<Model> path) {
+        Model model = models.get(path);
+        return model != null ? model : MISSING_BLOCK_MODEL.getResource(models::get);
     }
 
     public @Nullable ResourcePath<Texture> getTexturePath(String formatted) {
@@ -355,7 +393,7 @@ public class ResourcePack extends Pack {
             BlockState resource = getBlockState(state);
             if (resource != null) {
                 resource.forEach(state,0, 0, 0, variant -> {
-                    BlockModel model = variant.getModel().getResource(this::getBlockModel);
+                    Model model = variant.getModel().getResource(this::getModel);
                     if (model != null) {
                         if (props.isOccluding() == Tristate.UNDEFINED) props.occluding(model.isOccluding());
                         if (props.isCulling() == Tristate.UNDEFINED) props.culling(model.isCulling());

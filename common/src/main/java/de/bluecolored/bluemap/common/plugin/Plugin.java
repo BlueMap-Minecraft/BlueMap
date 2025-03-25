@@ -34,8 +34,9 @@ import de.bluecolored.bluemap.common.config.*;
 import de.bluecolored.bluemap.common.debug.StateDumper;
 import de.bluecolored.bluemap.common.live.LivePlayersDataSupplier;
 import de.bluecolored.bluemap.common.plugin.skins.PlayerSkinUpdater;
-import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
+import de.bluecolored.bluemap.common.rendermanager.MapUpdatePreparationTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
+import de.bluecolored.bluemap.common.rendermanager.RenderTask;
 import de.bluecolored.bluemap.common.serverinterface.Server;
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
@@ -264,15 +265,6 @@ public class Plugin implements ServerEventListener {
                 //initialize render manager
                 renderManager = new RenderManager();
 
-                //update all maps
-                maps.values().stream()
-                        .sorted(Comparator.comparing(bmMap -> bmMap.getMapSettings().getSorting()))
-                        .forEach(map -> {
-                    if (pluginState.getMapState(map).isUpdateEnabled()) {
-                        renderManager.scheduleRenderTask(new MapUpdateTask(map));
-                    }
-                });
-
                 //update webapp and settings
                 if (webappConfig.isEnabled())
                     blueMap.createOrUpdateWebApp(false);
@@ -336,14 +328,14 @@ public class Plugin implements ServerEventListener {
                     TimerTask updateAllMapsTask = new TimerTask() {
                         @Override
                         public void run() {
-                            for (BmMap map : maps.values()) {
-                                if (pluginState.getMapState(map).isUpdateEnabled()) {
-                                    renderManager.scheduleRenderTask(new MapUpdateTask(map));
-                                }
-                            }
+                            renderManager.scheduleRenderTasksNext(maps.values().stream()
+                                    .filter(map -> pluginState.getMapState(map).isUpdateEnabled())
+                                    .sorted(Comparator.comparing(bmMap -> bmMap.getMapSettings().getSorting()))
+                                    .map(map -> MapUpdatePreparationTask.updateMap(map, renderManager))
+                                    .toArray(RenderTask[]::new));
                         }
                     };
-                    daemonTimer.scheduleAtFixedRate(updateAllMapsTask, fullUpdateTime, fullUpdateTime);
+                    daemonTimer.scheduleAtFixedRate(updateAllMapsTask, 0, fullUpdateTime);
                 }
 
                 //metrics
@@ -650,6 +642,10 @@ public class Plugin implements ServerEventListener {
                 }
             }
         }
+    }
+
+    public boolean isLoading() {
+        return loadingLock.isLocked();
     }
 
 }

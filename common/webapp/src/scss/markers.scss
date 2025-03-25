@@ -89,6 +89,43 @@
     line-height: 1.2em;
 
     .group {
+
+      &[data-tooltip] {
+
+        position: relative;
+
+        pointer-events: auto;
+        user-select: none;
+        cursor: pointer;
+
+        margin: -0.5em;
+        padding: 0.5em;
+
+        &:hover::before {
+          display: block;
+          position: absolute;
+          z-index: 1;
+
+          left: 50%;
+          bottom: calc(100% + 0.5em);
+          transform: translate(-50%, 0);
+
+          content: attr(data-tooltip);
+
+          background: var(--theme-bg);
+          color: var(--theme-fg-light);
+          filter: drop-shadow(1px 1px 3px #0008);
+          font-size: 0.75em;
+          line-height: 1em;
+          padding: .5em;
+        }
+
+        &:active {
+          background-color: var(--theme-bg-light);
+        }
+
+      }
+
       > .label {
         position: relative;
         top: 0;

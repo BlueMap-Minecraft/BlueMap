@@ -1,0 +1,6 @@
+{
+  "parent": "entity/bed/bed_foot",
+  "textures": {
+    "bed": "entity/bed/yellow"
+  }
+}

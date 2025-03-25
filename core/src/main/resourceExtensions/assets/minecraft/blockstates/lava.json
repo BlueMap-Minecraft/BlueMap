@@ -1,5 +1,8 @@
 {
   "variants": {
-    "": { "model": "block/lava" }
+    "": {
+      "renderer": "bluemap:liquid",
+      "model": "block/lava"
+    }
   }
 }

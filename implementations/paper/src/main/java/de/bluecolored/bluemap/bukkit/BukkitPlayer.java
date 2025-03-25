@@ -32,13 +32,14 @@ import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.metadata.MetadataValue;
 import org.bukkit.potion.PotionEffectType;
 
-import java.util.*;
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.UUID;
 
-public class BukkitPlayer implements Player {
+public class BukkitPlayer extends Player {
 
     private static final Map<GameMode, Gamemode> GAMEMODE_MAP = new EnumMap<>(GameMode.class);
     static {
@@ -63,12 +64,6 @@ public class BukkitPlayer implements Player {
     public BukkitPlayer(UUID playerUUID) {
         this.uuid = playerUUID;
         update();
-
-        Material[] bestItems = Arrays.stream( Material.values() )
-                .filter( Material::isItem )
-                .sorted( Comparator.comparing( Material::isEdible, Boolean::compare ) )
-                .toArray( Material[]::new );
-
     }
 
     @Override

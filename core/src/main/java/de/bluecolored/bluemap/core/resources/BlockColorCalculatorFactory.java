@@ -28,7 +28,7 @@ import com.flowpowered.math.GenericMath;
 import com.google.gson.stream.JsonReader;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.biome.Biome;
-import de.bluecolored.bluemap.core.world.block.Block;
+import de.bluecolored.bluemap.core.world.block.BlockAccess;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 
 import java.awt.image.BufferedImage;
@@ -51,8 +51,9 @@ public class BlockColorCalculatorFactory {
             BLEND_MIN_Z = - BLEND_RADIUS_H,
             BLEND_MAX_Z =   BLEND_RADIUS_H;
 
-    private final int[] foliageMap = new int[65536];
-    private final int[] grassMap = new int[65536];
+    private int[] foliageMap = new int[0];
+    private int[] dryFoliageMap = new int[0];
+    private int[] grassMap = new int[0];
 
     private final Map<String, ColorFunction> blockColorMap;
 
@@ -75,6 +76,9 @@ public class BlockColorCalculatorFactory {
                 switch (value) {
                     case "@foliage":
                         colorFunction = BlockColorCalculator::getBlendedFoliageColor;
+                        break;
+                    case "@dry_foliage":
+                        colorFunction = BlockColorCalculator::getBlendedDryFoliageColor;
                         break;
                     case "@grass":
                         colorFunction = BlockColorCalculator::getBlendedGrassColor;
@@ -100,12 +104,19 @@ public class BlockColorCalculatorFactory {
         }
     }
 
-    public void setFoliageMap(BufferedImage foliageMap) {
-        foliageMap.getRGB(0, 0, 256, 256, this.foliageMap, 0, 256);
+    public void setFoliageMap(BufferedImage map) {
+        this.foliageMap = new int[65536];
+        map.getRGB(0, 0, 256, 256, this.foliageMap, 0, 256);
     }
 
-    public void setGrassMap(BufferedImage grassMap) {
-        grassMap.getRGB(0, 0, 256, 256, this.grassMap, 0, 256);
+    public void setDryFoliageMap(BufferedImage map) {
+        this.dryFoliageMap = new int[65536];
+        map.getRGB(0, 0, 256, 256, this.dryFoliageMap, 0, 256);
+    }
+
+    public void setGrassMap(BufferedImage map) {
+        this.grassMap = new int[65536];
+        map.getRGB(0, 0, 256, 256, this.grassMap, 0, 256);
     }
 
     public BlockColorCalculator createCalculator() {
@@ -114,7 +125,7 @@ public class BlockColorCalculatorFactory {
 
     @FunctionalInterface
     private interface ColorFunction {
-        Color invoke(BlockColorCalculator calculator, BlockNeighborhood<?> block, Color target);
+        Color invoke(BlockColorCalculator calculator, BlockNeighborhood block, Color target);
     }
 
     public class BlockColorCalculator {
@@ -122,7 +133,7 @@ public class BlockColorCalculatorFactory {
         private final Color tempColor = new Color();
 
         @SuppressWarnings("UnusedReturnValue")
-        public Color getBlockColor(BlockNeighborhood<?> block, Color target) {
+        public Color getBlockColor(BlockNeighborhood block, Color target) {
             String blockId = block.getBlockState().getFormatted();
 
             ColorFunction colorFunction = blockColorMap.get(blockId);
@@ -132,7 +143,7 @@ public class BlockColorCalculatorFactory {
             return colorFunction.invoke(this, block, target);
         }
 
-        public Color getRedstoneColor(Block<?> block, Color target) {
+        public Color getRedstoneColor(BlockAccess block, Color target) {
             int power = block.getBlockState().getRedstonePower();
             return target.set(
                     (power + 5f) / 20f, 0f, 0f,
@@ -140,7 +151,7 @@ public class BlockColorCalculatorFactory {
             );
         }
 
-        public Color getBlendedWaterColor(BlockNeighborhood<?> block, Color target) {
+        public Color getBlendedWaterColor(BlockNeighborhood block, Color target) {
             target.set(0, 0, 0, 0, true);
 
             int x, y, z;
@@ -158,7 +169,7 @@ public class BlockColorCalculatorFactory {
             return target.flatten();
         }
 
-        public Color getBlendedFoliageColor(BlockNeighborhood<?> block, Color target) {
+        public Color getBlendedFoliageColor(BlockNeighborhood block, Color target) {
             target.set(0, 0, 0, 0, true);
 
             int x, y, z;
@@ -181,7 +192,30 @@ public class BlockColorCalculatorFactory {
             return target.overlay(biome.getOverlayFoliageColor());
         }
 
-        public Color getBlendedGrassColor(BlockNeighborhood<?> block, Color target) {
+        public Color getBlendedDryFoliageColor(BlockNeighborhood block, Color target) {
+            target.set(0, 0, 0, 0, true);
+
+            int x, y, z;
+
+            Biome biome;
+            for (y = BLEND_MIN_Y; y <= BLEND_MAX_Y; y++) {
+                for (x = BLEND_MIN_X; x <= BLEND_MAX_X; x++) {
+                    for (z = BLEND_MIN_Z; z <= BLEND_MAX_Z; z++) {
+                        biome = block.getNeighborBlock(x, y, z).getBiome();
+                        target.add(getDryFoliageColor(biome, tempColor));
+                    }
+                }
+            }
+
+            return target.flatten();
+        }
+
+        public Color getDryFoliageColor(Biome biome, Color target) {
+            getColorFromMap(biome, dryFoliageMap, 0xff8f5f33, target);
+            return target.overlay(biome.getOverlayFoliageColor());
+        }
+
+        public Color getBlendedGrassColor(BlockNeighborhood block, Color target) {
             target.set(0, 0, 0, 0, true);
 
             int x, y, z;
@@ -197,7 +231,7 @@ public class BlockColorCalculatorFactory {
             return target.flatten();
         }
 
-        public Color getGrassColor(Block<?> block, Color target) {
+        public Color getGrassColor(BlockAccess block, Color target) {
             Biome biome = block.getBiome();
             getColorFromMap(biome, grassMap, 0xff52952f, target);
             target.overlay(biome.getOverlayGrassColor());

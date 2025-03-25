@@ -24,26 +24,19 @@
  */
 package de.bluecolored.bluemap.common.serverinterface;
 
-import java.util.Optional;
-
 import com.flowpowered.math.vector.Vector3d;
-
-import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.core.world.World;
+import net.kyori.adventure.text.Component;
+
+import java.util.Optional;
 
 public interface CommandSource {
 
-    void sendMessage(Text text);
-
-    default void sendMessages(Iterable<Text> textLines) {
-        for (Text text : textLines) {
-            sendMessage(text);
-        }
-    }
+    void sendMessage(Component text);
 
     boolean hasPermission(String permission);
 
-    default Optional<World> getWorld() {
+    default Optional<ServerWorld> getWorld() {
         return Optional.empty();
     }
 

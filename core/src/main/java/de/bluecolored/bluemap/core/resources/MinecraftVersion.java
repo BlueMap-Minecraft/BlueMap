@@ -39,10 +39,11 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Reader;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.*;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -53,7 +54,7 @@ import java.util.Arrays;
 public class MinecraftVersion {
     private static final Gson GSON = new Gson();
 
-    private static final String LATEST_KNOWN_VERSION = "1.20.6";
+    private static final String LATEST_KNOWN_VERSION = "1.21.4";
     private static final String EARLIEST_RESOURCEPACK_VERSION = "1.13";
     private static final String EARLIEST_DATAPACK_VERSION = "1.19.4";
 
@@ -134,32 +135,41 @@ public class MinecraftVersion {
     }
 
     private static void download(VersionManifest.Version version, Path file) throws IOException {
-        boolean downloadCompletedAndVerified = false;
         VersionManifest.Download download = version.fetchDetail().getDownloads().getClient();
         Logger.global.logInfo("Downloading '" + download.getUrl() + "' to '" + file + "'...");
 
         FileHelper.createDirectories(file.toAbsolutePath().normalize().getParent());
+        Path unverifiedFile = file.getParent().resolve(file.getFileName().toString() + ".unverified");
 
-        try (
-                DigestInputStream in = new DigestInputStream(new URI(download.getUrl()).toURL().openStream(), MessageDigest.getInstance("SHA-1"));
-                OutputStream out = Files.newOutputStream(file, StandardOpenOption.WRITE, StandardOpenOption.CREATE_NEW, StandardOpenOption.TRUNCATE_EXISTING)
-        ) {
-            in.transferTo(out);
+        try {
+            try (
+                    DigestInputStream in = new DigestInputStream(
+                            download.createInputStream(),
+                            MessageDigest.getInstance("SHA-1")
+                    );
+                    OutputStream out = Files.newOutputStream(unverifiedFile)
+            ) {
 
-            // verify sha-1
-            if (!Arrays.equals(
-                    in.getMessageDigest().digest(),
-                    hexStringToByteArray(download.getSha1())
-            )) {
-                throw new IOException("SHA-1 of the downloaded file does not match!");
+                // download
+                in.transferTo(out);
+
+                // verify sha-1
+                if (!Arrays.equals(
+                        in.getMessageDigest().digest(),
+                        hexStringToByteArray(download.getSha1())
+                )) {
+                    throw new IOException("SHA-1 of the downloaded file does not match!");
+                }
+
             }
 
-            downloadCompletedAndVerified = true;
-        } catch (NoSuchAlgorithmException | IOException | URISyntaxException ex) {
+            // rename once verified
+            FileHelper.atomicMove(unverifiedFile, file);
+
+        } catch (NoSuchAlgorithmException | IOException ex) {
             Logger.global.logWarning("Failed to download '" + download.getUrl() + "': " + ex);
         } finally {
-            if (!downloadCompletedAndVerified)
-                Files.deleteIfExists(file);
+            Files.deleteIfExists(unverifiedFile);
         }
 
     }

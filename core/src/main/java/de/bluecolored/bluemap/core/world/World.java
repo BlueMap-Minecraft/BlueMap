@@ -29,10 +29,12 @@ import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.WatchService;
+import de.bluecolored.bluemap.core.world.block.BlockAccess;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 /**
@@ -68,7 +70,7 @@ public interface World {
     /**
      * Returns the {@link Region} on the specified region-position
      */
-    Region getRegion(int x, int z);
+    Region<Chunk> getRegion(int x, int z);
 
     /**
      * Returns a collection of all regions in this world.
@@ -106,6 +108,8 @@ public interface World {
      * Invalidates the chunk from the chunk-cache (if there is a cache), so that the chunk has to be reloaded from disk
      */
     void invalidateChunkCache(int x, int z);
+
+    void iterateEntities(int minX, int minZ, int maxX, int maxZ, Consumer<Entity> entityConsumer);
 
     /**
      * Generates a unique world-id based on a world-folder and a dimension

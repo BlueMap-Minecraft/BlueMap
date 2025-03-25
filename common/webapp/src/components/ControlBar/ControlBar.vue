@@ -45,8 +45,8 @@
     <div class="space thin-hide greedy"></div>
     <DayNightSwitch v-if="showMapMenu" class="thin-hide" :title="$t('lighting.dayNightSwitch.tooltip')" />
     <div class="space thin-hide"></div>
-    <ControlsSwitch v-if="showMapMenu" class="thin-hide"></ControlsSwitch>
-    <div class="space thin-hide"></div>
+    <ControlsSwitch v-if="showMapMenu && showViewControls" class="thin-hide"></ControlsSwitch>
+    <div class="space thin-hide" v-if ="showViewControls"></div>
     <SvgButton v-if="showMapMenu" class="thin-hide" :title="$t('resetCamera.tooltip')" @action="$bluemap.resetCamera()">
       <svg viewBox="0 0 30 30">
         <rect x="7.085" y="4.341" transform="matrix(0.9774 0.2116 -0.2116 0.9774 3.2046 -1.394)" width="2.063" height="19.875"/>
@@ -101,6 +101,10 @@
       },
       showMapMenu() {
         return this.mapViewer.mapState === "loading" || this.mapViewer.mapState === "loaded";
+      },
+      showViewControls() {
+        if (!this.mapViewer.map) return false;
+        return this.mapViewer.map.views.length > 1;
       },
       showMarkerMenu() {
         return this.hasMarkers(this.markers)

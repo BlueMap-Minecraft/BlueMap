@@ -32,6 +32,7 @@ import de.bluecolored.bluemap.core.util.math.MatrixM4f;
 
 public class ArrayTileModel implements TileModel {
     private static final double GROW_MULTIPLIER = 1.5;
+    private static final int MAX_CAPACITY = 1000000;
 
     private static final InstancePool<ArrayTileModel> INSTANCE_POOL = new InstancePool<>(
             () -> new ArrayTileModel(100),
@@ -373,6 +374,9 @@ public class ArrayTileModel implements TileModel {
             int[] _materialIndex = materialIndex;
 
             int newCapacity = (int) (capacity * GROW_MULTIPLIER) + count;
+            if (newCapacity > MAX_CAPACITY) newCapacity = MAX_CAPACITY;
+            if (size + count > newCapacity)
+                throw new MaxCapacityReachedException("Capacity out of range: " + (size + count));
             setCapacity(newCapacity);
 
             System.arraycopy(_position,         0, position,        0, size * FI_POSITION);
@@ -387,6 +391,9 @@ public class ArrayTileModel implements TileModel {
     }
 
     private void setCapacity(int capacity) {
+        if (capacity > MAX_CAPACITY)
+            throw new MaxCapacityReachedException("Capacity out of range: " + capacity);
+
         this.capacity = capacity;
 
         // attributes                capacity * per-vertex * per-face
