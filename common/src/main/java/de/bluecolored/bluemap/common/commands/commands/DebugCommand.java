@@ -192,6 +192,7 @@ public class DebugCommand {
         Vector2i tilePos = map.getHiresModelManager().getTileGrid().getCell(blockPos);
 
         TileInfoRegion.TileInfo tileInfo = map.getMapTileState().get(tilePos.getX(), tilePos.getY());
+        int tileRenderTime = tileInfo.getRenderTime();
 
         int lastChunkHash = map.getMapChunkState().get(chunkPos.getX(), chunkPos.getY());
         int currentChunkHash = 0;
@@ -235,10 +236,12 @@ public class DebugCommand {
                                 text(z >> 4).color(HIGHLIGHT_COLOR)
                         )
                                 .appendNewline()
-                                .append(details(BASE_COLOR,
-                                        item("rendered", durationFormat(Instant.ofEpochSecond(tileInfo.getRenderTime()))).append(text(" ago")),
+                                .append(details(BASE_COLOR, stripNulls(
+                                        (tileRenderTime > 0) ?
+                                                item("rendered", durationFormat(Instant.ofEpochSecond(tileRenderTime)))
+                                                        .append(text(" ago")) : null,
                                         item("state", tileInfo.getState().getKey().getFormatted())
-                                ))
+                                )))
                 )
         ));
 
