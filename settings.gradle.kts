@@ -22,7 +22,7 @@ includeBuild("api")
 include(":core")
 include(":common")
 
-//implementation("cli")
+implementation("cli")
 //implementation("fabric")
 implementation("forge")
 //implementation("neoforge")
