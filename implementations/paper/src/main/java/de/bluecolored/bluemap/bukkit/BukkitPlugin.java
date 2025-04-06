@@ -201,7 +201,7 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
     }
 
     public ServerWorld getServerWorld(World world) {
-        return worlds.get(world);
+        return worlds.get(Objects.requireNonNull(world));
     }
 
     @Override
@@ -242,7 +242,7 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
     }
 
     private void initPlayer(org.bukkit.entity.Player bukkitPlayer) {
-        BukkitPlayer player = new BukkitPlayer(bukkitPlayer.getUniqueId());
+        BukkitPlayer player = new BukkitPlayer(bukkitPlayer);
         onlinePlayerMap.put(bukkitPlayer.getUniqueId(), player);
         onlinePlayerList.add(player);
 
@@ -250,7 +250,7 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
         scheduledTasks.add(
             bukkitPlayer.getScheduler().runAtFixedRate(this, task -> {
                 player.update();
-            }, () -> {}, 20, 20)
+            }, null, 20, 20)
         );
     }
 

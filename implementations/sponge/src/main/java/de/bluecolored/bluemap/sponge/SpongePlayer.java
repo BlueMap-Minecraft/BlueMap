@@ -63,9 +63,9 @@ public class SpongePlayer extends Player {
     private boolean vanished;
     private Gamemode gamemode;
 
-    public SpongePlayer(UUID playerUUID) {
-        this.uuid = playerUUID;
-        update();
+    public SpongePlayer(ServerPlayer player) {
+        this.uuid = player.uniqueId();
+        update(player);
     }
 
     @Override
@@ -130,6 +130,10 @@ public class SpongePlayer extends Player {
         ServerPlayer player = Sponge.server().player(uuid).orElse(null);
         if (player == null) return;
 
+        update(player);
+    }
+
+    private void update(ServerPlayer player) {
         this.gamemode = GAMEMODE_MAP.get(player.gameMode().get());
         if (this.gamemode == null) this.gamemode = Gamemode.SURVIVAL;
 

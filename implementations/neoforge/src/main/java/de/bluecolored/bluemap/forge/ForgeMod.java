@@ -177,14 +177,14 @@ public class ForgeMod implements Server {
             } catch (ClassCastException ignored) {}
         }
 
-        if (world instanceof ServerLevel)
-            return Optional.of(getServerWorld((ServerLevel) world));
+        if (world instanceof ServerLevel serverLevel)
+            return Optional.of(getServerWorld(serverLevel));
 
         return Optional.empty();
     }
 
     public ServerWorld getServerWorld(ServerLevel world) {
-        return worlds.get(world);
+        return worlds.get(Objects.requireNonNull(world));
     }
 
     @Override
@@ -199,10 +199,8 @@ public class ForgeMod implements Server {
 
     @SubscribeEvent
     public void onPlayerJoin(PlayerEvent.PlayerLoggedInEvent evt) {
-        var playerInstance = evt.getEntity();
-        if (!(playerInstance instanceof ServerPlayer)) return;
-
-        ForgePlayer player = new ForgePlayer(playerInstance.getUUID(), this);
+        if (!(evt.getEntity() instanceof ServerPlayer serverPlayer)) return;
+        ForgePlayer player = new ForgePlayer(serverPlayer, this);
         onlinePlayerMap.put(player.getUuid(), player);
         onlinePlayerList.add(player);
     }
@@ -210,8 +208,6 @@ public class ForgeMod implements Server {
     @SubscribeEvent
     public void onPlayerLeave(PlayerEvent.PlayerLoggedOutEvent evt) {
         var player = evt.getEntity();
-        if (!(player instanceof ServerPlayer)) return;
-
         UUID playerUUID = player.getUUID();
         onlinePlayerMap.remove(playerUUID);
         synchronized (onlinePlayerList) {

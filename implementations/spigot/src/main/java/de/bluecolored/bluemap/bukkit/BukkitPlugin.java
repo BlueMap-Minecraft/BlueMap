@@ -141,7 +141,7 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
         this.onlinePlayerList.clear();
         this.onlinePlayerMap.clear();
         for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) {
-            BukkitPlayer bukkitPlayer = new BukkitPlayer(player.getUniqueId());
+            BukkitPlayer bukkitPlayer = new BukkitPlayer(player);
             onlinePlayerMap.put(player.getUniqueId(), bukkitPlayer);
             onlinePlayerList.add(bukkitPlayer);
         }
@@ -222,7 +222,7 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
     }
 
     public ServerWorld getServerWorld(World world) {
-        return worlds.get(world);
+        return worlds.get(Objects.requireNonNull(world));
     }
 
     @Override
@@ -245,7 +245,7 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent evt) {
-        BukkitPlayer player = new BukkitPlayer(evt.getPlayer().getUniqueId());
+        BukkitPlayer player = new BukkitPlayer(evt.getPlayer());
         onlinePlayerMap.put(evt.getPlayer().getUniqueId(), player);
         onlinePlayerList.add(player);
     }

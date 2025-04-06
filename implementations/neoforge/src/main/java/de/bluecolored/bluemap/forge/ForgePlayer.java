@@ -31,6 +31,7 @@ import de.bluecolored.bluemap.common.serverinterface.Player;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -65,11 +66,11 @@ public class ForgePlayer extends Player {
 
     private final ForgeMod mod;
 
-    public ForgePlayer(UUID playerUuid, ForgeMod mod) {
-        this.uuid = playerUuid;
+    public ForgePlayer(ServerPlayer player, ForgeMod mod) {
+        this.uuid = player.getUUID();
         this.mod = mod;
 
-        update();
+        update(player);
     }
 
     @Override
@@ -132,6 +133,10 @@ public class ForgePlayer extends Player {
         ServerPlayer player = server.getPlayerList().getPlayer(uuid);
         if (player == null) return;
 
+        update(player);
+    }
+
+    private void update(ServerPlayer player) {
         this.gamemode = GAMEMODE_MAP.getOrDefault(player.gameMode.getGameModeForPlayer(), Gamemode.SURVIVAL);
         if (this.gamemode == null) this.gamemode = Gamemode.SURVIVAL;
 
@@ -145,10 +150,12 @@ public class ForgePlayer extends Player {
         this.rotation = new Vector3d(player.getXRot(), player.getYHeadRot(), 0);
         this.sneaking = player.isCrouching();
 
-        this.skyLight = player.level().getChunkSource().getLightEngine().getLayerListener(LightLayer.SKY).getLightValue(new BlockPos(player.getBlockX(), player.getBlockY(), player.getBlockZ()));
-        this.blockLight = player.level().getChunkSource().getLightEngine().getLayerListener(LightLayer.BLOCK).getLightValue(new BlockPos(player.getBlockX(), player.getBlockY(), player.getBlockZ()));
+        ServerLevel world = player.serverLevel();
 
-        this.world = mod.getServerWorld(player.serverLevel());
+        this.skyLight = world.getChunkSource().getLightEngine().getLayerListener(LightLayer.SKY).getLightValue(new BlockPos(player.getBlockX(), player.getBlockY(), player.getBlockZ()));
+        this.blockLight = world.getChunkSource().getLightEngine().getLayerListener(LightLayer.BLOCK).getLightValue(new BlockPos(player.getBlockX(), player.getBlockY(), player.getBlockZ()));
+
+        this.world = mod.getServerWorld(world);
     }
 
 }
