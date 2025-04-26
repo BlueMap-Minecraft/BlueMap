@@ -34,45 +34,28 @@ import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.Entity;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
-import de.bluecolored.bluemap.core.world.mca.entity.Llama;
+import de.bluecolored.bluemap.core.world.mca.entity.Fox;
 
-public class LlamaRenderer extends ResourceModelRenderer {
+public class FoxRenderer extends ResourceModelRenderer {
 
     private final ResourcePath<Model>
-            LAMA_CREAMY = new ResourcePath<>(Key.MINECRAFT_NAMESPACE, "entity/llama/llama_creamy"),
-            LAMA_WHITE = new ResourcePath<>(Key.MINECRAFT_NAMESPACE, "entity/llama/llama_white"),
-            LAMA_BROWN = new ResourcePath<>(Key.MINECRAFT_NAMESPACE, "entity/llama/llama_brown"),
-            LAMA_GRAY = new ResourcePath<>(Key.MINECRAFT_NAMESPACE, "entity/llama/llama_gray"),
-            LAMA_CHEST_CREAMY = new ResourcePath<>(Key.MINECRAFT_NAMESPACE, "entity/llama/llama_chest_creamy"),
-            LAMA_CHEST_WHITE = new ResourcePath<>(Key.MINECRAFT_NAMESPACE, "entity/llama/llama_chest_white"),
-            LAMA_CHEST_BROWN = new ResourcePath<>(Key.MINECRAFT_NAMESPACE, "entity/llama/llama_chest_brown"),
-            LAMA_CHEST_GRAY = new ResourcePath<>(Key.MINECRAFT_NAMESPACE, "entity/llama/llama_chest_gray");
+        FOX_ADULT_RED = new ResourcePath<>(Key.MINECRAFT_NAMESPACE, "entity/fox/adult"),
+        FOX_ADULT_SNOW = new ResourcePath<>(Key.MINECRAFT_NAMESPACE, "entity/fox/adult_snow");
 
-    public LlamaRenderer(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
+    public FoxRenderer(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
         super(resourcePack, textureGallery, renderSettings);
     }
 
     @Override
     public void render(Entity entity, BlockNeighborhood block, Part part, TileModelView tileModel) {
-        if (!(entity instanceof Llama llama)) return;
+        if (!(entity instanceof Fox fox)) return;
 
         // choose correct model
         ResourcePath<Model> model;
-        if (llama.isWithChest()) {
-            model = switch (llama.getVariant()) {
-                case CREAMY -> LAMA_CHEST_CREAMY;
-                case WHITE -> LAMA_CHEST_WHITE;
-                case BROWN -> LAMA_CHEST_BROWN;
-                case GRAY -> LAMA_CHEST_GRAY;
-            };
-        } else {
-            model = switch (llama.getVariant()) {
-                case CREAMY -> LAMA_CREAMY;
-                case WHITE -> LAMA_WHITE;
-                case BROWN -> LAMA_BROWN;
-                case GRAY -> LAMA_GRAY;
-            };
-        }
+        model = switch (fox.getType()) {
+            case RED -> FOX_ADULT_RED;
+            case SNOW -> FOX_ADULT_SNOW;
+        };
 
         // render chosen model
         super.render(entity, block, model.getResource(resourcePack::getModel), TintColorProvider.NO_TINT, tileModel);

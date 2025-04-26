@@ -26,12 +26,10 @@ package de.bluecolored.bluemap.core.map.hires.entity;
 
 import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
-import de.bluecolored.bluemap.core.map.hires.block.LiquidModelRenderer;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.Keyed;
 import de.bluecolored.bluemap.core.util.Registry;
-import de.bluecolored.bluemap.core.world.BlockState;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
@@ -41,11 +39,25 @@ public interface EntityRendererType extends Keyed, EntityRendererFactory {
     EntityRendererType MISSING = new Impl(Key.bluemap("missing"), MissingModelRenderer::new);
 
     EntityRendererType LLAMA = new Impl(Key.minecraft("llama"), LlamaRenderer::new);
+    EntityRendererType BEE = new Impl(Key.minecraft("bee"), BeeRenderer::new);
+    EntityRendererType CAT = new Impl(Key.minecraft("cat"), CatRenderer::new);
+    EntityRendererType OCELOT = new Impl(Key.minecraft("ocelot"), OcelotRenderer::new);
+    EntityRendererType CHICKEN = new Impl(Key.minecraft("chicken"), ChickenRenderer::new);
+    EntityRendererType FOX = new Impl(Key.minecraft("fox"), FoxRenderer::new);
+    EntityRendererType PIG = new Impl(Key.minecraft("pig"), PigRenderer::new);
+    EntityRendererType TROPICAL_FISH = new Impl(Key.minecraft("tropical_fish"), TropicalFishRenderer::new);
 
     Registry<EntityRendererType> REGISTRY = new Registry<>(
             DEFAULT,
             MISSING,
-            LLAMA
+            LLAMA,
+            BEE,
+            CAT,
+            OCELOT,
+            CHICKEN,
+            FOX,
+            PIG,
+            TROPICAL_FISH
     );
 
     /**

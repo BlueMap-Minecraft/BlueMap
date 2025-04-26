@@ -1,5 +1,5 @@
 {
   "parts": [
-    { "model": "minecraft:entity/fox/adult" }
+    { "renderer": "minecraft:fox" }
   ]
 }
