@@ -24,6 +24,10 @@
  */
 package de.bluecolored.bluemap.core.world;
 
+import de.bluecolored.bluemap.core.logger.Logger;
+
+import java.io.IOException;
+
 @FunctionalInterface
 public interface ChunkConsumer<T> {
 
@@ -32,6 +36,10 @@ public interface ChunkConsumer<T> {
     }
 
     void accept(int chunkX, int chunkZ, T chunk);
+
+    default void fail(int chunkX, int chunkZ, IOException exception) throws IOException {
+        throw exception;
+    }
 
     @FunctionalInterface
     interface ListOnly<T> extends ChunkConsumer<T> {

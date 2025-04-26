@@ -170,8 +170,15 @@ public class LinearRegion<T> implements Region<T> {
                                 chunkDataBuffer = new byte[length];
                             dIn.readFully(chunkDataBuffer, 0, length);
 
-                            T chunk = chunkLoader.load(chunkDataBuffer, 0, length, Compression.NONE);
-                            consumer.accept(chunkX, chunkZ, chunk);
+                            try {
+                                T chunk = chunkLoader.load(chunkDataBuffer, 0, length, Compression.NONE);
+                                consumer.accept(chunkX, chunkZ, chunk);
+                            } catch (IOException ex) {
+                                consumer.fail(chunkX, chunkZ, ex);
+                            } catch (Exception ex) {
+                                consumer.fail(chunkX, chunkZ, new IOException(ex));
+                            }
+
                         } else {
                             // skip before reading the next chunk, but only if there is a next chunk
                             // that we actually want to read, to avoid decompressing unnecessary data

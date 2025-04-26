@@ -60,6 +60,8 @@ public interface MapSettings extends RenderSettings {
 
     boolean isEnableHires();
 
+    boolean isCheckForRemovedRegions();
+
     @Override
     default boolean isSaveHiresLayer() {
         return isEnableHires();

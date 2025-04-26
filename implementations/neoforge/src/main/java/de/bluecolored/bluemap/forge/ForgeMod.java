@@ -26,8 +26,10 @@ package de.bluecolored.bluemap.forge;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import de.bluecolored.bluecommands.brigadier.BrigadierBridge;
+import de.bluecolored.bluemap.common.commands.BrigadierExecutionHandler;
+import de.bluecolored.bluemap.common.commands.Commands;
 import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.common.plugin.commands.Commands;
 import de.bluecolored.bluemap.common.serverinterface.Player;
 import de.bluecolored.bluemap.common.serverinterface.Server;
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
@@ -35,6 +37,7 @@ import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import net.minecraft.SharedConstants;
+import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
@@ -88,6 +91,7 @@ public class ForgeMod implements Server {
                 .build(ForgeWorld::new);
 
         NeoForge.EVENT_BUS.register(this);
+        NeoForge.EVENT_BUS.register(this.eventForwarder);
     }
 
     @SubscribeEvent
@@ -98,9 +102,11 @@ public class ForgeMod implements Server {
     @SubscribeEvent
     public void onRegisterCommands(RegisterCommandsEvent event) {
         //register commands
-        new Commands<>(pluginInstance, event.getDispatcher(), forgeSource ->
-                new ForgeCommandSource(this, pluginInstance, forgeSource)
-        );
+        BrigadierBridge.createCommandNodes(
+                Commands.create(pluginInstance),
+                new BrigadierExecutionHandler(pluginInstance),
+                (CommandSourceStack forgeSource) -> new ForgeCommandSource(this, forgeSource)
+        ).forEach(event.getDispatcher().getRoot()::addChild);
     }
 
     @SubscribeEvent
@@ -171,14 +177,14 @@ public class ForgeMod implements Server {
             } catch (ClassCastException ignored) {}
         }
 
-        if (world instanceof ServerLevel)
-            return Optional.of(getServerWorld((ServerLevel) world));
+        if (world instanceof ServerLevel serverLevel)
+            return Optional.of(getServerWorld(serverLevel));
 
         return Optional.empty();
     }
 
     public ServerWorld getServerWorld(ServerLevel world) {
-        return worlds.get(world);
+        return worlds.get(Objects.requireNonNull(world));
     }
 
     @Override
@@ -193,10 +199,8 @@ public class ForgeMod implements Server {
 
     @SubscribeEvent
     public void onPlayerJoin(PlayerEvent.PlayerLoggedInEvent evt) {
-        var playerInstance = evt.getEntity();
-        if (!(playerInstance instanceof ServerPlayer)) return;
-
-        ForgePlayer player = new ForgePlayer(playerInstance.getUUID(), this);
+        if (!(evt.getEntity() instanceof ServerPlayer serverPlayer)) return;
+        ForgePlayer player = new ForgePlayer(serverPlayer, this);
         onlinePlayerMap.put(player.getUuid(), player);
         onlinePlayerList.add(player);
     }
@@ -204,8 +208,6 @@ public class ForgeMod implements Server {
     @SubscribeEvent
     public void onPlayerLeave(PlayerEvent.PlayerLoggedOutEvent evt) {
         var player = evt.getEntity();
-        if (!(player instanceof ServerPlayer)) return;
-
         UUID playerUUID = player.getUUID();
         onlinePlayerMap.remove(playerUUID);
         synchronized (onlinePlayerList) {

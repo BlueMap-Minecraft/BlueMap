@@ -29,16 +29,14 @@ import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.MissingResourcesException;
 import de.bluecolored.bluemap.common.addons.Addons;
 import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
+import de.bluecolored.bluemap.common.commands.TextFormat;
 import de.bluecolored.bluemap.common.config.BlueMapConfigManager;
 import de.bluecolored.bluemap.common.config.ConfigurationException;
 import de.bluecolored.bluemap.common.config.CoreConfig;
 import de.bluecolored.bluemap.common.config.WebserverConfig;
 import de.bluecolored.bluemap.common.metrics.Metrics;
 import de.bluecolored.bluemap.common.plugin.MapUpdateService;
-import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
-import de.bluecolored.bluemap.common.rendermanager.RenderManager;
-import de.bluecolored.bluemap.common.rendermanager.RenderTask;
-import de.bluecolored.bluemap.common.rendermanager.TileUpdateStrategy;
+import de.bluecolored.bluemap.common.rendermanager.*;
 import de.bluecolored.bluemap.common.web.*;
 import de.bluecolored.bluemap.common.web.http.HttpRequestHandler;
 import de.bluecolored.bluemap.common.web.http.HttpServer;
@@ -114,18 +112,19 @@ public class BlueMapCLI {
         }
 
         //update all maps
-        int totalRegions = 0;
         for (BmMap map : maps.values()) {
-            MapUpdateTask updateTask = new MapUpdateTask(map, force);
-            renderManager.scheduleRenderTask(updateTask);
-            totalRegions += updateTask.getRegions().size();
+            renderManager.scheduleRenderTask(MapUpdatePreparationTask.builder()
+                    .map(map)
+                    .force(force)
+                    .taskConsumer(renderManager::scheduleRenderTaskNext)
+                    .build());
         }
 
         // enable api
         BlueMapAPIImpl api = new BlueMapAPIImpl(blueMap, null);
         api.register();
 
-        Logger.global.logInfo("Start updating " + maps.size() + " maps (" + totalRegions + " regions, ~" + totalRegions * 1024L + " chunks)...");
+        Logger.global.logInfo("Start updating " + maps.size() + " maps ...");
 
         // start rendering
         renderManager.start(blueMap.getConfig().getCoreConfig().resolveRenderThreadCount());
@@ -143,11 +142,7 @@ public class BlueMapCLI {
                 String eta = "";
                 if (etaMs > 0) {
                     Duration duration = Duration.of(etaMs, ChronoUnit.MILLIS);
-                    eta = " (ETA: %d:%02d:%02d)".formatted(
-                            duration.toHours(),
-                            duration.toMinutesPart(),
-                            duration.toSecondsPart()
-                    );
+                    eta = " (ETA: %s)".formatted(TextFormat.duration(duration));
                 }
                 Logger.global.logInfo(task.getDescription() + ": " + (Math.round(progress * 100000) / 1000.0) + "%" + eta);
             }
@@ -368,7 +363,7 @@ public class BlueMapCLI {
                 Thread.sleep(1000); //wait a second to let the webserver start, looks nicer in the log if anything comes after that
             }
 
-            if (cmd.hasOption("r")) {
+            if (cmd.hasOption("r") || cmd.hasOption("f") || cmd.hasOption("u") || cmd.hasOption("e")) {
                 noActions = false;
 
                 boolean watch = cmd.hasOption("u");

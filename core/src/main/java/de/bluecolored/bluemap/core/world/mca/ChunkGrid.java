@@ -111,9 +111,14 @@ public class ChunkGrid<T> {
                     Vector2i chunkPos = VECTOR_2_I_CACHE.get(chunkX, chunkZ);
                     chunkCache.put(chunkPos, chunk);
                 }
+
+                @Override
+                public void fail(int chunkX, int chunkZ, IOException ex) {
+                    Logger.global.logDebug("Failed to preload chunk (%d, %d) from region ('%s' -> x:%d, z:%d): %s".formatted(chunkX, chunkZ, regionFolder, x, z, ex));
+                }
             });
         } catch (IOException ex) {
-            Logger.global.logDebug("Unexpected exception trying to load preload region ('%s' -> x:%d, z:%d): %s".formatted(regionFolder, x, z, ex));
+            Logger.global.logDebug("Unexpected exception trying to preload region ('%s' -> x:%d, z:%d): %s".formatted(regionFolder, x, z, ex));
         }
     }
 

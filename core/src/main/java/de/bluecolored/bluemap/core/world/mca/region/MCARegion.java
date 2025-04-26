@@ -152,8 +152,15 @@ public class MCARegion<T> implements Region<T> {
                         channel.position(offset);
                         readFully(channel, chunkDataBuffer, 0, size);
 
-                        T chunk = loadChunk(chunkDataBuffer, size);
-                        consumer.accept(chunkX, chunkZ, chunk);
+                        try {
+                            T chunk = loadChunk(chunkDataBuffer, size);
+                            consumer.accept(chunkX, chunkZ, chunk);
+                        } catch (IOException ex) {
+                            consumer.fail(chunkX, chunkZ, ex);
+                        } catch (Exception ex) {
+                            consumer.fail(chunkX, chunkZ, new IOException(ex));
+                        }
+
                     }
                 }
             }

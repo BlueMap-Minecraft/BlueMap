@@ -5,21 +5,25 @@ plugins {
 }
 
 val supportedMinecraftVersions = listOf(
-    "1.20.1", "1.20.2", "1.20.3", "1.20.4", "1.20.5", "1.20.6",
-    "1.21", "1.21.1", "1.21.2", "1.21.3"
+    "1.20.6",
+    "1.21", "1.21.1", "1.21.2", "1.21.3", "1.21.4", "1.21.5"
 )
 
 val minecraftVersion = supportedMinecraftVersions.first()
 val paperVersion = "${minecraftVersion}-R0.1-SNAPSHOT"
-val apiVersion = "1.20" // paper-version but without minor
+val apiVersion = "1.20.6" // paper-version but without minor
 
 dependencies {
     api ( project( ":common" ) ) {
         exclude( group = "com.google.code.gson", module = "gson" )
+        exclude( group = "net.kyori", module = "adventure-api" )
     }
 
     shadow ( "io.papermc.paper", "paper-api", paperVersion )
     api ( libs.bstats.bukkit )
+    api ( libs.bluecommands.brigadier ) {
+        exclude ( group = "com.mojang", module = "brigadier" )
+    }
 }
 
 tasks.shadowJar {
@@ -31,9 +35,6 @@ tasks.shadowJar {
 
     // airlift
     relocate ("io.airlift", "de.bluecolored.shadow.airlift")
-
-    // brigadier
-    relocate ("com.mojang.brigadier", "de.bluecolored.shadow.brigadier")
 
     // caffeine
     relocate ("com.github.benmanes.caffeine", "de.bluecolored.shadow.caffeine")

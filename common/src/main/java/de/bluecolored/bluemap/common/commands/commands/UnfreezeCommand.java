@@ -22,23 +22,38 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.plugin.commands;
+package de.bluecolored.bluemap.common.commands.commands;
 
+import de.bluecolored.bluecommands.annotations.Argument;
+import de.bluecolored.bluecommands.annotations.Command;
+import de.bluecolored.bluemap.common.commands.Permission;
 import de.bluecolored.bluemap.common.plugin.Plugin;
+import de.bluecolored.bluemap.common.rendermanager.MapUpdatePreparationTask;
+import de.bluecolored.bluemap.common.serverinterface.CommandSource;
+import de.bluecolored.bluemap.core.map.BmMap;
+import lombok.RequiredArgsConstructor;
 
-import java.util.Collection;
+import static de.bluecolored.bluemap.common.commands.TextFormat.*;
+import static net.kyori.adventure.text.Component.text;
 
-public class StorageSuggestionProvider<S> extends AbstractSuggestionProvider<S> {
+@RequiredArgsConstructor
+public class UnfreezeCommand {
 
     private final Plugin plugin;
 
-    public StorageSuggestionProvider(Plugin plugin) {
-        this.plugin = plugin;
-    }
-
-    @Override
-    public Collection<String> getPossibleValues() {
-        return plugin.getBlueMap().getConfig().getStorageConfigs().keySet();
+    @Command("unfreeze <map>")
+    @Permission("bluemap.unfreeze")
+    public void unfreeze(CommandSource source, @Argument("map") BmMap map) {
+        plugin.getPluginState().getMapState(map).setUpdateEnabled(true);
+        plugin.startWatchingMap(map);
+        source.sendMessage(format("% Map % is no longer % and will update automatically",
+                ICON_IN_PROGRESS,
+                formatMap(map).color(HIGHLIGHT_COLOR),
+                text("frozen").color(FROZEN_COLOR)
+        ).color(BASE_COLOR));
+        plugin.getRenderManager().scheduleRenderTask(MapUpdatePreparationTask
+                .updateMap(map, plugin.getRenderManager()));
+        plugin.save();
     }
 
 }

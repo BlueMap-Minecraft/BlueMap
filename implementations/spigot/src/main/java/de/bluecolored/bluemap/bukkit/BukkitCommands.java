@@ -24,90 +24,73 @@
  */
 package de.bluecolored.bluemap.bukkit;
 
-import com.mojang.brigadier.CommandDispatcher;
-import com.mojang.brigadier.exceptions.CommandSyntaxException;
-import com.mojang.brigadier.suggestion.Suggestion;
-import com.mojang.brigadier.suggestion.Suggestions;
-import com.mojang.brigadier.tree.CommandNode;
+import de.bluecolored.bluecommands.*;
+import de.bluecolored.bluemap.common.commands.CommandExecutor;
+import de.bluecolored.bluemap.common.commands.Commands;
 import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.common.plugin.commands.Commands;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
+import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.RemoteConsoleCommandSender;
 import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.server.TabCompleteEvent;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.*;
+
+import static de.bluecolored.bluemap.common.commands.TextFormat.NEGATIVE_COLOR;
+import static net.kyori.adventure.text.Component.text;
 
 public class BukkitCommands implements Listener {
 
-    private final CommandDispatcher<CommandSender> dispatcher;
+    private final Command<CommandSource, Object> commands;
+    private final CommandExecutor commandExecutor;
 
     public BukkitCommands(final Plugin plugin) {
-        this.dispatcher = new CommandDispatcher<>();
-
-        // register commands
-        new Commands<>(plugin, dispatcher, bukkitSender -> {
-
-            // RCON doesn't work async, use console instead
-            if (bukkitSender instanceof RemoteConsoleCommandSender)
-                return new BukkitCommandSource(plugin, Bukkit.getConsoleSender());
-
-            return new BukkitCommandSource(plugin, bukkitSender);
-        });
+        this.commands = Commands.create(plugin);
+        this.commandExecutor = new CommandExecutor(plugin);
     }
 
-    public Collection<BukkitCommand> getRootCommands(){
-        Collection<BukkitCommand> rootCommands = new ArrayList<>();
-
-        for (CommandNode<CommandSender> node : this.dispatcher.getRoot().getChildren()) {
-            rootCommands.add(new CommandProxy(node.getName()));
-        }
-
-        return rootCommands;
+    public Collection<? extends BukkitCommand> getRootCommands(){
+        return List.of(new CommandProxy(((LiteralCommand<?, ?>) commands).getLiteral()));
     }
 
     @EventHandler
     public void onTabComplete(TabCompleteEvent evt) {
-        try {
-            String input = evt.getBuffer();
-            if (!input.isEmpty() && input.charAt(0) == '/') {
-                input = input.substring(1);
+        String input = evt.getBuffer();
+        if (!input.isEmpty() && input.charAt(0) == '/') {
+            input = input.substring(1);
+        }
+
+        int position = input.lastIndexOf(' ') + 1;
+
+        //noinspection resource
+        InputReader inputReader = new InputReader(input);
+        inputReader.setPosition(position);
+
+        BukkitCommandSource context = new BukkitCommandSource(evt.getSender());
+        ParseResult<CommandSource, Object> result = commands.parse(context, input);
+
+        List<String> completions = new ArrayList<>();
+        for (ParseFailure<?, ?> failure : result.getFailures()) {
+            if (failure.getPosition() != position) continue;
+            for (var suggestion : failure.getSuggestions()) {
+                completions.add(suggestion.getString());
             }
+        }
 
-            Suggestions suggestions = dispatcher.getCompletionSuggestions(dispatcher.parse(input, evt.getSender())).get(100, TimeUnit.MILLISECONDS);
-            List<String> completions = new ArrayList<>();
-            for (Suggestion suggestion : suggestions.getList()) {
-                String text = suggestion.getText();
+        if (!completions.isEmpty()) {
+            completions.sort(String::compareToIgnoreCase);
 
-                if (text.indexOf(' ') == -1) {
-                    completions.add(text);
-                }
+            try {
+                evt.getCompletions().addAll(completions);
+            } catch (UnsupportedOperationException ex){
+                // fix for a bug with paper where the completion-Collection is not mutable for some reason
+                List<String> mutableCompletions = new ArrayList<>(evt.getCompletions());
+                mutableCompletions.addAll(completions);
+                evt.setCompletions(mutableCompletions);
             }
-
-            if (!completions.isEmpty()) {
-                completions.sort(String::compareToIgnoreCase);
-
-                try {
-                    evt.getCompletions().addAll(completions);
-                } catch (UnsupportedOperationException ex){
-                    // fix for a bug with paper where the completion-Collection is not mutable for some reason
-                    List<String> mutableCompletions = new ArrayList<>(evt.getCompletions());
-                    mutableCompletions.addAll(completions);
-                    evt.setCompletions(mutableCompletions);
-                }
-            }
-        } catch (InterruptedException ignore) {
-            Thread.currentThread().interrupt();
-        } catch (ExecutionException | TimeoutException ignore) {}
+        }
     }
 
     private class CommandProxy extends BukkitCommand {
@@ -117,22 +100,30 @@ public class BukkitCommands implements Listener {
         }
 
         @Override
-        public boolean execute(CommandSender sender, String commandLabel, String[] args) {
-            String command = commandLabel;
+        public boolean execute(@NotNull CommandSender sender, @NotNull String commandLabel, String[] args) {
+            String input = commandLabel;
             if (args.length > 0) {
-                command += " " + String.join(" ", args);
+                input += " " + String.join(" ", args);
             }
 
-            try {
-                return dispatcher.execute(command, sender) > 0;
-            } catch (CommandSyntaxException ex) {
-                sender.sendMessage(ChatColor.RED + ex.getRawMessage().getString());
+            BukkitCommandSource context = new BukkitCommandSource(sender);
+            ParseResult<CommandSource, Object> result = commands.parse(context, input);
+            CommandExecutor.ExecutionResult executionResult = commandExecutor.execute(result);
 
-                String context = ex.getContext();
-                if (context != null) sender.sendMessage(ChatColor.GRAY + context);
+            if (executionResult.parseFailure()) {
+                Optional<ParseFailure<CommandSource, Object>> failure = result.getFailures().stream()
+                        .max(Comparator.comparing(ParseFailure::getPosition));
+
+                if (failure.isPresent()) {
+                    context.sendMessage(text(failure.get().getReason()).color(NEGATIVE_COLOR));
+                } else {
+                    context.sendMessage(text("Unknown command!").color(NEGATIVE_COLOR));
+                }
 
                 return false;
             }
+
+            return executionResult.resultCode() > 0;
         }
 
     }

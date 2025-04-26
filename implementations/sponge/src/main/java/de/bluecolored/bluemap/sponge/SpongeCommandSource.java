@@ -25,13 +25,11 @@
 package de.bluecolored.bluemap.sponge;
 
 import com.flowpowered.math.vector.Vector3d;
-import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.common.plugin.text.Text;
+import de.bluecolored.bluemap.common.commands.TextFormat;
 import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
-import de.bluecolored.bluemap.core.world.World;
 import net.kyori.adventure.audience.Audience;
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.kyori.adventure.text.Component;
 import org.spongepowered.api.service.permission.Subject;
 import org.spongepowered.api.world.Locatable;
 
@@ -39,19 +37,20 @@ import java.util.Optional;
 
 public class SpongeCommandSource implements CommandSource {
 
-    private final Plugin plugin;
     private final Audience audience;
     private final Subject subject;
 
-    public SpongeCommandSource(Plugin plugin, Audience audience, Subject subject) {
-        this.plugin = plugin;
+    public SpongeCommandSource(Audience audience, Subject subject) {
         this.subject = subject;
         this.audience = audience;
     }
 
     @Override
-    public void sendMessage(Text text) {
-        audience.sendMessage(GsonComponentSerializer.gson().deserialize(text.toJSONString()));
+    public void sendMessage(Component text) {
+        if (TextFormat.lineCount(text) > 1)
+            text = Component.newline().append(text).appendNewline();
+
+        audience.sendMessage(text.compact());
     }
 
     @Override
@@ -61,20 +60,18 @@ public class SpongeCommandSource implements CommandSource {
 
     @Override
     public Optional<Vector3d> getPosition() {
-        if (audience instanceof Locatable) {
-            return Optional.of(SpongePlugin.fromSpongePoweredVector(((Locatable) audience).location().position()));
-        }
-
+        if (audience instanceof Locatable locatable)
+            return Optional.of(SpongePlugin.fromSpongeVector(locatable.location().position()));
         return Optional.empty();
     }
 
     @Override
-    public Optional<World> getWorld() {
+    public Optional<ServerWorld> getWorld() {
         if (audience instanceof Locatable locatable) {
-            ServerWorld serverWorld = SpongePlugin.getInstance().getServerWorld(locatable.serverLocation().world());
-            return Optional.ofNullable(plugin.getWorld(serverWorld));
+            org.spongepowered.api.world.server.ServerWorld world = locatable.serverLocation().world();
+            if (world == null) return Optional.empty();
+            return Optional.of(SpongePlugin.getInstance().getServerWorld(world));
         }
-
         return Optional.empty();
     }
 

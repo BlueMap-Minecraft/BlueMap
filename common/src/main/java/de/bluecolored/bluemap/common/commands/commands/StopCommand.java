@@ -22,49 +22,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.bukkit;
+package de.bluecolored.bluemap.common.commands.commands;
 
-import de.bluecolored.bluemap.core.logger.AbstractLogger;
+import de.bluecolored.bluecommands.annotations.Command;
+import de.bluecolored.bluemap.common.commands.Permission;
+import de.bluecolored.bluemap.common.plugin.Plugin;
+import de.bluecolored.bluemap.common.serverinterface.CommandSource;
+import lombok.RequiredArgsConstructor;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import static de.bluecolored.bluemap.common.commands.TextFormat.*;
+import static net.kyori.adventure.text.Component.text;
 
-public class JavaLogger extends AbstractLogger {
+@RequiredArgsConstructor
+public class StopCommand {
 
-    private final Logger out;
+    private final Plugin plugin;
 
-    public JavaLogger(Logger out) {
-        this.out = out;
-    }
+    @Command("stop")
+    @Permission("bluemap.stop")
+    public void stop(CommandSource source) {
+        plugin.getPluginState().setRenderThreadsEnabled(false);
+        plugin.getRenderManager().stop();
 
-    @Override
-    public void logError(String message, Throwable throwable) {
-        out.log(Level.SEVERE, message, throwable);
-    }
+        source.sendMessage(format("% Render-Threads are now %",
+                ICON_STOPPED.color(NEGATIVE_COLOR),
+                text("stopped").color(NEGATIVE_COLOR)
+        ).color(BASE_COLOR));
 
-    @Override
-    public void logWarning(String message) {
-        out.log(Level.WARNING, message);
-    }
-
-    @Override
-    public void logInfo(String message) {
-        out.log(Level.INFO, message);
-    }
-
-    @Override
-    public void logDebug(String message) {
-        if (out.isLoggable(Level.FINE)) out.log(Level.FINE, message);
-    }
-
-    @Override
-    public void noFloodDebug(String message) {
-        if (out.isLoggable(Level.FINE)) super.noFloodDebug(message);
-    }
-
-    @Override
-    public void noFloodDebug(String key, String message) {
-        if (out.isLoggable(Level.FINE)) super.noFloodDebug(key, message);
+        plugin.save();
     }
 
 }

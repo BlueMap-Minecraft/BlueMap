@@ -32,6 +32,7 @@ import de.bluecolored.bluemap.common.serverinterface.Server;
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
+import de.bluecolored.bluemap.core.logger.JavaLogger;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.util.Key;
 import org.bstats.bukkit.Metrics;
@@ -127,7 +128,7 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
             CommandMap commandMap = (CommandMap) bukkitCommandMap.get(Bukkit.getServer());
 
             for (BukkitCommand command : commands.getRootCommands()) {
-                commandMap.register(command.getLabel(), command);
+                commandMap.register("bluemap", command);
             }
         } catch(NoSuchFieldException | SecurityException | IllegalAccessException e) {
             Logger.global.logError("Failed to register commands!", e);
@@ -140,7 +141,7 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
         this.onlinePlayerList.clear();
         this.onlinePlayerMap.clear();
         for (org.bukkit.entity.Player player : getServer().getOnlinePlayers()) {
-            BukkitPlayer bukkitPlayer = new BukkitPlayer(player.getUniqueId());
+            BukkitPlayer bukkitPlayer = new BukkitPlayer(player);
             onlinePlayerMap.put(player.getUniqueId(), bukkitPlayer);
             onlinePlayerList.add(bukkitPlayer);
         }
@@ -221,7 +222,7 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
     }
 
     public ServerWorld getServerWorld(World world) {
-        return worlds.get(world);
+        return worlds.get(Objects.requireNonNull(world));
     }
 
     @Override
@@ -244,7 +245,7 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public void onPlayerJoin(PlayerJoinEvent evt) {
-        BukkitPlayer player = new BukkitPlayer(evt.getPlayer().getUniqueId());
+        BukkitPlayer player = new BukkitPlayer(evt.getPlayer());
         onlinePlayerMap.put(evt.getPlayer().getUniqueId(), player);
         onlinePlayerList.add(player);
     }

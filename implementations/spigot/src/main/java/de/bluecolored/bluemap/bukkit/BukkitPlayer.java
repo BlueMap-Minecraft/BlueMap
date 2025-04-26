@@ -61,9 +61,9 @@ public class BukkitPlayer extends Player {
     private boolean vanished;
     private Gamemode gamemode;
 
-    public BukkitPlayer(UUID playerUUID) {
-        this.uuid = playerUUID;
-        update();
+    public BukkitPlayer(org.bukkit.entity.Player player) {
+        this.uuid = player.getUniqueId();
+        update(player);
     }
 
     @Override
@@ -128,6 +128,10 @@ public class BukkitPlayer extends Player {
         org.bukkit.entity.Player player = Bukkit.getPlayer(uuid);
         if (player == null) return;
 
+        update(player);
+    }
+
+    private void update(org.bukkit.entity.Player player) {
         this.gamemode = GAMEMODE_MAP.get(player.getGameMode());
         if (this.gamemode == null) this.gamemode = Gamemode.SURVIVAL;
 

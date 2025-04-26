@@ -65,7 +65,7 @@ public class Element {
     }
 
     private void init() {
-        faces.forEach((direction, face) -> face.init(direction, this::calculateDefaultUV, this::calculateDefaultCullface));
+        faces.forEach((direction, face) -> face.init(direction, this::calculateDefaultUV));
     }
 
     private Vector4f calculateDefaultUV(Direction face) {
@@ -82,17 +82,6 @@ public class Element {
                     from.getZ(), from.getY(),
                     to.getZ(), to.getY()
             );
-        };
-    }
-
-    private Direction calculateDefaultCullface(Direction face) {
-        return switch (face) {
-            case DOWN -> from.getY() == 0f ? Direction.DOWN : null;
-            case UP -> to.getY() == 1f ? Direction.UP : null;
-            case NORTH -> from.getZ() == 0f ? Direction.NORTH : null;
-            case SOUTH -> to.getZ() == 1f ? Direction.SOUTH : null;
-            case EAST -> to.getX() == 1f ? Direction.EAST : null;
-            case WEST -> from.getX() == 0f ? Direction.WEST : null;
         };
     }
 

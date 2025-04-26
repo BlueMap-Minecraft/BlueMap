@@ -63,9 +63,9 @@ public class SpongePlayer extends Player {
     private boolean vanished;
     private Gamemode gamemode;
 
-    public SpongePlayer(UUID playerUUID) {
-        this.uuid = playerUUID;
-        update();
+    public SpongePlayer(ServerPlayer player) {
+        this.uuid = player.uniqueId();
+        update(player);
     }
 
     @Override
@@ -130,6 +130,10 @@ public class SpongePlayer extends Player {
         ServerPlayer player = Sponge.server().player(uuid).orElse(null);
         if (player == null) return;
 
+        update(player);
+    }
+
+    private void update(ServerPlayer player) {
         this.gamemode = GAMEMODE_MAP.get(player.gameMode().get());
         if (this.gamemode == null) this.gamemode = Gamemode.SURVIVAL;
 
@@ -145,8 +149,8 @@ public class SpongePlayer extends Player {
         this.vanished = player.get(Keys.VANISH_STATE).orElse(VanishState.unvanished()).invisible();
 
         this.name = Text.of(player.name());
-        this.position = SpongePlugin.fromSpongePoweredVector(player.position());
-        this.rotation = SpongePlugin.fromSpongePoweredVector(player.rotation());
+        this.position = SpongePlugin.fromSpongeVector(player.position());
+        this.rotation = SpongePlugin.fromSpongeVector(player.rotation());
         this.sneaking = player.get(Keys.IS_SNEAKING).orElse(false);
 
         this.skyLight = player.world().light(LightTypes.SKY, player.blockPosition());

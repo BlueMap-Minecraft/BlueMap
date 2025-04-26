@@ -22,27 +22,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.plugin.commands;
+package de.bluecolored.bluemap.common.commands;
 
-import de.bluecolored.bluemap.common.plugin.Plugin;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import java.util.Collection;
-import java.util.HashSet;
-
-public class WorldOrMapSuggestionProvider<S> extends AbstractSuggestionProvider<S> {
-
-    private final Plugin plugin;
-
-    public WorldOrMapSuggestionProvider(Plugin plugin) {
-        this.plugin = plugin;
-    }
-
-    @Override
-    public Collection<String> getPossibleValues() {
-        Collection<String> values = new HashSet<>();
-        values.addAll(plugin.getBlueMap().getWorlds().keySet());
-        values.addAll(plugin.getBlueMap().getMaps().keySet());
-        return values;
-    }
-
-}
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface Unloaded {}

@@ -47,6 +47,7 @@ public class RenderManager {
     private volatile boolean newTask;
 
     private final LinkedList<RenderTask> renderTasks;
+    private final Map<RenderTask, Long> completedTasks;
 
     public RenderManager() {
         this.id = nextRenderManagerIndex.getAndIncrement();
@@ -62,6 +63,12 @@ public class RenderManager {
         this.newTask = true;
 
         this.renderTasks = new LinkedList<>();
+        this.completedTasks = new LinkedHashMap<>() {
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<RenderTask, Long> eldest) {
+                return size() > 10;
+            }
+        };
     }
 
     public void start(int threadCount) throws IllegalStateException {
@@ -144,10 +151,6 @@ public class RenderManager {
     }
 
     public int scheduleRenderTasks(RenderTask... tasks) {
-        return scheduleRenderTasks(Arrays.asList(tasks));
-    }
-
-    public int scheduleRenderTasks(Collection<RenderTask> tasks) {
         synchronized (this.renderTasks) {
             int count = 0;
             for (RenderTask task : tasks) {
@@ -166,6 +169,19 @@ public class RenderManager {
             renderTasks.add(1, task);
             renderTasks.notifyAll();
             return true;
+        }
+    }
+
+    public int scheduleRenderTasksNext(RenderTask... tasks) {
+        synchronized (this.renderTasks) {
+            if (renderTasks.size() <= 1)
+                return scheduleRenderTasks(tasks);
+
+            int count = 0;
+            for (int i = tasks.length - 1; i >= 0; i--) {
+                if (scheduleRenderTaskNext(tasks[i])) count++;
+            }
+            return count;
         }
     }
 
@@ -270,6 +286,10 @@ public class RenderManager {
         return lastTimeBusy;
     }
 
+    public Map<RenderTask, Long> getCompletedTasks() {
+        return Map.copyOf(completedTasks);
+    }
+
     private void removeTasksThatAreContainedIn(RenderTask containingTask) {
         synchronized (this.renderTasks) {
             if (renderTasks.size() < 2) return;
@@ -297,7 +317,10 @@ public class RenderManager {
             // before continuing working on the next RenderTask
             if (!task.hasMoreWork()) {
                 if (busyCount.get() <= 0) {
-                    this.renderTasks.removeFirst();
+                    this.completedTasks.put(
+                            this.renderTasks.removeFirst(),
+                            System.currentTimeMillis()
+                    );
                     this.renderTasks.notifyAll();
 
                     this.newTask = true;

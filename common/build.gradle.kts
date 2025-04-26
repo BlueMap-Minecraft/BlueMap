@@ -9,7 +9,11 @@ plugins {
 dependencies {
     api ( project( ":core" ) )
 
-    api ( libs.brigadier )
+    api ( libs.adventure.api )
+    api ( libs.bluecommands.core )
+
+    compileOnly ( libs.bluecommands.brigadier )
+    compileOnly ( libs.brigadier )
 
     compileOnly ( libs.jetbrains.annotations )
     compileOnly ( libs.lombok )

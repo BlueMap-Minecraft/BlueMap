@@ -37,7 +37,6 @@ import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.sponge.SpongeCommands.SpongeCommandProxy;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.Command;
@@ -103,19 +102,15 @@ public class SpongePlugin implements Server {
                 .maximumSize(1000)
                 .build(SpongeWorld::new);
 
-        //bstats
-        //metricsFactory.make(5911);
-
         SpongePlugin.instance = this;
     }
 
     @Listener
     public void onRegisterCommands(final RegisterCommandEvent<Command.Raw> event) {
         //register commands
-        for(SpongeCommandProxy command : commands.getRootCommands()) {
+        for (SpongeCommands.SpongeCommandProxy command : commands.getRootCommands()) {
             event.register(this.pluginContainer, command, command.getLabel());
         }
-
     }
 
     @Listener
@@ -169,7 +164,7 @@ public class SpongePlugin implements Server {
         synchronized (onlinePlayerList) {
             onlinePlayerList.clear();
             for (ServerPlayer spongePlayer : Sponge.server().onlinePlayers()) {
-                SpongePlayer player = new SpongePlayer(spongePlayer.uniqueId());
+                SpongePlayer player = new SpongePlayer(spongePlayer);
                 onlinePlayerMap.put(spongePlayer.uniqueId(), player);
                 onlinePlayerList.add(player);
             }
@@ -178,7 +173,7 @@ public class SpongePlugin implements Server {
 
     @Listener
     public void onPlayerJoin(ServerSideConnectionEvent.Join evt) {
-        SpongePlayer player = new SpongePlayer(evt.player().uniqueId());
+        SpongePlayer player = new SpongePlayer(evt.player());
         onlinePlayerMap.put(evt.player().uniqueId(), player);
         onlinePlayerList.add(player);
     }
@@ -238,7 +233,7 @@ public class SpongePlugin implements Server {
     }
 
     public ServerWorld getServerWorld(org.spongepowered.api.world.server.ServerWorld world) {
-        return worlds.get(world);
+        return worlds.get(Objects.requireNonNull(world));
     }
 
     @Override
@@ -294,15 +289,15 @@ public class SpongePlugin implements Server {
         }
     }
 
-    public static Vector3d fromSpongePoweredVector(org.spongepowered.math.vector.Vector3d vec) {
+    public static Vector3d fromSpongeVector(org.spongepowered.math.vector.Vector3d vec) {
         return new Vector3d(vec.x(), vec.y(), vec.z());
     }
 
-    public static Vector3i fromSpongePoweredVector(org.spongepowered.math.vector.Vector3i vec) {
+    public static Vector3i fromSpongeVector(org.spongepowered.math.vector.Vector3i vec) {
         return new Vector3i(vec.x(), vec.y(), vec.z());
     }
 
-    public static Vector2i fromSpongePoweredVector(org.spongepowered.math.vector.Vector2i vec) {
+    public static Vector2i fromSpongeVector(org.spongepowered.math.vector.Vector2i vec) {
         return new Vector2i(vec.x(), vec.y());
     }
 

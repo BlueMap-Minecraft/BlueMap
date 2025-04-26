@@ -25,33 +25,33 @@
 package de.bluecolored.bluemap.forge;
 
 import com.flowpowered.math.vector.Vector3d;
-import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.common.plugin.text.Text;
+import de.bluecolored.bluemap.common.commands.TextFormat;
 import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
-import de.bluecolored.bluemap.core.world.World;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.minecraft.commands.CommandSourceStack;
-import net.minecraft.network.chat.Component;
 
+import java.util.Objects;
 import java.util.Optional;
 
 public class ForgeCommandSource implements CommandSource {
 
     private final ForgeMod mod;
-    private final Plugin plugin;
     private final CommandSourceStack delegate;
 
-    public ForgeCommandSource(ForgeMod mod, Plugin plugin, CommandSourceStack delegate) {
+    public ForgeCommandSource(ForgeMod mod, CommandSourceStack delegate) {
         this.mod = mod;
-        this.plugin = plugin;
         this.delegate = delegate;
     }
 
     @Override
-    public void sendMessage(Text text) {
-        var component = Component.Serializer.fromJsonLenient(text.toJSONString(), delegate.registryAccess());
-        if (component != null)
-            delegate.sendSuccess(() -> component, false);
+    public void sendMessage(Component text) {
+        if (TextFormat.lineCount(text) > 1)
+            text = Component.newline().append(text).appendNewline();
+
+        delegate.sendSystemMessage(Objects.requireNonNull(net.minecraft.network.chat.Component.Serializer
+                .fromJson(GsonComponentSerializer.gson().serialize(text.compact()), delegate.registryAccess())));
     }
 
     @Override
@@ -61,14 +61,18 @@ public class ForgeCommandSource implements CommandSource {
 
     @Override
     public Optional<Vector3d> getPosition() {
+        if (!delegate.isPlayer() && delegate.getTextName().equals("Server")) return Optional.empty();
+
         var pos = delegate.getPosition();
         return Optional.of(new Vector3d(pos.x, pos.y, pos.z));
     }
 
     @Override
-    public Optional<World> getWorld() {
-        ServerWorld serverWorld = mod.getServerWorld(delegate.getLevel());
-        return Optional.ofNullable(plugin.getWorld(serverWorld));
+    public Optional<ServerWorld> getWorld() {
+        if (!delegate.isPlayer() && delegate.getTextName().equals("Server")) return Optional.empty();
+
+        return Optional.of(delegate.getLevel())
+                .map(mod::getServerWorld);
     }
 
 }

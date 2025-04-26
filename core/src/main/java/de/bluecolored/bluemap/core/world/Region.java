@@ -45,6 +45,7 @@ public interface Region<T> {
             public void accept(int chunkX, int chunkZ, T chunk) {
                 this.foundChunk = chunk;
             }
+
         }
 
         SingleChunkConsumer singleChunkConsumer = new SingleChunkConsumer();

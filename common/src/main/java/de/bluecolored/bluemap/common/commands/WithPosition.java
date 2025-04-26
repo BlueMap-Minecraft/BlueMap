@@ -22,49 +22,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.bukkit;
+package de.bluecolored.bluemap.common.commands;
 
-import de.bluecolored.bluemap.core.logger.AbstractLogger;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-public class JavaLogger extends AbstractLogger {
-
-    private final Logger out;
-
-    public JavaLogger(Logger out) {
-        this.out = out;
-    }
-
-    @Override
-    public void logError(String message, Throwable throwable) {
-        out.log(Level.SEVERE, message, throwable);
-    }
-
-    @Override
-    public void logWarning(String message) {
-        out.log(Level.WARNING, message);
-    }
-
-    @Override
-    public void logInfo(String message) {
-        out.log(Level.INFO, message);
-    }
-
-    @Override
-    public void logDebug(String message) {
-        if (out.isLoggable(Level.FINE)) out.log(Level.FINE, message);
-    }
-
-    @Override
-    public void noFloodDebug(String message) {
-        if (out.isLoggable(Level.FINE)) super.noFloodDebug(message);
-    }
-
-    @Override
-    public void noFloodDebug(String key, String message) {
-        if (out.isLoggable(Level.FINE)) super.noFloodDebug(key, message);
-    }
-
-}
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.METHOD)
+public @interface WithPosition {}

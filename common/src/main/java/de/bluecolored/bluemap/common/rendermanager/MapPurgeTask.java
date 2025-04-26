@@ -26,12 +26,13 @@ package de.bluecolored.bluemap.common.rendermanager;
 
 import de.bluecolored.bluemap.common.debug.DebugDump;
 import de.bluecolored.bluemap.core.map.BmMap;
+import lombok.Getter;
 
 import java.util.Objects;
 
-public class MapPurgeTask implements RenderTask {
+public class MapPurgeTask implements MapRenderTask {
 
-    private final BmMap map;
+    @Getter private final BmMap map;
 
     private volatile double progress;
     private volatile boolean hasMoreWork;
@@ -94,7 +95,7 @@ public class MapPurgeTask implements RenderTask {
 
     @Override
     public String getDescription() {
-        return "Purge map " + map.getId();
+        return "purging map '%s'".formatted(map.getId());
     }
 
 }

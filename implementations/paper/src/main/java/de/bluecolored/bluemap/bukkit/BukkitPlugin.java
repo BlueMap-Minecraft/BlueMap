@@ -26,20 +26,23 @@ package de.bluecolored.bluemap.bukkit;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import de.bluecolored.bluecommands.brigadier.BrigadierBridge;
+import de.bluecolored.bluemap.common.commands.BrigadierExecutionHandler;
+import de.bluecolored.bluemap.common.commands.Commands;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.serverinterface.Player;
 import de.bluecolored.bluemap.common.serverinterface.Server;
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
+import de.bluecolored.bluemap.core.logger.JavaLogger;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.util.Key;
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
-import org.bukkit.command.CommandMap;
-import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -48,7 +51,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -59,7 +61,6 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
 
     private final Plugin pluginInstance;
     private final EventForwarder eventForwarder;
-    private final BukkitCommands commands;
 
     private final Map<UUID, Player> onlinePlayerMap;
     private final List<BukkitPlayer> onlinePlayerList;
@@ -79,7 +80,6 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
 
         this.eventForwarder = new EventForwarder();
         this.pluginInstance = new Plugin("paper", this);
-        this.commands = new BukkitCommands(this.pluginInstance);
 
         this.worlds = Caffeine.newBuilder()
                 .executor(BlueMap.THREAD_POOL)
@@ -106,21 +106,17 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
         getServer().getPluginManager().registerEvents(eventForwarder, this);
 
         //register commands
-        try {
-            final Field bukkitCommandMap = Bukkit.getServer().getClass().getDeclaredField("commandMap");
+        //noinspection UnstableApiUsage
+        this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, commands -> {
 
-            bukkitCommandMap.setAccessible(true);
-            CommandMap commandMap = (CommandMap) bukkitCommandMap.get(Bukkit.getServer());
+            //noinspection UnstableApiUsage
+            BrigadierBridge.createCommandNodes(
+                    Commands.create(pluginInstance),
+                    new BrigadierExecutionHandler(pluginInstance),
+                    BukkitCommandSource::new
+            ).forEach(commands.registrar().getDispatcher().getRoot()::addChild);
 
-            for (BukkitCommand command : commands.getRootCommands()) {
-                commandMap.register(command.getLabel(), command);
-            }
-        } catch(NoSuchFieldException | SecurityException | IllegalAccessException e) {
-            Logger.global.logError("Failed to register commands!", e);
-        }
-
-        //tab completions
-        getServer().getPluginManager().registerEvents(commands, this);
+        });
 
         //update online-player collections
         this.onlinePlayerList.clear();
@@ -205,7 +201,7 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
     }
 
     public ServerWorld getServerWorld(World world) {
-        return worlds.get(world);
+        return worlds.get(Objects.requireNonNull(world));
     }
 
     @Override
@@ -246,7 +242,7 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
     }
 
     private void initPlayer(org.bukkit.entity.Player bukkitPlayer) {
-        BukkitPlayer player = new BukkitPlayer(bukkitPlayer.getUniqueId());
+        BukkitPlayer player = new BukkitPlayer(bukkitPlayer);
         onlinePlayerMap.put(bukkitPlayer.getUniqueId(), player);
         onlinePlayerList.add(player);
 
@@ -254,7 +250,7 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
         scheduledTasks.add(
             bukkitPlayer.getScheduler().runAtFixedRate(this, task -> {
                 player.update();
-            }, () -> {}, 20, 20)
+            }, null, 20, 20)
         );
     }
 

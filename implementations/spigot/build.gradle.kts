@@ -5,7 +5,7 @@ plugins {
 
 val supportedMinecraftVersions = listOf(
     "1.20", "1.20.1", "1.20.2", "1.20.3", "1.20.4", "1.20.5", "1.20.6",
-    "1.21", "1.21.1", "1.21.2", "1.21.3"
+    "1.21", "1.21.1", "1.21.2", "1.21.3", "1.21.4", "1.21.5"
 )
 
 val apiVersion = "1.16"
@@ -16,17 +16,21 @@ dependencies {
         exclude( group = "com.google.code.gson", module = "gson" )
     }
 
+    api ( libs.adventure.gson ) {
+        exclude ( group = "com.google.code.gson", module = "gson" )
+    }
+
     shadow ( "org.spigotmc", "spigot-api", spigotVersion )
     api ( libs.bstats.bukkit )
 }
 
 tasks.shadowJar {
 
+    // adventure
+    relocate ("net.kyori", "de.bluecolored.shadow.adventure")
+
     // airlift
     relocate ("io.airlift", "de.bluecolored.shadow.airlift")
-
-    // brigadier
-    relocate ("com.mojang.brigadier", "de.bluecolored.shadow.brigadier")
 
     // caffeine
     relocate ("com.github.benmanes.caffeine", "de.bluecolored.shadow.caffeine")

@@ -22,24 +22,40 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.plugin.commands;
+package de.bluecolored.bluemap.common.commands.commands;
 
+import de.bluecolored.bluecommands.annotations.Command;
+import de.bluecolored.bluemap.common.commands.Permission;
 import de.bluecolored.bluemap.common.plugin.Plugin;
+import lombok.RequiredArgsConstructor;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.format.TextDecoration;
 
-import java.util.Collection;
-import java.util.HashSet;
+import static de.bluecolored.bluemap.common.commands.TextFormat.*;
+import static net.kyori.adventure.text.Component.text;
+import static net.kyori.adventure.text.event.ClickEvent.openUrl;
 
-public class MapSuggestionProvider<S> extends AbstractSuggestionProvider<S> {
+@RequiredArgsConstructor
+public class HelpCommand {
 
     private final Plugin plugin;
 
-    public MapSuggestionProvider(Plugin plugin) {
-        this.plugin = plugin;
-    }
-
-    @Override
-    public Collection<String> getPossibleValues() {
-        return new HashSet<>(plugin.getBlueMap().getMaps().keySet());
+    @Command("help")
+    @Permission("bluemap.help")
+    public Component help() {
+        return paragraph("Help",
+                lines(
+                        format("Wiki: %", text(WIKI_LINK)
+                                .hoverEvent(text(WIKI_LINK))
+                                .clickEvent(openUrl(WIKI_LINK))
+                                .color(HIGHLIGHT_COLOR)),
+                        format("Discord: %", text(DISCORD_LINK)
+                                .hoverEvent(text(DISCORD_LINK))
+                                .clickEvent(openUrl(DISCORD_LINK))
+                                .color(HIGHLIGHT_COLOR))
+                ).color(BASE_COLOR)
+        );
     }
 
 }

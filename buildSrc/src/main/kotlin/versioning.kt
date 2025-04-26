@@ -8,7 +8,8 @@ fun Project.gitHash(): String {
 }
 
 fun Project.gitClean(): Boolean {
-    return runCommand("git status --porcelain", "NOT_CLEAN").isEmpty()
+    if (runCommand("git update-index --refresh", "NOT-CLEAN").equals("NOT-CLEAN")) return false;
+    return runCommand("git diff-index HEAD --", "NOT-CLEAN").isEmpty();
 }
 
 fun Project.gitVersion(): String {
@@ -52,8 +53,10 @@ private fun Project.runCommand(cmd: String, fallback: String? = null): String {
                 throw TimeoutException("Failed to execute command: '$cmd'")
         }
         .run {
+            val exitCode = waitFor()
+            if (exitCode == 0) return inputStream.bufferedReader().readText().trim()
+
             val error = errorStream.bufferedReader().readText().trim()
-            if (error.isEmpty()) return inputStream.bufferedReader().readText().trim()
             logger.warn("Failed to execute command '$cmd': $error")
             if (fallback != null) return fallback
             throw IOException(error)

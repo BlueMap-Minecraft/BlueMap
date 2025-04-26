@@ -25,12 +25,12 @@
 package de.bluecolored.bluemap.fabric;
 
 import com.flowpowered.math.vector.Vector3d;
-import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.common.plugin.text.Text;
+import de.bluecolored.bluemap.common.commands.TextFormat;
 import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
-import de.bluecolored.bluemap.core.world.World;
 import me.lucko.fabric.api.permissions.v0.Permissions;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.util.math.Vec3d;
 
@@ -39,22 +39,20 @@ import java.util.Optional;
 public class FabricCommandSource implements CommandSource {
 
     private final FabricMod mod;
-    private final Plugin plugin;
     private final ServerCommandSource delegate;
 
-    public FabricCommandSource(FabricMod mod, Plugin plugin, ServerCommandSource delegate) {
+    public FabricCommandSource(FabricMod mod, ServerCommandSource delegate) {
         this.mod = mod;
-        this.plugin = plugin;
         this.delegate = delegate;
     }
 
     @Override
-    public void sendMessage(Text text) {
-        delegate.sendFeedback(
-                () -> net.minecraft.text.Text.Serialization
-                        .fromJson(text.toJSONString(), delegate.getRegistryManager()),
-                false
-        );
+    public void sendMessage(Component text) {
+        if (TextFormat.lineCount(text) > 1)
+            text = Component.newline().append(text).appendNewline();
+
+        delegate.sendMessage(net.minecraft.text.Text.Serialization
+                .fromJson(GsonComponentSerializer.gson().serialize(text.compact()), delegate.getRegistryManager()));
     }
 
     @Override
@@ -69,18 +67,18 @@ public class FabricCommandSource implements CommandSource {
 
     @Override
     public Optional<Vector3d> getPosition() {
-        Vec3d pos = delegate.getPosition();
-        if (pos != null) {
-            return Optional.of(new Vector3d(pos.x, pos.y, pos.z));
-        }
+        if (!delegate.isExecutedByPlayer() && delegate.getName().equals("Server")) return Optional.empty();
 
-        return Optional.empty();
+        Vec3d pos = delegate.getPosition();
+        return Optional.of(new Vector3d(pos.x, pos.y, pos.z));
     }
 
     @Override
-    public Optional<World> getWorld() {
-        ServerWorld serverWorld = mod.getServerWorld(delegate.getWorld());
-        return Optional.ofNullable(plugin.getWorld(serverWorld));
+    public Optional<ServerWorld> getWorld() {
+        if (!delegate.isExecutedByPlayer() && delegate.getName().equals("Server")) return Optional.empty();
+
+        return Optional.of(delegate.getWorld())
+                .map(mod::getServerWorld);
     }
 
 }

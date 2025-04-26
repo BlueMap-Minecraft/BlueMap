@@ -46,7 +46,7 @@ import java.util.concurrent.TimeUnit;
 import static de.bluecolored.bluemap.core.map.renderstate.TileActionResolver.Action.DELETE;
 import static de.bluecolored.bluemap.core.map.renderstate.TileActionResolver.Action.RENDER;
 
-public class WorldRegionRenderTask implements RenderTask {
+public class WorldRegionRenderTask implements MapRenderTask {
 
     @Getter private final BmMap map;
     @Getter private final Vector2i regionPos;
@@ -102,7 +102,7 @@ public class WorldRegionRenderTask implements RenderTask {
         try {
             chunkHashes = new int[chunkMaxCount];
             map.getWorld().getRegion(regionPos.getX(), regionPos.getY())
-                    .iterateAllChunks( (ChunkConsumer.ListOnly) (x, z, timestamp) -> {
+                    .iterateAllChunks( (ChunkConsumer.ListOnly<Chunk>) (x, z, timestamp) -> {
                         chunkHashes[chunkIndex(
                                 x - chunkMin.getX(),
                                 z - chunkMin.getY()
@@ -242,6 +242,9 @@ public class WorldRegionRenderTask implements RenderTask {
             chunkHashes = null;
         }
 
+        // clear tile-actions
+        tileActions = null;
+
         // save map (at most, every minute)
         map.save(TimeUnit.MINUTES.toMillis(1));
     }
@@ -266,7 +269,7 @@ public class WorldRegionRenderTask implements RenderTask {
 
     @Override
     public String getDescription() {
-        return "Update region " + regionPos + " for map '" + map.getId() + "'";
+        return "updating region %s".formatted(regionPos);
     }
 
     @Override

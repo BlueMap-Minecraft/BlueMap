@@ -8,7 +8,7 @@ plugins {
 }
 
 val supportedMinecraftVersions = listOf(
-    "1.21", "1.21.1", "1.21.2", "1.21.3"
+    "1.21", "1.21.1", "1.21.2", "1.21.3", "1.21.4", "1.21.5"
 )
 
 val minecraftVersion = supportedMinecraftVersions.first()
@@ -23,14 +23,20 @@ dependencies {
 
     shadowInclude ( project( ":common" ) ) {
         exclude ( group = "com.google.code.gson", module = "gson" )
-        exclude ( group = "com.mojang", module = "brigadier" )
     }
 
     minecraft ("com.mojang:minecraft:${minecraftVersion}")
     mappings ("net.fabricmc:yarn:${yarnMappings}")
     modImplementation ("net.fabricmc:fabric-loader:${fabricLoaderVersion}")
     modImplementation ("net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}")
-    modImplementation( libs.fabric.permissions )
+    modImplementation ( libs.fabric.permissions )
+
+    shadowInclude ( libs.bluecommands.brigadier ) {
+        exclude ( group = "com.mojang", module = "brigadier" )
+    }
+    shadowInclude ( libs.adventure.gson ) {
+        exclude ( group = "com.google.code.gson", module = "gson" )
+    }
 
     // jarInJar
     include ( libs.flow.math )
@@ -46,6 +52,9 @@ tasks.shadowJar {
         exclude( dependency ( libs.flow.math.get() ) )
         exclude( dependency ( libs.bluenbt.get() ) )
     }
+
+    // adventure
+    relocate ("net.kyori", "de.bluecolored.shadow.adventure")
 
     // airlift
     relocate ("io.airlift", "de.bluecolored.shadow.airlift")
