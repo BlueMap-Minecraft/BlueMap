@@ -125,6 +125,7 @@ name: "SettingsMenu",
     },
     async changeLanguage(lang) {
         await setLanguage(lang);
+        this.$bluemap.updatePageAddress()
         this.$bluemap.saveUserSettings();
     }
   }
