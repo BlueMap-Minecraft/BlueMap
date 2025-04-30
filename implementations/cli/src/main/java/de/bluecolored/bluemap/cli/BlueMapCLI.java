@@ -24,19 +24,20 @@
  */
 package de.bluecolored.bluemap.cli;
 
+import de.bluecolored.bluemap.api.gson.MarkerGson;
 import de.bluecolored.bluemap.common.BlueMapConfiguration;
 import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.MissingResourcesException;
 import de.bluecolored.bluemap.common.addons.Addons;
 import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.commands.TextFormat;
-import de.bluecolored.bluemap.common.config.BlueMapConfigManager;
-import de.bluecolored.bluemap.common.config.ConfigurationException;
-import de.bluecolored.bluemap.common.config.CoreConfig;
-import de.bluecolored.bluemap.common.config.WebserverConfig;
+import de.bluecolored.bluemap.common.config.*;
 import de.bluecolored.bluemap.common.metrics.Metrics;
 import de.bluecolored.bluemap.common.plugin.MapUpdateService;
-import de.bluecolored.bluemap.common.rendermanager.*;
+import de.bluecolored.bluemap.common.rendermanager.MapUpdatePreparationTask;
+import de.bluecolored.bluemap.common.rendermanager.RenderManager;
+import de.bluecolored.bluemap.common.rendermanager.RenderTask;
+import de.bluecolored.bluemap.common.rendermanager.TileUpdateStrategy;
 import de.bluecolored.bluemap.common.web.*;
 import de.bluecolored.bluemap.common.web.http.HttpRequestHandler;
 import de.bluecolored.bluemap.common.web.http.HttpServer;
@@ -49,9 +50,13 @@ import org.apache.commons.cli.*;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -216,6 +221,34 @@ public class BlueMapCLI {
         }
     }
 
+    public void updateMarkers(BlueMapService blueMap, @Nullable String mapsToUpdate) {
+        Predicate<String> mapFilter = mapId -> true;
+        if (mapsToUpdate != null) {
+            Set<String> mapsToRenderSet = Set.of(mapsToUpdate.split(","));
+            mapFilter = mapsToRenderSet::contains;
+        }
+
+        for (Map.Entry<String, MapConfig> entry : blueMap.getConfig().getMapConfigs().entrySet()) {
+            String mapId = entry.getKey();
+            MapConfig mapConfig = entry.getValue();
+
+            if (!mapFilter.test(mapId)) return;
+
+            try {
+                MapStorage storage = blueMap.getOrLoadStorage(mapConfig.getStorage()).map(mapId);
+                try (
+                        OutputStream out = storage.markers().write();
+                        Writer writer = new OutputStreamWriter(out, StandardCharsets.UTF_8)
+                ) {
+                    MarkerGson.INSTANCE.toJson(mapConfig.parseMarkerSets(), writer);
+                }
+                Logger.global.logInfo("Updated markers for map '" + mapId + "'");
+            } catch (Exception ex) {
+                Logger.global.logError("Failed to save markers for map '" + mapId + "'!", ex);
+            }
+        }
+    }
+
     public void startWebserver(BlueMapService blueMap, boolean verbose) throws IOException, ConfigurationException, InterruptedException {
         Logger.global.logInfo("Starting webserver ...");
 
@@ -374,6 +407,11 @@ public class BlueMapCLI {
                 String mapsToRender = cmd.getOptionValue("m", null);
                 cli.renderMaps(blueMap, watch, force, generateWebappFiles, mapsToRender);
             } else {
+                if (cmd.hasOption("markers")) {
+                    noActions = false;
+                    String mapsToUpdate = cmd.getOptionValue("m", null);
+                    cli.updateMarkers(blueMap, mapsToUpdate);
+                }
                 if (cmd.hasOption("g")) {
                     noActions = false;
                     blueMap.createOrUpdateWebApp(true);
@@ -479,6 +517,8 @@ public class BlueMapCLI {
         options.addOption("e", "fix-edges", false, "Forces rendering the map-edges, instead of only rendering chunks that have been modified since the last render");
         options.addOption("f", "force-render", false, "Forces rendering everything, instead of only rendering chunks that have been modified since the last render");
         options.addOption("m", "maps", true, "A comma-separated list of map-id's that should be rendered. Example: 'world,nether'");
+
+        options.addOption(null, "markers", false, "Updates the map-markers based on the map configs");
 
         options.addOption("u", "watch", false, "Watches for file-changes after rendering and updates the map");
 
