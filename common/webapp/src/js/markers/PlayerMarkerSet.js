@@ -85,8 +85,8 @@ export class PlayerMarkerSet extends MarkerSet {
         // update
         marker.updateFromData(markerData);
 
-        // hide if from different world
-        marker.visible = !markerData.foreign;
+        // hide if from different world or out of bounds
+        marker.visible = !markerData.foreign && !marker.data.outOfBounds;
 
         return marker;
     }

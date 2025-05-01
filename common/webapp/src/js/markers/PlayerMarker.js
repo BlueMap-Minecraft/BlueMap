@@ -65,6 +65,8 @@ export class PlayerMarker extends Marker {
             this.playerHeadElement.src = "assets/steve.png";
         }, {once: true});
 
+        this.map = window.bluemap.mapViewer.map;
+
         this.add(this.elementObject);
     }
 
@@ -94,6 +96,7 @@ export class PlayerMarker extends Marker {
      *      uuid: string,
      *      name: string,
      *      foreign: boolean,
+     *      outOfBounds: boolean,
      *      position: {x: number, y: number, z: number},
      *      rotation: {yaw: number, pitch: number, roll: number}
      * }}
@@ -155,6 +158,22 @@ export class PlayerMarker extends Marker {
 
         // update world
         this.data.foreign = markerData.foreign;
+
+        // update outOfBounds based on current world bounds
+        if (this.map && this.map.data && this.map.data.bounds) {
+            const bounds = this.map.data.bounds;
+            const currentPos = this.position;
+            this.data.outOfBounds = (
+                currentPos.x < bounds.x[0] ||
+                currentPos.x > bounds.x[1] ||
+                currentPos.y < bounds.y[0] ||
+                currentPos.y > bounds.y[1] ||
+                currentPos.z < bounds.z[0] ||
+                currentPos.z > bounds.z[1]
+            );
+        } else {
+            this.data.outOfBounds = false;
+        }
     }
 
     dispose() {
