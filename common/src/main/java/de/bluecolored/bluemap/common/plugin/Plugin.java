@@ -565,7 +565,7 @@ public class Plugin implements ServerEventListener {
         stopWatchingMap(map);
 
         try {
-            MapUpdateService watcher = new MapUpdateService(renderManager, map);
+            MapUpdateService watcher = new MapUpdateService(blueMap.getConfig(), renderManager, map);
             watcher.start();
             mapUpdateServices.put(map.getId(), watcher);
         } catch (IOException ex) {
