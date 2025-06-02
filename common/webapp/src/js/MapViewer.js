@@ -85,7 +85,7 @@ export class MapViewer {
 		this.stats.hide();
 
 		// renderer
-		if (!WebGL.isWebGL2Available()) throw "WebGL2 is not supported.";
+		if (!WebGL.isWebGL2Available()) throw new Error("WebGL2 is not available in your browser. It's not bluemaps fault, i promise ;_; !");
 		this.renderer = new WebGLRenderer({
 			antialias: true,
 			sortObjects: true,
