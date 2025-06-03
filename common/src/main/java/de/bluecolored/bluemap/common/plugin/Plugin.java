@@ -517,6 +517,7 @@ public class Plugin implements ServerEventListener {
             try {
                 GsonConfigurationLoader loader = GsonConfigurationLoader.builder()
                         .path(blueMap.getConfig().getCoreConfig().getData().resolve("pluginState.json"))
+                        .indent(0)
                         .build();
                 loader.save(loader.createNode().set(PluginState.class, pluginState));
             } catch (IOException ex) {
