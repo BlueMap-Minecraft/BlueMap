@@ -24,24 +24,59 @@
  */
 package de.bluecolored.bluemap.core.util;
 
+import de.bluecolored.bluemap.core.logger.Logger;
+import org.jetbrains.annotations.Nullable;
+
+import java.time.Duration;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class InstancePool<T> {
 
+    private static final class AutoClearTimer {
+        private static final Timer INSTANCE = new Timer("BlueMap-InstancePool-RecycleTimer", true);
+    }
+
     private final Supplier<T> creator;
     private final Function<T, T> recycler;
     private final ConcurrentLinkedQueue<T> pool = new ConcurrentLinkedQueue<>();
+    private final @Nullable Duration autoClearTime;
+    private @Nullable TimerTask autoClearTask = null;
 
     public InstancePool(Supplier<T> creator) {
         this.creator = creator;
         this.recycler = t -> t;
+        this.autoClearTime = null;
     }
 
     public InstancePool(Supplier<T> creator, Function<T, T> recycler) {
         this.creator = creator;
         this.recycler = recycler;
+        this.autoClearTime = null;
+    }
+
+    public InstancePool(Supplier<T> creator, Function<T, T> recycler, @Nullable Duration autoClearTime) {
+        this.creator = creator;
+        this.recycler = recycler;
+        this.autoClearTime = autoClearTime;
+        updateAutoClear();
+    }
+
+    private void updateAutoClear() {
+        if (autoClearTask != null) autoClearTask.cancel();
+        if (autoClearTime != null) {
+            autoClearTask = new TimerTask() {
+                @Override
+                public void run() {
+                    Logger.global.logInfo("Auto-clearing pool now!");
+                    InstancePool.this.clear();
+                }
+            };
+            AutoClearTimer.INSTANCE.schedule(autoClearTask, autoClearTime.toMillis());
+        }
     }
 
     public T claimInstance() {
@@ -49,6 +84,7 @@ public class InstancePool<T> {
         if (instance == null) {
             instance = creator.get();
         }
+        updateAutoClear();
         return instance;
     }
 
@@ -56,6 +92,7 @@ public class InstancePool<T> {
         instance = recycler.apply(instance);
         if (instance != null)
             pool.offer(instance);
+        updateAutoClear();
     }
 
     public void clear() {
