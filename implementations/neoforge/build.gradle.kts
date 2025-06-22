@@ -91,6 +91,8 @@ val mergeShadowAndJarJar = tasks.create<Jar>("mergeShadowAndJarJar") {
     from (
         zipTree( tasks.shadowJar.map { it.outputs.files.singleFile } ),
         tasks.jarJar.map { it.outputs.files }
+    ).exclude(
+        "META-INF/services/net.kyori.adventure*" // not correctly relocated and not needed -> exclude
     )
     archiveFileName = "${project.name}-${project.version}-merged.jar"
 }
