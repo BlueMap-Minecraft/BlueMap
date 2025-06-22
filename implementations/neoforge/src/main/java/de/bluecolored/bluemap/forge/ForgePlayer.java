@@ -150,7 +150,7 @@ public class ForgePlayer extends Player {
         this.rotation = new Vector3d(player.getXRot(), player.getYHeadRot(), 0);
         this.sneaking = player.isCrouching();
 
-        ServerLevel world = player.serverLevel();
+        ServerLevel world = player.level();
 
         this.skyLight = world.getChunkSource().getLightEngine().getLayerListener(LightLayer.SKY).getLightValue(new BlockPos(player.getBlockX(), player.getBlockY(), player.getBlockZ()));
         this.blockLight = world.getChunkSource().getLightEngine().getLayerListener(LightLayer.BLOCK).getLightValue(new BlockPos(player.getBlockX(), player.getBlockY(), player.getBlockZ()));

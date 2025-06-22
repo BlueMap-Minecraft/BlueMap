@@ -140,7 +140,7 @@ public class ForgeMod implements Server {
 
     @Override
     public String getMinecraftVersion() {
-        return SharedConstants.getCurrentVersion().getId();
+        return SharedConstants.getCurrentVersion().id();
     }
 
     @Override
