@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.core.util;
 
-import de.bluecolored.bluemap.core.logger.Logger;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
@@ -65,7 +64,7 @@ public class InstancePool<T> {
         updateAutoClear();
     }
 
-    private void updateAutoClear() {
+    private synchronized void updateAutoClear() {
         if (autoClearTask != null) autoClearTask.cancel();
         if (autoClearTime != null) {
             autoClearTask = new TimerTask() {
