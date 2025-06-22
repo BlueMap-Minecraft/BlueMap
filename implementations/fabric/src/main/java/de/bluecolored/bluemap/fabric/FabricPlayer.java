@@ -148,7 +148,7 @@ public class FabricPlayer extends Player {
         this.rotation = new Vector3d(player.getPitch(), player.getHeadYaw(), 0);
         this.sneaking = player.isSneaking();
 
-        net.minecraft.server.world.ServerWorld world = player.getServerWorld();
+        net.minecraft.server.world.ServerWorld world = player.getWorld();
 
         this.skyLight = world.getLightingProvider().get(LightType.SKY).getLightLevel(player.getBlockPos());
         this.blockLight = world.getLightingProvider().get(LightType.BLOCK).getLightLevel(player.getBlockPos());
