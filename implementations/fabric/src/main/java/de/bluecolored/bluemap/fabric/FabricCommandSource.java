@@ -25,7 +25,7 @@
 package de.bluecolored.bluemap.fabric;
 
 import com.flowpowered.math.vector.Vector3d;
-import com.mojang.serialization.DataResult;
+import com.google.gson.JsonElement;
 import com.mojang.serialization.JsonOps;
 import de.bluecolored.bluemap.common.commands.TextFormat;
 import de.bluecolored.bluemap.common.serverinterface.CommandSource;
@@ -55,8 +55,9 @@ public class FabricCommandSource implements CommandSource {
         if (TextFormat.lineCount(text) > 1)
             text = Component.newline().append(text).appendNewline();
 
-        DataResult<Text> result = TextCodecs.CODEC.parse(JsonOps.INSTANCE, GsonComponentSerializer.gson().serializeToTree(text.compact()));
-        delegate.sendMessage(result.getOrThrow());
+        JsonElement textJson = GsonComponentSerializer.gson().serializeToTree(text.compact());
+        Text minecraftText = TextCodecs.CODEC.parse(JsonOps.INSTANCE, textJson).getOrThrow();
+        delegate.sendMessage(minecraftText);
     }
 
     @Override
