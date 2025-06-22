@@ -72,7 +72,7 @@ export class PopupMarker extends Marker {
 
     static blockClipboardFormat  = (pos, isHires) => isHires ? `${pos.x} ${pos.y} ${pos.z}` : `${pos.x} ${pos.z}`;
     static chunkClipboardFormat  = (pos, isHires) => isHires ? `${pos.x} ${pos.y} ${pos.z}` : `${pos.x} ${pos.z}`;
-    static regionClipboardFormat = pos => `r.${pos.x}.${pos.z}.mca`
+    static regionClipboardFormat = pos => `r.${pos.x}.${pos.y}.mca`
 
     onMapInteraction = evt => {
         let isHires = true;
