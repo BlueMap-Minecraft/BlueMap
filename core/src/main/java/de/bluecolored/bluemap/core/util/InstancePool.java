@@ -71,7 +71,6 @@ public class InstancePool<T> {
             autoClearTask = new TimerTask() {
                 @Override
                 public void run() {
-                    Logger.global.logInfo("Auto-clearing pool now!");
                     InstancePool.this.clear();
                 }
             };
