@@ -53,7 +53,7 @@ public class ArrayTileModel implements TileModel {
                 model.clear();
                 return model;
             },
-            Duration.ofMinutes(1)
+            SHRINK_TIME
     );
 
     // attributes         per-vertex * per-face
