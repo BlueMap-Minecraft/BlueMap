@@ -1,0 +1,6 @@
+{
+  "parent": "entity/llama/llama_chest",
+  "textures": {
+    "0": "entity/llama/white"
+  }
+}
