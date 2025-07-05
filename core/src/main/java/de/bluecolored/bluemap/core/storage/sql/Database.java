@@ -122,11 +122,19 @@ public class Database implements Closeable {
     }
 
     private DataSource createDataSource(ConnectionFactory connectionFactory, int maxPoolSize) {
-        PoolableConnectionFactory poolableConnectionFactory =
-                new PoolableConnectionFactory(() -> {
+        ConnectionFactory retryingConnectionFactory = new RetryingConnectionFactory(
+                () -> {
                     Logger.global.logDebug("Creating new SQL-Connection...");
                     return connectionFactory.createConnection();
-                }, null);
+                },
+                5,
+                1000,
+                16000,
+                2
+        );
+
+        PoolableConnectionFactory poolableConnectionFactory =
+                new PoolableConnectionFactory(retryingConnectionFactory, null);
         poolableConnectionFactory.setPoolStatements(true);
         poolableConnectionFactory.setMaxOpenPreparedStatements(20);
         poolableConnectionFactory.setDefaultAutoCommit(false);
