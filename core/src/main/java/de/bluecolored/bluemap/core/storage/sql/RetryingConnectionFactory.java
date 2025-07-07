@@ -36,7 +36,7 @@ public class RetryingConnectionFactory implements ConnectionFactory {
                 }
 
                 Logger.global.logWarning(String.format(
-                        "Exception caught while attempting to create an SQL connection. Waiting for %.1f second(s) before retrying.",
+                        "Exception caught while attempting to create an SQL connection. Waiting for %.1f second(s) before retrying. " + ex,
                         delay / 1000.0
                 ));
 
