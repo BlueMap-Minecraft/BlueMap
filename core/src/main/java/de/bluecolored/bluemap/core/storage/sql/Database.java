@@ -123,10 +123,7 @@ public class Database implements Closeable {
 
     private DataSource createDataSource(ConnectionFactory connectionFactory, int maxPoolSize) {
         ConnectionFactory retryingConnectionFactory = new RetryingConnectionFactory(
-                () -> {
-                    Logger.global.logDebug("Creating new SQL-Connection...");
-                    return connectionFactory.createConnection();
-                },
+                connectionFactory,
                 5,
                 1000,
                 16000,

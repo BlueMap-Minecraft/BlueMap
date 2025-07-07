@@ -28,6 +28,7 @@ public class RetryingConnectionFactory implements ConnectionFactory {
 
         for (int attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
+                Logger.global.logDebug("Creating new SQL-Connection...");
                 return delegate.createConnection();
             } catch (SQLException ex) {
                 if (attempt == maxAttempts) {
