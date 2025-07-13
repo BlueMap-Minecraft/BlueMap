@@ -25,7 +25,9 @@
 package de.bluecolored.bluemap.core.resources.pack.resourcepack.model;
 
 import com.flowpowered.math.vector.Vector4f;
+import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
 import lombok.Getter;
 
@@ -62,7 +64,7 @@ public class Face {
         return new Face(this);
     }
 
-    public void optimize(ResourcePack resourcePack) {
-        this.texture.optimize(resourcePack);
+    public void optimize(ResourcePool<Texture> texturePool) {
+        this.texture.optimize(texturePool);
     }
 }

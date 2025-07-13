@@ -52,6 +52,10 @@ public class ResourcePath<T> extends Key {
         super(namespace.toLowerCase(Locale.ROOT), value.toLowerCase(Locale.ROOT));
     }
 
+    public ResourcePath(Key key) {
+        super(key.getNamespace(), key.getValue());
+    }
+
     public ResourcePath(Path filePath, int namespacePos, int valuePos) {
         super(parsePath(filePath, namespacePos, valuePos).toLowerCase(Locale.ROOT));
     }

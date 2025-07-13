@@ -33,9 +33,9 @@ import de.bluecolored.bluemap.core.map.hires.TileModelView;
 import de.bluecolored.bluemap.core.resources.BlockColorCalculatorFactory;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.Variant;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.TextureVariable;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.Variant;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.util.math.Color;
@@ -45,6 +45,8 @@ import de.bluecolored.bluemap.core.util.math.VectorM3f;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 import de.bluecolored.bluemap.core.world.block.ExtendedBlock;
+
+import java.util.function.Function;
 
 /**
  * A model builder for all liquid blocks
@@ -58,7 +60,8 @@ public class LiquidModelRenderer implements BlockRenderer {
             .scale(0.5f, 0.5f, 1)
             .translate(0.5f, 0.5f);
 
-    private final ResourcePack resourcePack;
+    private final Function<ResourcePath<Model>, Model> modelProvider;
+    private final Function<ResourcePath<Texture>, Texture> textureProvider;
     private final TextureGallery textureGallery;
     private final RenderSettings renderSettings;
     private final BlockColorCalculatorFactory.BlockColorCalculator blockColorCalculator;
@@ -74,7 +77,8 @@ public class LiquidModelRenderer implements BlockRenderer {
     private Color blockColor;
 
     public LiquidModelRenderer(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
-        this.resourcePack = resourcePack;
+        this.modelProvider = resourcePack.getModels()::get;
+        this.textureProvider = resourcePack.getTextures()::get;
         this.textureGallery = textureGallery;
         this.renderSettings = renderSettings;
         this.blockColorCalculator = resourcePack.getColorCalculatorFactory().createCalculator();
@@ -98,7 +102,7 @@ public class LiquidModelRenderer implements BlockRenderer {
         this.blockState = block.getBlockState();
         this.isWaterlogged = blockState.isWaterlogged() || block.getProperties().isAlwaysWaterlogged();
         this.isWaterLike = blockState.isWater() || isWaterlogged;
-        this.modelResource = variant.getModel().getResource(resourcePack::getModel);
+        this.modelResource = variant.getModel().getResource(modelProvider);
         this.blockModel = blockModel;
         this.blockColor = color;
 
@@ -162,7 +166,7 @@ public class LiquidModelRenderer implements BlockRenderer {
 
         //calculate mapcolor
         if (upFaceRendered) {
-            Texture stillTexture = stillTexturePath == null ? null : stillTexturePath.getResource(resourcePack::getTexture);
+            Texture stillTexture = stillTexturePath == null ? null : stillTexturePath.getResource(textureProvider);
 
             if (stillTexture != null) {
                 blockColor.set(stillTexture.getColorPremultiplied());
@@ -224,14 +228,13 @@ public class LiquidModelRenderer implements BlockRenderer {
         return !blockState.isAir();
     }
 
-    @SuppressWarnings("StringEquality")
     private boolean isSameLiquid(ExtendedBlock block){
         BlockState blockState = block.getBlockState();
 
         if (this.isWaterlogged)
             return blockState.isWater() || blockState.isWaterlogged() || block.getProperties().isAlwaysWaterlogged();
 
-        if (blockState.getFormatted() == this.blockState.getFormatted())
+        if (blockState.getId().equals(this.blockState.getId()))
             return true;
 
         return this.isWaterLike && (blockState.isWaterlogged() || block.getProperties().isAlwaysWaterlogged());

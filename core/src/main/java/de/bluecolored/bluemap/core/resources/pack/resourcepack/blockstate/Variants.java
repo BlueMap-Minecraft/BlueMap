@@ -28,7 +28,7 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
+import de.bluecolored.bluemap.core.resources.adapter.AbstractTypeAdapterFactory;
 import de.bluecolored.bluemap.core.world.BlockState;
 import org.jetbrains.annotations.Nullable;
 
@@ -53,6 +53,14 @@ public class Variants {
     @Nullable
     public VariantSet getDefaultVariant() {
         return defaultVariant;
+    }
+
+    public void forEach(Consumer<Variant> consumer) {
+        for (VariantSet variant : variants) {
+            variant.forEach(consumer);
+        }
+
+        defaultVariant.forEach(consumer);
     }
 
     public void forEach(BlockState blockState, int x, int y, int z, Consumer<Variant> consumer) {

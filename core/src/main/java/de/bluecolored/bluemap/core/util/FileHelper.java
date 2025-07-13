@@ -36,6 +36,7 @@ import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;

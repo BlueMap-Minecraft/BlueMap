@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.resources;
+package de.bluecolored.bluemap.core.resources.adapter;
 
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;

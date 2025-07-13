@@ -134,7 +134,7 @@ public class BlockColorCalculatorFactory {
 
         @SuppressWarnings("UnusedReturnValue")
         public Color getBlockColor(BlockNeighborhood block, Color target) {
-            String blockId = block.getBlockState().getFormatted();
+            String blockId = block.getBlockState().getId().getFormatted();
 
             ColorFunction colorFunction = blockColorMap.get(blockId);
             if (colorFunction == null) colorFunction = blockColorMap.get("default");

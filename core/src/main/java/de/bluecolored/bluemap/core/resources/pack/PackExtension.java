@@ -22,22 +22,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.resources.pack.resourcepack;
-
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
+package de.bluecolored.bluemap.core.resources.pack;
 
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.List;
 
-public interface ResourcePackExtension {
+public interface PackExtension {
 
-    default void loadResources(Path root) throws IOException {}
+    default void loadResources(Iterable<Path> roots) throws IOException, InterruptedException {}
 
-    default Iterable<Texture> loadTextures(Path root) throws IOException {
-        return List.of();
-    }
-
-    default void bake() throws IOException {}
+    default void bake() throws IOException, InterruptedException {}
 
 }

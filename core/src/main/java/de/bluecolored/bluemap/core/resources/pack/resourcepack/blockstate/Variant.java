@@ -29,13 +29,13 @@ import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import de.bluecolored.bluemap.core.map.hires.block.BlockRendererType;
-import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
+import de.bluecolored.bluemap.core.resources.adapter.AbstractTypeAdapterFactory;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.util.math.MatrixM3f;
 import de.bluecolored.bluemap.core.util.math.MatrixM4f;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.io.IOException;
 
@@ -44,7 +44,9 @@ import java.io.IOException;
 @Getter
 public class Variant {
 
+    @Setter
     private BlockRendererType renderer = BlockRendererType.DEFAULT;
+
     private ResourcePath<Model> model = ResourcePack.MISSING_BLOCK_MODEL;
     private float x = 0, y = 0;
     private boolean uvlock = false;
