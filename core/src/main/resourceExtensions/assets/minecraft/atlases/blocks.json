@@ -2,8 +2,8 @@
   "sources": [
     {
       "type": "minecraft:directory",
-      "prefix": "entity/",
-      "source": "entity"
+      "prefix": "",
+      "source": ""
     }
   ]
 }
