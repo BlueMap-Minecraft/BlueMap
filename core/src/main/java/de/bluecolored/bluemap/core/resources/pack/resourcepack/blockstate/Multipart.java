@@ -28,7 +28,7 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
+import de.bluecolored.bluemap.core.resources.adapter.AbstractTypeAdapterFactory;
 import de.bluecolored.bluemap.core.world.BlockState;
 import lombok.Getter;
 
@@ -45,6 +45,12 @@ public class Multipart {
     private VariantSet[] parts = new VariantSet[0];
 
     private Multipart(){}
+
+    public void forEach(Consumer<Variant> consumer) {
+        for (VariantSet part : parts) {
+            part.forEach(consumer);
+        }
+    }
 
     public void forEach(BlockState blockState, int x, int y, int z, Consumer<Variant> consumer) {
         for (VariantSet part : parts) {

@@ -31,6 +31,7 @@ import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.map.hires.TileModelView;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.Variant;
+import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
@@ -81,7 +82,7 @@ public class BlockStateModelRenderer {
     private void renderModel(BlockNeighborhood block, BlockState blockState, TileModelView tileModel, Color blockColor) {
         int modelStart = tileModel.getStart();
 
-        var stateResource = resourcePack.getBlockState(blockState);
+        var stateResource = resourcePack.getBlockStates().get(blockState.getId());
         if (stateResource == null) return;
 
         float blockColorOpacity = 0;
@@ -109,6 +110,6 @@ public class BlockStateModelRenderer {
         tileModel.initialize(modelStart);
     }
 
-    private final static BlockState WATERLOGGED_BLOCKSTATE = new BlockState("minecraft:water");
+    private final static BlockState WATERLOGGED_BLOCKSTATE = new BlockState(Key.minecraft("water"));
 
 }

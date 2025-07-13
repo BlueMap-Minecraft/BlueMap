@@ -22,42 +22,15 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.resources;
+package de.bluecolored.bluemap.core.resources.pack;
 
-import de.bluecolored.bluemap.core.world.BlockState;
+import java.io.IOException;
+import java.nio.file.Path;
 
-import java.util.Map.Entry;
+public interface PackExtension {
 
-class BlockStateMapping<T> {
-    private final BlockState blockState;
-    private final T mapping;
+    default void loadResources(Iterable<Path> roots) throws IOException, InterruptedException {}
 
-    public BlockStateMapping(BlockState blockState, T mapping) {
-        this.blockState = blockState;
-        this.mapping = mapping;
-    }
-
-    /**
-     * Returns true if the all the properties on this BlockMapping-key are the same in the provided BlockState.<br>
-     * Properties that are not defined in this Mapping are ignored on the provided BlockState.<br>
-     */
-    public boolean fitsTo(BlockState blockState){
-        if (!this.blockState.getId().equals(blockState.getId())) return false;
-        for (Entry<String, String> e : this.blockState.getProperties().entrySet()){
-            if (!e.getValue().equals(blockState.getProperties().get(e.getKey()))){
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public BlockState getBlockState(){
-        return blockState;
-    }
-
-    public T getMapping(){
-        return mapping;
-    }
+    default void bake() throws IOException, InterruptedException {}
 
 }

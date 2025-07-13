@@ -25,7 +25,7 @@
 package de.bluecolored.bluemap.core.map.renderstate;
 
 import de.bluecolored.bluemap.core.util.Key;
-import de.bluecolored.bluemap.core.util.RegistryAdapter;
+import de.bluecolored.bluemap.core.util.nbt.RegistryAdapter;
 import de.bluecolored.bluenbt.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;

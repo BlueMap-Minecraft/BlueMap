@@ -24,11 +24,9 @@
  */
 package de.bluecolored.bluemap.core.util;
 
-import java.util.concurrent.ConcurrentHashMap;
+import static de.bluecolored.bluemap.core.util.StringUtil.intern;
 
 public class Key implements Keyed {
-
-    private static final ConcurrentHashMap<String, String> STRING_INTERN_POOL = new ConcurrentHashMap<>();
 
     public static final String MINECRAFT_NAMESPACE = "minecraft";
     public static final String BLUEMAP_NAMESPACE = "bluemap";
@@ -79,12 +77,7 @@ public class Key implements Keyed {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Key that)) return false;
-        if (!that.canEqual(this)) return false;
         return formatted == that.formatted;
-    }
-
-    protected boolean canEqual(Object o) {
-        return o instanceof Key;
     }
 
     @Override
@@ -119,14 +112,6 @@ public class Key implements Keyed {
 
     public static Key bluemap(String value) {
         return new Key(BLUEMAP_NAMESPACE, value);
-    }
-
-    /**
-     * Using our own function instead of {@link String#intern()} since the ConcurrentHashMap is much faster.
-     */
-    protected static String intern(String string) {
-        String interned = STRING_INTERN_POOL.putIfAbsent(string, string);
-        return interned != null ? interned : string;
     }
 
 }

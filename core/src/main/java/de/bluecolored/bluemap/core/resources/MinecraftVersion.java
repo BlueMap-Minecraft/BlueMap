@@ -30,6 +30,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.resources.adapter.AbstractTypeAdapterFactory;
 import de.bluecolored.bluemap.core.util.FileHelper;
 import lombok.AccessLevel;
 import lombok.Getter;

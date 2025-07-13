@@ -30,7 +30,7 @@ import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import de.bluecolored.bluemap.core.map.hires.entity.EntityRendererType;
-import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
+import de.bluecolored.bluemap.core.resources.adapter.AbstractTypeAdapterFactory;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model;

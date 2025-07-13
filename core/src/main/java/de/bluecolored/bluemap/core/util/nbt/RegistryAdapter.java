@@ -22,9 +22,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.util;
+package de.bluecolored.bluemap.core.util.nbt;
 
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluemap.core.util.Keyed;
+import de.bluecolored.bluemap.core.util.Registry;
 import de.bluecolored.bluenbt.NBTReader;
 import de.bluecolored.bluenbt.NBTWriter;
 import de.bluecolored.bluenbt.TagType;

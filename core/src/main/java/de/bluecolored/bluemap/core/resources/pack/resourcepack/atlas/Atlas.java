@@ -22,49 +22,50 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.resources.pack.resourcepack.model;
+package de.bluecolored.bluemap.core.resources.pack.resourcepack.atlas;
 
-import com.flowpowered.math.vector.Vector4f;
+import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
-import de.bluecolored.bluemap.core.util.Direction;
+import de.bluecolored.bluemap.core.util.Key;
 import lombok.Getter;
+import org.jetbrains.annotations.Contract;
 
-import java.util.function.Function;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.LinkedHashSet;
+import java.util.function.Predicate;
 
-@SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
 @Getter
-public class Face {
+@SuppressWarnings("FieldMayBeFinal")
+public class Atlas {
 
-    private static final TextureVariable DEFAULT_TEXTURE = new TextureVariable(ResourcePack.MISSING_TEXTURE);
+    private LinkedHashSet<Source> sources = new LinkedHashSet<>();
 
-    private Vector4f uv;
-    private TextureVariable texture = DEFAULT_TEXTURE;
-    private Direction cullface;
-    private int rotation = 0;
-    private int tintindex = -1;
-
-    @SuppressWarnings("unused")
-    private Face() {}
-
-    private Face(Face copyFrom) {
-        this.uv = copyFrom.uv;
-        this.texture = copyFrom.texture.copy();
-        this.cullface = copyFrom.cullface;
-        this.rotation = copyFrom.rotation;
-        this.tintindex = copyFrom.tintindex;
+    @Contract("_ -> this")
+    public Atlas add(Atlas atlas) {
+        sources.addAll(atlas.getSources());
+        return this;
     }
 
-    void init(Direction direction, Function<Direction, Vector4f> defaultUvCalculator) {
-        if (uv == null) uv = defaultUvCalculator.apply(direction);
+    public void load(Path root, ResourcePool<Texture> textures, Predicate<Key> textureFilter) throws IOException {
+        sources.forEach(source -> {
+            try {
+                source.load(root, textures, textureFilter);
+            } catch (IOException e) {
+                Logger.global.logDebug("Failed to load atlas-source: " + e);
+            }
+        });
     }
 
-    public Face copy() {
-        return new Face(this);
+    public void bake(ResourcePool<Texture> textures, Predicate<Key> textureFilter) throws IOException {
+        sources.forEach(source -> {
+            try {
+                source.bake(textures, textureFilter);
+            } catch (IOException e) {
+                Logger.global.logDebug("Failed to bake atlas-source: " + e);
+            }
+        });
     }
 
-    public void optimize(ResourcePool<Texture> texturePool) {
-        this.texture.optimize(texturePool);
-    }
 }

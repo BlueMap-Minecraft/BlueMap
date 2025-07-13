@@ -22,42 +22,20 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.resources;
+package de.bluecolored.bluemap.core.util;
 
-import de.bluecolored.bluemap.core.world.BlockState;
+import java.util.concurrent.ConcurrentHashMap;
 
-import java.util.Map.Entry;
+public class StringUtil {
 
-class BlockStateMapping<T> {
-    private final BlockState blockState;
-    private final T mapping;
-
-    public BlockStateMapping(BlockState blockState, T mapping) {
-        this.blockState = blockState;
-        this.mapping = mapping;
-    }
+    private static final ConcurrentHashMap<String, String> STRING_INTERN_POOL = new ConcurrentHashMap<>();
 
     /**
-     * Returns true if the all the properties on this BlockMapping-key are the same in the provided BlockState.<br>
-     * Properties that are not defined in this Mapping are ignored on the provided BlockState.<br>
+     * Using our own function instead of {@link String#intern()} since the ConcurrentHashMap is much faster.
      */
-    public boolean fitsTo(BlockState blockState){
-        if (!this.blockState.getId().equals(blockState.getId())) return false;
-        for (Entry<String, String> e : this.blockState.getProperties().entrySet()){
-            if (!e.getValue().equals(blockState.getProperties().get(e.getKey()))){
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    public BlockState getBlockState(){
-        return blockState;
-    }
-
-    public T getMapping(){
-        return mapping;
+    public static String intern(String string) {
+        String interned = STRING_INTERN_POOL.putIfAbsent(string, string);
+        return interned != null ? interned : string;
     }
 
 }

@@ -30,8 +30,10 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
-import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
+import de.bluecolored.bluemap.core.resources.adapter.AbstractTypeAdapterFactory;
+import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
 import lombok.Getter;
 
@@ -97,9 +99,9 @@ public class Element {
         return true;
     }
 
-    public void optimize(ResourcePack resourcePack) {
+    public void optimize(ResourcePool<Texture> texturePool) {
         for (var face : faces.values())  {
-            face.optimize(resourcePack);
+            face.optimize(texturePool);
         }
     }
 

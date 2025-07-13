@@ -37,6 +37,7 @@ import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.World;
 import de.bluecolored.bluemap.core.world.block.Block;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
+import lombok.extern.flogger.Flogger;
 
 public class HiresModelRenderer {
 

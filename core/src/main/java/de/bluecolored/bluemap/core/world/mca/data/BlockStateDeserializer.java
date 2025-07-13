@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.core.world.mca.data;
 
+import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluenbt.NBTReader;
 import de.bluecolored.bluenbt.TypeDeserializer;
@@ -58,7 +59,9 @@ public class BlockStateDeserializer implements TypeDeserializer<BlockState> {
         reader.endCompound();
 
         if (id == null) throw new IOException("Invalid BlockState, Name is missing!");
-        return properties == null ? new BlockState(id) : new BlockState(id, properties);
+
+        Key key = Key.parse(id);
+        return properties == null ? new BlockState(key) : new BlockState(key, properties);
     }
 
 }
