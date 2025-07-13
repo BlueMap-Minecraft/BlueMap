@@ -33,13 +33,11 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 import java.util.function.BinaryOperator;
-import java.util.function.Predicate;
 
 public class ResourcePool<T> {
 
-    private final Map<ResourcePath<T>, T> pool = new HashMap<>();
+    private final Map<Key, T> pool = new HashMap<>();
     private final Map<Key, ResourcePath<T>> paths = new HashMap<>();
 
     public void put(Key path, T value) {
@@ -63,8 +61,8 @@ public class ResourcePool<T> {
         }
     }
 
-    public Set<ResourcePath<T>> paths() {
-        return pool.keySet();
+    public Collection<ResourcePath<T>> paths() {
+        return paths.values();
     }
 
     public Collection<T> values() {
