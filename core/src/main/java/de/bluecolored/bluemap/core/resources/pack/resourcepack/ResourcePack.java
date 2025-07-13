@@ -33,7 +33,6 @@ import de.bluecolored.bluemap.core.resources.BlockPropertiesConfig;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.pack.Pack;
-import de.bluecolored.bluemap.core.resources.pack.PackExtension;
 import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.atlas.Atlas;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.BlockState;
@@ -64,7 +63,7 @@ import java.util.function.Predicate;
 
 public class ResourcePack extends Pack {
 
-    public interface Extension<T extends PackExtension> extends Keyed {
+    public interface Extension<T extends ResourcePackExtension> extends Keyed {
         Registry<Extension<?>> REGISTRY = new Registry<>();
         T create(ResourcePack pack);
     }
@@ -88,7 +87,7 @@ public class ResourcePack extends Pack {
     private final BlockPropertiesConfig blockPropertiesConfig;
     private final LoadingCache<de.bluecolored.bluemap.core.world.BlockState, BlockProperties> blockPropertiesCache;
 
-    private final Map<Extension<?>, PackExtension> extensions;
+    private final Map<Extension<?>, ResourcePackExtension> extensions;
 
     public ResourcePack(int packVersion) {
         super(packVersion);
@@ -339,6 +338,9 @@ public class ResourcePack extends Pack {
                 usedTextures.add(textureVariable.getTexturePath());
             }
         }
+        for (ResourcePackExtension extension : extensions.values()) {
+            usedTextures.addAll(extension.collectUsedTextureKeys());
+        }
         return usedTextures;
     }
 
@@ -374,7 +376,7 @@ public class ResourcePack extends Pack {
     }
 
     @SuppressWarnings({"unchecked", "unused"})
-    public <T extends PackExtension> T getExtension(Extension<T> extensionType) {
+    public <T extends ResourcePackExtension> T getExtension(Extension<T> extensionType) {
         return (T) extensions.get(extensionType);
     }
 
