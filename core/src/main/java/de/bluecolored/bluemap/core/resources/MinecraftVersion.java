@@ -54,7 +54,7 @@ import java.util.Arrays;
 public class MinecraftVersion {
     private static final Gson GSON = new Gson();
 
-    private static final String LATEST_KNOWN_VERSION = "1.21.4";
+    private static final String LATEST_KNOWN_VERSION = "1.21.7";
     private static final String EARLIEST_RESOURCEPACK_VERSION = "1.13";
     private static final String EARLIEST_DATAPACK_VERSION = "1.19.4";
 
