@@ -34,14 +34,14 @@ import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.math.MatrixM4f;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.io.IOException;
 
-@SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
-@JsonAdapter(Variant.Adapter.class)
+@SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal", "unused"})
 @Getter
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@JsonAdapter(Variant.Adapter.class)
 public class Variant {
 
     @Setter
@@ -55,7 +55,26 @@ public class Variant {
     private transient boolean transformed;
     private transient MatrixM4f transformMatrix;
 
-    private Variant(){}
+    public Variant(ResourcePath<Model> model) {
+        this.model = model;
+        init();
+    }
+
+    public Variant(ResourcePath<Model> model, float x, float y) {
+        this.model = model;
+        this.x = x;
+        this.y = y;
+        init();
+    }
+
+    public Variant(ResourcePath<Model> model, float x, float y, boolean uvlock, double weight) {
+        this.model = model;
+        this.x = x;
+        this.y = y;
+        this.uvlock = uvlock;
+        this.weight = weight;
+        init();
+    }
 
     private void init() {
         this.transformed = x != 0 || y != 0;

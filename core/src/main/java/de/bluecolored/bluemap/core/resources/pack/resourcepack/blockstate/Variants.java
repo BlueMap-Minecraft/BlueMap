@@ -30,6 +30,9 @@ import com.google.gson.stream.JsonReader;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.adapter.AbstractTypeAdapterFactory;
 import de.bluecolored.bluemap.core.world.BlockState;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -37,14 +40,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-@SuppressWarnings("FieldMayBeFinal")
+@SuppressWarnings({"FieldMayBeFinal", "unused"})
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @JsonAdapter(Variants.Adapter.class)
 public class Variants {
 
     private VariantSet[] variants = new VariantSet[0];
-    private VariantSet defaultVariant;
-
-    private Variants(){}
+    private @Nullable VariantSet defaultVariant;
 
     public VariantSet[] getVariants() {
         return variants;

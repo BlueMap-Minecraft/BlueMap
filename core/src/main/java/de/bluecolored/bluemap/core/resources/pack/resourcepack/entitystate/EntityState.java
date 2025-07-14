@@ -24,10 +24,15 @@
  */
 package de.bluecolored.bluemap.core.resources.pack.resourcepack.entitystate;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 @SuppressWarnings("FieldMayBeFinal")
 @Getter
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor
 public class EntityState {
 
     private Part[] parts;

@@ -30,18 +30,23 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
+import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.AbstractTypeAdapterFactory;
 import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.io.IOException;
 import java.util.EnumMap;
+import java.util.Map;
 
-@SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
+@SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal", "unused"})
 @JsonAdapter(Element.Adapter.class)
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 public class Element {
     private static final Vector3f FULL_BLOCK_MIN = Vector3f.ZERO;
@@ -53,8 +58,30 @@ public class Element {
     private int lightEmission = 0;
     private EnumMap<Direction, Face> faces = new EnumMap<>(Direction.class);
 
-    @SuppressWarnings("unused")
-    private Element() {}
+    public Element(Vector3f from, Vector3f to, Map<Direction, Face> faces) {
+        this.from = from;
+        this.to = to;
+        this.faces.putAll(faces);
+        init();
+    }
+
+    public Element(Vector3f from, Vector3f to, Rotation rotation, Map<Direction, Face> faces) {
+        this.from = from;
+        this.to = to;
+        this.rotation = rotation;
+        this.faces.putAll(faces);
+        init();
+    }
+
+    public Element(Vector3f from, Vector3f to, Rotation rotation, boolean shade, int lightEmission, Map<Direction, Face> faces) {
+        this.from = from;
+        this.to = to;
+        this.rotation = rotation;
+        this.shade = shade;
+        this.lightEmission = lightEmission;
+        this.faces.putAll(faces);
+        init();
+    }
 
     private Element(Element copyFrom) {
         this.from = copyFrom.from;

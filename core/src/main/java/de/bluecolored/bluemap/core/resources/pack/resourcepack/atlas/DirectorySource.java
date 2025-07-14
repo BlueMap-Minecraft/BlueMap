@@ -29,8 +29,7 @@ import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Key;
-import lombok.Getter;
-import lombok.SneakyThrows;
+import lombok.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -43,11 +42,17 @@ import static de.bluecolored.bluemap.core.resources.pack.Pack.list;
 import static de.bluecolored.bluemap.core.resources.pack.Pack.walk;
 
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @SuppressWarnings("unused")
 public class DirectorySource extends Source {
 
     private String source;
     private String prefix = "";
+
+    public DirectorySource(String source) {
+        this.source = source;
+    }
 
     @Override
     public void load(Path root, ResourcePool<Texture> textures, Predicate<Key> textureFilter) throws IOException {

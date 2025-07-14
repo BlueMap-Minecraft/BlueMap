@@ -26,16 +26,18 @@ package de.bluecolored.bluemap.core.resources.pack.resourcepack.model;
 
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
+@SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal", "unused"})
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 public class Model {
 
@@ -47,7 +49,34 @@ public class Model {
     private transient boolean culling = false;
     private transient boolean occluding = false;
 
-    private Model(){}
+    public Model(Map<String, TextureVariable> textures) {
+        this.textures.putAll(textures);
+    }
+
+    public Model(Element @Nullable ... elements) {
+        this.elements = elements;
+    }
+
+    public Model(Map<String, TextureVariable> textures, Element @Nullable ... elements) {
+        this.textures.putAll(textures);
+        this.elements = elements;
+    }
+
+    public Model(Map<String, TextureVariable> textures, Element @Nullable [] elements, boolean ambientocclusion) {
+        this.textures.putAll(textures);
+        this.elements = elements;
+    }
+
+    public Model(@Nullable ResourcePath<Model> parent, Map<String, TextureVariable> textures) {
+        this.parent = parent;
+        this.textures.putAll(textures);
+    }
+
+    public Model(@Nullable ResourcePath<Model> parent, Map<String, TextureVariable> textures, Element @Nullable [] elements, boolean ambientocclusion) {
+        this.parent = parent;
+        this.textures.putAll(textures);
+        this.elements = elements;
+    }
 
     public synchronized void optimize(ResourcePool<Texture> texturePool) {
         for (var variable : this.textures.values()) {

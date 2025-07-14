@@ -28,7 +28,10 @@ import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Key;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -38,11 +41,17 @@ import java.util.Objects;
 import java.util.function.Predicate;
 
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @SuppressWarnings("unused")
 public class SingleSource extends Source {
 
     private ResourcePath<Texture> resource;
     private @Nullable ResourcePath<Texture> sprite;
+
+    public SingleSource(ResourcePath<Texture> resource) {
+        this.resource = resource;
+    }
 
     @Override
     public void load(Path root, ResourcePool<Texture> textures, Predicate<Key> textureFilter) throws IOException {

@@ -30,7 +30,10 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import de.bluecolored.bluemap.core.resources.adapter.AbstractTypeAdapterFactory;
 import de.bluecolored.bluemap.core.world.BlockState;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,13 +41,13 @@ import java.util.List;
 import java.util.function.Consumer;
 
 @SuppressWarnings("FieldMayBeFinal")
+@AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @JsonAdapter(Multipart.Adapter.class)
 public class Multipart {
 
     @Getter
     private VariantSet[] parts = new VariantSet[0];
-
-    private Multipart(){}
 
     public void forEach(Consumer<Variant> consumer) {
         for (VariantSet part : parts) {

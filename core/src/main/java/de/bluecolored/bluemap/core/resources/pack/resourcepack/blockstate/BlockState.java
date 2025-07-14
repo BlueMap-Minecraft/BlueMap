@@ -24,17 +24,27 @@
  */
 package de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.Consumer;
 
-@SuppressWarnings("FieldMayBeFinal")
+@SuppressWarnings({"FieldMayBeFinal", "unused"})
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class BlockState {
 
     private Variants variants = null;
     private Multipart multipart = null;
 
-    private BlockState(){}
+    public BlockState(Variants variants){
+        this.variants = variants;
+    }
+
+    public BlockState(Multipart multipart){
+        this.multipart = multipart;
+    }
 
     @Nullable
     public Variants getVariants() {

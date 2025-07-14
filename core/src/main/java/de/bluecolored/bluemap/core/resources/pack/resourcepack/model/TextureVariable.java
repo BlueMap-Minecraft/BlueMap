@@ -43,10 +43,10 @@ import java.util.function.Function;
 @JsonAdapter(TextureVariable.Adapter.class)
 public class TextureVariable {
 
-    @Getter @Setter
+    @Getter
     private @Nullable String referenceName;
 
-    @Getter @Setter
+    @Getter
     private ResourcePath<Texture> texturePath;
 
     private transient volatile boolean isReference, isResolving;
