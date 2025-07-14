@@ -71,7 +71,6 @@ public class LiquidModelRenderer implements BlockRenderer {
 
     private BlockNeighborhood block;
     private BlockState blockState;
-    private boolean isWaterlogged, isWaterLike;
     private Model modelResource;
     private TileModelView blockModel;
     private Color blockColor;
@@ -100,13 +99,15 @@ public class LiquidModelRenderer implements BlockRenderer {
     public void render(BlockNeighborhood block, Variant variant, TileModelView blockModel, Color color) {
         this.block = block;
         this.blockState = block.getBlockState();
-        this.isWaterlogged = blockState.isWaterlogged() || block.getProperties().isAlwaysWaterlogged();
-        this.isWaterLike = blockState.isWater() || isWaterlogged;
         this.modelResource = variant.getModel().getResource(modelProvider);
         this.blockModel = blockModel;
         this.blockColor = color;
 
         if (this.modelResource == null) return;
+
+        // for waterlogged blocks, pretend it's just water
+        if (blockState.isWaterlogged() || block.getProperties().isAlwaysWaterlogged())
+            this.blockState = BlockState.WATER;
 
         build();
     }
@@ -145,8 +146,7 @@ public class LiquidModelRenderer implements BlockRenderer {
         int stillTextureId = textureGallery.get(stillTexturePath);
         int flowTextureId = textureGallery.get(flowTexturePath);
 
-        tintcolor.set(1f, 1f, 1f, 1f, true);
-        if (isWaterLike) blockColorCalculator.getBlendedWaterColor(block, tintcolor);
+        blockColorCalculator.getBlockColor(block, blockState, tintcolor);
 
         int modelStart = blockModel.getStart();
 
@@ -231,13 +231,10 @@ public class LiquidModelRenderer implements BlockRenderer {
     private boolean isSameLiquid(ExtendedBlock block){
         BlockState blockState = block.getBlockState();
 
-        if (this.isWaterlogged)
+        if (this.blockState.isWater())
             return blockState.isWater() || blockState.isWaterlogged() || block.getProperties().isAlwaysWaterlogged();
 
-        if (blockState.getId().equals(this.blockState.getId()))
-            return true;
-
-        return this.isWaterLike && (blockState.isWaterlogged() || block.getProperties().isAlwaysWaterlogged());
+        return blockState.getId().equals(this.blockState.getId());
     }
 
     private float getLiquidBaseHeight(BlockState block){

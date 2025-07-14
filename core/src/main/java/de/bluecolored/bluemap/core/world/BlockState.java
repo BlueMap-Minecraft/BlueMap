@@ -52,6 +52,7 @@ public class BlockState {
 
     public static final BlockState AIR = new BlockState(AIR_ID);
     public static final BlockState MISSING = new BlockState(MISSING_ID);
+    public static final BlockState WATER = new BlockState(WATER_ID);
 
     private boolean hashed;
     private int hash;

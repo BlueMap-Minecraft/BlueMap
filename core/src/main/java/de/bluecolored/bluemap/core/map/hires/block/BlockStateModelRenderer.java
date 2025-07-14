@@ -71,7 +71,7 @@ public class BlockStateModelRenderer {
         // add water if block is waterlogged
         if (blockState.isWaterlogged() || block.getProperties().isAlwaysWaterlogged()) {
             waterloggedColor.set(0f, 0f, 0f, 0f, true);
-            renderModel(block, WATERLOGGED_BLOCKSTATE, tileModel.initialize(), waterloggedColor);
+            renderModel(block, BlockState.WATER, tileModel.initialize(), waterloggedColor);
             blockColor.set(waterloggedColor.overlay(blockColor.premultiplied()));
         }
 
@@ -109,7 +109,5 @@ public class BlockStateModelRenderer {
 
         tileModel.initialize(modelStart);
     }
-
-    private final static BlockState WATERLOGGED_BLOCKSTATE = new BlockState(Key.minecraft("water"));
 
 }
