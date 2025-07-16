@@ -48,7 +48,7 @@ public class SignBlockEntity extends MCABlockEntity {
 
         boolean hasGlowingText;
         String color = "black";
-        List<String> messages = List.of();
+        List<Object> messages = List.of();
 
     }
 
