@@ -74,7 +74,6 @@ export class PopupMarker extends Marker {
         if (navigator?.clipboard?.writeText) {
             navigator.clipboard.writeText(text)
                 .catch(e => console.error(e));
-            console.log("Copied new!");
         } else {
             function listener(e) {
                 e.clipboardData.setData("text/plain", text);
@@ -83,7 +82,6 @@ export class PopupMarker extends Marker {
             document.addEventListener("copy", listener);
             document.execCommand("copy");
             document.removeEventListener("copy", listener);
-            console.log("Copied old!");
         }
     }
     static blockClipboardFormat  = (pos, isHires) => isHires ? `${pos.x} ${pos.y} ${pos.z}` : `${pos.x} ${pos.z}`;
