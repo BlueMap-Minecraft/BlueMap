@@ -3,7 +3,7 @@ name: Check translations
 on:
   push:
     paths:
-      - "BlueMapCommon/webapp/public/lang/**"
+      - "common/webapp/public/lang/**"
       - ".github/translation-checker/**"
 
 permissions:
