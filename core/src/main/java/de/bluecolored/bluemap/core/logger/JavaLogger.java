@@ -24,6 +24,8 @@
  */
 package de.bluecolored.bluemap.core.logger;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,7 +39,7 @@ public class JavaLogger extends AbstractLogger {
     }
 
     @Override
-    public void logError(String message, Throwable throwable) {
+    public void logError(String message, @Nullable Throwable throwable) {
         out.log(Level.SEVERE, message, throwable);
     }
 

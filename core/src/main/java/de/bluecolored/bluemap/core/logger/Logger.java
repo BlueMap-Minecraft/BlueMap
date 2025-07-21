@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.core.logger;
 
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -45,11 +46,11 @@ public abstract class Logger implements AutoCloseable {
         }));
     }
 
-    public void logError(Throwable throwable) {
+    public void logError(@NotNull Throwable throwable) {
         logError(throwable.getMessage(), throwable);
     }
 
-    public abstract void logError(String message, Throwable throwable);
+    public abstract void logError(String message, @Nullable Throwable throwable);
 
     public abstract void logWarning(String message);
 
@@ -60,7 +61,7 @@ public abstract class Logger implements AutoCloseable {
     /**
      * Only log the error if no message has been logged before with the same key.
      */
-    public abstract void noFloodError(String key, String message, Throwable throwable);
+    public abstract void noFloodError(String key, String message, @Nullable Throwable throwable);
 
     /**
      * Only log the warning if no message has been logged before with the same key.
@@ -80,14 +81,14 @@ public abstract class Logger implements AutoCloseable {
     /**
      * Only log the error if no message has been logged before with the same content.
      */
-    public void noFloodError(Throwable throwable){
+    public void noFloodError(@NotNull Throwable throwable){
         noFloodError(throwable.getMessage(), throwable);
     }
 
     /**
      * Only log the error if no message has been logged before with the same content.
      */
-    public void noFloodError(String message, Throwable throwable){
+    public void noFloodError(String message, @Nullable Throwable throwable){
         noFloodError(message, message, throwable);
     }
 
