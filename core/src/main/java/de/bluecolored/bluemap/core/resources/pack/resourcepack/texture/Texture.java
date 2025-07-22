@@ -132,7 +132,7 @@ public class Texture implements Keyed {
     public static Texture from(ResourcePath<Texture> resourcePath, BufferedImage image, @Nullable AnimationMeta animation) throws IOException {
 
         //check halfTransparency
-        boolean halfTransparent = checkHalfTransparent(image);
+        boolean halfTransparent = BufferedImageUtil.halfTransparent(image);
 
         //calculate color
         Color color = BufferedImageUtil.averageColor(image);
@@ -143,20 +143,6 @@ public class Texture implements Keyed {
         String base64 = TEXTURE_STRING_PREFIX + Base64.getEncoder().encodeToString(os.toByteArray());
 
         return new Texture(resourcePath, color, halfTransparent, base64, animation, image);
-    }
-
-    private static boolean checkHalfTransparent(BufferedImage image){
-        for (int x = 0; x < image.getWidth(); x++){
-            for (int y = 0; y < image.getHeight(); y++){
-                int pixel = image.getRGB(x, y);
-                int alpha = (pixel >> 24) & 0xff;
-                if (alpha > 0x00 && alpha < 0xff){
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     public static Texture missing(ResourcePath<Texture> resourcePath) {
