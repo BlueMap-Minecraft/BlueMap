@@ -19,6 +19,8 @@ dependencies {
     }
 
     api ( libs.bstats.sponge )
+
+    compileOnly ( libs.jetbrains.annotations )
 }
 
 sponge {
