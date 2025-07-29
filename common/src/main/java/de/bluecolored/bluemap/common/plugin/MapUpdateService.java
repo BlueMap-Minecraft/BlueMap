@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.common.plugin;
 
 import com.flowpowered.math.vector.Vector2i;
+import de.bluecolored.bluemap.common.BlueMapConfiguration;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -32,6 +33,7 @@ import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.util.WatchService;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
@@ -42,19 +44,35 @@ public class MapUpdateService extends Thread {
     private final BmMap map;
     private final RenderManager renderManager;
     private final WatchService<Vector2i> watchService;
+    private final int inactivityWait;
+    private final int inactivityMaxWait;
 
     private volatile boolean closed;
 
     private Timer delayTimer;
 
-    private final Map<Vector2i, TimerTask> scheduledUpdates;
+    private final Map<Vector2i, RegionUpdateInfo> scheduledUpdates;
 
-    public MapUpdateService(RenderManager renderManager, BmMap map) throws IOException {
+    private static class RegionUpdateInfo {
+        TimerTask task;
+        Instant waitingSince;
+
+        RegionUpdateInfo(TimerTask task, Instant waitingSince) {
+            this.task = task;
+            this.waitingSince = waitingSince;
+        }
+    }
+
+    public MapUpdateService(BlueMapConfiguration configService, RenderManager renderManager, BmMap map) throws IOException {
         this.renderManager = renderManager;
         this.map = map;
         this.closed = false;
         this.scheduledUpdates = new HashMap<>();
         this.watchService = map.getWorld().createRegionWatchService();
+
+        var coreConfig = configService.getCoreConfig();
+        inactivityWait = coreConfig.getUpdateRegionAfterInactivity();
+        inactivityMaxWait = coreConfig.getUpdateRegionMaxInactivityWait();
     }
 
     @Override
@@ -83,11 +101,17 @@ public class MapUpdateService extends Thread {
     private synchronized void updateRegion(Vector2i regionPos) {
         if (closed) return;
 
-        // we only want to start the render when there were no changes on a file for 5 seconds
-        TimerTask task = scheduledUpdates.remove(regionPos);
-        if (task != null) task.cancel();
+        // we only want to start the render when there were no changes on a file for inactivityWait seconds
+        RegionUpdateInfo previous = scheduledUpdates.get(regionPos);
+        if (previous != null) {
+            if (previous.waitingSince.plusSeconds(inactivityMaxWait).isBefore(Instant.now())) {
+                // exceeded max inactivity timeout, don't reschedule
+                return;
+            }
+            previous.task.cancel();
+        }
 
-        task = new TimerTask() {
+        TimerTask task = new TimerTask() {
             @Override
             public void run() {
                 synchronized (MapUpdateService.this) {
@@ -99,8 +123,13 @@ public class MapUpdateService extends Thread {
                 }
             }
         };
-        scheduledUpdates.put(regionPos, task);
-        delayTimer.schedule(task, 5000);
+
+        if (previous == null) {
+            scheduledUpdates.put(regionPos, new RegionUpdateInfo(task, Instant.now()));
+        } else {
+            previous.task = task;
+        }
+        delayTimer.schedule(task, inactivityWait * 1000L);
     }
 
     public synchronized void close() {
