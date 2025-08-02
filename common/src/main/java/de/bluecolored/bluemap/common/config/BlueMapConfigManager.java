@@ -310,6 +310,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
                 }
 
                 MapConfig mapConfig = configManager.loadConfig(configFile, MapConfig.class);
+                mapConfig.checkLegacy();
                 mapConfigs.put(id, mapConfig);
             }
         } catch (IOException ex) {

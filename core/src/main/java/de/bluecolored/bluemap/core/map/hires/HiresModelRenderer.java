@@ -61,8 +61,6 @@ public class HiresModelRenderer {
 
     public void render(World world, Vector3i modelMin, Vector3i modelMax, TileModel tileModel, TileMetaConsumer tileMetaConsumer) {
         try {
-            Vector3i min = modelMin.max(renderSettings.getMinPos());
-            Vector3i max = modelMax.min(renderSettings.getMaxPos());
             Vector3i modelAnchor = new Vector3i(modelMin.getX(), 0, modelMin.getZ());
 
             // render blocks
@@ -86,8 +84,8 @@ public class HiresModelRenderer {
 
                     if (renderSettings.isInsideRenderBoundaries(x, z)) {
                         Chunk chunk = world.getChunkAtBlock(x, z);
-                        minY = Math.max(min.getY(), chunk.getMinY(x, z));
-                        maxY = Math.min(max.getY(), chunk.getMaxY(x, z));
+                        minY = Math.max(modelMin.getY(), chunk.getMinY(x, z));
+                        maxY = Math.min(modelMax.getY(), chunk.getMaxY(x, z));
 
                         for (y = maxY; y >= minY; y--) {
                             block.set(x, y, z);
@@ -122,7 +120,7 @@ public class HiresModelRenderer {
             }
 
             // render entities
-            world.iterateEntities(min.getX(), min.getZ(), max.getX(), max.getZ(), entity -> {
+            world.iterateEntities(modelMin.getX(), modelMin.getZ(), modelMax.getX(), modelMax.getZ(), entity -> {
                 Vector3d pos = entity.getPos();
                 block.set(pos.getFloorX(), pos.getFloorY(), pos.getFloorZ());
                 entityRenderer.render(entity, block, tileModelView.initialize());
