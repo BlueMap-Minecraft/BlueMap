@@ -24,7 +24,7 @@ public class BoxMaskConfig extends MaskConfig {
     public Mask createMask() throws ConfigurationException {
         if (minX > maxX || minY > maxY || minZ > maxZ) {
             throw new ConfigurationException("""
-                    The box-mask configuration results in a collapsed volume.
+                    The box-mask configuration results in a degenerate mask.
                     Make sure that all "min-" values are actually SMALLER than their "max-" counterparts.
                     """.trim());
         }

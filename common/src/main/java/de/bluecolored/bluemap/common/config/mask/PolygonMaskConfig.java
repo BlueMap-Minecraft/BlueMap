@@ -23,7 +23,7 @@ public class PolygonMaskConfig extends MaskConfig {
     public Mask createMask() throws ConfigurationException {
         if (minY > maxY) {
             throw new ConfigurationException("""
-                    The polygon-mask configuration results in a collapsed volume.
+                    The polygon-mask configuration results in a degenerate mask.
                     Make sure that the "min-y" value is actually SMALLER than the "max-y" counterpart.
                     """.trim());
         }

@@ -24,14 +24,14 @@ public class CircleMaskConfig extends MaskConfig {
     public Mask createMask() throws ConfigurationException {
         if (minY > maxY) {
             throw new ConfigurationException("""
-                    The circle-mask configuration results in a collapsed volume.
+                    The circle-mask configuration results in a degenerate mask.
                     Make sure that the "min-y" value is actually SMALLER than the "max-y" counterpart.
                     """.trim());
         }
 
         if (radius <= 0) {
             throw new ConfigurationException("""
-                    The circle-mask configuration results in a collapsed volume.
+                    The circle-mask configuration results in a degenerate mask.
                     Make sure that the "radius" value is greater than 0.
                     """.trim());
         }

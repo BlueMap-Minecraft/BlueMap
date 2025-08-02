@@ -25,14 +25,14 @@ public class EllipseMaskConfig extends MaskConfig {
     public Mask createMask() throws ConfigurationException {
         if (minY > maxY) {
             throw new ConfigurationException("""
-                    The circle-mask configuration results in a collapsed volume.
+                    The circle-mask configuration results in a degenerate mask.
                     Make sure that the "min-y" value is actually SMALLER than the "max-y" counterpart.
                     """.trim());
         }
 
         if (radiusX <= 0 || radiusZ <= 0) {
             throw new ConfigurationException("""
-                    The ellipse-mask configuration results in a collapsed volume.
+                    The ellipse-mask configuration results in a degenerate mask.
                     Make sure that the radius values are greater than 0.
                     """.trim());
         }
