@@ -32,6 +32,7 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.AbstractTypeAdapterFactory;
+import de.bluecolored.bluemap.core.resources.adapter.PostDeserialize;
 import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
@@ -45,7 +46,6 @@ import java.util.EnumMap;
 import java.util.Map;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal", "unused"})
-@JsonAdapter(Element.Adapter.class)
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 public class Element {
@@ -93,6 +93,7 @@ public class Element {
         copyFrom.faces.forEach((direction, face) -> this.faces.put(direction, face.copy()));
     }
 
+    @PostDeserialize
     private void init() {
         faces.forEach((direction, face) -> face.init(direction, this::calculateDefaultUV));
     }
@@ -130,21 +131,6 @@ public class Element {
         for (var face : faces.values())  {
             face.optimize(texturePool);
         }
-    }
-
-    static class Adapter extends AbstractTypeAdapterFactory<Element> {
-
-        public Adapter() {
-            super(Element.class);
-        }
-
-        @Override
-        public Element read(JsonReader in, Gson gson) throws IOException {
-            Element element = gson.getDelegateAdapter(this, TypeToken.get(Element.class)).read(in);
-            element.init();
-            return element;
-        }
-
     }
 
 }

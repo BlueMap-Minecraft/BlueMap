@@ -49,6 +49,7 @@ public class ResourcesGson {
 
     public static GsonBuilder addAdapter(GsonBuilder builder) {
         return builder
+                .registerTypeAdapterFactory(new PostDeserializeAdapterFactory())
                 .registerTypeAdapter(Key.class, new KeyAdapter())
                 .registerTypeAdapter(Axis.class, new AxisAdapter())
                 .registerTypeAdapter(Color.class, new ColorAdapter())
