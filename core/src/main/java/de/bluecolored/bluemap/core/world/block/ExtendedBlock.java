@@ -109,7 +109,7 @@ public class ExtendedBlock implements BlockAccess {
     @Override
     public LightData getLightData() {
         LightData ld = blockAccess.getLightData();
-        if (renderSettings.isRenderEdges() && !isInsideRenderBounds()) ld.set(dimensionType.hasSkylight() ? 16 : 0, ld.getBlockLight());
+        if (renderSettings.isRenderEdges() && !isInsideRenderBounds()) ld.set(dimensionType.hasSkylight() ? renderSettings.getEdgeLightStrength() : 0, ld.getBlockLight());
         return ld;
     }
 

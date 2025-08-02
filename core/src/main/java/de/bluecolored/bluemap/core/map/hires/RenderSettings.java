@@ -60,6 +60,11 @@ public interface RenderSettings {
         return true;
     }
 
+    /**
+     * The sunlight-strength that the air blocks produced by {@link #isRenderEdges()} will have.
+     */
+    default int getEdgeLightStrength() { return 15; }
+
     default boolean isIgnoreMissingLightData() {
         return false;
     }

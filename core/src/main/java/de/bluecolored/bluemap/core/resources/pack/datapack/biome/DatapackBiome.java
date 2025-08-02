@@ -92,7 +92,6 @@ public class DatapackBiome implements Biome {
         @PostDeserialize
         private void init() {
             waterColor.a = 1f;
-            Logger.global.logInfo("Biome-Effects Initialized!");
         }
 
     }

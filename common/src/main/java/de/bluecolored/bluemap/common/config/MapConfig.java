@@ -25,7 +25,6 @@
 package de.bluecolored.bluemap.common.config;
 
 import com.flowpowered.math.vector.Vector2i;
-import com.flowpowered.math.vector.Vector3i;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -79,6 +78,7 @@ public class MapConfig implements MapSettings {
     private int minInhabitedTimeRadius = 0;
 
     private boolean renderEdges = true;
+    private int edgeLightStrength = 15;
 
     private boolean enablePerspectiveView = true;
     private boolean enableFlatView = true;
