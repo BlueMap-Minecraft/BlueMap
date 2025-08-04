@@ -56,7 +56,8 @@ public class CombinedMaskSerializer implements TypeSerializer<CombinedMask> {
 
     @Override
     public void serialize(Type type, @Nullable CombinedMask obj, ConfigurationNode node) {
-        throw new UnsupportedOperationException("Serialize not supported.");
+        // serialization not supported
+        // configurate calls this method sometimes during deserialization for some reason, so we just do nothing here
     }
 
 }

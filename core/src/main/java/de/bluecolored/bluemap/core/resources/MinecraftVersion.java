@@ -24,22 +24,27 @@
  */
 package de.bluecolored.bluemap.core.resources;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.google.gson.*;
 import com.google.gson.annotations.JsonAdapter;
+import com.google.gson.annotations.SerializedName;
+import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.adapter.AbstractTypeAdapterFactory;
+import de.bluecolored.bluemap.core.resources.pack.PackVersion;
 import de.bluecolored.bluemap.core.util.FileHelper;
 import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Nullable;
+import org.spongepowered.configurate.objectmapping.FieldData;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Reader;
+import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -53,7 +58,9 @@ import java.util.Arrays;
 @Getter
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 public class MinecraftVersion {
-    private static final Gson GSON = new Gson();
+    private static final Gson GSON = new GsonBuilder()
+            .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
+            .create();
 
     private static final String LATEST_KNOWN_VERSION = "1.21.8";
     private static final String EARLIEST_RESOURCEPACK_VERSION = "1.13";
@@ -62,10 +69,10 @@ public class MinecraftVersion {
     private final String id;
 
     private final Path resourcePack;
-    private final int resourcePackVersion;
+    private final PackVersion resourcePackVersion;
 
     private final Path dataPack;
-    private final int dataPackVersion;
+    private final PackVersion dataPackVersion;
 
     @Override
     public boolean equals(Object o) {
@@ -127,10 +134,13 @@ public class MinecraftVersion {
         VersionInfo resourcePackVersionInfo = loadVersionInfo(resourcePack);
         VersionInfo dataPackVersionInfo = resourcePack.equals(dataPack) ? resourcePackVersionInfo : loadVersionInfo(dataPack);
 
+        Logger.global.logInfo("Found resource pack version: " + resourcePackVersionInfo.getPackVersion().getResource());
+        Logger.global.logInfo("Found data pack version: " + resourcePackVersionInfo.getPackVersion().getData());
+
         return new MinecraftVersion(
                 id,
-                resourcePack, resourcePackVersionInfo.getResourcePackVersion(),
-                dataPack, dataPackVersionInfo.getDataPackVersion()
+                resourcePack, resourcePackVersionInfo.getPackVersion().getResource(),
+                dataPack, dataPackVersionInfo.getPackVersion().getData()
         );
 
     }
@@ -213,43 +223,55 @@ public class MinecraftVersion {
             }
 
             // no version.json found, assume 1.13 - 1.14.4
-            return new VersionInfo(4, 4);
+            return new VersionInfo();
         }
     }
 
+    @SuppressWarnings({"unused", "FieldMayBeFinal"})
     @Getter
-    @RequiredArgsConstructor
-    @JsonAdapter(VersionInfoAdapter.class)
-    public static class VersionInfo {
-
-        private final int resourcePackVersion;
-        private final int dataPackVersion;
-
+    private static class VersionInfo {
+        private PackVersions packVersion = new PackVersions();
     }
 
-    public static class VersionInfoAdapter extends AbstractTypeAdapterFactory<VersionInfo> {
+    @SuppressWarnings("FieldMayBeFinal")
+    @Getter
+    @JsonAdapter(PackVersions.Adapter.class)
+    @NoArgsConstructor
+    private static class PackVersions {
 
-        public VersionInfoAdapter() {
-            super(VersionInfo.class);
+        public PackVersions(int resource, int data) {
+            this.resourceMajor = resource;
+            this.dataMajor = data;
         }
 
-        @Override
-        public VersionInfo read(JsonReader in, Gson gson) throws IOException {
-            JsonObject object = gson.fromJson(in, JsonObject.class);
+        @SerializedName(value = "resource_major", alternate = "resource")
+        private int resourceMajor = 4;
+        private int resourceMinor = 0;
+        @SerializedName(value = "data_major", alternate = "data")
+        private int dataMajor = 4;
+        private int dataMinor = 0;
 
-            JsonElement packVersion = object.get("pack_version");
-            if (packVersion instanceof JsonObject packVersionObject) {
-                return new VersionInfo(
-                        packVersionObject.get("resource").getAsInt(),
-                        packVersionObject.get("data").getAsInt()
-                );
-            } else {
-                int version = packVersion.getAsInt();
-                return new VersionInfo(
-                        version,
-                        version
-                );
+        public PackVersion getResource() {
+            return new PackVersion(resourceMajor, resourceMinor);
+        }
+
+        public PackVersion getData() {
+            return new PackVersion(dataMajor, dataMinor);
+        }
+
+        private static class Adapter extends AbstractTypeAdapterFactory<PackVersions> {
+
+            public Adapter() {
+                super(PackVersions.class);
             }
+
+            @Override
+            public PackVersions read(JsonReader in, Gson gson) throws IOException {
+                return in.peek() == JsonToken.NUMBER ?
+                    new PackVersions(in.nextInt(), 4) :
+                    gson.getDelegateAdapter(this, TypeToken.get(PackVersions.class)).read(in);
+            }
+
         }
 
     }

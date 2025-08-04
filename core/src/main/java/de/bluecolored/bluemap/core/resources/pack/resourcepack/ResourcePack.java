@@ -33,6 +33,7 @@ import de.bluecolored.bluemap.core.resources.BlockPropertiesConfig;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.pack.Pack;
+import de.bluecolored.bluemap.core.resources.pack.PackVersion;
 import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.atlas.Atlas;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.BlockState;
@@ -89,7 +90,7 @@ public class ResourcePack extends Pack {
 
     private final Map<Extension<?>, ResourcePackExtension> extensions;
 
-    public ResourcePack(int packVersion) {
+    public ResourcePack(PackVersion packVersion) {
         super(packVersion);
 
         this.atlases = new ResourcePool<>();

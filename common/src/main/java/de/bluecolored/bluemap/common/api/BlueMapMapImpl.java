@@ -92,11 +92,15 @@ public class BlueMapMapImpl implements BlueMapMap {
     }
 
     @Override
+    @SuppressWarnings("removal")
+    @Deprecated(forRemoval = true)
     public void setTileFilter(@NonNull Predicate<Vector2i> filter) {
         unpack(map).setTileFilter(filter);
     }
 
     @Override
+    @SuppressWarnings("removal")
+    @Deprecated(forRemoval = true)
     public Predicate<Vector2i> getTileFilter() {
         return unpack(map).getTileFilter();
     }

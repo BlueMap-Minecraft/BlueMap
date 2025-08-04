@@ -28,6 +28,7 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.pack.Pack;
+import de.bluecolored.bluemap.core.resources.pack.PackVersion;
 import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
 import de.bluecolored.bluemap.core.resources.pack.datapack.biome.DatapackBiome;
 import de.bluecolored.bluemap.core.resources.pack.datapack.dimension.DimensionTypeData;
@@ -60,7 +61,7 @@ public class DataPack extends Pack {
 
     private LegacyBiomes legacyBiomes;
 
-    public DataPack(int packVersion) {
+    public DataPack(PackVersion packVersion) {
         super(packVersion);
     }
 

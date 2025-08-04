@@ -49,10 +49,10 @@ import java.util.stream.Stream;
 @Getter
 public abstract class Pack {
 
-    private final int packVersion;
+    private final PackVersion packVersion;
     private final @Nullable Set<Key> enabledFeatures;
 
-    public Pack(int packVersion) {
+    public Pack(PackVersion packVersion) {
         this(packVersion, null);
     }
 
@@ -137,8 +137,9 @@ public abstract class Pack {
         for (int i = overlays.length - 1; i >= 0; i--) {
             PackMeta.Overlay overlay = overlays[i];
             String dir = overlay.getDirectory();
-            if (dir != null && overlay.getFormats().includes(this.packVersion)) {
+            if (dir != null && overlay.includes(this.packVersion)) {
                 Path overlayRoot = root.resolve(dir);
+                Logger.global.logInfo("Loading overlay '" + overlayRoot + "'...");
                 if (Files.exists(overlayRoot)) {
                     try {
                         loadResourcePath(overlayRoot, resourceLoader);
