@@ -133,8 +133,10 @@ public class MinecraftVersion {
             );
         } catch (IOException ex) {
             // If something went wrong with reading the resource-files, delete them so they will be re-downloaded on the next try.
-            Files.deleteIfExists(resourcePack);
-            Files.deleteIfExists(dataPack);
+            if (allowDownload) {
+                Files.deleteIfExists(resourcePack);
+                Files.deleteIfExists(dataPack);
+            }
             throw ex;
         }
 
