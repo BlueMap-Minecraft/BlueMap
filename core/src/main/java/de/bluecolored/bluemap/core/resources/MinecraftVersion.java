@@ -24,7 +24,9 @@
  */
 package de.bluecolored.bluemap.core.resources;
 
-import com.google.gson.*;
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
@@ -39,12 +41,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Nullable;
-import org.spongepowered.configurate.objectmapping.FieldData;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.Reader;
-import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -62,7 +62,6 @@ public class MinecraftVersion {
             .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
             .create();
 
-    private static final String LATEST_KNOWN_VERSION = "1.21.8";
     private static final String EARLIEST_RESOURCEPACK_VERSION = "1.13";
     private static final String EARLIEST_DATAPACK_VERSION = "1.19.4";
 
@@ -98,15 +97,6 @@ public class MinecraftVersion {
             VersionManifest.Version version = manifest.getVersion(id);
             VersionManifest.Version resourcePackVersion = manifest.getVersion(EARLIEST_RESOURCEPACK_VERSION);
             VersionManifest.Version dataPackVersion = manifest.getVersion(EARLIEST_DATAPACK_VERSION);
-
-            if (version == null) {
-                Logger.global.logWarning("Could not find any version for id '" + id + "'. Using fallback-version: " + LATEST_KNOWN_VERSION);
-                version = manifest.getVersion(LATEST_KNOWN_VERSION);
-            }
-
-            if (version == null || resourcePackVersion == null || dataPackVersion == null) {
-                throw new IOException("Manifest is missing versions.");
-            }
 
             if (version.compareTo(resourcePackVersion) > 0) resourcePackVersion = version;
             if (version.compareTo(dataPackVersion) > 0) dataPackVersion = version;

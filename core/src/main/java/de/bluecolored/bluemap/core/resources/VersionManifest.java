@@ -89,14 +89,16 @@ public class VersionManifest {
         return versions;
     }
 
-    public synchronized @Nullable Version getVersion(String id) {
+    public synchronized Version getVersion(String id) throws IOException {
         if (versionMap == null) {
             versionMap = new HashMap<>();
             for (Version version : versions)
                 versionMap.put(version.id, version);
         }
 
-        return versionMap.get(id);
+        Version version = versionMap.get(id);
+        if (version == null) throw new IOException("There is no version '%s' in manifest.".formatted(id));
+        return version;
     }
 
     @Getter
