@@ -134,9 +134,6 @@ public class MinecraftVersion {
         VersionInfo resourcePackVersionInfo = loadVersionInfo(resourcePack);
         VersionInfo dataPackVersionInfo = resourcePack.equals(dataPack) ? resourcePackVersionInfo : loadVersionInfo(dataPack);
 
-        Logger.global.logInfo("Found resource pack version: " + resourcePackVersionInfo.getPackVersion().getResource());
-        Logger.global.logInfo("Found data pack version: " + resourcePackVersionInfo.getPackVersion().getData());
-
         return new MinecraftVersion(
                 id,
                 resourcePack, resourcePackVersionInfo.getPackVersion().getResource(),

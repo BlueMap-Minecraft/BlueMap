@@ -139,7 +139,6 @@ public abstract class Pack {
             String dir = overlay.getDirectory();
             if (dir != null && overlay.includes(this.packVersion)) {
                 Path overlayRoot = root.resolve(dir);
-                Logger.global.logInfo("Loading overlay '" + overlayRoot + "'...");
                 if (Files.exists(overlayRoot)) {
                     try {
                         loadResourcePath(overlayRoot, resourceLoader);
