@@ -54,6 +54,7 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.zip.ZipException;
 
 @Getter
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
@@ -121,14 +122,21 @@ public class MinecraftVersion {
         if (!Files.exists(resourcePack)) throw new IOException("Resource-File missing: " + resourcePack);
         if (!Files.exists(dataPack)) throw new IOException("Resource-File missing: " + dataPack);
 
-        VersionInfo resourcePackVersionInfo = loadVersionInfo(resourcePack);
-        VersionInfo dataPackVersionInfo = resourcePack.equals(dataPack) ? resourcePackVersionInfo : loadVersionInfo(dataPack);
+        try {
+            VersionInfo resourcePackVersionInfo = loadVersionInfo(resourcePack);
+            VersionInfo dataPackVersionInfo = resourcePack.equals(dataPack) ? resourcePackVersionInfo : loadVersionInfo(dataPack);
 
-        return new MinecraftVersion(
-                id,
-                resourcePack, resourcePackVersionInfo.getPackVersion().getResource(),
-                dataPack, dataPackVersionInfo.getPackVersion().getData()
-        );
+            return new MinecraftVersion(
+                    id,
+                    resourcePack, resourcePackVersionInfo.getPackVersion().getResource(),
+                    dataPack, dataPackVersionInfo.getPackVersion().getData()
+            );
+        } catch (IOException ex) {
+            // If something went wrong with reading the resource-files, delete them so they will be re-downloaded on the next try.
+            Files.deleteIfExists(resourcePack);
+            Files.deleteIfExists(dataPack);
+            throw ex;
+        }
 
     }
 
