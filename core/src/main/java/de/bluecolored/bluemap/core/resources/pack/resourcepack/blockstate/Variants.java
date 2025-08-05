@@ -63,7 +63,7 @@ public class Variants {
             variant.forEach(consumer);
         }
 
-        defaultVariant.forEach(consumer);
+        if (defaultVariant != null) defaultVariant.forEach(consumer);
     }
 
     public void forEach(BlockState blockState, int x, int y, int z, Consumer<Variant> consumer) {
