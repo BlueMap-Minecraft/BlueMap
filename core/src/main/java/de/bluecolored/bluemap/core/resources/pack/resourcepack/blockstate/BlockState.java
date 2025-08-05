@@ -57,8 +57,8 @@ public class BlockState {
     }
 
     public void forEach(Consumer<Variant> consumer) {
-        variants.forEach(consumer);
-        multipart.forEach(consumer);
+        if (variants != null) variants.forEach(consumer);
+        if (multipart != null) multipart.forEach(consumer);
     }
 
     public void forEach(de.bluecolored.bluemap.core.world.BlockState blockState, int x, int y, int z, Consumer<Variant> consumer) {
