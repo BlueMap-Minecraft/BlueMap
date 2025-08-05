@@ -386,8 +386,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
                 .setVariable("void-color", "#000000")
                 .setVariable("ambient-light", "0.1")
                 .setVariable("remove-caves-below-y", "55")
-                .setConditional("max-y-comment", true)
-                .setVariable("max-y", "100");
+                .setConditional("remove-nether-ceiling", false);
     }
 
     private ConfigTemplate createNetherMapTemplate(String name, Path worldFolder, Key dimension, int index) throws IOException {
@@ -400,8 +399,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
                 .setVariable("void-color", "#150000")
                 .setVariable("ambient-light", "0.6")
                 .setVariable("remove-caves-below-y", "-10000")
-                .setConditional("max-y-comment", false)
-                .setVariable("max-y", "90");
+                .setConditional("remove-nether-ceiling", true);
     }
 
     private ConfigTemplate createEndMapTemplate(String name, Path worldFolder, Key dimension, int index) throws IOException {
@@ -414,8 +412,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
                 .setVariable("void-color", "#080010")
                 .setVariable("ambient-light", "0.6")
                 .setVariable("remove-caves-below-y", "-10000")
-                .setConditional("max-y-comment", true)
-                .setVariable("max-y", "100");
+                .setConditional("remove-nether-ceiling", false);
     }
 
     public static String formatPath(Path path) {
