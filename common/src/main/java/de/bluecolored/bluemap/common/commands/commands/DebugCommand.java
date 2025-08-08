@@ -120,8 +120,8 @@ public class DebugCommand {
                         ))
                 ),
                 item("chunk", format("( x: % | z: % )",
-                        text(chunkPos.getX()).color(HIGHLIGHT_COLOR),
-                        text(chunkPos.getY()).color(HIGHLIGHT_COLOR)
+                                text(chunkPos.getX()).color(HIGHLIGHT_COLOR),
+                                text(chunkPos.getY()).color(HIGHLIGHT_COLOR)
                         )
                         .appendNewline()
                         .append(details(BASE_COLOR, TextFormat.stripNulls(
@@ -222,8 +222,8 @@ public class DebugCommand {
                         text(z).color(HIGHLIGHT_COLOR)
                 )),
                 item("chunk", format("( x: % | z: % )",
-                                text(x >> 4).color(HIGHLIGHT_COLOR),
-                                text(z >> 4).color(HIGHLIGHT_COLOR)
+                                text(chunkPos.getX()).color(HIGHLIGHT_COLOR),
+                                text(chunkPos.getY()).color(HIGHLIGHT_COLOR)
                         )
                                 .appendNewline()
                                 .append(details(BASE_COLOR,
@@ -232,8 +232,8 @@ public class DebugCommand {
                                 ))
                 ),
                 item("tile", format("( x: % | z: % )",
-                                text(x >> 4).color(HIGHLIGHT_COLOR),
-                                text(z >> 4).color(HIGHLIGHT_COLOR)
+                                text(tilePos.getX()).color(HIGHLIGHT_COLOR),
+                                text(tilePos.getY()).color(HIGHLIGHT_COLOR)
                         )
                                 .appendNewline()
                                 .append(details(BASE_COLOR, stripNulls(
