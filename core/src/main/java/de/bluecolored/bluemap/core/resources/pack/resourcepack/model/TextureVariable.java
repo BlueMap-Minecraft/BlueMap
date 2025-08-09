@@ -29,6 +29,7 @@ import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
+import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import lombok.Getter;
@@ -42,10 +43,10 @@ import java.util.function.Function;
 @JsonAdapter(TextureVariable.Adapter.class)
 public class TextureVariable {
 
-    @Getter @Setter
+    @Getter
     private @Nullable String referenceName;
 
-    @Getter @Setter
+    @Getter
     private ResourcePath<Texture> texturePath;
 
     private transient volatile boolean isReference, isResolving;
@@ -106,10 +107,10 @@ public class TextureVariable {
         }
     }
 
-    public void optimize(ResourcePack resourcePack) {
+    public void optimize(ResourcePool<Texture> texturePool) {
         synchronized (TextureVariable.class) {
             if (texturePath != null) {
-                texturePath = resourcePack.getTexturePath(texturePath.getFormatted());
+                texturePath = texturePool.getPath(texturePath);
             }
         }
     }

@@ -354,7 +354,7 @@ public class RenderManager {
 
         private WorkerThread() {
             this.id = RenderManager.this.nextWorkerThreadIndex.getAndIncrement();
-            this.setName("RenderManager-" + RenderManager.this.id + "-" + this.id);
+            this.setName("BlueMap-RenderThread-" + RenderManager.this.id + "-" + this.id);
         }
 
         @Override

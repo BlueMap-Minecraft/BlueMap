@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.core.resources;
 import com.flowpowered.math.GenericMath;
 import com.google.gson.stream.JsonReader;
 import de.bluecolored.bluemap.core.util.math.Color;
+import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.biome.Biome;
 import de.bluecolored.bluemap.core.world.block.BlockAccess;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
@@ -134,7 +135,12 @@ public class BlockColorCalculatorFactory {
 
         @SuppressWarnings("UnusedReturnValue")
         public Color getBlockColor(BlockNeighborhood block, Color target) {
-            String blockId = block.getBlockState().getFormatted();
+            return getBlockColor(block, block.getBlockState(), target);
+        }
+
+        @SuppressWarnings("UnusedReturnValue")
+        public Color getBlockColor(BlockNeighborhood block, BlockState blockState, Color target) {
+            String blockId = blockState.getId().getFormatted();
 
             ColorFunction colorFunction = blockColorMap.get(blockId);
             if (colorFunction == null) colorFunction = blockColorMap.get("default");

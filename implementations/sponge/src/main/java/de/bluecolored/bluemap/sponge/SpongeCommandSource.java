@@ -67,8 +67,11 @@ public class SpongeCommandSource implements CommandSource {
 
     @Override
     public Optional<ServerWorld> getWorld() {
-        if (audience instanceof Locatable locatable)
-            return Optional.ofNullable(SpongePlugin.getInstance().getServerWorld(locatable.serverLocation().world()));
+        if (audience instanceof Locatable locatable) {
+            org.spongepowered.api.world.server.ServerWorld world = locatable.serverLocation().world();
+            if (world == null) return Optional.empty();
+            return Optional.of(SpongePlugin.getInstance().getServerWorld(world));
+        }
         return Optional.empty();
     }
 

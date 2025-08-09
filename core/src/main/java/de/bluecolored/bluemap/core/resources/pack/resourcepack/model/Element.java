@@ -30,16 +30,23 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
-import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
+import de.bluecolored.bluemap.core.resources.ResourcePath;
+import de.bluecolored.bluemap.core.resources.adapter.AbstractTypeAdapterFactory;
+import de.bluecolored.bluemap.core.resources.adapter.PostDeserialize;
+import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.io.IOException;
 import java.util.EnumMap;
+import java.util.Map;
 
-@SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
-@JsonAdapter(Element.Adapter.class)
+@SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal", "unused"})
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 public class Element {
     private static final Vector3f FULL_BLOCK_MIN = Vector3f.ZERO;
@@ -51,8 +58,30 @@ public class Element {
     private int lightEmission = 0;
     private EnumMap<Direction, Face> faces = new EnumMap<>(Direction.class);
 
-    @SuppressWarnings("unused")
-    private Element() {}
+    public Element(Vector3f from, Vector3f to, Map<Direction, Face> faces) {
+        this.from = from;
+        this.to = to;
+        this.faces.putAll(faces);
+        init();
+    }
+
+    public Element(Vector3f from, Vector3f to, Rotation rotation, Map<Direction, Face> faces) {
+        this.from = from;
+        this.to = to;
+        this.rotation = rotation;
+        this.faces.putAll(faces);
+        init();
+    }
+
+    public Element(Vector3f from, Vector3f to, Rotation rotation, boolean shade, int lightEmission, Map<Direction, Face> faces) {
+        this.from = from;
+        this.to = to;
+        this.rotation = rotation;
+        this.shade = shade;
+        this.lightEmission = lightEmission;
+        this.faces.putAll(faces);
+        init();
+    }
 
     private Element(Element copyFrom) {
         this.from = copyFrom.from;
@@ -64,8 +93,9 @@ public class Element {
         copyFrom.faces.forEach((direction, face) -> this.faces.put(direction, face.copy()));
     }
 
+    @PostDeserialize
     private void init() {
-        faces.forEach((direction, face) -> face.init(direction, this::calculateDefaultUV, this::calculateDefaultCullface));
+        faces.forEach((direction, face) -> face.init(direction, this::calculateDefaultUV));
     }
 
     private Vector4f calculateDefaultUV(Direction face) {
@@ -85,17 +115,6 @@ public class Element {
         };
     }
 
-    private Direction calculateDefaultCullface(Direction face) {
-        return switch (face) {
-            case DOWN -> from.getY() == 0f ? Direction.DOWN : null;
-            case UP -> to.getY() == 1f ? Direction.UP : null;
-            case NORTH -> from.getZ() == 0f ? Direction.NORTH : null;
-            case SOUTH -> to.getZ() == 1f ? Direction.SOUTH : null;
-            case EAST -> to.getX() == 1f ? Direction.EAST : null;
-            case WEST -> from.getX() == 0f ? Direction.WEST : null;
-        };
-    }
-
     public Element copy() {
         return new Element(this);
     }
@@ -108,25 +127,10 @@ public class Element {
         return true;
     }
 
-    public void optimize(ResourcePack resourcePack) {
+    public void optimize(ResourcePool<Texture> texturePool) {
         for (var face : faces.values())  {
-            face.optimize(resourcePack);
+            face.optimize(texturePool);
         }
-    }
-
-    static class Adapter extends AbstractTypeAdapterFactory<Element> {
-
-        public Adapter() {
-            super(Element.class);
-        }
-
-        @Override
-        public Element read(JsonReader in, Gson gson) throws IOException {
-            Element element = gson.getDelegateAdapter(this, TypeToken.get(Element.class)).read(in);
-            element.init();
-            return element;
-        }
-
     }
 
 }

@@ -24,12 +24,13 @@
  */
 package de.bluecolored.bluemap.common.config;
 
+import com.flowpowered.math.vector.Vector2d;
 import com.flowpowered.math.vector.Vector2i;
+import de.bluecolored.bluemap.common.config.mask.MaskConfig;
 import de.bluecolored.bluemap.common.config.storage.StorageConfig;
-import de.bluecolored.bluemap.common.config.typeserializer.KeyTypeSerializer;
-import de.bluecolored.bluemap.common.config.typeserializer.ObjectMapperSerializer;
-import de.bluecolored.bluemap.common.config.typeserializer.Vector2iTypeSerializer;
+import de.bluecolored.bluemap.common.config.typeserializer.*;
 import de.bluecolored.bluemap.core.BlueMap;
+import de.bluecolored.bluemap.core.map.mask.CombinedMask;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluenbt.TypeToken;
 import org.spongepowered.configurate.ConfigurateException;
@@ -161,10 +162,13 @@ public class ConfigManager {
                 .path(path)
                 .defaultOptions(o -> o.serializers(b -> {
                     b.register(Vector2i.class, new Vector2iTypeSerializer());
+                    b.register(Vector2d.class, new Vector2dTypeSerializer());
                     b.register(Key.class, new KeyTypeSerializer());
+                    b.register(CombinedMask.class, new CombinedMaskSerializer());
 
-                    // try parse any StorageConfig type, even without the @ConfigSerializable annotation
-                    b.register(type -> TypeToken.of(type).is(StorageConfig.class), new ObjectMapperSerializer());
+                    // ignore missing @ConfigSerializable annotation for subtypes of the following types
+                    b.register(type -> TypeToken.of(type).is( StorageConfig.class ), new ObjectMapperSerializer());
+                    b.register(type -> TypeToken.of(type).is( MaskConfig.class ), new ObjectMapperSerializer());
 
                 }))
                 .build();

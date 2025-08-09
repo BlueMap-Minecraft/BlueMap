@@ -28,7 +28,10 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
+import de.bluecolored.bluemap.core.resources.adapter.AbstractTypeAdapterFactory;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -70,6 +73,12 @@ public class VariantSet {
         return Arrays.stream(variants)
                 .mapToDouble(Variant::getWeight)
                 .sum();
+    }
+
+    public void forEach(Consumer<Variant> consumer) {
+        for (Variant variant : variants) {
+            consumer.accept(variant);
+        }
     }
 
     public void forEach(int x, int y, int z, Consumer<Variant> consumer) {

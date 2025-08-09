@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.core.resources;
 
 import com.google.gson.stream.JsonReader;
+import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.BlockProperties;
 import de.bluecolored.bluemap.core.world.BlockState;
 
@@ -40,7 +41,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class BlockPropertiesConfig {
 
-    private final Map<String, List<BlockStateMapping<BlockProperties>>> mappings;
+    private final Map<Key, List<BlockStateMapping<BlockProperties>>> mappings;
 
     public BlockPropertiesConfig() {
         mappings = new ConcurrentHashMap<>();
@@ -73,14 +74,14 @@ public class BlockPropertiesConfig {
                 BlockStateMapping<BlockProperties> mapping = new BlockStateMapping<>(bsKey, bsValueBuilder.build());
 
                 // don't overwrite already present values, higher priority resources are loaded first
-                mappings.computeIfAbsent(bsKey.getFormatted(), k -> new LinkedList<>()).add(mapping);
+                mappings.computeIfAbsent(bsKey.getId(), k -> new LinkedList<>()).add(mapping);
             }
             json.endObject();
         }
     }
 
     public BlockProperties getBlockProperties(BlockState from){
-        for (BlockStateMapping<BlockProperties> bm : mappings.getOrDefault(from.getFormatted(), Collections.emptyList())){
+        for (BlockStateMapping<BlockProperties> bm : mappings.getOrDefault(from.getId(), Collections.emptyList())){
             if (bm.fitsTo(from)){
                 return bm.getMapping();
             }

@@ -42,7 +42,7 @@ class BlockStateMapping<T> {
      * Properties that are not defined in this Mapping are ignored on the provided BlockState.<br>
      */
     public boolean fitsTo(BlockState blockState){
-        if (!this.blockState.getValue().equals(blockState.getValue())) return false;
+        if (!this.blockState.getId().equals(blockState.getId())) return false;
         for (Entry<String, String> e : this.blockState.getProperties().entrySet()){
             if (!e.getValue().equals(blockState.getProperties().get(e.getKey()))){
                 return false;

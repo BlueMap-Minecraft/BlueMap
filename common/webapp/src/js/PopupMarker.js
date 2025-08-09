@@ -70,9 +70,23 @@ export class PopupMarker extends Marker {
         return true;
     }
 
+    static copyToClipboard = (text) => {
+        if (navigator?.clipboard?.writeText) {
+            navigator.clipboard.writeText(text)
+                .catch(e => console.error(e));
+        } else {
+            function listener(e) {
+                e.clipboardData.setData("text/plain", text);
+                e.preventDefault();
+            }
+            document.addEventListener("copy", listener);
+            document.execCommand("copy");
+            document.removeEventListener("copy", listener);
+        }
+    }
     static blockClipboardFormat  = (pos, isHires) => isHires ? `${pos.x} ${pos.y} ${pos.z}` : `${pos.x} ${pos.z}`;
     static chunkClipboardFormat  = (pos, isHires) => isHires ? `${pos.x} ${pos.y} ${pos.z}` : `${pos.x} ${pos.z}`;
-    static regionClipboardFormat = pos => `r.${pos.x}.${pos.z}.mca`
+    static regionClipboardFormat = pos => `r.${pos.x}.${pos.y}.mca`
 
     onMapInteraction = evt => {
         let isHires = true;
@@ -102,7 +116,7 @@ export class PopupMarker extends Marker {
             this.element.innerHTML = `
                 <div class="group" 
                      data-tooltip="${i18n.t("blockTooltip.clipboard")}"
-                     onclick="navigator.clipboard.writeText('${PopupMarker.blockClipboardFormat(this.position, true)}')" >
+                     onclick="BlueMap.PopupMarker.copyToClipboard('${PopupMarker.blockClipboardFormat(this.position, true)}')" >
                     <div class="label">${i18n.t("blockTooltip.block")}:</div>
                     <div class="content">
                         <div class="entry"><span class="label">x: </span><span class="value">${this.position.x}</span></div>
@@ -115,7 +129,7 @@ export class PopupMarker extends Marker {
             this.element.innerHTML = `
                 <div class="group"
                      data-tooltip="${i18n.t("blockTooltip.clipboard")}"
-                     onclick="navigator.clipboard.writeText('${PopupMarker.blockClipboardFormat(this.position, false)}')" >
+                     onclick="BlueMap.PopupMarker.copyToClipboard('${PopupMarker.blockClipboardFormat(this.position, false)}')" >
                     <div class="label">${i18n.t("blockTooltip.position")}:</div>
                     <div class="content">
                         <div class="entry"><span class="label">x: </span><span class="value">${this.position.x}</span></div>
@@ -135,7 +149,7 @@ export class PopupMarker extends Marker {
                     <hr>
                     <div class="group"
                          data-tooltip="${i18n.t("blockTooltip.clipboard")}"
-                         onclick="navigator.clipboard.writeText('${PopupMarker.chunkClipboardFormat(chunkCoords, true)}')" >
+                         onclick="BlueMap.PopupMarker.copyToClipboard('${PopupMarker.chunkClipboardFormat(chunkCoords, true)}')" >
                         <div class="label">${i18n.t("blockTooltip.chunk")}:</div>
                         <div class="content">
                             <div class="entry"><span class="label">x: </span><span class="value">${chunkCoords.x}</span></div>
@@ -149,7 +163,7 @@ export class PopupMarker extends Marker {
                     <hr>
                     <div class="group"
                          data-tooltip="${i18n.t("blockTooltip.clipboard")}"
-                         onclick="navigator.clipboard.writeText('${PopupMarker.chunkClipboardFormat(chunkCoords, false)}')" >
+                         onclick="BlueMap.PopupMarker.copyToClipboard('${PopupMarker.chunkClipboardFormat(chunkCoords, false)}')" >
                         <div class="label">${i18n.t("blockTooltip.chunk")}:</div>
                         <div class="content">
                             <div class="entry"><span class="label">x: </span><span class="value">${chunkCoords.x}</span></div>
@@ -163,7 +177,7 @@ export class PopupMarker extends Marker {
                 <hr>
                 <div class="group"
                      data-tooltip="${i18n.t("blockTooltip.clipboard")}"
-                     onclick="navigator.clipboard.writeText('${PopupMarker.regionClipboardFormat(regionCoords)}')" >
+                     onclick="BlueMap.PopupMarker.copyToClipboard('${PopupMarker.regionClipboardFormat(regionCoords)}')" >
                     <div class="label">${i18n.t("blockTooltip.region.region")}:</div>
                     <div class="content">
                         <div class="entry"><span class="label">x: </span><span class="value">${regionCoords.x}</span></div>

@@ -56,7 +56,7 @@ uniform bool chunkBorders;
 
 varying vec3 vPosition;
 varying vec3 vWorldPosition;
-//varying float vDistance;
+varying float vDistance;
 
 float metaToHeight(vec4 meta) {
 	float heightUnsigned = meta.g * 65280.0 + meta.b * 255.0;
@@ -88,6 +88,10 @@ void main() {
 	if (distance < 1000.0 && texture(hiresTileMap.map, ((vWorldPosition.xz - hiresTileMap.translate) / hiresTileMap.scale - hiresTileMap.pos) / hiresTileMap.size + 0.5).r > 0.75) discard;
 	
 	vec4 color = texture(textureImage, posToColorUV(vPosition.xz));
+	if (distance < 800.0 && color.a == 0.0) discard;
+	
+	// blend out lowres if too close
+	if (lod > 1.0 && vDistance < 10.0 * lodScale * lod) discard;
 
 	vec4 meta = texture(textureImage, posToMetaUV(vPosition.xz));
 	

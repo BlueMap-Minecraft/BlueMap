@@ -34,7 +34,12 @@ import java.net.URL;
 import java.nio.file.WatchService;
 import java.nio.file.*;
 import java.nio.file.attribute.FileAttribute;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 public class FileHelper {
 
@@ -138,6 +143,32 @@ public class FileHelper {
             }
             return true;
         }
+    }
+
+    /**
+     * Adapted version of {@link Files#walk(Path, int, FileVisitOption...)}.
+     * This version ignores NoSuchFileException if they occur while iterating the file-tree.
+     */
+    public static Stream<Path> walk(Path start, int maxDepth, FileVisitOption... options) throws IOException {
+        FileTreeIterator iterator = new FileTreeIterator(start, maxDepth, options);
+        try {
+            Spliterator<FileTreeWalker.Event> spliterator =
+                    Spliterators.spliteratorUnknownSize(iterator, Spliterator.DISTINCT);
+            return StreamSupport.stream(spliterator, false)
+                    .onClose(iterator::close)
+                    .map(FileTreeWalker.Event::file);
+        } catch (Error|RuntimeException e) {
+            iterator.close();
+            throw e;
+        }
+    }
+
+    /**
+     * Adapted version of {@link Files#walk(Path, FileVisitOption...)} .
+     * This version ignores NoSuchFileException if they occur while iterating the file-tree.
+     */
+    public static Stream<Path> walk(Path start, FileVisitOption... options) throws IOException {
+        return walk(start, Integer.MAX_VALUE, options);
     }
 
 }

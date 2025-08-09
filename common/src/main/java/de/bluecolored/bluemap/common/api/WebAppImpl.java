@@ -29,6 +29,7 @@ import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.util.FileHelper;
+import lombok.NonNull;
 import org.jetbrains.annotations.Nullable;
 
 import javax.imageio.ImageIO;
@@ -63,7 +64,7 @@ public class WebAppImpl implements WebApp {
     }
 
     @Override
-    public void setPlayerVisibility(UUID player, boolean visible) {
+    public void setPlayerVisibility(@NonNull UUID player, boolean visible) {
         if (plugin == null) return; // fail silently: not supported on non-plugin platforms
 
         if (visible) {
@@ -74,21 +75,21 @@ public class WebAppImpl implements WebApp {
     }
 
     @Override
-    public boolean getPlayerVisibility(UUID player) {
+    public boolean getPlayerVisibility(@NonNull UUID player) {
         if (plugin == null) return false; // fail silently: not supported on non-plugin platforms
 
         return !plugin.getPluginState().isPlayerHidden(player);
     }
 
     @Override
-    public synchronized void registerScript(String url) {
+    public synchronized void registerScript(@NonNull String url) {
         Logger.global.logDebug("Registering script from API: " + url);
         blueMapService.getWebFilesManager().getScripts().add(url);
         scheduleUpdateWebAppSettings();
     }
 
     @Override
-    public synchronized void registerStyle(String url) {
+    public synchronized void registerStyle(@NonNull String url) {
         Logger.global.logDebug("Registering style from API: " + url);
         blueMapService.getWebFilesManager().getStyles().add(url);
         scheduleUpdateWebAppSettings();
@@ -122,7 +123,7 @@ public class WebAppImpl implements WebApp {
     @Override
     @Deprecated(forRemoval = true)
     @SuppressWarnings("removal")
-    public String createImage(BufferedImage image, String path) throws IOException {
+    public String createImage(@NonNull BufferedImage image, @NonNull String path) throws IOException {
         path = path.replaceAll("[^a-zA-Z0-9_.\\-/]", "_");
 
         Path webRoot = getWebRoot().toAbsolutePath();

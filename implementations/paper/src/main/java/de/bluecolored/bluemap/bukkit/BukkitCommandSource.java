@@ -30,6 +30,7 @@ import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.command.ConsoleCommandSender;
 
 import java.util.Optional;
@@ -65,8 +66,9 @@ public class BukkitCommandSource implements CommandSource {
     public Optional<ServerWorld> getWorld() {
         if (delegate.getSender() instanceof ConsoleCommandSender) return Optional.empty();
 
-        ServerWorld serverWorld = BukkitPlugin.getInstance().getServerWorld(delegate.getLocation().getWorld());
-        return Optional.ofNullable(serverWorld);
+        World world = delegate.getLocation().getWorld();
+        if (world == null) return Optional.empty();
+        return Optional.of(BukkitPlugin.getInstance().getServerWorld(world));
     }
 
 }

@@ -47,7 +47,7 @@ public class EntityModelRenderer {
     }
 
     public void render(Entity entity, BlockNeighborhood block, TileModelView tileModel) {
-        EntityState stateResource = resourcePack.getEntityState(entity.getId());
+        EntityState stateResource = resourcePack.getEntityStates().get(entity.getId());
         if (stateResource == null) return;
 
         Part[] parts = stateResource.getParts();

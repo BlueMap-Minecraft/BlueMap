@@ -30,10 +30,7 @@ import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluecommands.annotations.Argument;
 import de.bluecolored.bluecommands.annotations.Command;
 import de.bluecolored.bluemap.common.BlueMapService;
-import de.bluecolored.bluemap.common.commands.Permission;
-import de.bluecolored.bluemap.common.commands.Unloaded;
-import de.bluecolored.bluemap.common.commands.WithPosition;
-import de.bluecolored.bluemap.common.commands.WithWorld;
+import de.bluecolored.bluemap.common.commands.*;
 import de.bluecolored.bluemap.common.config.BlueMapConfigManager;
 import de.bluecolored.bluemap.common.debug.StateDumper;
 import de.bluecolored.bluemap.common.plugin.Plugin;
@@ -45,6 +42,7 @@ import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.ChunkConsumer;
 import de.bluecolored.bluemap.core.world.LightData;
 import de.bluecolored.bluemap.core.world.World;
+import de.bluecolored.bluemap.core.world.mca.chunk.MCAChunk;
 import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.text.Component;
 
@@ -122,15 +120,18 @@ public class DebugCommand {
                         ))
                 ),
                 item("chunk", format("( x: % | z: % )",
-                        text(chunkPos.getX()).color(HIGHLIGHT_COLOR),
-                        text(chunkPos.getY()).color(HIGHLIGHT_COLOR)
+                                text(chunkPos.getX()).color(HIGHLIGHT_COLOR),
+                                text(chunkPos.getY()).color(HIGHLIGHT_COLOR)
                         )
                         .appendNewline()
-                        .append(details(BASE_COLOR,
+                        .append(details(BASE_COLOR, TextFormat.stripNulls(
                                 item("is generated", chunk.isGenerated()),
                                 item("has lightdata", chunk.hasLightData()),
+                                chunk instanceof MCAChunk mcaChunk ?
+                                        item("data-version", mcaChunk.getDataVersion()) :
+                                        null,
                                 item("inhabited-time", chunk.getInhabitedTime())
-                        ))
+                        )))
                 ),
                 item("world", text(world.getId()).color(HIGHLIGHT_COLOR)
                         .appendNewline()
@@ -191,6 +192,7 @@ public class DebugCommand {
         Vector2i tilePos = map.getHiresModelManager().getTileGrid().getCell(blockPos);
 
         TileInfoRegion.TileInfo tileInfo = map.getMapTileState().get(tilePos.getX(), tilePos.getY());
+        int tileRenderTime = tileInfo.getRenderTime();
 
         int lastChunkHash = map.getMapChunkState().get(chunkPos.getX(), chunkPos.getY());
         int currentChunkHash = 0;
@@ -220,8 +222,8 @@ public class DebugCommand {
                         text(z).color(HIGHLIGHT_COLOR)
                 )),
                 item("chunk", format("( x: % | z: % )",
-                                text(x >> 4).color(HIGHLIGHT_COLOR),
-                                text(z >> 4).color(HIGHLIGHT_COLOR)
+                                text(chunkPos.getX()).color(HIGHLIGHT_COLOR),
+                                text(chunkPos.getY()).color(HIGHLIGHT_COLOR)
                         )
                                 .appendNewline()
                                 .append(details(BASE_COLOR,
@@ -230,14 +232,16 @@ public class DebugCommand {
                                 ))
                 ),
                 item("tile", format("( x: % | z: % )",
-                                text(x >> 4).color(HIGHLIGHT_COLOR),
-                                text(z >> 4).color(HIGHLIGHT_COLOR)
+                                text(tilePos.getX()).color(HIGHLIGHT_COLOR),
+                                text(tilePos.getY()).color(HIGHLIGHT_COLOR)
                         )
                                 .appendNewline()
-                                .append(details(BASE_COLOR,
-                                        item("rendered", durationFormat(Instant.ofEpochSecond(tileInfo.getRenderTime()))).append(text(" ago")),
+                                .append(details(BASE_COLOR, stripNulls(
+                                        (tileRenderTime > 0) ?
+                                                item("rendered", durationFormat(Instant.ofEpochSecond(tileRenderTime)))
+                                                        .append(text(" ago")) : null,
                                         item("state", tileInfo.getState().getKey().getFormatted())
-                                ))
+                                )))
                 )
         ));
 

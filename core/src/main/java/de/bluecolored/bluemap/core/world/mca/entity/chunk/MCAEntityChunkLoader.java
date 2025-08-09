@@ -40,7 +40,11 @@ public class MCAEntityChunkLoader implements ChunkLoader<MCAEntityChunk> {
                 InputStream in = new ByteArrayInputStream(data, offset, length);
                 InputStream decompressedIn = compression.decompress(in)
         ) {
-            return MCAUtil.BLUENBT.read(decompressedIn, MCAEntityChunk.class);
+            try {
+                return MCAUtil.BLUENBT.read(decompressedIn, MCAEntityChunk.class);
+            } catch (Exception e) {
+                throw new IOException("Failed to parse chunk-data (%s): %s".formatted(MCAEntityChunk.class.getSimpleName(), e), e);
+            }
         }
     }
 

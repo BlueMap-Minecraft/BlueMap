@@ -134,7 +134,7 @@ public class FabricPlayer extends Player {
         update(player);
     }
 
-    public void update(ServerPlayerEntity player) {
+    private void update(ServerPlayerEntity player) {
         this.gamemode = GAMEMODE_MAP.get(player.interactionManager.getGameMode());
         if (this.gamemode == null) this.gamemode = Gamemode.SURVIVAL;
 
@@ -148,10 +148,12 @@ public class FabricPlayer extends Player {
         this.rotation = new Vector3d(player.getPitch(), player.getHeadYaw(), 0);
         this.sneaking = player.isSneaking();
 
-        this.skyLight = player.getWorld().getLightingProvider().get(LightType.SKY).getLightLevel(player.getBlockPos());
-        this.blockLight = player.getWorld().getLightingProvider().get(LightType.BLOCK).getLightLevel(player.getBlockPos());
+        net.minecraft.server.world.ServerWorld world = player.getWorld();
 
-        this.world = mod.getServerWorld(player.getServerWorld());
+        this.skyLight = world.getLightingProvider().get(LightType.SKY).getLightLevel(player.getBlockPos());
+        this.blockLight = world.getLightingProvider().get(LightType.BLOCK).getLightLevel(player.getBlockPos());
+
+        this.world = mod.getServerWorld(world);
     }
 
 }

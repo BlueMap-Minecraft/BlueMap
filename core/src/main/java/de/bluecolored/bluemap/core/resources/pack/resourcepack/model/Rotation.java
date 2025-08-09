@@ -31,15 +31,18 @@ import com.google.gson.Gson;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
-import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
+import de.bluecolored.bluemap.core.resources.adapter.AbstractTypeAdapterFactory;
+import de.bluecolored.bluemap.core.resources.adapter.PostDeserialize;
 import de.bluecolored.bluemap.core.util.math.Axis;
 import de.bluecolored.bluemap.core.util.math.MatrixM4f;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.io.IOException;
 
 @SuppressWarnings("FieldMayBeFinal")
-@JsonAdapter(Rotation.Adapter.class)
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 public class Rotation {
     private static final Vector3f DEFAULT_ORIGIN = new Vector3f(8, 8, 8);
@@ -55,8 +58,15 @@ public class Rotation {
 
     private transient MatrixM4f matrix;
 
-    private Rotation(){}
+    public Rotation(Vector3f origin, Axis axis, float angle, boolean rescale) {
+        this.origin = origin;
+        this.axis = axis;
+        this.angle = angle;
+        this.rescale = rescale;
+        init();
+    }
 
+    @PostDeserialize
     private void init() {
         Vector3i axisAngle = axis.toVector();
 
@@ -81,21 +91,6 @@ public class Rotation {
 
             matrix.translate(origin.getX(), origin.getY(), origin.getZ());
         }
-    }
-
-    static class Adapter extends AbstractTypeAdapterFactory<Rotation> {
-
-        public Adapter() {
-            super(Rotation.class);
-        }
-
-        @Override
-        public Rotation read(JsonReader in, Gson gson) throws IOException {
-            Rotation rotation = gson.getDelegateAdapter(this, TypeToken.get(Rotation.class)).read(in);
-            rotation.init();
-            return rotation;
-        }
-
     }
 
 }

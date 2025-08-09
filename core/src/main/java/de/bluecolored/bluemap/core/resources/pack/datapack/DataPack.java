@@ -25,8 +25,11 @@
 package de.bluecolored.bluemap.core.resources.pack.datapack;
 
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.pack.Pack;
+import de.bluecolored.bluemap.core.resources.pack.PackVersion;
+import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
 import de.bluecolored.bluemap.core.resources.pack.datapack.biome.DatapackBiome;
 import de.bluecolored.bluemap.core.resources.pack.datapack.dimension.DimensionTypeData;
 import de.bluecolored.bluemap.core.util.Key;
@@ -53,12 +56,12 @@ public class DataPack extends Pack {
     public static final Key DIMENSION_TYPE_THE_NETHER = new Key("minecraft", "the_nether");
     public static final Key DIMENSION_TYPE_THE_END = new Key("minecraft", "the_end");
 
-    private final Map<Key, DimensionType> dimensionTypes = new HashMap<>();
-    private final Map<Key, Biome> biomes = new HashMap<>();
+    private final ResourcePool<DimensionType> dimensionTypes = new ResourcePool<>();
+    private final ResourcePool<Biome> biomes = new ResourcePool<>();
 
     private LegacyBiomes legacyBiomes;
 
-    public DataPack(int packVersion) {
+    public DataPack(PackVersion packVersion) {
         super(packVersion);
     }
 
@@ -88,11 +91,14 @@ public class DataPack extends Pack {
                 .flatMap(DataPack::walk)
                 .filter(path -> path.getFileName().toString().endsWith(".json"))
                 .filter(Files::isRegularFile)
-                .forEach(file -> loadResource(root, file, 1, 3, key -> {
-                    try (BufferedReader reader = Files.newBufferedReader(file)) {
-                        return ResourcesGson.INSTANCE.fromJson(reader, DimensionTypeData.class);
-                    }
-                }, dimensionTypes));
+                .forEach(file -> dimensionTypes.load(
+                        new ResourcePath<>(root.relativize(file), 1, 3),
+                        key -> {
+                            try (BufferedReader reader = Files.newBufferedReader(file)) {
+                                return ResourcesGson.INSTANCE.fromJson(reader, DimensionTypeData.class);
+                            }
+                        }
+                ));
 
         list(root.resolve("data"))
                 .map(path -> path.resolve("worldgen").resolve("biome"))
@@ -100,11 +106,14 @@ public class DataPack extends Pack {
                 .flatMap(DataPack::walk)
                 .filter(path -> path.getFileName().toString().endsWith(".json"))
                 .filter(Files::isRegularFile)
-                .forEach(file -> loadResource(root, file, 1, 4, key -> {
-                    try (BufferedReader reader = Files.newBufferedReader(file)) {
-                        return new DatapackBiome(key, ResourcesGson.INSTANCE.fromJson(reader, DatapackBiome.Data.class));
-                    }
-                }, biomes));
+                .forEach(file -> biomes.load(
+                        new ResourcePath<>(root.relativize(file), 1, 4),
+                        key -> {
+                            try (BufferedReader reader = Files.newBufferedReader(file)) {
+                                return new DatapackBiome(key, ResourcesGson.INSTANCE.fromJson(reader, DatapackBiome.Data.class));
+                            }
+                        }
+                ));
     }
 
     public void bake() {

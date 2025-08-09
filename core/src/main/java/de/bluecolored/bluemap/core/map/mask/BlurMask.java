@@ -22,42 +22,45 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.util;
+package de.bluecolored.bluemap.core.map.mask;
 
-import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluenbt.NBTReader;
-import de.bluecolored.bluenbt.NBTWriter;
-import de.bluecolored.bluenbt.TagType;
-import de.bluecolored.bluenbt.TypeAdapter;
+import de.bluecolored.bluemap.core.util.Tristate;
 import lombok.RequiredArgsConstructor;
 
-import java.io.IOException;
-
 @RequiredArgsConstructor
-public class RegistryAdapter<T extends Keyed> implements TypeAdapter<T> {
+public class BlurMask implements Mask {
 
-    private final Registry<T> registry;
-    private final String defaultNamespace;
-    private final T fallback;
+    private final CombinedMask masks;
+    private final int size;
 
     @Override
-    public T read(NBTReader reader) throws IOException {
-        Key key = Key.parse(reader.nextString(), defaultNamespace);
-        T value = registry.get(key);
-        if (value != null) return value;
-
-        Logger.global.noFloodWarning("unknown-registry-key-" + key.getFormatted(), "Failed to find registry-entry for key: " + key);
-        return fallback;
+    public boolean test(int x, int y, int z) {
+        return masks.test(
+                x + randomOffset(x, y, z, 23948),
+                y + randomOffset(x, y, z, 53242),
+                z + randomOffset(x, y, z, 75654)
+        );
     }
 
     @Override
-    public void write(T value, NBTWriter writer) throws IOException {
-        writer.value(value.getKey().getFormatted());
+    public Tristate test(int minX, int minY, int minZ, int maxX, int maxY, int maxZ) {
+        return masks.test(
+                minX - size, minY - size, minZ - size,
+                maxX + size, maxY + size, maxZ + size
+        );
     }
 
     @Override
-    public TagType type() {
-        return TagType.STRING;
+    public boolean isEdge(int minX, int minZ, int maxX, int maxZ) {
+        return masks.isEdge(
+                minX - size, minZ - size,
+                maxX + size, maxZ + size
+        );
+    }
+
+    private int randomOffset(int x, int y, int z, long seed) {
+        final long hash = x * 73428767L ^ y * 4382893L ^ z * 2937119L ^ seed * 457;
+        return (int)((((hash * (hash + 456149) & 0x00ffffff) / (float) 0x01000000) - 0.5f) * 2 * size);
     }
 
 }

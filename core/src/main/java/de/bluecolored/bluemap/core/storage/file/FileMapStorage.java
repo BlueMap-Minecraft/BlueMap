@@ -31,6 +31,7 @@ import de.bluecolored.bluemap.core.storage.ItemStorage;
 import de.bluecolored.bluemap.core.storage.MapStorage;
 import de.bluecolored.bluemap.core.storage.compression.Compression;
 import de.bluecolored.bluemap.core.util.DeletingPathVisitor;
+import de.bluecolored.bluemap.core.util.FileHelper;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -154,7 +155,7 @@ public class FileMapStorage implements MapStorage {
         final LinkedList<Path> subFiles;
 
         // collect sub-files to be able to provide progress-updates
-        try (Stream<Path> pathStream = Files.walk(root, 3)) {
+        try (Stream<Path> pathStream = FileHelper.walk(root, 3)) {
             subFiles = pathStream.collect(Collectors.toCollection(LinkedList::new));
         }
         subFilesCount = subFiles.size();

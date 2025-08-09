@@ -37,6 +37,7 @@ import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.World;
 import de.bluecolored.bluemap.core.world.block.Block;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
+import lombok.extern.flogger.Flogger;
 
 public class HiresModelRenderer {
 
@@ -60,8 +61,6 @@ public class HiresModelRenderer {
 
     public void render(World world, Vector3i modelMin, Vector3i modelMax, TileModel tileModel, TileMetaConsumer tileMetaConsumer) {
         try {
-            Vector3i min = modelMin.max(renderSettings.getMinPos());
-            Vector3i max = modelMax.min(renderSettings.getMaxPos());
             Vector3i modelAnchor = new Vector3i(modelMin.getX(), 0, modelMin.getZ());
 
             // render blocks
@@ -85,13 +84,10 @@ public class HiresModelRenderer {
 
                     if (renderSettings.isInsideRenderBoundaries(x, z)) {
                         Chunk chunk = world.getChunkAtBlock(x, z);
-                        minY = Math.max(min.getY(), chunk.getMinY(x, z));
-                        maxY = Math.min(max.getY(), chunk.getMaxY(x, z));
+                        minY = Math.max(modelMin.getY(), chunk.getMinY(x, z));
+                        maxY = Math.min(modelMax.getY(), chunk.getMaxY(x, z));
 
                         for (y = maxY; y >= minY; y--) {
-                            if (x == -1743 && y == 64 && z == 1393)
-                                System.out.println();
-
                             block.set(x, y, z);
                             if (!block.isInsideRenderBounds()) continue;
 
@@ -124,7 +120,7 @@ public class HiresModelRenderer {
             }
 
             // render entities
-            world.iterateEntities(min.getX(), min.getZ(), max.getX(), max.getZ(), entity -> {
+            world.iterateEntities(modelMin.getX(), modelMin.getZ(), modelMax.getX(), modelMax.getZ(), entity -> {
                 Vector3d pos = entity.getPos();
                 block.set(pos.getFloorX(), pos.getFloorY(), pos.getFloorZ());
                 entityRenderer.render(entity, block, tileModelView.initialize());
@@ -136,7 +132,7 @@ public class HiresModelRenderer {
             });
         } catch (MaxCapacityReachedException ex) {
             Logger.global.noFloodWarning("max-capacity-reached",
-                    "One or more map-tiles are too complex to be completed: " + ex);
+                    "One or more map-tiles are too complex to be completed (@~ %s to %s): %s".formatted(modelMin, modelMax, ex));
         }
     }
 }

@@ -32,6 +32,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.md_5.bungee.chat.ComponentSerializer;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.command.BlockCommandSender;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
@@ -75,8 +76,9 @@ public class BukkitCommandSource implements CommandSource {
         Location location = getLocation();
 
         if (location != null) {
-            ServerWorld serverWorld = BukkitPlugin.getInstance().getServerWorld(location.getWorld());
-            return Optional.ofNullable(serverWorld);
+            World world = location.getWorld();
+            if (world == null) return Optional.empty();
+            return Optional.of(BukkitPlugin.getInstance().getServerWorld(world));
         }
 
         return Optional.empty();

@@ -196,7 +196,7 @@ public class ForgeMod implements Server {
     }
 
     public ServerWorld getServerWorld(ServerLevel world) {
-        return worlds.get(world);
+        return worlds.get(Objects.requireNonNull(world));
     }
 
     @Override
@@ -211,10 +211,9 @@ public class ForgeMod implements Server {
 
     @SubscribeEvent
     public void onPlayerJoin(PlayerLoggedInEvent evt) {
-        var playerInstance = evt.getEntity();
-        if (!(playerInstance instanceof ServerPlayer)) return;
+        if (!(evt.getEntity() instanceof ServerPlayer serverPlayer)) return;
 
-        ForgePlayer player = new ForgePlayer(playerInstance.getUUID(), this);
+        ForgePlayer player = new ForgePlayer(serverPlayer, this);
         onlinePlayerMap.put(player.getUuid(), player);
         onlinePlayerList.add(player);
     }

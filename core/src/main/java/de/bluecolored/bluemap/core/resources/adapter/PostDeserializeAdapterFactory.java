@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.resources;
+package de.bluecolored.bluemap.core.resources.adapter;
 
 import com.google.gson.Gson;
 import com.google.gson.TypeAdapter;
@@ -32,46 +32,39 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 
-public abstract class AbstractTypeAdapterFactory<T> implements TypeAdapterFactory {
-    protected static final String JSON_COMMENT = "__comment";
+public class PostDeserializeAdapterFactory implements TypeAdapterFactory {
 
-    private final Class<T> type;
+    @Override
+    public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
+        for (Method method : type.getRawType().getDeclaredMethods()) {
+            if (method.isAnnotationPresent(PostDeserialize.class) && method.getParameterCount() == 0) {
+                TypeAdapter<T> delegate = gson.getDelegateAdapter(this, type);
+                return new TypeAdapter<>() {
 
-    public AbstractTypeAdapterFactory(Class<T> type) {
-        this.type = type;
-    }
+                    @Override
+                    public void write(JsonWriter out, T value) throws IOException {
+                        delegate.write(out, value);
+                    }
 
-    public void write(JsonWriter out, T value, Gson gson) throws IOException {
-        throw new UnsupportedOperationException();
-    }
+                    @Override
+                    public T read(JsonReader in) throws IOException {
+                        try {
+                            T obj = delegate.read(in);
+                            method.setAccessible(true);
+                            method.invoke(obj);
+                            return obj;
+                        } catch (IllegalAccessException | InvocationTargetException e) {
+                            throw new IOException(e);
+                        }
+                    }
 
-    public abstract T read(JsonReader in, Gson gson) throws IOException;
-
-    @SuppressWarnings("unchecked")
-    public <U> TypeAdapter<U> create(Gson gson, TypeToken<U> type) {
-        if (!type.getRawType().isAssignableFrom(this.type)) return null;
-        return (TypeAdapter<U>) new Adapter(gson);
-    }
-
-    public class Adapter extends TypeAdapter<T> {
-
-        private final Gson gson;
-
-        public Adapter(Gson gson) {
-            this.gson = gson;
+                };
+            }
         }
-
-        @Override
-        public void write(JsonWriter out, T value) throws IOException {
-            AbstractTypeAdapterFactory.this.write(out, value, gson);
-        }
-
-        @Override
-        public T read(JsonReader in) throws IOException {
-            return AbstractTypeAdapterFactory.this.read(in, gson);
-        }
-
+        return null;
     }
 
 }

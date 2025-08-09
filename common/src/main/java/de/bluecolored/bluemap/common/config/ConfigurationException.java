@@ -65,7 +65,11 @@ public class ConfigurationException extends Exception {
 
     public String getFullExplanation() {
         Throwable cause = getCause();
-        if (cause instanceof ConfigurationException) {
+        while (cause != null && !(cause instanceof ConfigurationException)) {
+            cause = cause.getCause();
+        }
+
+        if (cause != null) {
             return getExplanation() + "\n\n" + ((ConfigurationException) cause).getFullExplanation();
         } else {
             return getExplanation();

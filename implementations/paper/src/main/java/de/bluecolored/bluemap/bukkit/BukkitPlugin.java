@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.bukkit;
 
+import com.destroystokyo.paper.event.player.PlayerPostRespawnEvent;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluecommands.brigadier.BrigadierBridge;
@@ -201,7 +202,7 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
     }
 
     public ServerWorld getServerWorld(World world) {
-        return worlds.get(world);
+        return worlds.get(Objects.requireNonNull(world));
     }
 
     @Override
@@ -236,13 +237,18 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
         }
     }
 
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlayerRespawn(PlayerPostRespawnEvent evt) {
+        initPlayer(evt.getPlayer());
+    }
+
     @Override
     public Collection<Player> getOnlinePlayers() {
         return onlinePlayerMap.values();
     }
 
     private void initPlayer(org.bukkit.entity.Player bukkitPlayer) {
-        BukkitPlayer player = new BukkitPlayer(bukkitPlayer.getUniqueId());
+        BukkitPlayer player = new BukkitPlayer(bukkitPlayer);
         onlinePlayerMap.put(bukkitPlayer.getUniqueId(), player);
         onlinePlayerList.add(player);
 
@@ -250,7 +256,7 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
         scheduledTasks.add(
             bukkitPlayer.getScheduler().runAtFixedRate(this, task -> {
                 player.update();
-            }, () -> {}, 20, 20)
+            }, null, 20, 20)
         );
     }
 

@@ -29,15 +29,17 @@ import de.bluecolored.bluemap.core.map.BmMap;
 import lombok.Getter;
 
 import java.util.Collection;
+import java.util.stream.Stream;
 
 public class MapUpdateTask extends CombinedRenderTask<RenderTask> implements MapRenderTask {
 
     @Getter private final BmMap map;
 
     public MapUpdateTask(BmMap map, Collection<Vector2i> regions, TileUpdateStrategy force) {
-        this(map, regions.stream()
-                .<RenderTask>map(region -> new WorldRegionRenderTask(map, region, force))
-                .toList());
+        this(map, Stream.concat(
+                regions.stream().<RenderTask>map(region -> new WorldRegionRenderTask(map, region, force)),
+                Stream.of(new MapSaveTask(map))
+        ).toList());
     }
 
     protected MapUpdateTask(BmMap map, Collection<RenderTask> tasks) {

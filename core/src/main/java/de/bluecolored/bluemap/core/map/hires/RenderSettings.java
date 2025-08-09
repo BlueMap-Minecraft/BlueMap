@@ -25,15 +25,12 @@
 package de.bluecolored.bluemap.core.map.hires;
 
 import com.flowpowered.math.vector.Vector2i;
-import com.flowpowered.math.vector.Vector3i;
+import de.bluecolored.bluemap.core.map.mask.Mask;
 import de.bluecolored.bluemap.core.util.Grid;
 
 import java.util.function.Predicate;
 
 public interface RenderSettings {
-
-    Vector3i DEFAULT_MIN = Vector3i.from(Integer.MIN_VALUE);
-    Vector3i DEFAULT_MAX = Vector3i.from(Integer.MAX_VALUE);
 
     /**
      * The y-level below which "caves" will not be rendered
@@ -51,20 +48,6 @@ public interface RenderSettings {
     boolean isCaveDetectionUsesBlockLight();
 
     /**
-     * The minimum position of blocks to render
-     */
-    default Vector3i getMinPos() {
-        return DEFAULT_MIN;
-    }
-
-    /**
-     * The maximum position of blocks to render
-     */
-    default Vector3i getMaxPos() {
-        return DEFAULT_MAX;
-    }
-
-    /**
      * The (default) ambient light of this world (0-1)
      */
     float getAmbientLight();
@@ -77,42 +60,30 @@ public interface RenderSettings {
         return true;
     }
 
+    /**
+     * The sunlight-strength that the air blocks produced by {@link #isRenderEdges()} will have.
+     */
+    default int getEdgeLightStrength() { return 15; }
+
     default boolean isIgnoreMissingLightData() {
         return false;
     }
 
-    default boolean isInsideRenderBoundaries(int x, int z) {
-        Vector3i min = getMinPos();
-        Vector3i max = getMaxPos();
+    Mask getRenderMask();
 
-        return
-                x >= min.getX() &&
-                x <= max.getX() &&
-                z >= min.getZ() &&
-                z <= max.getZ();
+    default boolean isInsideRenderBoundaries(int x, int z) {
+        return getRenderMask().test(x, Integer.MIN_VALUE, z, x, Integer.MAX_VALUE, z).getOr(true);
     }
 
     default boolean isInsideRenderBoundaries(int x, int y, int z) {
-        Vector3i min = getMinPos();
-        Vector3i max = getMaxPos();
-
-        return
-                x >= min.getX() &&
-                x <= max.getX() &&
-                z >= min.getZ() &&
-                z <= max.getZ() &&
-                y >= min.getY() &&
-                y <= max.getY();
+        return getRenderMask().test(x, y, z);
     }
 
     default boolean isInsideRenderBoundaries(Vector2i cell, Grid grid, boolean allowPartiallyIncludedCells) {
-        Vector2i cellMin = allowPartiallyIncludedCells ? grid.getCellMin(cell) : grid.getCellMax(cell);
-        if (cellMin.getX() > getMaxPos().getX()) return false;
-        if (cellMin.getY() > getMaxPos().getZ()) return false;
-
-        Vector2i cellMax = allowPartiallyIncludedCells ? grid.getCellMax(cell) : grid.getCellMin(cell);
-        if (cellMax.getX() < getMinPos().getX()) return false;
-        return cellMax.getY() >= getMinPos().getZ();
+        return getRenderMask().test(
+                grid.getCellMinX(cell.getX()), Integer.MIN_VALUE, grid.getCellMinY(cell.getY()),
+                grid.getCellMaxX(cell.getX()), Integer.MAX_VALUE, grid.getCellMaxY(cell.getY())
+        ).getOr(allowPartiallyIncludedCells);
     }
 
     /**

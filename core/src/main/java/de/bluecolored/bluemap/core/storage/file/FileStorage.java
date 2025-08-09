@@ -58,6 +58,7 @@ public class FileStorage implements Storage {
     @SuppressWarnings("resource")
     @Override
     public Stream<String> mapIds() throws IOException {
+        if (!Files.exists(root)) return Stream.empty();
         return Files.list(root)
                 .filter(Files::isDirectory)
                 .map(Path::getFileName)

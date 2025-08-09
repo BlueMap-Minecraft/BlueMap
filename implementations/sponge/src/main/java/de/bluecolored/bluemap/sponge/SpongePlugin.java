@@ -164,7 +164,7 @@ public class SpongePlugin implements Server {
         synchronized (onlinePlayerList) {
             onlinePlayerList.clear();
             for (ServerPlayer spongePlayer : Sponge.server().onlinePlayers()) {
-                SpongePlayer player = new SpongePlayer(spongePlayer.uniqueId());
+                SpongePlayer player = new SpongePlayer(spongePlayer);
                 onlinePlayerMap.put(spongePlayer.uniqueId(), player);
                 onlinePlayerList.add(player);
             }
@@ -173,7 +173,7 @@ public class SpongePlugin implements Server {
 
     @Listener
     public void onPlayerJoin(ServerSideConnectionEvent.Join evt) {
-        SpongePlayer player = new SpongePlayer(evt.player().uniqueId());
+        SpongePlayer player = new SpongePlayer(evt.player());
         onlinePlayerMap.put(evt.player().uniqueId(), player);
         onlinePlayerList.add(player);
     }
@@ -233,7 +233,7 @@ public class SpongePlugin implements Server {
     }
 
     public ServerWorld getServerWorld(org.spongepowered.api.world.server.ServerWorld world) {
-        return worlds.get(world);
+        return worlds.get(Objects.requireNonNull(world));
     }
 
     @Override

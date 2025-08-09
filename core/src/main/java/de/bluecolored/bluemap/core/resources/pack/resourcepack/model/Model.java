@@ -25,16 +25,19 @@
 package de.bluecolored.bluemap.core.resources.pack.resourcepack.model;
 
 import de.bluecolored.bluemap.core.resources.ResourcePath;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
 
-@SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
+@SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal", "unused"})
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 public class Model {
 
@@ -46,30 +49,57 @@ public class Model {
     private transient boolean culling = false;
     private transient boolean occluding = false;
 
-    private Model(){}
+    public Model(Map<String, TextureVariable> textures) {
+        this.textures.putAll(textures);
+    }
 
-    public synchronized void optimize(ResourcePack resourcePack) {
+    public Model(Element @Nullable ... elements) {
+        this.elements = elements;
+    }
+
+    public Model(Map<String, TextureVariable> textures, Element @Nullable ... elements) {
+        this.textures.putAll(textures);
+        this.elements = elements;
+    }
+
+    public Model(Map<String, TextureVariable> textures, Element @Nullable [] elements, boolean ambientocclusion) {
+        this.textures.putAll(textures);
+        this.elements = elements;
+    }
+
+    public Model(@Nullable ResourcePath<Model> parent, Map<String, TextureVariable> textures) {
+        this.parent = parent;
+        this.textures.putAll(textures);
+    }
+
+    public Model(@Nullable ResourcePath<Model> parent, Map<String, TextureVariable> textures, Element @Nullable [] elements, boolean ambientocclusion) {
+        this.parent = parent;
+        this.textures.putAll(textures);
+        this.elements = elements;
+    }
+
+    public synchronized void optimize(ResourcePool<Texture> texturePool) {
         for (var variable : this.textures.values()) {
-            variable.optimize(resourcePack);
+            variable.optimize(texturePool);
         }
 
         if (this.elements != null) {
             for (var element : elements) {
-                if (element != null) element.optimize(resourcePack);
+                if (element != null) element.optimize(texturePool);
             }
         }
     }
 
-    public synchronized void applyParent(ResourcePack resourcePack) {
+    public synchronized void applyParent(ResourcePool<Model> modelPool) {
         if (this.parent == null) return;
 
         // set parent to null early to avoid trying to resolve reference-loops
         ResourcePath<Model> parentPath = this.parent;
         this.parent = null;
 
-        Model parent = parentPath.getResource(resourcePack::getModel);
+        Model parent = parentPath.getResource(modelPool::get);
         if (parent != null) {
-            parent.applyParent(resourcePack);
+            parent.applyParent(modelPool);
 
             parent.textures.forEach(this::applyTextureVariable);
             if (this.elements == null && parent.elements != null) {
@@ -88,7 +118,7 @@ public class Model {
         }
     }
 
-    public synchronized void calculateProperties(ResourcePack resourcePack) {
+    public synchronized void calculateProperties(ResourcePool<Texture> texturePool) {
         if (elements == null) return;
         for (Element element : elements) {
             if (element != null && element.isFullCube()) {
@@ -108,7 +138,7 @@ public class Model {
                         break;
                     }
 
-                    Texture texture = textureResourcePath.getResource(resourcePack::getTexture);
+                    Texture texture = textureResourcePath.getResource(texturePool::get);
                     if (texture == null || texture.getColorStraight().a < 1) {
                         culling = false;
                         break;

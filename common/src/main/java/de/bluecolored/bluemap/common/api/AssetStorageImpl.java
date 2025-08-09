@@ -27,10 +27,12 @@ package de.bluecolored.bluemap.common.api;
 import de.bluecolored.bluemap.api.AssetStorage;
 import de.bluecolored.bluemap.core.storage.MapStorage;
 import de.bluecolored.bluemap.core.storage.compression.CompressedInputStream;
+import lombok.NonNull;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Objects;
 import java.util.Optional;
 
 public class AssetStorageImpl implements AssetStorage {
@@ -44,29 +46,29 @@ public class AssetStorageImpl implements AssetStorage {
     }
 
     @Override
-    public OutputStream writeAsset(String name) throws IOException {
+    public OutputStream writeAsset(@NonNull String name) throws IOException {
         return storage.asset(name).write();
     }
 
     @Override
-    public Optional<InputStream> readAsset(String name) throws IOException {
+    public Optional<InputStream> readAsset(@NonNull String name) throws IOException {
         CompressedInputStream in = storage.asset(name).read();
         if (in == null) return Optional.empty();
         return Optional.of(in.decompress());
     }
 
     @Override
-    public boolean assetExists(String name) throws IOException {
+    public boolean assetExists(@NonNull String name) throws IOException {
         return storage.asset(name).exists();
     }
 
     @Override
-    public String getAssetUrl(String name) {
+    public String getAssetUrl(@NonNull String name) {
         return "maps/" + mapId + "/assets/" + MapStorage.escapeAssetName(name);
     }
 
     @Override
-    public void deleteAsset(String name) throws IOException {
+    public void deleteAsset(@NonNull String name) throws IOException {
         storage.asset(name).delete();
     }
 

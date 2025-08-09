@@ -24,6 +24,8 @@
  */
 package de.bluecolored.bluemap.core.logger;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -83,7 +85,7 @@ public class MultiLogger extends AbstractLogger {
     }
 
     @Override
-    public void logError(String message, Throwable throwable) {
+    public void logError(String message, @Nullable Throwable throwable) {
         lock.readLock().lock();
         try {
             for (Logger l : logger.values())

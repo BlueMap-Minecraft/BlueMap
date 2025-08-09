@@ -42,7 +42,7 @@ public class MapRequestHandler extends RoutingRequestHandler {
 
     public MapRequestHandler(BmMap map, Server serverInterface, PluginConfig pluginConfig, Predicate<UUID> playerFilter) {
         this(map.getStorage(),
-                createPlayersDataSupplier(map, serverInterface, pluginConfig, playerFilter),
+                new LivePlayersDataSupplier(serverInterface, pluginConfig, map.getWorld(), playerFilter),
                 new LiveMarkersDataSupplier(map.getMarkerSets()));
     }
 
@@ -67,12 +67,6 @@ public class MapRequestHandler extends RoutingRequestHandler {
                     new CachedRateLimitDataSupplier(liveMarkerDataSupplier,10000)
             ));
         }
-    }
-
-    private static @Nullable LivePlayersDataSupplier createPlayersDataSupplier(BmMap map, Server serverInterface, PluginConfig pluginConfig, Predicate<UUID> playerFilter) {
-        ServerWorld world = serverInterface.getServerWorld(map.getWorld()).orElse(null);
-        if (world == null) return null;
-        return new LivePlayersDataSupplier(serverInterface, pluginConfig, world, playerFilter);
     }
 
 }

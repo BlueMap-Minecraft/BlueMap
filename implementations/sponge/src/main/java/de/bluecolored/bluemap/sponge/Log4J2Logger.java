@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.sponge;
 
 import de.bluecolored.bluemap.core.logger.AbstractLogger;
 import org.apache.logging.log4j.Logger;
+import org.jetbrains.annotations.Nullable;
 
 public class Log4J2Logger extends AbstractLogger {
 
@@ -36,7 +37,7 @@ public class Log4J2Logger extends AbstractLogger {
     }
 
     @Override
-    public void logError(String message, Throwable throwable) {
+    public void logError(String message, @Nullable Throwable throwable) {
         out.error(message, throwable);
     }
 

@@ -237,13 +237,13 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
                     Files.writeString(
                             configManager.resolveConfigFile(MAPS_CONFIG_FOLDER_NAME + "/nether"),
                             createNetherMapTemplate("Nether", worldFolder,
-                                    DataPack.DIMENSION_THE_NETHER, 0).build(),
+                                    DataPack.DIMENSION_THE_NETHER, 100).build(),
                             StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                     );
                     Files.writeString(
                             configManager.resolveConfigFile(MAPS_CONFIG_FOLDER_NAME + "/end"),
                             createEndMapTemplate("End", worldFolder,
-                                    DataPack.DIMENSION_THE_END, 0).build(),
+                                    DataPack.DIMENSION_THE_END, 200).build(),
                             StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                     );
                 } else {
@@ -278,9 +278,10 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
                         if (i > 1) name = name + " (" + i + ")";
 
                         ConfigTemplate template = switch (world.getDimension().getFormatted()) {
-                            case "minecraft:the_nether" -> createNetherMapTemplate(name, worldFolder, dimension, i - 1);
-                            case "minecraft:the_end" -> createEndMapTemplate(name, worldFolder, dimension, i - 1);
-                            default -> createOverworldMapTemplate(name, worldFolder, dimension, i - 1);
+                            case "minecraft:overworld" -> createOverworldMapTemplate(name, worldFolder, dimension, i - 1);
+                            case "minecraft:the_nether" -> createNetherMapTemplate(name, worldFolder, dimension, i - 1 + 100);
+                            case "minecraft:the_end" -> createEndMapTemplate(name, worldFolder, dimension, i - 1 + 200);
+                            default -> createOverworldMapTemplate(name, worldFolder, dimension, i - 1 + 300);
                         };
 
                         Files.writeString(
@@ -310,6 +311,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
                 }
 
                 MapConfig mapConfig = configManager.loadConfig(configFile, MapConfig.class);
+                mapConfig.checkLegacy();
                 mapConfigs.put(id, mapConfig);
             }
         } catch (IOException ex) {
@@ -375,46 +377,43 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
         return id.replaceAll("\\W", "_");
     }
 
-    private ConfigTemplate createOverworldMapTemplate(String name, Path worldFolder, Key dimension, int index) throws IOException {
+    private ConfigTemplate createOverworldMapTemplate(String name, Path worldFolder, Key dimension, int sorting) throws IOException {
         return configManager.loadConfigTemplate(MAP_STORAGE_CONFIG_NAME)
                 .setVariable("name", name)
-                .setVariable("sorting", "" + index)
+                .setVariable("sorting", "" + sorting)
                 .setVariable("world", formatPath(worldFolder))
                 .setVariable("dimension", dimension.getFormatted())
                 .setVariable("sky-color", "#7dabff")
                 .setVariable("void-color", "#000000")
                 .setVariable("ambient-light", "0.1")
                 .setVariable("remove-caves-below-y", "55")
-                .setConditional("max-y-comment", true)
-                .setVariable("max-y", "100");
+                .setConditional("remove-nether-ceiling", false);
     }
 
-    private ConfigTemplate createNetherMapTemplate(String name, Path worldFolder, Key dimension, int index) throws IOException {
+    private ConfigTemplate createNetherMapTemplate(String name, Path worldFolder, Key dimension, int sorting) throws IOException {
         return configManager.loadConfigTemplate(MAP_STORAGE_CONFIG_NAME)
                 .setVariable("name", name)
-                .setVariable("sorting", "" + (100 + index))
+                .setVariable("sorting", "" + sorting)
                 .setVariable("world", formatPath(worldFolder))
                 .setVariable("dimension", dimension.getFormatted())
                 .setVariable("sky-color", "#290000")
                 .setVariable("void-color", "#150000")
                 .setVariable("ambient-light", "0.6")
                 .setVariable("remove-caves-below-y", "-10000")
-                .setConditional("max-y-comment", false)
-                .setVariable("max-y", "90");
+                .setConditional("remove-nether-ceiling", true);
     }
 
-    private ConfigTemplate createEndMapTemplate(String name, Path worldFolder, Key dimension, int index) throws IOException {
+    private ConfigTemplate createEndMapTemplate(String name, Path worldFolder, Key dimension, int sorting) throws IOException {
         return configManager.loadConfigTemplate(MAP_STORAGE_CONFIG_NAME)
                 .setVariable("name", name)
-                .setVariable("sorting", "" + (200 + index))
+                .setVariable("sorting", "" + sorting)
                 .setVariable("world", formatPath(worldFolder))
                 .setVariable("dimension", dimension.getFormatted())
                 .setVariable("sky-color", "#080010")
                 .setVariable("void-color", "#080010")
                 .setVariable("ambient-light", "0.6")
                 .setVariable("remove-caves-below-y", "-10000")
-                .setConditional("max-y-comment", true)
-                .setVariable("max-y", "100");
+                .setConditional("remove-nether-ceiling", false);
     }
 
     public static String formatPath(Path path) {

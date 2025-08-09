@@ -64,7 +64,7 @@ async function load() {
       <div>
         <img src="assets/logo.png" alt="bluemap logo">
         <div class="bm-app-err-main">Failed to load BlueMap webapp!</div>
-        <div class="bm-app-err-hint">Make sure you have <a href="https://get.webgl.org/">WebGL</a> enabled on your browser.</div>
+        <div class="bm-app-err-hint">Make sure you have <a href="https://get.webgl.org/webgl2/">WebGL2</a> enabled on your browser.</div>
       </div>
     </div>
   `;

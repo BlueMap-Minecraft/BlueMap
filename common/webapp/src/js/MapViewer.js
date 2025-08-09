@@ -37,6 +37,7 @@ import {CombinedCamera} from "./util/CombinedCamera";
 import {CSS2DRenderer} from "./util/CSS2DRenderer";
 import {MarkerSet} from "./markers/MarkerSet";
 import {reactive} from "vue";
+import WebGL from "three/addons/capabilities/WebGL";
 
 export class MapViewer {
 
@@ -84,6 +85,7 @@ export class MapViewer {
 		this.stats.hide();
 
 		// renderer
+		if (!WebGL.isWebGL2Available()) throw new Error("WebGL2 is not available in your browser. It's not bluemaps fault, i promise ;_; !");
 		this.renderer = new WebGLRenderer({
 			antialias: true,
 			sortObjects: true,

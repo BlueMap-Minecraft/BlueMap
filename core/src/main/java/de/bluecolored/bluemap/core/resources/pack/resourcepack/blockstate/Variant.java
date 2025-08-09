@@ -24,27 +24,25 @@
  */
 package de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate;
 
-import com.google.gson.Gson;
-import com.google.gson.annotations.JsonAdapter;
-import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
 import de.bluecolored.bluemap.core.map.hires.block.BlockRendererType;
-import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model;
+import de.bluecolored.bluemap.core.resources.adapter.PostDeserialize;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
-import de.bluecolored.bluemap.core.util.math.MatrixM3f;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model;
 import de.bluecolored.bluemap.core.util.math.MatrixM4f;
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
-import java.io.IOException;
-
-@SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
-@JsonAdapter(Variant.Adapter.class)
+@SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal", "unused"})
 @Getter
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class Variant {
 
+    @Setter
     private BlockRendererType renderer = BlockRendererType.DEFAULT;
+
     private ResourcePath<Model> model = ResourcePack.MISSING_BLOCK_MODEL;
     private float x = 0, y = 0;
     private boolean uvlock = false;
@@ -53,29 +51,34 @@ public class Variant {
     private transient boolean transformed;
     private transient MatrixM4f transformMatrix;
 
-    private Variant(){}
+    public Variant(ResourcePath<Model> model) {
+        this.model = model;
+        init();
+    }
 
+    public Variant(ResourcePath<Model> model, float x, float y) {
+        this.model = model;
+        this.x = x;
+        this.y = y;
+        init();
+    }
+
+    public Variant(ResourcePath<Model> model, float x, float y, boolean uvlock, double weight) {
+        this.model = model;
+        this.x = x;
+        this.y = y;
+        this.uvlock = uvlock;
+        this.weight = weight;
+        init();
+    }
+
+    @PostDeserialize
     private void init() {
         this.transformed = x != 0 || y != 0;
         this.transformMatrix = new MatrixM4f()
                 .translate(-0.5f, -0.5f, -0.5f)
                 .rotate(-x, -y, 0)
                 .translate(0.5f, 0.5f, 0.5f);
-    }
-
-    static class Adapter extends AbstractTypeAdapterFactory<Variant> {
-
-        public Adapter() {
-            super(Variant.class);
-        }
-
-        @Override
-        public Variant read(JsonReader in, Gson gson) throws IOException {
-            Variant variant = gson.getDelegateAdapter(this, TypeToken.get(Variant.class)).read(in);
-            variant.init();
-            return variant;
-        }
-
     }
 
 }

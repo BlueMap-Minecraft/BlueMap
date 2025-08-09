@@ -111,7 +111,7 @@ public class MCAChunkLoader implements ChunkLoader<Chunk> {
                 D data = MCAUtil.BLUENBT.read(in, dataType);
                 return mightSupport(data.getDataVersion()) ? constructor.apply(world, data) : new MCAChunk(world, data) {};
             } catch (Exception e) {
-                throw new IOException("Failed to parse chunk-data: " + e, e);
+                throw new IOException("Failed to parse chunk-data (%s): %s".formatted(dataType.getSimpleName(), e), e);
             }
         }
 

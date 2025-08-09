@@ -32,35 +32,44 @@ import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static de.bluecolored.bluemap.core.util.StringUtil.intern;
+
 /**
  * Represents a BlockState<br>
  * It is important that {@link #hashCode} and {@link #equals} are implemented correctly, for the caching to work properly.<br>
  * <br>
  * <i>The implementation of this class has to be thread-save!</i><br>
  */
-public class BlockState extends Key {
+public class BlockState {
 
     private static final Pattern BLOCKSTATE_SERIALIZATION_PATTERN = Pattern.compile("^(.+?)(?:\\[(.*)])?$");
 
-    public static final BlockState AIR = new BlockState("minecraft:air");
-    public static final BlockState MISSING = new BlockState("bluemap:missing");
+    private static final Key MISSING_ID = Key.bluemap("missing");
+    private static final Key AIR_ID = Key.minecraft("air");
+    private static final Key CAVE_AIR_ID = Key.minecraft("cave_air");
+    private static final Key VOID_AIR_ID = Key.minecraft("void_air");
+    private static final Key WATER_ID = Key.minecraft("water");
+
+    public static final BlockState AIR = new BlockState(AIR_ID);
+    public static final BlockState MISSING = new BlockState(MISSING_ID);
+    public static final BlockState WATER = new BlockState(WATER_ID);
 
     private boolean hashed;
     private int hash;
 
+    private final Key id;
     private final Map<String, String> properties;
     private final Property[] propertiesArray;
 
     private final boolean isAir, isWater, isWaterlogged;
     private int liquidLevel = -1, redstonePower = -1;
 
-    public BlockState(String value) {
-        this(value, Collections.emptyMap());
+    public BlockState(Key id) {
+        this(id, Collections.emptyMap());
     }
 
-    public BlockState(String value, Map<String, String> properties) {
-        super(value);
-
+    public BlockState(Key id, Map<String, String> properties) {
+        this.id = id;
         this.hashed = false;
         this.hash = 0;
 
@@ -72,13 +81,17 @@ public class BlockState extends Key {
 
         // special fast-access properties
         this.isAir =
-                "minecraft:air".equals(this.getFormatted()) ||
-                "minecraft:cave_air".equals(this.getFormatted()) ||
-                "minecraft:void_air".equals(this.getFormatted());
+                AIR_ID.equals(this.id) ||
+                CAVE_AIR_ID.equals(this.id) ||
+                VOID_AIR_ID.equals(this.id);
 
-        this.isWater = "minecraft:water".equals(this.getFormatted());
+        this.isWater = WATER_ID.equals(this.id);
         this.isWaterlogged = "true".equals(properties.get("waterlogged"));
 
+    }
+
+    public Key getId() {
+        return id;
     }
 
     /**
@@ -134,25 +147,18 @@ public class BlockState extends Key {
         return redstonePower;
     }
 
-    @SuppressWarnings("StringEquality")
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (!(obj instanceof BlockState b)) return false;
-        if (!b.canEqual(this)) return false;
-        if (getFormatted() != b.getFormatted()) return false;
+        if (!id.equals(b.id)) return false;
         return Arrays.equals(propertiesArray, b.propertiesArray);
-    }
-
-    @Override
-    protected boolean canEqual(Object o) {
-        return o instanceof BlockState;
     }
 
     @Override
     public int hashCode() {
         if (!hashed){
-            hash = Objects.hash( getFormatted(), getProperties() );
+            hash = Objects.hash(id, properties);
             hashed = true;
         }
 
@@ -166,7 +172,7 @@ public class BlockState extends Key {
             sj.add(e.getKey() + "=" + e.getValue());
         }
 
-        return getFormatted() + "[" + sj + "]";
+        return id.getFormatted() + "[" + sj + "]";
     }
 
     public static BlockState fromString(String serializedBlockState) throws IllegalArgumentException {
@@ -188,7 +194,7 @@ public class BlockState extends Key {
 
             String blockId = m.group(1).trim();
 
-            return new BlockState(blockId, pt);
+            return new BlockState(Key.parse(blockId), pt);
         } catch (RuntimeException ex) {
             throw new IllegalArgumentException("'" + serializedBlockState + "' could not be parsed to a BlockState!");
         }

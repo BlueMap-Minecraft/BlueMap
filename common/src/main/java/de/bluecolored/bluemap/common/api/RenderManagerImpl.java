@@ -32,6 +32,7 @@ import de.bluecolored.bluemap.common.rendermanager.MapPurgeTask;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdatePreparationTask;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
 import de.bluecolored.bluemap.common.rendermanager.TileUpdateStrategy;
+import lombok.NonNull;
 
 import java.util.Collection;
 
@@ -48,20 +49,20 @@ public class RenderManagerImpl implements RenderManager {
     }
 
     @Override
-    public boolean scheduleMapUpdateTask(BlueMapMap map, boolean force) {
+    public boolean scheduleMapUpdateTask(@NonNull BlueMapMap map, boolean force) {
         BlueMapMapImpl cmap = castMap(map);
         return renderManager.scheduleRenderTask(MapUpdatePreparationTask
                 .updateMap(cmap.map(), TileUpdateStrategy.fixed(force), renderManager));
     }
 
     @Override
-    public boolean scheduleMapUpdateTask(BlueMapMap map, Collection<Vector2i> regions, boolean force) {
+    public boolean scheduleMapUpdateTask(@NonNull BlueMapMap map, Collection<Vector2i> regions, boolean force) {
         BlueMapMapImpl cmap = castMap(map);
         return renderManager.scheduleRenderTask(new MapUpdateTask(cmap.map(), regions, TileUpdateStrategy.fixed(force)));
     }
 
     @Override
-    public boolean scheduleMapPurgeTask(BlueMapMap map) {
+    public boolean scheduleMapPurgeTask(@NonNull BlueMapMap map) {
         BlueMapMapImpl cmap = castMap(map);
         return renderManager.scheduleRenderTask(new MapPurgeTask(cmap.map()));
     }
@@ -84,7 +85,7 @@ public class RenderManagerImpl implements RenderManager {
     @Override
     public void start() {
         if (!isRunning()){
-            renderManager.start(plugin.getBlueMap().getConfig().getCoreConfig().getRenderThreadCount());
+            renderManager.start(plugin.getBlueMap().getConfig().getCoreConfig().resolveRenderThreadCount());
         }
         plugin.getPluginState().setRenderThreadsEnabled(true);
     }

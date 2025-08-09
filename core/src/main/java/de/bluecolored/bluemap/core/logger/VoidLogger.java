@@ -24,10 +24,12 @@
  */
 package de.bluecolored.bluemap.core.logger;
 
+import org.jetbrains.annotations.Nullable;
+
 public class VoidLogger extends Logger {
 
     @Override
-    public void logError(String message, Throwable throwable) {}
+    public void logError(String message, @Nullable Throwable throwable) {}
 
     @Override
     public void logWarning(String message) {}
@@ -39,7 +41,7 @@ public class VoidLogger extends Logger {
     public void logDebug(String message) {}
 
     @Override
-    public void noFloodError(String key, String message, Throwable throwable) {}
+    public void noFloodError(String key, String message, @Nullable Throwable throwable) {}
 
     @Override
     public void noFloodWarning(String key, String message) {}

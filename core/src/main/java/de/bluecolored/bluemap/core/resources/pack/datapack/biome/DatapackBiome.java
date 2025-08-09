@@ -24,6 +24,8 @@
  */
 package de.bluecolored.bluemap.core.resources.pack.datapack.biome;
 
+import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.resources.adapter.PostDeserialize;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.biome.Biome;
@@ -86,6 +88,11 @@ public class DatapackBiome implements Biome {
         private Color foliageColor = Biome.DEFAULT.getOverlayFoliageColor();
         private Color grassColor = Biome.DEFAULT.getOverlayGrassColor();
         private GrassColorModifier grassColorModifier = Biome.DEFAULT.getGrassColorModifier();
+
+        @PostDeserialize
+        private void init() {
+            waterColor.a = 1f;
+        }
 
     }
 

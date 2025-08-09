@@ -8,13 +8,13 @@ plugins {
 }
 
 val supportedMinecraftVersions = listOf(
-    "1.21", "1.21.1", "1.21.2", "1.21.3", "1.21.4"
+    "1.21.6", "1.21.7", "1.21.8"
 )
 
 val minecraftVersion = supportedMinecraftVersions.first()
 val yarnMappings = "${minecraftVersion}+build.1"
-val fabricLoaderVersion = "0.15.11"
-val fabricApiVersion = "0.100.1+${minecraftVersion}"
+val fabricLoaderVersion = "0.16.14"
+val fabricApiVersion = "0.127.1+${minecraftVersion}"
 
 val shadowInclude: Configuration by configurations.creating
 configurations.api.get().extendsFrom(shadowInclude)
@@ -113,6 +113,7 @@ modrinth {
 curseforgeBlueMap {
     addGameVersion("Fabric")
     addGameVersion("Java ${java.toolchain.languageVersion.get()}")
+    //addGameVersion("Server")
     supportedMinecraftVersions.forEach {
         addGameVersion(it)
     }

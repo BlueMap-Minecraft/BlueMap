@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.core.map;
 import com.google.gson.*;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
+import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Key;
@@ -74,13 +75,13 @@ public class TextureGallery {
         });
     }
 
-    public synchronized void put(ResourcePack resourcePack) {
+    public synchronized void put(ResourcePool<Texture> texturePool) {
         this.put(ResourcePack.MISSING_TEXTURE); // put this first
-        resourcePack.getTextures().keySet()
+        texturePool.paths()
                 .stream()
                 .sorted(Comparator
                         .comparing((ResourcePath<Texture> r) ->  {
-                            Texture texture = r.getResource(resourcePack::getTexture);
+                            Texture texture = r.getResource(texturePool::get);
                             return texture != null && texture.getColorPremultiplied().a < 1f;
                         })
                         .thenComparing(Key::getFormatted))
@@ -114,7 +115,7 @@ public class TextureGallery {
             for (int ordinal = 0; ordinal < textures.length; ordinal++) {
                 Texture texture = textures[ordinal];
                 if (texture != null) {
-                    gallery.textureMappings.put(texture.getResourcePath(), new TextureMapping(ordinal, texture));
+                    gallery.textureMappings.put(texture.getKey(), new TextureMapping(ordinal, texture));
                 }
             }
         } catch (JsonParseException ex) {
