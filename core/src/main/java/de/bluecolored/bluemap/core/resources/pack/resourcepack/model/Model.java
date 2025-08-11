@@ -44,7 +44,7 @@ public class Model {
     private @Nullable ResourcePath<Model> parent;
     private Map<String, TextureVariable> textures = new HashMap<>();
     private Element @Nullable [] elements;
-    private boolean ambientocclusion = true;
+    @Getter(AccessLevel.NONE) private Boolean ambientocclusion;
 
     private transient boolean culling = false;
     private transient boolean occluding = false;
@@ -101,6 +101,10 @@ public class Model {
         if (parent != null) {
             parent.applyParent(modelPool);
 
+            if (this.ambientocclusion == null && parent.ambientocclusion != null) {
+                this.ambientocclusion = parent.ambientocclusion;
+            }
+
             parent.textures.forEach(this::applyTextureVariable);
             if (this.elements == null && parent.elements != null) {
                 this.elements = new Element[parent.elements.length];
@@ -148,6 +152,11 @@ public class Model {
                 break;
             }
         }
+    }
+
+    public boolean isAmbientocclusion() {
+        if (ambientocclusion == null) return true;
+        return ambientocclusion;
     }
 
 }
