@@ -24,20 +24,30 @@
  */
 package de.bluecolored.bluemap.common.addons;
 
-import lombok.Getter;
+import java.util.Arrays;
+import java.util.Objects;
 
-import java.nio.file.Path;
+public class CombinedClassLoader extends ClassLoader {
 
-@Getter
-public class LoadedAddon extends Addon {
+    private final ClassLoader[] delegates;
 
-    private final ClassLoader classLoader;
-    private final Object instance;
-
-    public LoadedAddon(AddonInfo addonInfo, Path jarFile, ClassLoader classLoader, Object instance) {
-        super(addonInfo, jarFile);
-        this.classLoader = classLoader;
-        this.instance = instance;
+    public CombinedClassLoader(ClassLoader parent, ClassLoader... delegates) {
+        super(parent);
+        if (delegates.length == 0) throw new IllegalArgumentException("No parent classloaders provided");
+        if (Arrays.stream(delegates).anyMatch(Objects::isNull)) throw new IllegalArgumentException("Parent classloaders can not be null");
+        this.delegates = delegates;
     }
 
+    @Override
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
+        for (ClassLoader parent : delegates) {
+            try {
+                return parent.loadClass(name);
+            } catch (ClassNotFoundException ignore) {
+                // ignore ClassNotFoundException thrown if class not found in parent
+            }
+        }
+
+        throw new ClassNotFoundException(name);
+    }
 }

@@ -28,7 +28,7 @@ import de.bluecolored.bluemap.api.gson.MarkerGson;
 import de.bluecolored.bluemap.common.BlueMapConfiguration;
 import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.MissingResourcesException;
-import de.bluecolored.bluemap.common.addons.Addons;
+import de.bluecolored.bluemap.common.addons.AddonLoader;
 import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.commands.TextFormat;
 import de.bluecolored.bluemap.common.config.*;
@@ -363,7 +363,7 @@ public class BlueMapCLI {
             // load addons
             Path packsFolder = cli.configFolder.resolve("packs");
             Files.createDirectories(packsFolder);
-            Addons.tryLoadAddons(packsFolder);
+            AddonLoader.INSTANCE.tryLoadAddons(packsFolder);
 
             // load configs
             BlueMapConfigManager configs = BlueMapConfigManager.builder()
@@ -449,11 +449,7 @@ public class BlueMapCLI {
             BlueMapCLI.printHelp();
             System.exit(1);
         } catch (ConfigurationException e) {
-            Logger.global.logWarning(e.getFormattedExplanation());
-            Throwable cause = e.getRootCause();
-            if (cause != null) {
-                Logger.global.logError("Detailed error:", e);
-            }
+            e.printLog(Logger.global);
         } catch (IOException e) {
             Logger.global.logError("An IO-error occurred!", e);
             System.exit(1);

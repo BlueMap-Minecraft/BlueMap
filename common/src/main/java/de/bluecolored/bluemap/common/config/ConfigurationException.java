@@ -24,6 +24,8 @@
  */
 package de.bluecolored.bluemap.common.config;
 
+import de.bluecolored.bluemap.core.logger.Logger;
+
 public class ConfigurationException extends Exception {
 
     private static final String FORMATTING_BAR = "################################";
@@ -51,12 +53,10 @@ public class ConfigurationException extends Exception {
     }
 
     public Throwable getRootCause() {
-        Throwable cause = getCause();
-        if (cause instanceof ConfigurationException) {
-            return ((ConfigurationException) cause).getRootCause();
-        } else {
-            return cause;
-        }
+        Throwable cause;
+        do { cause = getCause(); }
+        while (cause instanceof ConfigurationException);
+        return cause;
     }
 
     public String getExplanation() {
@@ -82,6 +82,13 @@ public class ConfigurationException extends Exception {
                "\n There is a problem with your BlueMap setup!\n" +
                indentedExplanation +
                "\n" + FORMATTING_BAR;
+    }
+
+    public void printLog(Logger logger) {
+        logger.logWarning(getFormattedExplanation());
+        Throwable cause = getRootCause();
+        if (cause != null)
+            logger.logError("Detailed error:", this);
     }
 
 }

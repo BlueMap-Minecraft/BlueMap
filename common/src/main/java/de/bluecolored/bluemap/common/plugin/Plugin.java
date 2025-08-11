@@ -28,7 +28,7 @@ import de.bluecolored.bluemap.common.BlueMapConfiguration;
 import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.InterruptableReentrantLock;
 import de.bluecolored.bluemap.common.MissingResourcesException;
-import de.bluecolored.bluemap.common.addons.Addons;
+import de.bluecolored.bluemap.common.addons.AddonLoader;
 import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.config.*;
 import de.bluecolored.bluemap.common.debug.StateDumper;
@@ -126,7 +126,7 @@ public class Plugin implements ServerEventListener {
                 //load addons
                 Path packsFolder = serverInterface.getConfigFolder().resolve("packs");
                 Files.createDirectories(packsFolder);
-                Addons.tryLoadAddons(packsFolder);
+                AddonLoader.INSTANCE.tryLoadAddons(packsFolder);
 
                 //load configs
                 BlueMapConfigManager configManager = BlueMapConfigManager.builder()
