@@ -25,19 +25,15 @@
 package de.bluecolored.bluemap.common.addons;
 
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.nio.file.Path;
 
+@RequiredArgsConstructor
 @Getter
-public class LoadedAddon extends Addon {
+public class Addon {
 
-    private final ClassLoader classLoader;
-    private final Object instance;
-
-    public LoadedAddon(AddonInfo addonInfo, Path jarFile, ClassLoader classLoader, Object instance) {
-        super(addonInfo, jarFile);
-        this.classLoader = classLoader;
-        this.instance = instance;
-    }
+    private final AddonInfo addonInfo;
+    private final Path jarFile;
 
 }
