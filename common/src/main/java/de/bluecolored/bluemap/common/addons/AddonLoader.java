@@ -64,7 +64,13 @@ public final class AddonLoader {
                         .findAny()
                         .orElse(null);
                 if (addonToRemove == null) break;
-                availableAddons.remove(addonToRemove.getAddonInfo().getId());
+                String id = addonToRemove.getAddonInfo().getId();
+                availableAddons.remove(id);
+                new ConfigurationException("Missing required dependencies %s to load addon '%s' (%s)".formatted(
+                        Arrays.toString(addonToRemove.getAddonInfo().getDependencies().toArray(String[]::new)),
+                        id,
+                        addonToRemove.getJarFile()
+                )).printLog(Logger.global);
             }
 
             // topography sort and load addons based on their dependencies
