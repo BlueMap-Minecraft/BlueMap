@@ -202,7 +202,7 @@ export class BlueMapApp {
         let player = this.mapViewer.controlsManager.controls?.data.followingPlayer;
 
         if (this.mapViewer.map && player) {
-            if (player.foreign){
+            if (player.foreign || player.outOfBounds) {
 
                 let matchingMap = await this.findPlayerMap(player.playerUuid)
                 if (matchingMap) {
@@ -228,10 +228,20 @@ export class BlueMapApp {
             for (let map of this.maps) {
                 let playerData = await this.loadPlayerData(map);
                 if (!Array.isArray(playerData.players)) continue;
+                const [minX, maxX] = map.data?.bounds?.x ?? [];
+                const [minY, maxY] = map.data?.bounds?.y ?? [];
+                const [minZ, maxZ] = map.data?.bounds?.z ?? [];
                 for (let p of playerData.players) {
                     if (p.uuid === playerUuid && !p.foreign) {
-                        matchingMap = map;
-                        break;
+                        const pos = p.position || {};
+                        const { x, y, z } = pos;
+                        // if any coordinate is missing or within its respective map bounds, consider it in bounds
+                        if ((x == null || ((minX == null || x >= minX) && (maxX == null || x <= maxX))) &&
+                            (y == null || ((minY == null || y >= minY) && (maxY == null || y <= maxY))) &&
+                            (z == null || ((minZ == null || z >= minZ) && (maxZ == null || z <= maxZ)))) {
+                            matchingMap = map;
+                            break;
+                      }
                     }
                 }
 
