@@ -145,6 +145,7 @@ public final class AddonLoader {
         AddonInfo addonInfo = addon.getAddonInfo();
         Path jarFile = addon.getJarFile();
 
+        if (loadedAddons.containsKey(addonInfo.getId())) return;
         Logger.global.logInfo("Loading BlueMap Addon: %s (%s)".formatted(addonInfo.getId(), jarFile));
 
         try {
