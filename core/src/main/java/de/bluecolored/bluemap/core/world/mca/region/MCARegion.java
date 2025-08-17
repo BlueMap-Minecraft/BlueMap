@@ -93,7 +93,7 @@ public class MCARegion<T> implements Region<T> {
             offset *= 4096;
             int size = (header[3] & 0xFF) * 4096;
 
-            if (size == 0) return chunkLoader.emptyChunk();
+            if (size <= 0) return chunkLoader.emptyChunk();
 
             byte[] chunkDataBuffer = new byte[size];
 
@@ -127,7 +127,7 @@ public class MCARegion<T> implements Region<T> {
                     int xzChunk = (z & 0b11111) << 5 | (x & 0b11111);
 
                     int size = (header[xzChunk * 4 + 3] & 0xFF) * 4096;
-                    if (size == 0) continue;
+                    if (size <= 0) continue;
 
                     int chunkX = chunkStartX + x;
                     int chunkZ = chunkStartZ + z;
