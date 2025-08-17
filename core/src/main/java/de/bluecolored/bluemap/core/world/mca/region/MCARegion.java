@@ -101,6 +101,8 @@ public class MCARegion<T> implements Region<T> {
             readFully(channel, chunkDataBuffer, 0, size);
 
             return loadChunk(chunkDataBuffer, size);
+        } catch (IOException | RuntimeException ex) {
+            throw new IOException("Exception trying to read chunk (%d,%d) from region '%s'".formatted(chunkX, chunkZ, regionFile), ex);
         }
     }
 
@@ -164,6 +166,8 @@ public class MCARegion<T> implements Region<T> {
                     }
                 }
             }
+        } catch (IOException | RuntimeException ex) {
+            throw new IOException("Exception trying to iterate chunks in region '%s'".formatted(regionFile), ex);
         }
     }
 
