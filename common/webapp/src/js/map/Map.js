@@ -65,6 +65,11 @@ export class Map {
 			texturesUrl: mapDataRoot + "/textures.json",
 			name: id,
 			startPos: {x: 0, z: 0},
+			bounds: {
+				x: null,
+				y: null,
+				z: null
+			},
 			skyColor: new Color(),
 			voidColor: new Color(0, 0, 0),
 			ambientLight: 0,
@@ -168,6 +173,16 @@ export class Map {
 				this.data.sorting = Number.isInteger(worldSettings.sorting) ? worldSettings.sorting : this.data.sorting;
 
 				this.data.startPos = {...this.data.startPos, ...vecArrToObj(worldSettings.startPos, true)};
+
+				if (worldSettings.bounds) {
+					const currentBounds = this.data.bounds;
+					['x', 'y', 'z'].forEach(coordinate => {
+						const boundsRange = worldSettings.bounds[coordinate];
+						if (Array.isArray(boundsRange) && boundsRange.length === 2) {
+							currentBounds[coordinate] = [...boundsRange];
+						}
+					});
+				}
 
 				if (worldSettings.skyColor && worldSettings.skyColor.length >= 3) {
 					this.data.skyColor.setRGB(

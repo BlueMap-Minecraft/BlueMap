@@ -75,7 +75,7 @@ export default {
 
       if (this.marker.type === "player") {
 
-        if (this.marker.foreign) {
+        if (this.marker.foreign || this.marker.outOfBounds) {
           let matchingMap = await this.$bluemap.findPlayerMap(this.marker.playerUuid);
           if (!matchingMap) return;
 
