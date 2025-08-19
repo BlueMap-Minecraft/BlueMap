@@ -57,7 +57,7 @@ public class EventForwarder implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
     public synchronized void onPlayerLeave(PlayerQuitEvent evt) {
-        for (ServerEventListener listener : listeners) listener.onPlayerJoin(evt.getPlayer().getUniqueId());
+        for (ServerEventListener listener : listeners) listener.onPlayerLeave(evt.getPlayer().getUniqueId());
     }
 
 }
