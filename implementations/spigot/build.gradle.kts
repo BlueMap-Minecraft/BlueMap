@@ -66,6 +66,6 @@ tasks.processResources {
 }
 
 modrinth {
-    loaders.addAll("spigot", "paper", "purpur")
+    loaders.addAll("spigot")
     gameVersions.addAll(supportedMinecraftVersions)
 }
