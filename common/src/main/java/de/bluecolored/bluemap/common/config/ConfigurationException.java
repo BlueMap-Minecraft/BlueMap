@@ -79,7 +79,7 @@ public class ConfigurationException extends Exception {
     public String getFormattedExplanation() {
         String indentedExplanation = " " + getFullExplanation().replace("\n", "\n ");
         return "\n" + FORMATTING_BAR +
-               "\n There is a problem with your BlueMap setup!\n" +
+               "\n There is a problem with your BlueMap setup!\n\n" +
                indentedExplanation +
                "\n" + FORMATTING_BAR;
     }

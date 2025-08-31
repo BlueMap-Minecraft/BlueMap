@@ -310,9 +310,15 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
                             "To resolve this issue, rename this file to something else.");
                 }
 
-                MapConfig mapConfig = configManager.loadConfig(configFile, MapConfig.class);
-                mapConfig.checkLegacy();
-                mapConfigs.put(id, mapConfig);
+                try {
+                    MapConfig mapConfig = configManager.loadConfig(configFile, MapConfig.class);
+                    mapConfig.checkLegacy();
+                    mapConfigs.put(id, mapConfig);
+                } catch (ConfigurationException ex) {
+                    throw new ConfigurationException("Failed to load map-config:\n" +
+                            configFile.toAbsolutePath().normalize(),
+                            ex);
+                }
             }
         } catch (IOException ex) {
             throw new ConfigurationException("BlueMap failed to read your map configuration from\n" +
