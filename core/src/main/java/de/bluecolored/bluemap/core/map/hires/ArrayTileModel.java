@@ -205,6 +205,17 @@ public class ArrayTileModel implements TileModel {
         position[index + 6 + 1] = y;
         position[index + 6 + 2] = z;
 
+        // swap first and last uvs
+        index = face * FI_UV;
+        x = uv[index    ];
+        y = uv[index + 1];
+
+        uv[index    ] = uv[index + 4    ];
+        uv[index + 1] = uv[index + 4 + 1];
+
+        uv[index + 4    ] = x;
+        uv[index + 4 + 1] = y;
+
         return this;
     }
 
