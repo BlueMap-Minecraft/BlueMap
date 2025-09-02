@@ -96,6 +96,11 @@ public class VoidTileModel implements TileModel {
     }
 
     @Override
+    public TileModel invertOrientation(int face) {
+        return this;
+    }
+
+    @Override
     public TileModel rotate(
             int start, int count,
             float angle,
@@ -164,6 +169,11 @@ public class VoidTileModel implements TileModel {
             float m20, float m21, float m22, float m23,
             float m30, float m31, float m32, float m33
     ) {
+        return this;
+    }
+
+    @Override
+    public TileModel invertOrientation(int start, int count) {
         return this;
     }
 

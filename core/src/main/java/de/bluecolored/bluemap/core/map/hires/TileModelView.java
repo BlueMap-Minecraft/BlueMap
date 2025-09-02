@@ -138,6 +138,11 @@ public class TileModelView {
         return this;
     }
 
+    public TileModelView invertOrientation() {
+        tileModel.invertOrientation(start, size);
+        return this;
+    }
+
     public TileModel getTileModel() {
         return tileModel;
     }
