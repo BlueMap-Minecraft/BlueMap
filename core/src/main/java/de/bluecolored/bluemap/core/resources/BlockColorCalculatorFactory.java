@@ -25,8 +25,13 @@
 package de.bluecolored.bluemap.core.resources;
 
 import com.flowpowered.math.GenericMath;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.gson.stream.JsonReader;
+import de.bluecolored.bluemap.core.BlueMap;
+import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.math.Color;
+import de.bluecolored.bluemap.core.world.BlockProperties;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.biome.Biome;
 import de.bluecolored.bluemap.core.world.block.BlockAccess;
@@ -37,8 +42,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 public class BlockColorCalculatorFactory {
 
@@ -52,14 +58,22 @@ public class BlockColorCalculatorFactory {
             BLEND_MIN_Z = - BLEND_RADIUS_H,
             BLEND_MAX_Z =   BLEND_RADIUS_H;
 
+    private static final ColorFunction DEFAULT_COLOR_FUNCTION =
+            (c, b, target) -> target.set(0xffffffff);
+
     private int[] foliageMap = new int[0];
     private int[] dryFoliageMap = new int[0];
     private int[] grassMap = new int[0];
 
-    private final Map<String, ColorFunction> blockColorMap;
+    private final Map<Key, List<BlockStateMapping<ColorFunction>>> mappings;
+    private final LoadingCache<BlockState, ColorFunction> colorFunctionCache = Caffeine.newBuilder()
+            .executor(BlueMap.THREAD_POOL)
+            .maximumSize(10000)
+            .expireAfterAccess(1, TimeUnit.MINUTES)
+            .build(this::findColorFunction);
 
     public BlockColorCalculatorFactory() {
-        this.blockColorMap = new HashMap<>();
+        this.mappings = new ConcurrentHashMap<>();
     }
 
     public void load(Path configFile) throws IOException {
@@ -70,7 +84,7 @@ public class BlockColorCalculatorFactory {
             json.beginObject();
             while (json.hasNext()) {
 
-                String key = json.nextName();
+                BlockState key = BlockState.fromString(json.nextName());
                 String value = json.nextString();
 
                 ColorFunction colorFunction;
@@ -97,8 +111,10 @@ public class BlockColorCalculatorFactory {
                         break;
                 }
 
+                BlockStateMapping<ColorFunction> mapping = new BlockStateMapping<>(key, colorFunction);
+
                 // don't overwrite already present values, higher priority resources are loaded first
-                blockColorMap.putIfAbsent(key, colorFunction);
+                mappings.computeIfAbsent(key.getId(), k -> new LinkedList<>()).add(mapping);
             }
 
             json.endObject();
@@ -118,6 +134,19 @@ public class BlockColorCalculatorFactory {
     public void setGrassMap(BufferedImage map) {
         this.grassMap = new int[65536];
         map.getRGB(0, 0, 256, 256, this.grassMap, 0, 256);
+    }
+
+    private ColorFunction getColorFunction(BlockState blockState) {
+        return colorFunctionCache.get(blockState);
+    }
+
+    private ColorFunction findColorFunction(BlockState blockState) {
+        for (BlockStateMapping<ColorFunction> bm : mappings.getOrDefault(blockState.getId(), Collections.emptyList())){
+            if (bm.fitsTo(blockState)){
+                return bm.getMapping();
+            }
+        }
+        return DEFAULT_COLOR_FUNCTION;
     }
 
     public BlockColorCalculator createCalculator() {
@@ -140,13 +169,7 @@ public class BlockColorCalculatorFactory {
 
         @SuppressWarnings("UnusedReturnValue")
         public Color getBlockColor(BlockNeighborhood block, BlockState blockState, Color target) {
-            String blockId = blockState.getId().getFormatted();
-
-            ColorFunction colorFunction = blockColorMap.get(blockId);
-            if (colorFunction == null) colorFunction = blockColorMap.get("default");
-            if (colorFunction == null) colorFunction = BlockColorCalculator::getBlendedFoliageColor;
-
-            return colorFunction.invoke(this, block, target);
+            return getColorFunction(blockState).invoke(this, block, target);
         }
 
         public Color getRedstoneColor(BlockAccess block, Color target) {
