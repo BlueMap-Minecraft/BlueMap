@@ -105,12 +105,12 @@ public class Element {
                     to.getX(), to.getZ()
             );
             case NORTH, SOUTH -> new Vector4f(
-                    from.getX(), from.getY(),
-                    to.getX(), to.getY()
+                    from.getX(), 16 - to.getY(),
+                    to.getX(), 16 - from.getY()
             );
             case WEST, EAST -> new Vector4f(
-                    from.getZ(), from.getY(),
-                    to.getZ(), to.getY()
+                    from.getZ(), 16 - to.getY(),
+                    to.getZ(), 16 - from.getY()
             );
         };
     }
