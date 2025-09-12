@@ -46,6 +46,7 @@ public interface EntityRendererType extends Keyed, EntityRendererFactory {
     EntityRendererType FOX = new Impl(Key.minecraft("fox"), FoxRenderer::new);
     EntityRendererType PIG = new Impl(Key.minecraft("pig"), PigRenderer::new);
     EntityRendererType TROPICAL_FISH = new Impl(Key.minecraft("tropical_fish"), TropicalFishRenderer::new);
+    EntityRendererType ZOMBIE = new Impl(Key.minecraft("zombie"), ZombieRenderer::new);
 
     Registry<EntityRendererType> REGISTRY = new Registry<>(
             DEFAULT,
@@ -57,7 +58,8 @@ public interface EntityRendererType extends Keyed, EntityRendererFactory {
             CHICKEN,
             FOX,
             PIG,
-            TROPICAL_FISH
+            TROPICAL_FISH,
+            ZOMBIE
     );
 
     /**
