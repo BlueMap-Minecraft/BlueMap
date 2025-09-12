@@ -30,9 +30,11 @@ import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
-import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
+import de.bluecolored.bluemap.core.resources.adapter.AbstractTypeAdapterFactory;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -41,6 +43,8 @@ import java.util.List;
 
 @Getter
 @JsonAdapter(AnimationMeta.Adapter.class)
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor
 public class AnimationMeta {
 
     private boolean interpolate = false;

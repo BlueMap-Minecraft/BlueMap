@@ -26,22 +26,27 @@ package de.bluecolored.bluemap.core.resources.pack.resourcepack.texture;
 
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.util.BufferedImageUtil;
+import de.bluecolored.bluemap.core.util.Keyed;
 import de.bluecolored.bluemap.core.util.math.Color;
 import org.jetbrains.annotations.Nullable;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.lang.ref.SoftReference;
 import java.util.Base64;
 
-public class Texture {
+public class Texture implements Keyed {
 
+    private static final String TEXTURE_STRING_PREFIX = "data:image/png;base64,";
     public static final Texture MISSING = new Texture(
             new ResourcePath<>("bluemap", "missing"),
             new Color().set(0.5f, 0f, 0.5f, 1.0f, false),
             false,
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAPklEQVR4Xu3MsQkAMAwDQe2/tFPnBB4gpLhG8MpkZpNkZ6AKZKAKZKAKZKAKZKAKZKAKZKAKWg0XD/UPnjg4MbX+EDdeTUwAAAAASUVORK5CYII\u003d",
+            null,
             null
     );
 
@@ -51,17 +56,22 @@ public class Texture {
     private String texture;
     @Nullable private AnimationMeta animation;
 
-    private transient Color colorPremultiplied;
+    private transient @Nullable Color colorPremultiplied;
+    private transient SoftReference<BufferedImage> textureImage = new SoftReference<>(null);
 
     @SuppressWarnings("unused")
     private Texture() {}
 
-    private Texture(ResourcePath<Texture> resourcePath, Color color, boolean halfTransparent, String texture, @Nullable AnimationMeta animation) {
+    private Texture(
+            ResourcePath<Texture> resourcePath, Color color, boolean halfTransparent,
+            String texture, @Nullable AnimationMeta animation, @Nullable BufferedImage textureImage
+    ) {
         this.resourcePath = resourcePath;
         this.color = color.straight();
         this.halfTransparent = halfTransparent;
         this.texture = texture;
         this.animation = animation;
+        this.textureImage = new SoftReference<>(textureImage);
     }
 
     private Texture(ResourcePath<Texture> resourcePath) {
@@ -72,7 +82,7 @@ public class Texture {
         this.animation = null;
     }
 
-    public ResourcePath<Texture> getResourcePath() {
+    public ResourcePath<Texture> getKey() {
         return resourcePath;
     }
 
@@ -98,6 +108,23 @@ public class Texture {
         return texture;
     }
 
+    public BufferedImage getTextureImage() throws IOException {
+        BufferedImage image = textureImage.get();
+        if (image != null) return image;
+
+        if (!texture.startsWith(TEXTURE_STRING_PREFIX))
+            throw new IOException("Texture-string is not in the expected format.");
+        byte[] imageData = Base64.getDecoder().decode(texture.substring(TEXTURE_STRING_PREFIX.length()));
+        image = ImageIO.read(new ByteArrayInputStream(imageData));
+
+        textureImage = new SoftReference<>(image);
+        return image;
+    }
+
+    public @Nullable AnimationMeta getAnimation() {
+        return animation;
+    }
+
     public static Texture from(ResourcePath<Texture> resourcePath, BufferedImage image) throws IOException {
         return from(resourcePath, image, null);
     }
@@ -105,7 +132,7 @@ public class Texture {
     public static Texture from(ResourcePath<Texture> resourcePath, BufferedImage image, @Nullable AnimationMeta animation) throws IOException {
 
         //check halfTransparency
-        boolean halfTransparent = checkHalfTransparent(image);
+        boolean halfTransparent = BufferedImageUtil.halfTransparent(image);
 
         //calculate color
         Color color = BufferedImageUtil.averageColor(image);
@@ -113,23 +140,9 @@ public class Texture {
         //write to Base64
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         ImageIO.write(image, "png", os);
-        String base64 = "data:image/png;base64," + Base64.getEncoder().encodeToString(os.toByteArray());
+        String base64 = TEXTURE_STRING_PREFIX + Base64.getEncoder().encodeToString(os.toByteArray());
 
-        return new Texture(resourcePath, color, halfTransparent, base64, animation);
-    }
-
-    private static boolean checkHalfTransparent(BufferedImage image){
-        for (int x = 0; x < image.getWidth(); x++){
-            for (int y = 0; y < image.getHeight(); y++){
-                int pixel = image.getRGB(x, y);
-                int alpha = (pixel >> 24) & 0xff;
-                if (alpha > 0x00 && alpha < 0xff){
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return new Texture(resourcePath, color, halfTransparent, base64, animation, image);
     }
 
     public static Texture missing(ResourcePath<Texture> resourcePath) {

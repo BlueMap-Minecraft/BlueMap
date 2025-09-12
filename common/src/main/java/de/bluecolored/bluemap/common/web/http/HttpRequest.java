@@ -28,6 +28,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.util.*;
@@ -48,11 +50,12 @@ public class HttpRequest {
 
     // request data
     private final InetAddress source;
-    private String method, address, version;
+    private URI address;
+    private String method, version;
     private final Map<String, HttpHeader> headers = new HashMap<>();
     private byte[] data;
 
-    // lazy parsed
+    // these values can be overwritten separately by a HttpRequestHandler for delegation
     private String path = null;
     private String getParamString = null;
     private Map<String, String> getParams = null;
@@ -131,8 +134,13 @@ public class HttpRequest {
         method = m.group(1);
         if (method == null) throw new IOException("Invalid HTTP Request: Request-Pattern not matching (method)");
 
-        address = m.group(2);
-        if (address == null) throw new IOException("Invalid HTTP Request: Request-Pattern not matching (address)");
+        String addressString = m.group(2);
+        if (addressString == null) throw new IOException("Invalid HTTP Request: Request-Pattern not matching (address)");
+        try {
+            address = new URI(addressString);
+        } catch (URISyntaxException ex) {
+            throw new IOException("Invalid HTTP Request: Request-URI is invalid", ex);
+        }
 
         version = m.group(3);
         if (version == null) throw new IOException("Invalid HTTP Request: Request-Pattern not matching (version)");
@@ -169,11 +177,11 @@ public class HttpRequest {
         this.method = method;
     }
 
-    public String getAddress() {
+    public URI getAddress() {
         return address;
     }
 
-    public void setAddress(String address) {
+    public void setAddress(URI address) {
         this.address = address;
         this.path = null;
         this.getParams = null;
@@ -235,12 +243,8 @@ public class HttpRequest {
     }
 
     private void parseAddress() {
-        String address = this.getAddress();
-        if (address.isEmpty()) address = "/";
-        String[] addressParts = address.split("\\?", 2);
-        String path = addressParts[0];
-        this.getParamString = addressParts.length > 1 ? addressParts[1] : "";
-        this.path = path;
+        this.path = address.getPath();
+        this.getParamString = address.getQuery();
     }
 
     private void parseGetParams() {

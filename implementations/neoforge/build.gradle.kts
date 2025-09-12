@@ -6,12 +6,11 @@ plugins {
 }
 
 val supportedMinecraftVersions = listOf(
-    "1.21", "1.21.1", "1.21.2", "1.21.3", "1.21.4", "1.21.5"
+    "1.21.6", "1.21.7", "1.21.8"
 )
 
 val minecraftVersion = supportedMinecraftVersions.first()
-val neoVersion = "21.0.0-beta"
-val loaderVersion = "4"
+val neoVersion = "21.6.11-beta"
 
 val shadowInclude: Configuration by configurations.creating
 configurations.api.get().extendsFrom(shadowInclude)
@@ -77,7 +76,6 @@ tasks.withType(ProcessResources::class).configureEach {
         "version" to project.version,
         "minecraft_version" to minecraftVersion,
         "neo_version" to neoVersion,
-        "loader_version" to loaderVersion,
     )
     inputs.properties(replacements)
     filesMatching(listOf(
@@ -91,6 +89,8 @@ val mergeShadowAndJarJar = tasks.create<Jar>("mergeShadowAndJarJar") {
     from (
         zipTree( tasks.shadowJar.map { it.outputs.files.singleFile } ),
         tasks.jarJar.map { it.outputs.files }
+    ).exclude(
+        "META-INF/services/net.kyori.adventure*" // not correctly relocated and not needed -> exclude
     )
     archiveFileName = "${project.name}-${project.version}-merged.jar"
 }
@@ -108,6 +108,7 @@ modrinth {
 curseforgeBlueMap {
     addGameVersion("NeoForge")
     addGameVersion("Java ${java.toolchain.languageVersion.get()}")
+    //addGameVersion("Server")
     supportedMinecraftVersions.forEach {
         addGameVersion(it)
     }

@@ -22,15 +22,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.resources.pack.resourcepack;
+package de.bluecolored.bluemap.common.addons;
 
-import de.bluecolored.bluemap.core.util.Keyed;
-import de.bluecolored.bluemap.core.util.Registry;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-public interface ResourcePackExtensionType<T extends ResourcePackExtension> extends Keyed {
+import java.nio.file.Path;
 
-    Registry<ResourcePackExtensionType<?>> REGISTRY = new Registry<>();
+@RequiredArgsConstructor
+@Getter
+public class Addon {
 
-    T create();
+    private final AddonInfo addonInfo;
+    private final Path jarFile;
 
 }

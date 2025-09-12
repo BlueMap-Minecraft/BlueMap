@@ -24,6 +24,8 @@
  */
 package de.bluecolored.bluemap.common.config;
 
+import de.bluecolored.bluemap.core.logger.Logger;
+
 public class ConfigurationException extends Exception {
 
     private static final String FORMATTING_BAR = "################################";
@@ -51,12 +53,10 @@ public class ConfigurationException extends Exception {
     }
 
     public Throwable getRootCause() {
-        Throwable cause = getCause();
-        if (cause instanceof ConfigurationException) {
-            return ((ConfigurationException) cause).getRootCause();
-        } else {
-            return cause;
-        }
+        Throwable cause;
+        do { cause = getCause(); }
+        while (cause instanceof ConfigurationException);
+        return cause;
     }
 
     public String getExplanation() {
@@ -65,7 +65,11 @@ public class ConfigurationException extends Exception {
 
     public String getFullExplanation() {
         Throwable cause = getCause();
-        if (cause instanceof ConfigurationException) {
+        while (cause != null && !(cause instanceof ConfigurationException)) {
+            cause = cause.getCause();
+        }
+
+        if (cause != null) {
             return getExplanation() + "\n\n" + ((ConfigurationException) cause).getFullExplanation();
         } else {
             return getExplanation();
@@ -75,9 +79,16 @@ public class ConfigurationException extends Exception {
     public String getFormattedExplanation() {
         String indentedExplanation = " " + getFullExplanation().replace("\n", "\n ");
         return "\n" + FORMATTING_BAR +
-               "\n There is a problem with your BlueMap setup!\n" +
+               "\n There is a problem with your BlueMap setup!\n\n" +
                indentedExplanation +
                "\n" + FORMATTING_BAR;
+    }
+
+    public void printLog(Logger logger) {
+        logger.logWarning(getFormattedExplanation());
+        Throwable cause = getRootCause();
+        if (cause != null)
+            logger.logError("Detailed error:", this);
     }
 
 }

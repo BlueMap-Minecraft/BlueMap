@@ -101,7 +101,7 @@ public class BmMap {
 
         Logger.global.logDebug("Loading textures for map '" + id + "'");
         this.textureGallery = loadTextureGallery();
-        this.textureGallery.put(resourcePack);
+        this.textureGallery.put(resourcePack.getTextures());
         saveTextureGallery();
 
         this.hiresModelManager = new HiresModelManager(
@@ -197,7 +197,7 @@ public class BmMap {
 
     public synchronized void resetTextureGallery() {
         this.textureGallery.clear();
-        this.textureGallery.put(this.resourcePack);
+        this.textureGallery.put(this.resourcePack.getTextures());
     }
 
     private void saveMapSettings() {

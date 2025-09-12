@@ -32,6 +32,18 @@ import java.awt.image.RenderedImage;
 
 public class BufferedImageUtil {
 
+    public static boolean halfTransparent(BufferedImage image){
+        Color color = new Color();
+        float[] buffer = null;
+        for (int x = 0; x < image.getWidth(); x++){
+            for (int y = 0; y < image.getHeight(); y++){
+                buffer = readPixel(image, x, y, color, buffer);
+                if (color.a > 0f && color.a < 1f) return true;
+            }
+        }
+        return false;
+    }
+
     public static Color averageColor(BufferedImage image) {
         Color average = new Color();
         Color color = new Color();
@@ -58,7 +70,7 @@ public class BufferedImageUtil {
         if (target == null) target = new Color();
 
         // workaround for java bug: 5051418
-        if (image.getType() == BufferedImage.TYPE_BYTE_GRAY) {
+        if (image.getType() == BufferedImage.TYPE_BYTE_GRAY ||  image.getType() == BufferedImage.TYPE_CUSTOM) {
             buffer = readPixelDirect(image, x, y, target, buffer);
         } else {
             readPixelDefault(image, x, y, target);
@@ -74,10 +86,10 @@ public class BufferedImageUtil {
     private static float[] readPixelDirect(RenderedImage image, int x, int y, Color target, float @Nullable [] buffer) {
         buffer = image.getData().getPixel(x, y, buffer);
 
-        float a = buffer.length >= 4 ? buffer[3] / 255f : 1f;
         float r = buffer[0] / 255f;
         float g = buffer.length >= 3 ? buffer[1] / 255f : r;
         float b = buffer.length >= 3 ? buffer[2] / 255f : r;
+        float a = buffer.length >= 4 ? buffer[3] / 255f : buffer.length == 2 ? buffer[1] / 255f : 1f;
 
         target.set(r, g, b, a, image.getColorModel().isAlphaPremultiplied());
 

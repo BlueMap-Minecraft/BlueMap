@@ -24,11 +24,25 @@
  */
 package de.bluecolored.bluemap.core.util;
 
-import java.util.function.BooleanSupplier;
+import lombok.RequiredArgsConstructor;
 
+import java.util.function.BooleanSupplier;
+import java.util.function.Supplier;
+
+@RequiredArgsConstructor
 public enum Tristate {
 
-    TRUE (true),
+    TRUE (true) {
+        @Override
+        public Tristate and(Supplier<Tristate> other) {
+            return other.get();
+        }
+
+        @Override
+        public Tristate or(Supplier<Tristate> other) {
+            return this;
+        }
+    },
     UNDEFINED (false) {
         @Override
         public Tristate getOr(Tristate other) {
@@ -44,13 +58,36 @@ public enum Tristate {
         public boolean getOr(boolean defaultValue) {
             return defaultValue;
         }
+
+        @Override
+        public Tristate and(Supplier<Tristate> other) {
+            return other.get() == FALSE ? FALSE : this;
+        }
+
+        @Override
+        public Tristate or(Supplier<Tristate> other) {
+            return other.get() == TRUE ? TRUE : this;
+        }
     },
-    FALSE (false);
+    FALSE (false) {
+        @Override
+        public Tristate and(Supplier<Tristate> other) {
+            return this;
+        }
+
+        @Override
+        public Tristate or(Supplier<Tristate> other) {
+            return other.get();
+        }
+    };
 
     private final boolean value;
+    private Tristate negative;
 
-    Tristate(boolean value ) {
-        this.value = value;
+    static {
+        TRUE.negative = FALSE;
+        UNDEFINED.negative = UNDEFINED;
+        FALSE.negative = TRUE;
     }
 
     public Tristate getOr(Tristate other) {
@@ -65,8 +102,29 @@ public enum Tristate {
         return value;
     }
 
+    public Tristate negated() {
+        return negative;
+    }
+
+    public abstract Tristate and(Supplier<Tristate> other);
+
+    public abstract Tristate or(Supplier<Tristate> other);
+
+    public Tristate and(Tristate other) {
+        return this.and(() -> other);
+    }
+
+    public Tristate or(Tristate other) {
+        return this.or(() -> other);
+    }
+
     @Override
     public String toString() {
         return "Tristate." + name();
     }
+
+    public static Tristate valueOf(boolean value) {
+        return value ? TRUE : FALSE;
+    }
+
 }

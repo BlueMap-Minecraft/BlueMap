@@ -25,13 +25,20 @@
 package de.bluecolored.bluemap.core.resources.pack.resourcepack.model;
 
 import com.flowpowered.math.vector.Vector4f;
+import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.function.Function;
 
-@SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
+@SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal", "unused"})
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor
 @Getter
 public class Face {
 
@@ -43,8 +50,20 @@ public class Face {
     private int rotation = 0;
     private int tintindex = -1;
 
-    @SuppressWarnings("unused")
-    private Face() {}
+    public Face(TextureVariable texture) {
+        this.texture = texture;
+    }
+
+    public Face(Vector4f uv, TextureVariable texture) {
+        this.uv = uv;
+        this.texture = texture;
+    }
+
+    public Face(Vector4f uv, TextureVariable texture, Direction cullface) {
+        this.uv = uv;
+        this.texture = texture;
+        this.cullface = cullface;
+    }
 
     private Face(Face copyFrom) {
         this.uv = copyFrom.uv;
@@ -62,7 +81,7 @@ public class Face {
         return new Face(this);
     }
 
-    public void optimize(ResourcePack resourcePack) {
-        this.texture.optimize(resourcePack);
+    public void optimize(ResourcePool<Texture> texturePool) {
+        this.texture.optimize(texturePool);
     }
 }

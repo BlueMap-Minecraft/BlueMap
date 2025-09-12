@@ -27,13 +27,12 @@ package de.bluecolored.bluemap.core.resources.pack;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.util.Key;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.BufferedReader;
@@ -43,25 +42,23 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletionException;
 import java.util.stream.Stream;
 
 @RequiredArgsConstructor
 @Getter
 public abstract class Pack {
 
-    private final int packVersion;
+    private final PackVersion packVersion;
     private final @Nullable Set<Key> enabledFeatures;
 
-    public Pack(int packVersion) {
+    public Pack(PackVersion packVersion) {
         this(packVersion, null);
     }
 
     public abstract void loadResources(Iterable<Path> roots) throws IOException, InterruptedException;
 
-    protected void loadResourcePath(Path root, ResourcePack.PathLoader resourceLoader) throws IOException, InterruptedException {
+    public void loadResourcePath(Path root, Loader resourceLoader) throws IOException, InterruptedException {
         if (Thread.interrupted()) throw new InterruptedException();
         if (!Files.isDirectory(root)) {
             try (FileSystem fileSystem = FileSystems.newFileSystem(root, (ClassLoader) null)) {
@@ -140,7 +137,7 @@ public abstract class Pack {
         for (int i = overlays.length - 1; i >= 0; i--) {
             PackMeta.Overlay overlay = overlays[i];
             String dir = overlay.getDirectory();
-            if (dir != null && overlay.getFormats().includes(this.packVersion)) {
+            if (dir != null && overlay.includes(this.packVersion)) {
                 Path overlayRoot = root.resolve(dir);
                 if (Files.exists(overlayRoot)) {
                     try {
@@ -155,45 +152,20 @@ public abstract class Pack {
         resourceLoader.load(root);
     }
 
-    protected <T> void loadResource(Path root, Path file, int namespacePos, int valuePos, Loader<T> loader, Map<? super ResourcePath<T>, T> resultMap) {
-        try {
-            ResourcePath<T> resourcePath = new ResourcePath<>(root.relativize(file), namespacePos, valuePos);
-            if (resultMap.containsKey(resourcePath)) return; // don't load already present resources
-
-            T resource = loader.load(resourcePath);
-            if (resource == null) return; // don't load missing resources
-
-            resourcePath.setResource(resource);
-            resultMap.put(resourcePath, resource);
-        } catch (Exception ex) {
-            Logger.global.logDebug("Failed to parse resource-file '" + file + "': " + ex);
-        }
-    }
-
-    protected static Stream<Path> list(Path root) {
+    @SneakyThrows(IOException.class)
+    public static Stream<Path> list(Path root) {
         if (!Files.isDirectory(root)) return Stream.empty();
-        try {
-            return Files.list(root);
-        } catch (IOException ex) {
-            throw new CompletionException(ex);
-        }
+        return Files.list(root);
     }
 
-    protected static Stream<Path> walk(Path root) {
+    @SneakyThrows(IOException.class)
+    public static Stream<Path> walk(Path root) {
         if (!Files.exists(root)) return Stream.empty();
         if (Files.isRegularFile(root)) return Stream.of(root);
-        try {
-            return FileHelper.walk(root);
-        } catch (IOException ex) {
-            throw new CompletionException(ex);
-        }
+        return FileHelper.walk(root);
     }
 
-    protected interface Loader<T> {
-        T load(ResourcePath<T> resourcePath) throws IOException;
-    }
-
-    protected interface PathLoader {
+    public interface Loader {
         void load(Path root) throws IOException;
     }
 

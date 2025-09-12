@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.bukkit;
 
+import com.destroystokyo.paper.event.player.PlayerPostRespawnEvent;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluecommands.brigadier.BrigadierBridge;
@@ -234,6 +235,11 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
         synchronized (onlinePlayerList) {
             onlinePlayerList.removeIf(p -> p.getUuid().equals(playerUUID));
         }
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onPlayerRespawn(PlayerPostRespawnEvent evt) {
+        initPlayer(evt.getPlayer());
     }
 
     @Override

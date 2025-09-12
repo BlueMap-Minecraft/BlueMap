@@ -25,16 +25,28 @@
 package de.bluecolored.bluemap.common.config;
 
 import com.flowpowered.math.vector.Vector2i;
-import com.flowpowered.math.vector.Vector3i;
+import com.google.gson.FieldNamingPolicy;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParseException;
+import com.google.gson.reflect.TypeToken;
+import de.bluecolored.bluemap.api.gson.MarkerGson;
+import de.bluecolored.bluemap.api.markers.MarkerSet;
 import de.bluecolored.bluemap.core.map.MapSettings;
+import de.bluecolored.bluemap.core.map.mask.CombinedMask;
 import de.bluecolored.bluemap.core.util.Key;
 import lombok.AccessLevel;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
+import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.gson.GsonConfigurationLoader;
+import org.spongepowered.configurate.loader.HeaderMode;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
+import java.lang.reflect.Type;
 import java.nio.file.Path;
+import java.util.Map;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
 @ConfigSerializable
@@ -60,20 +72,13 @@ public class MapConfig implements MapSettings {
     private int caveDetectionOceanFloor = 10000;
     private boolean caveDetectionUsesBlockLight = false;
 
-    @Getter(AccessLevel.NONE) private int minX = Integer.MIN_VALUE;
-    @Getter(AccessLevel.NONE) private int maxX = Integer.MAX_VALUE;
-    @Getter(AccessLevel.NONE) private int minZ = Integer.MIN_VALUE;
-    @Getter(AccessLevel.NONE) private int maxZ = Integer.MAX_VALUE;
-    @Getter(AccessLevel.NONE) private int minY = Integer.MIN_VALUE;
-    @Getter(AccessLevel.NONE) private int maxY = Integer.MAX_VALUE;
-
-    private transient Vector3i min = null;
-    private transient Vector3i max = null;
+    private CombinedMask renderMask = new CombinedMask();
 
     private long minInhabitedTime = 0;
     private int minInhabitedTimeRadius = 0;
 
     private boolean renderEdges = true;
+    private int edgeLightStrength = 15;
 
     private boolean enablePerspectiveView = true;
     private boolean enableFlatView = true;
@@ -94,14 +99,43 @@ public class MapConfig implements MapSettings {
     private int lodCount = 3;
     private int lodFactor = 5;
 
-    public Vector3i getMinPos() {
-        if (min == null) min = new Vector3i(minX, minY, minZ);
-        return min;
+    /**
+     * parse marker-config by converting it first from hocon to json and then loading it with MarkerGson
+     */
+    public Map<String, MarkerSet> parseMarkerSets() throws ConfigurationException {
+        if (markerSets == null || markerSets.empty()) return Map.of();
+        try {
+            String markerJson = GsonConfigurationLoader.builder()
+                    .headerMode(HeaderMode.NONE)
+                    .lenient(false)
+                    .indent(0)
+                    .buildAndSaveString(markerSets);
+            Gson gson = MarkerGson.addAdapters(new GsonBuilder())
+                    .setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_DASHES)
+                    .create();
+            Type markerSetType = new TypeToken<Map<String, MarkerSet>>() {}.getType();
+            return gson.fromJson(markerJson, markerSetType);
+        } catch (ConfigurateException | JsonParseException ex) {
+            throw new ConfigurationException("Failed to parse marker-sets." +
+                    "Make sure your marker-configuration for this map is valid.", ex);
+        }
     }
 
-    public Vector3i getMaxPos() {
-        if (max == null) max = new Vector3i(maxX, maxY, maxZ);
-        return max;
+    // ## legacy check ##
+    @SuppressWarnings("unused")
+    @Getter(AccessLevel.NONE)
+    private Integer minX, maxX, minZ, maxZ, minY, maxY;
+    public void checkLegacy() throws ConfigurationException {
+        if (
+                minX != null || maxX != null ||
+                minZ != null || maxZ != null ||
+                minY != null || maxY != null
+        ) throw new ConfigurationException("""
+                Your map-configuration is outdated!
+                Looks like you updated BlueMap but did not follow the upgrade-instructions correctly.
+                To fix your config, make sure to follow all relevant upgrade-instructions from BlueMap's changelogs.
+                You can find them here: https://github.com/BlueMap-Minecraft/BlueMap/releases
+                """.trim());
     }
 
 }

@@ -30,13 +30,30 @@ import de.bluecolored.bluemap.core.util.MergeSort;
 import de.bluecolored.bluemap.core.util.math.MatrixM3f;
 import de.bluecolored.bluemap.core.util.math.MatrixM4f;
 
+import java.time.Duration;
+import java.time.Instant;
+
 public class ArrayTileModel implements TileModel {
-    private static final double GROW_MULTIPLIER = 1.5;
+    private static final float GROW_MULTIPLIER = 1.5f;
     private static final int MAX_CAPACITY = 1000000;
+
+    private static final float SHRINK_MULTIPLIER = 1 / GROW_MULTIPLIER;
+    private static final Duration SHRINK_TIME = Duration.ofMinutes(1);
 
     private static final InstancePool<ArrayTileModel> INSTANCE_POOL = new InstancePool<>(
             () -> new ArrayTileModel(100),
-            ArrayTileModel::clear
+            model -> {
+                Instant now = Instant.now();
+
+                if ((float) model.size / model.capacity > SHRINK_MULTIPLIER)
+                    model.lastCapacityUse = now;
+                else if (model.lastCapacityUse.plus(SHRINK_TIME).isBefore(now))
+                    return null; // drop model
+
+                model.clear();
+                return model;
+            },
+            SHRINK_TIME
     );
 
     // attributes         per-vertex * per-face
@@ -56,6 +73,8 @@ public class ArrayTileModel implements TileModel {
     float[] color, uv, ao;
     byte[] sunlight, blocklight;
     int[] materialIndex, materialIndexSort, materialIndexSortSupport;
+
+    private transient Instant lastCapacityUse = Instant.now();
 
     public ArrayTileModel(int initialCapacity) {
         if (initialCapacity < 0) throw new IllegalArgumentException("initialCapacity is negative");
@@ -164,6 +183,45 @@ public class ArrayTileModel implements TileModel {
     @Override
     public ArrayTileModel setMaterialIndex(int face, int m) {
         materialIndex[face * FI_MATERIAL_INDEX] = m;
+        return this;
+    }
+
+    public ArrayTileModel invertOrientation(int face) {
+        int index;
+        float x, y, z;
+
+        // swap first and last positions
+        index = face * FI_POSITION;
+
+        x = position[index    ];
+        y = position[index + 1];
+        z = position[index + 2];
+
+        position[index    ] = position[index + 6    ];
+        position[index + 1] = position[index + 6 + 1];
+        position[index + 2] = position[index + 6 + 2];
+
+        position[index + 6    ] = x;
+        position[index + 6 + 1] = y;
+        position[index + 6 + 2] = z;
+
+        // swap first and last uvs
+        index = face * FI_UV;
+        x = uv[index    ];
+        y = uv[index + 1];
+
+        uv[index    ] = uv[index + 4    ];
+        uv[index + 1] = uv[index + 4 + 1];
+
+        uv[index + 4    ] = x;
+        uv[index + 4 + 1] = y;
+
+        // swap first and last ao
+        index = face * FI_AO;
+        x = ao[index];
+        ao[index] = ao[index + 2];
+        ao[index + 2] = x;
+
         return this;
     }
 

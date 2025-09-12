@@ -35,7 +35,7 @@ uniform vec2 textureSize;
 
 varying vec3 vPosition;
 varying vec3 vWorldPosition;
-//varying float vDistance;
+varying float vDistance;
 
 float metaToHeight(vec4 meta) {
 	float heightUnsigned = meta.g * 65280.0 + meta.b * 255.0;
@@ -60,7 +60,7 @@ void main() {
 	vec4 viewPos = viewMatrix * worldPos;
 	
 	vWorldPosition = worldPos.xyz;
-	//vDistance = -viewPos.z;
+	vDistance = -viewPos.z;
 	
 	gl_Position = projectionMatrix * viewPos;
 		

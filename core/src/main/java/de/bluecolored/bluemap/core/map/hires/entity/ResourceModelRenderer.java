@@ -46,6 +46,8 @@ import de.bluecolored.bluemap.core.world.Entity;
 import de.bluecolored.bluemap.core.world.LightData;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 
+import java.util.function.Function;
+
 /**
  * This model builder creates a BlockStateModel using the information from parsed resource-pack json files.
  */
@@ -53,9 +55,9 @@ import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 public class ResourceModelRenderer implements EntityRenderer {
     private static final float SCALE = 1f / 16f;
 
-    final ResourcePack resourcePack;
-    final TextureGallery textureGallery;
-    final RenderSettings renderSettings;
+    private final Function<ResourcePath<Model>, Model> modelProvider;
+    private final TextureGallery textureGallery;
+    private final RenderSettings renderSettings;
 
     private final VectorM3f[] corners = new VectorM3f[8];
     private final VectorM2f[] rawUvs = new VectorM2f[4];
@@ -69,7 +71,7 @@ public class ResourceModelRenderer implements EntityRenderer {
 
     @SuppressWarnings("unused")
     public ResourceModelRenderer(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
-        this.resourcePack = resourcePack;
+        this.modelProvider = resourcePack.getModels()::get;
         this.textureGallery = textureGallery;
         this.renderSettings = renderSettings;
 
@@ -82,7 +84,7 @@ public class ResourceModelRenderer implements EntityRenderer {
         render(
                 entity,
                 block,
-                part.getModel().getResource(resourcePack::getModel),
+                part.getModel().getResource(modelProvider),
                 TintColorProvider.NO_TINT,
                 tileModel
         );

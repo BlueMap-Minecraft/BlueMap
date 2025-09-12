@@ -138,7 +138,7 @@ public class FabricMod implements ModInitializer, Server {
 
     @Override
     public String getMinecraftVersion() {
-        return SharedConstants.getGameVersion().getId();
+        return SharedConstants.getGameVersion().comp_4024();
     }
 
     @Override

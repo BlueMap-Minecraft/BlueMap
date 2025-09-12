@@ -24,20 +24,15 @@
  */
 package de.bluecolored.bluemap.core.resources.pack.resourcepack;
 
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
+import de.bluecolored.bluemap.core.resources.pack.PackExtension;
+import de.bluecolored.bluemap.core.util.Key;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.List;
+import java.util.Set;
 
-public interface ResourcePackExtension {
+public interface ResourcePackExtension extends PackExtension {
 
-    default void loadResources(Path root) throws IOException {}
-
-    default Iterable<Texture> loadTextures(Path root) throws IOException {
-        return List.of();
+    default Set<Key> collectUsedTextureKeys() {
+        return Set.of();
     }
-
-    default void bake() throws IOException {}
 
 }

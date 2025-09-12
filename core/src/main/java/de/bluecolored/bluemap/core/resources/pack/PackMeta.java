@@ -29,7 +29,7 @@ import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
-import de.bluecolored.bluemap.core.resources.AbstractTypeAdapterFactory;
+import de.bluecolored.bluemap.core.resources.adapter.AbstractTypeAdapterFactory;
 import de.bluecolored.bluemap.core.util.Key;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -50,8 +50,23 @@ public class PackMeta {
 
     @Getter
     public static class Pack {
+        @JsonAdapter(PackVersion.MinAdapter.class) private PackVersion minFormat;
+        @JsonAdapter(PackVersion.MaxAdapter.class) private PackVersion maxFormat;
+
+        // <= 1.21.8
         private VersionRange packFormat = new VersionRange();
         private @Nullable VersionRange supportedFormats;
+
+        public boolean includes(PackVersion version) {
+
+            // <= 1.21.8
+            if (minFormat == null || maxFormat == null) {
+                if (supportedFormats != null && supportedFormats.includes(version.getMajor())) return true;
+                return packFormat.includes(version.getMajor());
+            }
+
+            return version.isGreaterOrEqual(minFormat) && version.isSmallerOrEqual(maxFormat);
+        }
     }
 
     @Getter
@@ -61,8 +76,23 @@ public class PackMeta {
 
     @Getter
     public static class Overlay {
-        private VersionRange formats = new VersionRange();
+        @JsonAdapter(PackVersion.MinAdapter.class) private PackVersion minFormat;
+        @JsonAdapter(PackVersion.MaxAdapter.class) private PackVersion maxFormat;
         private @Nullable String directory;
+
+        // <= 1.21.8
+        private VersionRange formats = new VersionRange();
+
+        public boolean includes(PackVersion version) {
+
+            // <= 1.21.8
+            if (minFormat == null || maxFormat == null) {
+                return formats.includes(version.getMajor());
+            }
+
+            return version.isGreaterOrEqual(minFormat) && version.isSmallerOrEqual(maxFormat);
+        }
+
     }
 
     @Getter

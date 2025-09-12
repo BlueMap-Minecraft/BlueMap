@@ -50,6 +50,8 @@ import de.bluecolored.bluemap.core.world.LightData;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 import de.bluecolored.bluemap.core.world.block.ExtendedBlock;
 
+import java.util.function.Function;
+
 /**
  * This model builder creates a BlockStateModel using the information from parsed resource-pack json files.
  */
@@ -57,7 +59,8 @@ import de.bluecolored.bluemap.core.world.block.ExtendedBlock;
 public class ResourceModelRenderer implements BlockRenderer {
     private static final float BLOCK_SCALE = 1f / 16f;
 
-    private final ResourcePack resourcePack;
+    private final Function<ResourcePath<Model>, Model> modelProvider;
+    private final Function<ResourcePath<Texture>, Texture> textureProvider;
     private final TextureGallery textureGallery;
     private final RenderSettings renderSettings;
     private final BlockColorCalculatorFactory.BlockColorCalculator blockColorCalculator;
@@ -76,7 +79,8 @@ public class ResourceModelRenderer implements BlockRenderer {
     private float blockColorOpacity;
 
     public ResourceModelRenderer(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
-        this.resourcePack = resourcePack;
+        this.modelProvider = resourcePack.getModels()::get;
+        this.textureProvider = resourcePack.getTextures()::get;
         this.textureGallery = textureGallery;
         this.renderSettings = renderSettings;
         this.blockColorCalculator = resourcePack.getColorCalculatorFactory().createCalculator();
@@ -91,7 +95,7 @@ public class ResourceModelRenderer implements BlockRenderer {
         this.blockColor = color;
         this.blockColorOpacity = 0f;
         this.variant = variant;
-        this.modelResource = variant.getModel().getResource(resourcePack::getModel);
+        this.modelResource = variant.getModel().getResource(modelProvider);
 
         if (this.modelResource == null) return;
 
@@ -324,7 +328,7 @@ public class ResourceModelRenderer implements BlockRenderer {
         //if is top face set model-color
         float a = faceRotationVector.y;
         if (a > 0.01 && texturePath != null) {
-            Texture texture = texturePath.getResource(resourcePack::getTexture);
+            Texture texture = texturePath.getResource(textureProvider);
             if (texture != null) {
                 mapColor.set(texture.getColorPremultiplied());
                 if (tintColor.a >= 0) {

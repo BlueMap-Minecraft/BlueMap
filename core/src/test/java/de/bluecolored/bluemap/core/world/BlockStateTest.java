@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.core.world;
 
+import de.bluecolored.bluemap.core.util.Key;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -36,27 +37,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class BlockStateTest {
 
     @Test
-    public void testIdNamespace() {
-        BlockState blockState = new BlockState("someblock");
-        assertEquals("minecraft:someblock", blockState.getFormatted());
-        assertEquals("minecraft", blockState.getNamespace());
-        assertEquals("someblock", blockState.getValue());
-
-        blockState = new BlockState("somemod:someblock");
-        assertEquals("somemod:someblock", blockState.getFormatted());
-        assertEquals("somemod", blockState.getNamespace());
-        assertEquals("someblock", blockState.getValue());
-    }
-
-    @Test
     public void testToString() {
-        BlockState blockState = new BlockState("someblock");
+        BlockState blockState = new BlockState(Key.parse("someblock"));
         assertEquals("minecraft:someblock[]", blockState.toString());
 
-        blockState = new BlockState("someblock", mapOf("testProp", "testVal"));
+        blockState = new BlockState(Key.parse("someblock"), mapOf("testProp", "testVal"));
         assertEquals("minecraft:someblock[testProp=testVal]", blockState.toString());
 
-        blockState = new BlockState("someblock", mapOf("testProp", "testVal", "testProp2", "testVal2"));
+        blockState = new BlockState(Key.parse("someblock"), mapOf("testProp", "testVal", "testProp2", "testVal2"));
         String toString = blockState.toString();
         assertTrue(
                 toString.equals("minecraft:someblock[testProp=testVal,testProp2=testVal2]") ||
@@ -64,25 +52,18 @@ public class BlockStateTest {
             );
     }
 
-
     @Test
     public void testFromString() {
         BlockState blockState = BlockState.fromString("somemod:someblock");
-        assertEquals("somemod:someblock", blockState.getFormatted());
-        assertEquals("somemod", blockState.getNamespace());
-        assertEquals("someblock", blockState.getValue());
+        assertEquals(Key.parse("somemod:someblock"), blockState.getId());
         assertTrue(blockState.getProperties().isEmpty());
 
         blockState = BlockState.fromString("somemod:someblock[]");
-        assertEquals("somemod:someblock", blockState.getFormatted());
-        assertEquals("somemod", blockState.getNamespace());
-        assertEquals("someblock", blockState.getValue());
+        assertEquals(Key.parse("somemod:someblock"), blockState.getId());
         assertTrue(blockState.getProperties().isEmpty());
 
         blockState = BlockState.fromString("somemod:someblock[testProp=testVal,testProp2=testVal2]");
-        assertEquals("somemod:someblock", blockState.getFormatted());
-        assertEquals("somemod", blockState.getNamespace());
-        assertEquals("someblock", blockState.getValue());
+        assertEquals(Key.parse("somemod:someblock"), blockState.getId());
         assertEquals("testVal", blockState.getProperties().get("testProp"));
         assertEquals("testVal2", blockState.getProperties().get("testProp2"));
     }

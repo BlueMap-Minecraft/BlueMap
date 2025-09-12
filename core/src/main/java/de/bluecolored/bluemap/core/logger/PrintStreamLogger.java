@@ -24,6 +24,8 @@
  */
 package de.bluecolored.bluemap.core.logger;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.io.PrintStream;
 import java.time.Instant;
 import java.time.ZoneId;
@@ -56,9 +58,9 @@ public class PrintStreamLogger extends AbstractLogger {
     }
 
     @Override
-    public void logError(String message, Throwable throwable) {
+    public void logError(String message, @Nullable Throwable throwable) {
         log(err, "ERROR", message);
-        throwable.printStackTrace(err);
+        if (throwable != null) throwable.printStackTrace(err);
     }
 
     @Override

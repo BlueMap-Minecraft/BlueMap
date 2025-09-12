@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.core.world.block;
 
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
+import de.bluecolored.bluemap.core.map.mask.Mask;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.world.*;
 import de.bluecolored.bluemap.core.world.biome.Biome;
@@ -43,6 +44,9 @@ public class ExtendedBlock implements BlockAccess {
     @Getter private DimensionType dimensionType;
 
     private @Nullable BlockProperties properties;
+
+    private Mask renderMask;
+    private final MaskArea maskArea = new MaskArea();
 
     private boolean insideRenderBoundsCalculated, insideRenderBounds;
     private boolean isCaveCalculated, isCave;
@@ -67,6 +71,11 @@ public class ExtendedBlock implements BlockAccess {
         this.properties = null;
         this.insideRenderBoundsCalculated = false;
         this.isCaveCalculated = false;
+
+        if (renderMask == null || !maskArea.isInside(x, z)) {
+            maskArea.setAround(x, z);
+            renderMask = maskArea.apply(renderSettings.getRenderMask());
+        }
     }
 
     @Override
@@ -87,6 +96,8 @@ public class ExtendedBlock implements BlockAccess {
         this.insideRenderBounds = extendedBlock.insideRenderBounds;
         this.isCaveCalculated = extendedBlock.isCaveCalculated;
         this.isCave = extendedBlock.isCave;
+        this.renderMask = extendedBlock.renderMask;
+        this.maskArea.copyFrom(extendedBlock.maskArea);
     }
 
     @Override
@@ -98,7 +109,7 @@ public class ExtendedBlock implements BlockAccess {
     @Override
     public LightData getLightData() {
         LightData ld = blockAccess.getLightData();
-        if (renderSettings.isRenderEdges() && !isInsideRenderBounds()) ld.set(dimensionType.hasSkylight() ? 16 : 0, ld.getBlockLight());
+        if (renderSettings.isRenderEdges() && !isInsideRenderBounds()) ld.set(dimensionType.hasSkylight() ? renderSettings.getEdgeLightStrength() : 0, ld.getBlockLight());
         return ld;
     }
 
@@ -130,7 +141,7 @@ public class ExtendedBlock implements BlockAccess {
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isInsideRenderBounds() {
         if (!insideRenderBoundsCalculated) {
-            insideRenderBounds = renderSettings.isInsideRenderBoundaries(getX(), getY(), getZ());
+            insideRenderBounds = renderMask.test(getX(), getY(), getZ());
             insideRenderBoundsCalculated = true;
         }
 
@@ -149,6 +160,35 @@ public class ExtendedBlock implements BlockAccess {
         }
 
         return isCave;
+    }
+
+    private static class MaskArea {
+        private int minX, minZ, maxX, maxZ;
+
+        public boolean isInside(int x, int z) {
+            return
+                    x >= minX && x <= maxX &&
+                    z >= minZ && z <= maxZ;
+        }
+
+        public void setAround(int x, int z) {
+            this.minX = (x >> 4) << 4;
+            this.minZ = (z >> 4) << 4;
+            this.maxX = minX + 15;
+            this.maxZ = minZ + 15;
+        }
+
+        public void copyFrom(MaskArea maskArea) {
+            this.minX = maskArea.minX;
+            this.minZ = maskArea.minZ;
+            this.maxX = maskArea.maxX;
+            this.maxZ = maskArea.maxZ;
+        }
+
+        public Mask apply(Mask mask) {
+            return mask.submask(minX, Integer.MIN_VALUE, minZ, maxX, Integer.MAX_VALUE, maxZ);
+        }
+
     }
 
 }
