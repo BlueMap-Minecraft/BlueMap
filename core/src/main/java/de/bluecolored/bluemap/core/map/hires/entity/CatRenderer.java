@@ -77,7 +77,7 @@ public class CatRenderer extends ResourceModelRenderer {
         };
 
         // render chosen model
-        super.render(entity, block, model.getResource(resourcePack::getModel), TintColorProvider.NO_TINT, tileModel);
+        super.render(entity, block, model.getResource(getModelProvider()), TintColorProvider.NO_TINT, tileModel);
 
         // apply part transform
         if (part.isTransformed())
