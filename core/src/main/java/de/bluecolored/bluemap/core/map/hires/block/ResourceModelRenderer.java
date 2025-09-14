@@ -140,12 +140,12 @@ public class ResourceModelRenderer implements BlockRenderer {
         Vector3f to = element.getTo();
 
         float
-                minX = Math.min(from.getX(), to.getX()),
-                minY = Math.min(from.getY(), to.getY()),
-                minZ = Math.min(from.getZ(), to.getZ()),
-                maxX = Math.max(from.getX(), to.getX()),
-                maxY = Math.max(from.getY(), to.getY()),
-                maxZ = Math.max(from.getZ(), to.getZ());
+                minX = from.getX(),
+                minY = from.getY(),
+                minZ = from.getZ(),
+                maxX = to.getX(),
+                maxY = to.getY(),
+                maxZ = to.getZ();
 
         VectorM3f[] c = corners;
         c[0].x = minX; c[0].y = minY; c[0].z = minZ;
