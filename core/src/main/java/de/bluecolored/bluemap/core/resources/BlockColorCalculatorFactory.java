@@ -59,7 +59,7 @@ public class BlockColorCalculatorFactory {
             BLEND_MAX_Z =   BLEND_RADIUS_H;
 
     private static final ColorFunction DEFAULT_COLOR_FUNCTION =
-            (c, b, target) -> target.set(0xffffffff);
+            (c, b, target) -> target.set(0xffffffff, true);
 
     private int[] foliageMap = new int[0];
     private int[] dryFoliageMap = new int[0];
