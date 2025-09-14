@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.core.world.mca.entity;
 
+import de.bluecolored.bluemap.core.world.mca.data.EquipmentData;
 import de.bluecolored.bluemap.core.world.mca.data.ItemStackDeserializer;
 import de.bluecolored.bluenbt.NBTName;
 import lombok.EqualsAndHashCode;
@@ -38,7 +39,7 @@ public class Llama extends MCAEntity {
 
     @NBTName("ChestedHorse") boolean withChest;
     @NBTName("Variant") Variant variant;
-    @NBTName("equipment.saddle") ItemStackDeserializer.ItemStack saddle;
+    @NBTName("equipment") EquipmentData equipment;
 
     public enum Variant {
         CREAMY,

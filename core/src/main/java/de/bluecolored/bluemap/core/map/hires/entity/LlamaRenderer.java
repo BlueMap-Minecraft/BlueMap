@@ -84,7 +84,7 @@ public class LlamaRenderer extends ResourceModelRenderer {
         }
 
         // decoration model
-        ResourcePath<Model> decorationModel = switch (llama.getSaddle().id().getFormatted()) {
+        ResourcePath<Model> decorationModel = switch (llama.getEquipment().getBody().id().getFormatted()) {
             case "minecraft:black_carpet" -> LLAMA_CARPET_BLACK;
             case "minecraft:blue_carpet" -> LLAMA_CARPET_BLUE;
             case "minecraft:brown_carpet" -> LLAMA_CARPET_BROWN;
