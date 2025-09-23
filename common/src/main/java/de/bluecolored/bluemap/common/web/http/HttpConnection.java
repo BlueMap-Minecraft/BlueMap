@@ -25,134 +25,57 @@
 package de.bluecolored.bluemap.common.web.http;
 
 import de.bluecolored.bluemap.core.logger.Logger;
+import lombok.RequiredArgsConstructor;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.SocketAddress;
-import java.nio.channels.Channel;
-import java.nio.channels.SelectableChannel;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.SocketChannel;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Executor;
+import java.net.Socket;
+import java.net.SocketTimeoutException;
 
-public class HttpConnection implements SelectionConsumer {
+public class HttpConnection implements Runnable {
 
+    private final Socket socket;
+    private final HttpRequestInputStream requestIn;
+    private final HttpResponseOutputStream responseOut;
     private final HttpRequestHandler requestHandler;
-    private final Executor responseHandlerExecutor;
-    private HttpRequest request;
-    private CompletableFuture<HttpResponse> futureResponse;
-    private HttpResponse response;
 
-    public HttpConnection(HttpRequestHandler requestHandler) {
-        this(requestHandler, Runnable::run); //run synchronously
-    }
-
-    public HttpConnection(HttpRequestHandler requestHandler, Executor responseHandlerExecutor) {
+    public HttpConnection(Socket socket, HttpRequestHandler requestHandler) throws IOException {
+        this.socket = socket;
         this.requestHandler = requestHandler;
-        this.responseHandlerExecutor = responseHandlerExecutor;
+
+        this.requestIn = new HttpRequestInputStream(new BufferedInputStream(socket.getInputStream()), socket.getInetAddress());
+        this.responseOut = new HttpResponseOutputStream(new BufferedOutputStream(socket.getOutputStream()));
     }
 
-    @Override
-    public void accept(SelectionKey selectionKey) {
-        if (!selectionKey.isValid()) return;
-
-        SelectableChannel selChannel = selectionKey.channel();
-
-        if (!(selChannel instanceof SocketChannel)) return;
-        SocketChannel channel = (SocketChannel) selChannel;
-
+    public void run() {
         try {
+            while (socket.isConnected() && !socket.isClosed() && !socket.isInputShutdown() && !socket.isOutputShutdown()) {
+                HttpRequest request = requestIn.read();
+                if (request == null) continue;
 
-            if (request == null) {
-                SocketAddress remote = channel.getRemoteAddress();
-                InetAddress remoteInet = null;
-                if (remote instanceof InetSocketAddress)
-                    remoteInet = ((InetSocketAddress) remote).getAddress();
-
-                request = new HttpRequest(remoteInet);
-            }
-
-            // receive request
-            if (!request.write(channel)) {
-                if (!selectionKey.isValid()) return;
-                selectionKey.interestOps(SelectionKey.OP_READ);
-                return;
-            }
-
-            // process request
-            if (futureResponse == null) {
-                futureResponse = CompletableFuture.supplyAsync(
-                        () -> requestHandler.handle(request),
-                        responseHandlerExecutor
-                );
-                futureResponse.handle((response, error) -> {
-                    if (error != null) {
-                        Logger.global.logError("Unexpected error handling request", error);
-                        response = new HttpResponse(HttpStatusCode.INTERNAL_SERVER_ERROR);
-                    }
-
-                    try {
-                        response.read(channel); // do an initial read to trigger response sending intent
-                        this.response = response;
-                    } catch (IOException e) {
-                        handleIOException(channel, e);
-                    }
-
-                    return null;
-                });
-            }
-
-            if (response == null) return;
-            if (!selectionKey.isValid()) return;
-
-            // send response
-            if (!response.read(channel)){
-                selectionKey.interestOps(SelectionKey.OP_WRITE);
-                return;
-            }
-
-            // reset to accept new request
-            request.clear();
-            response.close();
-            futureResponse = null;
-            response = null;
-            selectionKey.interestOps(SelectionKey.OP_READ);
-
-        } catch (IOException e) {
-            handleIOException(channel, e);
-        }
-    }
-
-    private void handleIOException(Channel channel, IOException e) {
-        request.clear();
-
-        if (response != null) {
-            try {
-                response.close();
-            } catch (IOException e2) {
-                Logger.global.logWarning("Failed to close response: " + e2);
-            }
-            response = null;
-        }
-
-        if (futureResponse != null) {
-            futureResponse.thenAccept(response -> {
-                try {
-                    response.close();
-                } catch (IOException e2) {
-                    Logger.global.logWarning("Failed to close response: " + e2);
+                try (HttpResponse response = requestHandler.handle(request)) {
+                    responseOut.write(response);
                 }
-            });
-            futureResponse = null;
-        }
-
-        Logger.global.logDebug("Failed to process selection: " + e);
-        try {
-            channel.close();
-        } catch (IOException e2) {
-            Logger.global.logWarning("Failed to close channel" + e2);
+            }
+        } catch (EOFException | SocketTimeoutException ignore) {
+            // ignore known exceptions that happen when browsers or us close the connection
+        } catch (IOException e) {
+            if ( // ignore known exceptions that happen when browsers close the connection
+                    e.getMessage() == null ||
+                    !e.getMessage().equals("Broken pipe")
+            ) {
+                Logger.global.logDebug("Exception in HttpConnection: " + e);
+            }
+        } catch (Exception e) {
+            Logger.global.logDebug("Exception in HttpConnection: " + e);
+        } finally {
+            try {
+                socket.close();
+            } catch (IOException e) {
+                Logger.global.logDebug("Exception closing HttpConnection: " + e);
+            }
         }
     }
 
