@@ -1,5 +1,5 @@
 import com.matthewprenger.cursegradle.CurseProject
-import gradle.kotlin.dsl.accessors._30aa10cce2eda716151152e22de91a4c.curseforge
+import gradle.kotlin.dsl.accessors._94345610689fa610403700b47edcf23c.curseforge
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.kotlin.dsl.closureOf
