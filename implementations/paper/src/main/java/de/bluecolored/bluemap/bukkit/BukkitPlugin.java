@@ -39,6 +39,7 @@ import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.JavaLogger;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.util.Key;
+import io.papermc.paper.ServerBuildInfo;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
 import io.papermc.paper.threadedregions.scheduler.ScheduledTask;
 import org.bstats.bukkit.Metrics;
@@ -155,7 +156,7 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
 
     @Override
     public String getMinecraftVersion() {
-        return Bukkit.getMinecraftVersion();
+        return ServerBuildInfo.buildInfo().minecraftVersionId();
     }
 
     @Override
