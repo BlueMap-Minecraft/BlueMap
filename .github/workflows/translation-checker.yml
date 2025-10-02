@@ -1,4 +1,4 @@
-name: Check translations
+name: Check Translations
 
 on:
   push:
@@ -10,15 +10,17 @@ permissions:
   contents: read
 
 jobs:
-  deploy:
+  run:
+    name: Check Translations
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+        uses: actions/checkout@v5
+      - name: Install Node
+        uses: actions/setup-node@v5
         with:
           node-version: 20
-      - name: Install deps
+      - name: Install Dependencies
         working-directory: .github/translation-checker
         run: npm ci
       - name: Run Translation Checker

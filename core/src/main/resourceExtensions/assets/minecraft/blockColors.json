@@ -1,5 +1,4 @@
 {
-    "default": "#ffffff",
     "minecraft:water": "@water",
     "minecraft:water_cauldron": "@water",
     "minecraft:redstone_wire": "@redstone",
@@ -72,5 +71,23 @@
     "minecraft:purple_shulker_box": "#8932b8",
     "minecraft:magenta_shulker_box": "#c74ebd",
     "minecraft:pink_shulker_box": "#f38baa",
-    "minecraft:lily_pad": "#208030"
+    "minecraft:lily_pad": "#208030",
+    "minecraft:pumpkin_stem[age=0]": "#00ff00",
+    "minecraft:pumpkin_stem[age=1]": "#20f704",
+    "minecraft:pumpkin_stem[age=2]": "#40ef08",
+    "minecraft:pumpkin_stem[age=3]": "#60e70c",
+    "minecraft:pumpkin_stem[age=4]": "#80df10",
+    "minecraft:pumpkin_stem[age=5]": "#a0d714",
+    "minecraft:pumpkin_stem[age=6]": "#c0cf18",
+    "minecraft:pumpkin_stem[age=7]": "#e0c71c",
+    "minecraft:attached_pumpkin_stem": "#e0c71c",
+    "minecraft:melon_stem[age=0]": "#00ff00",
+    "minecraft:melon_stem[age=1]": "#20f704",
+    "minecraft:melon_stem[age=2]": "#40ef08",
+    "minecraft:melon_stem[age=3]": "#60e70c",
+    "minecraft:melon_stem[age=4]": "#80df10",
+    "minecraft:melon_stem[age=5]": "#a0d714",
+    "minecraft:melon_stem[age=6]": "#c0cf18",
+    "minecraft:melon_stem[age=7]": "#e0c71c",
+    "minecraft:attached_melon_stem": "#e0c71c"
 }

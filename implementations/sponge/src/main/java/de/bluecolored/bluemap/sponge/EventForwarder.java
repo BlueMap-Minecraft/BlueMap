@@ -44,7 +44,7 @@ public class EventForwarder {
 
     @Listener(order = Order.POST)
     public void onPlayerLeave(ServerSideConnectionEvent.Leave evt) {
-        listener.onPlayerJoin(evt.player().uniqueId());
+        listener.onPlayerLeave(evt.player().uniqueId());
     }
 
 }

@@ -24,33 +24,25 @@
  */
 package de.bluecolored.bluemap.common.web.http;
 
-import lombok.Getter;
-import lombok.Setter;
+import java.util.Locale;
+import java.util.Map;
 
-import java.io.IOException;
-import java.nio.channels.SocketChannel;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+public interface HttpHeaderCarrier {
 
-public class HttpServer extends Server {
+    Map<String, HttpHeader> getHeaders();
 
-    @Getter @Setter
-    private HttpRequestHandler requestHandler;
-    private ExecutorService executor;
-
-    public HttpServer(HttpRequestHandler requestHandler, ExecutorService executor) throws IOException {
-        this.requestHandler = requestHandler;
-        this.executor = executor;
+    default void addHeader(String name, String... values) {
+        getHeaders().put(name.toLowerCase(Locale.ROOT), new HttpHeader(name, values));
     }
 
-    public HttpServer(HttpRequestHandler requestHandler) throws IOException {
-        this(requestHandler, Executors.newVirtualThreadPerTaskExecutor());
+    default HttpHeader getHeader(String key) {
+        return getHeaders().get(key.toLowerCase(Locale.ROOT));
     }
 
-    @Override
-    public void handleConnection(SocketChannel connection) throws IOException {
-        connection.socket().setSoTimeout(600000); // set a 10 min max idle timeout
-        executor.execute(new HttpConnection(connection.socket(), requestHandler));
+    default boolean hasHeaderValue(String key, String value) {
+        HttpHeader header = getHeader(key);
+        if (header == null) return false;
+        return header.contains(value);
     }
 
 }

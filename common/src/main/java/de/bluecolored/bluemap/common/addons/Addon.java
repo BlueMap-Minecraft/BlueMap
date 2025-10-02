@@ -22,9 +22,18 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.web.http;
+package de.bluecolored.bluemap.common.addons;
 
-import java.nio.channels.SelectionKey;
-import java.util.function.Consumer;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
-public interface SelectionConsumer extends Consumer<SelectionKey> {}
+import java.nio.file.Path;
+
+@RequiredArgsConstructor
+@Getter
+public class Addon {
+
+    private final AddonInfo addonInfo;
+    private final Path jarFile;
+
+}

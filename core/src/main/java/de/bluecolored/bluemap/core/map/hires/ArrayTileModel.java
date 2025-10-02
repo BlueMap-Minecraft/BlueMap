@@ -186,6 +186,45 @@ public class ArrayTileModel implements TileModel {
         return this;
     }
 
+    public ArrayTileModel invertOrientation(int face) {
+        int index;
+        float x, y, z;
+
+        // swap first and last positions
+        index = face * FI_POSITION;
+
+        x = position[index    ];
+        y = position[index + 1];
+        z = position[index + 2];
+
+        position[index    ] = position[index + 6    ];
+        position[index + 1] = position[index + 6 + 1];
+        position[index + 2] = position[index + 6 + 2];
+
+        position[index + 6    ] = x;
+        position[index + 6 + 1] = y;
+        position[index + 6 + 2] = z;
+
+        // swap first and last uvs
+        index = face * FI_UV;
+        x = uv[index    ];
+        y = uv[index + 1];
+
+        uv[index    ] = uv[index + 4    ];
+        uv[index + 1] = uv[index + 4 + 1];
+
+        uv[index + 4    ] = x;
+        uv[index + 4 + 1] = y;
+
+        // swap first and last ao
+        index = face * FI_AO;
+        x = ao[index];
+        ao[index] = ao[index + 2];
+        ao[index + 2] = x;
+
+        return this;
+    }
+
     @Override
     public ArrayTileModel rotate(
             int start, int count,

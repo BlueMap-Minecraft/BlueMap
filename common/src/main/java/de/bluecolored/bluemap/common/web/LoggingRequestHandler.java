@@ -63,7 +63,9 @@ public class LoggingRequestHandler implements HttpRequestHandler {
         }
 
         String method = request.getMethod();
-        String address = request.getAddress();
+        String path = request.getPath();
+        String queryString = request.getRawQueryString();
+        String address = queryString == null ? path : path + "?" + queryString;
         String version = request.getVersion();
 
         // run request

@@ -22,35 +22,32 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.web.http;
+package de.bluecolored.bluemap.common.addons;
 
-import lombok.Getter;
-import lombok.Setter;
+import java.util.Arrays;
+import java.util.Objects;
 
-import java.io.IOException;
-import java.nio.channels.SocketChannel;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+public class CombinedClassLoader extends ClassLoader {
 
-public class HttpServer extends Server {
+    private final ClassLoader[] delegates;
 
-    @Getter @Setter
-    private HttpRequestHandler requestHandler;
-    private ExecutorService executor;
-
-    public HttpServer(HttpRequestHandler requestHandler, ExecutorService executor) throws IOException {
-        this.requestHandler = requestHandler;
-        this.executor = executor;
-    }
-
-    public HttpServer(HttpRequestHandler requestHandler) throws IOException {
-        this(requestHandler, Executors.newVirtualThreadPerTaskExecutor());
+    public CombinedClassLoader(ClassLoader parent, ClassLoader... delegates) {
+        super(parent);
+        if (delegates.length == 0) throw new IllegalArgumentException("No parent classloaders provided");
+        if (Arrays.stream(delegates).anyMatch(Objects::isNull)) throw new IllegalArgumentException("Parent classloaders can not be null");
+        this.delegates = delegates;
     }
 
     @Override
-    public void handleConnection(SocketChannel connection) throws IOException {
-        connection.socket().setSoTimeout(600000); // set a 10 min max idle timeout
-        executor.execute(new HttpConnection(connection.socket(), requestHandler));
-    }
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
+        for (ClassLoader parent : delegates) {
+            try {
+                return parent.loadClass(name);
+            } catch (ClassNotFoundException ignore) {
+                // ignore ClassNotFoundException thrown if class not found in parent
+            }
+        }
 
+        throw new ClassNotFoundException(name);
+    }
 }

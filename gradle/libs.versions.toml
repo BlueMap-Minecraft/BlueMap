@@ -36,11 +36,11 @@ lz4 = { module = "org.lz4:lz4-java", version = "1.8.0" }
 cursegradle = { id = "com.matthewprenger.cursegradle", version = "1.4.0" }
 forgegradle = { id = "net.minecraftforge.gradle", version = "[6.0.24,6.2)" }
 hangar = { id = "io.papermc.hangar-publish-plugin", version = "0.1.2" }
-loom = { id = "fabric-loom", version = "1.10-SNAPSHOT" }
+loom = { id = "fabric-loom", version = "1.11-SNAPSHOT" }
 minotaur = { id = "com.modrinth.minotaur", version = "2.8.7" }
 node-gradle = { id = "com.github.node-gradle.node", version = "7.0.2" }
-neoforge-gradle = { id = "net.neoforged.moddev", version = "2.0.28-beta" }
-shadow = { id = "io.github.goooler.shadow", version = "8.1.8" }
+neoforge-gradle = { id = "net.neoforged.moddev", version = "2.0.107" }
+shadow = { id = "com.gradleup.shadow", version = "9.1.0" }
 sponge-plugin = { id = "org.spongepowered.gradle.plugin", version.ref = "spongegradle" }
 sponge-ore = { id = "org.spongepowered.gradle.ore", version.ref = "spongegradle" }
 spotless = { id = "com.diffplug.spotless", version = "6.25.0" }

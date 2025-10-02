@@ -45,6 +45,7 @@ import de.bluecolored.bluemap.core.util.math.VectorM3f;
 import de.bluecolored.bluemap.core.world.Entity;
 import de.bluecolored.bluemap.core.world.LightData;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
+import lombok.Getter;
 
 import java.util.function.Function;
 
@@ -55,9 +56,9 @@ import java.util.function.Function;
 public class ResourceModelRenderer implements EntityRenderer {
     private static final float SCALE = 1f / 16f;
 
-    private final Function<ResourcePath<Model>, Model> modelProvider;
-    private final TextureGallery textureGallery;
-    private final RenderSettings renderSettings;
+    @Getter private final Function<ResourcePath<Model>, Model> modelProvider;
+    @Getter private final TextureGallery textureGallery;
+    @Getter private final RenderSettings renderSettings;
 
     private final VectorM3f[] corners = new VectorM3f[8];
     private final VectorM2f[] rawUvs = new VectorM2f[4];
@@ -132,12 +133,12 @@ public class ResourceModelRenderer implements EntityRenderer {
         Vector3f to = element.getTo();
 
         float
-                minX = Math.min(from.getX(), to.getX()),
-                minY = Math.min(from.getY(), to.getY()),
-                minZ = Math.min(from.getZ(), to.getZ()),
-                maxX = Math.max(from.getX(), to.getX()),
-                maxY = Math.max(from.getY(), to.getY()),
-                maxZ = Math.max(from.getZ(), to.getZ());
+                minX = from.getX(),
+                minY = from.getY(),
+                minZ = from.getZ(),
+                maxX = to.getX(),
+                maxY = to.getY(),
+                maxZ = to.getZ();
 
         VectorM3f[] c = corners;
         c[0].x = minX; c[0].y = minY; c[0].z = minZ;

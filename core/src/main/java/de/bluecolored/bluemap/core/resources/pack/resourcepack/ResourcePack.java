@@ -60,6 +60,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 public class ResourcePack extends Pack {
@@ -106,6 +107,7 @@ public class ResourcePack extends Pack {
         this.blockPropertiesCache = Caffeine.newBuilder()
                 .executor(BlueMap.THREAD_POOL)
                 .maximumSize(10000)
+                .expireAfterAccess(1, TimeUnit.MINUTES)
                 .build(this::loadBlockProperties);
 
         this.extensions = new HashMap<>();

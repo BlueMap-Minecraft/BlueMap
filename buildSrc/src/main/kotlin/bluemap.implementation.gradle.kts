@@ -1,6 +1,6 @@
 plugins {
     id ( "bluemap.base" )
-    id ( "io.github.goooler.shadow" )
+    id ( "com.gradleup.shadow" )
 }
 
 tasks.shadowJar {

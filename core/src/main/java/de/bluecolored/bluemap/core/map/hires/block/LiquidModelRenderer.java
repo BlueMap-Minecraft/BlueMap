@@ -45,6 +45,7 @@ import de.bluecolored.bluemap.core.util.math.VectorM3f;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 import de.bluecolored.bluemap.core.world.block.ExtendedBlock;
+import lombok.Getter;
 
 import java.util.function.Function;
 
@@ -60,11 +61,11 @@ public class LiquidModelRenderer implements BlockRenderer {
             .scale(0.5f, 0.5f, 1)
             .translate(0.5f, 0.5f);
 
-    private final Function<ResourcePath<Model>, Model> modelProvider;
-    private final Function<ResourcePath<Texture>, Texture> textureProvider;
-    private final TextureGallery textureGallery;
-    private final RenderSettings renderSettings;
-    private final BlockColorCalculatorFactory.BlockColorCalculator blockColorCalculator;
+    @Getter private final Function<ResourcePath<Model>, Model> modelProvider;
+    @Getter private final Function<ResourcePath<Texture>, Texture> textureProvider;
+    @Getter private final TextureGallery textureGallery;
+    @Getter private final RenderSettings renderSettings;
+    @Getter private final BlockColorCalculatorFactory.BlockColorCalculator blockColorCalculator;
 
     private final VectorM3f[] corners;
     private final VectorM2f[] uvs = new VectorM2f[4];

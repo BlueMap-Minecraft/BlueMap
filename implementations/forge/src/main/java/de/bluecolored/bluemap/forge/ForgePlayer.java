@@ -145,7 +145,7 @@ public class ForgePlayer extends Player {
 
         this.name = Text.of(player.getName().getString());
 
-        Vec3 pos = player.getPosition(1f);
+        Vec3 pos = player.position();
         this.position = new Vector3d(pos.x(), pos.y(), pos.z());
         this.rotation = new Vector3d(player.getXRot(), player.getYHeadRot(), 0);
         this.sneaking = player.isCrouching();
