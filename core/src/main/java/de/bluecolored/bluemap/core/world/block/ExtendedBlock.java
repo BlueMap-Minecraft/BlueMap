@@ -45,7 +45,7 @@ public class ExtendedBlock implements BlockAccess {
 
     private @Nullable BlockProperties properties;
 
-    private Mask renderMask;
+    private @Nullable Mask renderMask;
     private final MaskArea maskArea = new MaskArea();
 
     private boolean insideRenderBoundsCalculated, insideRenderBounds;
@@ -71,11 +71,7 @@ public class ExtendedBlock implements BlockAccess {
         this.properties = null;
         this.insideRenderBoundsCalculated = false;
         this.isCaveCalculated = false;
-
-        if (renderMask == null || !maskArea.isInside(x, z)) {
-            maskArea.setAround(x, z);
-            renderMask = maskArea.apply(renderSettings.getRenderMask());
-        }
+        if (!maskArea.isInside(x, z)) this.renderMask = null;
     }
 
     @Override
@@ -138,10 +134,18 @@ public class ExtendedBlock implements BlockAccess {
         return properties;
     }
 
+    private Mask getRenderMask() {
+        if (renderMask == null) {
+            maskArea.setAround(x, z);
+            renderMask = maskArea.apply(renderSettings.getRenderMask());
+        }
+        return renderMask;
+    }
+
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isInsideRenderBounds() {
         if (!insideRenderBoundsCalculated) {
-            insideRenderBounds = renderMask.test(getX(), getY(), getZ());
+            insideRenderBounds = getRenderMask().test(getX(), getY(), getZ());
             insideRenderBoundsCalculated = true;
         }
 
@@ -164,6 +168,10 @@ public class ExtendedBlock implements BlockAccess {
 
     private static class MaskArea {
         private int minX, minZ, maxX, maxZ;
+
+        public MaskArea() {
+            setAround(0, 0);
+        }
 
         public boolean isInside(int x, int z) {
             return
