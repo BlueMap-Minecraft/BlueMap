@@ -184,8 +184,8 @@ public class ExtendedBlock implements BlockAccess {
         }
 
         private void setAround(int x, int z) {
-            this.minX = (x >> 4) << 4;
-            this.minZ = (z >> 4) << 4;
+            this.minX = x & 0xFFFFFFF0;
+            this.minZ = z & 0xFFFFFFF0;
             this.maxX = minX + 15;
             this.maxZ = minZ + 15;
         }
