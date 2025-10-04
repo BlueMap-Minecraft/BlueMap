@@ -29,6 +29,7 @@ import de.bluecolored.bluemap.core.map.mask.Mask;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.world.*;
 import de.bluecolored.bluemap.core.world.biome.Biome;
+import lombok.AccessLevel;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 
@@ -46,7 +47,7 @@ public class ExtendedBlock implements BlockAccess {
     private @Nullable BlockProperties properties;
 
     private @Nullable Mask renderMask;
-    private final MaskArea maskArea = new MaskArea();
+    @Getter(AccessLevel.PROTECTED) private final MaskArea maskArea = new MaskArea();
 
     private boolean insideRenderBoundsCalculated, insideRenderBounds;
     private boolean isCaveCalculated, isCave;
@@ -134,7 +135,10 @@ public class ExtendedBlock implements BlockAccess {
         return properties;
     }
 
-    private Mask getRenderMask() {
+    /**
+     * The returned {@link Mask} is only valid for the area currently defined in {@link #getMaskArea()}
+     */
+    protected Mask getRenderMask() {
         if (renderMask == null) {
             maskArea.setAround(x, z);
             renderMask = maskArea.apply(renderSettings.getRenderMask());
@@ -166,7 +170,7 @@ public class ExtendedBlock implements BlockAccess {
         return isCave;
     }
 
-    private static class MaskArea {
+    protected static class MaskArea {
         private int minX, minZ, maxX, maxZ;
 
         public MaskArea() {
@@ -179,14 +183,14 @@ public class ExtendedBlock implements BlockAccess {
                     z >= minZ && z <= maxZ;
         }
 
-        public void setAround(int x, int z) {
+        private void setAround(int x, int z) {
             this.minX = (x >> 4) << 4;
             this.minZ = (z >> 4) << 4;
             this.maxX = minX + 15;
             this.maxZ = minZ + 15;
         }
 
-        public void copyFrom(MaskArea maskArea) {
+        private void copyFrom(MaskArea maskArea) {
             this.minX = maskArea.minX;
             this.minZ = maskArea.minZ;
             this.maxX = maskArea.maxX;
