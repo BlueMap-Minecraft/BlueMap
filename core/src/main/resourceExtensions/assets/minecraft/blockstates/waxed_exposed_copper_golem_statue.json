@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "copper_golem_pose=running,facing=north": { "model": "entity/copper_golem/exposed_copper_golem_statue_running" },
+    "copper_golem_pose=running,facing=east": { "model": "entity/copper_golem/exposed_copper_golem_statue_running", "y": 90 },
+    "copper_golem_pose=running,facing=south": { "model": "entity/copper_golem/exposed_copper_golem_statue_running", "y": 180 },
+    "copper_golem_pose=running,facing=west": { "model": "entity/copper_golem/exposed_copper_golem_statue_running", "y": 270 },
+    "copper_golem_pose=sitting,facing=north": { "model": "entity/copper_golem/exposed_copper_golem_statue_sitting" },
+    "copper_golem_pose=sitting,facing=east": { "model": "entity/copper_golem/exposed_copper_golem_statue_sitting", "y": 90 },
+    "copper_golem_pose=sitting,facing=south": { "model": "entity/copper_golem/exposed_copper_golem_statue_sitting", "y": 180 },
+    "copper_golem_pose=sitting,facing=west": { "model": "entity/copper_golem/exposed_copper_golem_statue_sitting", "y": 270 },
+    "copper_golem_pose=standing,facing=north": { "model": "entity/copper_golem/exposed_copper_golem_statue_standing" },
+    "copper_golem_pose=standing,facing=east": { "model": "entity/copper_golem/exposed_copper_golem_statue_standing", "y": 90 },
+    "copper_golem_pose=standing,facing=south": { "model": "entity/copper_golem/exposed_copper_golem_statue_standing", "y": 180 },
+    "copper_golem_pose=standing,facing=west": { "model": "entity/copper_golem/exposed_copper_golem_statue_standing", "y": 270 },
+    "copper_golem_pose=star,facing=north": { "model": "entity/copper_golem/exposed_copper_golem_statue_star" },
+    "copper_golem_pose=star,facing=east": { "model": "entity/copper_golem/exposed_copper_golem_statue_star", "y": 90 },
+    "copper_golem_pose=star,facing=south": { "model": "entity/copper_golem/exposed_copper_golem_statue_star", "y": 180 },
+    "copper_golem_pose=star,facing=west": { "model": "entity/copper_golem/exposed_copper_golem_statue_star", "y": 270 }
+  }
+}
