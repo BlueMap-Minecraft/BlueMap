@@ -1,5 +1,5 @@
 plugins {
-    bluemap.base
+    bluemap.java
 }
 
 dependencies {

@@ -2,7 +2,7 @@ import com.github.gradle.node.npm.task.NpmTask
 import java.io.IOException
 
 plugins {
-    bluemap.base
+    bluemap.java
     alias ( libs.plugins.node.gradle )
 }
 

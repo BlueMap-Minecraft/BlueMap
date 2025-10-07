@@ -1,5 +1,5 @@
 plugins {
-    id ( "bluemap.base" )
+    id ( "bluemap.java" )
     id ( "com.gradleup.shadow" )
 }
 

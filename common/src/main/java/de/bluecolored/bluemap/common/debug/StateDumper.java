@@ -185,7 +185,7 @@ public class StateDumper {
                 writer.name("state").value(thread.getState().toString());
                 writer.name("priority").value(thread.getPriority());
                 writer.name("alive").value(thread.isAlive());
-                writer.name("id").value(thread.getId());
+                writer.name("id").value(thread.threadId());
                 writer.name("deamon").value(thread.isDaemon());
                 writer.name("interrupted").value(thread.isInterrupted());
 
