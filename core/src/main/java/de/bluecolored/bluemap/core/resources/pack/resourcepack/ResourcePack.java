@@ -223,8 +223,7 @@ public class ResourcePack extends Pack {
                     CompletableFuture.runAsync(() -> {
                         list(root.resolve("assets"))
                                 .map(path -> path.resolve("models"))
-                                .flatMap(ResourcePack::list)
-                                .filter(path -> !path.getFileName().toString().equals("item"))
+                                .filter(Files::isDirectory)
                                 .flatMap(ResourcePack::walk)
                                 .filter(path -> path.getFileName().toString().endsWith(".json"))
                                 .filter(Files::isRegularFile)
