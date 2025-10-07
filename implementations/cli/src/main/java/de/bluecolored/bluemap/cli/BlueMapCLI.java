@@ -546,6 +546,10 @@ public class BlueMapCLI {
     private static String getCliCommand() {
         String filename = "bluemap-cli.jar";
         try {
+            if (System.getenv("BLUEMAP_COMMAND") != null) {
+                return System.getenv("BLUEMAP_COMMAND");
+            }
+
             Path file = Path.of(BlueMapCLI.class.getProtectionDomain()
                     .getCodeSource()
                     .getLocation()
