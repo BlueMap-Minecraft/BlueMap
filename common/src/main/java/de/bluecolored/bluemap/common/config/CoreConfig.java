@@ -36,6 +36,9 @@ public class CoreConfig {
 
     private int renderThreadCount = 1;
 
+    private int updateRegionAfterInactivity = 5;
+    private int updateRegionMaxInactivityWait = 60;
+
     private boolean metrics = true;
 
     private Path data = Path.of("bluemap");
@@ -55,6 +58,14 @@ public class CoreConfig {
     public int resolveRenderThreadCount() {
         if (renderThreadCount > 0) return renderThreadCount;
         return Math.max(Runtime.getRuntime().availableProcessors() + renderThreadCount, 1);
+    }
+
+    public int getUpdateRegionAfterInactivity() {
+        return updateRegionAfterInactivity;
+    }
+
+    public int getUpdateRegionMaxInactivityWait() {
+        return updateRegionMaxInactivityWait;
     }
 
     public boolean isMetrics() {
