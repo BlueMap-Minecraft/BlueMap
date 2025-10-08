@@ -1,0 +1,6 @@
+{
+	"parent":"entity/chest/chest_double_right",
+    "textures": {
+        "chest": "entity/chest/copper_oxidized_right"
+	}
+}

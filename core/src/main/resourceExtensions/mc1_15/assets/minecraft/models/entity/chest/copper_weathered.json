@@ -1,0 +1,6 @@
+{
+  "parent": "entity/chest/chest",
+  "textures": {
+    "chest": "entity/chest/copper_weathered"
+  }
+}

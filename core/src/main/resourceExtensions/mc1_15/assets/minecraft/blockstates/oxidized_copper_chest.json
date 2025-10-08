@@ -1,0 +1,16 @@
+{
+    "variants": {
+        "type=single,facing=north": { "model": "entity/chest/copper_oxidized", "y": 90 },
+        "type=single,facing=east": { "model": "entity/chest/copper_oxidized", "y": 180 },
+        "type=single,facing=south": { "model": "entity/chest/copper_oxidized", "y": 270 },
+        "type=single,facing=west": { "model": "entity/chest/copper_oxidized"},
+        "type=right,facing=north": { "model": "entity/chest/copper_oxidized_double_right", "y": 90 },
+        "type=right,facing=east": { "model": "entity/chest/copper_oxidized_double_right", "y": 180 },
+        "type=right,facing=south": { "model": "entity/chest/copper_oxidized_double_right", "y": 270 },
+        "type=right,facing=west": { "model": "entity/chest/copper_oxidized_double_right"},
+		"type=left,facing=north": { "model": "entity/chest/copper_oxidized_double_left", "y": 90 },
+        "type=left,facing=east": { "model": "entity/chest/copper_oxidized_double_left","y": 180 },
+        "type=left,facing=south": { "model": "entity/chest/copper_oxidized_double_left", "y": 270 },
+        "type=left,facing=west": { "model": "entity/chest/copper_oxidized_double_left"}
+    }
+}
