@@ -51,6 +51,7 @@ import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 import de.bluecolored.bluemap.core.world.block.ExtendedBlock;
 import lombok.Getter;
 
+import java.util.EnumMap;
 import java.util.function.Function;
 
 /**
@@ -71,6 +72,7 @@ public class ResourceModelRenderer implements BlockRenderer {
     private final VectorM2f[] uvs = new VectorM2f[4];
     private final Color tintColor = new Color();
     private final Color mapColor = new Color();
+    private final EnumMap<Direction, Float> uvLockRotationCache = new EnumMap<>(Direction.class);
 
     private BlockNeighborhood block;
     private Variant variant;
@@ -195,11 +197,7 @@ public class ResourceModelRenderer implements BlockRenderer {
         ) return;
 
         // calculate faceRotationVector
-        faceRotationVector.set(
-                faceDirVector.getX(),
-                faceDirVector.getY(),
-                faceDirVector.getZ()
-        );
+        faceRotationVector.set(faceDirVector);
         faceRotationVector.rotateAndScale(element.getRotation().getMatrix());
         makeRotationRelative(faceRotationVector);
 
@@ -258,19 +256,10 @@ public class ResourceModelRenderer implements BlockRenderer {
             uvs[i] = rawUvs[(rotationSteps + i) % 4];
 
         // UV-Lock counter-rotation
-        float uvRotation = 0f;
         if (variant.isUvlock() && variant.isTransformed()) {
-            float xRotSin = TrigMath.sin(variant.getX() * TrigMath.DEG_TO_RAD);
-            float xRotCos = TrigMath.cos(variant.getX() * TrigMath.DEG_TO_RAD);
+            float uvRotation = uvLockRotation(faceDir);
 
-            uvRotation =
-                    variant.getY() * (faceDirVector.getY() * xRotCos + faceDirVector.getZ() * xRotSin) +
-                    variant.getX() * (1 - faceDirVector.getY());
-        }
-
-        // rotate uv's
-        if (uvRotation != 0){
-            uvRotation = (float)(uvRotation * TrigMath.DEG_TO_RAD);
+            // rotate uv's
             float cx = TrigMath.cos(uvRotation), cy = TrigMath.sin(uvRotation);
             for (VectorM2f uv : uvs) {
                 uv.translate(-0.5f, -0.5f);
@@ -349,6 +338,42 @@ public class ResourceModelRenderer implements BlockRenderer {
                 blockColor.add(mapColor);
             }
         }
+    }
+
+    private final VectorM3f rotatedNormal = new VectorM3f(0, 0, 0);
+    private final VectorM3f rotatedUp = new VectorM3f(0, 0, 0);
+    private final VectorM3f projectedWorldUp = new VectorM3f(0, 0, 0);
+    private float uvLockRotation(Direction direction) {
+        if (!variant.isTransformed()) return 0f;
+
+        makeRotationRelative(rotatedNormal.set(direction.toVector()));
+        makeRotationRelative(rotatedUp.set(direction.getLocalUp().toVector()));
+
+        // project world-up (0, 1, 0) onto rotated face
+        projectedWorldUp.set(0f, 1f, 0f);
+        float dot = projectedWorldUp.dot(rotatedNormal);
+        projectedWorldUp.set(rotatedNormal);
+        projectedWorldUp.mul(dot);
+        projectedWorldUp.set(
+                0f - projectedWorldUp.x,
+                1f - projectedWorldUp.y,
+                0f - projectedWorldUp.z
+        );
+
+        // special case, if we are close to up or down, the rotation should be locked to NORTH/SOUTH (localUp)
+        if (projectedWorldUp.lengthSquared() < 0.01) {
+            Direction upDown = rotatedNormal.y > 0f ? Direction.UP : Direction.DOWN;
+            projectedWorldUp.set(upDown.getLocalUp().toVector());
+        } else {
+            projectedWorldUp.normalize();
+        }
+
+        // compute angle between rotatedUp and projectedWorldUp around rotatedNormal
+        dot = rotatedUp.dot(projectedWorldUp);
+        return (float) TrigMath.atan2(
+                rotatedUp.cross(projectedWorldUp).dot(rotatedNormal),
+                dot
+        );
     }
 
     private ExtendedBlock getRotationRelativeBlock(Direction direction){

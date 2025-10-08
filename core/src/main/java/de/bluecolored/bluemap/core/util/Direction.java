@@ -26,9 +26,9 @@ package de.bluecolored.bluemap.core.util;
 
 import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluemap.core.util.math.Axis;
+import lombok.Getter;
 
 import java.util.Objects;
-
 
 public enum Direction {
 
@@ -60,11 +60,18 @@ public enum Direction {
         SOUTH.right = WEST;
         WEST.right = NORTH;
         EAST.right = SOUTH;
+
+        UP.localUp = NORTH;
+        DOWN.localUp = SOUTH;
+        NORTH.localUp = UP;
+        SOUTH.localUp = UP;
+        WEST.localUp = UP;
+        EAST.localUp = UP;
     }
 
     private final Vector3i dir;
-    private final Axis axis;
-    private Direction opposite, left, right;
+    @Getter private final Axis axis;
+    @Getter private Direction opposite, left, right, localUp;
 
     Direction(int x, int y, int z, Axis axis) {
         this.dir = new Vector3i(x, y, z);
@@ -76,25 +83,10 @@ public enum Direction {
         return dir;
     }
 
-    public Direction opposite() {
-        return opposite;
-    }
-
-    public Direction left() {
-        return left;
-    }
-
-    public Direction right() {
-        return right;
-    }
-
-    public Axis getAxis() {
-        return axis;
-    }
-
     public static Direction fromString(String name){
         Objects.requireNonNull(name);
 
         return valueOf(name.toUpperCase());
     }
+
 }

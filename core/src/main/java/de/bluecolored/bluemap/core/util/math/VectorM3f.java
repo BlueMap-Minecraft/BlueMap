@@ -24,6 +24,8 @@
  */
 package de.bluecolored.bluemap.core.util.math;
 
+import com.flowpowered.math.vector.Vector3i;
+
 public class VectorM3f {
 
     public float x, y, z;
@@ -39,6 +41,35 @@ public class VectorM3f {
         this.y = y;
         this.z = z;
         return this;
+    }
+
+    public VectorM3f set(Vector3i v) {
+        this.x = v.getX();
+        this.y = v.getY();
+        this.z = v.getZ();
+        return this;
+    }
+
+    public VectorM3f set(VectorM3f v) {
+        this.x = v.x;
+        this.y = v.y;
+        this.z = v.z;
+        return this;
+    }
+
+    public VectorM3f mul(float a) {
+        this.x *= a;
+        this.y *= a;
+        this.z *= a;
+        return this;
+    }
+
+    public VectorM3f cross(VectorM3f v) {
+        return set(
+                y * v.z - z * v.y,
+                z * v.x - x * v.z,
+                x * v.y - y * v.x
+        );
     }
 
     public VectorM3f transform(MatrixM3f t) {
@@ -81,4 +112,7 @@ public class VectorM3f {
         return x * x + y * y + z * z;
     }
 
+    public float dot(VectorM3f v) {
+        return x * v.x + y * v.y + z * v.z;
+    }
 }
