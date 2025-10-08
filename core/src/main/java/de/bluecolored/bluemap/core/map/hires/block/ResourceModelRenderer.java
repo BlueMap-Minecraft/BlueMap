@@ -258,8 +258,6 @@ public class ResourceModelRenderer implements BlockRenderer {
         // UV-Lock counter-rotation
         if (variant.isUvlock() && variant.isTransformed()) {
             float uvRotation = uvLockRotation(faceDir);
-
-            // rotate uv's
             float cx = TrigMath.cos(uvRotation), cy = TrigMath.sin(uvRotation);
             for (VectorM2f uv : uvs) {
                 uv.translate(-0.5f, -0.5f);
