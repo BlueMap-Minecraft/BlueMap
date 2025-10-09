@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.core.map;
 
 import com.flowpowered.math.vector.Vector2i;
+import com.flowpowered.math.vector.Vector3i;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
@@ -70,6 +71,15 @@ public class MapSettingsSerializer implements JsonSerializer<BmMap> {
         Vector2i startPos = Optional.ofNullable(map.getMapSettings().getStartPos())
                 .orElse(map.getWorld().getSpawnPoint().toVector2(true));
         root.add("startPos", context.serialize(startPos));
+
+        // bounds
+        JsonObject bounds = new JsonObject();
+        Vector3i min = map.getMapSettings().getMinPos();
+        Vector3i max = map.getMapSettings().getMaxPos();
+        bounds.add("x", context.serialize(new int[] { min.getX(), max.getX() }));
+        bounds.add("y", context.serialize(new int[] { min.getY(), max.getY() }));
+        bounds.add("z", context.serialize(new int[] { min.getZ(), max.getZ() }));
+        root.add("bounds", bounds);
 
         // skyColor
         Color skyColor = new Color().parse(map.getMapSettings().getSkyColor());
