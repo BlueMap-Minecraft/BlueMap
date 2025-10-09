@@ -33,8 +33,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -61,12 +61,12 @@ public class BlockPropertiesConfig {
                 json.beginObject();
                 while (json.hasNext()) {
                     switch (json.nextName()) {
-                        case "culling": bsValueBuilder.culling(json.nextBoolean()); break;
-                        case "occluding": bsValueBuilder.occluding(json.nextBoolean()); break;
-                        case "alwaysWaterlogged": bsValueBuilder.alwaysWaterlogged(json.nextBoolean()); break;
-                        case "randomOffset": bsValueBuilder.randomOffset(json.nextBoolean()); break;
-                        case "cullingIdentical": bsValueBuilder.cullingIdentical(json.nextBoolean()); break;
-                        default: break;
+                        case "culling" -> bsValueBuilder.culling(json.nextBoolean());
+                        case "occluding" -> bsValueBuilder.occluding(json.nextBoolean());
+                        case "alwaysWaterlogged" -> bsValueBuilder.alwaysWaterlogged(json.nextBoolean());
+                        case "randomOffset" -> bsValueBuilder.randomOffset(json.nextBoolean());
+                        case "cullingIdentical" -> bsValueBuilder.cullingIdentical(json.nextBoolean());
+                        default -> {}
                     }
                 }
                 json.endObject();
@@ -74,7 +74,7 @@ public class BlockPropertiesConfig {
                 BlockStateMapping<BlockProperties> mapping = new BlockStateMapping<>(bsKey, bsValueBuilder.build());
 
                 // don't overwrite already present values, higher priority resources are loaded first
-                mappings.computeIfAbsent(bsKey.getId(), k -> new LinkedList<>()).add(mapping);
+                mappings.computeIfAbsent(bsKey.getId(), k -> new ArrayList<>(1)).add(mapping);
             }
             json.endObject();
         }

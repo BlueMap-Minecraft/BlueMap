@@ -34,6 +34,7 @@ import de.bluecolored.bluemap.core.util.Key;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -99,7 +100,7 @@ public class TextureGallery {
             textures[ordinal] = texture;
         });
 
-        try (Writer writer = new OutputStreamWriter(out)) {
+        try (Writer writer = new OutputStreamWriter(out, StandardCharsets.UTF_8)) {
             GSON.toJson(textures, Texture[].class, writer);
         } catch (JsonIOException ex) {
             throw new IOException(ex);
@@ -108,7 +109,7 @@ public class TextureGallery {
 
     public static TextureGallery readTexturesFile(InputStream in) throws IOException {
         TextureGallery gallery = new TextureGallery();
-        try (Reader reader = new InputStreamReader(in)) {
+        try (Reader reader = new InputStreamReader(in, StandardCharsets.UTF_8)) {
             Texture[] textures = GSON.fromJson(reader, Texture[].class);
             if (textures == null) throw new IOException("Texture data is empty!");
             gallery.nextId = textures.length;

@@ -45,7 +45,7 @@ public class Texture implements Keyed {
             new ResourcePath<>("bluemap", "missing"),
             new Color().set(0.5f, 0f, 0.5f, 1.0f, false),
             false,
-            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAPklEQVR4Xu3MsQkAMAwDQe2/tFPnBB4gpLhG8MpkZpNkZ6AKZKAKZKAKZKAKZKAKZKAKZKAKWg0XD/UPnjg4MbX+EDdeTUwAAAAASUVORK5CYII\u003d",
+            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAPklEQVR4Xu3MsQkAMAwDQe2/tFPnBB4gpLhG8MpkZpNkZ6AKZKAKZKAKZKAKZKAKZKAKZKAKWg0XD/UPnjg4MbX+EDdeTUwAAAAASUVORK5CYII=",
             null,
             null
     );
@@ -82,6 +82,7 @@ public class Texture implements Keyed {
         this.animation = null;
     }
 
+    @Override
     public ResourcePath<Texture> getKey() {
         return resourcePath;
     }

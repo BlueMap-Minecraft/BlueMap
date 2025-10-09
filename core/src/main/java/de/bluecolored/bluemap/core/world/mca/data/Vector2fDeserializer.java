@@ -64,9 +64,9 @@ public class Vector2fDeserializer implements TypeDeserializer<Vector2f> {
                 reader.beginCompound();
                 while (reader.peek() != TagType.END) {
                     switch (reader.name()) {
-                        case "x", "yaw": x = reader.nextFloat(); break;
-                        case "y", "z", "pitch": y = reader.nextFloat(); break;
-                        default: reader.skip();
+                        case "x", "yaw" -> x = reader.nextFloat();
+                        case "y", "z", "pitch" -> y = reader.nextFloat();
+                        default -> reader.skip();
                     }
                 }
                 reader.endCompound();

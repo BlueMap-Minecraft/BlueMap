@@ -82,9 +82,9 @@ public class Multipart {
                 while (in.hasNext()) {
                     String key = in.nextName();
                     switch (key) {
-                        case "when": condition = readCondition(in); break;
-                        case "apply": variantSet = gson.fromJson(in, VariantSet.class); break;
-                        default: in.skipValue(); break;
+                        case "when" -> condition = readCondition(in);
+                        case "apply" -> variantSet = gson.fromJson(in, VariantSet.class);
+                        default -> in.skipValue();
                     }
                 }
                 in.endObject();

@@ -109,16 +109,12 @@ class FileGridStorage implements GridStorage {
     }
 
     public Path getItemPath(int x, int z) {
-        StringBuilder sb = new StringBuilder()
-                .append('x')
-                .append(x)
-                .append('z')
-                .append(z);
+        String encodedPosition = "x" + x + "z" + z;
 
         LinkedList<String> folders = new LinkedList<>();
         StringBuilder folder = new StringBuilder();
-        for (int i = 0; i < sb.length(); i++) {
-            char c = sb.charAt(i);
+        for (int i = 0; i < encodedPosition.length(); i++) {
+            char c = encodedPosition.charAt(i);
             folder.append(c);
             if (c >= '0' && c <= '9') {
                 folders.add(folder.toString());

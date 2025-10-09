@@ -115,6 +115,7 @@ public class ResourcePack extends Pack {
             extensions.put(extensionType, extensionType.create(this));
     }
 
+    @Override
     public synchronized void loadResources(Iterable<Path> roots) throws IOException, InterruptedException {
         Logger.global.logInfo("Loading resources...");
 
@@ -284,7 +285,7 @@ public class ResourcePack extends Pack {
 
         } catch (RuntimeException ex) {
             Throwable cause = ex.getCause();
-            if (cause instanceof IOException) throw (IOException) cause;
+            if (cause instanceof IOException ioEx) throw ioEx;
             if (cause != null) throw new IOException(cause);
             throw new IOException(ex);
         }

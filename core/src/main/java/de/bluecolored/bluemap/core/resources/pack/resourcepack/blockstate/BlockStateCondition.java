@@ -91,8 +91,8 @@ public interface BlockStateCondition {
             // Optimization: count distinct properties
             Set<String> distinctPropertiesSet = new HashSet<>();
             for (BlockStateCondition condition : this.conditions) {
-                if (condition instanceof Property) {
-                    distinctPropertiesSet.add(((Property) condition).key);
+                if (condition instanceof Property property) {
+                    distinctPropertiesSet.add(property.key);
                 }
             }
             this.distinctProperties = distinctPropertiesSet.size();

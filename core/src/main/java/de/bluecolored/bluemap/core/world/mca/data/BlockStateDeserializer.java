@@ -44,15 +44,15 @@ public class BlockStateDeserializer implements TypeDeserializer<BlockState> {
 
         while (reader.hasNext()) {
             switch (reader.name()) {
-                case "Name" : id = reader.nextString(); break;
-                case "Properties" :
+                case "Name" -> id = reader.nextString();
+                case "Properties" -> {
                     properties = new LinkedHashMap<>();
                     reader.beginCompound();
                     while (reader.hasNext())
                         properties.put(reader.name(), reader.nextString());
                     reader.endCompound();
-                    break;
-                default : reader.skip();
+                }
+                default -> reader.skip();
             }
         }
 

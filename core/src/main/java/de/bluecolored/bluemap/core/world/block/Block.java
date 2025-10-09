@@ -95,6 +95,7 @@ public class Block implements BlockAccess {
         return biome;
     }
 
+    @Override
     public @Nullable BlockEntity getBlockEntity() {
         if (!isBlockEntitySet) {
             blockEntity = getChunk().getBlockEntity(x, y, z);

@@ -51,7 +51,6 @@ import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 import de.bluecolored.bluemap.core.world.block.ExtendedBlock;
 import lombok.Getter;
 
-import java.util.EnumMap;
 import java.util.function.Function;
 
 /**
@@ -72,7 +71,6 @@ public class ResourceModelRenderer implements BlockRenderer {
     private final VectorM2f[] uvs = new VectorM2f[4];
     private final Color tintColor = new Color();
     private final Color mapColor = new Color();
-    private final EnumMap<Direction, Float> uvLockRotationCache = new EnumMap<>(Direction.class);
 
     private BlockNeighborhood block;
     private Variant variant;
@@ -92,6 +90,7 @@ public class ResourceModelRenderer implements BlockRenderer {
         for (int i = 0; i < rawUvs.length; i++) rawUvs[i] = new VectorM2f(0, 0);
     }
 
+    @Override
     public void render(BlockNeighborhood block, Variant variant, TileModelView blockModel, Color color) {
         this.block = block;
         this.blockModel = blockModel;

@@ -186,6 +186,7 @@ public class ArrayTileModel implements TileModel {
         return this;
     }
 
+    @Override
     public ArrayTileModel invertOrientation(int face) {
         int index;
         float x, y, z;

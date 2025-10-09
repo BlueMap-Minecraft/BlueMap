@@ -26,12 +26,9 @@ package de.bluecolored.bluemap.core.world.mca.region;
 
 import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.core.storage.compression.Compression;
-import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.ChunkConsumer;
 import de.bluecolored.bluemap.core.world.Region;
 import de.bluecolored.bluemap.core.world.mca.ChunkLoader;
-import de.bluecolored.bluemap.core.world.mca.chunk.MCAChunkLoader;
-import de.bluecolored.bluemap.core.world.mca.chunk.MCAChunk;
 import lombok.Getter;
 
 import java.io.IOException;

@@ -81,12 +81,12 @@ public class AnimationMeta {
                 in.beginObject();
                 while (in.hasNext()) {
                     switch (in.nextName()) {
-                        case "interpolate" : animationMeta.interpolate = in.nextBoolean(); break;
-                        case "width" : animationMeta.width = in.nextInt(); break;
-                        case "height" : animationMeta.height = in.nextInt(); break;
-                        case "frametime" : animationMeta.frametime = (int) in.nextDouble(); break;
-                        case "frames" : readFramesList(in, animationMeta); break;
-                        default: in.skipValue(); break;
+                        case "interpolate" -> animationMeta.interpolate = in.nextBoolean();
+                        case "width" -> animationMeta.width = in.nextInt();
+                        case "height" -> animationMeta.height = in.nextInt();
+                        case "frametime" -> animationMeta.frametime = (int) in.nextDouble();
+                        case "frames" -> readFramesList(in, animationMeta);
+                        default -> in.skipValue();
                     }
                 }
                 in.endObject();
@@ -118,9 +118,9 @@ public class AnimationMeta {
                     in.beginObject();
                     while (in.hasNext()) {
                         switch (in.nextName()) {
-                            case "index" : index = in.nextInt(); break;
-                            case "time" : time = (int) in.nextDouble(); break;
-                            default: in.skipValue(); break;
+                            case "index" -> index = in.nextInt();
+                            case "time" -> time = (int) in.nextDouble();
+                            default -> in.skipValue();
                         }
                     }
                     in.endObject();

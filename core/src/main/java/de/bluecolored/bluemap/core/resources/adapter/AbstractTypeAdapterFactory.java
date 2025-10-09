@@ -49,6 +49,7 @@ public abstract class AbstractTypeAdapterFactory<T> implements TypeAdapterFactor
     public abstract T read(JsonReader in, Gson gson) throws IOException;
 
     @SuppressWarnings("unchecked")
+    @Override
     public <U> TypeAdapter<U> create(Gson gson, TypeToken<U> type) {
         if (!type.getRawType().isAssignableFrom(this.type)) return null;
         return (TypeAdapter<U>) new Adapter(gson);

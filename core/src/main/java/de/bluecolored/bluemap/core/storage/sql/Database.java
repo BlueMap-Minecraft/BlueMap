@@ -110,9 +110,9 @@ public class Database implements Closeable {
     @Override
     public void close() throws IOException {
         isClosed = true;
-        if (dataSource instanceof AutoCloseable) {
+        if (dataSource instanceof AutoCloseable closeable) {
             try {
-                ((AutoCloseable) dataSource).close();
+                closeable.close();
             } catch (IOException ex) {
                 throw ex;
             } catch (Exception ex) {
