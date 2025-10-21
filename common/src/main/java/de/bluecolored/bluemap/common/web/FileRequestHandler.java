@@ -85,7 +85,7 @@ public class FileRequestHandler implements HttpRequestHandler {
         // redirect to have correct relative paths
         if (Files.isDirectory(filePath) && !request.getPath().endsWith("/")) {
             HttpResponse response = new HttpResponse(HttpStatusCode.SEE_OTHER);
-            response.addHeader("Location", "/" + path + "/" + (request.getRawQueryString().isEmpty() ? "" : "?" + request.getRawQueryString()));
+            response.addHeader("Location", "/" + path + "/" + (request.getGETParamString().isEmpty() ? "" : "?" + request.getGETParamString()));
             return response;
         }
 
@@ -151,7 +151,7 @@ public class FileRequestHandler implements HttpRequestHandler {
 
         //send response
         try {
-            response.setBody(Files.newInputStream(filePath));
+            response.setData(Files.newInputStream(filePath));
             return response;
         } catch (FileNotFoundException e) {
             return new HttpResponse(HttpStatusCode.NOT_FOUND);
