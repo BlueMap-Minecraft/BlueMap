@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "rotation=0": { "model": "entity/signs/pale_oak" },
+    "rotation=1": { "model": "entity/signs/pale_oak", "y": 22.5 },
+    "rotation=2": { "model": "entity/signs/pale_oak", "y": 45 },
+    "rotation=3": { "model": "entity/signs/pale_oak", "y": 67.5 },
+    "rotation=4": { "model": "entity/signs/pale_oak", "y": 90 },
+    "rotation=5": { "model": "entity/signs/pale_oak", "y": 112.5 },
+    "rotation=6": { "model": "entity/signs/pale_oak", "y": 135 },
+    "rotation=7": { "model": "entity/signs/pale_oak", "y": 157.5 },
+    "rotation=8": { "model": "entity/signs/pale_oak", "y": 180 },
+    "rotation=9": { "model": "entity/signs/pale_oak", "y": 202.5 },
+    "rotation=10": { "model": "entity/signs/pale_oak", "y": 225 },
+    "rotation=11": { "model": "entity/signs/pale_oak", "y": 247.5 },
+    "rotation=12": { "model": "entity/signs/pale_oak", "y": 270 },
+    "rotation=13": { "model": "entity/signs/pale_oak", "y": 292.5 },
+    "rotation=14": { "model": "entity/signs/pale_oak", "y": 315 },
+    "rotation=15": { "model": "entity/signs/pale_oak", "y": 337.5 }
+  }
+}
