@@ -8,7 +8,7 @@ plugins {
 }
 
 val supportedMinecraftVersions = listOf(
-    "1.21.9"
+    "1.21.9", "1.21.10"
 )
 
 val minecraftVersion = supportedMinecraftVersions.first()
