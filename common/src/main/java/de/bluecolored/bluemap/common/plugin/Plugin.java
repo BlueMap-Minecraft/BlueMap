@@ -67,6 +67,7 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -328,8 +329,8 @@ public class Plugin implements ServerEventListener {
                 daemonTimer.schedule(fileWatcherRestartTask, TimeUnit.HOURS.toMillis(1), TimeUnit.HOURS.toMillis(1));
 
                 //periodically update all (non frozen) maps
-                if (pluginConfig.getFullUpdateInterval() > 0) {
-                    long fullUpdateTime = TimeUnit.MINUTES.toMillis(pluginConfig.getFullUpdateInterval());
+                long fullUpdateInterval = pluginConfig.getFullUpdateInterval().toMillis();
+                if (fullUpdateInterval > 0) {
                     TimerTask updateAllMapsTask = new TimerTask() {
                         @Override
                         public void run() {
@@ -340,7 +341,7 @@ public class Plugin implements ServerEventListener {
                                     .toArray(RenderTask[]::new));
                         }
                     };
-                    daemonTimer.scheduleAtFixedRate(updateAllMapsTask, 0, fullUpdateTime);
+                    daemonTimer.scheduleAtFixedRate(updateAllMapsTask, 0, fullUpdateInterval);
                 }
 
                 //metrics
@@ -565,8 +566,10 @@ public class Plugin implements ServerEventListener {
     public synchronized void startWatchingMap(BmMap map) {
         stopWatchingMap(map);
 
+        if (blueMap == null) return;
+
         try {
-            MapUpdateService watcher = new MapUpdateService(renderManager, map);
+            MapUpdateService watcher = new MapUpdateService(renderManager, map, blueMap.getConfig().getPluginConfig().getUpdateCooldown());
             watcher.start();
             mapUpdateServices.put(map.getId(), watcher);
         } catch (IOException ex) {

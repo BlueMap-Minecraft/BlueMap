@@ -103,7 +103,7 @@ public class BlueMapCLI {
         if (watch) {
             for (BmMap map : maps.values()) {
                 try {
-                    MapUpdateService watcher = new MapUpdateService(renderManager, map);
+                    MapUpdateService watcher = new MapUpdateService(renderManager, map, blueMap.getConfig().getPluginConfig().getUpdateCooldown());
                     watcher.start();
                     mapUpdateServices.add(watcher);
                 } catch (IOException ex) {
