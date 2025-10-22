@@ -49,8 +49,8 @@ public class BlueMapResponseModifier implements HttpRequestHandler {
         HttpResponse response = delegate.handle(request);
 
         HttpStatusCode status = response.getStatusCode();
-        if (status.getCode() >= 400 && !response.hasData()){
-            response.setData(status.getCode() + " - " + status.getMessage() + "\n" + this.serverName);
+        if (status.getCode() >= 400 && response.getBody() != null){
+            response.setBody(status.getCode() + " - " + status.getMessage() + "\n" + this.serverName);
         }
 
         response.addHeader("Server", this.serverName);

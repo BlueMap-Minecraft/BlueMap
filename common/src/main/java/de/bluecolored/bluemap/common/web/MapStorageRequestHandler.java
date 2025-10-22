@@ -122,7 +122,7 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
                 request.hasHeaderValue("Accept-Encoding", compression.getId())
         ) {
             response.addHeader("Content-Encoding", compression.getId());
-            response.setData(data);
+            response.setBody(data);
         } else if (
                 compression != Compression.GZIP &&
                 !response.hasHeaderValue("Content-Type", "image/png") &&
@@ -134,9 +134,9 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
                 data.decompress().transferTo(os);
             }
             byte[] compressedData = byteOut.toByteArray();
-            response.setData(new ByteArrayInputStream(compressedData));
+            response.setBody(new ByteArrayInputStream(compressedData));
         } else {
-            response.setData(data.decompress());
+            response.setBody(data.decompress());
         }
     }
 
