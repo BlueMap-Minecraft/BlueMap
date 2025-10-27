@@ -24,7 +24,25 @@
  */
 package de.bluecolored.bluemap.common.web.http;
 
-import java.nio.channels.SelectionKey;
-import java.util.function.Consumer;
+import java.util.Locale;
+import java.util.Map;
 
-public interface SelectionConsumer extends Consumer<SelectionKey> {}
+public interface HttpHeaderCarrier {
+
+    Map<String, HttpHeader> getHeaders();
+
+    default void addHeader(String name, String... values) {
+        getHeaders().put(name.toLowerCase(Locale.ROOT), new HttpHeader(name, values));
+    }
+
+    default HttpHeader getHeader(String key) {
+        return getHeaders().get(key.toLowerCase(Locale.ROOT));
+    }
+
+    default boolean hasHeaderValue(String key, String value) {
+        HttpHeader header = getHeader(key);
+        if (header == null) return false;
+        return header.contains(value);
+    }
+
+}
