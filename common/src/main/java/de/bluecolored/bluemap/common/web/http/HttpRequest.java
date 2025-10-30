@@ -24,6 +24,8 @@
  */
 package de.bluecolored.bluemap.common.web.http;
 
+import org.jetbrains.annotations.Nullable;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -218,7 +220,7 @@ public class HttpRequest {
         return new ByteArrayInputStream(data);
     }
 
-    public String getPath() {
+    public @Nullable String getPath() {
         if (path == null) parseAddress();
         return path;
     }
@@ -232,7 +234,7 @@ public class HttpRequest {
         return getParams;
     }
 
-    public String getGETParamString() {
+    public @Nullable String getGETParamString() {
         if (getParamString == null) parseAddress();
         return getParamString;
     }
@@ -249,12 +251,15 @@ public class HttpRequest {
 
     private void parseGetParams() {
         Map<String, String> getParams = new HashMap<>();
-        for (String getParam : this.getGETParamString().split("&")){
-            if (getParam.isEmpty()) continue;
-            String[] kv = getParam.split("=", 2);
-            String key = kv[0];
-            String value = kv.length > 1 ? kv[1] : "";
-            getParams.put(key, value);
+        String getParamString = this.getGETParamString();
+        if (getParamString != null) {
+            for (String getParam : getParamString.split("&")) {
+                if (getParam.isEmpty()) continue;
+                String[] kv = getParam.split("=", 2);
+                String key = kv[0];
+                String value = kv.length > 1 ? kv[1] : "";
+                getParams.put(key, value);
+            }
         }
         this.getParams = getParams;
     }

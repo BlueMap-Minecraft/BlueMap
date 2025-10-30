@@ -65,6 +65,7 @@ public class FileRequestHandler implements HttpRequestHandler {
 
     private HttpResponse generateResponse(HttpRequest request) throws IOException {
         String path = request.getPath();
+        if (path == null) return new HttpResponse(HttpStatusCode.BAD_REQUEST);
 
         // normalize path
         if (path.startsWith("/")) path = path.substring(1);
