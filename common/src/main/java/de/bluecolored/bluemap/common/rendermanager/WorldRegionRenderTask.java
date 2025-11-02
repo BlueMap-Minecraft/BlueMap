@@ -329,6 +329,7 @@ public class WorldRegionRenderTask implements MapRenderTask {
     }
 
     private @Nullable TileState checkTileRenderPreconditions(Vector2i tile) {
+        boolean chunksAreGenerated = false;
         boolean chunksAreInhabited = false;
 
         long minInhabitedTime = map.getMapSettings().getMinInhabitedTime();
@@ -344,11 +345,17 @@ public class WorldRegionRenderTask implements MapRenderTask {
             for (int chunkZ = minZ; chunkZ <= maxZ; chunkZ++) {
                 Chunk chunk = map.getWorld().getChunk(chunkX, chunkZ);
                 if (chunk == Chunk.ERRORED_CHUNK) return TileState.CHUNK_ERROR;
-                if (!chunk.isGenerated()) return TileState.NOT_GENERATED;
-                if (requireLight && !chunk.hasLightData()) return TileState.MISSING_LIGHT;
+                if (requireLight) {
+                    if (!chunk.isGenerated()) return TileState.NOT_GENERATED;
+                    if (!chunk.hasLightData()) return TileState.MISSING_LIGHT;
+                } else {
+                    if (chunk.isGenerated()) chunksAreGenerated = true;
+                }
                 if (chunk.getInhabitedTime() >= minInhabitedTime) chunksAreInhabited = true;
             }
         }
+
+        if (!chunksAreGenerated) return TileState.NOT_GENERATED;
 
         // second pass for increased inhabited-time-radius
         if (!chunksAreInhabited && minInhabitedTimeRadius > 0) {
