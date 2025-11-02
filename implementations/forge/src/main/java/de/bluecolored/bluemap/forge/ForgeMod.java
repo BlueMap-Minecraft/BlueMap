@@ -146,7 +146,7 @@ public class ForgeMod implements Server {
     }
 
     @SubscribeEvent
-    public void onTick(ServerTickEvent.Post evt) {
+    public void onTick(ServerTickEvent evt) {
         updateSomePlayers();
     }
 
