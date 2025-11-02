@@ -53,8 +53,9 @@ import net.minecraftforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent;
 import net.minecraftforge.event.server.ServerStartedEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.event.server.ServerStoppingEvent;
-import net.minecraftforge.eventbus.api.listener.SubscribeEvent;
+import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.IExtensionPoint;
+import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.apache.logging.log4j.LogManager;
@@ -97,7 +98,7 @@ public class ForgeMod implements Server {
         MinecraftForge.EVENT_BUS.register(this.eventForwarder);
 
         //Make sure the mod being absent on the other network side does not cause the client to display the server as incompatible
-        context.registerExtensionPoint(
+        ModLoadingContext.get().registerExtensionPoint(
                 IExtensionPoint.DisplayTest.class,
                 () -> new IExtensionPoint.DisplayTest(
                         () -> IExtensionPoint.DisplayTest.IGNORESERVERONLY,
@@ -146,13 +147,13 @@ public class ForgeMod implements Server {
     }
 
     @SubscribeEvent
-    public void onTick(ServerTickEvent.Post evt) {
+    public void onTick(ServerTickEvent evt) {
         updateSomePlayers();
     }
 
     @Override
     public String getMinecraftVersion() {
-        return SharedConstants.getCurrentVersion().id();
+        return SharedConstants.getCurrentVersion().getId();
     }
 
     @Override

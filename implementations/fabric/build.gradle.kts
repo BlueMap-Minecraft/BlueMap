@@ -8,13 +8,13 @@ plugins {
 }
 
 val supportedMinecraftVersions = listOf(
-    "1.21.9", "1.21.10"
+    "1.21", "1.21.1", "1.21.2", "1.21.3", "1.21.4"
 )
 
 val minecraftVersion = supportedMinecraftVersions.first()
 val yarnMappings = "${minecraftVersion}+build.1"
 val fabricLoaderVersion = "0.17.2"
-val fabricApiVersion = "0.133.14+${minecraftVersion}"
+val fabricApiVersion = "0.100.1+${minecraftVersion}"
 
 val shadowInclude: Configuration by configurations.creating
 configurations.api.get().extendsFrom(shadowInclude)

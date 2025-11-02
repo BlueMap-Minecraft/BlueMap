@@ -41,7 +41,6 @@ import net.fabricmc.fabric.api.command.v2.CommandRegistrationCallback;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
-import net.kyori.adventure.text.serializer.json.JSONComponentSerializer;
 import net.minecraft.SharedConstants;
 import net.minecraft.registry.RegistryKey;
 import net.minecraft.registry.RegistryKeys;
@@ -138,7 +137,7 @@ public class FabricMod implements ModInitializer, Server {
 
     @Override
     public String getMinecraftVersion() {
-        return SharedConstants.getGameVersion().comp_4024();
+        return SharedConstants.getGameVersion().getId();
     }
 
     @Override
