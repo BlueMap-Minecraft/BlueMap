@@ -348,9 +348,8 @@ public class WorldRegionRenderTask implements MapRenderTask {
                 if (requireLight) {
                     if (!chunk.isGenerated()) return TileState.NOT_GENERATED;
                     if (!chunk.hasLightData()) return TileState.MISSING_LIGHT;
-                } else {
-                    if (chunk.isGenerated()) chunksAreGenerated = true;
                 }
+                if (chunk.isGenerated()) chunksAreGenerated = true;
                 if (chunk.getInhabitedTime() >= minInhabitedTime) chunksAreInhabited = true;
             }
         }
