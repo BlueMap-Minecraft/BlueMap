@@ -67,6 +67,7 @@ public class RoutingRequestHandler implements HttpRequestHandler {
     @Override
     public HttpResponse handle(HttpRequest request) {
         String path = request.getPath();
+        if (path == null) return new HttpResponse(HttpStatusCode.BAD_REQUEST);
 
         // normalize path
         if (path.startsWith("/")) path = path.substring(1);

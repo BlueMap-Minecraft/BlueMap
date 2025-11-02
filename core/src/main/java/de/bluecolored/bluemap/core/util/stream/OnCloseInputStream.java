@@ -53,8 +53,8 @@ public class OnCloseInputStream extends DelegateInputStream {
             onClose.close();
         } catch (Exception ex) {
             if (ioExcetion == null) {
-                if (ex instanceof IOException) {
-                    ioExcetion = (IOException) ex;
+                if (ex instanceof IOException ioEx) {
+                    ioExcetion = ioEx;
                 } else {
                     ioExcetion = new IOException(ex);
                 }

@@ -63,9 +63,9 @@ public class Vector2iDeserializer implements TypeDeserializer<Vector2i> {
                 reader.beginCompound();
                 while (reader.peek() != TagType.END) {
                     switch (reader.name()) {
-                        case "x": x = reader.nextDouble(); break;
-                        case "y", "z": y = reader.nextDouble(); break;
-                        default: reader.skip();
+                        case "x" -> x = reader.nextDouble();
+                        case "y", "z" -> y = reader.nextDouble();
+                        default -> reader.skip();
                     }
                 }
                 reader.endCompound();

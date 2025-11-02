@@ -50,7 +50,7 @@ public class ColorAdapter extends TypeAdapter<Color> {
         Color value = new Color();
         JsonToken token = in.peek();
         switch (token) {
-            case BEGIN_ARRAY:
+            case BEGIN_ARRAY -> {
                 in.beginArray();
                 value.set(
                         (float) in.nextDouble(),
@@ -60,8 +60,8 @@ public class ColorAdapter extends TypeAdapter<Color> {
                         false
                 );
                 in.endArray();
-                break;
-            case BEGIN_OBJECT:
+            }
+            case BEGIN_OBJECT -> {
                 value.a = 1f;
                 in.beginObject();
                 while (in.hasNext()) {
@@ -76,18 +76,15 @@ public class ColorAdapter extends TypeAdapter<Color> {
                     }
                 }
                 in.endObject();
-                break;
-            case STRING:
-                value.parse(in.nextString());
-                break;
-            case NUMBER:
+            }
+            case STRING -> value.parse(in.nextString());
+            case NUMBER -> {
                 int color = in.nextInt();
                 if ((color & 0xFF000000) == 0) color = color | 0xFF000000; // assume full alpha if not specified
                 value.set(color);
-                break;
-            case NULL:
-                break;
-            default: throw new IOException("Unexpected token while parsing Color:" + token);
+            }
+            case NULL -> {}
+            default -> throw new IOException("Unexpected token while parsing Color:" + token);
         }
         return value;
     }

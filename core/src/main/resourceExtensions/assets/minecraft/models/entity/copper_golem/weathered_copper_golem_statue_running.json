@@ -1,0 +1,7 @@
+{
+  "parent": "minecraft:entity/copper_golem/copper_golem_statue_running",
+  "textures": {
+    "golem": "minecraft:entity/copper_golem/weathered_copper_golem",
+    "particle": "minecraft:block/weathered_copper"
+  }
+}

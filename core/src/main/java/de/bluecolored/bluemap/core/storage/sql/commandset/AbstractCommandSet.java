@@ -71,6 +71,7 @@ public abstract class AbstractCommandSet implements CommandSet {
     @Language("sql")
     public abstract String createGridStorageDataTableStatement();
 
+    @Override
     public void initializeTables() throws IOException {
         db.run(connection -> {
             executeUpdate(connection, createMapTableStatement());

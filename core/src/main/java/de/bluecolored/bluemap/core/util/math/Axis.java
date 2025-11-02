@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.core.util.math;
 
 import com.flowpowered.math.vector.Vector3i;
 
+import java.util.Locale;
 import java.util.Objects;
 
 public enum Axis {
@@ -47,6 +48,6 @@ public enum Axis {
     public static Axis fromString(String name){
         Objects.requireNonNull(name);
 
-        return valueOf(name.toUpperCase());
+        return valueOf(name.toUpperCase(Locale.ROOT));
     }
 }

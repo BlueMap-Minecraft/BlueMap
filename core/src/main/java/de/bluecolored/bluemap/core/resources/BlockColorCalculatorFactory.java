@@ -31,7 +31,6 @@ import com.google.gson.stream.JsonReader;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.math.Color;
-import de.bluecolored.bluemap.core.world.BlockProperties;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.biome.Biome;
 import de.bluecolored.bluemap.core.world.block.BlockAccess;
@@ -42,7 +41,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -89,32 +91,22 @@ public class BlockColorCalculatorFactory {
 
                 ColorFunction colorFunction;
                 switch (value) {
-                    case "@foliage":
-                        colorFunction = BlockColorCalculator::getBlendedFoliageColor;
-                        break;
-                    case "@dry_foliage":
-                        colorFunction = BlockColorCalculator::getBlendedDryFoliageColor;
-                        break;
-                    case "@grass":
-                        colorFunction = BlockColorCalculator::getBlendedGrassColor;
-                        break;
-                    case "@water":
-                        colorFunction = BlockColorCalculator::getBlendedWaterColor;
-                        break;
-                    case "@redstone":
-                        colorFunction = BlockColorCalculator::getRedstoneColor;
-                        break;
-                    default:
+                    case "@foliage" -> colorFunction = BlockColorCalculator::getBlendedFoliageColor;
+                    case "@dry_foliage" -> colorFunction = BlockColorCalculator::getBlendedDryFoliageColor;
+                    case "@grass" -> colorFunction = BlockColorCalculator::getBlendedGrassColor;
+                    case "@water" -> colorFunction = BlockColorCalculator::getBlendedWaterColor;
+                    case "@redstone" -> colorFunction = BlockColorCalculator::getRedstoneColor;
+                    default -> {
                         final Color color = new Color();
                         color.parse(value).premultiplied();
                         colorFunction = (calculator, block, target) -> target.set(color);
-                        break;
+                    }
                 }
 
                 BlockStateMapping<ColorFunction> mapping = new BlockStateMapping<>(key, colorFunction);
 
                 // don't overwrite already present values, higher priority resources are loaded first
-                mappings.computeIfAbsent(key.getId(), k -> new LinkedList<>()).add(mapping);
+                mappings.computeIfAbsent(key.getId(), k -> new ArrayList<>(1)).add(mapping);
             }
 
             json.endObject();

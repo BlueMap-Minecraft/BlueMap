@@ -45,12 +45,12 @@ public abstract class Server extends Thread implements Closeable, Runnable {
         this.server = new ArrayList<>();
     }
 
-    public abstract void handleConnection(SocketChannel connection) throws IOException;
+    public abstract SelectionConsumer createConnectionHandler();
 
     public void bind(SocketAddress address) throws IOException {
         final ServerSocketChannel server = ServerSocketChannel.open();
         server.configureBlocking(false);
-        server.register(selector, SelectionKey.OP_ACCEPT);
+        server.register(selector, SelectionKey.OP_ACCEPT, (SelectionConsumer) this::accept);
         server.bind(address);
         this.server.add(server);
 
@@ -62,7 +62,8 @@ public abstract class Server extends Thread implements Closeable, Runnable {
     }
 
     private boolean checkIfBoundToAllInterfaces(SocketAddress address) {
-        if (address instanceof InetSocketAddress inetAddress) {
+        if (address instanceof InetSocketAddress) {
+            InetSocketAddress inetAddress = (InetSocketAddress) address;
             return Objects.equals(inetAddress.getAddress(), new InetSocketAddress(0).getAddress());
         }
 
@@ -74,10 +75,17 @@ public abstract class Server extends Thread implements Closeable, Runnable {
         Logger.global.logInfo("WebServer started.");
         while (this.selector.isOpen()) {
             try {
-                this.selector.select(this::accept);
+                this.selector.select(this::selection);
             } catch (IOException e) {
                 Logger.global.logDebug("Failed to select channel: " + e);
             } catch (ClosedSelectorException ignore) {}
+        }
+    }
+
+    private void selection(SelectionKey selectionKey) {
+        Object attachment = selectionKey.attachment();
+        if (attachment instanceof SelectionConsumer) {
+            ((SelectionConsumer) attachment).accept(selectionKey);
         }
     }
 
@@ -87,7 +95,8 @@ public abstract class Server extends Thread implements Closeable, Runnable {
             ServerSocketChannel serverSocketChannel = (ServerSocketChannel) selectionKey.channel();
             SocketChannel channel = serverSocketChannel.accept();
             if (channel == null) return;
-            handleConnection(channel);
+            channel.configureBlocking(false);
+            channel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE, createConnectionHandler());
         } catch (IOException e) {
             Logger.global.logDebug("Failed to accept connection: " + e);
         }

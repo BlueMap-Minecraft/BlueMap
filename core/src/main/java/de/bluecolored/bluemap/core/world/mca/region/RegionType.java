@@ -100,10 +100,12 @@ public interface RegionType extends Keyed {
         private final RegionFileNameFunction regionFileNameFunction;
         private final Pattern regionFileNamePattern;
 
+        @Override
         public <T> Region<T> createRegion(ChunkLoader<T> chunkLoader, Path regionFile) {
             return this.regionFactory.create(chunkLoader, regionFile);
         }
 
+        @Override
         public String getRegionFileName(int regionX, int regionZ) {
             return regionFileNameFunction.getRegionFileName(regionX, regionZ);
         }

@@ -1,0 +1,6 @@
+{
+  "parent": "minecraft:entity/signs/hanging_sign_attached",
+  "textures": {
+    "wood": "minecraft:entity/signs/hanging/pale_oak"
+  }
+}

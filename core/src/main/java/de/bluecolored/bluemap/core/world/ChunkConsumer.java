@@ -24,8 +24,6 @@
  */
 package de.bluecolored.bluemap.core.world;
 
-import de.bluecolored.bluemap.core.logger.Logger;
-
 import java.io.IOException;
 
 @FunctionalInterface

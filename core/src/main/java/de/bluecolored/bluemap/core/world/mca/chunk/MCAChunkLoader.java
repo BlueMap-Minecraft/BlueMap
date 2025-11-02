@@ -57,6 +57,7 @@ public class MCAChunkLoader implements ChunkLoader<Chunk> {
 
     private ChunkVersionLoader<?> lastUsedLoader = CHUNK_VERSION_LOADERS.get(0);
 
+    @Override
     public MCAChunk load(byte[] data, int offset, int length, Compression compression) throws IOException {
         InputStream in = new ByteArrayInputStream(data, offset, length);
         in.mark(-1);

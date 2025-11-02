@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.common.config;
 
+import lombok.Getter;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import java.nio.file.Path;
@@ -33,6 +34,7 @@ import java.util.Set;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
 @ConfigSerializable
+@Getter
 public class WebappConfig {
 
     private boolean enabled = true;
@@ -65,80 +67,8 @@ public class WebappConfig {
     private Set<String> scripts = new HashSet<>();
     private Set<String> styles = new HashSet<>();
 
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public Path getWebroot() {
-        return webroot;
-    }
-
-    public boolean isUpdateSettingsFile() {
-        return updateSettingsFile;
-    }
-
-    public boolean isUseCookies() {
-        return useCookies;
-    }
-
-    public boolean isDefaultToFlatView() {
-        return defaultToFlatView;
-    }
-
     public Optional<String> getStartLocation() {
         return Optional.ofNullable(startLocation);
-    }
-
-    public float getResolutionDefault() {
-        return resolutionDefault;
-    }
-
-    public int getMinZoomDistance() {
-        return minZoomDistance;
-    }
-
-    public int getMaxZoomDistance() {
-        return maxZoomDistance;
-    }
-
-    public int getHiresSliderMax() {
-        return hiresSliderMax;
-    }
-
-    public int getHiresSliderDefault() {
-        return hiresSliderDefault;
-    }
-
-    public int getHiresSliderMin() {
-        return hiresSliderMin;
-    }
-
-    public int getLowresSliderMax() {
-        return lowresSliderMax;
-    }
-
-    public int getLowresSliderDefault() {
-        return lowresSliderDefault;
-    }
-
-    public int getLowresSliderMin() {
-        return lowresSliderMin;
-    }
-
-    public String getMapDataRoot() {
-        return mapDataRoot;
-    }
-
-    public String getLiveDataRoot() {
-        return liveDataRoot;
-    }
-
-    public Set<String> getScripts() {
-        return scripts;
-    }
-
-    public Set<String> getStyles() {
-        return styles;
     }
 
 }

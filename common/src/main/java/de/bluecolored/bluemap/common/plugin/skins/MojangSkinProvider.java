@@ -35,6 +35,7 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.URI;
 import java.net.URL;
 import java.util.Base64;
 import java.util.Optional;
@@ -45,10 +46,9 @@ public class MojangSkinProvider implements SkinProvider {
     @Override
     public Optional<BufferedImage> load(UUID playerUUID) throws IOException {
         try (Reader reader = requestProfileJson(playerUUID)) {
-            JsonParser parser = new JsonParser();
-            String textureInfoJson = readTextureInfoJson(parser.parse(reader));
-            String textureUrl = readTextureUrl(parser.parse(textureInfoJson));
-            return Optional.of(ImageIO.read(new URL(textureUrl)));
+            String textureInfoJson = readTextureInfoJson(JsonParser.parseReader(reader));
+            String textureUrl = readTextureUrl(JsonParser.parseString(textureInfoJson));
+            return Optional.of(ImageIO.read(URI.create(textureUrl).toURL()));
         } catch (IOException ex) {
             Logger.global.logDebug("Failed to load skin from mojang for player: '" + playerUUID + "' - " + ex);
             return Optional.empty();
@@ -56,7 +56,7 @@ public class MojangSkinProvider implements SkinProvider {
     }
 
     private Reader requestProfileJson(UUID playerUUID) throws IOException {
-        URL url = new URL("https://sessionserver.mojang.com/session/minecraft/profile/" + playerUUID);
+        URL url = URI.create("https://sessionserver.mojang.com/session/minecraft/profile/" + playerUUID).toURL();
         return new InputStreamReader(url.openStream());
     }
 

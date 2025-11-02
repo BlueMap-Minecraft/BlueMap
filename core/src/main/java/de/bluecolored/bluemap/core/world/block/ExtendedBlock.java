@@ -29,6 +29,7 @@ import de.bluecolored.bluemap.core.map.mask.Mask;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.world.*;
 import de.bluecolored.bluemap.core.world.biome.Biome;
+import lombok.AccessLevel;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 
@@ -45,8 +46,8 @@ public class ExtendedBlock implements BlockAccess {
 
     private @Nullable BlockProperties properties;
 
-    private Mask renderMask;
-    private final MaskArea maskArea = new MaskArea();
+    private @Nullable Mask renderMask;
+    @Getter(AccessLevel.PROTECTED) private final MaskArea maskArea = new MaskArea();
 
     private boolean insideRenderBoundsCalculated, insideRenderBounds;
     private boolean isCaveCalculated, isCave;
@@ -71,11 +72,7 @@ public class ExtendedBlock implements BlockAccess {
         this.properties = null;
         this.insideRenderBoundsCalculated = false;
         this.isCaveCalculated = false;
-
-        if (renderMask == null || !maskArea.isInside(x, z)) {
-            maskArea.setAround(x, z);
-            renderMask = maskArea.apply(renderSettings.getRenderMask());
-        }
+        if (!maskArea.isInside(x, z)) this.renderMask = null;
     }
 
     @Override
@@ -138,10 +135,21 @@ public class ExtendedBlock implements BlockAccess {
         return properties;
     }
 
+    /**
+     * The returned {@link Mask} is only valid for the area currently defined in {@link #getMaskArea()}
+     */
+    protected Mask getRenderMask() {
+        if (renderMask == null) {
+            maskArea.setAround(x, z);
+            renderMask = maskArea.apply(renderSettings.getRenderMask());
+        }
+        return renderMask;
+    }
+
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isInsideRenderBounds() {
         if (!insideRenderBoundsCalculated) {
-            insideRenderBounds = renderMask.test(getX(), getY(), getZ());
+            insideRenderBounds = getRenderMask().test(getX(), getY(), getZ());
             insideRenderBoundsCalculated = true;
         }
 
@@ -162,8 +170,12 @@ public class ExtendedBlock implements BlockAccess {
         return isCave;
     }
 
-    private static class MaskArea {
+    protected static class MaskArea {
         private int minX, minZ, maxX, maxZ;
+
+        public MaskArea() {
+            setAround(0, 0);
+        }
 
         public boolean isInside(int x, int z) {
             return
@@ -171,14 +183,14 @@ public class ExtendedBlock implements BlockAccess {
                     z >= minZ && z <= maxZ;
         }
 
-        public void setAround(int x, int z) {
-            this.minX = (x >> 4) << 4;
-            this.minZ = (z >> 4) << 4;
+        private void setAround(int x, int z) {
+            this.minX = x & 0xFFFFFFF0;
+            this.minZ = z & 0xFFFFFFF0;
             this.maxX = minX + 15;
             this.maxZ = minZ + 15;
         }
 
-        public void copyFrom(MaskArea maskArea) {
+        private void copyFrom(MaskArea maskArea) {
             this.minX = maskArea.minX;
             this.minZ = maskArea.minZ;
             this.maxX = maskArea.maxX;

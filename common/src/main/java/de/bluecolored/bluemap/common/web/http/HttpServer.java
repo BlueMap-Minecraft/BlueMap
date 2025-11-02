@@ -28,29 +28,19 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.io.IOException;
-import java.nio.channels.SocketChannel;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class HttpServer extends Server {
 
     @Getter @Setter
     private HttpRequestHandler requestHandler;
-    private ExecutorService executor;
-
-    public HttpServer(HttpRequestHandler requestHandler, ExecutorService executor) throws IOException {
-        this.requestHandler = requestHandler;
-        this.executor = executor;
-    }
 
     public HttpServer(HttpRequestHandler requestHandler) throws IOException {
-        this(requestHandler, Executors.newVirtualThreadPerTaskExecutor());
+        this.requestHandler = requestHandler;
     }
 
     @Override
-    public void handleConnection(SocketChannel connection) throws IOException {
-        connection.socket().setSoTimeout(600000); // set a 10 min max idle timeout
-        executor.execute(new HttpConnection(connection.socket(), requestHandler));
+    public SelectionConsumer createConnectionHandler() {
+        return new HttpConnection(requestHandler);
     }
 
 }

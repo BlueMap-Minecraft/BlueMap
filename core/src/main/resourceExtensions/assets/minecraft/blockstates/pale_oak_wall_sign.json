@@ -1,0 +1,8 @@
+{
+    "variants": {
+        "facing=south": { "model": "entity/signs/wall_pale_oak" },
+        "facing=west": { "model": "entity/signs/wall_pale_oak", "y": 90 },
+        "facing=north": { "model": "entity/signs/wall_pale_oak", "y": 180 },
+        "facing=east": { "model": "entity/signs/wall_pale_oak", "y": 270 }
+    }
+}

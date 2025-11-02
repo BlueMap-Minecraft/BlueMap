@@ -97,6 +97,7 @@ public class LiquidModelRenderer implements BlockRenderer {
         for (int i = 0; i < uvs.length; i++) uvs[i] = new VectorM2f(0, 0);
     }
 
+    @Override
     public void render(BlockNeighborhood block, Variant variant, TileModelView blockModel, Color color) {
         this.block = block;
         this.blockState = block.getBlockState();

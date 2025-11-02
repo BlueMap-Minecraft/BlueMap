@@ -48,6 +48,7 @@ public class LogFormatter extends Formatter {
      * @param record the log record to be formatted.
      * @return the formatted log
      */
+    @Override
     public String format(LogRecord record) {
         ZonedDateTime zdt = ZonedDateTime.ofInstant(
                 record.getInstant(), ZoneId.systemDefault());

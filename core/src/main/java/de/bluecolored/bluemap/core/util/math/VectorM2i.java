@@ -47,7 +47,7 @@ public class VectorM2i {
     }
 
     public VectorM2i normalize() {
-        final float length = length();
+        final int length = length();
         x /= length;
         y /= length;
         return this;

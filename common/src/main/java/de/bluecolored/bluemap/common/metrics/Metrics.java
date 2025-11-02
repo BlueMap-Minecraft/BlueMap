@@ -34,7 +34,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.net.URL;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
 public class Metrics {
@@ -61,10 +61,11 @@ public class Metrics {
         }
     }
 
+    @SuppressWarnings("UnusedReturnValue")
     private static String sendData(String data) throws IOException {
         byte[] bytes = data.getBytes(StandardCharsets.UTF_8);
 
-        HttpsURLConnection connection = (HttpsURLConnection) new URL(METRICS_REPORT_URL).openConnection();
+        HttpsURLConnection connection = (HttpsURLConnection) URI.create(METRICS_REPORT_URL).toURL().openConnection();
         connection.setRequestMethod("POST");
         connection.addRequestProperty("Content-Length", String.valueOf(bytes.length));
         connection.setRequestProperty("Content-Type", "application/json");

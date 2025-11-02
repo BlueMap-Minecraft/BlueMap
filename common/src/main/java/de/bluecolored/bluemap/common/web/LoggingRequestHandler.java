@@ -31,6 +31,8 @@ import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
 
+import java.net.URI;
+
 @Getter @Setter
 @AllArgsConstructor
 public class LoggingRequestHandler implements HttpRequestHandler {
@@ -63,9 +65,7 @@ public class LoggingRequestHandler implements HttpRequestHandler {
         }
 
         String method = request.getMethod();
-        String path = request.getPath();
-        String queryString = request.getRawQueryString();
-        String address = queryString == null ? path : path + "?" + queryString;
+        URI address = request.getAddress();
         String version = request.getVersion();
 
         // run request
@@ -81,7 +81,7 @@ public class LoggingRequestHandler implements HttpRequestHandler {
                 source,
                 xffSource,
                 method,
-                address,
+                address.toString(),
                 version,
                 statusCode,
                 statusMessage

@@ -103,7 +103,7 @@ public class BlueMapCLI {
         if (watch) {
             for (BmMap map : maps.values()) {
                 try {
-                    MapUpdateService watcher = new MapUpdateService(renderManager, map);
+                    MapUpdateService watcher = new MapUpdateService(renderManager, map, blueMap.getConfig().getPluginConfig().getUpdateCooldown());
                     watcher.start();
                     mapUpdateServices.add(watcher);
                 } catch (IOException ex) {
@@ -546,6 +546,10 @@ public class BlueMapCLI {
     private static String getCliCommand() {
         String filename = "bluemap-cli.jar";
         try {
+            if (System.getenv("BLUEMAP_COMMAND") != null) {
+                return System.getenv("BLUEMAP_COMMAND");
+            }
+
             Path file = Path.of(BlueMapCLI.class.getProtectionDomain()
                     .getCodeSource()
                     .getLocation()

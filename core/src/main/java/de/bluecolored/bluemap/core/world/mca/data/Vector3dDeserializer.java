@@ -65,10 +65,10 @@ public class Vector3dDeserializer implements TypeDeserializer<Vector3d> {
                 reader.beginCompound();
                 while (reader.peek() != TagType.END) {
                     switch (reader.name()) {
-                        case "x": x = reader.nextDouble(); break;
-                        case "y": y = reader.nextDouble(); break;
-                        case "z": z = reader.nextDouble(); break;
-                        default: reader.skip();
+                        case "x" -> x = reader.nextDouble();
+                        case "y" -> y = reader.nextDouble();
+                        case "z" -> z = reader.nextDouble();
+                        default -> reader.skip();
                     }
                 }
                 reader.endCompound();

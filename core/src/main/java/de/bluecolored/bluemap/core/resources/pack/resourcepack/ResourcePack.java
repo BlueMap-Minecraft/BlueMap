@@ -115,6 +115,7 @@ public class ResourcePack extends Pack {
             extensions.put(extensionType, extensionType.create(this));
     }
 
+    @Override
     public synchronized void loadResources(Iterable<Path> roots) throws IOException, InterruptedException {
         Logger.global.logInfo("Loading resources...");
 
@@ -223,8 +224,7 @@ public class ResourcePack extends Pack {
                     CompletableFuture.runAsync(() -> {
                         list(root.resolve("assets"))
                                 .map(path -> path.resolve("models"))
-                                .flatMap(ResourcePack::list)
-                                .filter(path -> !path.getFileName().toString().equals("item"))
+                                .filter(Files::isDirectory)
                                 .flatMap(ResourcePack::walk)
                                 .filter(path -> path.getFileName().toString().endsWith(".json"))
                                 .filter(Files::isRegularFile)
@@ -285,7 +285,7 @@ public class ResourcePack extends Pack {
 
         } catch (RuntimeException ex) {
             Throwable cause = ex.getCause();
-            if (cause instanceof IOException) throw (IOException) cause;
+            if (cause instanceof IOException ioEx) throw ioEx;
             if (cause != null) throw new IOException(cause);
             throw new IOException(ex);
         }
