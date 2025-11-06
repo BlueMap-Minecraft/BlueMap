@@ -36,7 +36,7 @@ lz4 = { module = "org.lz4:lz4-java", version = "1.8.0" }
 cursegradle = { id = "com.matthewprenger.cursegradle", version = "1.4.0" }
 forgegradle = { id = "net.minecraftforge.gradle", version = "[6.0.24,6.2)" }
 hangar = { id = "io.papermc.hangar-publish-plugin", version = "0.1.2" }
-loom = { id = "fabric-loom", version = "1.11-SNAPSHOT" }
+loom = { id = "fabric-loom", version = "1.12-SNAPSHOT" }
 minotaur = { id = "com.modrinth.minotaur", version = "2.8.7" }
 node-gradle = { id = "com.github.node-gradle.node", version = "7.0.2" }
 neoforge-gradle = { id = "net.neoforged.moddev", version = "2.0.107" }
