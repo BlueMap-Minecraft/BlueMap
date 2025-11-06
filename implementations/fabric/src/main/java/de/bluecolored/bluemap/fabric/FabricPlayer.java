@@ -143,12 +143,12 @@ public class FabricPlayer extends Player {
 
         this.name = Text.of(player.getName().getString());
 
-        Vec3d pos = player.getEntityPos();
+        Vec3d pos = player.getPos();
         this.position = new Vector3d(pos.getX(), pos.getY(), pos.getZ());
         this.rotation = new Vector3d(player.getPitch(), player.getHeadYaw(), 0);
         this.sneaking = player.isSneaking();
 
-        net.minecraft.server.world.ServerWorld world = player.getEntityWorld();
+        net.minecraft.server.world.ServerWorld world = player.getServerWorld();
 
         this.skyLight = world.getLightingProvider().get(LightType.SKY).getLightLevel(player.getBlockPos());
         this.blockLight = world.getLightingProvider().get(LightType.BLOCK).getLightLevel(player.getBlockPos());

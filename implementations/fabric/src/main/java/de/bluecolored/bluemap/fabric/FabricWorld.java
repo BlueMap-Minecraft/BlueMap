@@ -47,7 +47,7 @@ public class FabricWorld implements ServerWorld {
         this.delegate = new WeakReference<>(delegate);
 
         MinecraftServer server = delegate.getServer();
-        this.worldFolder = delegate.getServer().getRunDirectory()
+        this.worldFolder = delegate.getServer().getRunDirectory().toPath()
                 .resolve(server.getSavePath(WorldSavePath.ROOT));
 
         Identifier id = delegate.getRegistryKey().getValue();

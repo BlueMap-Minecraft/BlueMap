@@ -23,7 +23,7 @@ include(":core")
 include(":common")
 
 implementation("cli")
-//implementation("fabric")
+implementation("fabric")
 implementation("forge")
 //implementation("neoforge")
 //implementation("paper")

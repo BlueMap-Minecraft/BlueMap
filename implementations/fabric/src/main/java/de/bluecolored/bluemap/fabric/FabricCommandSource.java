@@ -26,7 +26,6 @@ package de.bluecolored.bluemap.fabric;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.google.gson.JsonElement;
-import com.mojang.serialization.JsonOps;
 import de.bluecolored.bluemap.common.commands.TextFormat;
 import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
@@ -35,7 +34,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
-import net.minecraft.text.TextCodecs;
 import net.minecraft.util.math.Vec3d;
 
 import java.util.Optional;
@@ -56,7 +54,7 @@ public class FabricCommandSource implements CommandSource {
             text = Component.newline().append(text).appendNewline();
 
         JsonElement textJson = GsonComponentSerializer.gson().serializeToTree(text.compact());
-        Text minecraftText = TextCodecs.CODEC.parse(JsonOps.INSTANCE, textJson).getOrThrow();
+        Text minecraftText = net.minecraft.text.Text.Serializer.fromJson(textJson);
         delegate.sendMessage(minecraftText);
     }
 
