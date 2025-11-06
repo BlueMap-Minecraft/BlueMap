@@ -44,9 +44,7 @@ jobs:
         uses: actions/setup-java@v5
         with:
           distribution: 'temurin'
-          java-version: |
-            21
-            17
+          java-version: 21
           cache: 'gradle'
       - name: Build with Gradle
         run: ./gradlew release --stacktrace
