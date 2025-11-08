@@ -35,6 +35,16 @@ public class PostgreSQLCommandSet extends AbstractCommandSet {
 
     @Override
     @Language("postgresql")
+    public String listExistingTablesStatement() {
+        return """
+        SELECT tablename
+        FROM pg_catalog.pg_tables
+        WHERE schemaname = current_schema()
+        """;
+    }
+
+    @Override
+    @Language("postgresql")
     public String createMapTableStatement() {
         return """
         CREATE TABLE IF NOT EXISTS bluemap_map (
