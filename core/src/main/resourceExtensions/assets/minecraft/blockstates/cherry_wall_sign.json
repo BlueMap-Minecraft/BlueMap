@@ -1,0 +1,8 @@
+{
+    "variants": {
+        "facing=south": { "model": "entity/signs/wall_cherry" },
+        "facing=west": { "model": "entity/signs/wall_cherry", "y": 90 },
+        "facing=north": { "model": "entity/signs/wall_cherry", "y": 180 },
+        "facing=east": { "model": "entity/signs/wall_cherry", "y": 270 }
+    }
+}
