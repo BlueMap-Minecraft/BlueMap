@@ -98,34 +98,84 @@ public class MatrixM3f {
         return rotateByQuaternion((float) qx, (float) qy, (float) qz, (float) qw);
     }
 
-    public MatrixM3f rotate(float pitch, float yaw, float roll) {
-
+    public MatrixM3f rotateXYZ(float pitch, float yaw, float roll) {
         double
-                halfYaw = Math.toRadians(yaw) * 0.5,
-                qy1 = TrigMath.sin(halfYaw),
-                qw1 = TrigMath.cos(halfYaw),
-
                 halfPitch = Math.toRadians(pitch) * 0.5,
-                qx2 = TrigMath.sin(halfPitch),
-                qw2 = TrigMath.cos(halfPitch),
+                sx = TrigMath.sin(halfPitch),
+                cx = TrigMath.cos(halfPitch),
+
+                halfYaw = Math.toRadians(yaw) * 0.5,
+                sy = TrigMath.sin(halfYaw),
+                cy = TrigMath.cos(halfYaw),
 
                 halfRoll = Math.toRadians(roll) * 0.5,
-                qz3 = TrigMath.sin(halfRoll),
-                qw3 = TrigMath.cos(halfRoll);
+                sz = TrigMath.sin(halfRoll),
+                cz = TrigMath.cos(halfRoll),
 
-        // multiply 1 with 2
-        double
-                qxA =   qw1 * qx2,
-                qyA =   qy1 * qw2,
-                qzA = - qy1 * qx2,
-                qwA =   qw1 * qw2;
+                cycz = cy * cz,
+                sysz = sy * sz,
+                sycz = sy * cz,
+                cysz = cy * sz;
 
-        // multiply with 3
         return rotateByQuaternion(
-                (float) (qxA * qw3 + qyA * qz3),
-                (float) (qyA * qw3 - qxA * qz3),
-                (float) (qwA * qz3 + qzA * qw3),
-                (float) (qwA * qw3 - qzA * qz3)
+                (float) (sx * cycz + cx * sysz),
+                (float) (cx * sycz - sx * cysz),
+                (float) (cx * cysz + sx * sycz),
+                (float) (cx * cycz - sx * sysz)
+        );
+    }
+
+    public MatrixM3f rotateZYX(float pitch, float yaw, float roll) {
+        double
+                halfPitch = Math.toRadians(pitch) * 0.5,
+                sx = TrigMath.sin(halfPitch),
+                cx = TrigMath.cos(halfPitch),
+
+                halfYaw = Math.toRadians(yaw) * 0.5,
+                sy = TrigMath.sin(halfYaw),
+                cy = TrigMath.cos(halfYaw),
+
+                halfRoll = Math.toRadians(roll) * 0.5,
+                sz = TrigMath.sin(halfRoll),
+                cz = TrigMath.cos(halfRoll),
+
+                cycz = cy * cz,
+                sysz = sy * sz,
+                sycz = sy * cz,
+                cysz = cy * sz;
+
+        return rotateByQuaternion(
+                (float) (cx * cycz + sx * sysz),
+                (float) (sx * cycz - cx * sysz),
+                (float) (cx * sycz + sx * cysz),
+                (float) (cx * cysz - sx * sycz)
+        );
+    }
+
+    public MatrixM3f rotateYXZ(float pitch, float yaw, float roll) {
+        double
+                halfPitch = Math.toRadians(pitch) * 0.5,
+                sx = TrigMath.sin(halfPitch),
+                cx = TrigMath.cos(halfPitch),
+
+                halfYaw = Math.toRadians(yaw) * 0.5,
+                sy = TrigMath.sin(halfYaw),
+                cy = TrigMath.cos(halfYaw),
+
+                halfRoll = Math.toRadians(roll) * 0.5,
+                sz = TrigMath.sin(halfRoll),
+                cz = TrigMath.cos(halfRoll),
+
+                cysx = cy * sx,
+                sycx = sy * cx,
+                sysx = sy * sx,
+                cycx = cy * cx;
+
+        return rotateByQuaternion(
+                (float) (cysx * cz + sycx * sz),
+                (float) (sycx * cz - cysx * sz),
+                (float) (cycx * sz - sysx * cz),
+                (float) (cycx * cz + sysx * sz)
         );
     }
 

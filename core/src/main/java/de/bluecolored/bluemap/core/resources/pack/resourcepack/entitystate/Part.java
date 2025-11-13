@@ -25,20 +25,16 @@
 package de.bluecolored.bluemap.core.resources.pack.resourcepack.entitystate;
 
 import com.flowpowered.math.vector.Vector3f;
-import com.google.gson.Gson;
-import com.google.gson.annotations.JsonAdapter;
-import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
 import de.bluecolored.bluemap.core.map.hires.entity.EntityRendererType;
-import de.bluecolored.bluemap.core.resources.adapter.AbstractTypeAdapterFactory;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.PostDeserialize;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model;
 import de.bluecolored.bluemap.core.util.math.MatrixM4f;
-import lombok.*;
-
-import java.io.IOException;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @SuppressWarnings("FieldMayBeFinal")
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
@@ -71,7 +67,7 @@ public class Part {
     private void init() {
         this.transformed = !position.equals(Vector3f.ZERO) || !rotation.equals(Vector3f.ZERO);
         this.transformMatrix = new MatrixM4f()
-                .rotate(rotation.getX(), rotation.getY(), rotation.getZ())
+                .rotateYXZ(-rotation.getX(), -rotation.getY(), -rotation.getZ())
                 .translate(position.getX(), position.getY(), position.getZ());
     }
 }

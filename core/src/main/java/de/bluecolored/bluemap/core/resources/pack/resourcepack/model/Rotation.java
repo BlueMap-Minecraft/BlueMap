@@ -24,34 +24,26 @@
  */
 package de.bluecolored.bluemap.core.resources.pack.resourcepack.model;
 
-import com.flowpowered.math.TrigMath;
 import com.flowpowered.math.vector.Vector3f;
-import com.flowpowered.math.vector.Vector3i;
-import com.google.gson.Gson;
-import com.google.gson.annotations.JsonAdapter;
-import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
-import de.bluecolored.bluemap.core.resources.adapter.AbstractTypeAdapterFactory;
 import de.bluecolored.bluemap.core.resources.adapter.PostDeserialize;
 import de.bluecolored.bluemap.core.util.math.Axis;
 import de.bluecolored.bluemap.core.util.math.MatrixM4f;
+import de.bluecolored.bluemap.core.util.math.VectorM3f;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
-
-import java.io.IOException;
 
 @SuppressWarnings("FieldMayBeFinal")
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @Getter
 public class Rotation {
     private static final Vector3f DEFAULT_ORIGIN = new Vector3f(8, 8, 8);
-    private static final double FIT_TO_BLOCK_SCALE_MULTIPLIER = 2 - Math.sqrt(2);
 
     public static final Rotation ZERO = new Rotation();
     static { ZERO.init(); }
 
     private Vector3f origin = DEFAULT_ORIGIN;
+    private float x, y, z;
     private Axis axis = Axis.Y;
     private float angle = 0;
     private boolean rescale = false;
@@ -66,27 +58,43 @@ public class Rotation {
         init();
     }
 
+    public Rotation(Vector3f origin, float x, float y, float z, boolean rescale) {
+        this.origin = origin;
+        this.x = x;
+        this.y = y;
+        this.z = z;
+        this.rescale = rescale;
+        init();
+    }
+
     @PostDeserialize
     private void init() {
-        Vector3i axisAngle = axis.toVector();
+
+        // angle/axis notation takes precedence
+        if (angle != 0) {
+            x = y = z = 0;
+            switch (axis) {
+                case X -> x = angle;
+                case Y -> y = angle;
+                case Z -> z = angle;
+            }
+        }
 
         matrix = new MatrixM4f();
-        if (angle != 0f) {
+        if (x != 0 || y != 0 || z != 0) {
             matrix.translate(-origin.getX(), -origin.getY(), -origin.getZ());
-            matrix.rotate(
-                    angle,
-                    axisAngle.getX(),
-                    axisAngle.getY(),
-                    axisAngle.getZ()
-            );
+            matrix.rotateYXZ(x, y, z);
 
             if (rescale) {
-                float scale = (float) (Math.abs(TrigMath.sin(angle * TrigMath.DEG_TO_RAD)) * FIT_TO_BLOCK_SCALE_MULTIPLIER);
-                matrix.scale(
-                        (1 - axisAngle.getX()) * scale + 1,
-                        (1 - axisAngle.getY()) * scale + 1,
-                        (1 - axisAngle.getZ()) * scale + 1
-                );
+                VectorM3f axisVector = new VectorM3f(0, 0, 0);
+                float sX = 1f / axisVector.set(1, 0, 0).rotateAndScale(matrix).absolute().max();
+                float sY = 1f / axisVector.set(0, 1, 0).rotateAndScale(matrix).absolute().max();
+                float sZ = 1f / axisVector.set(0, 0, 1).rotateAndScale(matrix).absolute().max();
+
+                matrix.identity();
+                matrix.translate(-origin.getX(), -origin.getY(), -origin.getZ());
+                matrix.scale(sX, sY, sZ);
+                matrix.rotateYXZ(x, y, z);
             }
 
             matrix.translate(origin.getX(), origin.getY(), origin.getZ());
