@@ -60,7 +60,7 @@ public class MapConfig implements MapSettings {
 
     private int sorting = 0;
 
-    @Nullable private Vector2i startPos = null;
+    private Vector2i startPos = Vector2i.ZERO;
 
     private String skyColor = "#7dabff";
     private String voidColor = "#000000";
