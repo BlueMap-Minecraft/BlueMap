@@ -57,7 +57,7 @@ public class LoggingRequestHandler implements HttpRequestHandler {
     public HttpResponse handle(HttpRequest request) {
 
         // gather format parameters from request
-        String source = request.getSource().toString();
+        String source = request.getSource().getHostAddress();
         String xffSource = source;
         HttpHeader xffHeader = request.getHeader("X-Forwarded-For");
         if (xffHeader != null && !xffHeader.getValues().isEmpty()) {
