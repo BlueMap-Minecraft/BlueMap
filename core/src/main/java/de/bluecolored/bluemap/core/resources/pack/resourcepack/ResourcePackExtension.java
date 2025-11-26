@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.core.resources.pack.resourcepack;
 import de.bluecolored.bluemap.core.resources.pack.PackExtension;
 import de.bluecolored.bluemap.core.util.Key;
 
+import java.lang.reflect.Type;
 import java.util.Set;
 
 public interface ResourcePackExtension extends PackExtension {
@@ -35,4 +36,7 @@ public interface ResourcePackExtension extends PackExtension {
         return Set.of();
     }
 
+    default Key remapResource(Type type, Key src) {
+        return src;
+    }
 }

@@ -39,6 +39,18 @@ public class ResourcePool<T> {
 
     private final Map<Key, T> pool = new HashMap<>();
     private final Map<Key, ResourcePath<T>> paths = new HashMap<>();
+    private final ResourcePoolMapper mapper;
+    private final Class<T> type;
+
+    public ResourcePool() {
+        this.type = null;
+        this.mapper = null;
+    }
+
+    public ResourcePool(Class<T> type, ResourcePoolMapper mapper) {
+        this.type = type;
+        this.mapper = mapper;
+    }
 
     public void put(Key path, T value) {
         put(new ResourcePath<>(path), value);
@@ -70,6 +82,9 @@ public class ResourcePool<T> {
     }
 
     public boolean contains(Key path) {
+        if (mapper != null) {
+            path = mapper.remapResource(type, path);
+        }
         return paths.containsKey(path);
     }
 
@@ -78,7 +93,7 @@ public class ResourcePool<T> {
     }
 
     public @Nullable T get(Key path) {
-        ResourcePath<T> rp = paths.get(path);
+        ResourcePath<T> rp = getPath(path);
         return rp == null ? null : rp.getResource(this::get);
     }
 
@@ -88,6 +103,9 @@ public class ResourcePool<T> {
     }
 
     public @Nullable ResourcePath<T> getPath(Key path) {
+        if (mapper != null) {
+            path = mapper.remapResource(type, path);
+        }
         return paths.get(path);
     }
 
