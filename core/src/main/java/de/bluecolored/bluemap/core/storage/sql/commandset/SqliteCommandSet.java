@@ -35,6 +35,16 @@ public class SqliteCommandSet extends AbstractCommandSet {
 
     @Override
     @Language("sqlite")
+    public String listExistingTablesStatement() {
+        return """
+        SELECT `name`
+        FROM `sqlite_master`
+        WHERE `type` = 'table'
+        """;
+    }
+
+    @Override
+    @Language("sqlite")
     public String createMapTableStatement() {
         return """
         CREATE TABLE IF NOT EXISTS `bluemap_map` (

@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.core.storage.sql.commandset;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
+import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.storage.compression.Compression;
 import de.bluecolored.bluemap.core.storage.sql.Database;
 import de.bluecolored.bluemap.core.util.Key;
@@ -35,8 +36,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @SuppressWarnings("SqlSourceToSinkFlow")
 @RequiredArgsConstructor
@@ -52,6 +52,9 @@ public abstract class AbstractCommandSet implements CommandSet {
             .build(this::findOrCreateItemStorageKey);
     protected final LoadingCache<Key, Integer> gridStorageKeys = Caffeine.newBuilder()
             .build(this::findOrCreateGridStorageKey);
+
+    @Language("sql")
+    public abstract String listExistingTablesStatement();
 
     @Language("sql")
     public abstract String createMapTableStatement();
@@ -74,6 +77,27 @@ public abstract class AbstractCommandSet implements CommandSet {
     @Override
     public void initializeTables() throws IOException {
         db.run(connection -> {
+            try {
+                Set<String> tables = new HashSet<>(6);
+                ResultSet result = executeQuery(connection, listExistingTablesStatement());
+                while (result.next()) {
+                    tables.add(result.getString(1));
+                }
+
+                if (tables.containsAll(Set.of(
+                        "bluemap_map",
+                        "bluemap_compression",
+                        "bluemap_item_storage",
+                        "bluemap_item_storage_data",
+                        "bluemap_grid_storage",
+                        "bluemap_grid_storage_data"
+                ))) return;
+            } catch (SQLException ex) {
+                Logger.global.logWarning("Failed to check for existing tables, will try to create them...");
+                Logger.global.logDebug(ex.toString());
+            }
+
+            // create tables (if not exists)
             executeUpdate(connection, createMapTableStatement());
             executeUpdate(connection, createCompressionTableStatement());
             executeUpdate(connection, createItemStorageTableStatement());
@@ -343,7 +367,6 @@ public abstract class AbstractCommandSet implements CommandSet {
 
     public int mapKey(String mapId) {
         synchronized (mapKeys) {
-            //noinspection DataFlowIssue
             return mapKeys.get(mapId);
         }
     }
@@ -379,7 +402,6 @@ public abstract class AbstractCommandSet implements CommandSet {
 
     public int compressionKey(Compression compression) {
         synchronized (compressionKeys) {
-            //noinspection DataFlowIssue
             return compressionKeys.get(compression);
         }
     }
@@ -415,7 +437,6 @@ public abstract class AbstractCommandSet implements CommandSet {
 
     public int itemStorageKey(Key key) {
         synchronized (itemStorageKeys) {
-            //noinspection DataFlowIssue
             return itemStorageKeys.get(key);
         }
     }
@@ -451,7 +472,6 @@ public abstract class AbstractCommandSet implements CommandSet {
 
     public int gridStorageKey(Key key) {
         synchronized (gridStorageKeys) {
-            //noinspection DataFlowIssue
             return gridStorageKeys.get(key);
         }
     }

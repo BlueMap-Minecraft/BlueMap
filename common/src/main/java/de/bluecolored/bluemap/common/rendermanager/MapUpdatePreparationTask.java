@@ -112,14 +112,8 @@ public class MapUpdatePreparationTask implements MapRenderTask {
         ArrayList<WorldRegionRenderTask> regionTasks = new ArrayList<>(regions.size());
         regions.forEach(region -> regionTasks.add(new WorldRegionRenderTask(map, region, force)));
 
-        // get spawn region
-        World world = map.getWorld();
-        Vector2i spawnPoint = world.getSpawnPoint().toVector2(true);
-        Grid regionGrid = world.getRegionGrid();
-        Vector2i spawnRegion = regionGrid.getCell(spawnPoint);
-
-        // sort tasks by distance to the spawn region
-        regionTasks.sort(WorldRegionRenderTask.defaultComparator(spawnRegion));
+        // sort tasks by distance to 0/0
+        regionTasks.sort(WorldRegionRenderTask.defaultComparator(Vector2i.ZERO));
 
         // save map before and after the whole update
         ArrayList<RenderTask> tasks = new ArrayList<>(regionTasks.size() + 2);

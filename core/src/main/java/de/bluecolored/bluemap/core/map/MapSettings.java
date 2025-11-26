@@ -32,7 +32,7 @@ public interface MapSettings extends RenderSettings {
 
     int getSorting();
 
-    @Nullable Vector2i getStartPos();
+    Vector2i getStartPos();
 
     String getSkyColor();
 

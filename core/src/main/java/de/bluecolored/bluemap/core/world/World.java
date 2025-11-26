@@ -49,8 +49,6 @@ public interface World {
 
     String getName();
 
-    Vector3i getSpawnPoint();
-
     DimensionType getDimensionType();
 
     Grid getChunkGrid();

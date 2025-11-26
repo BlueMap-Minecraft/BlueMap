@@ -26,7 +26,6 @@ package de.bluecolored.bluemap.common.commands.commands;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector3d;
-import com.flowpowered.math.vector.Vector3i;
 import de.bluecolored.bluecommands.annotations.Argument;
 import de.bluecolored.bluecommands.annotations.Command;
 import de.bluecolored.bluemap.common.BlueMapService;
@@ -103,7 +102,6 @@ public class DebugCommand {
 
         Chunk chunk = world.getChunkAtBlock(x, z);
         LightData lightData = chunk.getLightData(x, y, z, new LightData(0, 0));
-        Vector3i spawnPoint = world.getSpawnPoint();
 
         return paragraph("World-Info (debug)", lines(
                 item("position", format("( x: % | y: % | z: % )",
@@ -138,12 +136,7 @@ public class DebugCommand {
                         .append(details(BASE_COLOR,
                                 item("name", world.getName()),
                                 item("min-y", world.getDimensionType().getMinY()),
-                                item("height", world.getDimensionType().getHeight()),
-                                item("spawn", format("( x: % | y: % | z: % )",
-                                        text(spawnPoint.getX()).color(HIGHLIGHT_COLOR),
-                                        text(spawnPoint.getY()).color(HIGHLIGHT_COLOR),
-                                        text(spawnPoint.getZ()).color(HIGHLIGHT_COLOR)
-                                ))
+                                item("height", world.getDimensionType().getHeight())
                         ))
                 )
         ));

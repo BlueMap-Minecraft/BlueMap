@@ -85,8 +85,18 @@ public class TileModelView {
         return this;
     }
 
-    public TileModelView rotate(float pitch, float yaw, float roll) {
-        tileModel.rotate(start, size, pitch, yaw, roll);
+    public TileModelView rotateXYZ(float pitch, float yaw, float roll) {
+        tileModel.rotateXYZ(start, size, pitch, yaw, roll);
+        return this;
+    }
+
+    public TileModelView rotateZYX(float pitch, float yaw, float roll) {
+        tileModel.rotateZYX(start, size, pitch, yaw, roll);
+        return this;
+    }
+
+    public TileModelView rotateYXZ(float pitch, float yaw, float roll) {
+        tileModel.rotateYXZ(start, size, pitch, yaw, roll);
         return this;
     }
 

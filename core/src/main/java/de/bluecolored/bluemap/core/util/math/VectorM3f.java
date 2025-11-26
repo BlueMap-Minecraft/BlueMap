@@ -104,6 +104,13 @@ public class VectorM3f {
         return this;
     }
 
+    public VectorM3f absolute() {
+        x = Math.abs(x);
+        y = Math.abs(y);
+        z = Math.abs(z);
+        return this;
+    }
+
     public float length() {
         return (float) Math.sqrt(lengthSquared());
     }
@@ -115,4 +122,13 @@ public class VectorM3f {
     public float dot(VectorM3f v) {
         return x * v.x + y * v.y + z * v.z;
     }
+
+    public float max() {
+        return Math.max(x, Math.max(y, z));
+    }
+
+    public float min() {
+        return Math.min(x, Math.min(y, z));
+    }
+
 }
