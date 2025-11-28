@@ -46,10 +46,10 @@ import java.util.function.Predicate;
 @SuppressWarnings("unused")
 public class SingleSource extends Source {
 
-    private ResourcePath<Texture> resource;
-    private @Nullable ResourcePath<Texture> sprite;
+    private Key resource;
+    private @Nullable Key sprite;
 
-    public SingleSource(ResourcePath<Texture> resource) {
+    public SingleSource(Key resource) {
         this.resource = resource;
     }
 
@@ -57,8 +57,8 @@ public class SingleSource extends Source {
     public void load(Path root, ResourcePool<Texture> textures, Predicate<Key> textureFilter) throws IOException {
         if (resource == null) return;
 
-        ResourcePath<Texture> sprite = getSprite();
-        if (textures.contains(sprite)) return;
+        Key sprite = getSprite();
+        if (textures.containsKey(sprite)) return;
         if (!textureFilter.test(sprite)) return;
 
         Path file = getFile(root, resource);
@@ -68,7 +68,7 @@ public class SingleSource extends Source {
         if (texture != null) textures.put(sprite, texture);
     }
 
-    public ResourcePath<Texture> getSprite() {
+    public Key getSprite() {
         return sprite == null ? resource : sprite;
     }
 

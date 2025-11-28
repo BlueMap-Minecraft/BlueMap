@@ -26,7 +26,6 @@ package de.bluecolored.bluemap.core.resources.pack.resourcepack.atlas;
 
 import com.google.gson.annotations.SerializedName;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.BufferedImageUtil;
@@ -53,11 +52,11 @@ import java.util.function.Predicate;
 @SuppressWarnings({"unused", "FieldMayBeFinal"})
 public class PalettedPermutationsSource extends Source {
 
-    private Set<ResourcePath<Texture>> textures;
+    private Set<Key> textures;
     private String separator = "_";
     @SerializedName("palette_key")
-    private ResourcePath<Texture> paletteKey;
-    private Map<String, ResourcePath<Texture>> permutations;
+    private Key paletteKey;
+    private Map<String, Key> permutations;
 
     @Override
     public void load(Path root, ResourcePool<Texture> texturePool, Predicate<Key> textureFilter) throws IOException {
@@ -66,7 +65,7 @@ public class PalettedPermutationsSource extends Source {
         if (permutations == null || permutations.isEmpty()) return;
 
         // textures
-        for (ResourcePath<Texture> resource : textures) {
+        for (Key resource : textures) {
             texturePool.load(resource, rp -> {
                 Path file = getFile(root, resource);
                 return loadTexture(resource, file);
@@ -80,7 +79,7 @@ public class PalettedPermutationsSource extends Source {
         });
 
         // permutations
-        for (ResourcePath<Texture> resource : permutations.values()) {
+        for (Key resource : permutations.values()) {
             texturePool.load(resource, rp -> {
                 Path file = getFile(root, resource);
                 return loadTexture(resource, file);
@@ -118,7 +117,7 @@ public class PalettedPermutationsSource extends Source {
 
         // generate textures
         Color tempColor = new Color();
-        for (ResourcePath<Texture> resource : textures) {
+        for (Key resource : textures) {
             Texture texture = texturePool.get(resource);
             if (texture == null) continue;
             BufferedImage image = texture.getTextureImage();
@@ -127,11 +126,11 @@ public class PalettedPermutationsSource extends Source {
                 String suffix = paletteEntry.getKey();
                 PaletteMap palette = paletteEntry.getValue();
 
-                ResourcePath<Texture> sprite = new ResourcePath<>(
+                Key sprite = new Key(
                         resource.getNamespace(),
                         resource.getValue() + separator + suffix
                 );
-                if (texturePool.contains(sprite)) continue;
+                if (texturePool.containsKey(sprite)) continue;
                 if (!textureFilter.test(sprite)) continue;
 
                 BufferedImage resultImage = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);

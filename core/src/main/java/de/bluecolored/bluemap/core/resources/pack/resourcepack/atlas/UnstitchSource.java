@@ -26,7 +26,6 @@ package de.bluecolored.bluemap.core.resources.pack.resourcepack.atlas;
 
 import com.google.gson.annotations.SerializedName;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Key;
@@ -49,7 +48,7 @@ import java.util.function.Predicate;
 @SuppressWarnings("unused")
 public class UnstitchSource extends Source {
 
-    private ResourcePath<Texture> resource;
+    private Key resource;
     @SerializedName("divisor_x") private double divisorX;
     @SerializedName("divisor_y") private double divisorY;
     private Set<Region> regions;
@@ -81,7 +80,7 @@ public class UnstitchSource extends Source {
 
         for (Region region : regions) {
             if (region == null) continue;
-            if (textures.contains(region.sprite)) continue;
+            if (textures.containsKey(region.sprite)) continue;
             if (!textureFilter.test(region.sprite)) continue;
 
             try {
@@ -124,7 +123,7 @@ public class UnstitchSource extends Source {
     @NoArgsConstructor(access = AccessLevel.PRIVATE)
     @AllArgsConstructor
     public static class Region {
-        private ResourcePath<Texture> sprite;
+        private Key sprite;
         private double x;
         private double y;
         private double width;
