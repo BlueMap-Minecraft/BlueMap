@@ -35,6 +35,7 @@ import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.pack.Pack;
 import de.bluecolored.bluemap.core.resources.pack.PackVersion;
 import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
+import de.bluecolored.bluemap.core.resources.pack.ResourcePoolMapper;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.atlas.Atlas;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.BlockState;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.entitystate.EntityState;
@@ -53,6 +54,7 @@ import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -63,7 +65,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
-public class ResourcePack extends Pack {
+public class ResourcePack extends Pack implements ResourcePoolMapper {
 
     public interface Extension<T extends ResourcePackExtension> extends Keyed {
         Registry<Extension<?>> REGISTRY = new Registry<>();
@@ -94,12 +96,12 @@ public class ResourcePack extends Pack {
     public ResourcePack(PackVersion packVersion) {
         super(packVersion);
 
-        this.atlases = new ResourcePool<>();
-        this.blockStates = new ResourcePool<>();
-        this.entityStates = new ResourcePool<>();
-        this.models = new ResourcePool<>();
-        this.textures = new ResourcePool<>();
-        this.colormaps = new ResourcePool<>();
+        this.atlases = new ResourcePool<>(Atlas.class, this);
+        this.blockStates = new ResourcePool<>(BlockState.class, this);
+        this.entityStates = new ResourcePool<>(EntityState.class, this);
+        this.models = new ResourcePool<>(Model.class, this);
+        this.textures = new ResourcePool<>(Texture.class, this);
+        this.colormaps = new ResourcePool<>(BufferedImage.class, this);
 
         this.colorCalculatorFactory = new BlockColorCalculatorFactory();
         this.blockPropertiesConfig = new BlockPropertiesConfig();
@@ -113,6 +115,14 @@ public class ResourcePack extends Pack {
         this.extensions = new HashMap<>();
         for (Extension<?> extensionType : Extension.REGISTRY.values())
             extensions.put(extensionType, extensionType.create(this));
+    }
+
+    @Override
+    public Key remapResource(Type type, Key src) {
+        for (ResourcePackExtension extension : extensions.values()) {
+            src = extension.remapResource(type, src);
+        }
+        return src;
     }
 
     @Override
