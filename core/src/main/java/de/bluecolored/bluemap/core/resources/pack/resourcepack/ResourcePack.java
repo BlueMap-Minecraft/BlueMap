@@ -355,15 +355,32 @@ public class ResourcePack extends Pack {
         return new Atlas();
     }
 
+    public BlockState getBlockState(de.bluecolored.bluemap.core.world.BlockState blockState) {
+        Key key = blockState.getId();
+        for (ResourcePackExtension extension : extensions.values()) {
+            key = extension.getBlockStateKey(key);
+        }
+        return blockStates.get(key);
+    }
+
     public BlockProperties getBlockProperties(de.bluecolored.bluemap.core.world.BlockState state) {
         return blockPropertiesCache.get(state);
     }
 
     private BlockProperties loadBlockProperties(de.bluecolored.bluemap.core.world.BlockState state) {
-        BlockProperties.Builder props = blockPropertiesConfig.getBlockProperties(state).toBuilder();
+        BlockProperties.Builder props = BlockProperties.builder();
 
+        // collect properties from extensions
+        for (ResourcePackExtension extension : extensions.values()) {
+            extension.getBlockProperties(state, props);
+        }
+
+        // explicitly configured properties always have priority -> overwrite
+        props.from(blockPropertiesConfig.getBlockProperties(state));
+
+        // calculate culling and occlusion from model if UNDEFINED
         if (props.isOccluding() == Tristate.UNDEFINED || props.isCulling() == Tristate.UNDEFINED) {
-            BlockState resource = blockStates.get(state.getId());
+            BlockState resource = getBlockState(state);
             if (resource != null) {
                 resource.forEach(state,0, 0, 0, variant -> {
                     Model model = variant.getModel().getResource(models::get);
