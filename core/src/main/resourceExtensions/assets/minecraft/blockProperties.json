@@ -51,5 +51,9 @@
 	"minecraft:red_stained_glass": { "occluding": false, "cullingIdentical": true },
 	"minecraft:black_stained_glass": { "occluding": false, "cullingIdentical": true },
 
-	"minecraft:ice": { "cullingIdentical": true }
+	"minecraft:ice": { "cullingIdentical": true },
+
+	"minecraft:brown_mushroom_block": { "culling":  true },
+	"minecraft:red_mushroom_block": { "culling":  true },
+	"minecraft:mushroom_stem": { "culling":  true }
 }
