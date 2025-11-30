@@ -53,7 +53,7 @@
 
 	"minecraft:ice": { "cullingIdentical": true },
 
-	"minecraft:brown_mushroom_block": { "culling":  true },
-	"minecraft:red_mushroom_block": { "culling":  true },
-	"minecraft:mushroom_stem": { "culling":  true }
+	"minecraft:brown_mushroom_block": { "culling": true, "occluding": true },
+	"minecraft:red_mushroom_block": { "culling": true, "occluding": true },
+	"minecraft:mushroom_stem": { "culling": true, "occluding": true }
 }
