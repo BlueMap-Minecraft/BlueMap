@@ -87,6 +87,8 @@ public class ResourcePack extends Pack {
 
     @Getter private final BlockColorCalculatorFactory colorCalculatorFactory;
     private final BlockPropertiesConfig blockPropertiesConfig;
+
+    private final LoadingCache<de.bluecolored.bluemap.core.world.BlockState, BlockState> blockStateCache;
     private final LoadingCache<de.bluecolored.bluemap.core.world.BlockState, BlockProperties> blockPropertiesCache;
 
     private final Map<Extension<?>, ResourcePackExtension> extensions;
@@ -104,6 +106,11 @@ public class ResourcePack extends Pack {
         this.colorCalculatorFactory = new BlockColorCalculatorFactory();
         this.blockPropertiesConfig = new BlockPropertiesConfig();
 
+        this.blockStateCache = Caffeine.newBuilder()
+                .executor(BlueMap.THREAD_POOL)
+                .maximumSize(10000)
+                .expireAfterAccess(1, TimeUnit.MINUTES)
+                .build(this::loadBlockState);
         this.blockPropertiesCache = Caffeine.newBuilder()
                 .executor(BlueMap.THREAD_POOL)
                 .maximumSize(10000)
@@ -356,6 +363,10 @@ public class ResourcePack extends Pack {
     }
 
     public BlockState getBlockState(de.bluecolored.bluemap.core.world.BlockState blockState) {
+        return blockStateCache.get(blockState);
+    }
+
+    private BlockState loadBlockState(de.bluecolored.bluemap.core.world.BlockState blockState) {
         Key key = blockState.getId();
         for (ResourcePackExtension extension : extensions.values()) {
             key = extension.getBlockStateKey(key);
