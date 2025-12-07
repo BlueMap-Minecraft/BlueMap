@@ -24,12 +24,12 @@
  */
 package de.bluecolored.bluemap.core.storage.file;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.core.storage.GridStorage;
 import de.bluecolored.bluemap.core.storage.ItemStorage;
 import de.bluecolored.bluemap.core.storage.MapStorage;
 import de.bluecolored.bluemap.core.storage.compression.Compression;
+import de.bluecolored.bluemap.core.util.Caches;
 import de.bluecolored.bluemap.core.util.DeletingPathVisitor;
 import de.bluecolored.bluemap.core.util.FileHelper;
 
@@ -68,7 +68,7 @@ public class FileMapStorage implements MapStorage {
                 atomic
         );
 
-        this.lowresGridStorages = Caffeine.newBuilder().build(lod -> new FileGridStorage(
+        this.lowresGridStorages = Caches.build(lod -> new FileGridStorage(
                 root.resolve(TILES_PATH).resolve(String.valueOf(lod)),
                 ".png",
                 Compression.NONE,

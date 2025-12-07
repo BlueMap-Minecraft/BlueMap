@@ -30,6 +30,7 @@ import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.storage.GridStorage;
+import de.bluecolored.bluemap.core.util.Caches;
 import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.util.Vector2iCache;
 import de.bluecolored.bluemap.core.util.math.Color;
@@ -75,13 +76,11 @@ public class LowresLayer {
 
         // this extra cache makes sure that a tile instance is reused as long as it is still referenced somewhere ..
         // so always only one instance of the same lowres-tile exists
-        this.tileWeakInstanceCache = Caffeine.newBuilder()
-                .executor(BlueMap.THREAD_POOL)
+        this.tileWeakInstanceCache = Caches.with()
                 .weakValues()
                 .build(this::createTile);
 
-        this.tileCache = Caffeine.newBuilder()
-                .executor(BlueMap.THREAD_POOL)
+        this.tileCache = Caches.with()
                 .softValues()
                 .maximumSize(1000)
                 .expireAfterAccess(1, TimeUnit.MINUTES)

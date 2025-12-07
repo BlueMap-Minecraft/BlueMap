@@ -24,11 +24,11 @@
  */
 package de.bluecolored.bluemap.core.storage.sql.commandset;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.storage.compression.Compression;
 import de.bluecolored.bluemap.core.storage.sql.Database;
+import de.bluecolored.bluemap.core.util.Caches;
 import de.bluecolored.bluemap.core.util.Key;
 import lombok.RequiredArgsConstructor;
 import org.intellij.lang.annotations.Language;
@@ -36,7 +36,10 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.sql.*;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @SuppressWarnings("SqlSourceToSinkFlow")
 @RequiredArgsConstructor
@@ -44,14 +47,10 @@ public abstract class AbstractCommandSet implements CommandSet {
 
     protected final Database db;
 
-    protected final LoadingCache<String, Integer> mapKeys = Caffeine.newBuilder()
-            .build(this::findOrCreateMapKey);
-    protected final LoadingCache<Compression, Integer> compressionKeys = Caffeine.newBuilder()
-            .build(this::findOrCreateCompressionKey);
-    protected final LoadingCache<Key, Integer> itemStorageKeys = Caffeine.newBuilder()
-            .build(this::findOrCreateItemStorageKey);
-    protected final LoadingCache<Key, Integer> gridStorageKeys = Caffeine.newBuilder()
-            .build(this::findOrCreateGridStorageKey);
+    protected final LoadingCache<String, Integer> mapKeys = Caches.build(this::findOrCreateMapKey);
+    protected final LoadingCache<Compression, Integer> compressionKeys = Caches.build(this::findOrCreateCompressionKey);
+    protected final LoadingCache<Key, Integer> itemStorageKeys = Caches.build(this::findOrCreateItemStorageKey);
+    protected final LoadingCache<Key, Integer> gridStorageKeys = Caches.build(this::findOrCreateGridStorageKey);
 
     @Language("sql")
     public abstract String listExistingTablesStatement();

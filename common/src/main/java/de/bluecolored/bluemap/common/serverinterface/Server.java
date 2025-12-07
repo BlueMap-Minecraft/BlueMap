@@ -25,9 +25,8 @@
 package de.bluecolored.bluemap.common.serverinterface;
 
 import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
-import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.common.debug.DebugDump;
+import de.bluecolored.bluemap.core.util.Caches;
 import de.bluecolored.bluemap.core.util.Tristate;
 import de.bluecolored.bluemap.core.world.World;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
@@ -36,12 +35,10 @@ import org.jetbrains.annotations.Nullable;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
 
 public interface Server {
 
-    Cache<World, Optional<ServerWorld>> SERVER_WORLD_CACHE = Caffeine.newBuilder()
-            .expireAfterWrite(10, TimeUnit.SECONDS)
+    Cache<World, Optional<ServerWorld>> SERVER_WORLD_CACHE = Caches.with()
             .weakKeys()
             .weakValues()
             .build();

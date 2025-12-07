@@ -25,12 +25,12 @@
 package de.bluecolored.bluemap.core.storage.sql;
 
 import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import de.bluecolored.bluemap.core.storage.GridStorage;
 import de.bluecolored.bluemap.core.storage.ItemStorage;
 import de.bluecolored.bluemap.core.storage.KeyedMapStorage;
 import de.bluecolored.bluemap.core.storage.compression.Compression;
 import de.bluecolored.bluemap.core.storage.sql.commandset.CommandSet;
+import de.bluecolored.bluemap.core.util.Caches;
 import de.bluecolored.bluemap.core.util.Key;
 
 import java.io.IOException;
@@ -41,8 +41,8 @@ public class SQLMapStorage extends KeyedMapStorage {
     private final String mapId;
     private final CommandSet sql;
 
-    private final Cache<Key, ItemStorage> itemStorages = Caffeine.newBuilder().build();
-    private final Cache<Key, GridStorage> gridStorages = Caffeine.newBuilder().build();
+    private final Cache<Key, ItemStorage> itemStorages = Caches.build();
+    private final Cache<Key, GridStorage> gridStorages = Caches.build();
 
     public SQLMapStorage(String mapId, CommandSet sql, Compression compression) {
         super(compression);
