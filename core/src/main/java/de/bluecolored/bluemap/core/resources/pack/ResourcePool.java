@@ -41,12 +41,12 @@ public class ResourcePool<T> {
     }
 
     public void put(Key key, T value) {
-        Objects.requireNonNull(key, "key is null");
+        Objects.requireNonNull(key, "key can not be null");
         resources.put(key, value);
     }
 
     public void putIfAbsent(Key key, T value) {
-        Objects.requireNonNull(key, "key is null");
+        Objects.requireNonNull(key, "key can not be null");
         resources.putIfAbsent(key, value);
     }
 
