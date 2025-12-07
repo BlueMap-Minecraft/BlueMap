@@ -25,10 +25,9 @@
 package de.bluecolored.bluemap.core.resources;
 
 import com.flowpowered.math.GenericMath;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import com.google.gson.stream.JsonReader;
-import de.bluecolored.bluemap.core.BlueMap;
+import de.bluecolored.bluemap.core.util.Caches;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.BlockState;
@@ -46,7 +45,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 public class BlockColorCalculatorFactory {
 
@@ -68,11 +66,7 @@ public class BlockColorCalculatorFactory {
     private int[] grassMap = new int[0];
 
     private final Map<Key, List<BlockStateMapping<ColorFunction>>> mappings;
-    private final LoadingCache<BlockState, ColorFunction> colorFunctionCache = Caffeine.newBuilder()
-            .executor(BlueMap.THREAD_POOL)
-            .maximumSize(10000)
-            .expireAfterAccess(1, TimeUnit.MINUTES)
-            .build(this::findColorFunction);
+    private final LoadingCache<BlockState, ColorFunction> colorFunctionCache = Caches.build(this::findColorFunction);
 
     public BlockColorCalculatorFactory() {
         this.mappings = new ConcurrentHashMap<>();

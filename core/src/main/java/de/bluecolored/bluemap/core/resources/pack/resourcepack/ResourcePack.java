@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.core.resources.pack.resourcepack;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -41,10 +40,7 @@ import de.bluecolored.bluemap.core.resources.pack.resourcepack.entitystate.Entit
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.TextureVariable;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
-import de.bluecolored.bluemap.core.util.Key;
-import de.bluecolored.bluemap.core.util.Keyed;
-import de.bluecolored.bluemap.core.util.Registry;
-import de.bluecolored.bluemap.core.util.Tristate;
+import de.bluecolored.bluemap.core.util.*;
 import de.bluecolored.bluemap.core.world.BlockProperties;
 import lombok.Getter;
 
@@ -106,16 +102,8 @@ public class ResourcePack extends Pack {
         this.colorCalculatorFactory = new BlockColorCalculatorFactory();
         this.blockPropertiesConfig = new BlockPropertiesConfig();
 
-        this.blockStateCache = Caffeine.newBuilder()
-                .executor(BlueMap.THREAD_POOL)
-                .maximumSize(10000)
-                .expireAfterAccess(1, TimeUnit.MINUTES)
-                .build(this::loadBlockState);
-        this.blockPropertiesCache = Caffeine.newBuilder()
-                .executor(BlueMap.THREAD_POOL)
-                .maximumSize(10000)
-                .expireAfterAccess(1, TimeUnit.MINUTES)
-                .build(this::loadBlockProperties);
+        this.blockStateCache = Caches.build(this::loadBlockState);
+        this.blockPropertiesCache = Caches.build(this::loadBlockProperties);
 
         this.extensions = new HashMap<>();
         for (Extension<?> extensionType : Extension.REGISTRY.values())

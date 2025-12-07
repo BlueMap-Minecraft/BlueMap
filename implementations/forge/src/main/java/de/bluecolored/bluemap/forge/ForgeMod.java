@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.forge;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluecommands.brigadier.BrigadierBridge;
 import de.bluecolored.bluemap.common.commands.BrigadierExecutionHandler;
@@ -34,8 +33,8 @@ import de.bluecolored.bluemap.common.serverinterface.Player;
 import de.bluecolored.bluemap.common.serverinterface.Server;
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
-import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.util.Caches;
 import net.minecraft.SharedConstants;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.registries.Registries;
@@ -87,8 +86,7 @@ public class ForgeMod implements Server {
         this.pluginInstance = new Plugin("forge", this);
 
         this.eventForwarder = new ForgeEventForwarder();
-        this.worlds = Caffeine.newBuilder()
-                .executor(BlueMap.THREAD_POOL)
+        this.worlds = Caches.with()
                 .weakKeys()
                 .maximumSize(1000)
                 .build(ForgeWorld::new);

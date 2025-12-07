@@ -24,14 +24,13 @@
  */
 package de.bluecolored.bluemap.core.map.hires.block;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.map.hires.TileModelView;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.Variant;
-import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluemap.core.util.Caches;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
@@ -48,8 +47,7 @@ public class BlockStateModelRenderer {
 
     public BlockStateModelRenderer(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
         this.resourcePack = resourcePack;
-        this.blockRenderers = Caffeine.newBuilder()
-                .build(type -> type.create(resourcePack, textureGallery, renderSettings));
+        this.blockRenderers = Caches.build(type -> type.create(resourcePack, textureGallery, renderSettings));
     }
 
     public void render(BlockNeighborhood block, TileModelView blockModel, Color blockColor) {
