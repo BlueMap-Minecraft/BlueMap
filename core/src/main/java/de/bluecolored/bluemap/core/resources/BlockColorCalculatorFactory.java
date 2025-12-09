@@ -227,7 +227,7 @@ public class BlockColorCalculatorFactory {
 
         public Color getDryFoliageColor(Biome biome, Color target) {
             getColorFromMap(biome, dryFoliageMap, 0xff8f5f33, target);
-            return target.overlay(biome.getOverlayFoliageColor());
+            return target.overlay(biome.getOverlayDryFoliageColor());
         }
 
         public Color getBlendedGrassColor(BlockNeighborhood block, Color target) {
