@@ -33,6 +33,7 @@ import net.minecraft.util.WorldSavePath;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.nio.file.Path;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
@@ -46,9 +47,8 @@ public class FabricWorld implements ServerWorld {
     public FabricWorld(net.minecraft.server.world.ServerWorld delegate) {
         this.delegate = new WeakReference<>(delegate);
 
-        MinecraftServer server = delegate.getServer();
-        this.worldFolder = delegate.getServer().getRunDirectory()
-                .resolve(server.getSavePath(WorldSavePath.ROOT));
+        MinecraftServer server = Objects.requireNonNull(delegate.getServer());
+        this.worldFolder = server.getRunDirectory().resolve(server.getSavePath(WorldSavePath.ROOT));
 
         Identifier id = delegate.getRegistryKey().getValue();
         this.dimension = new Key(id.getNamespace(), id.getPath());

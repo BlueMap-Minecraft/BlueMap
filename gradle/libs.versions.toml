@@ -30,13 +30,13 @@ jetbrains-annotations = { module = "org.jetbrains:annotations", version = "23.0.
 junit-core = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
 lombok = { module = "org.projectlombok:lombok", version = "1.18.32" }
-lz4 = { module = "org.lz4:lz4-java", version = "1.8.0" }
+lz4 = { module = "at.yawk.lz4:lz4-java", version = "1.8.1" }
 
 [plugins]
 cursegradle = { id = "com.matthewprenger.cursegradle", version = "1.4.0" }
 forgegradle = { id = "net.minecraftforge.gradle", version = "[6.0.24,6.2)" }
 hangar = { id = "io.papermc.hangar-publish-plugin", version = "0.1.2" }
-loom = { id = "fabric-loom", version = "1.11-SNAPSHOT" }
+loom = { id = "fabric-loom", version = "1.13-SNAPSHOT" }
 minotaur = { id = "com.modrinth.minotaur", version = "2.8.7" }
 node-gradle = { id = "com.github.node-gradle.node", version = "7.0.2" }
 neoforge-gradle = { id = "net.neoforged.moddev", version = "2.0.107" }

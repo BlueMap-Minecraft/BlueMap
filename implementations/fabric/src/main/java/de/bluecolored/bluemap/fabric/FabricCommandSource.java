@@ -33,6 +33,9 @@ import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.minecraft.command.DefaultPermissions;
+import net.minecraft.command.permission.Permission;
+import net.minecraft.command.permission.PermissionLevel;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.text.TextCodecs;
@@ -66,7 +69,7 @@ public class FabricCommandSource implements CommandSource {
             Class.forName("me.lucko.fabric.api.permissions.v0.Permissions");
             return Permissions.check(delegate, permission, 1);
         } catch (ClassNotFoundException ex) {
-            return delegate.hasPermissionLevel(1);
+            return delegate.getPermissions().hasPermission(DefaultPermissions.MODERATORS);
         }
     }
 
