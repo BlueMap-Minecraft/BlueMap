@@ -58,8 +58,8 @@ public class EllipseMask implements Mask {
     }
 
     public boolean testXZ(double x, double z) {
-        x = x - center.getX();
-        z = z - center.getY();
+        x -= center.getX();
+        z -= center.getY();
         return (x * x) / radiusSquaredX + (z * z) / radiusSquaredZ <= 1.0;
     }
 
