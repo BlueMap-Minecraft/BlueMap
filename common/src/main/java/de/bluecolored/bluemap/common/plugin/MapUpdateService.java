@@ -26,11 +26,11 @@ package de.bluecolored.bluemap.common.plugin;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
+import de.bluecolored.bluemap.core.util.Caches;
 import de.bluecolored.bluemap.core.util.WatchService;
 
 import java.io.IOException;
@@ -60,7 +60,7 @@ public class MapUpdateService extends Thread {
         this.regionUpdateCooldown = regionUpdateCooldown;
         this.closed = false;
         this.scheduledUpdates = new HashMap<>();
-        this.lastUpdateTimes = Caffeine.newBuilder()
+        this.lastUpdateTimes = Caches.with()
                 .expireAfterWrite(regionUpdateCooldown)
                 .build();
         this.watchService = map.getWorld().createRegionWatchService();

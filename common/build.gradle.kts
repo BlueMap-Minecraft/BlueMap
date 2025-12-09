@@ -31,6 +31,7 @@ node {
     version = "20.14.0"
     download = true
     nodeProjectDir = file("webapp/")
+    npmInstallCommand = "ci"
 }
 
 tasks.register("buildWebapp", type = NpmTask::class) {

@@ -26,6 +26,9 @@ package de.bluecolored.bluemap.core.resources.pack.resourcepack;
 
 import de.bluecolored.bluemap.core.resources.pack.PackExtension;
 import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluemap.core.world.BlockProperties;
+import de.bluecolored.bluemap.core.world.BlockState;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Set;
 
@@ -34,5 +37,11 @@ public interface ResourcePackExtension extends PackExtension {
     default Set<Key> collectUsedTextureKeys() {
         return Set.of();
     }
+
+    default Key getBlockStateKey(Key key) {
+        return key;
+    }
+
+    default void getBlockProperties(BlockState blockState, BlockProperties.Builder propertiesBuilder) {}
 
 }

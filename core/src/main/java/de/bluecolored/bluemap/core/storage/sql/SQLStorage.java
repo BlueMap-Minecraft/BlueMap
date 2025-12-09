@@ -24,12 +24,12 @@
  */
 package de.bluecolored.bluemap.core.storage.sql;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.core.storage.MapStorage;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.storage.compression.Compression;
 import de.bluecolored.bluemap.core.storage.sql.commandset.CommandSet;
+import de.bluecolored.bluemap.core.util.Caches;
 import lombok.RequiredArgsConstructor;
 
 import java.io.IOException;
@@ -41,8 +41,7 @@ public class SQLStorage implements Storage {
 
     private final CommandSet sql;
     private final Compression compression;
-    private final LoadingCache<String, SQLMapStorage> mapStorages = Caffeine.newBuilder()
-            .build(this::create);
+    private final LoadingCache<String, SQLMapStorage> mapStorages = Caches.build(this::create);
 
     @Override
     public void initialize() throws IOException {

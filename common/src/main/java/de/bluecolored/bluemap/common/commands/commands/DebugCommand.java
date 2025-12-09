@@ -73,7 +73,7 @@ public class DebugCommand {
                     text(BlueMapConfigManager.formatPath(file)).color(HIGHLIGHT_COLOR)
             ).color(POSITIVE_COLOR));
             return 1;
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.global.logError("Failed to create dump!", ex);
             source.sendMessage(text("Exception trying to create debug-dump! See console for details.").color(NEGATIVE_COLOR));
             return 0;

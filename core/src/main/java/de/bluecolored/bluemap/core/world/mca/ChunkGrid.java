@@ -25,10 +25,9 @@
 package de.bluecolored.bluemap.core.world.mca;
 
 import com.flowpowered.math.vector.Vector2i;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
-import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.util.Caches;
 import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.util.Vector2iCache;
 import de.bluecolored.bluemap.core.util.WatchService;
@@ -58,15 +57,13 @@ public class ChunkGrid<T> {
     private final ChunkLoader<T> chunkLoader;
     private final Path regionFolder;
 
-    private final LoadingCache<Vector2i, Region<T>> regionCache = Caffeine.newBuilder()
-            .executor(BlueMap.THREAD_POOL)
+    private final LoadingCache<Vector2i, Region<T>> regionCache = Caches.with()
             .softValues()
             .maximumSize(32)
             .expireAfterWrite(10, TimeUnit.MINUTES)
             .expireAfterAccess(1, TimeUnit.MINUTES)
             .build(this::loadRegion);
-    private final LoadingCache<Vector2i, T> chunkCache = Caffeine.newBuilder()
-            .executor(BlueMap.THREAD_POOL)
+    private final LoadingCache<Vector2i, T> chunkCache = Caches.with()
             .softValues()
             .maximumSize(10240) // 10 regions worth of chunks
             .expireAfterWrite(10, TimeUnit.MINUTES)
