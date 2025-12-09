@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.core.map.hires.entity;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.TextureGallery;
@@ -32,27 +31,25 @@ import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.map.hires.TileModelView;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.entitystate.Part;
+import de.bluecolored.bluemap.core.util.Caches;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.Entity;
 import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 
 public class MissingModelRenderer implements EntityRenderer {
 
-    private static final LoadingCache<Key, EntityRendererType> ENTITY_RENDERER_TYPES = Caffeine.newBuilder()
-            .maximumSize(1000)
-            .build(entityType -> {
-                for (EntityRendererType type : EntityRendererType.REGISTRY.values())
-                    if (type.isFallbackFor(entityType)) return type;
+    private static final LoadingCache<Key, EntityRendererType> ENTITY_RENDERER_TYPES = Caches.build(entityType -> {
+        for (EntityRendererType type : EntityRendererType.REGISTRY.values())
+            if (type.isFallbackFor(entityType)) return type;
 
-                Logger.global.logDebug("No renderer found for entity type: " + entityType);
-                return EntityRendererType.DEFAULT;
-            });
+        Logger.global.logDebug("No renderer found for entity type: " + entityType);
+        return EntityRendererType.DEFAULT;
+    });
 
     private final LoadingCache<EntityRendererType, EntityRenderer> entityRenderers;
 
     public MissingModelRenderer(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
-        this.entityRenderers = Caffeine.newBuilder()
-                .build(type -> type.create(resourcePack, textureGallery, renderSettings));
+        this.entityRenderers = Caches.build(type -> type.create(resourcePack, textureGallery, renderSettings));
     }
 
     @Override

@@ -25,7 +25,6 @@
 package de.bluecolored.bluemap.bukkit;
 
 import com.destroystokyo.paper.event.player.PlayerPostRespawnEvent;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluecommands.brigadier.BrigadierBridge;
 import de.bluecolored.bluemap.common.commands.BrigadierExecutionHandler;
@@ -35,9 +34,9 @@ import de.bluecolored.bluemap.common.serverinterface.Player;
 import de.bluecolored.bluemap.common.serverinterface.Server;
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
-import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.JavaLogger;
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.util.Caches;
 import de.bluecolored.bluemap.core.util.Key;
 import io.papermc.paper.ServerBuildInfo;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -83,8 +82,7 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
         this.eventForwarder = new EventForwarder();
         this.pluginInstance = new Plugin("paper", this);
 
-        this.worlds = Caffeine.newBuilder()
-                .executor(BlueMap.THREAD_POOL)
+        this.worlds = Caches.with()
                 .weakKeys()
                 .maximumSize(1000)
                 .build(BukkitWorld::new);

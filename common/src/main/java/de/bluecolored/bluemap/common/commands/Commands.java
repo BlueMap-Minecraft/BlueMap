@@ -26,7 +26,6 @@ package de.bluecolored.bluemap.common.commands;
 
 import com.flowpowered.math.vector.Vector3d;
 import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluecommands.*;
 import de.bluecolored.bluemap.common.commands.arguments.MapBackedArgumentParser;
@@ -39,8 +38,8 @@ import de.bluecolored.bluemap.common.rendermanager.TileUpdateStrategy;
 import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.map.BmMap;
+import de.bluecolored.bluemap.core.util.Caches;
 import de.bluecolored.bluemap.core.world.World;
-import net.kyori.adventure.text.event.ClickEvent;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
@@ -53,10 +52,10 @@ import static net.kyori.adventure.text.Component.text;
 
 public class Commands {
 
-    private static final Cache<String, RenderTask> REF_TO_RENDERTASK = Caffeine.newBuilder()
+    private static final Cache<String, RenderTask> REF_TO_RENDERTASK = Caches.with()
             .weakValues()
             .build();
-    private static final LoadingCache<RenderTask, String> RENDERTASK_TO_REF = Caffeine.newBuilder()
+    private static final LoadingCache<RenderTask, String> RENDERTASK_TO_REF = Caches.with()
             .weakKeys()
             .build(Commands::safeRandomRef);
 

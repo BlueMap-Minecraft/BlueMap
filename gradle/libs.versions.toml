@@ -13,7 +13,7 @@ adventure-ansi = { module = "net.kyori:adventure-text-serializer-ansi", version.
 aircompressor = { module = "io.airlift:aircompressor", version = "0.27" }
 bluecommands-core = { module = "de.bluecolored:bluecommands-core", version.ref = "bluecommands" }
 bluecommands-brigadier = { module = "de.bluecolored:bluecommands-brigadier", version.ref = "bluecommands" }
-bluenbt = { module = "de.bluecolored:bluenbt", version = "3.3.0" }
+bluenbt = { module = "de.bluecolored:bluenbt", version = "3.5.0" }
 brigadier = { module = "com.mojang:brigadier", version = "1.0.17" }
 bstats-bukkit = { module = "org.bstats:bstats-bukkit", version.ref = "bstats" }
 bstats-sponge = { module = "org.bstats:bstats-sponge", version.ref = "bstats" }

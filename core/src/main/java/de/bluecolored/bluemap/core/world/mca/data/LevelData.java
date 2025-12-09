@@ -24,8 +24,12 @@
  */
 package de.bluecolored.bluemap.core.world.mca.data;
 
+import com.flowpowered.math.vector.Vector3i;
+import de.bluecolored.bluemap.core.resources.pack.datapack.DataPack;
+import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.DimensionType;
 import de.bluecolored.bluenbt.NBTName;
+import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -46,17 +50,30 @@ public class LevelData {
         @NBTName("LevelName")
         private String levelName = "world";
 
-        @NBTName("SpawnX")
-        private int spawnX = 0;
-
-        @NBTName("SpawnY")
-        private int spawnY = 0;
-
-        @NBTName("SpawnZ")
-        private int spawnZ = 0;
+        private Spawn spawn = null;
 
         @NBTName("WorldGenSettings")
         private WGSettings worldGenSettings = new WGSettings();
+
+        // legacy-spawn notation
+        @NBTName("SpawnX")
+        @Getter(AccessLevel.NONE)
+        private int spawnX = 0;
+
+        @NBTName("SpawnY")
+        @Getter(AccessLevel.NONE)
+        private int spawnY = 0;
+
+        @NBTName("SpawnZ")
+        @Getter(AccessLevel.NONE)
+        private int spawnZ = 0;
+
+        public Spawn getSpawn() {
+            if (spawn == null) {
+                spawn = new Spawn(new Vector3i(spawnX, spawnY, spawnZ));
+            }
+            return spawn;
+        }
 
     }
 
@@ -70,6 +87,22 @@ public class LevelData {
     @AllArgsConstructor
     public static class Dimension {
         private DimensionType type = DimensionType.OVERWORLD;
+    }
+
+    @Getter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class Spawn {
+
+        private Key dimension = DataPack.DIMENSION_OVERWORLD;
+        private Vector3i position = Vector3i.ZERO;
+        private float yaw = 0;
+        private float pitch = 0;
+
+        public Spawn(Vector3i position) {
+            this.position = position;
+        }
+
     }
 
 }

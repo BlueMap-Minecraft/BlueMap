@@ -110,7 +110,23 @@ public class VoidTileModel implements TileModel {
     }
 
     @Override
-    public TileModel rotate(
+    public TileModel rotateXYZ(
+            int start, int count,
+            float pitch, float yaw, float roll
+    ) {
+        return this;
+    }
+
+    @Override
+    public TileModel rotateZYX(
+            int start, int count,
+            float pitch, float yaw, float roll
+    ) {
+        return this;
+    }
+
+    @Override
+    public TileModel rotateYXZ(
             int start, int count,
             float pitch, float yaw, float roll
     ) {

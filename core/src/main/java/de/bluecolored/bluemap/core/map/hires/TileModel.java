@@ -70,7 +70,17 @@ public interface TileModel {
             float angle, float axisX, float axisY, float axisZ
     );
 
-    TileModel rotate(
+    TileModel rotateXYZ(
+            int start, int count,
+            float pitch, float yaw, float roll
+    );
+
+    TileModel rotateZYX(
+            int start, int count,
+            float pitch, float yaw, float roll
+    );
+
+    TileModel rotateYXZ(
             int start, int count,
             float pitch, float yaw, float roll
     );

@@ -24,6 +24,8 @@
  */
 package de.bluecolored.bluemap.common.debug;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.stats.CacheStats;
 import com.google.gson.stream.JsonWriter;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.util.Key;
@@ -117,7 +119,57 @@ public class StateDumper {
             String identityString = toIdentityString(instance);
             writer.name("#identity").value(identityString);
 
+            if (instance instanceof Cache<?,?> cache) {
+                writer.name("stats");
+                dumpInstance(cache.stats(), writer, alreadyDumped);
+
+                writer.name("estimated-size").value(cache.estimatedSize());
+
+                writer.name("entries").beginArray();
+                int count = 0;
+                for (Map.Entry<?, ?> entry : cache.asMap().entrySet()) {
+                    if (++count > 10) {
+                        writer.value("<<more elements>>");
+                        break;
+                    }
+
+                    writer.beginObject();
+                    try {
+
+                        writer.name("key");
+                        dumpInstance(entry.getKey(), writer, alreadyDumped);
+
+                        writer.name("value");
+                        dumpInstance(entry.getValue(), writer, alreadyDumped);
+
+                    } finally {
+                        writer.endObject();
+                    }
+
+                }
+                writer.endArray();
+                return;
+            }
+
+            if (instance instanceof CacheStats cacheStats) {
+                writer.name("request-count").value(cacheStats.requestCount());
+                writer.name("hit-count").value(cacheStats.hitCount());
+                writer.name("hit-rate").value(cacheStats.hitRate());
+                writer.name("miss-count").value(cacheStats.missCount());
+                writer.name("miss-rate").value(cacheStats.missRate());
+                writer.name("load-count").value(cacheStats.loadCount());
+                writer.name("load-success-count").value(cacheStats.loadSuccessCount());
+                writer.name("load-failure-count").value(cacheStats.loadFailureCount());
+                writer.name("load-failure-rate").value(cacheStats.loadFailureRate());
+                writer.name("total-load-time").value(cacheStats.totalLoadTime());
+                writer.name("average-load-penalty").value(cacheStats.averageLoadPenalty());
+                writer.name("eviction-count").value(cacheStats.evictionCount());
+                writer.name("eviction-weight").value(cacheStats.evictionWeight());
+                return;
+            }
+
             if (instance instanceof Map<?, ?> map) {
+                writer.name("size").value(map.size());
                 writer.name("entries").beginArray();
 
                 int count = 0;
@@ -128,14 +180,17 @@ public class StateDumper {
                     }
 
                     writer.beginObject();
+                    try {
 
-                    writer.name("key");
-                    dumpInstance(entry.getKey(), writer, alreadyDumped);
+                        writer.name("key");
+                        dumpInstance(entry.getKey(), writer, alreadyDumped);
 
-                    writer.name("value");
-                    dumpInstance(entry.getValue(), writer, alreadyDumped);
+                        writer.name("value");
+                        dumpInstance(entry.getValue(), writer, alreadyDumped);
 
-                    writer.endObject();
+                    } finally {
+                        writer.endObject();
+                    }
                 }
 
                 writer.endArray();
@@ -143,6 +198,7 @@ public class StateDumper {
             }
 
             if (instance instanceof Collection<?> collection) {
+                writer.name("size").value(collection.size());
                 writer.name("entries").beginArray();
 
                 int count = 0;
@@ -160,6 +216,7 @@ public class StateDumper {
             }
 
             if (instance instanceof Object[] array) {
+                writer.name("length").value(array.length);
                 writer.name("entries").beginArray();
 
                 int count = 0;

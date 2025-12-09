@@ -35,6 +35,17 @@ public class MySQLCommandSet extends AbstractCommandSet {
 
     @Override
     @Language("mysql")
+    public String listExistingTablesStatement() {
+        return """
+        SELECT TABLE_NAME
+        FROM information_schema.tables
+        WHERE table_schema = DATABASE()
+          AND table_type = 'BASE TABLE'
+        """;
+    }
+
+    @Override
+    @Language("mysql")
     public String createMapTableStatement() {
         return """
         CREATE TABLE IF NOT EXISTS `bluemap_map` (

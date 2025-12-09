@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.common.api;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.api.BlueMapAPI;
 import de.bluecolored.bluemap.api.BlueMapMap;
@@ -35,6 +34,7 @@ import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
+import de.bluecolored.bluemap.core.util.Caches;
 import de.bluecolored.bluemap.core.world.World;
 import lombok.NonNull;
 import org.jetbrains.annotations.Nullable;
@@ -68,12 +68,10 @@ public class BlueMapAPIImpl extends BlueMapAPI {
         this.webAppImpl = new WebAppImpl(blueMapService, plugin);
         this.pluginImpl = plugin != null ? new PluginImpl(plugin) : null;
 
-        this.worldCache = Caffeine.newBuilder()
-                .executor(BlueMap.THREAD_POOL)
+        this.worldCache = Caches.with()
                 .weakKeys()
                 .build(this::getWorldUncached);
-        this.mapCache = Caffeine.newBuilder()
-                .executor(BlueMap.THREAD_POOL)
+        this.mapCache = Caches.with()
                 .weakKeys()
                 .build(this::getMapUncached);
     }

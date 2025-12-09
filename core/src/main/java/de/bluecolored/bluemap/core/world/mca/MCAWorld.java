@@ -63,7 +63,6 @@ public class MCAWorld implements World {
     private final LevelData levelData;
 
     private final DimensionType dimensionType;
-    private final Vector3i spawnPoint;
     private final Path dimensionFolder;
 
     private final ChunkGrid<Chunk> blockChunkGrid;
@@ -89,11 +88,6 @@ public class MCAWorld implements World {
         }
 
         this.dimensionType = dimensionData.getType();
-        this.spawnPoint = new Vector3i(
-                levelData.getData().getSpawnX(),
-                levelData.getData().getSpawnY(),
-                levelData.getData().getSpawnZ()
-        );
         this.dimensionFolder = resolveDimensionFolder(worldFolder, dimension);
 
         this.blockChunkGrid = new ChunkGrid<>(new MCAChunkLoader(this), dimensionFolder.resolve("region"));

@@ -24,10 +24,10 @@
  */
 package de.bluecolored.bluemap.core.storage.file;
 
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.storage.compression.Compression;
+import de.bluecolored.bluemap.core.util.Caches;
 import lombok.Getter;
 
 import java.io.IOException;
@@ -42,9 +42,7 @@ public class FileStorage implements Storage {
 
     public FileStorage(Path root, Compression compression, boolean atomic) {
         this.root = root;
-
-        mapStorages = Caffeine.newBuilder()
-                .build(id -> new FileMapStorage(root.resolve(id), compression, atomic));
+        mapStorages = Caches.build(id -> new FileMapStorage(root.resolve(id), compression, atomic));
     }
 
     @Override

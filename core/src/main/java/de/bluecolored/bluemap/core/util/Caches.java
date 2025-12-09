@@ -24,17 +24,32 @@
  */
 package de.bluecolored.bluemap.core.util;
 
-import com.github.benmanes.caffeine.cache.Interner;
+import com.github.benmanes.caffeine.cache.*;
+import de.bluecolored.bluemap.core.BlueMap;
 
-public class StringUtil {
+import java.util.concurrent.TimeUnit;
 
-    private static final Interner<String> STRING_INTERNER = Interner.newWeakInterner();
+public class Caches {
 
-    /**
-     * Using Caffeines {@link Interner} instead of {@link String#intern()} since it is much faster.
-     */
-    public static String intern(String string) {
-        return STRING_INTERNER.intern(string);
+    public static Caffeine<Object, Object> with() {
+        return Caffeine.newBuilder()
+                .executor(BlueMap.THREAD_POOL)
+                .scheduler(Scheduler.systemScheduler())
+                .recordStats();
+    }
+
+    public static <K, V> Cache<K, V> build() {
+        return with()
+                .maximumSize(10000)
+                .expireAfterAccess(1, TimeUnit.MINUTES)
+                .build();
+    }
+
+    public static <K, V> LoadingCache<K, V> build(CacheLoader<? super K, V> loader) {
+        return with()
+                .maximumSize(10000)
+                .expireAfterAccess(1, TimeUnit.MINUTES)
+                .build(loader);
     }
 
 }

@@ -44,7 +44,7 @@ public class Variant {
     private BlockRendererType renderer = BlockRendererType.DEFAULT;
 
     private ResourcePath<Model> model = ResourcePack.MISSING_BLOCK_MODEL;
-    private float x = 0, y = 0;
+    private float x = 0, y = 0, z = 0;
     private boolean uvlock = false;
     private double weight = 1;
 
@@ -56,17 +56,19 @@ public class Variant {
         init();
     }
 
-    public Variant(ResourcePath<Model> model, float x, float y) {
+    public Variant(ResourcePath<Model> model, float x, float y, float z) {
         this.model = model;
         this.x = x;
         this.y = y;
+        this.z = z;
         init();
     }
 
-    public Variant(ResourcePath<Model> model, float x, float y, boolean uvlock, double weight) {
+    public Variant(ResourcePath<Model> model, float x, float y, float z, boolean uvlock, double weight) {
         this.model = model;
         this.x = x;
         this.y = y;
+        this.z = z;
         this.uvlock = uvlock;
         this.weight = weight;
         init();
@@ -74,10 +76,10 @@ public class Variant {
 
     @PostDeserialize
     private void init() {
-        this.transformed = x != 0 || y != 0;
+        this.transformed = x != 0 || y != 0 || z != 0;
         this.transformMatrix = new MatrixM4f()
                 .translate(-0.5f, -0.5f, -0.5f)
-                .rotate(-x, -y, 0)
+                .rotateYXZ(-x, -y, -z)
                 .translate(0.5f, 0.5f, 0.5f);
     }
 
