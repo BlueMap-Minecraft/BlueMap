@@ -6,11 +6,11 @@ plugins {
 }
 
 val supportedMinecraftVersions = listOf(
-    "1.21.6", "1.21.7", "1.21.8", "1.21.9", "1.21.10"
+    "1.21.11"
 )
 
 val minecraftVersion = supportedMinecraftVersions.first()
-val forgeVersion = "56.0.7"
+val forgeVersion = "61.0.0"
 
 val shadowInclude: Configuration by configurations.creating
 configurations.api.get().extendsFrom(shadowInclude)
