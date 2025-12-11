@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.bukkit;
 import com.flowpowered.math.vector.Vector3d;
 import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
+import de.bluecolored.bluemap.core.logger.Logger;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;

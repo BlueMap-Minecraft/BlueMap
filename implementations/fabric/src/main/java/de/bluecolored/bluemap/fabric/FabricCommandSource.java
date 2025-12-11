@@ -77,15 +77,15 @@ public class FabricCommandSource implements CommandSource {
     public Optional<Vector3d> getPosition() {
         if (!delegate.isExecutedByPlayer() && delegate.getName().equals("Server")) return Optional.empty();
 
-        Vec3d pos = delegate.getPosition();
-        return Optional.of(new Vector3d(pos.x, pos.y, pos.z));
+        return Optional.ofNullable(delegate.getPosition())
+                .map(pos -> new Vector3d(pos.x, pos.y, pos.z));
     }
 
     @Override
     public Optional<ServerWorld> getWorld() {
         if (!delegate.isExecutedByPlayer() && delegate.getName().equals("Server")) return Optional.empty();
 
-        return Optional.of(delegate.getWorld())
+        return Optional.ofNullable(delegate.getWorld())
                 .map(mod::getServerWorld);
     }
 
