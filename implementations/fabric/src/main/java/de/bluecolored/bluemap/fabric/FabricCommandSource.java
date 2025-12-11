@@ -67,7 +67,7 @@ public class FabricCommandSource implements CommandSource {
     public boolean hasPermission(String permission) {
         try {
             Class.forName("me.lucko.fabric.api.permissions.v0.Permissions");
-            return Permissions.check(delegate, permission, 1);
+            return Permissions.check(delegate, permission, PermissionLevel.MODERATORS);
         } catch (ClassNotFoundException ex) {
             return delegate.getPermissions().hasPermission(DefaultPermissions.MODERATORS);
         }
