@@ -5,13 +5,12 @@ plugins {
 }
 
 val supportedMinecraftVersions = listOf(
-    "1.20.6",
-    "1.21", "1.21.1", "1.21.2", "1.21.3", "1.21.4", "1.21.5", "1.21.6", "1.21.7", "1.21.8", "1.21.9", "1.21.10", "1.21.11"
+    "1.21.5", "1.21.6", "1.21.7", "1.21.8", "1.21.9", "1.21.10", "1.21.11"
 )
 
 val minecraftVersion = supportedMinecraftVersions.first()
 val paperVersion = "${minecraftVersion}-R0.1-SNAPSHOT"
-val apiVersion = "1.20.6" // paper-version but without minor
+val apiVersion = "1.21.6" // paper-version but without minor
 
 dependencies {
     api ( project( ":common" ) ) {
