@@ -152,7 +152,9 @@ export class FreeFlightControls {
 
         document.body.requestFullscreen()
             .finally(() => {
-                this.target.requestPointerLock();
+                this.target.requestPointerLock({
+                    unadjustedMovement: true
+                });
             });
     }
 
