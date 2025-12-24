@@ -1,3 +1,4 @@
+import com.matthewprenger.cursegradle.CurseRelation
 import net.fabricmc.loom.task.RemapJarTask
 
 plugins {
@@ -117,4 +118,7 @@ curseforgeBlueMap {
     supportedMinecraftVersions.forEach {
         addGameVersion(it)
     }
+    relations( closureOf<CurseRelation> {
+        requiredDependency("fabric-api")
+    })
 }
