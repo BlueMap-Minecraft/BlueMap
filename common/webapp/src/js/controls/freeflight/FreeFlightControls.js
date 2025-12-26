@@ -152,8 +152,16 @@ export class FreeFlightControls {
 
         document.body.requestFullscreen()
             .finally(() => {
+                // try with unadjustedMovement first and fall back without it if not supported
                 this.target.requestPointerLock({
                     unadjustedMovement: true
+                })
+                .catch(err => {
+                    if (err.name === "NotSupportedError") {
+                        return this.target.requestPointerLock();
+                    } else {
+                        throw err;
+                    }
                 });
             });
     }
