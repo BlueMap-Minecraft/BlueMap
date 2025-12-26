@@ -291,7 +291,7 @@ public class BlueMapCLI {
 
         try {
             //noinspection resource
-            HttpServer webServer = new HttpServer(handler);
+            HttpServer webServer = new HttpServer("BlueMap-Webserver", handler);
             webServer.bind(new InetSocketAddress(
                     config.resolveIp(),
                     config.getPort()

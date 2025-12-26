@@ -40,7 +40,8 @@ public abstract class Server extends Thread implements Closeable, Runnable {
     private final Selector selector;
     private final Collection<ServerSocketChannel> server;
 
-    public Server() throws IOException {
+    public Server(String name) throws IOException {
+        super(name);
         this.selector = Selector.open();
         this.server = new ArrayList<>();
     }

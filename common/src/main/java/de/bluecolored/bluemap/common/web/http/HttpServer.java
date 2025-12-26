@@ -34,7 +34,8 @@ public class HttpServer extends Server {
     @Getter @Setter
     private HttpRequestHandler requestHandler;
 
-    public HttpServer(HttpRequestHandler requestHandler) throws IOException {
+    public HttpServer(String name, HttpRequestHandler requestHandler) throws IOException {
+        super(name);
         this.requestHandler = requestHandler;
     }
 

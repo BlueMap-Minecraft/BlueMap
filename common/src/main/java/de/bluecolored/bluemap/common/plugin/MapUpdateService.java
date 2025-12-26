@@ -39,8 +39,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class MapUpdateService extends Thread {
+
+    private static final AtomicInteger NEXT_ID = new AtomicInteger(0);
 
     private final BmMap map;
     private final RenderManager renderManager;
@@ -55,6 +58,7 @@ public class MapUpdateService extends Thread {
     private final Cache<Vector2i, Long> lastUpdateTimes;
 
     public MapUpdateService(RenderManager renderManager, BmMap map, Duration regionUpdateCooldown) throws IOException {
+        super("BlueMap-MapUpdateService-" + NEXT_ID.getAndIncrement());
         this.renderManager = renderManager;
         this.map = map;
         this.regionUpdateCooldown = regionUpdateCooldown;

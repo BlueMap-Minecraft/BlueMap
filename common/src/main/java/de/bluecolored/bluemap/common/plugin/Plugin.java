@@ -232,11 +232,14 @@ public class Plugin implements ServerEventListener {
                     webLogger = Logger.combine(webLoggerList);
 
                     try {
-                        webServer = new HttpServer(new LoggingRequestHandler(
-                                webRequestHandler,
-                                webserverConfig.getLog().getFormat(),
-                                webLogger
-                        ));
+                        webServer = new HttpServer(
+                                "BlueMap-Webserver",
+                                new LoggingRequestHandler(
+                                        webRequestHandler,
+                                        webserverConfig.getLog().getFormat(),
+                                        webLogger
+                                )
+                        );
                         webServer.bind(new InetSocketAddress(
                                 webserverConfig.resolveIp(),
                                 webserverConfig.getPort()
