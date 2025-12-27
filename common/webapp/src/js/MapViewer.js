@@ -27,7 +27,7 @@ import {Map} from "./map/Map";
 import {SkyboxScene} from "./skybox/SkyboxScene";
 import {ControlsManager} from "./controls/ControlsManager";
 import Stats from "./util/Stats";
-import {alert, dispatchEvent, elementOffset, generateCacheHash, htmlToElement, softClamp} from "./util/Utils";
+import {alert, dispatchEvent, elementOffset, htmlToElement, softClamp} from "./util/Utils";
 import {TileManager} from "./map/TileManager";
 import {HIRES_VERTEX_SHADER} from "./map/hires/HiresVertexShader";
 import {HIRES_FRAGMENT_SHADER} from "./map/hires/HiresFragmentShader";
@@ -79,7 +79,12 @@ export class MapViewer {
 			loadedLowresViewDistance: 2000,
 		});
 
-		this.tileCacheHash = generateCacheHash();
+		/** @import { RevalidatingFileLoader } from "./util/RevalidatingFileLoader" */
+		/**
+		 * Used by {@link RevalidatingFileLoader}.
+		 * @type {Set<string> | undefined}
+		 */
+		this.revalidatedUrls = undefined;
 
 		this.stats = new Stats();
 		this.stats.hide();
@@ -405,7 +410,7 @@ export class MapViewer {
 		this.map = map;
 
 		if (this.map && this.map.isMap) {
-			return map.load(HIRES_VERTEX_SHADER, HIRES_FRAGMENT_SHADER, LOWRES_VERTEX_SHADER, LOWRES_FRAGMENT_SHADER, this.data.uniforms, this.tileCacheHash)
+			return map.load(HIRES_VERTEX_SHADER, HIRES_FRAGMENT_SHADER, LOWRES_VERTEX_SHADER, LOWRES_FRAGMENT_SHADER, this.data.uniforms, this.revalidatedUrls)
 				.then(() => {
 					for (let texture of this.map.loadedTextures){
 						this.renderer.initTexture(texture);
@@ -462,15 +467,13 @@ export class MapViewer {
 		}
 	}
 
-	clearTileCache(newTileCacheHash) {
-		if (!newTileCacheHash) newTileCacheHash = generateCacheHash();
-
-		this.tileCacheHash = newTileCacheHash;
+	clearTileCache() {
+		this.revalidatedUrls = new Set();
 		if (this.map) {
 			for (let i = 0; i < this.map.lowresTileManager.length; i++) {
-				this.map.lowresTileManager[i].tileLoader.tileCacheHash = this.tileCacheHash;
+				this.map.lowresTileManager[i].tileLoader.revalidatedUrls = this.revalidatedUrls;
 			}
-			this.map.hiresTileManager.tileLoader.tileCacheHash = this.tileCacheHash;
+			this.map.hiresTileManager.tileLoader.revalidatedUrls = this.revalidatedUrls;
 		}
 	}
 
