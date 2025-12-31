@@ -22,9 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-import {FileLoader} from "three";
 import {MarkerSet} from "./MarkerSet";
-import {alert, generateCacheHash} from "../util/Utils";
+import {alert} from "../util/Utils";
+import {RevalidatingFileLoader} from "../util/RevalidatingFileLoader";
 
 /**
  * A manager for loading and updating markers from a file
@@ -116,9 +116,10 @@ export class MarkerManager {
      */
     loadMarkerFile() {
         return new Promise((resolve, reject) => {
-            let loader = new FileLoader();
+            let loader = new RevalidatingFileLoader();
+            loader.setRevalidatedUrls(new Set()); // force no-cache requests
             loader.setResponseType("json");
-            loader.load(this.fileUrl + "?" + generateCacheHash(),
+            loader.load(this.fileUrl,
                 markerFileData => {
                     if (!markerFileData) reject(`Failed to parse '${this.fileUrl}'!`);
                     else resolve(markerFileData);

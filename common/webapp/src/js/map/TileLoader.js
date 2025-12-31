@@ -23,8 +23,9 @@
  * THE SOFTWARE.
  */
 import {pathFromCoords} from "../util/Utils";
-import {BufferGeometryLoader, FileLoader, Mesh, Material} from "three";
+import {BufferGeometryLoader, Mesh, Material} from "three";
 import {PRBMLoader} from "./hires/PRBMLoader";
+import {RevalidatingFileLoader} from "../util/RevalidatingFileLoader";
 
 export class TileLoader {
 
@@ -37,21 +38,22 @@ export class TileLoader {
      *      translate: {x: number, z: number}
      * }}
      * @param loadBlocker {function: Promise}
-     * @param tileCacheHash {number}
+     * @param revalidatedUrls {Set<string> | undefined}
      */
-    constructor(tilePath, material, tileSettings, loadBlocker = () => Promise.resolve(), tileCacheHash = 0) {
+    constructor(tilePath, material, tileSettings, loadBlocker = () => Promise.resolve(), revalidatedUrls) {
         Object.defineProperty( this, 'isTileLoader', { value: true } );
 
         this.tilePath = tilePath;
         this.material = material;
         this.tileSettings = tileSettings;
 
-        this.tileCacheHash = tileCacheHash;
+        this.revalidatedUrls = revalidatedUrls;
 
         this.loadBlocker = loadBlocker;
 
-        this.fileLoader = new FileLoader();
+        this.fileLoader = new RevalidatingFileLoader();
         this.fileLoader.setResponseType('arraybuffer');
+        this.fileLoader.setRevalidatedUrls(this.revalidatedUrls);
 
         this.bufferGeometryLoader = new PRBMLoader();
     }
@@ -60,7 +62,8 @@ export class TileLoader {
         let tileUrl = this.tilePath + pathFromCoords(tileX, tileZ) + '.prbm';
 
         return new Promise((resolve, reject) => {
-            this.fileLoader.load(tileUrl + '?' + this.tileCacheHash,
+            this.fileLoader.setRevalidatedUrls(this.revalidatedUrls);
+            this.fileLoader.load(tileUrl,
                 async data => {
 
                     await this.loadBlocker();
