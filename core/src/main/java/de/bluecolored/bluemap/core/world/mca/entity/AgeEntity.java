@@ -24,44 +24,16 @@
  */
 package de.bluecolored.bluemap.core.world.mca.entity;
 
-import de.bluecolored.bluemap.core.util.Key;
-import de.bluecolored.bluemap.core.util.Keyed;
-import de.bluecolored.bluemap.core.util.Registry;
-import de.bluecolored.bluemap.core.world.Entity;
+import de.bluecolored.bluenbt.NBTName;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 
-public interface EntityType extends Keyed {
+@Getter
+@EqualsAndHashCode(callSuper = true)
+@ToString
+@SuppressWarnings("FieldMayBeFinal")
+public class AgeEntity extends MCAEntity {
 
-    EntityType LLAMA = new Impl(Key.minecraft("llama"), Llama.class);
-    EntityType BEE = new Impl(Key.minecraft("bee"), Bee.class);
-    EntityType CAT = new Impl(Key.minecraft("cat"), Cat.class);
-    EntityType OCELOT = new Impl(Key.minecraft("ocelot"), Ocelot.class);
-    EntityType CHICKEN = new Impl(Key.minecraft("chicken"), AgeEntity.class);
-    EntityType FOX = new Impl(Key.minecraft("fox"), Fox.class);
-    EntityType PIG = new Impl(Key.minecraft("pig"), Pig.class);
-    EntityType TROPICAL_FISH = new Impl(Key.minecraft("tropical_fish"), TropicalFish.class);
-
-    Registry<EntityType> REGISTRY = new Registry<>(
-            LLAMA,
-            BEE,
-            CAT,
-            OCELOT,
-            CHICKEN,
-            FOX,
-            PIG,
-            TROPICAL_FISH
-    );
-
-    Class<? extends Entity> getEntityClass();
-
-    @RequiredArgsConstructor
-    @Getter
-    class Impl implements EntityType {
-
-        private final Key key;
-        private final Class<? extends Entity> entityClass;
-
-    }
-
+    @NBTName("Age") int age;
 }
