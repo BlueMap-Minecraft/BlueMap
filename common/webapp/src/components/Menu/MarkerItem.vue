@@ -1,8 +1,9 @@
 <template>
   <div class="marker-item" :class="{'marker-hidden': !marker.visible}">
     <div class="marker-button" :title="marker.id" @click="click(false)">
-      <div class="icon" v-if="marker.type === 'player'">
-        <img :src="'maps/' + mapId +  '/assets/playerheads/' + marker.playerUuid + '.png'" alt="playerhead" @error="steve">
+      <div class="icon" v-if="marker.type === 'player' || marker.listIcon">
+        <img v-if="marker.type === 'player'" :src="'maps/' + mapId +  '/assets/playerheads/' + marker.playerUuid + '.png'" alt="playerhead" @error="steve">
+        <img v-else :src="getListIconUrl(marker.listIcon)" :alt="markerLabel" @error="onIconError">
       </div>
       <div class="info">
         <div class="label">{{markerLabel}}</div>
@@ -95,6 +96,25 @@ export default {
     },
     steve(event) {
       event.target.src = "assets/steve.png";
+    },
+    getListIconUrl(listIcon) {
+      if (!listIcon) return "";
+      // If it's already a full URL, return as-is
+      if (listIcon.startsWith("http://") || listIcon.startsWith("https://") || listIcon.startsWith("//")) {
+        return listIcon;
+      }
+      // If it starts with /, treat as absolute path from web root
+      if (listIcon.startsWith("/")) {
+        return listIcon;
+      }
+      // Otherwise, treat as relative to the map's assets
+      return "maps/" + this.mapId + "/" + listIcon;
+    },
+    onIconError(event) {
+      // Hide the icon if it fails to load
+      if (event.target.parentElement) {
+        event.target.parentElement.style.display = "none";
+      }
     }
   }
 }

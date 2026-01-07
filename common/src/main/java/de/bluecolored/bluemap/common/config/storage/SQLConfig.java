@@ -63,6 +63,8 @@ public class SQLConfig extends StorageConfig {
     private String driverClass = null;
     private int maxConnections = -1;
 
+    private String tablePrefix = "bluemap_";
+
     private String compression = Compression.GZIP.getKey().getFormatted();
 
     @Getter(AccessLevel.NONE)
@@ -124,7 +126,7 @@ public class SQLConfig extends StorageConfig {
         } else {
             database = new Database(getConnectionUrl(), getConnectionProperties(), getMaxConnections());
         }
-        CommandSet commandSet = getDialect().createCommandSet(database);
+        CommandSet commandSet = getDialect().createCommandSet(database, getTablePrefix());
         return new SQLStorage(commandSet, getCompression());
     }
 

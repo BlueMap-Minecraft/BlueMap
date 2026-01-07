@@ -23,7 +23,7 @@
  * THE SOFTWARE.
  */
 
-import {MathUtils} from "three";
+import {MathUtils, Vector2, Vector3} from "three";
 import {MapControls} from "../MapControls";
 
 export class MouseZoomControls {
@@ -41,6 +41,7 @@ export class MouseZoomControls {
         this.speed = speed;
 
         this.deltaZoom = 0;
+        this.lastMousePosition = null;
     }
 
     /**
@@ -61,22 +62,113 @@ export class MouseZoomControls {
      * @param map {Map}
      */
     update(delta, map) {
-        if (this.deltaZoom === 0) return;
+        if (this.deltaZoom === 0) {
+            this.lastMousePosition = null;
+            return;
+        }
 
         let smoothing = this.stiffness / (16.666 / delta);
         smoothing = MathUtils.clamp(smoothing, 0, 1);
 
+        // Calculate world position under mouse before zooming (if we have a mouse position)
+        let targetWorldPoint = null;
+        if (this.lastMousePosition && this.manager.mapViewer && map && map.isLoaded) {
+            const rootElement = this.manager.mapViewer.rootElement;
+            const normalizedScreenPos = new Vector2(
+                ((this.lastMousePosition.x - rootElement.getBoundingClientRect().left) / rootElement.clientWidth) * 2 - 1,
+                -((this.lastMousePosition.y - rootElement.getBoundingClientRect().top) / rootElement.clientHeight) * 2 + 1
+            );
+
+            // Update camera matrix before raycasting
+            this.manager.mapViewer.camera.updateMatrixWorld();
+            this.manager.mapViewer.raycaster.setFromCamera(normalizedScreenPos, this.manager.mapViewer.camera);
+
+            // Raycast to find the world point under the mouse
+            const intersectScenes = [map.hiresTileManager.scene];
+            for (let i = 0; i < map.lowresTileManager.length; i++) {
+                intersectScenes.push(map.lowresTileManager[i].scene);
+            }
+
+            const intersects = this.manager.mapViewer.raycaster.intersectObjects(intersectScenes, true);
+            if (intersects.length > 0) {
+                targetWorldPoint = intersects[0].point.clone();
+            } else {
+                // If no intersection, calculate point on a plane at the current camera target height
+                // Use the camera's look direction to find a point at the current distance
+                const cameraDirection = new Vector3();
+                this.manager.mapViewer.camera.getWorldDirection(cameraDirection);
+                const planeNormal = new Vector3(0, 1, 0);
+                const planePoint = this.manager.position.clone();
+                
+                // Calculate intersection of ray with horizontal plane
+                const denom = cameraDirection.dot(planeNormal);
+                if (Math.abs(denom) > 0.0001) {
+                    const toPlane = planePoint.clone().sub(this.manager.mapViewer.camera.position);
+                    const t = toPlane.dot(planeNormal) / denom;
+                    targetWorldPoint = this.manager.mapViewer.camera.position.clone().add(cameraDirection.clone().multiplyScalar(t));
+                }
+            }
+        }
+
+        const oldDistance = this.manager.distance;
         this.manager.distance *= Math.pow(1.5, this.deltaZoom * smoothing * this.speed);
         this.manager.angle = Math.min(this.manager.angle, MapControls.getMaxPerspectiveAngleForDistance(this.manager.distance));
+
+        // Adjust camera position to keep the same world point under the mouse
+        if (targetWorldPoint && this.lastMousePosition) {
+            // Recalculate the normalized screen position
+            const rootElement = this.manager.mapViewer.rootElement;
+            const normalizedScreenPos = new Vector2(
+                ((this.lastMousePosition.x - rootElement.getBoundingClientRect().left) / rootElement.clientWidth) * 2 - 1,
+                -((this.lastMousePosition.y - rootElement.getBoundingClientRect().top) / rootElement.clientHeight) * 2 + 1
+            );
+
+            // Update camera with new distance
+            this.manager.updateCamera();
+            this.manager.mapViewer.camera.updateMatrixWorld();
+
+            // Raycast again to find where the mouse now points
+            this.manager.mapViewer.raycaster.setFromCamera(normalizedScreenPos, this.manager.mapViewer.camera);
+            const intersectScenes = [map.hiresTileManager.scene];
+            for (let i = 0; i < map.lowresTileManager.length; i++) {
+                intersectScenes.push(map.lowresTileManager[i].scene);
+            }
+            const newIntersects = this.manager.mapViewer.raycaster.intersectObjects(intersectScenes, true);
+            
+            let newWorldPoint = null;
+            if (newIntersects.length > 0) {
+                newWorldPoint = newIntersects[0].point.clone();
+            } else {
+                // Fallback: use plane intersection
+                const cameraDirection = new Vector3();
+                this.manager.mapViewer.camera.getWorldDirection(cameraDirection);
+                const planeNormal = new Vector3(0, 1, 0);
+                const planePoint = this.manager.position.clone();
+                const denom = cameraDirection.dot(planeNormal);
+                if (Math.abs(denom) > 0.0001) {
+                    const toPlane = planePoint.clone().sub(this.manager.mapViewer.camera.position);
+                    const t = toPlane.dot(planeNormal) / denom;
+                    newWorldPoint = this.manager.mapViewer.camera.position.clone().add(cameraDirection.clone().multiplyScalar(t));
+                }
+            }
+
+            // Adjust position to compensate for the shift
+            if (newWorldPoint && targetWorldPoint) {
+                const offset = targetWorldPoint.clone().sub(newWorldPoint);
+                this.manager.position.add(offset);
+            }
+        }
 
         this.deltaZoom *= 1 - smoothing;
         if (Math.abs(this.deltaZoom) < 0.0001) {
             this.deltaZoom = 0;
+            this.lastMousePosition = null;
         }
     }
 
     reset() {
         this.deltaZoom = 0;
+        this.lastMousePosition = null;
     }
 
     /**
@@ -85,6 +177,12 @@ export class MouseZoomControls {
      */
     onMouseWheel = evt => {
         evt.preventDefault();
+
+        // Store mouse position for zoom centering
+        this.lastMousePosition = {
+            x: evt.clientX,
+            y: evt.clientY
+        };
 
         let delta = evt.deltaY;
         if (evt.deltaMode === WheelEvent.DOM_DELTA_PIXEL) delta *= 0.01;

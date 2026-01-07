@@ -57,6 +57,14 @@ public class HttpRequest {
     private final Map<String, HttpHeader> headers = new HashMap<>();
     private byte[] data;
 
+    // body reading state
+    private int bodyBytesRead = 0;
+    private int expectedBodyLength = 0;
+    private boolean readingChunkedBody = false;
+    private int currentChunkSize = -1;
+    private int currentChunkBytesRead = 0;
+    private final List<byte[]> bodyChunks = new ArrayList<>();
+
     // these values can be overwritten separately by a HttpRequestHandler for delegation
     private String path = null;
     private String getParamString = null;
@@ -95,6 +103,12 @@ public class HttpRequest {
 
             if (hasHeaderValue("transfer-encoding", "chunked")) {
                 writeChunkedBody();
+                // Chunked body sets data when complete, so check if data is set
+                if (data != null) {
+                    complete = true;
+                    return true;
+                }
+                return false; // Need more data
             } else {
                 HttpHeader contentLengthHeader = getHeader("content-length");
                 int contentLength = 0;
@@ -108,23 +122,135 @@ public class HttpRequest {
 
                 if (contentLength > 0) {
                     writeBody(contentLength);
+                    // Body is complete when data is set
+                    if (data != null) {
+                        complete = true;
+                        return true;
+                    }
+                    return false; // Need more data
+                } else {
+                    // No body to read
+                    complete = true;
+                    return true;
                 }
             }
-
-            complete = true;
-            return true;
 
         } finally {
             byteBuffer.compact();
         }
     }
 
-    private void writeChunkedBody() {
-        // TODO
+    private void writeChunkedBody() throws IOException {
+        if (!readingChunkedBody) {
+            readingChunkedBody = true;
+            currentChunkSize = -1;
+            currentChunkBytesRead = 0;
+        }
+
+        while (true) {
+            // Read chunk size line if needed
+            if (currentChunkSize < 0) {
+                if (!writeLine()) return; // Need more data
+                String chunkSizeLine = lineBuffer.toString().stripTrailing();
+                lineBuffer.setLength(0);
+
+                // Parse chunk size (hex format, may have extensions after semicolon)
+                int semicolonIndex = chunkSizeLine.indexOf(';');
+                if (semicolonIndex >= 0) {
+                    chunkSizeLine = chunkSizeLine.substring(0, semicolonIndex);
+                }
+                chunkSizeLine = chunkSizeLine.trim();
+
+                try {
+                    currentChunkSize = Integer.parseInt(chunkSizeLine, 16);
+                } catch (NumberFormatException ex) {
+                    throw new IOException("Invalid HTTP Request: Invalid chunk size: " + chunkSizeLine, ex);
+                }
+
+                currentChunkBytesRead = 0;
+
+                // Last chunk (size 0) - read trailing CRLF and finish
+                if (currentChunkSize == 0) {
+                    // Read the trailing CRLF after the last chunk
+                    if (!writeLine()) return; // Need more data
+                    String trailingLine = lineBuffer.toString().stripTrailing();
+                    lineBuffer.setLength(0);
+                    if (!trailingLine.isEmpty()) {
+                        throw new IOException("Invalid HTTP Request: Expected empty line after last chunk");
+                    }
+
+                    // Combine all chunks into data array
+                    int totalSize = bodyChunks.stream().mapToInt(b -> b.length).sum();
+                    data = new byte[totalSize];
+                    int offset = 0;
+                    for (byte[] chunk : bodyChunks) {
+                        System.arraycopy(chunk, 0, data, offset, chunk.length);
+                        offset += chunk.length;
+                    }
+                    bodyChunks.clear();
+                    return;
+                }
+            }
+
+            // Read chunk data
+            int remainingInChunk = currentChunkSize - currentChunkBytesRead;
+            int bytesToRead = Math.min(remainingInChunk, byteBuffer.remaining());
+            
+            if (bytesToRead > 0) {
+                byte[] chunkData = new byte[bytesToRead];
+                byteBuffer.get(chunkData);
+                bodyChunks.add(chunkData);
+                currentChunkBytesRead += bytesToRead;
+            }
+
+            // If chunk is complete, read the trailing CRLF
+            if (currentChunkBytesRead >= currentChunkSize) {
+                if (!writeLine()) return; // Need more data
+                String trailingLine = lineBuffer.toString().stripTrailing();
+                lineBuffer.setLength(0);
+                if (!trailingLine.isEmpty()) {
+                    throw new IOException("Invalid HTTP Request: Expected CRLF after chunk data");
+                }
+                currentChunkSize = -1; // Reset for next chunk
+            } else {
+                // Need more data to complete this chunk
+                return;
+            }
+        }
     }
 
-    private void writeBody(int length) {
-        // TODO
+    private void writeBody(int length) throws IOException {
+        if (expectedBodyLength == 0) {
+            expectedBodyLength = length;
+            bodyBytesRead = 0;
+            bodyChunks.clear();
+        }
+
+        int remaining = expectedBodyLength - bodyBytesRead;
+        if (remaining <= 0) {
+            // Body already complete
+            return;
+        }
+
+        int bytesToRead = Math.min(remaining, byteBuffer.remaining());
+        if (bytesToRead > 0) {
+            byte[] chunk = new byte[bytesToRead];
+            byteBuffer.get(chunk);
+            bodyChunks.add(chunk);
+            bodyBytesRead += bytesToRead;
+        }
+
+        // If body is complete, combine chunks into data array
+        if (bodyBytesRead >= expectedBodyLength) {
+            int totalSize = bodyChunks.stream().mapToInt(b -> b.length).sum();
+            data = new byte[totalSize];
+            int offset = 0;
+            for (byte[] chunk : bodyChunks) {
+                System.arraycopy(chunk, 0, data, offset, chunk.length);
+                offset += chunk.length;
+            }
+            bodyChunks.clear();
+        }
     }
 
     private void parseHeaders() throws IOException {
@@ -285,6 +411,14 @@ public class HttpRequest {
         path = null;
         getParamString = null;
         getParams = null;
+
+        // Reset body reading state
+        bodyBytesRead = 0;
+        expectedBodyLength = 0;
+        readingChunkedBody = false;
+        currentChunkSize = -1;
+        currentChunkBytesRead = 0;
+        bodyChunks.clear();
     }
 
 }

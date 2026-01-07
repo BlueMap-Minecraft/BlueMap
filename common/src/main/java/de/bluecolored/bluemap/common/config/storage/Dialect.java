@@ -35,7 +35,7 @@ import de.bluecolored.bluemap.core.util.Registry;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 public interface Dialect extends Keyed {
 
@@ -53,7 +53,7 @@ public interface Dialect extends Keyed {
 
     boolean supports(String connectionUrl);
 
-    CommandSet createCommandSet(Database database);
+    CommandSet createCommandSet(Database database, String tablePrefix);
 
     @RequiredArgsConstructor
     class Impl implements Dialect {
@@ -61,7 +61,7 @@ public interface Dialect extends Keyed {
         @Getter private final Key key;
         private final String protocol;
 
-        private final Function<Database, CommandSet> commandSetProvider;
+        private final BiFunction<Database, String, CommandSet> commandSetProvider;
 
         @Override
         public boolean supports(String connectionUrl) {
@@ -69,8 +69,8 @@ public interface Dialect extends Keyed {
         }
 
         @Override
-        public CommandSet createCommandSet(Database database) {
-            return commandSetProvider.apply(database);
+        public CommandSet createCommandSet(Database database, String tablePrefix) {
+            return commandSetProvider.apply(database, tablePrefix);
         }
 
     }

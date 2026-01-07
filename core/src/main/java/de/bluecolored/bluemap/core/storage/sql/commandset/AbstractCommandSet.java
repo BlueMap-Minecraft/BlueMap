@@ -46,11 +46,21 @@ import java.util.Set;
 public abstract class AbstractCommandSet implements CommandSet {
 
     protected final Database db;
+    protected final String tablePrefix;
 
     protected final LoadingCache<String, Integer> mapKeys = Caches.build(this::findOrCreateMapKey);
     protected final LoadingCache<Compression, Integer> compressionKeys = Caches.build(this::findOrCreateCompressionKey);
     protected final LoadingCache<Key, Integer> itemStorageKeys = Caches.build(this::findOrCreateItemStorageKey);
     protected final LoadingCache<Key, Integer> gridStorageKeys = Caches.build(this::findOrCreateGridStorageKey);
+
+    /**
+     * Returns the table name with the configured prefix.
+     * @param name The base table name (without prefix)
+     * @return The prefixed table name
+     */
+    protected String tableName(String name) {
+        return tablePrefix + name;
+    }
 
     @Language("sql")
     public abstract String listExistingTablesStatement();
@@ -84,12 +94,12 @@ public abstract class AbstractCommandSet implements CommandSet {
                 }
 
                 if (tables.containsAll(Set.of(
-                        "bluemap_map",
-                        "bluemap_compression",
-                        "bluemap_item_storage",
-                        "bluemap_item_storage_data",
-                        "bluemap_grid_storage",
-                        "bluemap_grid_storage_data"
+                        tablePrefix + "map",
+                        tablePrefix + "compression",
+                        tablePrefix + "item_storage",
+                        tablePrefix + "item_storage_data",
+                        tablePrefix + "grid_storage",
+                        tablePrefix + "grid_storage_data"
                 ))) return;
             } catch (SQLException ex) {
                 Logger.global.logWarning("Failed to check for existing tables, will try to create them...");

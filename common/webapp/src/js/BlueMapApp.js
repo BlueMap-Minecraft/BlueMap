@@ -456,6 +456,63 @@ export class BlueMapApp {
                 this.mainMenu.closeAll();
             }
         });
+
+        // Global hotkeys
+        window.addEventListener("keydown", this.onGlobalKeyDown);
+    }
+
+    /**
+     * @private
+     * @param evt {KeyboardEvent}
+     */
+    onGlobalKeyDown = evt => {
+        // Don't handle hotkeys if user is typing in an input field
+        if (evt.target instanceof HTMLInputElement || evt.target instanceof HTMLTextAreaElement) {
+            return;
+        }
+
+        // Toggle menu: M or Escape
+        if (evt.code === "KeyM" || evt.code === "Escape") {
+            if (this.appState.menu.isOpen) {
+                this.appState.menu.closeAll();
+            } else {
+                this.appState.menu.reOpenPage();
+            }
+            evt.preventDefault();
+            return;
+        }
+
+        // Toggle fullscreen: F or F11
+        if (evt.code === "KeyF" || evt.code === "F11") {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                document.body.requestFullscreen();
+            }
+            evt.preventDefault();
+            return;
+        }
+
+        // Reset camera: R
+        if (evt.code === "KeyR" && !evt.ctrlKey && !evt.shiftKey && !evt.altKey) {
+            this.resetCamera();
+            evt.preventDefault();
+            return;
+        }
+
+        // Toggle debug mode: D
+        if (evt.code === "KeyD" && !evt.ctrlKey && !evt.shiftKey && !evt.altKey) {
+            this.appState.debug = !this.appState.debug;
+            evt.preventDefault();
+            return;
+        }
+
+        // Screenshot: Ctrl+S or P
+        if ((evt.code === "KeyS" && evt.ctrlKey) || (evt.code === "KeyP" && !evt.ctrlKey && !evt.shiftKey && !evt.altKey)) {
+            this.takeScreenshot();
+            evt.preventDefault();
+            return;
+        }
     }
 
     setPerspectiveView(transition = 0, minDistance = 5) {

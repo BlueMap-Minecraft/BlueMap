@@ -29,8 +29,8 @@ import org.intellij.lang.annotations.Language;
 
 public class PostgreSQLCommandSet extends AbstractCommandSet {
 
-    public PostgreSQLCommandSet(Database db) {
-        super(db);
+    public PostgreSQLCommandSet(Database db, String tablePrefix) {
+        super(db, tablePrefix);
     }
 
     @Override
@@ -46,345 +46,345 @@ public class PostgreSQLCommandSet extends AbstractCommandSet {
     @Override
     @Language("postgresql")
     public String createMapTableStatement() {
-        return """
-        CREATE TABLE IF NOT EXISTS bluemap_map (
+        return String.format("""
+        CREATE TABLE IF NOT EXISTS %s (
          id SMALLSERIAL PRIMARY KEY,
          map_id VARCHAR(190) UNIQUE NOT NULL
         )
-        """;
+        """, tableName("map"));
     }
 
     @Override
     @Language("postgresql")
     public String createCompressionTableStatement() {
-        return """
-        CREATE TABLE IF NOT EXISTS bluemap_compression (
+        return String.format("""
+        CREATE TABLE IF NOT EXISTS %s (
          id SMALLSERIAL PRIMARY KEY,
          key VARCHAR(190) UNIQUE NOT NULL
         )
-        """;
+        """, tableName("compression"));
     }
 
     @Override
     @Language("postgresql")
     public String createItemStorageTableStatement() {
-        return """
-        CREATE TABLE IF NOT EXISTS bluemap_item_storage (
+        return String.format("""
+        CREATE TABLE IF NOT EXISTS %s (
          id SERIAL PRIMARY KEY,
          key VARCHAR(190) UNIQUE NOT NULL
         )
-        """;
+        """, tableName("item_storage"));
     }
 
     @Override
     @Language("postgresql")
     public String createItemStorageDataTableStatement() {
-        return """
-        CREATE TABLE IF NOT EXISTS bluemap_item_storage_data (
+        return String.format("""
+        CREATE TABLE IF NOT EXISTS %s (
          map SMALLINT NOT NULL
-          REFERENCES bluemap_map (id)
+          REFERENCES %s (id)
           ON UPDATE RESTRICT
           ON DELETE CASCADE,
          storage INT NOT NULL
-          REFERENCES bluemap_item_storage (id)
+          REFERENCES %s (id)
           ON UPDATE RESTRICT
           ON DELETE CASCADE,
          compression SMALLINT NOT NULL
-          REFERENCES bluemap_compression (id)
+          REFERENCES %s (id)
           ON UPDATE RESTRICT
           ON DELETE CASCADE,
          data BYTEA NOT NULL,
          PRIMARY KEY (map, storage)
         )
-        """;
+        """, tableName("item_storage_data"), tableName("map"), tableName("item_storage"), tableName("compression"));
     }
 
     @Override
     @Language("postgresql")
     public String createGridStorageTableStatement() {
-        return """
-        CREATE TABLE IF NOT EXISTS bluemap_grid_storage (
+        return String.format("""
+        CREATE TABLE IF NOT EXISTS %s (
          id SMALLSERIAL PRIMARY KEY,
          key VARCHAR(190) UNIQUE NOT NULL
         )
-        """;
+        """, tableName("grid_storage"));
     }
 
     @Override
     @Language("postgresql")
     public String createGridStorageDataTableStatement() {
-        return """
-        CREATE TABLE IF NOT EXISTS bluemap_grid_storage_data (
+        return String.format("""
+        CREATE TABLE IF NOT EXISTS %s (
          map SMALLINT NOT NULL
-          REFERENCES bluemap_map (id)
+          REFERENCES %s (id)
           ON UPDATE RESTRICT
           ON DELETE CASCADE,
          storage SMALLINT NOT NULL
-          REFERENCES bluemap_grid_storage (id)
+          REFERENCES %s (id)
           ON UPDATE RESTRICT
           ON DELETE CASCADE,
          x INT NOT NULL,
          z INT NOT NULL,
          compression SMALLINT NOT NULL
-          REFERENCES bluemap_compression (id)
+          REFERENCES %s (id)
           ON UPDATE RESTRICT
           ON DELETE CASCADE,
          data BYTEA NOT NULL,
          PRIMARY KEY (map, storage, x, z)
         )
-        """;
+        """, tableName("grid_storage_data"), tableName("map"), tableName("grid_storage"), tableName("compression"));
     }
 
     @Override
     @Language("postgresql")
     public String itemStorageWriteStatement() {
-        return """
+        return String.format("""
         INSERT
-        INTO bluemap_item_storage_data (map, storage, compression, data)
+        INTO %s (map, storage, compression, data)
         VALUES (?, ?, ?, ?)
         ON CONFLICT (map, storage)
          DO UPDATE SET
           compression = excluded.compression,
           data = excluded.data
-        """;
+        """, tableName("item_storage_data"));
     }
 
     @Override
     @Language("postgresql")
     public String itemStorageReadStatement() {
-        return """
+        return String.format("""
         SELECT data
-        FROM bluemap_item_storage_data
+        FROM %s
         WHERE map = ?
         AND storage = ?
         AND compression = ?
-        """;
+        """, tableName("item_storage_data"));
     }
 
     @Override
     @Language("postgresql")
     public String itemStorageDeleteStatement() {
-        return """
+        return String.format("""
         DELETE
-        FROM bluemap_item_storage_data
+        FROM %s
         WHERE map = ?
         AND storage = ?
-        """;
+        """, tableName("item_storage_data"));
     }
 
     @Override
     @Language("postgresql")
     public String itemStorageHasStatement() {
-        return """
+        return String.format("""
         SELECT COUNT(*) > 0
-        FROM bluemap_item_storage_data
+        FROM %s
         WHERE map = ?
         AND storage = ?
         AND compression = ?
-        """;
+        """, tableName("item_storage_data"));
     }
 
     @Override
     @Language("postgresql")
     public String gridStorageWriteStatement() {
-        return """
+        return String.format("""
         INSERT
-        INTO bluemap_grid_storage_data (map, storage, x, z, compression, data)
+        INTO %s (map, storage, x, z, compression, data)
         VALUES (?, ?, ?, ?, ?, ?)
         ON CONFLICT (map, storage, x, z)
          DO UPDATE SET
           compression = excluded.compression,
           data = excluded.data
-        """;
+        """, tableName("grid_storage_data"));
     }
 
     @Override
     @Language("postgresql")
     public String gridStorageReadStatement() {
-        return """
+        return String.format("""
         SELECT data
-        FROM bluemap_grid_storage_data
+        FROM %s
         WHERE map = ?
         AND storage = ?
         AND x = ?
         AND z = ?
         AND compression = ?
-        """;
+        """, tableName("grid_storage_data"));
     }
 
     @Override
     @Language("postgresql")
     public String gridStorageDeleteStatement() {
-        return """
+        return String.format("""
         DELETE
-        FROM bluemap_grid_storage_data
+        FROM %s
         WHERE map = ?
         AND storage = ?
         AND x = ?
         AND z = ?
-        """;
+        """, tableName("grid_storage_data"));
     }
 
     @Override
     @Language("postgresql")
     public String gridStorageHasStatement() {
-        return """
+        return String.format("""
         SELECT COUNT(*) > 0
-        FROM bluemap_grid_storage_data
+        FROM %s
         WHERE map = ?
         AND storage = ?
         AND x = ?
         AND z = ?
         AND compression = ?
-        """;
+        """, tableName("grid_storage_data"));
     }
 
     @Override
     @Language("postgresql")
     public String gridStorageListStatement() {
-        return """
+        return String.format("""
         SELECT x, z
-        FROM bluemap_grid_storage_data
+        FROM %s
         WHERE map = ?
         AND storage = ?
         AND compression = ?
         LIMIT ? OFFSET ?
-        """;
+        """, tableName("grid_storage_data"));
     }
 
     @Override
     @Language("postgresql")
     public String gridStorageCountMapItemsStatement() {
-        return """
+        return String.format("""
         SELECT COUNT(*)
-        FROM bluemap_grid_storage_data
+        FROM %s
         WHERE map = ?
-        """;
+        """, tableName("grid_storage_data"));
     }
 
     @Override
     @Language("postgresql")
     public String gridStoragePurgeMapStatement() {
-        return """
+        return String.format("""
         DELETE
-        FROM bluemap_grid_storage_data
+        FROM %s
         WHERE CTID IN (
          SELECT CTID
-         FROM bluemap_grid_storage_data t
+         FROM %s t
          WHERE t.map = ?
          LIMIT ?
         )
-        """;
+        """, tableName("grid_storage_data"), tableName("grid_storage_data"));
     }
 
     @Override
     @Language("postgresql")
     public String purgeMapStatement() {
-        return """
+        return String.format("""
         DELETE
-        FROM bluemap_map
+        FROM %s
         WHERE id = ?
-        """;
+        """, tableName("map"));
     }
 
     @Override
     @Language("postgresql")
     public String hasMapStatement() {
-        return """
+        return String.format("""
         SELECT COUNT(*) > 0
-        FROM bluemap_map m
+        FROM %s m
         WHERE m.map_id = ?
-        """;
+        """, tableName("map"));
     }
 
     @Override
     @Language("postgresql")
     public String listMapIdsStatement() {
-        return """
+        return String.format("""
         SELECT map_id
-        FROM bluemap_map m
+        FROM %s m
         LIMIT ? OFFSET ?
-        """;
+        """, tableName("map"));
     }
 
     @Override
     @Language("postgresql")
     public String findMapKeyStatement() {
-        return """
+        return String.format("""
         SELECT id
-        FROM bluemap_map
+        FROM %s
         WHERE map_id = ?
-        """;
+        """, tableName("map"));
     }
 
     @Override
     @Language("postgresql")
     public String createMapKeyStatement() {
-        return """
+        return String.format("""
         INSERT
-        INTO bluemap_map (map_id)
+        INTO %s (map_id)
         VALUES (?)
-        """;
+        """, tableName("map"));
     }
 
     @Override
     @Language("postgresql")
     public String findCompressionKeyStatement() {
-        return """
+        return String.format("""
         SELECT id
-        FROM bluemap_compression
+        FROM %s
         WHERE key = ?
-        """;
+        """, tableName("compression"));
     }
 
     @Override
     @Language("postgresql")
     public String createCompressionKeyStatement() {
-        return """
+        return String.format("""
         INSERT
-        INTO bluemap_compression (key)
+        INTO %s (key)
         VALUES (?)
-        """;
+        """, tableName("compression"));
     }
 
     @Override
     @Language("postgresql")
     public String findItemStorageKeyStatement() {
-        return """
+        return String.format("""
         SELECT id
-        FROM bluemap_item_storage
+        FROM %s
         WHERE key = ?
-        """;
+        """, tableName("item_storage"));
     }
 
     @Override
     @Language("postgresql")
     public String createItemStorageKeyStatement() {
-        return """
+        return String.format("""
         INSERT
-        INTO bluemap_item_storage (key)
+        INTO %s (key)
         VALUES (?)
-        """;
+        """, tableName("item_storage"));
     }
 
     @Override
     @Language("postgresql")
     public String findGridStorageKeyStatement() {
-        return """
+        return String.format("""
         SELECT id
-        FROM bluemap_grid_storage
+        FROM %s
         WHERE key = ?
-        """;
+        """, tableName("grid_storage"));
     }
 
     @Override
     @Language("postgresql")
     public String createGridStorageKeyStatement() {
-        return """
+        return String.format("""
         INSERT
-        INTO bluemap_grid_storage (key)
+        INTO %s (key)
         VALUES (?)
-        """;
+        """, tableName("grid_storage"));
     }
 
 }
