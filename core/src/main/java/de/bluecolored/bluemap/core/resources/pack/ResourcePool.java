@@ -25,75 +25,54 @@
 package de.bluecolored.bluemap.core.resources.pack;
 
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.util.Key;
-import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BinaryOperator;
+import java.util.function.Function;
 
 public class ResourcePool<T> {
 
-    private final Map<Key, T> pool = new HashMap<>();
-    private final Map<Key, ResourcePath<T>> paths = new HashMap<>();
+    private final Map<Key, T> resources = new HashMap<>();
 
-    public void put(Key path, T value) {
-        put(new ResourcePath<>(path), value);
+    public T get(Key key) {
+        return resources.get(key);
     }
 
-    public synchronized void put(ResourcePath<T> path, T value) {
-        pool.put(path, value);
-        paths.put(path, path);
-        path.setResource(value);
+    public void put(Key key, T value) {
+        Objects.requireNonNull(key, "key can not be null");
+        resources.put(key, value);
     }
 
-    public void putIfAbsent(Key path, T value) {
-        putIfAbsent(new ResourcePath<>(path), value);
+    public void putIfAbsent(Key key, T value) {
+        Objects.requireNonNull(key, "key can not be null");
+        resources.putIfAbsent(key, value);
     }
 
-    public synchronized void putIfAbsent(ResourcePath<T> path, T value) {
-        if (pool.putIfAbsent(path, value) == null) {
-            paths.put(path, path);
-            path.setResource(value);
-        }
+    public boolean containsKey(Key key) {
+        return resources.containsKey(key);
     }
 
-    public Collection<ResourcePath<T>> paths() {
-        return paths.values();
+    public void remove(Key key) {
+        resources.remove(key);
     }
 
     public Collection<T> values() {
-        return pool.values();
+        return resources.values();
     }
 
-    public boolean contains(Key path) {
-        return paths.containsKey(path);
+    public Set<Map.Entry<Key, T>> entrySet() {
+        return resources.entrySet();
     }
 
-    public @Nullable T get(ResourcePath<T> path) {
-        return pool.get(path);
+    public Set<Key> keySet() {
+        return resources.keySet();
     }
 
-    public @Nullable T get(Key path) {
-        ResourcePath<T> rp = paths.get(path);
-        return rp == null ? null : rp.getResource(this::get);
-    }
-
-    public synchronized void remove(Key path) {
-        ResourcePath<T> removed = paths.remove(path);
-        if (removed != null) pool.remove(removed);
-    }
-
-    public @Nullable ResourcePath<T> getPath(Key path) {
-        return paths.get(path);
-    }
-
-    public void load(ResourcePath<T> path, Loader<T> loader) {
+    public void load(Key path, Loader<T> loader) {
         try {
-            if (contains(path)) return; // don't load already present resources
+            if (this.containsKey(path)) return; // don't load already present resources
 
             T resource = loader.load(path);
             if (resource == null) return; // don't load missing resources
@@ -104,7 +83,7 @@ public class ResourcePool<T> {
         }
     }
 
-    public void load(ResourcePath<T> path, Loader<T> loader, BinaryOperator<T> mergeFunction) {
+    public void load(Key path, Loader<T> loader, BinaryOperator<T> mergeFunction) {
         try {
             T resource = loader.load(path);
             if (resource == null) return; // don't load missing resources
@@ -120,7 +99,7 @@ public class ResourcePool<T> {
     }
 
     public interface Loader<T> {
-        T load(ResourcePath<T> resourcePath) throws IOException;
+        T load(Key resourcePath) throws IOException;
     }
 
 }

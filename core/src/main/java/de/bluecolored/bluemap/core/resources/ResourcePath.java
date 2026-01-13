@@ -49,7 +49,7 @@ public class ResourcePath<T> extends Key {
     }
 
     public ResourcePath(String namespace, String value) {
-        super(namespace.toLowerCase(Locale.ROOT), value.toLowerCase(Locale.ROOT));
+        super(namespace, value);
     }
 
     public ResourcePath(Key key) {
@@ -57,7 +57,7 @@ public class ResourcePath<T> extends Key {
     }
 
     public ResourcePath(Path filePath, int namespacePos, int valuePos) {
-        super(parsePath(filePath, namespacePos, valuePos).toLowerCase(Locale.ROOT));
+        super(parsePath(filePath, namespacePos, valuePos));
     }
 
     @Nullable
@@ -66,7 +66,7 @@ public class ResourcePath<T> extends Key {
     }
 
     @Nullable
-    public T getResource(Function<ResourcePath<T>, T> supplier) {
+    public T getResource(Function<Key, T> supplier) {
         if (resource == null) resource = supplier.apply(this);
         return resource;
     }
