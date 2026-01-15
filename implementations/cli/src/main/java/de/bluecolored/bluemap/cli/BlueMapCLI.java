@@ -450,6 +450,7 @@ public class BlueMapCLI {
             System.exit(1);
         } catch (ConfigurationException e) {
             e.printLog(Logger.global);
+            System.exit(1);
         } catch (IOException e) {
             Logger.global.logError("An IO-error occurred!", e);
             System.exit(1);
