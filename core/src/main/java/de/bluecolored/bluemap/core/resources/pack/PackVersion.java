@@ -72,7 +72,7 @@ public class PackVersion {
         @Override
         public PackVersion read(JsonReader in) throws IOException {
             return switch (in.peek()) {
-                case JsonToken.STRING -> parseString(in.nextString());
+                case STRING -> parseString(in.nextString());
                 case NUMBER -> {
                     double version = in.nextDouble();
                     if (version == Math.floor(version)) yield new PackVersion((int) version, defaultMinor);
