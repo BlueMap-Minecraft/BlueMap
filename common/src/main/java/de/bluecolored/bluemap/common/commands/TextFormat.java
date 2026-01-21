@@ -83,6 +83,7 @@ public class TextFormat {
 
     public static final String DISCORD_LINK = "https://discord.gg/zmkyJa3";
     public static final String WIKI_LINK = "https://bluemap.bluecolored.de/wiki/";
+    public static final String WIKI_LINK_RENDER_MASKS = "https://bluemap.bluecolored.de/wiki/customization/Masks.html";
 
     public static Component paragraph(TextColor color, Component title, Component content) {
         return lines(
