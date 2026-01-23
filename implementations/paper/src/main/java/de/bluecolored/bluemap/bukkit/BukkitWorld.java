@@ -51,7 +51,7 @@ public class BukkitWorld implements ServerWorld {
             case NORMAL -> DataPack.DIMENSION_OVERWORLD;
             case NETHER -> DataPack.DIMENSION_THE_NETHER;
             case THE_END -> DataPack.DIMENSION_THE_END;
-            case CUSTOM -> {
+            default -> {
                 var id = delegate.key();
                 yield new Key(id.namespace(), id.value());
             }
