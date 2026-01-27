@@ -132,7 +132,10 @@ public class BlueMapCLI {
         Logger.global.logInfo("Start updating " + maps.size() + " maps ...");
 
         // start rendering
-        renderManager.start(blueMap.getConfig().getCoreConfig().resolveRenderThreadCount());
+        renderManager.start(
+                blueMap.getConfig().getCoreConfig().resolveRenderThreadCount(),
+                blueMap.getConfig().getCoreConfig().getRenderThreadPriority()
+        );
 
         Timer timer = new Timer("BlueMap-CLI-Timer", true);
         TimerTask updateInfoTask = new TimerTask() {

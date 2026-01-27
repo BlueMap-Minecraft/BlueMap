@@ -38,6 +38,8 @@ public class CoreConfig {
 
     private int renderThreadCount = 1;
 
+    private int renderThreadPriority = Thread.NORM_PRIORITY;
+
     private boolean metrics = true;
 
     private Path data = Path.of("bluemap");

@@ -84,16 +84,16 @@ public class RenderManagerImpl implements RenderManager {
 
     @Override
     public void start() {
-        if (!isRunning()){
-            renderManager.start(plugin.getBlueMap().getConfig().getCoreConfig().resolveRenderThreadCount());
-        }
-        plugin.getPluginState().setRenderThreadsEnabled(true);
+        start(plugin.getBlueMap().getConfig().getCoreConfig().resolveRenderThreadCount());
     }
 
     @Override
     public void start(int threadCount) {
         if (!isRunning()){
-            renderManager.start(threadCount);
+            renderManager.start(
+                    threadCount,
+                    plugin.getBlueMap().getConfig().getCoreConfig().getRenderThreadPriority()
+            );
         }
         plugin.getPluginState().setRenderThreadsEnabled(true);
     }

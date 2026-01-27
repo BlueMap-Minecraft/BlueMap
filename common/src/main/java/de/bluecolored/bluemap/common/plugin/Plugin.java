@@ -67,7 +67,6 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -422,7 +421,7 @@ public class Plugin implements ServerEventListener {
                 if (renderManager != null){
                     if (renderManager.getCurrentRenderTask() != null) {
                         renderManager.removeAllRenderTasks();
-                        if (!renderManager.isRunning()) renderManager.start(1);
+                        if (!renderManager.isRunning()) renderManager.start(1, Thread.NORM_PRIORITY);
                         try {
                             renderManager.awaitIdle(true);
                         } catch (InterruptedException ex) {
@@ -633,7 +632,7 @@ public class Plugin implements ServerEventListener {
             return true;
         } else {
             if (!renderManager.isRunning() && getPluginState().isRenderThreadsEnabled())
-                renderManager.start(coreConfig.resolveRenderThreadCount());
+                renderManager.start(coreConfig.resolveRenderThreadCount(), coreConfig.getRenderThreadPriority());
             return false;
         }
     }
