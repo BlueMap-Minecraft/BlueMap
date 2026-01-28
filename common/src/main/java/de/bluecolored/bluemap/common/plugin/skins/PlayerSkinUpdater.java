@@ -76,11 +76,6 @@ public class PlayerSkinUpdater implements ServerEventListener {
                 throw new CompletionException("The skin provider threw an exception while loading the skin for UUID: '" + playerUuid + "'!", e);
             }
         }, BlueMap.THREAD_POOL).thenAcceptAsync(skin -> {
-            if (skin == null) {
-                Logger.global.logDebug("No player-skin provided for UUID: " + playerUuid);
-                return;
-            }
-
             Map<String, BmMap> maps = plugin.getBlueMap().getMaps();
             if (maps == null) {
                 Logger.global.logDebug("Could not update skin, since the plugin seems not to be ready.");
