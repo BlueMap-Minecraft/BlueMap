@@ -40,6 +40,7 @@ import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 public class MapUpdateService extends Thread {
 
@@ -57,7 +58,9 @@ public class MapUpdateService extends Thread {
     private final Map<Vector2i, TimerTask> scheduledUpdates;
     private final Cache<Vector2i, Long> lastUpdateTimes;
 
-    public MapUpdateService(RenderManager renderManager, BmMap map, Duration regionUpdateCooldown) throws IOException {
+    private final Consumer<String> verboseLog;
+
+    public MapUpdateService(RenderManager renderManager, BmMap map, Duration regionUpdateCooldown, boolean verbose) throws IOException {
         super("BlueMap-MapUpdateService-" + NEXT_ID.getAndIncrement());
         this.renderManager = renderManager;
         this.map = map;
@@ -68,13 +71,14 @@ public class MapUpdateService extends Thread {
                 .expireAfterWrite(regionUpdateCooldown)
                 .build();
         this.watchService = map.getWorld().createRegionWatchService();
+        this.verboseLog = verbose ? Logger.global::logInfo : Logger.global::logDebug;
     }
 
     @Override
     public void run() {
         if (delayTimer == null) delayTimer = new Timer("BlueMap-RegionFileWatchService-DelayTimer", true);
 
-        Logger.global.logDebug("Started watching map '" + map.getId() + "' for updates...");
+        verboseLog.accept("Started watching map '" + map.getId() + "' for updates...");
 
         try {
             while (!closed)
@@ -85,7 +89,7 @@ public class MapUpdateService extends Thread {
         } catch (InterruptedException iex) {
             Thread.currentThread().interrupt();
         } finally {
-            Logger.global.logDebug("Stopped watching map '" + map.getId() + "' for updates.");
+            verboseLog.accept("Stopped watching map '" + map.getId() + "' for updates.");
             if (!closed) {
                 Logger.global.logWarning("Region-file watch-service for map '" + map.getId() +
                         "' stopped unexpectedly! (This map might not update automatically from now on)");
@@ -109,7 +113,7 @@ public class MapUpdateService extends Thread {
                     renderManager.scheduleRenderTask(task);
                     lastUpdateTimes.put(regionPos, System.currentTimeMillis());
 
-                    Logger.global.logDebug("Scheduled update for region-file: " + regionPos + " (Map: " + map.getId() + ")");
+                    verboseLog.accept("Scheduled update for region-file: " + regionPos + " (Map: " + map.getId() + ")");
                 }
             }
         };

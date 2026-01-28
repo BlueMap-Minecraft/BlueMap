@@ -103,7 +103,7 @@ public class BlueMapCLI {
         if (watch) {
             for (BmMap map : maps.values()) {
                 try {
-                    MapUpdateService watcher = new MapUpdateService(renderManager, map, blueMap.getConfig().getPluginConfig().getUpdateCooldown());
+                    MapUpdateService watcher = new MapUpdateService(renderManager, map, blueMap.getConfig().getPluginConfig().getUpdateCooldown(), true);
                     watcher.start();
                     mapUpdateServices.add(watcher);
                 } catch (IOException ex) {
@@ -139,10 +139,19 @@ public class BlueMapCLI {
 
         Timer timer = new Timer("BlueMap-CLI-Timer", true);
         TimerTask updateInfoTask = new TimerTask() {
+
+            boolean wasIdle = false;
+
             @Override
             public void run() {
                 RenderTask task = renderManager.getCurrentRenderTask();
-                if (task == null) return;
+
+                if (task == null){
+                    if (!wasIdle) Logger.global.logInfo("Waiting for changes on the world-files...");
+                    wasIdle = true;
+                    return;
+                }
+                wasIdle = false;
 
                 double progress = task.estimateProgress();
                 long etaMs = renderManager.estimateCurrentRenderTaskTimeRemaining();
@@ -215,10 +224,7 @@ public class BlueMapCLI {
 
         Logger.global.logInfo("Your maps are now all up-to-date!");
 
-        if (watch) {
-            updateInfoTask.cancel();
-            Logger.global.logInfo("Waiting for changes on the world-files...");
-        } else {
+        if (!watch) {
             Runtime.getRuntime().removeShutdownHook(shutdownHook);
             shutdown.run();
         }
