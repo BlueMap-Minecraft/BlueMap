@@ -104,7 +104,25 @@ public class WebFilesManager {
     }
 
     public boolean filesNeedUpdate() {
-        return !Files.exists(webRoot.resolve("index.html"));
+        Path indexHtml = webRoot.resolve("index.html");
+
+        // if there is no existing webapp, we definitely need to extract it
+        if (!Files.exists(indexHtml)) return true;
+
+        // compare the timestamp of the bundled webapp.zip with the existing index.html
+        URL zippedWebapp = getClass().getResource("/de/bluecolored/bluemap/webapp.zip");
+        if (zippedWebapp == null) return false; // no bundled webapp found, assume no update
+
+        try {
+            long zipLastModified = zippedWebapp.openConnection().getLastModified();
+            if (zipLastModified <= 0) return false; // unknown timestamp, don't force update
+
+            long indexLastModified = Files.getLastModifiedTime(indexHtml).toMillis();
+            return indexLastModified < zipLastModified;
+        } catch (IOException ex) {
+            Logger.global.logDebug("Failed to compare webapp file versions", ex);
+            return false;
+        }
     }
 
     public void updateFiles() throws IOException {
