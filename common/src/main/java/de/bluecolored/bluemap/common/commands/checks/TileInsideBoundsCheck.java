@@ -31,6 +31,7 @@ import de.bluecolored.bluemap.core.map.BmMap;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
 
 import static de.bluecolored.bluemap.common.commands.TextFormat.*;
 import static net.kyori.adventure.text.Component.empty;
@@ -58,14 +59,23 @@ public class TileInsideBoundsCheck implements Check {
                 ),
                 empty(),
                 format("""
-                        make sure to set %, %, % and %
-                        in % correctly
+                        if you expect this part of the map to be rendered
+                        make sure your %
+                        in % is correct
                         """.strip(),
-                        text("min-x").color(HIGHLIGHT_COLOR),
-                        text("min-z").color(HIGHLIGHT_COLOR),
-                        text("max-x").color(HIGHLIGHT_COLOR),
-                        text("max-z").color(HIGHLIGHT_COLOR),
+                        text("render-mask").color(HIGHLIGHT_COLOR),
                         formatConfigFilePath("maps/" + map.getId()).color(HIGHLIGHT_COLOR)
+                ).color(BASE_COLOR),
+                empty(),
+                format("""
+                        more info about the % setting can
+                        be found %
+                        """.strip(),
+                        text("render-mask").color(HIGHLIGHT_COLOR),
+                        text("in the wiki")
+                                .hoverEvent(text(WIKI_LINK_RENDER_MASKS))
+                                .clickEvent(ClickEvent.openUrl(WIKI_LINK_RENDER_MASKS))
+                                .color(HIGHLIGHT_COLOR)
                 ).color(BASE_COLOR)
         );
     }

@@ -63,15 +63,17 @@ public class ForgeCommandSource implements CommandSource {
     public Optional<Vector3d> getPosition() {
         if (!delegate.isPlayer() && delegate.getTextName().equals("Server")) return Optional.empty();
 
-        var pos = delegate.getPosition();
-        return Optional.of(new Vector3d(pos.x, pos.y, pos.z));
+        //noinspection OptionalOfNullableMisuse
+        return Optional.ofNullable(delegate.getPosition())
+                .map(pos -> new Vector3d(pos.x, pos.y, pos.z));
     }
 
     @Override
     public Optional<ServerWorld> getWorld() {
         if (!delegate.isPlayer() && delegate.getTextName().equals("Server")) return Optional.empty();
 
-        return Optional.of(delegate.getLevel())
+        //noinspection OptionalOfNullableMisuse
+        return Optional.ofNullable(delegate.getLevel())
                 .map(mod::getServerWorld);
     }
 

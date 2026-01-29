@@ -22,42 +22,39 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.config;
+package de.bluecolored.bluemap.core.map.hires;
 
+import de.bluecolored.bluemap.core.map.TextureGallery;
+import de.bluecolored.bluemap.core.map.hires.block.BlockRenderPass;
+import de.bluecolored.bluemap.core.map.hires.entity.EntityRenderPass;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
+import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluemap.core.util.Keyed;
+import de.bluecolored.bluemap.core.util.Registry;
 import lombok.Getter;
-import org.spongepowered.configurate.objectmapping.ConfigSerializable;
+import lombok.RequiredArgsConstructor;
 
-import java.nio.file.Path;
+public interface RenderPassType extends Keyed, RenderPassFactory {
 
-@SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
-@ConfigSerializable
-@Getter
-public class CoreConfig {
+    RenderPassType BLOCKS = new Impl(Key.bluemap("blocks"), BlockRenderPass::new);
+    RenderPassType ENTITIES = new Impl(Key.bluemap("entities"), EntityRenderPass::new);
 
-    private boolean acceptDownload = false;
+    Registry<RenderPassType> REGISTRY = new Registry<>(
+            BLOCKS,
+            ENTITIES
+    );
 
-    private int renderThreadCount = 1;
+    @RequiredArgsConstructor
+    class Impl implements RenderPassType {
 
-    private int renderThreadPriority = Thread.NORM_PRIORITY;
+        @Getter
+        private final Key key;
+        private final RenderPassFactory factory;
 
-    private boolean metrics = true;
-
-    private Path data = Path.of("bluemap");
-    private boolean scanForModResources = true;
-
-    private LogConfig log = new LogConfig();
-
-    public int resolveRenderThreadCount() {
-        if (renderThreadCount > 0) return renderThreadCount;
-        return Math.max(Runtime.getRuntime().availableProcessors() + renderThreadCount, 1);
-    }
-
-    @ConfigSerializable
-    @Getter
-    public static class LogConfig {
-
-        private String file = null;
-        private boolean append = false;
+        @Override
+        public RenderPass create(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
+            return factory.create(resourcePack, textureGallery, renderSettings);
+        }
 
     }
 

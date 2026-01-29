@@ -34,6 +34,8 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.io.IOException;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @AllArgsConstructor
 @Getter
@@ -54,6 +56,8 @@ public class PackVersion {
 
     public static class Adapter extends TypeAdapter<PackVersion> {
 
+        private static final Pattern VERSION_STRING_PATTERN = Pattern.compile("^(\\d+)(?:\\.(\\d+))?$");
+
         private final int defaultMinor;
 
         public Adapter(int defaultMinor) {
@@ -67,12 +71,32 @@ public class PackVersion {
 
         @Override
         public PackVersion read(JsonReader in) throws IOException {
-            if (in.peek() == JsonToken.NUMBER) return new PackVersion(in.nextInt(), defaultMinor);
-            in.beginArray();
-            int major = in.nextInt();
-            int minor = in.hasNext() ? in.nextInt() : defaultMinor;
-            in.endArray();
-            return new PackVersion(major, minor);
+            return switch (in.peek()) {
+                case STRING -> parseString(in.nextString());
+                case NUMBER -> {
+                    double version = in.nextDouble();
+                    if (version == Math.floor(version)) yield new PackVersion((int) version, defaultMinor);
+                    yield parseString("%.9f".formatted(version));
+                }
+                case BEGIN_ARRAY -> {
+                    in.beginArray();
+                    int major = in.nextInt();
+                    int minor = in.hasNext() ? in.nextInt() : defaultMinor;
+                    in.endArray();
+                    yield new PackVersion(major, minor);
+                }
+                default -> throw new IOException("Invalid version format: '%s'!".formatted(in.peek()));
+            };
+        }
+
+        private PackVersion parseString(String versionString) throws IOException {
+            Matcher versionStringMatcher = VERSION_STRING_PATTERN.matcher(versionString);
+            if (!versionStringMatcher.matches())
+                throw new IOException("Invalid version string: '%s'!".formatted(versionString));
+
+            String major = versionStringMatcher.group(1);
+            String minor = versionStringMatcher.group(2);
+            return new PackVersion(Integer.parseInt(major), minor != null && !minor.isEmpty() ? Integer.parseInt(minor) : defaultMinor);
         }
 
     }

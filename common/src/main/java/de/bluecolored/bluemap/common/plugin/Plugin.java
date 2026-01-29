@@ -67,7 +67,6 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -232,11 +231,14 @@ public class Plugin implements ServerEventListener {
                     webLogger = Logger.combine(webLoggerList);
 
                     try {
-                        webServer = new HttpServer(new LoggingRequestHandler(
-                                webRequestHandler,
-                                webserverConfig.getLog().getFormat(),
-                                webLogger
-                        ));
+                        webServer = new HttpServer(
+                                "BlueMap-Webserver",
+                                new LoggingRequestHandler(
+                                        webRequestHandler,
+                                        webserverConfig.getLog().getFormat(),
+                                        webLogger
+                                )
+                        );
                         webServer.bind(new InetSocketAddress(
                                 webserverConfig.resolveIp(),
                                 webserverConfig.getPort()
@@ -419,7 +421,7 @@ public class Plugin implements ServerEventListener {
                 if (renderManager != null){
                     if (renderManager.getCurrentRenderTask() != null) {
                         renderManager.removeAllRenderTasks();
-                        if (!renderManager.isRunning()) renderManager.start(1);
+                        if (!renderManager.isRunning()) renderManager.start(1, Thread.NORM_PRIORITY);
                         try {
                             renderManager.awaitIdle(true);
                         } catch (InterruptedException ex) {
@@ -569,7 +571,7 @@ public class Plugin implements ServerEventListener {
         if (blueMap == null) return;
 
         try {
-            MapUpdateService watcher = new MapUpdateService(renderManager, map, blueMap.getConfig().getPluginConfig().getUpdateCooldown());
+            MapUpdateService watcher = new MapUpdateService(renderManager, map, blueMap.getConfig().getPluginConfig().getUpdateCooldown(), false);
             watcher.start();
             mapUpdateServices.put(map.getId(), watcher);
         } catch (IOException ex) {
@@ -630,7 +632,7 @@ public class Plugin implements ServerEventListener {
             return true;
         } else {
             if (!renderManager.isRunning() && getPluginState().isRenderThreadsEnabled())
-                renderManager.start(coreConfig.resolveRenderThreadCount());
+                renderManager.start(coreConfig.resolveRenderThreadCount(), coreConfig.getRenderThreadPriority());
             return false;
         }
     }

@@ -22,43 +22,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.config;
+package de.bluecolored.bluemap.core.map.hires;
 
-import lombok.Getter;
-import org.spongepowered.configurate.objectmapping.ConfigSerializable;
+import de.bluecolored.bluemap.core.map.TextureGallery;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 
-import java.nio.file.Path;
+public interface RenderPassFactory {
 
-@SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
-@ConfigSerializable
-@Getter
-public class CoreConfig {
-
-    private boolean acceptDownload = false;
-
-    private int renderThreadCount = 1;
-
-    private int renderThreadPriority = Thread.NORM_PRIORITY;
-
-    private boolean metrics = true;
-
-    private Path data = Path.of("bluemap");
-    private boolean scanForModResources = true;
-
-    private LogConfig log = new LogConfig();
-
-    public int resolveRenderThreadCount() {
-        if (renderThreadCount > 0) return renderThreadCount;
-        return Math.max(Runtime.getRuntime().availableProcessors() + renderThreadCount, 1);
-    }
-
-    @ConfigSerializable
-    @Getter
-    public static class LogConfig {
-
-        private String file = null;
-        private boolean append = false;
-
-    }
+    RenderPass create(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings);
 
 }

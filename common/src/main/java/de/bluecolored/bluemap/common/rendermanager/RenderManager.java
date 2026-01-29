@@ -71,7 +71,7 @@ public class RenderManager {
         };
     }
 
-    public void start(int threadCount) throws IllegalStateException {
+    public void start(int threadCount, int threadPriority) throws IllegalStateException {
         if (threadCount <= 0) throw new IllegalArgumentException("threadCount has to be 1 or more!");
 
         synchronized (this.workerThreads) {
@@ -86,7 +86,7 @@ public class RenderManager {
             this.running = true;
 
             for (int i = 0; i < threadCount; i++) {
-                WorkerThread worker = new WorkerThread();
+                WorkerThread worker = new WorkerThread(threadPriority);
                 this.workerThreads.add(worker);
                 worker.start();
             }
@@ -352,9 +352,10 @@ public class RenderManager {
 
         private final int id;
 
-        private WorkerThread() {
+        private WorkerThread(int threadPriority) {
             this.id = RenderManager.this.nextWorkerThreadIndex.getAndIncrement();
             this.setName("BlueMap-RenderThread-" + RenderManager.this.id + "-" + this.id);
+            this.setPriority(Math.clamp(threadPriority, Thread.MIN_PRIORITY, Thread.MAX_PRIORITY));
         }
 
         @Override

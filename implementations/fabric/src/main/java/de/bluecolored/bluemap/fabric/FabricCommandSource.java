@@ -32,6 +32,9 @@ import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.minecraft.command.DefaultPermissions;
+import net.minecraft.command.permission.Permission;
+import net.minecraft.command.permission.PermissionLevel;
 import net.minecraft.server.command.ServerCommandSource;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.Vec3d;
@@ -62,9 +65,9 @@ public class FabricCommandSource implements CommandSource {
     public boolean hasPermission(String permission) {
         try {
             Class.forName("me.lucko.fabric.api.permissions.v0.Permissions");
-            return Permissions.check(delegate, permission, 1);
+            return Permissions.check(delegate, permission, PermissionLevel.MODERATORS);
         } catch (ClassNotFoundException ex) {
-            return delegate.hasPermissionLevel(1);
+            return delegate.getPermissions().hasPermission(DefaultPermissions.MODERATORS);
         }
     }
 
@@ -72,15 +75,15 @@ public class FabricCommandSource implements CommandSource {
     public Optional<Vector3d> getPosition() {
         if (!delegate.isExecutedByPlayer() && delegate.getName().equals("Server")) return Optional.empty();
 
-        Vec3d pos = delegate.getPosition();
-        return Optional.of(new Vector3d(pos.x, pos.y, pos.z));
+        return Optional.ofNullable(delegate.getPosition())
+                .map(pos -> new Vector3d(pos.x, pos.y, pos.z));
     }
 
     @Override
     public Optional<ServerWorld> getWorld() {
         if (!delegate.isExecutedByPlayer() && delegate.getName().equals("Server")) return Optional.empty();
 
-        return Optional.of(delegate.getWorld())
+        return Optional.ofNullable(delegate.getWorld())
                 .map(mod::getServerWorld);
     }
 

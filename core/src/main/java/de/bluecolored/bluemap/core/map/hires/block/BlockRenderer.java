@@ -32,7 +32,7 @@ import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 public interface BlockRenderer {
 
     /**
-     * Renders the given blocks (block-state-)variant into the given blockModel, and sets the given blockColor to the
+     * Renders the given blocks (block-state-)variant into the given tileModel, and sets the given blockColor to the
      * color that represents the rendered block.
      * <p>
      *  <b>Implementation Note:</b><br>

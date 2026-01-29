@@ -26,13 +26,14 @@ import "./BlueMap";
 import {MapViewer} from "./MapViewer";
 import {MapControls} from "./controls/map/MapControls";
 import {FreeFlightControls} from "./controls/freeflight/FreeFlightControls";
-import {FileLoader, MathUtils, Vector3} from "three";
+import {MathUtils, Vector3} from "three";
 import {Map as BlueMapMap} from "./map/Map";
-import {alert, animate, EasingFunctions, generateCacheHash} from "./util/Utils";
+import {alert, animate, EasingFunctions} from "./util/Utils";
 import {MainMenu} from "./MainMenu";
 import {PopupMarker} from "./PopupMarker";
 import {MarkerSet} from "./markers/MarkerSet";
 import {getLocalStorage, round, setLocalStorage} from "./Utils";
+import {RevalidatingFileLoader} from "./util/RevalidatingFileLoader";
 import {i18n, setLanguage} from "../i18n";
 import {PlayerMarkerManager} from "./markers/PlayerMarkerManager";
 import {NormalMarkerManager} from "./markers/NormalMarkerManager";
@@ -310,7 +311,7 @@ export class BlueMapApp {
                 let map = new BlueMapMap(mapId, settings.mapDataRoot + "/" + mapId, settings.liveDataRoot + "/" + mapId, this.loadBlocker, this.mapViewer.events);
                 maps.push(map);
 
-                return map.loadSettings(this.mapViewer.tileCacheHash)
+                return map.loadSettings(this.mapViewer.revalidatedUrls)
                     .catch(error => {
                         alert(this.events, `Failed to load settings for map '${map.data.id}':` + error, "warning");
                     });
@@ -366,9 +367,10 @@ export class BlueMapApp {
      */
     loadSettings() {
         return new Promise((resolve, reject) => {
-            let loader = new FileLoader();
+            let loader = new RevalidatingFileLoader();
+            loader.setRevalidatedUrls(new Set()); // force no-cache requests
             loader.setResponseType("json");
-            loader.load("settings.json?" + generateCacheHash(),
+            loader.load("settings.json",
                 resolve,
                 () => {},
                 () => reject("Failed to load the settings.json!")
@@ -382,9 +384,10 @@ export class BlueMapApp {
      */
     loadPlayerData(map) {
         return new Promise((resolve, reject) => {
-            let loader = new FileLoader();
+            let loader = new RevalidatingFileLoader();
+            loader.setRevalidatedUrls(new Set()); // force no-cache requests
             loader.setResponseType("json");
-            loader.load(map.data.liveDataRoot + "/live/players.json?" + generateCacheHash(),
+            loader.load(map.data.liveDataRoot + "/live/players.json",
                 fileData => {
                     if (!fileData) reject(`Failed to parse '${this.fileUrl}'!`);
                     else resolve(fileData);
@@ -636,11 +639,11 @@ export class BlueMapApp {
             return;
         }
 
-        // Only reuse the user's tile cash hash if the current browser navigation event is not a reload.
-        // If it's a reload, we assume the user is troubleshooting and actually wants to refresh the map.
+        // If it's a reload, we assume the user is troubleshooting and actually
+        // wants to fully refresh the map.
         const [entry] = performance.getEntriesByType("navigation");
-        if (entry.type != "reload") {
-            this.mapViewer.clearTileCache(this.loadUserSetting("tileCacheHash", this.mapViewer.tileCacheHash));
+        if (entry.type === "reload") {
+            this.mapViewer.clearTileCache();
         }
 
         this.mapViewer.superSampling = this.loadUserSetting("superSampling", this.mapViewer.data.superSampling);
@@ -665,7 +668,6 @@ export class BlueMapApp {
         if (!this.settings.useCookies) return;
 
         this.saveUserSetting("resetSettings", false);
-        this.saveUserSetting("tileCacheHash", this.mapViewer.tileCacheHash);
 
         this.saveUserSetting("superSampling", this.mapViewer.data.superSampling);
         this.saveUserSetting("hiresViewDistance", this.mapViewer.data.loadedHiresViewDistance);

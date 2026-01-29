@@ -103,7 +103,7 @@ public class BlueMapCLI {
         if (watch) {
             for (BmMap map : maps.values()) {
                 try {
-                    MapUpdateService watcher = new MapUpdateService(renderManager, map, blueMap.getConfig().getPluginConfig().getUpdateCooldown());
+                    MapUpdateService watcher = new MapUpdateService(renderManager, map, blueMap.getConfig().getPluginConfig().getUpdateCooldown(), true);
                     watcher.start();
                     mapUpdateServices.add(watcher);
                 } catch (IOException ex) {
@@ -132,14 +132,26 @@ public class BlueMapCLI {
         Logger.global.logInfo("Start updating " + maps.size() + " maps ...");
 
         // start rendering
-        renderManager.start(blueMap.getConfig().getCoreConfig().resolveRenderThreadCount());
+        renderManager.start(
+                blueMap.getConfig().getCoreConfig().resolveRenderThreadCount(),
+                blueMap.getConfig().getCoreConfig().getRenderThreadPriority()
+        );
 
         Timer timer = new Timer("BlueMap-CLI-Timer", true);
         TimerTask updateInfoTask = new TimerTask() {
+
+            boolean wasIdle = false;
+
             @Override
             public void run() {
                 RenderTask task = renderManager.getCurrentRenderTask();
-                if (task == null) return;
+
+                if (task == null){
+                    if (!wasIdle) Logger.global.logInfo("Waiting for changes on the world-files...");
+                    wasIdle = true;
+                    return;
+                }
+                wasIdle = false;
 
                 double progress = task.estimateProgress();
                 long etaMs = renderManager.estimateCurrentRenderTaskTimeRemaining();
@@ -212,10 +224,7 @@ public class BlueMapCLI {
 
         Logger.global.logInfo("Your maps are now all up-to-date!");
 
-        if (watch) {
-            updateInfoTask.cancel();
-            Logger.global.logInfo("Waiting for changes on the world-files...");
-        } else {
+        if (!watch) {
             Runtime.getRuntime().removeShutdownHook(shutdownHook);
             shutdown.run();
         }
@@ -291,7 +300,7 @@ public class BlueMapCLI {
 
         try {
             //noinspection resource
-            HttpServer webServer = new HttpServer(handler);
+            HttpServer webServer = new HttpServer("BlueMap-Webserver", handler);
             webServer.bind(new InetSocketAddress(
                     config.resolveIp(),
                     config.getPort()
@@ -450,6 +459,7 @@ public class BlueMapCLI {
             System.exit(1);
         } catch (ConfigurationException e) {
             e.printLog(Logger.global);
+            System.exit(1);
         } catch (IOException e) {
             Logger.global.logError("An IO-error occurred!", e);
             System.exit(1);

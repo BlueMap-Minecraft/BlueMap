@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.bukkit;
 import com.flowpowered.math.vector.Vector3d;
 import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
+import de.bluecolored.bluemap.core.logger.Logger;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Location;
@@ -58,17 +59,25 @@ public class BukkitCommandSource implements CommandSource {
     public Optional<Vector3d> getPosition() {
         if (delegate.getSender() instanceof ConsoleCommandSender) return Optional.empty();
 
-        Location location = delegate.getLocation();
-        return Optional.of(new Vector3d(location.getX(), location.getY(), location.getZ()));
+        try {
+            Location location = delegate.getLocation();
+            return Optional.of(new Vector3d(location.getX(), location.getY(), location.getZ()));
+        } catch (NullPointerException ex) { // workaround for a paper-bug: https://github.com/PaperMC/Paper/issues/13387
+            return Optional.empty();
+        }
     }
 
     @Override
     public Optional<ServerWorld> getWorld() {
         if (delegate.getSender() instanceof ConsoleCommandSender) return Optional.empty();
 
-        World world = delegate.getLocation().getWorld();
-        if (world == null) return Optional.empty();
-        return Optional.of(BukkitPlugin.getInstance().getServerWorld(world));
+        try {
+            World world = delegate.getLocation().getWorld();
+            if (world == null) return Optional.empty();
+            return Optional.of(BukkitPlugin.getInstance().getServerWorld(world));
+        } catch (NullPointerException ex) { // workaround for a paper-bug: https://github.com/PaperMC/Paper/issues/13387
+            return Optional.empty();
+        }
     }
 
 }

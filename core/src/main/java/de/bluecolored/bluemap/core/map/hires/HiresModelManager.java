@@ -38,47 +38,60 @@ import lombok.Getter;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Collection;
+import java.util.List;
 
 public class HiresModelManager {
 
+    private final World world;
     private final GridStorage storage;
-    private final HiresModelRenderer renderer;
+    private final ThreadLocal<Collection<RenderPass>> renderPasses;
 
     @Getter
     private final Grid tileGrid;
 
-    public HiresModelManager(GridStorage storage, ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings, Grid tileGrid) {
-        this(storage, new HiresModelRenderer(resourcePack, textureGallery, renderSettings), tileGrid);
-    }
-
-    public HiresModelManager(GridStorage storage, HiresModelRenderer renderer, Grid tileGrid) {
+    public HiresModelManager(World world, GridStorage storage, ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings, Grid tileGrid) {
+        this.world = world;
         this.storage = storage;
-        this.renderer = renderer;
-
         this.tileGrid = tileGrid;
+
+        Collection<RenderPassType> renderPassTypes = List.copyOf(RenderPassType.REGISTRY.values());
+        this.renderPasses = ThreadLocal.withInitial(() -> renderPassTypes.stream()
+                .map(type -> type.create(resourcePack, textureGallery, renderSettings))
+                .toList()
+        );
     }
 
     /**
      * Renders the given world tile with the provided render-settings
      */
-    public void render(World world, Vector2i tile, TileMetaConsumer tileMetaConsumer, boolean save) {
-        Vector2i tileMin = tileGrid.getCellMin(tile);
-        Vector2i tileMax = tileGrid.getCellMax(tile);
-
-        Vector3i modelMin = new Vector3i(tileMin.getX(), Integer.MIN_VALUE, tileMin.getY());
-        Vector3i modelMax = new Vector3i(tileMax.getX(), Integer.MAX_VALUE, tileMax.getY());
+    public void render(Vector2i tile, TileMetaConsumer tileMetaConsumer, boolean save) {
+        Vector3i modelMin = new Vector3i(tileGrid.getCellMinX(tile.getX()), Integer.MIN_VALUE, tileGrid.getCellMinY(tile.getY()));
+        Vector3i modelMax = new Vector3i(tileGrid.getCellMaxX(tile.getX()), Integer.MAX_VALUE, tileGrid.getCellMaxY(tile.getY()));
+        Vector3i modelAnchor = new Vector3i(modelMin.getX(), 0, modelMin.getZ());
 
         if (save) {
             ArrayTileModel model = ArrayTileModel.instancePool().claimInstance();
+            TileModelView modelView = new TileModelView(model);
 
-            renderer.render(world, modelMin, modelMax, model, tileMetaConsumer);
+            try {
+                for (RenderPass renderPass : renderPasses.get()) {
+                    renderPass.render(world, modelMin, modelMax, modelAnchor, modelView.initialize(), tileMetaConsumer);
+                }
+            } catch (MaxCapacityReachedException ex) {
+                Logger.global.noFloodWarning("max-capacity-reached",
+                        "One or more map-tiles are too complex to be completed (@~ %s to %s): %s".formatted(modelMin, modelMax, ex));
+            }
 
             model.sort();
             save(model, tile);
 
             ArrayTileModel.instancePool().recycleInstance(model);
         } else {
-            renderer.render(world, modelMin, modelMax, VoidTileModel.INSTANCE, tileMetaConsumer);
+            TileModelView modelView = new TileModelView(VoidTileModel.INSTANCE);
+            for (RenderPass renderPass : renderPasses.get()) {
+                renderPass.render(world, modelMin, modelMax, modelAnchor, modelView.initialize(), tileMetaConsumer);
+            }
         }
 
     }

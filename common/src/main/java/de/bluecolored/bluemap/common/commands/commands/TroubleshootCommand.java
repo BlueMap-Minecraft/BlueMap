@@ -112,6 +112,11 @@ public class TroubleshootCommand {
             for (BmMap map : maps) {
                 new TileIsUpdatedCheck(plugin, map, position).test();
             }
+
+            // check map boundaries
+            for (BmMap map : maps) {
+                new TileInsideBoundsCheck(plugin, map, position).test();
+            }
         }
 
         // check maps are updated
@@ -122,13 +127,6 @@ public class TroubleshootCommand {
         // check maps are not frozen
         for (BmMap map : maps) {
             new MapIsNotFrozenCheck(plugin, map).test();
-        }
-
-        if (position != null) {
-            // check map-boundaries
-            for (BmMap map : maps) {
-                new TileInsideBoundsCheck(plugin, map, position).test();
-            }
         }
     }
 
