@@ -105,6 +105,7 @@ public class BmMap {
         saveTextureGallery();
 
         this.hiresModelManager = new HiresModelManager(
+                world,
                 storage.hiresTiles(),
                 this.resourcePack,
                 this.textureGallery,
@@ -135,7 +136,7 @@ public class BmMap {
 
         long start = System.nanoTime();
 
-        hiresModelManager.render(world, tile, lowresTileManager, mapSettings.isSaveHiresLayer());
+        hiresModelManager.render(tile, lowresTileManager, mapSettings.isSaveHiresLayer());
 
         long end = System.nanoTime();
         long delta = end - start;
