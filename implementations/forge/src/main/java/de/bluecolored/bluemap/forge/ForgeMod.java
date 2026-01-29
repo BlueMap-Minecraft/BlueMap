@@ -38,8 +38,8 @@ import de.bluecolored.bluemap.core.util.Caches;
 import net.minecraft.SharedConstants;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.registries.Registries;
-import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -177,7 +177,7 @@ public class ForgeMod implements Server {
     public Optional<ServerWorld> getServerWorld(Object world) {
 
         if (world instanceof String) {
-            Identifier identifier = Identifier.tryParse((String) world);
+            ResourceLocation identifier = ResourceLocation.tryParse((String) world);
             if (identifier != null) world = serverInstance.getLevel(ResourceKey.create(Registries.DIMENSION, identifier));
         }
 
