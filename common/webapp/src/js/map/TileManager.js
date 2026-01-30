@@ -223,4 +223,27 @@ export class TileManager {
         this.scene.remove(tile.model);
         this.onTileUnload(tile);
     }
+
+    /**
+     * Reloads a single tile if it is currently managed.
+     * This will unload the existing tile-model, remove it from the internal map
+     * and immediately schedule a new load for the same coordinates.
+     *
+     * @param x {number}
+     * @param z {number}
+     */
+    reloadTile(x, z) {
+        if (this.unloaded) return;
+
+        let tileHash = hashTile(x, z);
+        let tile = this.tiles.get(tileHash);
+        if (!tile) return;
+
+        if (tile.loading) return;
+
+        tile.unload();
+        this.tiles.delete(tileHash);
+
+        this.tryLoadTile(x, z);
+    }
 }

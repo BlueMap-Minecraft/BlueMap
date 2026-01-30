@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.common.rendermanager;
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector2l;
 import de.bluecolored.bluemap.common.debug.DebugDump;
+import de.bluecolored.bluemap.common.live.LiveModifiedTilesRegistry;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.map.renderstate.TileActionResolver.ActionAndNextState;
@@ -48,9 +49,12 @@ import static de.bluecolored.bluemap.core.map.renderstate.TileActionResolver.Act
 
 public class WorldRegionRenderTask implements MapRenderTask {
 
-    @Getter private final BmMap map;
-    @Getter private final Vector2i regionPos;
-    @Getter private final TileUpdateStrategy force;
+    @Getter
+    private final BmMap map;
+    @Getter
+    private final Vector2i regionPos;
+    @Getter
+    private final TileUpdateStrategy force;
 
     private Grid regionGrid, chunkGrid, tileGrid;
     private Vector2i chunkMin, chunkMax, chunksSize;
@@ -102,11 +106,10 @@ public class WorldRegionRenderTask implements MapRenderTask {
         try {
             chunkHashes = new int[chunkMaxCount];
             map.getWorld().getRegion(regionPos.getX(), regionPos.getY())
-                    .iterateAllChunks( (ChunkConsumer.ListOnly<Chunk>) (x, z, timestamp) -> {
+                    .iterateAllChunks((ChunkConsumer.ListOnly<Chunk>) (x, z, timestamp) -> {
                         chunkHashes[chunkIndex(
                                 x - chunkMin.getX(),
-                                z - chunkMin.getY()
-                        )] = timestamp;
+                                z - chunkMin.getY())] = timestamp;
                         map.getWorld().invalidateChunkCache(x, z);
                     });
         } catch (IOException ex) {
@@ -127,8 +130,7 @@ public class WorldRegionRenderTask implements MapRenderTask {
                 int tileIndex = tileIndex(x, z);
                 tileActions[tileIndex] = tileState.findActionAndNextState(
                         force.test(tileState) || checkChunksHaveChanges(tile),
-                        checkTileBounds(tile)
-                );
+                        checkTileBounds(tile));
 
                 if (tileActions[tileIndex].action() == RENDER)
                     tileRenderCount++;
@@ -147,19 +149,22 @@ public class WorldRegionRenderTask implements MapRenderTask {
 
     @Override
     public void doWork() {
-        if (cancelled || completed) return;
+        if (cancelled || completed)
+            return;
 
         int tileX, tileZ;
 
         synchronized (this) {
-            if (cancelled || completed) return;
+            if (cancelled || completed)
+                return;
 
             tileX = nextTileX;
             tileZ = nextTileZ;
 
             if (tileX == 0 && tileZ == 0) {
                 init();
-                if (cancelled || completed) return;
+                if (cancelled || completed)
+                    return;
             }
 
             nextTileX = tileX + 1;
@@ -198,7 +203,7 @@ public class WorldRegionRenderTask implements MapRenderTask {
 
                 case RENDER -> {
                     TileState failedState = checkTileRenderPreconditions(tile);
-                    if (failedState != null){
+                    if (failedState != null) {
                         map.unrenderTile(tile);
                         yield failedState;
                     }
@@ -223,8 +228,11 @@ public class WorldRegionRenderTask implements MapRenderTask {
             // mark tile with new state
             map.getMapTileState().set(tile.getX(), tile.getY(), new TileInfoRegion.TileInfo(
                     (int) (System.currentTimeMillis() / 1000),
-                    resultState
-            ));
+                    resultState));
+
+            // record this tile as modified so the live web-endpoint can
+            // inform connected clients that they should refresh it
+            LiveModifiedTilesRegistry.record(map.getId(), tile.getX(), tile.getY());
 
         }
 
@@ -258,7 +266,8 @@ public class WorldRegionRenderTask implements MapRenderTask {
     @Override
     @DebugDump
     public double estimateProgress() {
-        if (tileSize == null) return 0;
+        if (tileSize == null)
+            return 0;
         return Math.min((double) (nextTileZ * tileSize.getX() + nextTileX) / (tileSize.getX() * tileSize.getY()), 1);
     }
 
@@ -274,8 +283,10 @@ public class WorldRegionRenderTask implements MapRenderTask {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         WorldRegionRenderTask that = (WorldRegionRenderTask) o;
         return force == that.force && map.getId().equals(that.map.getId()) && regionPos.equals(that.regionPos);
     }
@@ -294,7 +305,7 @@ public class WorldRegionRenderTask implements MapRenderTask {
     }
 
     private boolean checkChunksHaveChanges(Vector2i tile) {
-        int     minX = tileGrid.getCellMinX(tile.getX(), chunkGrid),
+        int minX = tileGrid.getCellMinX(tile.getX(), chunkGrid),
                 maxX = tileGrid.getCellMaxX(tile.getX(), chunkGrid),
                 minZ = tileGrid.getCellMinY(tile.getY(), chunkGrid),
                 maxZ = tileGrid.getCellMaxY(tile.getY(), chunkGrid);
@@ -305,14 +316,13 @@ public class WorldRegionRenderTask implements MapRenderTask {
                 int dz = chunkZ - chunkMin.getY();
 
                 // only check hash for chunks inside the current region
-                if (
-                        chunkX >= chunkMin.getX() && chunkX <= chunkMax.getX() &&
-                        chunkZ >= chunkMin.getY() && chunkZ <= chunkMax.getY()
-                ) {
+                if (chunkX >= chunkMin.getX() && chunkX <= chunkMax.getX() &&
+                        chunkZ >= chunkMin.getY() && chunkZ <= chunkMax.getY()) {
                     int hash = chunkHashes[chunkIndex(dx, dz)];
                     int lastHash = map.getMapChunkState().get(chunkX, chunkZ);
 
-                    if (lastHash != hash) return true;
+                    if (lastHash != hash)
+                        return true;
                 }
             }
         }
@@ -322,7 +332,8 @@ public class WorldRegionRenderTask implements MapRenderTask {
 
     private BoundsSituation checkTileBounds(Vector2i tile) {
         boolean isInsideBounds = map.getMapSettings().isInsideRenderBoundaries(tile, tileGrid, true);
-        if (!isInsideBounds) return BoundsSituation.OUTSIDE;
+        if (!isInsideBounds)
+            return BoundsSituation.OUTSIDE;
 
         boolean isFullyInsideBounds = map.getMapSettings().isInsideRenderBoundaries(tile, tileGrid, false);
         return isFullyInsideBounds ? BoundsSituation.INSIDE : BoundsSituation.EDGE;
@@ -336,7 +347,7 @@ public class WorldRegionRenderTask implements MapRenderTask {
         int minInhabitedTimeRadius = map.getMapSettings().getMinInhabitedTimeRadius();
         boolean requireLight = !map.getMapSettings().isIgnoreMissingLightData();
 
-        int     minX = tileGrid.getCellMinX(tile.getX(), chunkGrid),
+        int minX = tileGrid.getCellMinX(tile.getX(), chunkGrid),
                 maxX = tileGrid.getCellMaxX(tile.getX(), chunkGrid),
                 minZ = tileGrid.getCellMinY(tile.getY(), chunkGrid),
                 maxZ = tileGrid.getCellMaxY(tile.getY(), chunkGrid);
@@ -344,22 +355,28 @@ public class WorldRegionRenderTask implements MapRenderTask {
         for (int chunkX = minX; chunkX <= maxX; chunkX++) {
             for (int chunkZ = minZ; chunkZ <= maxZ; chunkZ++) {
                 Chunk chunk = map.getWorld().getChunk(chunkX, chunkZ);
-                if (chunk == Chunk.ERRORED_CHUNK) return TileState.CHUNK_ERROR;
+                if (chunk == Chunk.ERRORED_CHUNK)
+                    return TileState.CHUNK_ERROR;
                 if (requireLight) {
-                    if (!chunk.isGenerated()) return TileState.NOT_GENERATED;
-                    if (!chunk.hasLightData()) return TileState.MISSING_LIGHT;
+                    if (!chunk.isGenerated())
+                        return TileState.NOT_GENERATED;
+                    if (!chunk.hasLightData())
+                        return TileState.MISSING_LIGHT;
                 }
-                if (chunk.isGenerated()) chunksAreGenerated = true;
-                if (chunk.getInhabitedTime() >= minInhabitedTime) chunksAreInhabited = true;
+                if (chunk.isGenerated())
+                    chunksAreGenerated = true;
+                if (chunk.getInhabitedTime() >= minInhabitedTime)
+                    chunksAreInhabited = true;
             }
         }
 
-        if (!chunksAreGenerated) return TileState.NOT_GENERATED;
+        if (!chunksAreGenerated)
+            return TileState.NOT_GENERATED;
 
         // second pass for increased inhabited-time-radius
         if (!chunksAreInhabited && minInhabitedTimeRadius > 0) {
-            inhabitedRadiusCheck:
-            for (int chunkX = minX - minInhabitedTimeRadius; chunkX <= maxX + minInhabitedTimeRadius; chunkX++) {
+            inhabitedRadiusCheck: for (int chunkX = minX - minInhabitedTimeRadius; chunkX <= maxX
+                    + minInhabitedTimeRadius; chunkX++) {
                 for (int chunkZ = minZ - minInhabitedTimeRadius; chunkZ <= maxZ + minInhabitedTimeRadius; chunkZ++) {
                     Chunk chunk = map.getWorld().getChunk(chunkX, chunkZ);
                     if (chunk.getInhabitedTime() >= minInhabitedTime) {
@@ -376,8 +393,10 @@ public class WorldRegionRenderTask implements MapRenderTask {
     public static Comparator<WorldRegionRenderTask> defaultComparator(final Vector2i centerRegion) {
         return (task1, task2) -> {
             // use long to compare to avoid overflow (comparison uses distanceSquared)
-            Vector2l task1Rel = new Vector2l(task1.regionPos.getX() - centerRegion.getX(), task1.regionPos.getY() - centerRegion.getY());
-            Vector2l task2Rel = new Vector2l(task2.regionPos.getX() - centerRegion.getX(), task2.regionPos.getY() - centerRegion.getY());
+            Vector2l task1Rel = new Vector2l(task1.regionPos.getX() - centerRegion.getX(),
+                    task1.regionPos.getY() - centerRegion.getY());
+            Vector2l task2Rel = new Vector2l(task2.regionPos.getX() - centerRegion.getX(),
+                    task2.regionPos.getY() - centerRegion.getY());
             return compareVec2L(task1Rel, task2Rel);
         };
     }

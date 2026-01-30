@@ -1,3 +1,4 @@
+import {ModifiedChunksPoller} from "./map/ModifiedChunksPoller";
 /*
  * This file is part of BlueMap, licensed under the MIT License (MIT).
  *
@@ -48,6 +49,9 @@ export class BlueMapApp {
         this.events = rootElement;
 
         this.mapViewer = new MapViewer(rootElement, this.events);
+
+        /** @type {ModifiedChunksPoller | null} */
+        this.modifiedChunksPoller = null;
 
         this.mapControls = new MapControls(this.mapViewer.renderer.domElement, rootElement);
         this.freeFlightControls = new FreeFlightControls(this.mapViewer.renderer.domElement);
@@ -254,6 +258,7 @@ export class BlueMapApp {
 
         if (this.playerMarkerManager) this.playerMarkerManager.dispose();
         if (this.markerFileManager) this.markerFileManager.dispose();
+        if (this.modifiedChunksPoller) this.modifiedChunksPoller.stop();
 
         await this.mapViewer.switchMap(map)
 
@@ -262,10 +267,18 @@ export class BlueMapApp {
 
         this.updatePageAddress();
 
+        // (Re-)initialize live data managers
         await Promise.all([
             this.initPlayerMarkerManager(),
             this.initMarkerFileManager()
         ]);
+
+        // Start polling for recently rendered / modified chunks so that
+        // updated tiles get reloaded automatically in the viewer.
+        if (!this.modifiedChunksPoller) {
+            this.modifiedChunksPoller = new ModifiedChunksPoller(this.mapViewer, this.events);
+        }
+        this.modifiedChunksPoller.start();
     }
 
     resetCamera() {

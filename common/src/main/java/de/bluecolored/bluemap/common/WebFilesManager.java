@@ -46,7 +46,7 @@ public class WebFilesManager {
 
     private static final Gson GSON = ResourcesGson.addAdapter(new GsonBuilder())
             .setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)
-            //.setPrettyPrinting() // enable pretty printing for easy editing
+            // .setPrettyPrinting() // enable pretty printing for easy editing
             .create();
 
     private final Path webRoot;
@@ -107,34 +107,38 @@ public class WebFilesManager {
         Path indexHtml = webRoot.resolve("index.html");
 
         // if there is no existing webapp, we definitely need to extract it
-        if (!Files.exists(indexHtml)) return true;
+        if (!Files.exists(indexHtml))
+            return true;
 
         // compare the timestamp of the bundled webapp.zip with the existing index.html
         URL zippedWebapp = getClass().getResource("/de/bluecolored/bluemap/webapp.zip");
-        if (zippedWebapp == null) return false; // no bundled webapp found, assume no update
+        if (zippedWebapp == null)
+            return false; // no bundled webapp found, assume no update
 
         try {
             long zipLastModified = zippedWebapp.openConnection().getLastModified();
-            if (zipLastModified <= 0) return false; // unknown timestamp, don't force update
+            if (zipLastModified <= 0)
+                return false; // unknown timestamp, don't force update
 
             long indexLastModified = Files.getLastModifiedTime(indexHtml).toMillis();
             return indexLastModified < zipLastModified;
         } catch (IOException ex) {
-            Logger.global.logDebug("Failed to compare webapp file versions", ex);
+            Logger.global.logError("Failed to compare webapp file versions", ex);
             return false;
         }
     }
 
     public void updateFiles() throws IOException {
         URL zippedWebapp = getClass().getResource("/de/bluecolored/bluemap/webapp.zip");
-        if (zippedWebapp == null) throw new IOException("Failed to open bundled webapp.");
+        if (zippedWebapp == null)
+            throw new IOException("Failed to open bundled webapp.");
 
         // extract zip to webroot
         Files.createDirectories(webRoot);
         FileHelper.extractZipFile(zippedWebapp, webRoot, StandardCopyOption.REPLACE_EXISTING);
     }
 
-    @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal", "unused", "MismatchedQueryAndUpdateOfCollection"})
+    @SuppressWarnings({ "FieldMayBeFinal", "FieldCanBeLocal", "unused", "MismatchedQueryAndUpdateOfCollection" })
     private static class Settings {
 
         private String version = BlueMap.VERSION;
