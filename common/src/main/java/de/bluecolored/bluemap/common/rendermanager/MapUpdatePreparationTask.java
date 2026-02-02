@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.common.rendermanager;
 
 import com.flowpowered.math.vector.Vector2i;
+import com.flowpowered.math.vector.Vector2l;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.map.renderstate.MapTileState;
@@ -34,6 +35,9 @@ import de.bluecolored.bluemap.core.storage.GridStorage;
 import de.bluecolored.bluemap.core.storage.compression.CompressedInputStream;
 import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.world.World;
+import de.bluecolored.bluemap.common.serverinterface.Player;
+import de.bluecolored.bluemap.common.serverinterface.Server;
+import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -50,7 +54,9 @@ import java.util.stream.Stream;
 
 public class MapUpdatePreparationTask implements MapRenderTask {
 
-    @Getter private final BmMap map;
+    @Getter
+    private final BmMap map;
+    private final @Nullable Server server;
     private final @Nullable Vector2i center;
     private final @Nullable Integer radius;
     private final TileUpdateStrategy force;
@@ -61,12 +67,13 @@ public class MapUpdatePreparationTask implements MapRenderTask {
     @Builder
     protected MapUpdatePreparationTask(
             @NonNull BmMap map,
+            @Nullable Server server,
             @Nullable Vector2i center,
             @Nullable Integer radius,
             TileUpdateStrategy force,
-            @NonNull Consumer<MapUpdateTask> taskConsumer
-    ) {
+            @NonNull Consumer<MapUpdateTask> taskConsumer) {
         this.map = map;
+        this.server = server;
         this.center = center;
         this.radius = radius;
         this.force = force != null ? force : TileUpdateStrategy.FORCE_NONE;
@@ -77,17 +84,20 @@ public class MapUpdatePreparationTask implements MapRenderTask {
     @Override
     public void doWork() {
         synchronized (this) {
-            if (!hasMoreWork) return;
+            if (!hasMoreWork)
+                return;
             hasMoreWork = false;
         }
-        if (cancelled) return;
+        if (cancelled)
+            return;
 
         // do work
         Collection<Vector2i> regions = findRegions();
         Collection<RenderTask> tasks = createTasks(regions);
         MapUpdateTask mapUpdateTask = new MapUpdateTask(map, tasks);
 
-        if (cancelled) return;
+        if (cancelled)
+            return;
 
         // return created task
         taskConsumer.accept(mapUpdateTask);
@@ -112,8 +122,25 @@ public class MapUpdatePreparationTask implements MapRenderTask {
         ArrayList<WorldRegionRenderTask> regionTasks = new ArrayList<>(regions.size());
         regions.forEach(region -> regionTasks.add(new WorldRegionRenderTask(map, region, force)));
 
-        // sort tasks by distance to 0/0
-        regionTasks.sort(WorldRegionRenderTask.defaultComparator(Vector2i.ZERO));
+        Grid regionGrid = map.getWorld().getRegionGrid();
+
+        if (center != null) {
+            // Explicit center: keep existing behavior (distance to that center)
+            Vector2i centerRegion = regionGrid.getCell(center);
+            regionTasks.sort(WorldRegionRenderTask.defaultComparator(centerRegion));
+        } else {
+            // No explicit center: if possible, prioritize regions by the
+            // smallest distance to any player on this map's world.
+            var playerRegions = computePlayerRegions(regionGrid);
+            if (!playerRegions.isEmpty()) {
+                regionTasks.sort((t1, t2) -> Long.compare(
+                        closestDistanceSquared(t1.getRegionPos(), playerRegions),
+                        closestDistanceSquared(t2.getRegionPos(), playerRegions)));
+            } else {
+                // No player info available: fall back to 0/0 as before
+                regionTasks.sort(WorldRegionRenderTask.defaultComparator(Vector2i.ZERO));
+            }
+        }
 
         // save map before and after the whole update
         ArrayList<RenderTask> tasks = new ArrayList<>(regionTasks.size() + 2);
@@ -122,6 +149,51 @@ public class MapUpdatePreparationTask implements MapRenderTask {
         tasks.add(new MapSaveTask(map));
 
         return tasks;
+    }
+
+    private java.util.List<Vector2l> computePlayerRegions(Grid regionGrid) {
+        java.util.List<Vector2l> result = new java.util.ArrayList<>();
+        if (server == null)
+            return result;
+
+        try {
+            ServerWorld serverWorld = server.getServerWorld(map.getWorld()).orElse(null);
+            if (serverWorld == null)
+                return result;
+
+            for (Player player : server.getOnlinePlayers()) {
+                if (!player.getWorld().equals(serverWorld))
+                    continue;
+
+                var pos = player.getPosition();
+                int blockX = (int) Math.floor(pos.getX());
+                int blockZ = (int) Math.floor(pos.getZ());
+
+                Vector2i blockPos = new Vector2i(blockX, blockZ);
+                Vector2i regionCell = regionGrid.getCell(blockPos);
+                result.add(new Vector2l(regionCell.getX(), regionCell.getY()));
+            }
+        } catch (Exception ignored) {
+            // fall through with whatever we collected (likely empty)
+        }
+
+        return result;
+    }
+
+    private long closestDistanceSquared(Vector2i regionPos, java.util.List<Vector2l> playerRegions) {
+        if (playerRegions.isEmpty())
+            return Long.MAX_VALUE;
+
+        Vector2l r = new Vector2l(regionPos.getX(), regionPos.getY());
+        long best = Long.MAX_VALUE;
+        for (Vector2l p : playerRegions) {
+            long dx = r.getX() - p.getX();
+            long dz = r.getY() - p.getY();
+            long d2 = dx * dx + dz * dz;
+            if (d2 < best)
+                best = d2;
+        }
+        return best;
     }
 
     private Collection<Vector2i> findRegions() {
@@ -150,8 +222,10 @@ public class MapUpdatePreparationTask implements MapRenderTask {
                 .filter(regionRadiusFilter)
                 .forEach(regions::add);
 
-        // also update regions that are present as map-tile-state files (they might have been rendered before but deleted now)
-        // (a little hacky as we are operating on raw tile-state files -> maybe find a better way?)
+        // also update regions that are present as map-tile-state files (they might have
+        // been rendered before but deleted now)
+        // (a little hacky as we are operating on raw tile-state files -> maybe find a
+        // better way?)
         if (map.getMapSettings().isCheckForRemovedRegions()) {
             Grid tileGrid = map.getHiresModelManager().getTileGrid();
             Grid cellGrid = MapTileState.GRID.multiply(tileGrid);
@@ -159,15 +233,16 @@ public class MapUpdatePreparationTask implements MapRenderTask {
                 stream
                         .filter(c -> {
                             // filter out files that are fully UNKNOWN/NOT_GENERATED
-                            // this avoids unnecessarily converting UNKNOWN tiles into NOT_GENERATED tiles on force-updates
+                            // this avoids unnecessarily converting UNKNOWN tiles into NOT_GENERATED tiles
+                            // on force-updates
                             try (CompressedInputStream in = c.read()) {
-                                if (in == null) return false;
+                                if (in == null)
+                                    return false;
                                 TileState[] states = TileInfoRegion.loadPalette(in.decompress());
                                 for (TileState state : states) {
-                                    if (
-                                            state != TileState.UNKNOWN &&
-                                                    state != TileState.NOT_GENERATED
-                                    ) return true;
+                                    if (state != TileState.UNKNOWN &&
+                                            state != TileState.NOT_GENERATED)
+                                        return true;
                                 }
                                 return false;
                             } catch (IOException ignore) {
@@ -186,9 +261,10 @@ public class MapUpdatePreparationTask implements MapRenderTask {
         return regions;
     }
 
-    public static MapUpdatePreparationTask updateMap(BmMap map, RenderManager renderManager) {
+    public static MapUpdatePreparationTask updateMap(BmMap map, Server server, RenderManager renderManager) {
         return builder()
                 .map(map)
+                .server(server)
                 .taskConsumer(renderManager::scheduleRenderTask)
                 .build();
     }

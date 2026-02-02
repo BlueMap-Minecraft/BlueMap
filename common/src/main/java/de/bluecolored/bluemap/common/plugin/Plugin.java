@@ -121,15 +121,16 @@ public class Plugin implements ServerEventListener {
         try {
             synchronized (this) {
 
-                if (loaded) return;
-                unload(); //ensure nothing is left running (from a failed load or something)
+                if (loaded)
+                    return;
+                unload(); // ensure nothing is left running (from a failed load or something)
 
-                //load addons
+                // load addons
                 Path packsFolder = serverInterface.getConfigFolder().resolve("packs");
                 Files.createDirectories(packsFolder);
                 AddonLoader.INSTANCE.tryLoadAddons(packsFolder);
 
-                //load configs
+                // load configs
                 BlueMapConfigManager configManager = BlueMapConfigManager.builder()
                         .minecraftVersion(serverInterface.getMinecraftVersion())
                         .configRoot(serverInterface.getConfigFolder())
@@ -143,18 +144,17 @@ public class Plugin implements ServerEventListener {
                 WebappConfig webappConfig = configManager.getWebappConfig();
                 PluginConfig pluginConfig = configManager.getPluginConfig();
 
-                //apply new file-logger config
+                // apply new file-logger config
                 if (coreConfig.getLog().getFile() != null) {
                     ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
                     Logger.global.put(DEBUG_FILE_LOG_NAME, () -> Logger.file(
                             Path.of(String.format(coreConfig.getLog().getFile(), zdt)),
-                            coreConfig.getLog().isAppend()
-                    ));
+                            coreConfig.getLog().isAppend()));
                 } else {
                     Logger.global.remove(DEBUG_FILE_LOG_NAME);
                 }
 
-                //load plugin state
+                // load plugin state
                 try {
                     GsonConfigurationLoader loader = GsonConfigurationLoader.builder()
                             .path(coreConfig.getData().resolve("pluginState.json"))
@@ -165,31 +165,35 @@ public class Plugin implements ServerEventListener {
                     pluginState = new PluginState();
                 }
 
-                //create bluemap-service
+                // create bluemap-service
                 blueMap = new BlueMapService(configManager, preloadedResourcePack);
 
-                //try load resources
+                // try load resources
                 try {
                     blueMap.getOrLoadResourcePack();
                 } catch (MissingResourcesException ex) {
                     Logger.global.logWarning("BlueMap is missing important resources!");
-                    Logger.global.logWarning("You must accept the required file download in order for BlueMap to work!");
+                    Logger.global
+                            .logWarning("You must accept the required file download in order for BlueMap to work!");
 
                     BlueMapConfiguration configProvider = blueMap.getConfig();
                     if (configProvider instanceof BlueMapConfigManager) {
-                        Logger.global.logWarning("Please check: " + ((BlueMapConfigManager) configProvider).getConfigManager().resolveConfigFile(BlueMapConfigManager.CORE_CONFIG_NAME).toAbsolutePath().normalize());
+                        Logger.global.logWarning("Please check: " + ((BlueMapConfigManager) configProvider)
+                                .getConfigManager().resolveConfigFile(BlueMapConfigManager.CORE_CONFIG_NAME)
+                                .toAbsolutePath().normalize());
                     }
 
-                    Logger.global.logInfo("If you have changed the config you can simply reload the plugin using: /bluemap reload");
+                    Logger.global.logInfo(
+                            "If you have changed the config you can simply reload the plugin using: /bluemap reload");
 
                     unload();
                     return;
                 }
 
-                //load maps
+                // load maps
                 Map<String, BmMap> maps = blueMap.getOrLoadMaps();
 
-                //create and start webserver
+                // create and start webserver
                 if (webserverConfig.isEnabled()) {
                     Path webroot = webserverConfig.getWebroot();
                     FileHelper.createDirectories(webroot);
@@ -207,7 +211,8 @@ public class Plugin implements ServerEventListener {
                         MapRequestHandler mapRequestHandler;
                         BmMap map = maps.get(id);
                         if (map != null) {
-                            mapRequestHandler = new MapRequestHandler(map, serverInterface, pluginConfig, Predicate.not(pluginState::isPlayerHidden));
+                            mapRequestHandler = new MapRequestHandler(map, serverInterface, pluginConfig,
+                                    Predicate.not(pluginState::isPlayerHidden));
                         } else {
                             Storage storage = blueMap.getOrLoadStorage(mapConfig.getStorage());
                             mapRequestHandler = new MapRequestHandler(storage.map(id));
@@ -216,8 +221,7 @@ public class Plugin implements ServerEventListener {
                         webRequestHandler.register(
                                 "maps/" + Pattern.quote(id) + "/(.*)",
                                 "$1",
-                                new BlueMapResponseModifier(mapRequestHandler)
-                        );
+                                new BlueMapResponseModifier(mapRequestHandler));
                     }
 
                     // create web-logger
@@ -226,8 +230,7 @@ public class Plugin implements ServerEventListener {
                         ZonedDateTime zdt = ZonedDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
                         webLoggerList.add(Logger.file(
                                 Path.of(String.format(webserverConfig.getLog().getFile(), zdt)),
-                                webserverConfig.getLog().isAppend()
-                        ));
+                                webserverConfig.getLog().isAppend()));
                     }
                     webLogger = Logger.combine(webLoggerList);
 
@@ -237,66 +240,71 @@ public class Plugin implements ServerEventListener {
                                 new LoggingRequestHandler(
                                         webRequestHandler,
                                         webserverConfig.getLog().getFormat(),
-                                        webLogger
-                                )
-                        );
+                                        webLogger));
                         webServer.bind(new InetSocketAddress(
                                 webserverConfig.resolveIp(),
-                                webserverConfig.getPort()
-                        ));
+                                webserverConfig.getPort()));
                         webServer.start();
                     } catch (UnknownHostException ex) {
-                        throw new ConfigurationException("BlueMap failed to resolve the ip in your webserver-config.\n" +
-                                "Check if that is correctly configured.", ex);
+                        throw new ConfigurationException(
+                                "BlueMap failed to resolve the ip in your webserver-config.\n" +
+                                        "Check if that is correctly configured.",
+                                ex);
                     } catch (BindException ex) {
                         throw new ConfigurationException("BlueMap failed to bind to the configured address.\n" +
-                                "This usually happens when the configured port (" + webserverConfig.getPort() + ") is already in use by some other program.", ex);
+                                "This usually happens when the configured port (" + webserverConfig.getPort()
+                                + ") is already in use by some other program.", ex);
                     } catch (IOException ex) {
-                        throw new ConfigurationException("""
-                                BlueMap failed to initialize the webserver.
-                                Check your webserver-config if everything is configured correctly.
-                                (Make sure you DON'T use the same port for bluemap that you also use for your minecraft server)
-                                """.strip(), ex);
+                        throw new ConfigurationException(
+                                """
+                                        BlueMap failed to initialize the webserver.
+                                        Check your webserver-config if everything is configured correctly.
+                                        (Make sure you DON'T use the same port for bluemap that you also use for your minecraft server)
+                                        """
+                                        .strip(),
+                                ex);
                     }
                 }
 
-                //warn if no maps are configured
+                // warn if no maps are configured
                 if (maps.isEmpty()) {
-                    Logger.global.logWarning("There are no valid maps configured, please check your map-configs! Disabling BlueMap...");
+                    Logger.global.logWarning(
+                            "There are no valid maps configured, please check your map-configs! Disabling BlueMap...");
                     unload(true);
                     return;
                 }
 
-                //initialize render manager
+                // initialize render manager
                 renderManager = new RenderManager();
 
-                //update webapp and settings
+                // update webapp and settings
                 if (webappConfig.isEnabled())
                     blueMap.createOrUpdateWebApp(false);
 
-                //start skin updater
+                // start skin updater
                 this.skinUpdater = new PlayerSkinUpdater(this);
                 if (pluginConfig.isLivePlayerMarkers()) {
                     serverInterface.registerListener(skinUpdater);
                 }
 
-                //init timer
+                // init timer
                 daemonTimer = new Timer("BlueMap-Plugin-DaemonTimer", true);
 
-                //periodically save and release memory
+                // periodically save and release memory
                 TimerTask saveTask = new TimerTask() {
                     @Override
                     public void run() {
                         save();
 
-                        // if nothing is being actively rendered, clear caches and pools to release some heap-space
+                        // if nothing is being actively rendered, clear caches and pools to release some
+                        // heap-space
                         if (!renderManager.isRunning() || renderManager.getCurrentRenderTask() == null)
                             ArrayTileModel.instancePool().clear();
                     }
                 };
                 daemonTimer.schedule(saveTask, TimeUnit.MINUTES.toMillis(10), TimeUnit.MINUTES.toMillis(10));
 
-                //periodically save markers
+                // periodically save markers
                 int writeMarkersInterval = pluginConfig.getWriteMarkersInterval();
                 if (writeMarkersInterval > 0) {
                     TimerTask saveMarkersTask = new TimerTask() {
@@ -305,10 +313,11 @@ public class Plugin implements ServerEventListener {
                             saveMarkerStates();
                         }
                     };
-                    daemonTimer.schedule(saveMarkersTask, TimeUnit.SECONDS.toMillis(writeMarkersInterval), TimeUnit.SECONDS.toMillis(writeMarkersInterval));
+                    daemonTimer.schedule(saveMarkersTask, TimeUnit.SECONDS.toMillis(writeMarkersInterval),
+                            TimeUnit.SECONDS.toMillis(writeMarkersInterval));
                 }
 
-                //periodically save players
+                // periodically save players
                 int writePlayersInterval = pluginConfig.getWritePlayersInterval();
                 if (writePlayersInterval > 0) {
                     TimerTask savePlayersTask = new TimerTask() {
@@ -317,10 +326,11 @@ public class Plugin implements ServerEventListener {
                             savePlayerStates();
                         }
                     };
-                    daemonTimer.schedule(savePlayersTask, TimeUnit.SECONDS.toMillis(writePlayersInterval), TimeUnit.SECONDS.toMillis(writePlayersInterval));
+                    daemonTimer.schedule(savePlayersTask, TimeUnit.SECONDS.toMillis(writePlayersInterval),
+                            TimeUnit.SECONDS.toMillis(writePlayersInterval));
                 }
 
-                //periodically restart the file-watchers
+                // periodically restart the file-watchers
                 TimerTask fileWatcherRestartTask = new TimerTask() {
                     @Override
                     public void run() {
@@ -331,7 +341,7 @@ public class Plugin implements ServerEventListener {
                 };
                 daemonTimer.schedule(fileWatcherRestartTask, TimeUnit.HOURS.toMillis(1), TimeUnit.HOURS.toMillis(1));
 
-                //periodically update all (non frozen) maps
+                // periodically update all (non frozen) maps
                 long fullUpdateInterval = pluginConfig.getFullUpdateInterval().toMillis();
                 if (fullUpdateInterval > 0) {
                     TimerTask updateAllMapsTask = new TimerTask() {
@@ -340,14 +350,14 @@ public class Plugin implements ServerEventListener {
                             renderManager.scheduleRenderTasksNext(maps.values().stream()
                                     .filter(map -> pluginState.getMapState(map).isUpdateEnabled())
                                     .sorted(Comparator.comparing(bmMap -> bmMap.getMapSettings().getSorting()))
-                                    .map(map -> MapUpdatePreparationTask.updateMap(map, renderManager))
+                                    .map(map -> MapUpdatePreparationTask.updateMap(map, serverInterface, renderManager))
                                     .toArray(RenderTask[]::new));
                         }
                     };
                     daemonTimer.scheduleAtFixedRate(updateAllMapsTask, 0, fullUpdateInterval);
                 }
 
-                //metrics
+                // metrics
                 MinecraftVersion minecraftVersion = blueMap.getOrLoadMinecraftVersion();
                 TimerTask metricsTask = new TimerTask() {
                     @Override
@@ -356,27 +366,28 @@ public class Plugin implements ServerEventListener {
                             Metrics.sendReport(implementationType, minecraftVersion.getId());
                     }
                 };
-                daemonTimer.scheduleAtFixedRate(metricsTask, TimeUnit.MINUTES.toMillis(1), TimeUnit.MINUTES.toMillis(30));
+                daemonTimer.scheduleAtFixedRate(metricsTask, TimeUnit.MINUTES.toMillis(1),
+                        TimeUnit.MINUTES.toMillis(30));
 
-                //watch map-changes
+                // watch map-changes
                 this.mapUpdateServices = new HashMap<>();
                 initFileWatcherTasks();
 
-                //register listener
+                // register listener
                 serverInterface.registerListener(this);
 
-                //enable api
+                // enable api
                 this.api = new BlueMapAPIImpl(this);
                 this.api.register();
 
-                //start render-manager
+                // start render-manager
                 if (pluginState.isRenderThreadsEnabled()) {
                     checkPausedByPlayerCount(); // <- this also starts the render-manager if it should start
                 } else {
                     Logger.global.logInfo("Render-Threads are STOPPED! Use the command 'bluemap start' to start them.");
                 }
 
-                //done
+                // done
                 loaded = true;
             }
         } catch (ConfigurationException ex) {
@@ -399,19 +410,21 @@ public class Plugin implements ServerEventListener {
         try {
             synchronized (this) {
 
-                //disable api
-                if (api != null) api.unregister();
+                // disable api
+                if (api != null)
+                    api.unregister();
                 api = null;
 
-                //unregister listeners
+                // unregister listeners
                 serverInterface.unregisterAllListeners();
                 skinUpdater = null;
 
-                //stop scheduled threads
-                if (daemonTimer != null) daemonTimer.cancel();
+                // stop scheduled threads
+                if (daemonTimer != null)
+                    daemonTimer.cancel();
                 daemonTimer = null;
 
-                //stop file-watchers
+                // stop file-watchers
                 if (mapUpdateServices != null) {
                     mapUpdateServices.values().forEach(MapUpdateService::close);
                     mapUpdateServices.clear();
@@ -419,10 +432,11 @@ public class Plugin implements ServerEventListener {
                 mapUpdateServices = null;
 
                 // stop render-manager
-                if (renderManager != null){
+                if (renderManager != null) {
                     if (renderManager.getCurrentRenderTask() != null) {
                         renderManager.removeAllRenderTasks();
-                        if (!renderManager.isRunning()) renderManager.start(1);
+                        if (!renderManager.isRunning())
+                            renderManager.start(1);
                         try {
                             renderManager.awaitIdle(true);
                         } catch (InterruptedException ex) {
@@ -438,7 +452,7 @@ public class Plugin implements ServerEventListener {
                     }
                 }
 
-                //save
+                // save
                 save();
 
                 // stop webserver
@@ -460,7 +474,7 @@ public class Plugin implements ServerEventListener {
                     webLogger = null;
                 }
 
-                //close bluemap
+                // close bluemap
                 if (blueMap != null) {
                     try {
                         blueMap.close();
@@ -473,10 +487,10 @@ public class Plugin implements ServerEventListener {
                 // remove file-logger
                 Logger.global.remove(DEBUG_FILE_LOG_NAME);
 
-                //clear resources
+                // clear resources
                 pluginState = null;
 
-                //done
+                // done
                 loaded = false;
             }
         } finally {
@@ -515,7 +529,8 @@ public class Plugin implements ServerEventListener {
     }
 
     public synchronized void save() {
-        if (blueMap == null) return;
+        if (blueMap == null)
+            return;
 
         if (pluginState != null) {
             try {
@@ -536,7 +551,8 @@ public class Plugin implements ServerEventListener {
     }
 
     public void saveMarkerStates() {
-        if (blueMap == null) return;
+        if (blueMap == null)
+            return;
 
         var maps = blueMap.getMaps();
         for (BmMap map : maps.values()) {
@@ -545,7 +561,8 @@ public class Plugin implements ServerEventListener {
     }
 
     public void savePlayerStates() {
-        if (blueMap == null) return;
+        if (blueMap == null)
+            return;
 
         var maps = blueMap.getMaps();
         for (BmMap map : maps.values()) {
@@ -553,12 +570,10 @@ public class Plugin implements ServerEventListener {
                     serverInterface,
                     getBlueMap().getConfig().getPluginConfig(),
                     map.getWorld(),
-                    Predicate.not(pluginState::isPlayerHidden)
-            );
+                    Predicate.not(pluginState::isPlayerHidden));
             try (
                     OutputStream out = map.getStorage().players().write();
-                    Writer writer = new OutputStreamWriter(out)
-            ) {
+                    Writer writer = new OutputStreamWriter(out)) {
                 writer.write(dataSupplier.get());
             } catch (Exception ex) {
                 Logger.global.logError("Failed to save players for map '" + map.getId() + "'!", ex);
@@ -569,18 +584,21 @@ public class Plugin implements ServerEventListener {
     public synchronized void startWatchingMap(BmMap map) {
         stopWatchingMap(map);
 
-        if (blueMap == null) return;
+        if (blueMap == null)
+            return;
 
         try {
-            MapUpdateService watcher = new MapUpdateService(renderManager, map, blueMap.getConfig().getPluginConfig().getUpdateCooldown());
+            MapUpdateService watcher = new MapUpdateService(renderManager, map,
+                    blueMap.getConfig().getPluginConfig().getUpdateCooldown());
             watcher.start();
             mapUpdateServices.put(map.getId(), watcher);
         } catch (IOException ex) {
             Logger.global.logError("Failed to create update-watcher for map: " + map.getId() +
                     " (This means the map might not automatically update)", ex);
         } catch (UnsupportedOperationException ex) {
-            Logger.global.logWarning("Update-watcher for map '" + map.getId() + "' is not supported for the world-type." +
-                    " (This means the map might not automatically update)");
+            Logger.global
+                    .logWarning("Update-watcher for map '" + map.getId() + "' is not supported for the world-type." +
+                            " (This means the map might not automatically update)");
         }
     }
 
@@ -593,7 +611,8 @@ public class Plugin implements ServerEventListener {
 
     public boolean flushWorldUpdates(World world) throws IOException {
         var implWorld = serverInterface.getServerWorld(world).orElse(null);
-        if (implWorld != null) return implWorld.persistWorldChanges();
+        if (implWorld != null)
+            return implWorld.persistWorldChanges();
         return false;
     }
 
@@ -608,7 +627,8 @@ public class Plugin implements ServerEventListener {
     }
 
     private void checkPausedByPlayerCountSoon() {
-        // check is done a second later to make sure the player has actually joined/left and is no longer on the list
+        // check is done a second later to make sure the player has actually joined/left
+        // and is no longer on the list
         try {
             daemonTimer.schedule(new TimerTask() {
                 @Override
@@ -625,11 +645,10 @@ public class Plugin implements ServerEventListener {
         CoreConfig coreConfig = getBlueMap().getConfig().getCoreConfig();
         PluginConfig pluginConfig = getBlueMap().getConfig().getPluginConfig();
 
-        if (
-                pluginConfig.getPlayerRenderLimit() > 0 &&
-                getServerInterface().getOnlinePlayers().size() >= pluginConfig.getPlayerRenderLimit()
-        ) {
-            if (renderManager.isRunning()) renderManager.stop();
+        if (pluginConfig.getPlayerRenderLimit() > 0 &&
+                getServerInterface().getOnlinePlayers().size() >= pluginConfig.getPlayerRenderLimit()) {
+            if (renderManager.isRunning())
+                renderManager.stop();
             return true;
         } else {
             if (!renderManager.isRunning() && getPluginState().isRenderThreadsEnabled())

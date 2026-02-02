@@ -54,128 +54,120 @@ import static net.kyori.adventure.text.Component.text;
 @RequiredArgsConstructor
 public class UpdateCommand {
 
-    private final Plugin plugin;
-    private final TileUpdateStrategy updateStrategy;
+        private final Plugin plugin;
+        private final TileUpdateStrategy updateStrategy;
 
-    @Command("")
-    @Permission("bluemap.update")
-    @WithWorld
-    public boolean update(CommandSource source, World world) throws IOException {
-        return update(source, world, null, null);
-    }
-
-    @Command("<radius>")
-    @Permission("bluemap.update")
-    @WithWorld
-    @WithPosition
-    public boolean update(
-            CommandSource source,
-            World world,
-            Vector3d position,
-            @Argument("radius") int radius
-    ) throws IOException {
-        return update(source, world, position.toVector2(true).toInt(), radius);
-    }
-
-    @Command("<x> <z> <radius>")
-    @Permission("bluemap.update")
-    @WithWorld
-    public boolean update(
-            CommandSource source,
-            World world,
-            @Argument("x") int x,
-            @Argument("z") int z,
-            @Argument("radius") int radius
-    ) throws IOException {
-        return update(source, world, new Vector2i(x, z), radius);
-    }
-
-    @Command("<map>")
-    @Permission("bluemap.update")
-    public boolean update(
-            CommandSource source,
-            @Argument("map") BmMap map
-    ) throws IOException {
-        return update(source, map.getWorld(), List.of(map), null, null);
-    }
-
-    @Command("<map> <radius>")
-    @Permission("bluemap.update")
-    @WithWorld
-    @WithPosition
-    public boolean update(
-            CommandSource source,
-            World world,
-            Vector3d position,
-            @Argument("map") BmMap map,
-            @Argument("radius") int radius
-    ) throws IOException {
-        if (!map.getWorld().equals(world)) {
-            source.sendMessage(text("The map does not belong to the same world you are currently in!")
-                    .color(NEGATIVE_COLOR));
-            return false;
+        @Command("")
+        @Permission("bluemap.update")
+        @WithWorld
+        public boolean update(CommandSource source, World world) throws IOException {
+                return update(source, world, null, null);
         }
 
-        return update(source, map.getWorld(), List.of(map), position.toVector2(true).toInt(), radius);
-    }
-
-    @Command("<map> <x> <z> <radius>")
-    @Permission("bluemap.update")
-    public boolean update(
-            CommandSource source,
-            @Argument("map") BmMap map,
-            @Argument("x") int x,
-            @Argument("z") int z,
-            @Argument("radius") int radius
-    ) throws IOException {
-        return update(source, map.getWorld(), List.of(map), new Vector2i(x, z), radius);
-    }
-
-    private boolean update(
-            CommandSource source, World world,
-            @Nullable Vector2i center, @Nullable Integer radius
-    ) throws IOException {
-        // find maps for world
-        List<BmMap> maps = new ArrayList<>();
-        for (BmMap map : plugin.getBlueMap().getMaps().values()) {
-            if (map.getWorld().equals(world)) maps.add(map);
+        @Command("<radius>")
+        @Permission("bluemap.update")
+        @WithWorld
+        @WithPosition
+        public boolean update(
+                        CommandSource source,
+                        World world,
+                        Vector3d position,
+                        @Argument("radius") int radius) throws IOException {
+                return update(source, world, position.toVector2(true).toInt(), radius);
         }
 
-        if (maps.isEmpty()) {
-            source.sendMessage(text("No map has been found for this world that could be updated!")
-                    .color(NEGATIVE_COLOR));
-            return false;
+        @Command("<x> <z> <radius>")
+        @Permission("bluemap.update")
+        @WithWorld
+        public boolean update(
+                        CommandSource source,
+                        World world,
+                        @Argument("x") int x,
+                        @Argument("z") int z,
+                        @Argument("radius") int radius) throws IOException {
+                return update(source, world, new Vector2i(x, z), radius);
         }
 
-        // sort by map-sorting
-        maps.sort(Comparator.comparing(map -> map.getMapSettings().getSorting()));
+        @Command("<map>")
+        @Permission("bluemap.update")
+        public boolean update(
+                        CommandSource source,
+                        @Argument("map") BmMap map) throws IOException {
+                return update(source, map.getWorld(), List.of(map), null, null);
+        }
 
-        return update(source, world, maps, center, radius);
-    }
+        @Command("<map> <radius>")
+        @Permission("bluemap.update")
+        @WithWorld
+        @WithPosition
+        public boolean update(
+                        CommandSource source,
+                        World world,
+                        Vector3d position,
+                        @Argument("map") BmMap map,
+                        @Argument("radius") int radius) throws IOException {
+                if (!map.getWorld().equals(world)) {
+                        source.sendMessage(text("The map does not belong to the same world you are currently in!")
+                                        .color(NEGATIVE_COLOR));
+                        return false;
+                }
 
-    private boolean update(
-            CommandSource source, World world, Collection<BmMap> maps,
-            @Nullable Vector2i center, @Nullable Integer radius
-    ) throws IOException {
-        source.sendMessage(text("Creating update-tasks ...").color(INFO_COLOR));
-        plugin.flushWorldUpdates(world);
-        plugin.getRenderManager().scheduleRenderTasksNext(maps.stream()
-                .map(map -> MapUpdatePreparationTask.builder()
-                        .map(map)
-                        .center(center)
-                        .radius(radius)
-                        .force(updateStrategy)
-                        .taskConsumer(plugin.getRenderManager()::scheduleRenderTask)
-                        .build())
-                .peek(task -> source.sendMessage(format("Created new update-task for map %",
-                        formatMap(task.getMap()).color(HIGHLIGHT_COLOR)
-                ).color(POSITIVE_COLOR)))
-                .toArray(RenderTask[]::new));
-        source.sendMessage(format("Use % to see the progress",
-                command("/bluemap").color(HIGHLIGHT_COLOR)
-        ).color(BASE_COLOR));
-        return true;
-    }
+                return update(source, map.getWorld(), List.of(map), position.toVector2(true).toInt(), radius);
+        }
 
+        @Command("<map> <x> <z> <radius>")
+        @Permission("bluemap.update")
+        public boolean update(
+                        CommandSource source,
+                        @Argument("map") BmMap map,
+                        @Argument("x") int x,
+                        @Argument("z") int z,
+                        @Argument("radius") int radius) throws IOException {
+                return update(source, map.getWorld(), List.of(map), new Vector2i(x, z), radius);
+        }
+
+        private boolean update(
+                        CommandSource source, World world,
+                        @Nullable Vector2i center, @Nullable Integer radius) throws IOException {
+                // find maps for world
+                List<BmMap> maps = new ArrayList<>();
+                for (BmMap map : plugin.getBlueMap().getMaps().values()) {
+                        if (map.getWorld().equals(world))
+                                maps.add(map);
+                }
+
+                if (maps.isEmpty()) {
+                        source.sendMessage(text("No map has been found for this world that could be updated!")
+                                        .color(NEGATIVE_COLOR));
+                        return false;
+                }
+
+                // sort by map-sorting
+                maps.sort(Comparator.comparing(map -> map.getMapSettings().getSorting()));
+
+                return update(source, world, maps, center, radius);
+        }
+
+        private boolean update(
+                        CommandSource source, World world, Collection<BmMap> maps,
+                        @Nullable Vector2i center, @Nullable Integer radius) throws IOException {
+                source.sendMessage(text("Creating update-tasks ...").color(INFO_COLOR));
+                plugin.flushWorldUpdates(world);
+                plugin.getRenderManager().scheduleRenderTasksNext(maps.stream()
+                                .map(map -> MapUpdatePreparationTask.builder()
+                                                .map(map)
+                                                .server(plugin.getServerInterface())
+                                                .center(center)
+                                                .radius(radius)
+                                                .force(updateStrategy)
+                                                .taskConsumer(plugin.getRenderManager()::scheduleRenderTask)
+                                                .build())
+                                .peek(task -> source.sendMessage(format("Created new update-task for map %",
+                                                formatMap(task.getMap()).color(HIGHLIGHT_COLOR)).color(POSITIVE_COLOR)))
+                                .toArray(RenderTask[]::new));
+                source.sendMessage(format("Use % to see the progress",
+                                command("/bluemap").color(HIGHLIGHT_COLOR)).color(BASE_COLOR));
+                return true;
+        }
 
 }
