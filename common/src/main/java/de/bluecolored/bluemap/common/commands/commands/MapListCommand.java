@@ -32,7 +32,6 @@ import de.bluecolored.bluemap.core.map.BmMap;
 import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.HoverEvent;
-import net.kyori.adventure.text.format.TextDecoration;
 
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -67,8 +66,7 @@ public class MapListCommand {
         if (!plugin.getPluginState().getMapState(map).isUpdateEnabled()) {
             icon = ICON_FROZEN;
             details.addFirst(format("is %",
-                    text("frozen").color(HIGHLIGHT_COLOR)
-            ));
+                    text("frozen").color(HIGHLIGHT_COLOR)));
         }
 
         long pendingCount = plugin.getRenderManager().getScheduledRenderTasks().stream()
@@ -78,8 +76,7 @@ public class MapListCommand {
         if (pendingCount > 0) {
             icon = ICON_PENDING;
             details.addFirst(format(pendingCount == 1 ? "has % pending task" : "has % pending tasks",
-                    text(pendingCount).color(HIGHLIGHT_COLOR)
-            ));
+                    text(pendingCount).color(HIGHLIGHT_COLOR)));
         }
 
         RenderTask task = plugin.getRenderManager().getCurrentRenderTask();
@@ -92,14 +89,13 @@ public class MapListCommand {
                 default -> "has a running task: %";
             };
             details.addFirst(format(format,
-                    text(String.format("%.3f%%", task.estimateProgress() * 100)).color(HIGHLIGHT_COLOR)
-            ).hoverEvent(HoverEvent.showText(text(task.getDescription()))));
+                    text(String.format("%.3f%%", task.estimateProgress() * 100)).color(HIGHLIGHT_COLOR))
+                    .hoverEvent(HoverEvent.showText(text(task.getDescription()))));
         }
 
         return lines(
                 icon.appendSpace().append(formatMap(map).color(HIGHLIGHT_COLOR)),
-                details.isEmpty() ? null : details(BASE_COLOR, details)
-        );
+                details.isEmpty() ? null : details(BASE_COLOR, details));
     }
 
 }

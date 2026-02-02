@@ -26,12 +26,9 @@ package de.bluecolored.bluemap.common.commands.checks;
 
 import de.bluecolored.bluemap.common.config.BlueMapConfigManager;
 import de.bluecolored.bluemap.common.plugin.Plugin;
-import de.bluecolored.bluemap.common.rendermanager.MapRenderTask;
-import de.bluecolored.bluemap.core.map.BmMap;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.ClickEvent;
 
 import static de.bluecolored.bluemap.common.commands.TextFormat.*;
 import static net.kyori.adventure.text.Component.empty;
@@ -45,8 +42,7 @@ public class RenderThreadsRunningCheck implements Check {
 
     @Override
     public CheckResult getResult() {
-        return
-                plugin.getRenderManager().isRunning() ? CheckResult.OK : CheckResult.BAD;
+        return plugin.getRenderManager().isRunning() ? CheckResult.OK : CheckResult.BAD;
     }
 
     @Override
@@ -57,17 +53,13 @@ public class RenderThreadsRunningCheck implements Check {
                     text("there are too many players online for rendering"),
                     empty(),
                     format("this threshold can be configured in the %",
-                            formatConfigFilePath("plugin").color(HIGHLIGHT_COLOR)
-                    ).color(BASE_COLOR)
-            );
+                            formatConfigFilePath("plugin").color(HIGHLIGHT_COLOR)).color(BASE_COLOR));
         } else {
             return lines(
                     text("⚠ render-threads are stopped"),
                     empty(),
                     format("you can use % to start them",
-                            command("/bluemap start").color(HIGHLIGHT_COLOR)
-                    ).color(BASE_COLOR)
-            );
+                            command("/bluemap start").color(HIGHLIGHT_COLOR)).color(BASE_COLOR));
         }
     }
 
@@ -76,8 +68,7 @@ public class RenderThreadsRunningCheck implements Check {
 
         if (plugin.getBlueMap().getConfig() instanceof BlueMapConfigManager configManager) {
             format = format.hoverEvent(
-                    text(BlueMapConfigManager.formatPath(configManager.getConfigManager().resolveConfigFile(name)))
-            );
+                    text(BlueMapConfigManager.formatPath(configManager.getConfigManager().resolveConfigFile(name))));
         }
 
         return format;

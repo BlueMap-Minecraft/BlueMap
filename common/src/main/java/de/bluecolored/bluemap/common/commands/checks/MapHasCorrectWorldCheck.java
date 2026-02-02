@@ -29,11 +29,9 @@ import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.world.World;
-import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.text.Component;
-import org.jetbrains.annotations.Nullable;
 
 import static de.bluecolored.bluemap.common.commands.TextFormat.*;
 import static net.kyori.adventure.text.Component.empty;
@@ -66,11 +64,9 @@ public class MapHasCorrectWorldCheck implements Check {
                         """.strip(),
                         formatMap(map).color(HIGHLIGHT_COLOR),
                         text(map.getWorld().getId()).color(HIGHLIGHT_COLOR),
-                        text(getExpectedWorldId()).color(HIGHLIGHT_COLOR)
-                ),
+                        text(getExpectedWorldId()).color(HIGHLIGHT_COLOR)),
                 empty(),
-                mapWorldConfigInfo()
-        );
+                mapWorldConfigInfo());
     }
 
     private Component mapWorldConfigInfo() {
@@ -81,8 +77,7 @@ public class MapHasCorrectWorldCheck implements Check {
                 in the % config file
                 """.strip(),
                 formatWorldConfig().color(INFO_COLOR),
-                formatConfigFilePath("maps/" + map.getId()).color(HIGHLIGHT_COLOR)
-        ).color(BASE_COLOR);
+                formatConfigFilePath("maps/" + map.getId()).color(HIGHLIGHT_COLOR)).color(BASE_COLOR);
     }
 
     private Component formatWorldConfig() {
@@ -93,8 +88,7 @@ public class MapHasCorrectWorldCheck implements Check {
                 └
                 """.strip(),
                 BlueMapConfigManager.formatPath(expectedWorld.getWorldFolder()),
-                expectedWorld.getDimension().getFormatted()
-        );
+                expectedWorld.getDimension().getFormatted());
     }
 
     private Component formatConfigFilePath(String name) {
@@ -102,8 +96,7 @@ public class MapHasCorrectWorldCheck implements Check {
 
         if (plugin.getBlueMap().getConfig() instanceof BlueMapConfigManager configManager) {
             format = format.hoverEvent(
-                    text(BlueMapConfigManager.formatPath(configManager.getConfigManager().resolveConfigFile(name)))
-            );
+                    text(BlueMapConfigManager.formatPath(configManager.getConfigManager().resolveConfigFile(name))));
         }
 
         return format;

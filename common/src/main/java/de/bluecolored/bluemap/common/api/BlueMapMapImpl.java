@@ -118,18 +118,20 @@ public class BlueMapMapImpl implements BlueMapMap {
 
     private synchronized void unfreeze() {
         Plugin plugin = this.plugin.get();
-        if (plugin == null) return; // fail silently: not supported on non-plugin platforms
+        if (plugin == null)
+            return; // fail silently: not supported on non-plugin platforms
 
         BmMap map = unpack(this.map);
         plugin.startWatchingMap(map);
         plugin.getPluginState().getMapState(map).setUpdateEnabled(true);
         plugin.getRenderManager().scheduleRenderTaskNext(MapUpdatePreparationTask
-                .updateMap(map, plugin.getRenderManager()));
+                .updateMap(map, plugin.getServerInterface(), plugin.getRenderManager()));
     }
 
     private synchronized void freeze() {
         Plugin plugin = this.plugin.get();
-        if (plugin == null) return; // fail silently: not supported on non-plugin platforms
+        if (plugin == null)
+            return; // fail silently: not supported on non-plugin platforms
 
         BmMap map = unpack(this.map);
         plugin.stopWatchingMap(map);
@@ -148,15 +150,18 @@ public class BlueMapMapImpl implements BlueMapMap {
     @Override
     public boolean isFrozen() {
         Plugin plugin = this.plugin.get();
-        if (plugin == null) return false; // fail silently: not supported on non-plugin platforms
+        if (plugin == null)
+            return false; // fail silently: not supported on non-plugin platforms
 
         return !plugin.getPluginState().getMapState(unpack(map)).isUpdateEnabled();
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
 
         BlueMapMapImpl that = (BlueMapMapImpl) o;
 
@@ -169,14 +174,19 @@ public class BlueMapMapImpl implements BlueMapMap {
     }
 
     private <T> T unpack(WeakReference<T> ref) {
-        return Objects.requireNonNull(ref.get(), "Reference lost to delegate object. Most likely BlueMap got reloaded and this instance is no longer valid.");
+        return Objects.requireNonNull(ref.get(),
+                "Reference lost to delegate object. Most likely BlueMap got reloaded and this instance is no longer valid.");
     }
 
     /**
      * Easy-access method for addons depending on BlueMapCore:<br>
-     * <blockquote><pre>
-     *     BmMap map = ((BlueMapMapImpl) blueMapMap).map();
-     * </pre></blockquote>
+     * <blockquote>
+     * 
+     * <pre>
+     * BmMap map = ((BlueMapMapImpl) blueMapMap).map();
+     * </pre>
+     * 
+     * </blockquote>
      */
     public BmMap map() {
         return unpack(map);

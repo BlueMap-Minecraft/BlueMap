@@ -32,7 +32,6 @@ import lombok.NonNull;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Objects;
 import java.util.Optional;
 
 public class AssetStorageImpl implements AssetStorage {
@@ -53,7 +52,8 @@ public class AssetStorageImpl implements AssetStorage {
     @Override
     public Optional<InputStream> readAsset(@NonNull String name) throws IOException {
         CompressedInputStream in = storage.asset(name).read();
-        if (in == null) return Optional.empty();
+        if (in == null)
+            return Optional.empty();
         return Optional.of(in.decompress());
     }
 

@@ -27,7 +27,6 @@ package de.bluecolored.bluemap.common.addons;
 import de.bluecolored.bluemap.common.config.ConfigurationException;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
-import lombok.Singular;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -46,7 +45,8 @@ public final class AddonLoader {
     private final Map<String, LoadedAddon> loadedAddons = new ConcurrentHashMap<>();
 
     public void tryLoadAddons(Path root) {
-        if (!Files.exists(root)) return;
+        if (!Files.exists(root))
+            return;
         try (Stream<Path> files = Files.list(root)) {
 
             // find all addons and load addon-info
@@ -63,28 +63,29 @@ public final class AddonLoader {
                         .filter(a -> !availableAddons.keySet().containsAll(a.getAddonInfo().getDependencies()))
                         .findAny()
                         .orElse(null);
-                if (addonToRemove == null) break;
+                if (addonToRemove == null)
+                    break;
                 String id = addonToRemove.getAddonInfo().getId();
                 availableAddons.remove(id);
                 new ConfigurationException("Missing required dependencies %s to load addon '%s' (%s)".formatted(
                         Arrays.toString(addonToRemove.getAddonInfo().getDependencies().toArray(String[]::new)),
                         id,
-                        addonToRemove.getJarFile()
-                )).printLog(Logger.global);
+                        addonToRemove.getJarFile())).printLog(Logger.global);
             }
 
             // topography sort and load addons based on their dependencies
             Map<String, Long> dependenciesToLoad = new HashMap<>();
             Queue<String> loadNext = new ArrayDeque<>();
             for (Addon addon : availableAddons.values()) {
-                long dependencyCount =
-                        addon.getAddonInfo().getDependencies().size() +
+                long dependencyCount = addon.getAddonInfo().getDependencies().size() +
                         addon.getAddonInfo().getSoftDependencies().stream()
                                 .filter(availableAddons::containsKey)
                                 .count();
                 String id = addon.getAddonInfo().getId();
-                if (dependencyCount == 0) loadNext.add(id);
-                else dependenciesToLoad.put(id, dependencyCount);
+                if (dependencyCount == 0)
+                    loadNext.add(id);
+                else
+                    dependenciesToLoad.put(id, dependencyCount);
             }
 
             while (!loadNext.isEmpty()) {
@@ -97,7 +98,8 @@ public final class AddonLoader {
                         AddonInfo info = dependant.getAddonInfo();
                         if (info.getDependencies().contains(id) || info.getSoftDependencies().contains(id)) {
                             Long count = dependenciesToLoad.get(info.getId());
-                            if (count == null) continue;
+                            if (count == null)
+                                continue;
                             if (--count <= 0) {
                                 dependenciesToLoad.remove(info.getId());
                                 loadNext.add(info.getId());
@@ -117,7 +119,8 @@ public final class AddonLoader {
             for (String id : dependenciesToLoad.keySet()) {
                 Addon addon = availableAddons.remove(id);
                 try {
-                    if (addon != null) loadAddon(addon);
+                    if (addon != null)
+                        loadAddon(addon);
                 } catch (ConfigurationException ex) {
                     new ConfigurationException("Failed to load addon '%s' (%s)".formatted(id, addon.getJarFile()), ex)
                             .printLog(Logger.global);
@@ -132,7 +135,8 @@ public final class AddonLoader {
     private @Nullable Addon tryLoadAddonInfo(Path jarFile) {
         try {
             AddonInfo addonInfo = AddonInfo.load(jarFile);
-            if (addonInfo == null) return null;
+            if (addonInfo == null)
+                return null;
             return new Addon(addonInfo, jarFile);
         } catch (ConfigurationException e) {
             new ConfigurationException("Failed to load addon info from '%s'.".formatted(jarFile), e)
@@ -145,20 +149,23 @@ public final class AddonLoader {
         AddonInfo addonInfo = addon.getAddonInfo();
         Path jarFile = addon.getJarFile();
 
-        if (loadedAddons.containsKey(addonInfo.getId())) return;
+        if (loadedAddons.containsKey(addonInfo.getId()))
+            return;
         Logger.global.logInfo("Loading BlueMap Addon: %s (%s)".formatted(addonInfo.getId(), jarFile));
 
         try {
             Set<ClassLoader> dependencyClassLoaders = new LinkedHashSet<>();
             for (String dependencyId : addon.getAddonInfo().getDependencies()) {
                 LoadedAddon loadedAddon = loadedAddons.get(dependencyId);
-                if (loadedAddon == null) throw new IllegalStateException("Required dependency '%s' is not loaded."
-                        .formatted(addon.getAddonInfo().getId()));
+                if (loadedAddon == null)
+                    throw new IllegalStateException("Required dependency '%s' is not loaded."
+                            .formatted(addon.getAddonInfo().getId()));
                 dependencyClassLoaders.add(loadedAddon.getClassLoader());
             }
             for (String dependencyId : addon.getAddonInfo().getSoftDependencies()) {
                 LoadedAddon loadedAddon = loadedAddons.get(dependencyId);
-                if (loadedAddon == null) continue;
+                if (loadedAddon == null)
+                    continue;
                 dependencyClassLoaders.add(loadedAddon.getClassLoader());
             }
 
@@ -167,9 +174,8 @@ public final class AddonLoader {
                 parent = new CombinedClassLoader(parent, dependencyClassLoaders.toArray(ClassLoader[]::new));
 
             ClassLoader addonClassLoader = new URLClassLoader(
-                    new URL[]{ jarFile.toUri().toURL() },
-                    parent
-            );
+                    new URL[] { jarFile.toUri().toURL() },
+                    parent);
             Class<?> entrypointClass = addonClassLoader.loadClass(addonInfo.getEntrypoint());
 
             // create addon instance
@@ -178,8 +184,7 @@ public final class AddonLoader {
                     addonInfo,
                     jarFile,
                     addonClassLoader,
-                    instance
-            );
+                    instance);
 
             loadedAddons.put(addonInfo.getId(), loadedAddon);
 

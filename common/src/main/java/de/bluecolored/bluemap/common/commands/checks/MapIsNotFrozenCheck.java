@@ -29,7 +29,6 @@ import de.bluecolored.bluemap.core.map.BmMap;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.ClickEvent;
 
 import static de.bluecolored.bluemap.common.commands.TextFormat.*;
 import static net.kyori.adventure.text.Component.empty;
@@ -54,11 +53,9 @@ public class MapIsNotFrozenCheck implements Check {
                         text("⚠ map % is frozen"),
                         text("a frozen map will not be updated"),
                         empty(),
-                        text("you can use % to unfreeze the map").color(BASE_COLOR)
-                ),
+                        text("you can use % to unfreeze the map").color(BASE_COLOR)),
                 formatMap(map).color(HIGHLIGHT_COLOR),
-                command("/bluemap unfreeze " + map.getId()).color(HIGHLIGHT_COLOR)
-        );
+                command("/bluemap unfreeze " + map.getId()).color(HIGHLIGHT_COLOR));
     }
 
 }

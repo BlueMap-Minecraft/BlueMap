@@ -65,7 +65,8 @@ public class WebAppImpl implements WebApp {
 
     @Override
     public void setPlayerVisibility(@NonNull UUID player, boolean visible) {
-        if (plugin == null) return; // fail silently: not supported on non-plugin platforms
+        if (plugin == null)
+            return; // fail silently: not supported on non-plugin platforms
 
         if (visible) {
             plugin.getPluginState().removeHiddenPlayer(player);
@@ -76,7 +77,8 @@ public class WebAppImpl implements WebApp {
 
     @Override
     public boolean getPlayerVisibility(@NonNull UUID player) {
-        if (plugin == null) return false; // fail silently: not supported on non-plugin platforms
+        if (plugin == null)
+            return false; // fail silently: not supported on non-plugin platforms
 
         return !plugin.getPluginState().isPlayerHidden(player);
     }
@@ -96,12 +98,16 @@ public class WebAppImpl implements WebApp {
     }
 
     /**
-     * Save webapp-settings after a short delay, if no other save is already scheduled.
-     * (to bulk-save changes in case there is a lot of scripts being registered at once)
+     * Save webapp-settings after a short delay, if no other save is already
+     * scheduled.
+     * (to bulk-save changes in case there is a lot of scripts being registered at
+     * once)
      */
     private synchronized void scheduleUpdateWebAppSettings() {
-        if (!blueMapService.getConfig().getWebappConfig().isEnabled()) return;
-        if (scheduledWebAppSettingsUpdate != null) return;
+        if (!blueMapService.getConfig().getWebappConfig().isEnabled())
+            return;
+        if (scheduledWebAppSettingsUpdate != null)
+            return;
 
         timer.schedule(new TimerTask() {
             @Override
@@ -122,7 +128,6 @@ public class WebAppImpl implements WebApp {
 
     @Override
     @Deprecated(forRemoval = true)
-    @SuppressWarnings("removal")
     public String createImage(@NonNull BufferedImage image, @NonNull String path) throws IOException {
         path = path.replaceAll("[^a-zA-Z0-9_.\\-/]", "_");
 
@@ -144,7 +149,6 @@ public class WebAppImpl implements WebApp {
 
     @Override
     @Deprecated(forRemoval = true)
-    @SuppressWarnings("removal")
     public Map<String, String> availableImages() throws IOException {
         Path webRoot = getWebRoot().toAbsolutePath();
         String separator = webRoot.getFileSystem().getSeparator();
@@ -163,7 +167,7 @@ public class WebAppImpl implements WebApp {
                             try {
                                 String key = imageRootPath.relativize(p).toString();
                                 key = key
-                                        .substring(0, key.length() - 4) //remove .png
+                                        .substring(0, key.length() - 4) // remove .png
                                         .replace(separator, "/");
 
                                 String value = webRoot.relativize(p).toString()

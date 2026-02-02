@@ -30,42 +30,35 @@ import de.bluecolored.bluemap.core.map.BmMap;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.ClickEvent;
 
 import static de.bluecolored.bluemap.common.commands.TextFormat.*;
 import static net.kyori.adventure.text.Component.empty;
-import static net.kyori.adventure.text.Component.text;
 
 @Getter
 @RequiredArgsConstructor
 public class MapIsUpdatedCheck implements Check {
 
-    private final Plugin plugin;
-    private final BmMap map;
+        private final Plugin plugin;
+        private final BmMap map;
 
-    @Override
-    public CheckResult getResult() {
-        return plugin.getRenderManager().getScheduledRenderTasks().stream()
-                .noneMatch(task ->
-                        task instanceof MapRenderTask mapTask &&
-                        mapTask.getMap().equals(map)
-                ) ? CheckResult.OK : CheckResult.BAD;
-    }
+        @Override
+        public CheckResult getResult() {
+                return plugin.getRenderManager().getScheduledRenderTasks().stream()
+                                .noneMatch(task -> task instanceof MapRenderTask mapTask &&
+                                                mapTask.getMap().equals(map)) ? CheckResult.OK : CheckResult.BAD;
+        }
 
-    @Override
-    public Component getFailureDescription() {
-        return lines(
-                format("⚠ map % has pending updates",
-                        formatMap(map).color(HIGHLIGHT_COLOR)
-                ),
-                empty(),
-                format("""
-                        wait until the map finished updating
-                        you can use % to see the update progress
-                        """.strip(),
-                        command("/bluemap").color(HIGHLIGHT_COLOR)
-                ).color(BASE_COLOR)
-        );
-    }
+        @Override
+        public Component getFailureDescription() {
+                return lines(
+                                format("⚠ map % has pending updates",
+                                                formatMap(map).color(HIGHLIGHT_COLOR)),
+                                empty(),
+                                format("""
+                                                wait until the map finished updating
+                                                you can use % to see the update progress
+                                                """.strip(),
+                                                command("/bluemap").color(HIGHLIGHT_COLOR)).color(BASE_COLOR));
+        }
 
 }

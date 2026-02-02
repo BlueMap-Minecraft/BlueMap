@@ -49,10 +49,9 @@ public class UnfreezeCommand {
         source.sendMessage(format("% Map % is no longer % and will update automatically",
                 ICON_IN_PROGRESS,
                 formatMap(map).color(HIGHLIGHT_COLOR),
-                text("frozen").color(FROZEN_COLOR)
-        ).color(BASE_COLOR));
+                text("frozen").color(FROZEN_COLOR)).color(BASE_COLOR));
         plugin.getRenderManager().scheduleRenderTask(MapUpdatePreparationTask
-                .updateMap(map, plugin.getRenderManager()));
+                .updateMap(map, plugin.getServerInterface(), plugin.getRenderManager()));
         plugin.save();
     }
 

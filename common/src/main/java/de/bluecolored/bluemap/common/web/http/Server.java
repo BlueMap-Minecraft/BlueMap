@@ -35,7 +35,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Objects;
 
-public abstract class Server extends Thread implements Closeable, Runnable {
+public abstract class Server extends Thread implements Closeable {
 
     private final Selector selector;
     private final Collection<ServerSocketChannel> server;
@@ -56,7 +56,8 @@ public abstract class Server extends Thread implements Closeable, Runnable {
         this.server.add(server);
 
         if (checkIfBoundToAllInterfaces(address)) {
-            Logger.global.logInfo("WebServer bound to all network interfaces on port " + ((InetSocketAddress) server.getLocalAddress()).getPort());
+            Logger.global.logInfo("WebServer bound to all network interfaces on port "
+                    + ((InetSocketAddress) server.getLocalAddress()).getPort());
         } else {
             Logger.global.logInfo("WebServer bound to: " + server.getLocalAddress());
         }
@@ -79,7 +80,8 @@ public abstract class Server extends Thread implements Closeable, Runnable {
                 this.selector.select(this::selection);
             } catch (IOException e) {
                 Logger.global.logDebug("Failed to select channel: " + e);
-            } catch (ClosedSelectorException ignore) {}
+            } catch (ClosedSelectorException ignore) {
+            }
         }
     }
 
@@ -92,10 +94,11 @@ public abstract class Server extends Thread implements Closeable, Runnable {
 
     private void accept(SelectionKey selectionKey) {
         try {
-            //noinspection resource
+            // noinspection resource
             ServerSocketChannel serverSocketChannel = (ServerSocketChannel) selectionKey.channel();
             SocketChannel channel = serverSocketChannel.accept();
-            if (channel == null) return;
+            if (channel == null)
+                return;
             channel.configureBlocking(false);
             channel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE, createConnectionHandler());
         } catch (IOException e) {
@@ -118,12 +121,15 @@ public abstract class Server extends Thread implements Closeable, Runnable {
             try {
                 server.close();
             } catch (IOException ex) {
-                if (exception == null) exception = ex;
-                else exception.addSuppressed(ex);
+                if (exception == null)
+                    exception = ex;
+                else
+                    exception.addSuppressed(ex);
             }
         }
 
-        if (exception != null) throw exception;
+        if (exception != null)
+            throw exception;
     }
 
 }

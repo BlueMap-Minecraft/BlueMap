@@ -55,43 +55,37 @@ public class PurgeCommand {
 
             // delete map
             MapPurgeTask purgeTask = new MapPurgeTask(map);
-            plugin.getRenderManager().removeRenderTasksIf(task ->
-                    task instanceof MapRenderTask mrt &&
-                            mrt.getMap().equals(map)
-            );
+            plugin.getRenderManager().removeRenderTasksIf(task -> task instanceof MapRenderTask mrt &&
+                    mrt.getMap().equals(map));
             plugin.getRenderManager().scheduleRenderTaskNext(purgeTask);
 
             List<Component> lines = new LinkedList<>();
             lines.add(format("Scheduled a new task to purge map %",
-                    formatMap(map).color(HIGHLIGHT_COLOR)
-            ).color(POSITIVE_COLOR));
+                    formatMap(map).color(HIGHLIGHT_COLOR)).color(POSITIVE_COLOR));
             lines.add(format("Use % to see the progress",
-                    command("/bluemap").color(HIGHLIGHT_COLOR)
-            ).color(BASE_COLOR));
+                    command("/bluemap").color(HIGHLIGHT_COLOR)).color(BASE_COLOR));
 
             if (updateMap) {
                 lines.add(empty());
                 lines.add(format("""
-                                BlueMap will automatically start rendering the map again once the purge is done
-                                If you don't want this, use % before purging
-                                """.strip(),
-                        command("/bluemap freeze " + map.getId()).color(HIGHLIGHT_COLOR)
-                ).color(BASE_COLOR));
+                        BlueMap will automatically start rendering the map again once the purge is done
+                        If you don't want this, use % before purging
+                        """.strip(),
+                        command("/bluemap freeze " + map.getId()).color(HIGHLIGHT_COLOR)).color(BASE_COLOR));
             }
 
             source.sendMessage(lines(lines));
 
             if (updateMap) {
                 plugin.getRenderManager().scheduleRenderTask(MapUpdatePreparationTask
-                        .updateMap(map, plugin.getRenderManager()));
+                        .updateMap(map, plugin.getServerInterface(), plugin.getRenderManager()));
             }
 
             return true;
         } catch (IllegalArgumentException e) {
             Logger.global.logError("Failed to purge map '" + map.getId() + "'!", e);
             source.sendMessage(format("There was an error trying to purge %, see console for details.",
-                    formatMap(map).color(HIGHLIGHT_COLOR)
-            ).color(NEGATIVE_COLOR));
+                    formatMap(map).color(HIGHLIGHT_COLOR)).color(NEGATIVE_COLOR));
             return false;
         }
     }

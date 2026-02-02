@@ -25,7 +25,6 @@
 package de.bluecolored.bluemap.common.serverinterface;
 
 import com.flowpowered.math.vector.Vector3d;
-import de.bluecolored.bluemap.core.world.World;
 import net.kyori.adventure.text.Component;
 
 import java.util.Optional;

@@ -294,9 +294,7 @@ public class BlueMapCLI {
                 config.getLog().getFormat(),
                 Logger.combine(webLoggerList));
 
-        try {
-            // noinspection resource
-            HttpServer webServer = new HttpServer("BlueMap-Webserver", handler);
+        try (HttpServer webServer = new HttpServer("BlueMap-Webserver", handler)) {
             webServer.bind(new InetSocketAddress(
                     config.resolveIp(),
                     config.getPort()));
