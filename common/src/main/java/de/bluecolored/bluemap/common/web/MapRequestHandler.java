@@ -45,7 +45,7 @@ public class MapRequestHandler extends RoutingRequestHandler {
         this(map.getStorage(),
                 new LivePlayersDataSupplier(serverInterface, pluginConfig, map.getWorld(), playerFilter),
                 new LiveMarkersDataSupplier(map.getMarkerSets()),
-                new LiveModifiedTilesRequestHandler(map.getId()));
+                new LiveModifiedTilesRequestHandler(map));
     }
 
     public MapRequestHandler(MapStorage mapStorage) {
