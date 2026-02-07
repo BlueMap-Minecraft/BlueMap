@@ -211,7 +211,7 @@ public class Plugin implements ServerEventListener {
                         BmMap map = maps.get(id);
                         if (map != null) {
                             mapRequestHandler = new MapRequestHandler(map, serverInterface, pluginConfig,
-                                    Predicate.not(pluginState::isPlayerHidden));
+                                    Predicate.not(pluginState::isPlayerHidden), () -> renderManager);
                         } else {
                             Storage storage = blueMap.getOrLoadStorage(mapConfig.getStorage());
                             mapRequestHandler = new MapRequestHandler(storage.map(id));

@@ -88,6 +88,11 @@ public class WorldRegionRenderTask implements MapRenderTask {
         this.cancelled = false;
     }
 
+    @Override
+    public Vector2i getRegion() {
+        return regionPos;
+    }
+
     private synchronized void init() {
 
         // calculate bounds

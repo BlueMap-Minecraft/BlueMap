@@ -24,10 +24,24 @@
  */
 package de.bluecolored.bluemap.common.rendermanager;
 
+import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.core.map.BmMap;
+import org.jetbrains.annotations.Nullable;
 
 public interface MapRenderTask extends RenderTask {
 
     BmMap getMap();
+
+    /**
+     * Returns the region-position this task is working on, if applicable.
+     *
+     * <p>
+     * Tasks that do not operate on a single region should return {@code null}
+     * (the default implementation).
+     * </p>
+     */
+    default @Nullable Vector2i getRegion() {
+        return null;
+    }
 
 }

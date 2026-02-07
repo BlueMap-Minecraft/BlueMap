@@ -29,7 +29,7 @@ import java.util.*;
 public class CombinedRenderTask<T extends RenderTask> implements RenderTask {
 
     private final String description;
-    private final List<T> tasks;
+    protected final List<T> tasks;
     private int currentTaskIndex;
 
     public CombinedRenderTask(String description, Collection<T> tasks) {
@@ -39,15 +39,23 @@ public class CombinedRenderTask<T extends RenderTask> implements RenderTask {
         this.currentTaskIndex = 0;
     }
 
+    /**
+     * Returns the immutable list of combined subtasks.
+     */
+    public List<T> getTasks() {
+        return tasks;
+    }
+
     @Override
     public void doWork() throws Exception {
         T task;
 
         synchronized (this) {
-            if (!hasMoreWork()) return;
+            if (!hasMoreWork())
+                return;
             task = this.tasks.get(this.currentTaskIndex);
 
-            if (!task.hasMoreWork()){
+            if (!task.hasMoreWork()) {
                 this.currentTaskIndex++;
                 return;
             }
@@ -64,7 +72,8 @@ public class CombinedRenderTask<T extends RenderTask> implements RenderTask {
     @Override
     public double estimateProgress() {
         int currentTask = this.currentTaskIndex;
-        if (currentTask >= this.tasks.size()) return 1;
+        if (currentTask >= this.tasks.size())
+            return 1;
 
         double total = currentTask;
         total += this.tasks.get(currentTask).estimateProgress();
@@ -74,22 +83,26 @@ public class CombinedRenderTask<T extends RenderTask> implements RenderTask {
 
     @Override
     public void cancel() {
-        for (T task : tasks) task.cancel();
+        for (T task : tasks)
+            task.cancel();
     }
 
     @Override
     public boolean contains(RenderTask task) {
-        if (this.equals(task)) return true;
+        if (this.equals(task))
+            return true;
 
         if (task instanceof CombinedRenderTask<?> combinedTask) {
             for (RenderTask subTask : combinedTask.tasks) {
-                if (!this.contains(subTask)) return false;
+                if (!this.contains(subTask))
+                    return false;
             }
             return true;
         }
 
         for (RenderTask subTask : this.tasks) {
-            if (subTask.contains(task)) return true;
+            if (subTask.contains(task))
+                return true;
         }
 
         return false;
@@ -102,7 +115,8 @@ public class CombinedRenderTask<T extends RenderTask> implements RenderTask {
 
     @Override
     public Optional<String> getDetail() {
-        if (this.currentTaskIndex >= this.tasks.size()) return Optional.empty();
+        if (this.currentTaskIndex >= this.tasks.size())
+            return Optional.empty();
         return Optional.ofNullable(this.tasks.get(this.currentTaskIndex).getDescription());
     }
 
