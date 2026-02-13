@@ -38,6 +38,7 @@ import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Face;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
+import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.util.math.MatrixM4f;
 import de.bluecolored.bluemap.core.util.math.VectorM2f;
@@ -56,7 +57,7 @@ import java.util.function.Function;
 public class ResourceModelRenderer implements EntityRenderer {
     private static final float SCALE = 1f / 16f;
 
-    @Getter private final Function<ResourcePath<Model>, Model> modelProvider;
+    @Getter private final Function<Key, Model> modelProvider;
     @Getter private final TextureGallery textureGallery;
     @Getter private final RenderSettings renderSettings;
 
