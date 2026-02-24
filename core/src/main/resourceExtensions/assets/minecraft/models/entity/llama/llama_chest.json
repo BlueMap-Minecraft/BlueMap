@@ -1,0 +1,46 @@
+{
+	"format_version": "1.21.6",
+	"credit": "Model by Miraculixx",
+	"texture_size": [128, 64],
+	"textures": {
+		"0": "entity/llama/brown"
+	},
+	"elements": [
+		{
+			"name": "chest_left",
+			"from": [-8.5, 12, -2],
+			"to": [-5.5, 20, 6],
+			"rotation": {"angle": 0, "axis": "y", "origin": [2, -1, -5]},
+			"faces": {
+				"north": {"uv": [7, 11, 7.375, 13], "texture": "#0"},
+				"east": {"uv": [5.625, 11, 6.625, 13], "texture": "#0"},
+				"south": {"uv": [5.625, 11, 6, 13], "texture": "#0"},
+				"west": {"uv": [7.375, 11, 8.375, 13], "texture": "#0"},
+				"up": {"uv": [7, 11, 6, 10.25], "rotation": 90, "texture": "#0"},
+				"down": {"uv": [7, 11, 8, 10.25], "rotation": 90, "texture": "#0"}
+			}
+		},
+		{
+			"name": "chest_right",
+			"from": [5.5, 12, -2],
+			"to": [8.5, 20, 6],
+			"rotation": {"angle": 0, "axis": "y", "origin": [2, -1, -5]},
+			"faces": {
+				"north": {"uv": [5.625, 7.75, 6, 9.75], "texture": "#0"},
+				"east": {"uv": [6, 7.75, 7, 9.75], "texture": "#0"},
+				"south": {"uv": [8, 7.75, 8.375, 9.75], "texture": "#0"},
+				"west": {"uv": [7, 7.75, 8, 9.75], "texture": "#0"},
+				"up": {"uv": [7, 7.75, 6, 7], "rotation": 90, "texture": "#0"},
+				"down": {"uv": [7, 7.75, 8, 7], "rotation": 90, "texture": "#0"}
+			}
+		}
+	],
+	"groups": [
+		{
+			"name": "chest",
+			"origin": [8, 8, 8],
+			"color": 0,
+			"children": [0, 1]
+		}
+	]
+}
