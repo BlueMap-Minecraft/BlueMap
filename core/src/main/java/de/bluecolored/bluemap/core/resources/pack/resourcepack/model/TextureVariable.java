@@ -110,7 +110,7 @@ public class TextureVariable {
     public void optimize(ResourcePool<Texture> texturePool) {
         synchronized (TextureVariable.class) {
             if (texturePath != null) {
-                texturePath = texturePool.getPath(texturePath);
+                texturePath.getResource(texturePool::get);
             }
         }
     }

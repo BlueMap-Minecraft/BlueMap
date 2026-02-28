@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.core.resources.pack.resourcepack.atlas;
 
-import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
@@ -83,7 +82,7 @@ public class DirectorySource extends Source {
 
     @Override
     @SneakyThrows
-    protected @Nullable Texture loadTexture(ResourcePath<Texture> key, Path file) {
+    protected @Nullable Texture loadTexture(Key key, Path file) {
         return super.loadTexture(key, file);
     }
 
