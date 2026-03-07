@@ -27,17 +27,22 @@ package de.bluecolored.bluemap.core.util;
 import de.bluecolored.bluemap.core.util.math.Color;
 import org.jetbrains.annotations.Nullable;
 
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 
 public class BufferedImageUtil {
 
     public static boolean halfTransparent(BufferedImage image){
+        if (image.getTransparency() == Transparency.OPAQUE || image.getTransparency() == Transparency.BITMASK)
+            return false;
+
         Color color = new Color();
         float[] buffer = null;
+        boolean useWorkaround = shouldUseWorkaround(image);
         for (int x = 0; x < image.getWidth(); x++){
             for (int y = 0; y < image.getHeight(); y++){
-                buffer = readPixel(image, x, y, color, buffer);
+                buffer = readPixel(image, x, y, color, buffer, useWorkaround);
                 if (color.a > 0f && color.a < 1f) return true;
             }
         }
@@ -49,9 +54,10 @@ public class BufferedImageUtil {
         Color color = new Color();
         float[] buffer = null;
         int count = 0;
+        boolean useWorkaround = shouldUseWorkaround(image);
         for (int x = 0; x < image.getWidth(); x++) {
             for (int y = 0; y < image.getHeight(); y++) {
-                buffer = readPixel(image, x, y, color, buffer);
+                buffer = readPixel(image, x, y, color, buffer, useWorkaround);
 
                 count++;
                 average.add(color.premultiplied());
@@ -62,15 +68,15 @@ public class BufferedImageUtil {
     }
 
     public static Color readPixel(BufferedImage image, int x, int y, @Nullable Color target) {
-        readPixel(image, x, y, target, null);
+        readPixel(image, x, y, target, null, shouldUseWorkaround(image));
         return target;
     }
 
-    private static float[] readPixel(BufferedImage image, int x, int y, @Nullable Color target, float @Nullable [] buffer) {
+    private static float[] readPixel(BufferedImage image, int x, int y, @Nullable Color target, float @Nullable [] buffer, boolean useWorkaround) {
         if (target == null) target = new Color();
 
         // workaround for java bug: 5051418
-        if (image.getType() == BufferedImage.TYPE_BYTE_GRAY ||  image.getType() == BufferedImage.TYPE_CUSTOM) {
+        if (useWorkaround) {
             buffer = readPixelDirect(image, x, y, target, buffer);
         } else {
             readPixelDefault(image, x, y, target);
@@ -83,6 +89,21 @@ public class BufferedImageUtil {
         target.set(image.getRGB(x, y), image.getColorModel().isAlphaPremultiplied());
     }
 
+    /**
+     * workaround for java bug: 5051418
+     */
+    private static boolean shouldUseWorkaround(BufferedImage image) {
+        if (image.getType() != BufferedImage.TYPE_BYTE_GRAY && image.getType() != BufferedImage.TYPE_CUSTOM) return false;
+        int[] componentSize = image.getColorModel().getComponentSize();
+        for (int i = 0; i < componentSize.length; i++) {
+            if (componentSize[i] != 8) return false;
+        }
+        return true;
+    }
+
+    /**
+     * workaround for java bug: 5051418
+     */
     private static float[] readPixelDirect(RenderedImage image, int x, int y, Color target, float @Nullable [] buffer) {
         buffer = image.getData().getPixel(x, y, buffer);
 
