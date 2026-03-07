@@ -126,7 +126,11 @@ public class FabricMod implements ModInitializer, Server {
         });
 
         ServerTickEvents.END_SERVER_TICK.register((MinecraftServer server) -> {
-            if (server == this.serverInstance) this.updateSomePlayers();
+            try {
+                if (server == this.serverInstance) this.updateSomePlayers();
+            } catch (RuntimeException e) {
+                Logger.global.logError("Exception trying to update players", e);
+            }
         });
 
         this.eventForwarder.init();
@@ -228,18 +232,20 @@ public class FabricMod implements ModInitializer, Server {
      * Only call this method on the server-thread.
      */
     private void updateSomePlayers() {
-        int onlinePlayerCount = onlinePlayerList.size();
-        if (onlinePlayerCount == 0) return;
+        synchronized (onlinePlayerList) {
+            int onlinePlayerCount = onlinePlayerList.size();
+            if (onlinePlayerCount == 0) return;
 
-        int playersToBeUpdated = onlinePlayerCount / 20; //with 20 tps, each player is updated once a second
-        if (playersToBeUpdated == 0) playersToBeUpdated = 1;
+            int playersToBeUpdated = onlinePlayerCount / 20; //with 20 tps, each player is updated once a second
+            if (playersToBeUpdated == 0) playersToBeUpdated = 1;
 
-        for (int i = 0; i < playersToBeUpdated; i++) {
-            playerUpdateIndex++;
-            if (playerUpdateIndex >= 20 && playerUpdateIndex >= onlinePlayerCount) playerUpdateIndex = 0;
+            for (int i = 0; i < playersToBeUpdated; i++) {
+                playerUpdateIndex++;
+                if (playerUpdateIndex >= 20 && playerUpdateIndex >= onlinePlayerCount) playerUpdateIndex = 0;
 
-            if (playerUpdateIndex < onlinePlayerCount) {
-                onlinePlayerList.get(playerUpdateIndex).update();
+                if (playerUpdateIndex < onlinePlayerCount) {
+                    onlinePlayerList.get(playerUpdateIndex).update();
+                }
             }
         }
     }
