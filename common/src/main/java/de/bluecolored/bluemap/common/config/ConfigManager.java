@@ -32,6 +32,7 @@ import de.bluecolored.bluemap.common.config.typeserializer.*;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.map.mask.CombinedMask;
 import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluemap.core.world.WorldLoaderType;
 import de.bluecolored.bluenbt.TypeToken;
 import org.spongepowered.configurate.ConfigurateException;
 import org.spongepowered.configurate.ConfigurationNode;
@@ -165,6 +166,7 @@ public class ConfigManager {
                     b.register(Vector2d.class, new Vector2dTypeSerializer());
                     b.register(Key.class, new KeyTypeSerializer());
                     b.register(CombinedMask.class, new CombinedMaskSerializer());
+                    b.register(WorldLoaderType.class, new RegistryTypeSerializer<>(WorldLoaderType.REGISTRY, Key.BLUEMAP_NAMESPACE, WorldLoaderType.ANVIL));
 
                     // ignore missing @ConfigSerializable annotation for subtypes of the following types
                     b.register(type -> TypeToken.of(type).is( StorageConfig.class ), new ObjectMapperSerializer());

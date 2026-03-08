@@ -22,33 +22,42 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.map.hires;
+package de.bluecolored.bluemap.common.config.typeserializer;
 
-import de.bluecolored.bluemap.core.map.hires.block.BlockRenderPass;
-import de.bluecolored.bluemap.core.map.hires.entity.EntityRenderPass;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.Keyed;
 import de.bluecolored.bluemap.core.util.Registry;
-import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.Delegate;
+import org.jetbrains.annotations.Nullable;
+import org.spongepowered.configurate.ConfigurationNode;
+import org.spongepowered.configurate.serialize.SerializationException;
+import org.spongepowered.configurate.serialize.TypeSerializer;
 
-public interface RenderPassType extends Keyed, RenderPassFactory {
+import java.lang.reflect.Type;
 
-    RenderPassType BLOCKS = new Impl(Key.bluemap("blocks"), BlockRenderPass::new);
-    RenderPassType ENTITIES = new Impl(Key.bluemap("entities"), EntityRenderPass::new);
+@RequiredArgsConstructor
+public class RegistryTypeSerializer<T extends Keyed> implements TypeSerializer<T> {
 
-    Registry<RenderPassType> REGISTRY = new Registry<>(
-            BLOCKS,
-            ENTITIES
-    );
+    private final Registry<T> registry;
+    private final String defaultNamespace;
+    private final T defaultValue;
 
-    @RequiredArgsConstructor
-    class Impl implements RenderPassType {
+    @Override
+    public T deserialize(Type type, ConfigurationNode node) throws SerializationException {
+        String keyString = node.getString();
+        if (keyString == null) return defaultValue;
 
-        @Getter private final Key key;
-        @Delegate private final RenderPassFactory factory;
+        Key key = Key.parse(keyString, defaultNamespace);
+        T value = registry.get(key);
+        if (value != null) return value;
 
+        throw new SerializationException("Unknown key '" + keyString + "' for type '" + type.getTypeName() + "'");
+    }
+
+    @Override
+    public void serialize(Type type, @Nullable T obj, ConfigurationNode node) throws SerializationException {
+        if (obj == null) return;
+        node.set(obj.getKey().getFormatted());
     }
 
 }

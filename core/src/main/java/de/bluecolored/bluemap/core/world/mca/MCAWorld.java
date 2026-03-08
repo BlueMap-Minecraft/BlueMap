@@ -35,8 +35,10 @@ import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.WatchService;
 import de.bluecolored.bluemap.core.world.*;
 import de.bluecolored.bluemap.core.world.mca.chunk.MCAChunkLoader;
+import de.bluecolored.bluemap.core.world.mca.data.DimensionSettings;
 import de.bluecolored.bluemap.core.world.mca.data.DimensionTypeDeserializer;
 import de.bluecolored.bluemap.core.world.mca.data.LevelData;
+import de.bluecolored.bluemap.core.world.mca.data.WorldGenSettings;
 import de.bluecolored.bluemap.core.world.mca.entity.chunk.MCAEntityChunk;
 import de.bluecolored.bluemap.core.world.mca.entity.chunk.MCAEntityChunkLoader;
 import de.bluecolored.bluenbt.BlueNBT;
@@ -60,7 +62,6 @@ public class MCAWorld implements World {
     private final Path worldFolder;
     private final Key dimension;
     private final DataPack dataPack;
-    private final LevelData levelData;
 
     private final DimensionType dimensionType;
     private final Path dimensionFolder;
@@ -68,36 +69,18 @@ public class MCAWorld implements World {
     private final ChunkGrid<Chunk> blockChunkGrid;
     private final ChunkGrid<MCAEntityChunk> entityChunkGrid;
 
-    private MCAWorld(Path worldFolder, Key dimension, DataPack dataPack, LevelData levelData) {
+    private MCAWorld(Path worldFolder, Key dimension, DimensionType dimensionType, Path dimensionFolder, DataPack dataPack) {
         this.id = World.id(worldFolder, dimension);
         this.worldFolder = worldFolder;
         this.dimension = dimension;
+        this.dimensionType = dimensionType;
+        this.dimensionFolder = dimensionFolder;
         this.dataPack = dataPack;
-        this.levelData = levelData;
 
-        LevelData.Dimension dimensionData = levelData.getData().getWorldGenSettings().getDimensions().get(dimension.getFormatted());
-        if (dimensionData == null) {
-            if (DataPack.DIMENSION_OVERWORLD.equals(dimension)) dimensionData = new LevelData.Dimension(DimensionType.OVERWORLD);
-            else if (DataPack.DIMENSION_THE_NETHER.equals(dimension)) dimensionData = new LevelData.Dimension(DimensionType.NETHER);
-            else if (DataPack.DIMENSION_THE_END.equals(dimension)) dimensionData = new LevelData.Dimension(DimensionType.END);
-            else {
-                Logger.global.logWarning("The level-data does not contain any dimension with the id '" + dimension +
-                        "', using fallback.");
-                dimensionData = new LevelData.Dimension();
-            }
-        }
-
-        this.dimensionType = dimensionData.getType();
-        this.dimensionFolder = resolveDimensionFolder(worldFolder, dimension);
 
         this.blockChunkGrid = new ChunkGrid<>(new MCAChunkLoader(this), dimensionFolder.resolve("region"));
         this.entityChunkGrid = new ChunkGrid<>(new MCAEntityChunkLoader(), dimensionFolder.resolve("entities"));
 
-    }
-
-    @Override
-    public String getName() {
-        return levelData.getData().getLevelName();
     }
 
     @Override
@@ -180,30 +163,55 @@ public class MCAWorld implements World {
     }
 
     public static MCAWorld load(Path worldFolder, Key dimension, DataPack dataPack) throws IOException, InterruptedException {
-
-        // load level.dat
-        Path levelFile = worldFolder.resolve("level.dat");
-        BlueNBT blueNBT = createBlueNBTForDataPack(dataPack);
-        LevelData levelData;
-        try (InputStream levelFileIn = Compression.GZIP.decompress(Files.newInputStream(levelFile))) {
-            levelData = blueNBT.read(levelFileIn, LevelData.class);
-        }
-
-        // create world
-        return new MCAWorld(worldFolder, dimension, dataPack, levelData);
+        DimensionType dimensionType = loadDimensionType(worldFolder, dimension, dataPack);
+        Path dimensionFolder = resolveDimensionFolder(worldFolder, dimension);
+        return new MCAWorld(worldFolder, dimension, dimensionType, dimensionFolder, dataPack);
     }
 
     public static Path resolveDimensionFolder(Path worldFolder, Key dimension) {
+        Path dimensionFolder = worldFolder.resolve("dimensions").resolve(dimension.getNamespace()).resolve(dimension.getValue());
+        if (Files.isDirectory(dimensionFolder)) return dimensionFolder;
+
         if (DataPack.DIMENSION_OVERWORLD.equals(dimension)) return worldFolder;
         if (DataPack.DIMENSION_THE_NETHER.equals(dimension)) return worldFolder.resolve("DIM-1");
         if (DataPack.DIMENSION_THE_END.equals(dimension)) return worldFolder.resolve("DIM1");
-        return worldFolder.resolve("dimensions").resolve(dimension.getNamespace()).resolve(dimension.getValue());
+
+        // might exist later
+        return dimensionFolder;
+    }
+
+    public static DimensionType loadDimensionType(Path worldFolder, Key dimension, DataPack dataPack) throws IOException {
+        BlueNBT blueNBT = createBlueNBTForDataPack(dataPack);
+        WorldGenSettings worldGenSettings = load(WorldGenSettings.class, worldFolder.resolve("data/minecraft/world_gen_settings.dat"), blueNBT);
+        DimensionSettings dimensionSettings = worldGenSettings.getData().getDimensions().get(dimension.getFormatted());
+
+        if (dimensionSettings == null) {
+            // try loading from the level.dat instead (old world format)
+            LevelData levelData = load(LevelData.class, worldFolder.resolve("level.dat"), blueNBT);
+            dimensionSettings = levelData.getData().getWorldGenSettings().getDimensions().get(dimension.getFormatted());
+        }
+
+        if (dimensionSettings != null) return dimensionSettings.getType();
+
+        if (DataPack.DIMENSION_OVERWORLD.equals(dimension)) return DimensionType.OVERWORLD;
+        else if (DataPack.DIMENSION_THE_NETHER.equals(dimension)) return DimensionType.NETHER;
+        else if (DataPack.DIMENSION_THE_END.equals(dimension)) return DimensionType.END;
+
+        Logger.global.logWarning("The world-data does not contain any info about a dimension with the id '" + dimension +
+                "', using fallback.");
+        return DimensionType.OVERWORLD;
     }
 
     private static BlueNBT createBlueNBTForDataPack(DataPack dataPack) {
         BlueNBT blueNBT = MCAUtil.addCommonNbtSettings(new BlueNBT());
         blueNBT.register(TypeToken.of(DimensionType.class), new DimensionTypeDeserializer(blueNBT, dataPack));
         return blueNBT;
+    }
+
+    private static <T> T load(Class<T> type, Path path, BlueNBT blueNBT) throws IOException {
+        try (InputStream fileIn = Compression.GZIP.decompress(Files.newInputStream(path))) {
+            return blueNBT.read(fileIn, type);
+        }
     }
 
 }

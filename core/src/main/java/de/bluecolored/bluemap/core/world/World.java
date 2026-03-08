@@ -47,8 +47,6 @@ public interface World {
 
     String getId();
 
-    String getName();
-
     DimensionType getDimensionType();
 
     Grid getChunkGrid();
@@ -110,16 +108,16 @@ public interface World {
     void iterateEntities(int minX, int minZ, int maxX, int maxZ, Consumer<Entity> entityConsumer);
 
     /**
-     * Generates a unique world-id based on a world-folder and a dimension
+     * Generates a unique world-id based on a path and a dimension
      */
-    static String id(Path worldFolder, Key dimension) {
-        worldFolder = worldFolder.toAbsolutePath().normalize();
+    static String id(Path path, Key dimension) {
+        path = path.toAbsolutePath().normalize();
 
         Path workingDir = Path.of("").toAbsolutePath().normalize();
-        if (worldFolder.startsWith(workingDir))
-            worldFolder = workingDir.relativize(worldFolder);
+        if (path.startsWith(workingDir))
+            path = workingDir.relativize(path);
 
-        return worldFolder + "#" + dimension.getFormatted();
+        return path + "#" + dimension.getFormatted();
     }
 
 }

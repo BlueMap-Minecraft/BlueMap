@@ -24,15 +24,13 @@
  */
 package de.bluecolored.bluemap.core.map.hires.block;
 
-import de.bluecolored.bluemap.core.map.TextureGallery;
-import de.bluecolored.bluemap.core.map.hires.RenderSettings;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.Keyed;
 import de.bluecolored.bluemap.core.util.Registry;
 import de.bluecolored.bluemap.core.world.BlockState;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.Delegate;
 
 public interface BlockRendererType extends Keyed, BlockRendererFactory {
 
@@ -68,12 +66,7 @@ public interface BlockRendererType extends Keyed, BlockRendererFactory {
     class Impl implements BlockRendererType {
 
         @Getter private final Key key;
-        private final BlockRendererFactory rendererFactory;
-
-        @Override
-        public BlockRenderer create(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
-            return rendererFactory.create(resourcePack, textureGallery, renderSettings);
-        }
+        @Delegate private final BlockRendererFactory rendererFactory;
 
     }
 

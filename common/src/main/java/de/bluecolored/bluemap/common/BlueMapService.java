@@ -39,6 +39,8 @@ import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.World;
+import de.bluecolored.bluemap.core.world.WorldLoader;
+import de.bluecolored.bluemap.core.world.WorldLoaderType;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 import org.jetbrains.annotations.Nullable;
 
@@ -206,15 +208,16 @@ public class BlueMapService implements Closeable {
         String worldId = World.id(worldFolder, dimension);
         World world = worlds.get(worldId);
         if (world == null) {
+            WorldLoader worldLoader = mapConfig.getLoader();
+
             try {
                 Logger.global.logDebug("Loading world " + worldId + " ...");
-                world = MCAWorld.load(worldFolder, dimension, loadDataPack(worldFolder));
+                List<Path> worldPacks = worldLoader.worldDataPacks(worldFolder, dimension);
+                DataPack dataPack = loadDataPack(worldPacks);
+                world = MCAWorld.load(worldFolder, dimension, dataPack);
                 worlds.put(worldId, world);
             } catch (IOException ex) {
-                throw new ConfigurationException(
-                        "Failed to load world " + worldId + "!\n" +
-                        "Is the level.dat of that world present and not corrupted?",
-                        ex);
+                throw new ConfigurationException("Failed to load world " + worldId + "!", ex);
             }
         }
 
@@ -310,22 +313,11 @@ public class BlueMapService implements Closeable {
         return this.resourcePack;
     }
 
-    public synchronized DataPack loadDataPack(Path worldFolder) throws ConfigurationException, InterruptedException {
+    public synchronized DataPack loadDataPack(List<Path> worldPacks) throws ConfigurationException, InterruptedException {
         MinecraftVersion minecraftVersion = getOrLoadMinecraftVersion();
         Path vanillaDataPack = minecraftVersion.getDataPack();
 
         if (Thread.interrupted()) throw new InterruptedException();
-
-        // also load world datapacks
-        Iterable<Path> worldPacks = List.of();
-        Path worldPacksFolder = worldFolder.resolve("datapacks");
-        if (Files.isDirectory(worldPacksFolder)) {
-            try (Stream<Path> worldPacksStream = Files.list(worldPacksFolder)) {
-                worldPacks = worldPacksStream.toList();
-            } catch (IOException e) {
-                throw new ConfigurationException("Failed to access the worlds datapacks folder.", e);
-            }
-        }
 
         Deque<Path> packRoots = getPackRoots(worldPacks);
         packRoots.addLast(vanillaDataPack);

@@ -79,14 +79,7 @@ public class LevelData {
 
     @Getter
     public static class WGSettings {
-        private Map<String, Dimension> dimensions = new HashMap<>();
-    }
-
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class Dimension {
-        private DimensionType type = DimensionType.OVERWORLD;
+        private Map<String, DimensionSettings> dimensions = new HashMap<>();
     }
 
     @Getter
