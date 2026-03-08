@@ -45,6 +45,7 @@ import de.bluecolored.bluenbt.BlueNBT;
 import de.bluecolored.bluenbt.TypeToken;
 import lombok.Getter;
 import lombok.ToString;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -182,13 +183,19 @@ public class MCAWorld implements World {
 
     public static DimensionType loadDimensionType(Path worldFolder, Key dimension, DataPack dataPack) throws IOException {
         BlueNBT blueNBT = createBlueNBTForDataPack(dataPack);
+        DimensionSettings dimensionSettings = null;
+
         WorldGenSettings worldGenSettings = load(WorldGenSettings.class, worldFolder.resolve("data/minecraft/world_gen_settings.dat"), blueNBT);
-        DimensionSettings dimensionSettings = worldGenSettings.getData().getDimensions().get(dimension.getFormatted());
+        if (worldGenSettings != null) {
+            dimensionSettings = worldGenSettings.getData().getDimensions().get(dimension.getFormatted());
+        }
 
         if (dimensionSettings == null) {
             // try loading from the level.dat instead (old world format)
             LevelData levelData = load(LevelData.class, worldFolder.resolve("level.dat"), blueNBT);
-            dimensionSettings = levelData.getData().getWorldGenSettings().getDimensions().get(dimension.getFormatted());
+            if (levelData != null) {
+                dimensionSettings = levelData.getData().getWorldGenSettings().getDimensions().get(dimension.getFormatted());
+            }
         }
 
         if (dimensionSettings != null) return dimensionSettings.getType();
@@ -208,7 +215,8 @@ public class MCAWorld implements World {
         return blueNBT;
     }
 
-    private static <T> T load(Class<T> type, Path path, BlueNBT blueNBT) throws IOException {
+    private static <T> @Nullable T load(Class<T> type, Path path, BlueNBT blueNBT) throws IOException {
+        if (!Files.exists(path)) return null;
         try (InputStream fileIn = Compression.GZIP.decompress(Files.newInputStream(path))) {
             return blueNBT.read(fileIn, type);
         }
