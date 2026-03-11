@@ -27,8 +27,7 @@ package de.bluecolored.bluemap.fabric;
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-
+import net.minecraft.server.level.ServerPlayer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.UUID;
@@ -61,17 +60,17 @@ public class FabricEventForwarder {
         this.eventListeners.clear();
     }
 
-    public synchronized void onPlayerJoin(MinecraftServer server, ServerPlayerEntity player) {
+    public synchronized void onPlayerJoin(MinecraftServer server, ServerPlayer player) {
         if (this.mod.getServer() != server) return;
 
-        UUID uuid = player.getUuid();
+        UUID uuid = player.getUUID();
         for (ServerEventListener listener : eventListeners) listener.onPlayerJoin(uuid);
     }
 
-    public synchronized void onPlayerLeave(MinecraftServer server, ServerPlayerEntity player) {
+    public synchronized void onPlayerLeave(MinecraftServer server, ServerPlayer player) {
         if (this.mod.getServer() != server) return;
 
-        UUID uuid = player.getUuid();
+        UUID uuid = player.getUUID();
         for (ServerEventListener listener : eventListeners) listener.onPlayerLeave(uuid);
     }
 

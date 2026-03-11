@@ -29,26 +29,25 @@ import de.bluecolored.bluemap.common.plugin.text.Text;
 import de.bluecolored.bluemap.common.serverinterface.Gamemode;
 import de.bluecolored.bluemap.common.serverinterface.Player;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
-import net.minecraft.entity.effect.StatusEffectInstance;
-import net.minecraft.entity.effect.StatusEffects;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.GameMode;
-import net.minecraft.world.LightType;
-
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.LightLayer;
+import net.minecraft.world.phys.Vec3;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.UUID;
 
 public class FabricPlayer extends Player {
 
-    private static final Map<GameMode, Gamemode> GAMEMODE_MAP = new EnumMap<>(GameMode.class);
+    private static final Map<GameType, Gamemode> GAMEMODE_MAP = new EnumMap<>(GameType.class);
     static {
-        GAMEMODE_MAP.put(GameMode.ADVENTURE, Gamemode.ADVENTURE);
-        GAMEMODE_MAP.put(GameMode.SURVIVAL, Gamemode.SURVIVAL);
-        GAMEMODE_MAP.put(GameMode.CREATIVE, Gamemode.CREATIVE);
-        GAMEMODE_MAP.put(GameMode.SPECTATOR, Gamemode.SPECTATOR);
+        GAMEMODE_MAP.put(GameType.ADVENTURE, Gamemode.ADVENTURE);
+        GAMEMODE_MAP.put(GameType.SURVIVAL, Gamemode.SURVIVAL);
+        GAMEMODE_MAP.put(GameType.CREATIVE, Gamemode.CREATIVE);
+        GAMEMODE_MAP.put(GameType.SPECTATOR, Gamemode.SPECTATOR);
     }
 
     private final UUID uuid;
@@ -64,8 +63,8 @@ public class FabricPlayer extends Player {
 
     private final FabricMod mod;
 
-    public FabricPlayer(ServerPlayerEntity player, FabricMod mod) {
-        this.uuid = player.getUuid();
+    public FabricPlayer(ServerPlayer player, FabricMod mod) {
+        this.uuid = player.getUUID();
         this.mod = mod;
 
         update(player);
@@ -128,30 +127,30 @@ public class FabricPlayer extends Player {
         MinecraftServer server = mod.getServer();
         if (server == null) return;
 
-        ServerPlayerEntity player = server.getPlayerManager().getPlayer(uuid);
+        ServerPlayer player = server.getPlayerList().getPlayer(uuid);
         if (player == null) return;
 
         update(player);
     }
 
-    private void update(ServerPlayerEntity player) {
-        this.gamemode = GAMEMODE_MAP.get(player.interactionManager.getGameMode());
+    private void update(ServerPlayer player) {
+        this.gamemode = GAMEMODE_MAP.get(player.gameMode.getGameModeForPlayer());
         if (this.gamemode == null) this.gamemode = Gamemode.SURVIVAL;
 
-        StatusEffectInstance invis = player.getStatusEffect(StatusEffects.INVISIBILITY);
+        MobEffectInstance invis = player.getEffect(MobEffects.INVISIBILITY);
         this.invisible = invis != null && invis.getDuration() > 0;
 
         this.name = Text.of(player.getName().getString());
 
-        Vec3d pos = player.getEntityPos();
-        this.position = new Vector3d(pos.getX(), pos.getY(), pos.getZ());
-        this.rotation = new Vector3d(player.getPitch(), player.getHeadYaw(), 0);
-        this.sneaking = player.isSneaking();
+        Vec3 pos = player.position();
+        this.position = new Vector3d(pos.x(), pos.y(), pos.z());
+        this.rotation = new Vector3d(player.getXRot(), player.getYHeadRot(), 0);
+        this.sneaking = player.isShiftKeyDown();
 
-        net.minecraft.server.world.ServerWorld world = player.getEntityWorld();
+        net.minecraft.server.level.ServerLevel world = player.level();
 
-        this.skyLight = world.getLightingProvider().get(LightType.SKY).getLightLevel(player.getBlockPos());
-        this.blockLight = world.getLightingProvider().get(LightType.BLOCK).getLightLevel(player.getBlockPos());
+        this.skyLight = world.getLightEngine().getLayerListener(LightLayer.SKY).getLightValue(player.blockPosition());
+        this.blockLight = world.getLightEngine().getLayerListener(LightLayer.BLOCK).getLightValue(player.blockPosition());
 
         this.world = mod.getServerWorld(world);
     }
