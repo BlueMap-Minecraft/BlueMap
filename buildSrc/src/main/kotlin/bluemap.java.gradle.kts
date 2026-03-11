@@ -5,6 +5,22 @@ plugins {
     id ( "com.diffplug.spotless" )
 }
 
+var libs = project.extensions.getByType(VersionCatalogsExtension::class).named("libs")
+
+dependencies {
+    compileOnly ( libs.findLibrary("jetbrains-annotations").get() )
+    compileOnly ( libs.findLibrary("lombok").get() )
+
+    annotationProcessor ( libs.findLibrary("lombok").get() )
+
+    testImplementation( platform(libs.findLibrary("junit-bom").get()) )
+    testImplementation( libs.findBundle("junit-jupiter").get() )
+    testAnnotationProcessor ( libs.findLibrary("lombok").get() )
+
+    testRuntimeOnly( libs.findBundle("junit-runtime").get() )
+    testRuntimeOnly ( libs.findLibrary("lombok").get() )
+}
+
 tasks.withType(JavaCompile::class).configureEach {
     options.encoding = "utf-8"
 }
