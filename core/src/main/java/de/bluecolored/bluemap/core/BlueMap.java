@@ -28,6 +28,7 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 
+import javax.imageio.ImageIO;
 import java.io.IOException;
 import java.util.concurrent.*;
 
@@ -53,6 +54,9 @@ public class BlueMap {
 
         VERSION = version;
         GIT_HASH = gitHash;
+
+        // global Java config
+        ImageIO.setUseCache(false);
     }
 
     public static final ForkJoinPool THREAD_POOL = new ForkJoinPool(
