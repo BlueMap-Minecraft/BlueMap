@@ -34,7 +34,13 @@ import static de.bluecolored.bluemap.core.map.renderstate.TileActionResolver.Act
 
 public interface TileState extends Keyed, TileActionResolver {
 
-    TileState UNKNOWN = new Impl( Key.bluemap("unknown"));
+    TileState UNKNOWN = new Impl( Key.bluemap("unknown"), ((chunks, bounds) ->
+        switch (bounds) {
+            case INSIDE -> RENDER_RENDERED;
+            case EDGE -> RENDER_RENDERED_EDGE;
+            case OUTSIDE -> DELETE_OUT_OF_BOUNDS;
+        }
+    ));
 
     TileState RENDERED = new Impl(Key.bluemap("rendered"), (changed, bounds) ->
             switch (bounds) {
