@@ -53,8 +53,11 @@ import java.util.Optional;
 @Getter
 public class SQLiteConfig extends StorageConfig {
 
+    // @TODO: There must be some better way to do this..
+    private String fileLocation = "bluemap/map.db";
+
     @DebugDump(exclude = true)
-    private String connectionUrl = "jdbc:sqlite:file:" + Path.of("bluemap", "web") + "/map.db";
+    private String connectionUrl = "jdbc:sqlite:file:" + fileLocation;
 
     @DebugDump(exclude = true)
     private Map<String, String> connectionProperties = new HashMap<>();
