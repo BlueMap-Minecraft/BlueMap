@@ -52,8 +52,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import javax.management.RuntimeErrorException;
-
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
 @ConfigSerializable
 @Getter
@@ -130,27 +128,9 @@ public class SQLiteConfig extends StorageConfig {
         Driver driver = createDriver();
         Database database;
         if (driver != null) {
-            database = new Database(getConnectionUrl(), getConnectionProperties(), getMaxConnections(), driver);
+            database = new Database(getConnectionUrl(), getConnectionProperties(), getMaxConnections(), driver, pragmaCommands);
         } else {
-            database = new Database(getConnectionUrl(), getConnectionProperties(), getMaxConnections());
-        }
-
-        // @TODO: Move this, or maybe just fix the exceptions?
-        // @TODO: This doesn't work because this is in a transaction, which is wrong.
-        try {
-            database.run(connection -> {
-                try (Statement stmt = connection.createStatement()) {
-                    connection.setAutoCommit(true); // @TODO: This is probably not the right solution.
-                    for (String pragmaCommand : pragmaCommands) {
-                        System.out.println("autocommit=" + connection.getAutoCommit());
-                        stmt.execute("PRAGMA " + pragmaCommand.trim());
-                    }
-                } catch (SQLException e) {
-                    throw new RuntimeException("SQL exception while running PRAGMAs!", e);
-                }
-            });
-        } catch(IOException e) {
-            throw new RuntimeException("IOException while running PRAGMAs!", e);
+            database = new Database(getConnectionUrl(), getConnectionProperties(), getMaxConnections(), pragmaCommands);
         }
         CommandSet commandSet = getDialect().createCommandSet(database);
         return new SQLStorage(commandSet, getCompression());
