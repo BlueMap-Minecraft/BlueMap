@@ -35,17 +35,13 @@ import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
-import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.Connection;
 import java.sql.Driver;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -127,6 +123,8 @@ public class SQLiteConfig extends StorageConfig {
     public SQLStorage createStorage() throws ConfigurationException {
         Driver driver = createDriver();
         Database database;
+        // @TODO: Maybe make another variable called fixedPragmaCommands or something?
+        pragmaCommands.replaceAll(s -> "PRAGMA " + s); 
         if (driver != null) {
             database = new Database(getConnectionUrl(), getConnectionProperties(), getMaxConnections(), driver, pragmaCommands);
         } else {
