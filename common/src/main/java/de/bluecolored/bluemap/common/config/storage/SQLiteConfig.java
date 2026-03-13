@@ -1,0 +1,204 @@
+/*
+ * This file is part of BlueMap, licensed under the MIT License (MIT).
+ *
+ * Copyright (c) Blue (Lukas Rieger) <https://bluecolored.de>
+ * Copyright (c) contributors
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+package de.bluecolored.bluemap.common.config.storage;
+
+import de.bluecolored.bluemap.common.config.ConfigurationException;
+import de.bluecolored.bluemap.common.debug.DebugDump;
+import de.bluecolored.bluemap.core.storage.compression.Compression;
+import de.bluecolored.bluemap.core.storage.sql.Database;
+import de.bluecolored.bluemap.core.storage.sql.SQLStorage;
+import de.bluecolored.bluemap.core.storage.sql.commandset.CommandSet;
+import lombok.AccessLevel;
+import lombok.Getter;
+import org.jetbrains.annotations.Nullable;
+import org.spongepowered.configurate.objectmapping.ConfigSerializable;
+
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.sql.Connection;
+import java.sql.Driver;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import javax.management.RuntimeErrorException;
+
+@SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
+@ConfigSerializable
+@Getter
+public class SQLiteConfig extends StorageConfig {
+
+    @DebugDump(exclude = true)
+    private String connectionUrl = "jdbc:sqlite:file:" + Path.of("bluemap", "web") + "/map.db";
+
+    @DebugDump(exclude = true)
+    private Map<String, String> connectionProperties = new HashMap<>();
+
+    private String dialect = null;
+
+    private String driverJar = null;
+    private String driverClass = null;
+    private int maxConnections = 1;
+
+    private List<String> pragmaCommands = new ArrayList<>();
+
+    private String compression = Compression.GZIP.getKey().getFormatted();
+
+    @Getter(AccessLevel.NONE)
+    private transient URL driverJarURL = null;
+
+    public Optional<URL> getDriverJar() throws ConfigurationException {
+        try {
+            if (driverJar == null) return Optional.empty();
+
+            if (driverJarURL == null) {
+                driverJarURL = Paths.get(driverJar).toUri().toURL();
+            }
+
+            return Optional.of(driverJarURL);
+        } catch (MalformedURLException ex) {
+            throw new ConfigurationException("""
+            The configured driver-jar path is not formatted correctly!
+            Please check your 'driver-jar' setting in your configuration and make sure you have the correct path configured.
+            """.strip(), ex);
+        }
+    }
+
+    @SuppressWarnings("unused")
+    public Optional<String> getDriverClass() {
+        return Optional.ofNullable(driverClass);
+    }
+
+    public Compression getCompression() throws ConfigurationException {
+        return parseKey(Compression.REGISTRY, compression, "compression");
+    }
+
+    public Dialect getDialect() throws ConfigurationException {
+        String key = dialect;
+
+        // default from connection-url
+        if (key == null) {
+            for (Dialect d : Dialect.REGISTRY.values()) {
+                if (d.supports(connectionUrl)) {
+                    key = d.getKey().getFormatted();
+                    break;
+                }
+            }
+
+            if (key == null) throw new ConfigurationException("""
+                Could not find any sql-dialect that is matching the given connection-url.
+                Please check your 'connection-url' setting in your configuration and make sure it is in the correct format.
+                """.strip());
+        }
+
+        return parseKey(Dialect.REGISTRY, key, "dialect");
+    }
+
+    @Override
+    public SQLStorage createStorage() throws ConfigurationException {
+        Driver driver = createDriver();
+        Database database;
+        if (driver != null) {
+            database = new Database(getConnectionUrl(), getConnectionProperties(), getMaxConnections(), driver);
+        } else {
+            database = new Database(getConnectionUrl(), getConnectionProperties(), getMaxConnections());
+        }
+
+        // @TODO: Move this, or maybe just fix the exceptions?
+        // @TODO: This doesn't work because this is in a transaction, which is wrong.
+        try {
+            database.run(connection -> {
+                try (Statement stmt = connection.createStatement()) {
+                    connection.setAutoCommit(true); // @TODO: This is probably not the right solution.
+                    for (String pragmaCommand : pragmaCommands) {
+                        System.out.println("autocommit=" + connection.getAutoCommit());
+                        stmt.execute("PRAGMA " + pragmaCommand.trim());
+                    }
+                } catch (SQLException e) {
+                    throw new RuntimeException("SQL exception while running PRAGMAs!", e);
+                }
+            });
+        } catch(IOException e) {
+            throw new RuntimeException("IOException while running PRAGMAs!", e);
+        }
+        CommandSet commandSet = getDialect().createCommandSet(database);
+        return new SQLStorage(commandSet, getCompression());
+    }
+
+    private @Nullable Driver createDriver() throws ConfigurationException {
+        if (driverClass == null) return null;
+
+        try {
+            // load driver class
+            Class<?> driverClazz;
+            URL driverJarUrl = getDriverJar().orElse(null);
+            if (driverJarUrl != null) {
+
+                // sanity-check if file exists
+                if (!Files.exists(Path.of(driverJarUrl.toURI()))) {
+                    throw new ConfigurationException("""
+                    The configured driver-jar was not found!
+                    Please check your 'driver-jar' setting in your configuration and make sure you have the correct path configured.
+                    """.strip());
+                }
+
+                ClassLoader classLoader = new URLClassLoader(new URL[]{driverJarUrl});
+                driverClazz = Class.forName(driverClass, true, classLoader);
+            } else {
+                driverClazz = Class.forName(driverClass);
+            }
+
+            // create driver
+            return (Driver) driverClazz.getDeclaredConstructor().newInstance();
+        } catch (ClassCastException ex) {
+            throw new ConfigurationException("""
+            The configured driver-class was found but is not of the correct class-type!
+            Please check your 'driver-class' setting in your configuration and make sure you have the correct class configured.
+            """.strip(), ex);
+        } catch (ClassNotFoundException ex) {
+            throw new ConfigurationException("""
+            The configured driver-class was not found!
+            Please check your 'driver-class' setting in your configuration and make sure you have the correct class configured.
+            """.strip(), ex);
+        } catch (ConfigurationException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw new ConfigurationException("""
+            BlueMap failed to load the configured SQLite-Driver!
+            Please check your 'driver-jar' and 'driver-class' settings in your configuration.
+            """.strip(), ex);
+        }
+    }
+
+}
