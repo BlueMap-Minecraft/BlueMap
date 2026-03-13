@@ -52,6 +52,8 @@ public class Database implements Closeable {
     private final DataSource dataSource;
     private boolean isClosed = false;
 
+    // @TODO: Figure out some better way to pass initialCommands rather than this.
+
     public Database(String url, Map<String, String> properties, int maxPoolSize) {
         this(url, properties, maxPoolSize, List.of());
     }
