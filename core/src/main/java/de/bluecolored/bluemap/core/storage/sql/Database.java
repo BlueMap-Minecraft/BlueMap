@@ -140,7 +140,6 @@ public class Database implements Closeable {
                     Connection conn = connectionFactory.createConnection();
                     try (Statement stmt = conn.createStatement()) {
                         for (String initialCommand : initialCommands) {
-                            Logger.global.logDebug("autocommit=" + conn.getAutoCommit());
                             stmt.execute(initialCommand);
                         }
                     }
