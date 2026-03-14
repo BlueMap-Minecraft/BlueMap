@@ -126,12 +126,21 @@ public class SQLiteConfig extends StorageConfig {
     public SQLStorage createStorage() throws ConfigurationException {
         Driver driver = createDriver();
         Database database;
-        // @TODO: Maybe make another variable called fixedPragmaCommands or something?
-        pragmaCommands.replaceAll(s -> "PRAGMA " + s); 
+        List<String> initialCommands = List.of();
+        // @TODO: Ehh, I feel like there should be a better way of doing this
+        String pragmaPrefix = "PRAGMA";
+
+        // Prefix all pragma commands with PRAGMA if they don't already start with it
+        initialCommands.addAll(
+            pragmaCommands.stream()
+                .map(s -> s.startsWith(pragmaPrefix) ? s: pragmaPrefix + s)
+                .toList()
+        );
+
         if (driver != null) {
-            database = new Database(getConnectionUrl(), getConnectionProperties(), getMaxConnections(), driver, pragmaCommands);
+            database = new Database(getConnectionUrl(), getConnectionProperties(), getMaxConnections(), driver, initialCommands);
         } else {
-            database = new Database(getConnectionUrl(), getConnectionProperties(), getMaxConnections(), pragmaCommands);
+            database = new Database(getConnectionUrl(), getConnectionProperties(), getMaxConnections(), initialCommands);
         }
         CommandSet commandSet = getDialect().createCommandSet(database);
         return new SQLStorage(commandSet, getCompression());
