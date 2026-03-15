@@ -60,6 +60,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
 
     public static final String FILE_STORAGE_CONFIG_NAME = STORAGES_CONFIG_FOLDER_NAME + "/file";
     public static final String SQL_STORAGE_CONFIG_NAME = STORAGES_CONFIG_FOLDER_NAME + "/sql";
+    public static final String SQLITE_STORAGE_CONFIG_NAME = STORAGES_CONFIG_FOLDER_NAME + "/sqlite";
 
     private final ConfigManager configManager;
 
@@ -348,6 +349,11 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
                 Files.writeString(
                         configManager.resolveConfigFile(SQL_STORAGE_CONFIG_NAME),
                         configManager.loadConfigTemplate(SQL_STORAGE_CONFIG_NAME).build(),
+                        StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
+                );
+                Files.writeString(
+                        configManager.resolveConfigFile(SQLITE_STORAGE_CONFIG_NAME),
+                        configManager.loadConfigTemplate(SQLITE_STORAGE_CONFIG_NAME).build(),
                         StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                 );
             } catch (IOException | NullPointerException ex) {

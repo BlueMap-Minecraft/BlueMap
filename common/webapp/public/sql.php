@@ -2,7 +2,8 @@
 
 // !!! SET YOUR SQL-CONNECTION SETTINGS HERE: !!!
 
-$driver   = 'mysql'; // 'mysql' (MySQL) or 'pgsql' (PostgreSQL)
+$driver   = 'mysql'; // 'mysql' (MySQL), 'pgsql' (PostgreSQL) or 'sqlite' (SQLite)
+$sqlfile  = 'bluemap.db'; // Only applies when using 'sqlite' as the driver
 $hostname = '127.0.0.1';
 $port     = 3306;
 $username = 'root';
@@ -147,7 +148,11 @@ if (startsWith($path, "/maps/")) {
 
     // Initialize PDO
     try {
-        $sql = new PDO("$driver:host=$hostname;port=$port;dbname=$database", $username, $password);
+        if ($driver === "sqlite") {
+            $sql = new PDO("$driver:file:$sqlfile");
+        } else {
+            $sql = new PDO("$driver:host=$hostname;port=$port;dbname=$database", $username, $password);
+        }
         $sql->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
     } catch (PDOException $e ) { 
         error_log($e->getMessage(), 0); // Logs the detailed error message
