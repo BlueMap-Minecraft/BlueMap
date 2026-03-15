@@ -149,7 +149,7 @@ if (startsWith($path, "/maps/")) {
     // Initialize PDO
     try {
         if ($driver === "sqlite") {
-            $sql = new PDO("$driver:file:$sqlfile?mode=ro");
+            $sql = new PDO("$driver:file:$sqlfile");
         } else {
             $sql = new PDO("$driver:host=$hostname;port=$port;dbname=$database", $username, $password);
         }
