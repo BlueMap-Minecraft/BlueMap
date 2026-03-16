@@ -64,7 +64,7 @@ tasks.processResources {
         expand (
             "version" to project.version,
             "api_version" to apiVersion,
-            "flow_math_version" to libs.flow.math.get().version
+            "flow_math_version" to libs.flow.math.get().version!!
         )
     }
 }
