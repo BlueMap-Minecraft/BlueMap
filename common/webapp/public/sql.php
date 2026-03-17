@@ -3,7 +3,7 @@
 // !!! SET YOUR SQL-CONNECTION SETTINGS HERE: !!!
 
 $driver   = 'mysql'; // 'mysql' (MySQL), 'pgsql' (PostgreSQL) or 'sqlite' (SQLite)
-$sqlfile  = 'bluemap.db'; // Only applies when using 'sqlite' as the driver
+$sqlfile  = 'map.db'; // Only applies when using 'sqlite' as the driver
 $hostname = '127.0.0.1';
 $port     = 3306;
 $username = 'root';
