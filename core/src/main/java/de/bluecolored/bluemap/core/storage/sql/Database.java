@@ -39,7 +39,9 @@ import java.sql.Connection;
 import java.sql.Driver;
 import java.sql.SQLException;
 import java.sql.SQLRecoverableException;
+import java.sql.Statement;
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -50,14 +52,24 @@ public class Database implements Closeable {
     private final DataSource dataSource;
     private boolean isClosed = false;
 
-    public Database(String url, Map<String, String> properties, int maxPoolSize) {
-        Properties props = new Properties();
-        props.putAll(properties);
+    // @TODO: Figure out some better way to pass initialCommands rather than this.
 
-        this.dataSource = createDataSource(new DriverManagerConnectionFactory(url, props), maxPoolSize);
+    public Database(String url, Map<String, String> properties, int maxPoolSize) {
+        this(url, properties, maxPoolSize, List.of());
     }
 
     public Database(String url, Map<String, String> properties, int maxPoolSize, Driver driver) {
+        this(url, properties, maxPoolSize, driver, List.of());
+    }
+
+    public Database(String url, Map<String, String> properties, int maxPoolSize, List<String> initialCommands) {
+        Properties props = new Properties();
+        props.putAll(properties);
+
+        this.dataSource = createDataSource(new DriverManagerConnectionFactory(url, props), maxPoolSize, initialCommands);
+    }
+
+    public Database(String url, Map<String, String> properties, int maxPoolSize, Driver driver, List<String> initialCommands) {
         Properties props = new Properties();
         props.putAll(properties);
 
@@ -67,7 +79,7 @@ public class Database implements Closeable {
                 props
         );
 
-        this.dataSource = createDataSource(connectionFactory, maxPoolSize);
+        this.dataSource = createDataSource(connectionFactory, maxPoolSize, initialCommands);
     }
 
     public void run(ConnectionConsumer action) throws IOException {
@@ -121,11 +133,17 @@ public class Database implements Closeable {
         }
     }
 
-    private DataSource createDataSource(ConnectionFactory connectionFactory, int maxPoolSize) {
+    private DataSource createDataSource(ConnectionFactory connectionFactory, int maxPoolSize, List<String> initialCommands) {
         PoolableConnectionFactory poolableConnectionFactory =
                 new PoolableConnectionFactory(() -> {
                     Logger.global.logDebug("Creating new SQL-Connection...");
-                    return connectionFactory.createConnection();
+                    Connection conn = connectionFactory.createConnection();
+                    try (Statement stmt = conn.createStatement()) {
+                        for (String initialCommand : initialCommands) {
+                            stmt.execute(initialCommand);
+                        }
+                    }
+                    return conn;
                 }, null);
         poolableConnectionFactory.setPoolStatements(true);
         poolableConnectionFactory.setMaxOpenPreparedStatements(20);
