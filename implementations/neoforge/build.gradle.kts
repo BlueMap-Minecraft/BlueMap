@@ -6,11 +6,11 @@ plugins {
 }
 
 val supportedMinecraftVersions = listOf(
-    "1.21.11"
+    "26.1-snapshot-1"
 )
 
 val minecraftVersion = supportedMinecraftVersions.first()
-val neoVersion = "21.11.0-beta"
+val neoVersion = "26.1.0.0-alpha.2+snapshot-1"
 
 val shadowInclude: Configuration by configurations.creating
 configurations.api.get().extendsFrom(shadowInclude)
@@ -31,8 +31,8 @@ dependencies {
         exclude ( group = "com.google.code.gson", module = "gson" )
     }
 
-    jarJar ( libs.flow.math.get().group, libs.flow.math.get().name , "[${libs.flow.math.get().version},)" )
-    jarJar ( libs.bluenbt.get().group, libs.bluenbt.get().name , "[${libs.bluenbt.get().version},)" )
+    jarJar ( "${libs.flow.math.get().group}:${libs.flow.math.get().name}:[${libs.flow.math.get().version},)" )
+    jarJar ( "${libs.bluenbt.get().group}:${libs.bluenbt.get().name}:[${libs.bluenbt.get().version},)" )
 }
 
 tasks.shadowJar {
@@ -84,7 +84,7 @@ tasks.withType(ProcessResources::class).configureEach {
     )) { expand(replacements) }
 }
 
-val mergeShadowAndJarJar = tasks.create<Jar>("mergeShadowAndJarJar") {
+val mergeShadowAndJarJar = tasks.register<Jar>("mergeShadowAndJarJar") {
     dependsOn( tasks.shadowJar, tasks.jarJar )
     from (
         zipTree( tasks.shadowJar.map { it.outputs.files.singleFile } ),
@@ -97,7 +97,7 @@ val mergeShadowAndJarJar = tasks.create<Jar>("mergeShadowAndJarJar") {
 
 tasks.getByName<CopyFileTask>("release") {
     dependsOn( mergeShadowAndJarJar )
-    inputFile = mergeShadowAndJarJar.outputs.files.singleFile
+    inputFile = mergeShadowAndJarJar.get().outputs.files.singleFile
 }
 
 modrinth {

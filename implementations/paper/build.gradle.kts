@@ -18,7 +18,7 @@ dependencies {
         exclude( group = "net.kyori", module = "adventure-api" )
     }
 
-    shadow ( "io.papermc.paper", "paper-api", paperVersion )
+    shadow ("io.papermc.paper:paper-api:$paperVersion")
     api ( libs.bstats.bukkit )
     api ( libs.bluecommands.brigadier ) {
         exclude ( group = "com.mojang", module = "brigadier" )

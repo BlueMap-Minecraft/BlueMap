@@ -31,8 +31,8 @@ dependencies {
         exclude ( group = "com.google.code.gson", module = "gson" )
     }
 
-    jarJar ( libs.flow.math.get().group, libs.flow.math.get().name , "[${libs.flow.math.get().version},)" )
-    jarJar ( libs.bluenbt.get().group, libs.bluenbt.get().name , "[${libs.bluenbt.get().version},)" )
+    jarJar ( "${libs.flow.math.get().group}:${libs.flow.math.get().name}:[${libs.flow.math.get().version},)" )
+    jarJar ( "${libs.bluenbt.get().group}:${libs.bluenbt.get().name}:[${libs.bluenbt.get().version},)" )
 
 }
 

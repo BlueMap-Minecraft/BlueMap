@@ -20,7 +20,7 @@ dependencies {
         exclude ( group = "com.google.code.gson", module = "gson" )
     }
 
-    shadow ( "org.spigotmc", "spigot-api", spigotVersion )
+    shadow ( "org.spigotmc:spigot-api:$spigotVersion" )
     api ( libs.bstats.bukkit )
 }
 
