@@ -18,7 +18,7 @@ dependencies {
         exclude( group = "net.kyori", module = "adventure-api" )
     }
 
-    shadow ( "io.papermc.paper", "paper-api", paperVersion )
+    shadow ("io.papermc.paper:paper-api:$paperVersion")
     api ( libs.bstats.bukkit )
     api ( libs.bluecommands.brigadier ) {
         exclude ( group = "com.mojang", module = "brigadier" )
@@ -64,7 +64,7 @@ tasks.processResources {
         expand (
             "version" to project.version,
             "api_version" to apiVersion,
-            "flow_math_version" to libs.flow.math.get().version
+            "flow_math_version" to libs.flow.math.get().version!!
         )
     }
 }

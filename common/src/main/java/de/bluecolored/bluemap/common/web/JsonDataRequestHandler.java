@@ -48,7 +48,7 @@ public class JsonDataRequestHandler implements HttpRequestHandler {
         HttpResponse response = new HttpResponse(HttpStatusCode.OK);
         response.addHeader("Cache-Control", "no-cache");
         response.addHeader("Content-Type", "application/json");
-        response.setData(dataSupplier.get());
+        response.setBody(dataSupplier.get());
         return response;
     }
 

@@ -30,25 +30,19 @@ import com.mojang.serialization.JsonOps;
 import de.bluecolored.bluemap.common.commands.TextFormat;
 import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
-import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
-import net.minecraft.command.DefaultPermissions;
-import net.minecraft.command.permission.Permission;
-import net.minecraft.command.permission.PermissionLevel;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.Text;
-import net.minecraft.text.TextCodecs;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.ComponentSerialization;
 
 import java.util.Optional;
 
 public class FabricCommandSource implements CommandSource {
 
     private final FabricMod mod;
-    private final ServerCommandSource delegate;
+    private final CommandSourceStack delegate;
 
-    public FabricCommandSource(FabricMod mod, ServerCommandSource delegate) {
+    public FabricCommandSource(FabricMod mod, CommandSourceStack delegate) {
         this.mod = mod;
         this.delegate = delegate;
     }
@@ -59,23 +53,27 @@ public class FabricCommandSource implements CommandSource {
             text = Component.newline().append(text).appendNewline();
 
         JsonElement textJson = GsonComponentSerializer.gson().serializeToTree(text.compact());
-        Text minecraftText = TextCodecs.CODEC.parse(JsonOps.INSTANCE, textJson).getOrThrow();
-        delegate.sendMessage(minecraftText);
+        net.minecraft.network.chat.Component minecraftText = ComponentSerialization.CODEC.parse(JsonOps.INSTANCE, textJson).getOrThrow();
+        delegate.sendSystemMessage(minecraftText);
     }
 
     @Override
     public boolean hasPermission(String permission) {
+        /* TODO: re-enable permission-api support once fabric-permission-api is updated
         try {
             Class.forName("me.lucko.fabric.api.permissions.v0.Permissions");
             return Permissions.check(delegate, permission, PermissionLevel.MODERATORS);
         } catch (ClassNotFoundException ex) {
-            return delegate.getPermissions().hasPermission(DefaultPermissions.MODERATORS);
+            return delegate.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_MODERATOR);
         }
+        */
+
+        return delegate.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_MODERATOR);
     }
 
     @Override
     public Optional<Vector3d> getPosition() {
-        if (!delegate.isExecutedByPlayer() && delegate.getName().equals("Server")) return Optional.empty();
+        if (!delegate.isPlayer() && delegate.getTextName().equals("Server")) return Optional.empty();
 
         return Optional.ofNullable(delegate.getPosition())
                 .map(pos -> new Vector3d(pos.x, pos.y, pos.z));
@@ -83,9 +81,9 @@ public class FabricCommandSource implements CommandSource {
 
     @Override
     public Optional<ServerWorld> getWorld() {
-        if (!delegate.isExecutedByPlayer() && delegate.getName().equals("Server")) return Optional.empty();
+        if (!delegate.isPlayer() && delegate.getTextName().equals("Server")) return Optional.empty();
 
-        return Optional.ofNullable(delegate.getWorld())
+        return Optional.ofNullable(delegate.getLevel())
                 .map(mod::getServerWorld);
     }
 
