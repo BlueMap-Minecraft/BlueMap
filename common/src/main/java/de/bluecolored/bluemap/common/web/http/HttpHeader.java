@@ -24,40 +24,52 @@
  */
 package de.bluecolored.bluemap.common.web.http;
 
+import lombok.Getter;
+
 import java.util.*;
 
 public class HttpHeader {
 
-    private final String key;
-    private final String value;
+    @Getter private final String key;
+    @Getter private String value;
     private List<String> values;
     private Set<String> valuesLC;
 
-    public HttpHeader(String key, String value) {
+    public HttpHeader(String key, String... values) {
         this.key = key;
-        this.value = value;
+        this.value = String.join(",", values);
     }
 
-    public String getKey() {
-        return key;
+    public synchronized void add(String... values) {
+        if (value.isEmpty()) {
+            set(values);
+            return;
+        }
+
+        this.value = value + "," + String.join(",", values);
+        this.values = null;
+        this.valuesLC = null;
     }
 
-    public String getValue() {
-        return value;
+    public synchronized void set(String... values) {
+        this.value = String.join(",", values);
+        this.values = null;
+        this.valuesLC = null;
     }
 
-    public List<String> getValues() {
+    public synchronized List<String> getValues() {
         if (values == null) {
-            values = new ArrayList<>();
+            List<String> vs = new ArrayList<>();
             for (String v : value.split(",")) {
-                values.add(v.trim());
+                vs.add(v.trim());
             }
+            values = Collections.unmodifiableList(vs);
         }
 
         return values;
     }
 
-    public boolean contains(String value) {
+    public synchronized boolean contains(String value) {
         if (valuesLC == null) {
             valuesLC = new HashSet<>();
             for (String v : getValues()) {
@@ -66,6 +78,23 @@ public class HttpHeader {
         }
 
         return valuesLC.contains(value);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || getClass() != o.getClass()) return false;
+        HttpHeader that = (HttpHeader) o;
+        return Objects.equals(key, that.key) && Objects.equals(value, that.value);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(key, value);
+    }
+
+    @Override
+    public String toString() {
+        return key + ": " + value;
     }
 
 }
