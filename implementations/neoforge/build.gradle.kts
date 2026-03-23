@@ -6,11 +6,11 @@ plugins {
 }
 
 val supportedMinecraftVersions = listOf(
-    "26.1-snapshot-1"
+    "26.1"
 )
 
 val minecraftVersion = supportedMinecraftVersions.first()
-val neoVersion = "26.1.0.0-alpha.2+snapshot-1"
+val neoVersion = "26.1.0.0-alpha.15+pre-3"
 
 val shadowInclude: Configuration by configurations.creating
 configurations.api.get().extendsFrom(shadowInclude)
@@ -74,8 +74,6 @@ tasks.shadowJar {
 tasks.withType(ProcessResources::class).configureEach {
     val replacements = mapOf(
         "version" to project.version,
-        "minecraft_version" to minecraftVersion,
-        "neo_version" to neoVersion,
     )
     inputs.properties(replacements)
     filesMatching(listOf(

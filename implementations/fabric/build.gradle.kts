@@ -8,13 +8,12 @@ plugins {
 }
 
 val supportedMinecraftVersions = listOf(
-    "26.1-snapshot-11"
+    "26.1"
 )
 
-val minecraftVersion = supportedMinecraftVersions.first()
+val minecraftVersion = "26.1-rc-3"
 val fabricLoaderVersion = "0.18.4"
-//val fabricApiVersion = "0.143.11+${minecraftVersion}"
-val fabricApiVersion = "0.143.11+26.1"
+val fabricApiVersion = "0.144.0+26.1"
 
 val shadowInclude: Configuration by configurations.creating
 configurations.api.get().extendsFrom(shadowInclude)
@@ -83,8 +82,6 @@ tasks.withType(ProcessResources::class).configureEach {
     val replacements = mapOf(
         "version" to project.version,
         "fabric_loader_version" to fabricLoaderVersion,
-        "minecraft_version" to "26.1-alpha.11",
-        //"minecraft_version" to minecraftVersion,
         "java_version" to java.toolchain.languageVersion.get()
     )
     inputs.properties(replacements)
