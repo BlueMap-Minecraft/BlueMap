@@ -24,7 +24,7 @@ include(":common")
 
 implementation("cli")
 implementation("fabric")
-implementation("forge")
+//implementation("forge")
 implementation("neoforge")
 implementation("paper")
 implementation("spigot")

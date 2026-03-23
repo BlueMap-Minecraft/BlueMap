@@ -54,6 +54,7 @@ import org.spongepowered.api.util.Tristate;
 import org.spongepowered.plugin.PluginContainer;
 
 import java.io.IOException;
+import java.lang.invoke.MethodHandles;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -192,13 +193,13 @@ public class SpongePlugin implements Server {
 
     @Override
     public void registerListener(ServerEventListener listener) {
-        Sponge.eventManager().registerListeners(this.pluginContainer, new EventForwarder(listener));
+        Sponge.eventManager().registerListeners(this.pluginContainer, new EventForwarder(listener), MethodHandles.lookup());
     }
 
     @Override
     public void unregisterAllListeners() {
         Sponge.eventManager().unregisterListeners(this.pluginContainer);
-        Sponge.eventManager().registerListeners(this.pluginContainer, this);
+        Sponge.eventManager().registerListeners(this.pluginContainer, this, MethodHandles.lookup());
     }
 
     @Override

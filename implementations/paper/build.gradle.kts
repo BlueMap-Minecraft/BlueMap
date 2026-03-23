@@ -5,12 +5,11 @@ plugins {
 }
 
 val supportedMinecraftVersions = listOf(
-    "1.21.5", "1.21.6", "1.21.7", "1.21.8", "1.21.9", "1.21.10", "1.21.11"
+    "26.1"
 )
 
-val minecraftVersion = supportedMinecraftVersions.first()
-val paperVersion = "${minecraftVersion}-R0.1-SNAPSHOT"
 val apiVersion = "1.21.6" // paper-version but without minor
+val paperVersion = "1.21.6-R0.1-SNAPSHOT"
 
 dependencies {
     api ( project( ":common" ) ) {
@@ -18,7 +17,7 @@ dependencies {
         exclude( group = "net.kyori", module = "adventure-api" )
     }
 
-    shadow ( "io.papermc.paper", "paper-api", paperVersion )
+    shadow ("io.papermc.paper:paper-api:$paperVersion")
     api ( libs.bstats.bukkit )
     api ( libs.bluecommands.brigadier ) {
         exclude ( group = "com.mojang", module = "brigadier" )
@@ -64,7 +63,7 @@ tasks.processResources {
         expand (
             "version" to project.version,
             "api_version" to apiVersion,
-            "flow_math_version" to libs.flow.math.get().version
+            "flow_math_version" to libs.flow.math.get().version!!
         )
     }
 }

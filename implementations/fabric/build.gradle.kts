@@ -1,5 +1,4 @@
 import com.matthewprenger.cursegradle.CurseRelation
-import net.fabricmc.loom.task.RemapJarTask
 
 plugins {
     bluemap.implementation
@@ -9,13 +8,12 @@ plugins {
 }
 
 val supportedMinecraftVersions = listOf(
-    "1.21.11"
+    "26.1"
 )
 
-val minecraftVersion = supportedMinecraftVersions.first()
-val yarnMappings = "${minecraftVersion}+build.1"
-val fabricLoaderVersion = "0.18.2"
-val fabricApiVersion = "0.139.4+${minecraftVersion}"
+val minecraftVersion = "26.1-rc-3"
+val fabricLoaderVersion = "0.18.4"
+val fabricApiVersion = "0.144.0+26.1"
 
 val shadowInclude: Configuration by configurations.creating
 configurations.api.get().extendsFrom(shadowInclude)
@@ -27,10 +25,9 @@ dependencies {
     }
 
     minecraft ("com.mojang:minecraft:${minecraftVersion}")
-    mappings ("net.fabricmc:yarn:${yarnMappings}")
-    modImplementation ("net.fabricmc:fabric-loader:${fabricLoaderVersion}")
-    modImplementation ("net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}")
-    modImplementation ( libs.fabric.permissions )
+    implementation ("net.fabricmc:fabric-loader:${fabricLoaderVersion}")
+    implementation ("net.fabricmc.fabric-api:fabric-api:${fabricApiVersion}")
+    implementation ( libs.fabric.permissions )
 
     shadowInclude ( libs.bluecommands.brigadier ) {
         exclude ( group = "com.mojang", module = "brigadier" )
@@ -85,7 +82,6 @@ tasks.withType(ProcessResources::class).configureEach {
     val replacements = mapOf(
         "version" to project.version,
         "fabric_loader_version" to fabricLoaderVersion,
-        "minecraft_version" to minecraftVersion,
         "java_version" to java.toolchain.languageVersion.get()
     )
     inputs.properties(replacements)
@@ -94,16 +90,25 @@ tasks.withType(ProcessResources::class).configureEach {
     )) { expand(replacements) }
 }
 
-val remappedShadowJar = tasks.register("remappedShadowJar", type = RemapJarTask::class) {
-    dependsOn (tasks.shadowJar)
-    archiveFileName = "${project.name}-${project.version}-shadow-remapped.jar"
-    inputFile = tasks.shadowJar.flatMap { it.archiveFile }
-    addNestedDependencies = true
+val mergeShadowAndJarJar = tasks.register<Jar>("mergeShadowAndJarJar") {
+    dependsOn( tasks.shadowJar, tasks.jar )
+    from (
+        zipTree( tasks.shadowJar.map { it.outputs.files.singleFile } ).matching {
+            exclude("fabric.mod.json")
+        },
+        zipTree( tasks.jar.map { it.outputs.files.singleFile } ).matching {
+            include("META-INF/jars/**")
+            include("fabric.mod.json")
+        }
+    ).exclude(
+        "META-INF/services/net.kyori.adventure*" // not correctly relocated and not needed -> exclude
+    )
+    archiveFileName = "${project.name}-${project.version}-merged.jar"
 }
 
 tasks.getByName<CopyFileTask>("release") {
-    dependsOn(remappedShadowJar)
-    inputFile = remappedShadowJar.flatMap { it.archiveFile }
+    dependsOn(mergeShadowAndJarJar)
+    inputFile = mergeShadowAndJarJar.flatMap { it.archiveFile }
 }
 
 modrinth {

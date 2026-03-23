@@ -4,8 +4,7 @@ plugins {
 }
 
 val supportedMinecraftVersions = listOf(
-    "1.20", "1.20.1", "1.20.2", "1.20.3", "1.20.4", "1.20.5", "1.20.6",
-    "1.21", "1.21.1", "1.21.2", "1.21.3", "1.21.4", "1.21.5", "1.21.6", "1.21.7", "1.21.8", "1.21.9", "1.21.10", "1.21.11"
+    "26.1"
 )
 
 val apiVersion = "1.16"
@@ -20,7 +19,7 @@ dependencies {
         exclude ( group = "com.google.code.gson", module = "gson" )
     }
 
-    shadow ( "org.spigotmc", "spigot-api", spigotVersion )
+    shadow ( "org.spigotmc:spigot-api:$spigotVersion" )
     api ( libs.bstats.bukkit )
 }
 
