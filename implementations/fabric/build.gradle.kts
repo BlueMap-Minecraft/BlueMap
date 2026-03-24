@@ -11,7 +11,7 @@ val supportedMinecraftVersions = listOf(
     "26.1"
 )
 
-val minecraftVersion = "26.1-rc-3"
+val minecraftVersion = "26.1"
 val fabricLoaderVersion = "0.18.4"
 val fabricApiVersion = "0.144.0+26.1"
 
