@@ -3,18 +3,25 @@ plugins {
     bluemap.modrinth
     bluemap.curseforge
     alias ( libs.plugins.forgegradle )
+    alias ( libs.plugins.jarjar )
 }
 
 val supportedMinecraftVersions = listOf(
-    "1.21.11"
+    "26.1"
 )
 
 val minecraftVersion = supportedMinecraftVersions.first()
-val forgeVersion = "61.0.0"
+val forgeVersion = "62.0.1"
 
 val shadowInclude: Configuration by configurations.creating
 configurations.api.get().extendsFrom(shadowInclude)
-jarJar.enable()
+jarJar.register();
+
+repositories {
+    minecraft.mavenizer(this)
+    maven(fg.forgeMaven)
+    maven(fg.minecraftLibsMaven)
+}
 
 dependencies {
 
@@ -22,7 +29,8 @@ dependencies {
         exclude ( group = "com.google.code.gson", module = "gson" )
     }
 
-    minecraft ( "net.minecraftforge", "forge", "$minecraftVersion-$forgeVersion" )
+    implementation ( minecraft.dependency("net.minecraftforge:forge:$minecraftVersion-$forgeVersion") )
+    annotationProcessor ( "net.minecraftforge:eventbus-validator:7.0.1" )
 
     shadowInclude ( libs.bluecommands.brigadier ) {
         exclude ( group = "com.mojang", module = "brigadier" )
@@ -31,14 +39,13 @@ dependencies {
         exclude ( group = "com.google.code.gson", module = "gson" )
     }
 
-    jarJar ( "${libs.flow.math.get().group}:${libs.flow.math.get().name}:[${libs.flow.math.get().version},)" )
-    jarJar ( "${libs.bluenbt.get().group}:${libs.bluenbt.get().name}:[${libs.bluenbt.get().version},)" )
+    "jarJar" ( libs.flow.math )
+    "jarJar" ( libs.bluenbt )
 
 }
 
 minecraft {
     mappings( "official", minecraftVersion )
-    reobf = false
 }
 
 tasks.shadowJar {
@@ -77,10 +84,6 @@ tasks.shadowJar {
 
 }
 
-tasks.jarJar.configure {
-    archiveFileName = "${project.name}-${project.version}-jarjar.jar"
-}
-
 tasks.withType(ProcessResources::class).configureEach {
     val replacements = mapOf(
         "version" to project.version,
@@ -94,11 +97,15 @@ tasks.withType(ProcessResources::class).configureEach {
     )) { expand(replacements) }
 }
 
-val mergeShadowAndJarJar = tasks.create<Jar>("mergeShadowAndJarJar") {
-    dependsOn( tasks.shadowJar, tasks.jarJar )
+val jarJarTask = tasks.named<Jar>("jarJar") {
+    archiveFileName = "${project.name}-${project.version}-jarjar.jar"
+}
+
+val mergeShadowAndJarJar = tasks.register<Jar>("mergeShadowAndJarJar") {
+    dependsOn( tasks.shadowJar, jarJarTask )
     from (
         zipTree( tasks.shadowJar.map { it.outputs.files.singleFile } ),
-        zipTree( tasks.jarJar.map { it.outputs.files.singleFile } ).matching {
+        zipTree( jarJarTask.map { it.outputs.files.singleFile } ).matching {
             include("META-INF/jarjar/**")
         }
     ).exclude(
@@ -109,7 +116,7 @@ val mergeShadowAndJarJar = tasks.create<Jar>("mergeShadowAndJarJar") {
 
 tasks.getByName<CopyFileTask>("release") {
     dependsOn( mergeShadowAndJarJar )
-    inputFile = mergeShadowAndJarJar.outputs.files.singleFile
+    inputFile = mergeShadowAndJarJar.get().outputs.files.singleFile
 }
 
 modrinth {

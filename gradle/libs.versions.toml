@@ -38,8 +38,9 @@ lz4 = { module = "at.yawk.lz4:lz4-java", version = "1.8.1" }
 
 [plugins]
 cursegradle = { id = "com.matthewprenger.cursegradle", version = "1.4.0" }
-forgegradle = { id = "net.minecraftforge.gradle", version = "[6.0.24,6.2)" }
+forgegradle = { id = "net.minecraftforge.gradle", version = "[7.0.17,8)" }
 hangar = { id = "io.papermc.hangar-publish-plugin", version = "0.1.2" }
+jarjar = { id = "net.minecraftforge.jarjar", version = "0.2.3" }
 loom = { id = "net.fabricmc.fabric-loom", version = "1.15-SNAPSHOT" }
 minotaur = { id = "com.modrinth.minotaur", version = "2.8.7" }
 node-gradle = { id = "com.github.node-gradle.node", version = "7.0.2" }
