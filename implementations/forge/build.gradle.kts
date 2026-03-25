@@ -44,10 +44,6 @@ dependencies {
 
 }
 
-minecraft {
-    mappings( "official", minecraftVersion )
-}
-
 tasks.shadowJar {
     configurations = listOf(shadowInclude)
 
