@@ -5,11 +5,11 @@ plugins {
 }
 
 val supportedMinecraftVersions = listOf(
-    "26.1"
+    "26.1.1"
 )
 
-val apiVersion = "1.21.6" // paper-version but without minor
-val paperVersion = "1.21.6-R0.1-SNAPSHOT"
+val apiVersion = "26.1.1" // paper-version but without minor
+val paperVersion = "26.1.1.build.29-alpha"
 
 dependencies {
     api ( project( ":common" ) ) {

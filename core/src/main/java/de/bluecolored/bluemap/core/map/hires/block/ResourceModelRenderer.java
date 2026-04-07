@@ -106,6 +106,8 @@ public class ResourceModelRenderer implements BlockRenderer {
         // render model
         int modelStart = blockModel.getStart();
 
+
+
         Element[] elements = modelResource.getElements();
         if (elements != null) {
             for (Element element : elements) {

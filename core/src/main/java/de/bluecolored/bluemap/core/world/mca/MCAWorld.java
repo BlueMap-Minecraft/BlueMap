@@ -173,12 +173,19 @@ public class MCAWorld implements World {
         Path dimensionFolder = worldFolder.resolve("dimensions").resolve(dimension.getNamespace()).resolve(dimension.getValue());
         if (Files.isDirectory(dimensionFolder)) return dimensionFolder;
 
-        if (DataPack.DIMENSION_OVERWORLD.equals(dimension)) return worldFolder;
-        if (DataPack.DIMENSION_THE_NETHER.equals(dimension)) return worldFolder.resolve("DIM-1");
-        if (DataPack.DIMENSION_THE_END.equals(dimension)) return worldFolder.resolve("DIM1");
+        // try legacy format
+        Path legacyDimensionFolder = legacyDimensionFolder(worldFolder, dimension);
+        if (Files.isDirectory(legacyDimensionFolder.resolve("regions"))) return legacyDimensionFolder;
 
         // might exist later
         return dimensionFolder;
+    }
+
+    private static Path legacyDimensionFolder(Path worldFolder, Key dimension) {
+        if (DataPack.DIMENSION_OVERWORLD.equals(dimension)) return worldFolder;
+        if (DataPack.DIMENSION_THE_NETHER.equals(dimension)) return worldFolder.resolve("DIM-1");
+        if (DataPack.DIMENSION_THE_END.equals(dimension)) return worldFolder.resolve("DIM1");
+        return worldFolder.resolve("dimensions").resolve(dimension.getNamespace()).resolve(dimension.getValue());
     }
 
     public static DimensionType loadDimensionType(Path worldFolder, Key dimension, DataPack dataPack) throws IOException {

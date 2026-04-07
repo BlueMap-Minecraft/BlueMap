@@ -25,14 +25,13 @@
 package de.bluecolored.bluemap.bukkit;
 
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
+import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.pack.datapack.DataPack;
 import de.bluecolored.bluemap.core.util.Key;
-import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 
 import java.lang.ref.WeakReference;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
@@ -45,28 +44,20 @@ public class BukkitWorld implements ServerWorld {
 
     public BukkitWorld(World delegate) {
         this.delegate = new WeakReference<>(delegate);
-        Path worldFolder = delegate.getWorldFolder().toPath();
 
-        this.dimension = switch (delegate.getEnvironment()) {
-            case NORMAL -> DataPack.DIMENSION_OVERWORLD;
-            case NETHER -> DataPack.DIMENSION_THE_NETHER;
-            case THE_END -> DataPack.DIMENSION_THE_END;
-            default -> {
-                var id = delegate.key();
-                yield new Key(id.namespace(), id.value());
-            }
-        };
-
-        // fix for hybrids
-        Path dimensionFolder = MCAWorld.resolveDimensionFolder(worldFolder, dimension);
-        if (!Files.exists(dimensionFolder)) {
-            Path dimensionSubPath = worldFolder.relativize(dimensionFolder);
-
-            if (Files.exists(worldFolder) && worldFolder.endsWith(dimensionSubPath))
-                worldFolder = worldFolder.subpath(0, worldFolder.getNameCount() - dimensionSubPath.getNameCount());
+        Path dimensionFolder = delegate.getWorldPath().toAbsolutePath().normalize();
+        int nameCount = dimensionFolder.getNameCount();
+        if (nameCount < 3 || !"dimensions".equals(dimensionFolder.getName(nameCount - 3).toString())) {
+            Logger.global.logWarning("Unexpected dimension folder path layout '" + dimensionFolder + "'.");
+            this.worldFolder = dimensionFolder;
+            this.dimension = DataPack.DIMENSION_OVERWORLD;
+        } else {
+            this.worldFolder = dimensionFolder.getParent().getParent().getParent();
+            this.dimension = new Key(
+                    dimensionFolder.getName(nameCount - 2).toString(),
+                    dimensionFolder.getName(nameCount - 1).toString()
+            );
         }
-
-        this.worldFolder = worldFolder;
     }
 
     @Override
