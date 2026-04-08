@@ -175,7 +175,7 @@ public class MCAWorld implements World {
 
         // try legacy format
         Path legacyDimensionFolder = legacyDimensionFolder(worldFolder, dimension);
-        if (Files.isDirectory(legacyDimensionFolder.resolve("regions"))) return legacyDimensionFolder;
+        if (Files.isDirectory(legacyDimensionFolder.resolve("region"))) return legacyDimensionFolder;
 
         // might exist later
         return dimensionFolder;
