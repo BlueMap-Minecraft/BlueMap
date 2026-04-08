@@ -214,7 +214,7 @@ public class BlueMapService implements Closeable {
                 Logger.global.logDebug("Loading world " + worldId + " ...");
                 List<Path> worldPacks = worldLoader.worldDataPacks(worldFolder, dimension);
                 DataPack dataPack = loadDataPack(worldPacks);
-                world = MCAWorld.load(worldFolder, dimension, dataPack);
+                world = worldLoader.loadWorld(worldFolder, dimension, dataPack);
                 worlds.put(worldId, world);
             } catch (IOException ex) {
                 throw new ConfigurationException("Failed to load world " + worldId + "!", ex);
