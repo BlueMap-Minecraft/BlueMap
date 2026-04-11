@@ -139,7 +139,10 @@ public class FileHelper {
                 long now = System.currentTimeMillis();
                 if (now >= endTime) return false;
                 WatchKey key = watchService.poll(endTime - now, TimeUnit.MILLISECONDS);
-                if (key != null) key.reset();
+                if (key != null) {
+                    key.pollEvents();
+                    key.reset();
+                }
             }
             return true;
         }
