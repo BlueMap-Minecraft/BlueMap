@@ -64,13 +64,11 @@ public class StateDumper {
 
         Set<Object> alreadyDumped = Collections.newSetFromMap(new IdentityHashMap<>());
 
-        writer.name("dump").beginObject();
+        writer.name("dump").beginArray();
         for (Object instance : instances) {
-            Class<?> type = instance.getClass();
-            writer.name(type.getName());
             dumpInstance(instance, writer, alreadyDumped);
         }
-        writer.endObject();
+        writer.endArray();
 
         writer.name("threads").beginArray();
         Thread.getAllStackTraces().keySet().stream()
