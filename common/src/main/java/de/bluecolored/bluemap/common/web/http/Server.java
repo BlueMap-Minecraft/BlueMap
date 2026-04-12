@@ -31,14 +31,17 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.channels.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Objects;
+import java.util.*;
+
+import static java.util.Collections.newSetFromMap;
+import static java.util.Collections.synchronizedSet;
 
 public abstract class Server extends Thread implements Closeable, Runnable {
 
     private final Selector selector;
     private final Collection<ServerSocketChannel> server;
+
+    private final Set<SocketChannel> connections = synchronizedSet(newSetFromMap(new WeakHashMap<>()));
 
     public Server(String name) throws IOException {
         super(name);
@@ -88,6 +91,7 @@ public abstract class Server extends Thread implements Closeable, Runnable {
             ServerSocketChannel serverSocketChannel = (ServerSocketChannel) selectionKey.channel();
             SocketChannel channel = serverSocketChannel.accept();
             if (channel == null) return;
+            connections.add(channel);
             handleConnection(channel);
         } catch (IOException e) {
             Logger.global.logDebug("Failed to accept connection: " + e);
@@ -111,6 +115,18 @@ public abstract class Server extends Thread implements Closeable, Runnable {
             } catch (IOException ex) {
                 if (exception == null) exception = ex;
                 else exception.addSuppressed(ex);
+            }
+        }
+
+        // close active connections
+        synchronized (this.connections) {
+            for (SocketChannel channel : this.connections) {
+                try {
+                    channel.close();
+                } catch (IOException ex) {
+                    if (exception == null) exception = ex;
+                    else exception.addSuppressed(ex);
+                }
             }
         }
 
