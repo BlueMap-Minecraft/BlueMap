@@ -39,6 +39,7 @@ dependencies {
     // jarInJar
     include ( libs.flow.math )
     include ( libs.bluenbt )
+    include ( libs.fabric.permissions )
 
 }
 
@@ -49,6 +50,7 @@ tasks.shadowJar {
     dependencies {
         exclude( dependency ( libs.flow.math.get() ) )
         exclude( dependency ( libs.bluenbt.get() ) )
+        exclude( dependency ( libs.fabric.permissions.get() ) )
     }
 
     // adventure

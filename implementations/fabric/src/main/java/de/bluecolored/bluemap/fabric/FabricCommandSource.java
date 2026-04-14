@@ -34,6 +34,8 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.network.chat.ComponentSerialization;
+import me.lucko.fabric.api.permissions.v0.Permissions;
+import net.minecraft.server.permissions.PermissionLevel;
 
 import java.util.Optional;
 
@@ -59,16 +61,7 @@ public class FabricCommandSource implements CommandSource {
 
     @Override
     public boolean hasPermission(String permission) {
-        /* TODO: re-enable permission-api support once fabric-permission-api is updated
-        try {
-            Class.forName("me.lucko.fabric.api.permissions.v0.Permissions");
-            return Permissions.check(delegate, permission, PermissionLevel.MODERATORS);
-        } catch (ClassNotFoundException ex) {
-            return delegate.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_MODERATOR);
-        }
-        */
-
-        return delegate.permissions().hasPermission(net.minecraft.server.permissions.Permissions.COMMANDS_MODERATOR);
+        return Permissions.check(delegate, permission, PermissionLevel.MODERATORS);
     }
 
     @Override
