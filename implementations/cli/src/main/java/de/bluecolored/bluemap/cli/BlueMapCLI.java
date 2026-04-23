@@ -25,7 +25,6 @@
 package de.bluecolored.bluemap.cli;
 
 import de.bluecolored.bluemap.api.gson.MarkerGson;
-import de.bluecolored.bluemap.api.markers.HtmlMarker;
 import de.bluecolored.bluemap.common.BlueMapConfiguration;
 import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.MissingResourcesException;
@@ -431,12 +430,6 @@ public class BlueMapCLI {
                     blueMap.createOrUpdateWebApp(false);
                 }
             }
-
-            HtmlMarker marker = HtmlMarker.builder()
-                    .styleClasses("test1")
-                    .build();
-
-            marker.addStyleClasses("sfed");
 
             // if nothing has been defined to do
             if (noActions) {
