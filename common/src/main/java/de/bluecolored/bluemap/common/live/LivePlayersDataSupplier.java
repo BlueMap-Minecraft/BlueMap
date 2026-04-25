@@ -45,14 +45,20 @@ public class LivePlayersDataSupplier implements Supplier<String> {
     private final PluginConfig config;
     private final World world;
     private final Predicate<UUID> playerFilter;
+    private final Predicate<UUID> capeChecker;
 
     private transient @Nullable ServerWorld serverWorld;
 
     public LivePlayersDataSupplier(Server server, PluginConfig config, World world, Predicate<UUID> playerFilter) {
+        this(server, config, world, playerFilter, uuid -> false);
+    }
+
+    public LivePlayersDataSupplier(Server server, PluginConfig config, World world, Predicate<UUID> playerFilter, Predicate<UUID> capeChecker) {
         this.server = server;
         this.config = config;
         this.world = world;
         this.playerFilter = playerFilter;
+        this.capeChecker = capeChecker;
     }
 
     @Override
@@ -97,6 +103,8 @@ public class LivePlayersDataSupplier implements Supplier<String> {
                     json.name("yaw").value(player.getRotation().getY());
                     json.name("roll").value(player.getRotation().getZ());
                     json.endObject();
+
+                    json.name("hasCape").value(capeChecker.test(player.getUuid()));
 
                     json.endObject();
                 }

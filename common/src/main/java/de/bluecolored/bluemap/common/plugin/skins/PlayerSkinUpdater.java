@@ -32,12 +32,20 @@ import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.net.URI;
+import java.util.Base64;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -48,6 +56,7 @@ public class PlayerSkinUpdater implements ServerEventListener {
 
     private final Plugin plugin;
     private final Map<UUID, Long> skinUpdates;
+    private final java.util.Set<UUID> playersWithCapes = java.util.Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     private SkinProvider skinProvider;
     private PlayerIconFactory playerMarkerIconFactory;
@@ -87,6 +96,8 @@ public class PlayerSkinUpdater implements ServerEventListener {
                 for (BmMap map : maps.values()) {
                     try {
                         map.getStorage().asset("playerheads/" + playerUuid + ".png").delete();
+                        map.getStorage().asset("playerskins/" + playerUuid + ".png").delete();
+                        map.getStorage().asset("playercapes/" + playerUuid + ".png").delete();
                     } catch (IOException ex) {
                         Logger.global.logError("Failed to remove player skin from storage: " + playerUuid, ex);
                     }
@@ -95,15 +106,65 @@ public class PlayerSkinUpdater implements ServerEventListener {
             }
 
             BufferedImage playerHead = playerMarkerIconFactory.apply(playerUuid, skin.get());
+            Optional<BufferedImage> cape = fetchCapeImage(playerUuid);
 
             for (BmMap map : maps.values()) {
                 try (OutputStream out = map.getStorage().asset("playerheads/" + playerUuid + ".png").write()) {
                     ImageIO.write(playerHead, "png", out);
                 } catch (IOException ex) {
+                    Logger.global.logError("Failed to write player head to storage: " + playerUuid, ex);
+                }
+                try (OutputStream out = map.getStorage().asset("playerskins/" + playerUuid + ".png").write()) {
+                    ImageIO.write(skin.get(), "png", out);
+                } catch (IOException ex) {
                     Logger.global.logError("Failed to write player skin to storage: " + playerUuid, ex);
+                }
+                if (cape.isPresent()) {
+                    try (OutputStream out = map.getStorage().asset("playercapes/" + playerUuid + ".png").write()) {
+                        ImageIO.write(cape.get(), "png", out);
+                        playersWithCapes.add(playerUuid);
+                    } catch (IOException ex) {
+                        Logger.global.logError("Failed to write player cape to storage: " + playerUuid, ex);
+                    }
+                } else {
+                    playersWithCapes.remove(playerUuid);
+                    try {
+                        map.getStorage().asset("playercapes/" + playerUuid + ".png").delete();
+                    } catch (IOException ex) {
+                        Logger.global.logDebug("Could not delete player cape (may not exist): " + playerUuid);
+                    }
                 }
             }
         }, BlueMap.THREAD_POOL);
+    }
+
+    private Optional<BufferedImage> fetchCapeImage(UUID playerUuid) {
+        try {
+            var url = URI.create("https://sessionserver.mojang.com/session/minecraft/profile/" + playerUuid).toURL();
+            try (var reader = new InputStreamReader(url.openStream())) {
+                JsonArray properties = JsonParser.parseReader(reader)
+                        .getAsJsonObject().getAsJsonArray("properties");
+                for (JsonElement element : properties) {
+                    if (!"textures".equals(element.getAsJsonObject().get("name").getAsString())) continue;
+                    String decoded = new String(Base64.getDecoder().decode(
+                            element.getAsJsonObject().get("value").getAsString()));
+                    var textures = JsonParser.parseString(decoded)
+                            .getAsJsonObject().getAsJsonObject("textures");
+                    if (textures != null && textures.has("CAPE")) {
+                        String capeUrl = textures.getAsJsonObject("CAPE").get("url").getAsString();
+                        return Optional.of(ImageIO.read(URI.create(capeUrl).toURL()));
+                    }
+                    break;
+                }
+            }
+        } catch (Exception ex) {
+            Logger.global.logDebug("Could not fetch cape for player: " + playerUuid + " - " + ex);
+        }
+        return Optional.empty();
+    }
+
+    public boolean hasCape(UUID playerUuid) {
+        return playersWithCapes.contains(playerUuid);
     }
 
     @Override

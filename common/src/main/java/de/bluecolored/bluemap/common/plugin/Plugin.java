@@ -552,7 +552,8 @@ public class Plugin implements ServerEventListener {
                     serverInterface,
                     getBlueMap().getConfig().getPluginConfig(),
                     map.getWorld(),
-                    Predicate.not(pluginState::isPlayerHidden)
+                    Predicate.not(pluginState::isPlayerHidden),
+                    skinUpdater != null ? skinUpdater::hasCape : uuid -> false
             );
             try (
                     OutputStream out = map.getStorage().players().write();

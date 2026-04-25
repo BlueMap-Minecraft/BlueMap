@@ -78,7 +78,10 @@ export class PlayerMarkerSet extends MarkerSet {
         // create new if not existent of wrong type
         if (!marker || !marker.isPlayerMarker) {
             if (marker) this.remove(marker);
-            marker = new PlayerMarker(markerId, playerUuid, `${this.data.playerheadsUrl}${playerUuid}.png`);
+            const base = this.data.playerheadsUrl.replace(/playerheads\/?$/, '');
+            const skinUrl = base + `playerskins/${playerUuid}.png`;
+            const capeUrl = base + `playercapes/${playerUuid}.png`;
+            marker = new PlayerMarker(markerId, playerUuid, skinUrl, capeUrl);
             this.add(marker);
         }
 
