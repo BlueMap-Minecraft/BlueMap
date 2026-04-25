@@ -65,6 +65,11 @@ export class Map {
 			texturesUrl: mapDataRoot + "/textures.json",
 			name: id,
 			startPos: {x: 0, z: 0},
+			startDistance: 1500,
+			startRotation: 0,
+			startAngle: 0,
+			startTilt: 0,
+			startView: "perspective",
 			skyColor: new Color(),
 			voidColor: new Color(0, 0, 0),
 			ambientLight: 0,
@@ -168,6 +173,12 @@ export class Map {
 				this.data.sorting = Number.isInteger(worldSettings.sorting) ? worldSettings.sorting : this.data.sorting;
 
 				this.data.startPos = {...this.data.startPos, ...vecArrToObj(worldSettings.startPos, true)};
+
+				if (worldSettings.startDistance !== undefined) this.data.startDistance = worldSettings.startDistance;
+				if (worldSettings.startRotation !== undefined) this.data.startRotation = worldSettings.startRotation;
+				if (worldSettings.startAngle !== undefined) this.data.startAngle = worldSettings.startAngle;
+				if (worldSettings.startTilt !== undefined) this.data.startTilt = worldSettings.startTilt;
+				if (worldSettings.startView !== undefined) this.data.startView = worldSettings.startView;
 
 				if (worldSettings.skyColor && worldSettings.skyColor.length >= 3) {
 					this.data.skyColor.setRGB(

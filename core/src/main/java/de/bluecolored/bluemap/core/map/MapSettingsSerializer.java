@@ -65,8 +65,13 @@ public class MapSettingsSerializer implements JsonSerializer<BmMap> {
         lowres.add("lodCount", context.serialize(lowresTileManager.getLodCount()));
         root.add("lowres", lowres);
 
-        // startPos
+        // startPos and camera defaults
         root.add("startPos", context.serialize(map.getMapSettings().getStartPos()));
+        root.addProperty("startDistance", map.getMapSettings().getStartDistance());
+        root.addProperty("startRotation", map.getMapSettings().getStartRotation());
+        root.addProperty("startAngle", map.getMapSettings().getStartAngle());
+        root.addProperty("startTilt", map.getMapSettings().getStartTilt());
+        root.addProperty("startView", map.getMapSettings().getStartView());
 
         // skyColor
         Color skyColor = new Color().parse(map.getMapSettings().getSkyColor());

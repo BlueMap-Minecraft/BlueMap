@@ -274,25 +274,28 @@ export class BlueMapApp {
 
         if (map) {
             controls.position.set(map.data.startPos.x, 0, map.data.startPos.z);
-            controls.distance = 1500;
-            controls.angle = 0;
-            controls.rotation = 0;
-            controls.tilt = 0;
-            controls.ortho = 0;
         }
 
-        controls.controls = this.mapControls;
-        this.appState.controls.state = "perspective";
-
-        if (this.settings.defaultToFlatView && map.hasView("flat")) {
-            this.setFlatView();
+        // Determine starting view: per-map config first, then global defaultToFlatView, then fallback
+        const startView = map?.data.startView ?? "perspective";
+        if (startView === "flat" && map?.hasView("flat")) {
+            this.setFlatView(0);
+        } else if (startView === "free" && map?.hasView("free")) {
+            this.setFreeFlight(0);
+        } else if (this.settings.defaultToFlatView && map?.hasView("flat")) {
+            this.setFlatView(0);
+        } else if (map && !map.hasView("perspective")) {
+            if (map.hasView("flat")) this.setFlatView(0);
+            else this.setFreeFlight(0);
+        } else {
+            this.setPerspectiveView(0);
         }
 
-        else if (!map.hasView("perspective")) {
-            if (map.hasView("flat"))
-                this.setFlatView();
-            else
-                this.setFreeFlight();
+        if (map) {
+            controls.distance = map.data.startDistance ?? 1500;
+            controls.rotation = map.data.startRotation ?? 0;
+            controls.angle = map.data.startAngle ?? 0;
+            controls.tilt = map.data.startTilt ?? 0;
         }
 
         this.updatePageAddress();

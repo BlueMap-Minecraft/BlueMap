@@ -63,6 +63,11 @@ public class MapConfig implements MapSettings {
     private int sorting = 0;
 
     private Vector2i startPos = Vector2i.ZERO;
+    private int startDistance = 1500;
+    private float startRotation = 0;
+    private float startAngle = 0;
+    private float startTilt = 0;
+    private String startView = "perspective";
 
     private String skyColor = "#7dabff";
     private String voidColor = "#000000";

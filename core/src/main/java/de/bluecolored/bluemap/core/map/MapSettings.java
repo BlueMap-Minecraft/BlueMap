@@ -34,6 +34,26 @@ public interface MapSettings extends RenderSettings {
 
     Vector2i getStartPos();
 
+    default int getStartDistance() {
+        return 1500;
+    }
+
+    default float getStartRotation() {
+        return 0;
+    }
+
+    default float getStartAngle() {
+        return 0;
+    }
+
+    default float getStartTilt() {
+        return 0;
+    }
+
+    default String getStartView() {
+        return "perspective";
+    }
+
     String getSkyColor();
 
     String getVoidColor();
