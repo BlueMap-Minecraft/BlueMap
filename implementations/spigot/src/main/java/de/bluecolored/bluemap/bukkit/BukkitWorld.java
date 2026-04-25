@@ -98,6 +98,13 @@ public class BukkitWorld implements ServerWorld {
     }
 
     @Override
+    public long getTimeOfDay() {
+        World world = delegate.get();
+        if (world == null) return 6000L;
+        return world.getTime();
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

@@ -48,4 +48,13 @@ public interface ServerWorld {
         return false;
     }
 
+    /**
+     * Returns the current in-game time of day in ticks (0–23999).
+     * 0 = sunrise, 6000 = noon, 12000 = sunset, 18000 = midnight.
+     * Returns 6000 (noon) by default for platforms that do not implement this.
+     */
+    default long getTimeOfDay() {
+        return 6000L;
+    }
+
 }

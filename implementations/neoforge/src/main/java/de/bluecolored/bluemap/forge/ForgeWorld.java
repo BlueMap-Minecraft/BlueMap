@@ -94,6 +94,13 @@ public class ForgeWorld implements ServerWorld {
     }
 
     @Override
+    public long getTimeOfDay() {
+        ServerLevel world = delegate.get();
+        if (world == null) return 6000L;
+        return world.getOverworldClockTime() % 24000L;
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
