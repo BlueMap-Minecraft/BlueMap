@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.core.resources.pack.resourcepack.texture;
 
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.util.BufferedImageUtil;
+import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.Keyed;
 import de.bluecolored.bluemap.core.util.math.Color;
 import org.jetbrains.annotations.Nullable;
@@ -38,11 +39,12 @@ import java.io.IOException;
 import java.lang.ref.SoftReference;
 import java.util.Base64;
 
+@SuppressWarnings("FieldMayBeFinal")
 public class Texture implements Keyed {
 
     private static final String TEXTURE_STRING_PREFIX = "data:image/png;base64,";
     public static final Texture MISSING = new Texture(
-            new ResourcePath<>("bluemap", "missing"),
+            new Key("bluemap", "missing"),
             new Color().set(0.5f, 0f, 0.5f, 1.0f, false),
             false,
             "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAPklEQVR4Xu3MsQkAMAwDQe2/tFPnBB4gpLhG8MpkZpNkZ6AKZKAKZKAKZKAKZKAKZKAKZKAKWg0XD/UPnjg4MbX+EDdeTUwAAAAASUVORK5CYII=",
@@ -50,7 +52,7 @@ public class Texture implements Keyed {
             null
     );
 
-    private ResourcePath<Texture> resourcePath;
+    private Key key;
     private Color color;
     private boolean halfTransparent;
     private String texture;
@@ -59,14 +61,18 @@ public class Texture implements Keyed {
     private transient @Nullable Color colorPremultiplied;
     private transient SoftReference<BufferedImage> textureImage = new SoftReference<>(null);
 
-    @SuppressWarnings("unused")
-    private Texture() {}
+    private Texture() {
+        this.key = MISSING.key;
+        this.color = MISSING.color;
+        this.halfTransparent = false;
+        this.texture = MISSING.texture;
+    }
 
     private Texture(
-            ResourcePath<Texture> resourcePath, Color color, boolean halfTransparent,
+            Key key, Color color, boolean halfTransparent,
             String texture, @Nullable AnimationMeta animation, @Nullable BufferedImage textureImage
     ) {
-        this.resourcePath = resourcePath;
+        this.key = new ResourcePath<>(key);
         this.color = color.straight();
         this.halfTransparent = halfTransparent;
         this.texture = texture;
@@ -74,8 +80,8 @@ public class Texture implements Keyed {
         this.textureImage = new SoftReference<>(textureImage);
     }
 
-    private Texture(ResourcePath<Texture> resourcePath) {
-        this.resourcePath = resourcePath;
+    private Texture(Key key) {
+        this.key = new ResourcePath<>(key);
         this.color = MISSING.color;
         this.halfTransparent = MISSING.halfTransparent;
         this.texture = MISSING.texture;
@@ -83,8 +89,8 @@ public class Texture implements Keyed {
     }
 
     @Override
-    public ResourcePath<Texture> getKey() {
-        return resourcePath;
+    public Key getKey() {
+        return key;
     }
 
     public Color getColorStraight() {
@@ -126,11 +132,11 @@ public class Texture implements Keyed {
         return animation;
     }
 
-    public static Texture from(ResourcePath<Texture> resourcePath, BufferedImage image) throws IOException {
+    public static Texture from(Key resourcePath, BufferedImage image) throws IOException {
         return from(resourcePath, image, null);
     }
 
-    public static Texture from(ResourcePath<Texture> resourcePath, BufferedImage image, @Nullable AnimationMeta animation) throws IOException {
+    public static Texture from(Key resourcePath, BufferedImage image, @Nullable AnimationMeta animation) throws IOException {
 
         //check halfTransparency
         boolean halfTransparent = BufferedImageUtil.halfTransparent(image);
@@ -146,7 +152,7 @@ public class Texture implements Keyed {
         return new Texture(resourcePath, color, halfTransparent, base64, animation, image);
     }
 
-    public static Texture missing(ResourcePath<Texture> resourcePath) {
+    public static Texture missing(Key resourcePath) {
         return new Texture(resourcePath);
     }
 
