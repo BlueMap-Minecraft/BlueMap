@@ -66,6 +66,7 @@ export default {
             mapViewer: this.$bluemap.mapViewer.data,
             mode: initialMode(),
             _liveTimer: null,
+            _firstLiveFetch: true,
         }
     },
     computed: {
@@ -74,11 +75,19 @@ export default {
         }
     },
     watch: {
+        // When a new map is selected, restart the poll with its URL
         currentMap(newMap, oldMap) {
-            if (this.mode === 'live' && newMap !== oldMap) {
+            if (this.mode === 'live' && newMap && newMap !== oldMap) {
                 this.stopLivePoll();
-                this.fetchAndApplyTime();
+                this._firstLiveFetch = true;
                 this._liveTimer = setInterval(() => this.fetchAndApplyTime(), LIVE_POLL_INTERVAL);
+            }
+        },
+        // MapViewer resets sunlightStrength when a map finishes loading — re-apply live time
+        'mapViewer.mapState'(newState) {
+            if (newState === 'loaded' && this.mode === 'live') {
+                this._firstLiveFetch = true;
+                this.fetchAndApplyTime();
             }
         }
     },
@@ -107,6 +116,7 @@ export default {
             } else if (newMode === 'night') {
                 this.animateTo(SUNLIGHT_NIGHT, 300);
             } else if (newMode === 'live') {
+                this._firstLiveFetch = true;
                 this.fetchAndApplyTime();
                 this._liveTimer = setInterval(() => this.fetchAndApplyTime(), LIVE_POLL_INTERVAL);
             }
@@ -130,7 +140,14 @@ export default {
                 if (!response.ok) return;
                 const data = await response.json();
                 if (typeof data.timeOfDay === 'number') {
-                    this.animateTo(timeToSunlight(data.timeOfDay), 2000);
+                    const target = timeToSunlight(data.timeOfDay);
+                    if (this._firstLiveFetch) {
+                        this._firstLiveFetch = false;
+                        this.mapViewer.uniforms.sunlightStrength.value = target;
+                        this.$bluemap.mapViewer.redraw();
+                    } else {
+                        this.animateTo(target, 2000);
+                    }
                 }
             } catch {
                 // endpoint unavailable — stay at current lighting
