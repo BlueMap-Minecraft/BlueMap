@@ -1,14 +1,14 @@
 <template>
   <div class="control-bar">
-    <MenuButton :close="appState.menu.isOpen" :back="false" @action="appState.menu.reOpenPage()" :title="$t('menu.tooltip')" />
+    <MenuButton v-if="embed.menu" :close="appState.menu.isOpen" :back="false" @action="appState.menu.reOpenPage()" :title="$t('menu.tooltip')" />
     <div class="space thin-hide"></div>
-    <SvgButton v-if="appState.maps.length > 1" class="thin-hide" :title="$t('maps.tooltip')"
+    <SvgButton v-if="embed.maps && appState.maps.length > 1" class="thin-hide" :title="$t('maps.tooltip')"
                @action="appState.menu.openPage('maps', $t('maps.title'))">
       <svg viewBox="0 0 30 30">
         <polygon points="26.708,22.841 19.049,25.186 11.311,20.718 3.292,22.841 7.725,5.96 13.475,4.814 19.314,7.409 25.018,6.037 "/>
       </svg>
     </SvgButton>
-    <SvgButton v-if="showMapMenu && showMarkerMenu" class="thin-hide" :title="$t('markers.tooltip')"
+    <SvgButton v-if="embed.markers && showMapMenu && showMarkerMenu" class="thin-hide" :title="$t('markers.tooltip')"
                @action="appState.menu.openPage('markers', $t('markers.title'), {markerSet: markers})">
       <svg viewBox="0 0 30 30">
         <path d="M15,3.563c-4.459,0-8.073,3.615-8.073,8.073c0,6.483,8.196,14.802,8.196,14.802s7.951-8.013,7.951-14.802
@@ -16,7 +16,7 @@
 			c2.263,0,4.098,1.835,4.098,4.098C19.098,13.899,17.263,15.734,15,15.734z"/>
       </svg>
     </SvgButton>
-    <SvgButton v-if="showMapMenu && !playerMarkerSet.fake" class="thin-hide" :title="$t('players.tooltip')" @action="openPlayerList">
+    <SvgButton v-if="embed.players && showMapMenu && !playerMarkerSet.fake" class="thin-hide" :title="$t('players.tooltip')" @action="openPlayerList">
       <svg viewBox="0 0 30 30">
         <g>
           <path d="M8.95,14.477c0.409-0.77,1.298-1.307,2.164-1.309h0.026c-0.053-0.234-0.087-0.488-0.087-0.755
@@ -43,11 +43,11 @@
       </svg>
     </SvgButton>
     <div class="space thin-hide greedy"></div>
-    <DayNightSwitch v-if="showMapMenu" class="thin-hide" :title="$t('lighting.dayNightSwitch.tooltip')" />
+    <DayNightSwitch v-if="embed.daynight && showMapMenu" class="thin-hide" :title="$t('lighting.dayNightSwitch.tooltip')" />
     <div class="space thin-hide"></div>
-    <ControlsSwitch v-if="showMapMenu && showViewControls" class="thin-hide"></ControlsSwitch>
-    <div class="space thin-hide" v-if ="showViewControls"></div>
-    <SvgButton v-if="showMapMenu" class="thin-hide" :title="$t('resetCamera.tooltip')" @action="$bluemap.resetCamera()">
+    <ControlsSwitch v-if="embed.controlsswitch && showMapMenu && showViewControls" class="thin-hide"></ControlsSwitch>
+    <div class="space thin-hide" v-if="embed.controlsswitch && showViewControls"></div>
+    <SvgButton v-if="embed.resetcamera && showMapMenu" class="thin-hide" :title="$t('resetCamera.tooltip')" @action="$bluemap.resetCamera()">
       <svg viewBox="0 0 30 30">
         <rect x="7.085" y="4.341" transform="matrix(0.9774 0.2116 -0.2116 0.9774 3.2046 -1.394)" width="2.063" height="19.875"/>
         <path d="M12.528,5.088c0,0,3.416-0.382,4.479-0.031c1.005,0.332,2.375,2.219,3.382,2.545c1.096,0.354,4.607-0.089,4.607-0.089
@@ -55,8 +55,8 @@
       L12.528,5.088z"/>
       </svg>
     </SvgButton>
-    <PositionInput v-if="showMapMenu" class="pos-input" />
-    <Compass v-if="showMapMenu" :title="$t('compass.tooltip')" />
+    <PositionInput v-if="embed.position && showMapMenu" class="pos-input" />
+    <Compass v-if="embed.compass && showMapMenu" :title="$t('compass.tooltip')" />
   </div>
 </template>
 
@@ -67,6 +67,7 @@
   import ControlsSwitch from "./ControlsSwitch.vue";
   import MenuButton from "./MenuButton.vue";
   import SvgButton from "./SvgButton.vue";
+  import {embedParams} from "../../js/EmbedParams.js";
 
   export default {
     name: "ControlBar",
@@ -82,7 +83,8 @@
       return {
         appState: this.$bluemap.appState,
         markers: this.$bluemap.mapViewer.markers.data,
-        mapViewer: this.$bluemap.mapViewer.data
+        mapViewer: this.$bluemap.mapViewer.data,
+        embed: embedParams,
       }
     },
     computed: {
