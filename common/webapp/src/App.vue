@@ -2,7 +2,7 @@
   <div id="app" :class="{'theme-light': appState.theme === 'light', 'theme-dark': appState.theme === 'dark', 'theme-contrast': appState.theme === 'contrast'}">
     <FreeFlightMobileControls v-if="mapViewer.mapState === 'loaded' && appState.controls.state === 'free'" />
     <ZoomButtons v-if="embed.zoom && showMapMenu && appState.controls.showZoomButtons && appState.controls.state !== 'free'" />
-    <ControlBar v-if="embed.controls" />
+    <ControlBar v-show="embed.controls" />
     <div v-if="mapViewer.mapState !== 'loaded'" class="map-state-message">{{ $t("map." + mapViewer.mapState) }}</div>
     <MainMenu v-if="embed.menu" :menu="appState.menu" />
   </div>
