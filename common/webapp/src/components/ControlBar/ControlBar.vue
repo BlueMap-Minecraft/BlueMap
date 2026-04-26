@@ -43,7 +43,7 @@
       </svg>
     </SvgButton>
     <div class="space thin-hide greedy"></div>
-    <DayNightSwitch v-if="embed.daynight && showMapMenu" class="thin-hide" :title="$t('lighting.dayNightSwitch.tooltip')" />
+    <DayNightSwitch v-if="showMapMenu" v-show="embed.daynight" class="thin-hide" :title="$t('lighting.dayNightSwitch.tooltip')" />
     <div class="space thin-hide"></div>
     <ControlsSwitch v-if="embed.controlsswitch && showMapMenu && showViewControls" class="thin-hide"></ControlsSwitch>
     <div class="space thin-hide" v-if="embed.controlsswitch && showViewControls"></div>
