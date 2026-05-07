@@ -53,15 +53,4 @@ public class PluginConfig {
 
     private int playerRenderLimit = -1;
 
-    private int updateCooldown = 60;
-    private int fullUpdateInterval = 1440;
-
-    public Duration getUpdateCooldown() {
-        return Duration.ofSeconds(updateCooldown);
-    }
-
-    public Duration getFullUpdateInterval() {
-        return Duration.ofMinutes(fullUpdateInterval);
-    }
-
 }

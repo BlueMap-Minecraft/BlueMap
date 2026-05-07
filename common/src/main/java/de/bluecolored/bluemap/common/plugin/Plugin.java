@@ -331,7 +331,7 @@ public class Plugin implements ServerEventListener {
                 daemonTimer.schedule(fileWatcherRestartTask, TimeUnit.HOURS.toMillis(1), TimeUnit.HOURS.toMillis(1));
 
                 //periodically update all (non frozen) maps
-                long fullUpdateInterval = pluginConfig.getFullUpdateInterval().toMillis();
+                long fullUpdateInterval = coreConfig.getFullUpdateInterval().toMillis();
                 if (fullUpdateInterval > 0) {
                     TimerTask updateAllMapsTask = new TimerTask() {
                         @Override
@@ -571,7 +571,7 @@ public class Plugin implements ServerEventListener {
         if (blueMap == null) return;
 
         try {
-            MapUpdateService watcher = new MapUpdateService(renderManager, map, blueMap.getConfig().getPluginConfig().getUpdateCooldown(), false);
+            MapUpdateService watcher = new MapUpdateService(renderManager, map, blueMap.getConfig().getCoreConfig().getUpdateCooldown(), false);
             watcher.start();
             mapUpdateServices.put(map.getId(), watcher);
         } catch (IOException ex) {
