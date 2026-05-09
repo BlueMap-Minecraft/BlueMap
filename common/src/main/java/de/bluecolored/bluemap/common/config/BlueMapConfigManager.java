@@ -82,6 +82,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
             @Nullable Collection<ServerWorld> autoConfigWorlds,
             @Nullable Boolean usePluginConfig,
             @Nullable Boolean useMetricsConfig,
+            @Nullable Boolean isCli,
             @Nullable Path packsFolder,
             @Nullable Path modsFolder
     ) throws ConfigurationException {
@@ -91,11 +92,12 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
         if (autoConfigWorlds == null) autoConfigWorlds = Collections.emptyList();
         if (usePluginConfig == null) usePluginConfig = true;
         if (useMetricsConfig == null) useMetricsConfig = true;
+        if (isCli == null) isCli = false;
         if (packsFolder == null) packsFolder = configRoot.resolve("packs");
 
         // load
         this.configManager = new ConfigManager(configRoot);
-        this.coreConfig = loadCoreConfig(defaultDataFolder, useMetricsConfig);
+        this.coreConfig = loadCoreConfig(defaultDataFolder, useMetricsConfig, isCli);
         this.webappConfig = loadWebappConfig(defaultWebroot);
         this.webserverConfig = loadWebserverConfig(webappConfig.getWebroot(), coreConfig.getData());
         this.pluginConfig = usePluginConfig ? loadPluginConfig() : new PluginConfig();
@@ -106,7 +108,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
         this.modsFolder = modsFolder;
     }
 
-    private CoreConfig loadCoreConfig(Path defaultDataFolder, boolean useMetricsConfig) throws ConfigurationException {
+    private CoreConfig loadCoreConfig(Path defaultDataFolder, boolean useMetricsConfig, boolean isCli) throws ConfigurationException {
         Path configFile = configManager.resolveConfigFile(CORE_CONFIG_NAME);
         Path configFolder = configFile.getParent();
 
@@ -123,6 +125,8 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
                                 .setVariable("data", formatPath(defaultDataFolder))
                                 .setVariable("implementation", "bukkit")
                                 .setVariable("render-thread-count", Integer.toString(suggestRenderThreadCount()))
+                                .setVariable("default-thread-priority", String.valueOf(Thread.NORM_PRIORITY))
+                                .setConditional("update-interval-u-flag", isCli)
                                 .setVariable("logfile", formatPath(defaultDataFolder.resolve("logs").resolve("debug.log")))
                                 .setVariable("logfile-with-time", formatPath(defaultDataFolder.resolve("logs").resolve("debug_%1$tF_%1$tT.log")))
                                 .build(),

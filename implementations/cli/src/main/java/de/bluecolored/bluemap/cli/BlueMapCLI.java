@@ -103,7 +103,7 @@ public class BlueMapCLI {
         if (watch) {
             for (BmMap map : maps.values()) {
                 try {
-                    MapUpdateService watcher = new MapUpdateService(renderManager, map, blueMap.getConfig().getPluginConfig().getUpdateCooldown(), true);
+                    MapUpdateService watcher = new MapUpdateService(renderManager, map, blueMap.getConfig().getCoreConfig().getUpdateCooldown(), true);
                     watcher.start();
                     mapUpdateServices.add(watcher);
                 } catch (IOException ex) {
@@ -117,13 +117,15 @@ public class BlueMapCLI {
         }
 
         //update all maps
-        for (BmMap map : maps.values()) {
-            renderManager.scheduleRenderTask(MapUpdatePreparationTask.builder()
-                    .map(map)
-                    .force(force)
-                    .taskConsumer(renderManager::scheduleRenderTaskNext)
-                    .build());
-        }
+        maps.values().stream()
+                .sorted(Comparator.comparing(bmMap -> bmMap.getMapSettings().getSorting()))
+                .forEach(map -> {
+                    renderManager.scheduleRenderTask(MapUpdatePreparationTask.builder()
+                            .map(map)
+                            .force(force)
+                            .taskConsumer(renderManager::scheduleRenderTaskNext)
+                            .build());
+                });
 
         // enable api
         BlueMapAPIImpl api = new BlueMapAPIImpl(blueMap, null);
@@ -175,6 +177,23 @@ public class BlueMapCLI {
             }
         };
         timer.scheduleAtFixedRate(saveTask, TimeUnit.MINUTES.toMillis(2), TimeUnit.MINUTES.toMillis(2));
+
+        if (watch) {
+            long fullUpdateInterval = blueMap.getConfig().getCoreConfig().getFullUpdateInterval().toMillis();
+            if (fullUpdateInterval > 0) {
+                TimerTask updateAllMapsTask = new TimerTask() {
+                    @Override
+                    public void run() {
+                        Logger.global.logInfo("Start updating " + maps.size() + " maps ...");
+                        renderManager.scheduleRenderTasksNext(maps.values().stream()
+                                .sorted(Comparator.comparing(bmMap -> bmMap.getMapSettings().getSorting()))
+                                .map(map -> MapUpdatePreparationTask.updateMap(map, renderManager))
+                                .toArray(RenderTask[]::new));
+                    }
+                };
+                timer.scheduleAtFixedRate(updateAllMapsTask, fullUpdateInterval, fullUpdateInterval);
+            }
+        }
 
         Runnable shutdown = () -> {
             Logger.global.logInfo("Stopping...");
@@ -381,6 +400,7 @@ public class BlueMapCLI {
                     .modsFolder(cli.modsFolder)
                     .packsFolder(packsFolder)
                     .usePluginConfig(false)
+                    .isCli(true)
                     .defaultDataFolder(Path.of("data"))
                     .defaultWebroot(Path.of("web"))
                     .build();

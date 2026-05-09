@@ -29,6 +29,7 @@ import com.github.benmanes.caffeine.cache.stats.CacheStats;
 import com.google.gson.stream.JsonWriter;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluemap.core.util.Registry;
 import lombok.SneakyThrows;
 
 import java.io.IOException;
@@ -63,6 +64,12 @@ public class StateDumper {
         collectSystemInfo(writer);
 
         Set<Object> alreadyDumped = Collections.newSetFromMap(new IdentityHashMap<>());
+
+        writer.name("registries").beginArray();
+        for (Object instance : Registry.REGISTRIES) {
+            dumpInstance(instance, writer, alreadyDumped);
+        }
+        writer.endArray();
 
         writer.name("dump").beginArray();
         for (Object instance : instances) {

@@ -28,6 +28,7 @@ import lombok.Getter;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import java.nio.file.Path;
+import java.time.Duration;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
 @ConfigSerializable
@@ -40,12 +41,23 @@ public class CoreConfig {
 
     private int renderThreadPriority = Thread.NORM_PRIORITY;
 
+    private int updateCooldown = 60;
+    private int fullUpdateInterval = 1440;
+
     private boolean metrics = true;
 
     private Path data = Path.of("bluemap");
     private boolean scanForModResources = true;
 
     private LogConfig log = new LogConfig();
+
+    public Duration getUpdateCooldown() {
+        return Duration.ofSeconds(updateCooldown);
+    }
+
+    public Duration getFullUpdateInterval() {
+        return Duration.ofMinutes(fullUpdateInterval);
+    }
 
     public int resolveRenderThreadCount() {
         if (renderThreadCount > 0) return renderThreadCount;

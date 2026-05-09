@@ -189,10 +189,15 @@ public class MCAWorld implements World {
     }
 
     public static DimensionType loadDimensionType(Path worldFolder, Key dimension, DataPack dataPack) throws IOException {
+        Path dimensionFolder = resolveDimensionFolder(worldFolder, dimension);
         BlueNBT blueNBT = createBlueNBTForDataPack(dataPack);
         DimensionSettings dimensionSettings = null;
 
-        WorldGenSettings worldGenSettings = load(WorldGenSettings.class, worldFolder.resolve("data/minecraft/world_gen_settings.dat"), blueNBT);
+        WorldGenSettings worldGenSettings = load(WorldGenSettings.class, dimensionFolder.resolve("data/minecraft/world_gen_settings.dat"), blueNBT);
+        if (worldGenSettings == null){
+            worldGenSettings = load(WorldGenSettings.class, worldFolder.resolve("data/minecraft/world_gen_settings.dat"), blueNBT);
+        }
+
         if (worldGenSettings != null) {
             dimensionSettings = worldGenSettings.getData().getDimensions().get(dimension.getFormatted());
         }

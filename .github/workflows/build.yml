@@ -69,6 +69,23 @@ jobs:
         with:
           name: artifacts
           path: build/release
+      - name: Check latest
+        id: check_latest
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          CURRENT_TAG=${GITHUB_REF#refs/tags/}
+          
+          git fetch --all --tags --quiet
+          ALL_TAGS=$(git tag -l | grep -E '^v[0-9]+\.[0-9]+' | sort -V)
+          LATEST_TAG=$(echo "${ALL_TAGS}" | tail -n 1)
+          
+          if [ "${CURRENT_TAG}" = "${LATEST_TAG}" ]; then
+            echo "is_latest=true" >> $GITHUB_OUTPUT
+            echo "Current tag ${CURRENT_TAG} is the latest version"
+          else
+            echo "is_latest=false" >> $GITHUB_OUTPUT
+            echo "Current tag ${CURRENT_TAG} is not the latest (latest is ${LATEST_TAG})"
+          fi
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
@@ -86,7 +103,7 @@ jobs:
           # For releases: latest, full version and major version (ex. latest, v3.3 and v3)
           tags: |
             type=raw,value={{branch}}
-            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/') }}
+            type=raw,value=latest,enable=${{ steps.check_latest.outputs.is_latest == 'true' }}
             type=raw,value={{tag}},enable=${{ startsWith(github.ref, 'refs/tags/') }}
             type=match,pattern=v\d+,group=0,enable=${{ startsWith(github.ref, 'refs/tags/') }}
           flavor: |
