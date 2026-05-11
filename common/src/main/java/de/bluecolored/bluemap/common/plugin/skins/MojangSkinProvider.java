@@ -56,7 +56,8 @@ public class MojangSkinProvider implements SkinProvider {
     }
 
     private Reader requestProfileJson(UUID playerUUID) throws IOException {
-        URL url = URI.create("https://sessionserver.mojang.com/session/minecraft/profile/" + playerUUID).toURL();
+        String undashedUUID = playerUUID.toString().replace("-", "");
+        URL url = URI.create("https://sessionserver.mojang.com/session/minecraft/profile/" + undashedUUID).toURL();
         return new InputStreamReader(url.openStream());
     }
 
