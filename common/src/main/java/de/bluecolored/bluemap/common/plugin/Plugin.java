@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.common.plugin;
 
+import de.bluecolored.bluemap.api.plugin.PlayerDisplayNameProvider;
 import de.bluecolored.bluemap.common.BlueMapConfiguration;
 import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.InterruptableReentrantLock;
@@ -101,6 +102,7 @@ public class Plugin implements ServerEventListener {
     private Timer daemonTimer;
     private Map<String, MapUpdateService> mapUpdateServices;
     private PlayerSkinUpdater skinUpdater;
+    private PlayerDisplayNameProvider playerDisplayNameProvider;
 
     private boolean loaded = false;
 
@@ -206,7 +208,7 @@ public class Plugin implements ServerEventListener {
                         MapRequestHandler mapRequestHandler;
                         BmMap map = maps.get(id);
                         if (map != null) {
-                            mapRequestHandler = new MapRequestHandler(map, serverInterface, pluginConfig, Predicate.not(pluginState::isPlayerHidden));
+                            mapRequestHandler = new MapRequestHandler(this, map, serverInterface, pluginConfig, Predicate.not(pluginState::isPlayerHidden));
                         } else {
                             Storage storage = blueMap.getOrLoadStorage(mapConfig.getStorage());
                             mapRequestHandler = new MapRequestHandler(storage.map(id));
@@ -278,6 +280,8 @@ public class Plugin implements ServerEventListener {
                 if (pluginConfig.isLivePlayerMarkers()) {
                     serverInterface.registerListener(skinUpdater);
                 }
+
+                this.playerDisplayNameProvider = new ServerPlayerDisplayNameProvider(this.serverInterface);
 
                 //init timer
                 daemonTimer = new Timer("BlueMap-Plugin-DaemonTimer", true);
@@ -549,6 +553,7 @@ public class Plugin implements ServerEventListener {
         var maps = blueMap.getMaps();
         for (BmMap map : maps.values()) {
             var dataSupplier = new LivePlayersDataSupplier(
+                    this,
                     serverInterface,
                     getBlueMap().getConfig().getPluginConfig(),
                     map.getWorld(),
@@ -657,4 +662,7 @@ public class Plugin implements ServerEventListener {
         return loadingLock.isLocked();
     }
 
+    public void setPlayerDisplayNameProvider(PlayerDisplayNameProvider playerDisplayNameProvider) {
+        this.playerDisplayNameProvider = Objects.requireNonNull(playerDisplayNameProvider, "playerDisplayNameProvider can not be null");
+    }
 }

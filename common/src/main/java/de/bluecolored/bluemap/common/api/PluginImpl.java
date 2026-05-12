@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.common.api;
 
 
 import de.bluecolored.bluemap.api.plugin.PlayerIconFactory;
+import de.bluecolored.bluemap.api.plugin.PlayerDisplayNameProvider;
 import de.bluecolored.bluemap.api.plugin.SkinProvider;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import lombok.NonNull;
@@ -56,6 +57,16 @@ public class PluginImpl implements de.bluecolored.bluemap.api.plugin.Plugin {
     @Override
     public void setPlayerMarkerIconFactory(PlayerIconFactory playerMarkerIconFactory) {
         plugin.getSkinUpdater().setPlayerMarkerIconFactory(playerMarkerIconFactory);
+    }
+
+    @Override
+    public PlayerDisplayNameProvider getPlayerDisplayNameProvider() {
+        return plugin.getPlayerDisplayNameProvider();
+    }
+
+    @Override
+    public void setPlayerDisplayNameProvider(PlayerDisplayNameProvider playerNameProvider) {
+        plugin.setPlayerDisplayNameProvider(playerNameProvider);
     }
 
     public Plugin getPlugin() {

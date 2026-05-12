@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.common.live;
 
 import com.google.gson.stream.JsonWriter;
 import de.bluecolored.bluemap.common.config.PluginConfig;
+import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.serverinterface.Player;
 import de.bluecolored.bluemap.common.serverinterface.Server;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
@@ -41,6 +42,7 @@ import java.util.function.Supplier;
 
 public class LivePlayersDataSupplier implements Supplier<String> {
 
+    private final Plugin plugin;
     private final Server server;
     private final PluginConfig config;
     private final World world;
@@ -48,7 +50,8 @@ public class LivePlayersDataSupplier implements Supplier<String> {
 
     private transient @Nullable ServerWorld serverWorld;
 
-    public LivePlayersDataSupplier(Server server, PluginConfig config, World world, Predicate<UUID> playerFilter) {
+    public LivePlayersDataSupplier(Plugin plugin, Server server, PluginConfig config, World world, Predicate<UUID> playerFilter) {
+        this.plugin = plugin;
         this.server = server;
         this.config = config;
         this.world = world;
@@ -83,7 +86,7 @@ public class LivePlayersDataSupplier implements Supplier<String> {
 
                     json.beginObject();
                     json.name("uuid").value(player.getUuid().toString());
-                    json.name("name").value(player.getName().toPlainString());
+                    json.name("name").value(this.plugin.getPlayerDisplayNameProvider().get(player.getUuid()));
                     json.name("foreign").value(!isCorrectWorld);
 
                     json.name("position").beginObject();
