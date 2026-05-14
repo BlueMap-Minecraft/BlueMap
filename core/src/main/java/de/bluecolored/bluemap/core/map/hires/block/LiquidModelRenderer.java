@@ -38,6 +38,7 @@ import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.TextureVariable;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
+import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.math.Color;
 import de.bluecolored.bluemap.core.util.math.MatrixM3f;
 import de.bluecolored.bluemap.core.util.math.VectorM2f;
@@ -61,8 +62,8 @@ public class LiquidModelRenderer implements BlockRenderer {
             .scale(0.5f, 0.5f, 1)
             .translate(0.5f, 0.5f);
 
-    @Getter private final Function<ResourcePath<Model>, Model> modelProvider;
-    @Getter private final Function<ResourcePath<Texture>, Texture> textureProvider;
+    @Getter private final Function<Key, Model> modelProvider;
+    @Getter private final Function<Key, Texture> textureProvider;
     @Getter private final TextureGallery textureGallery;
     @Getter private final RenderSettings renderSettings;
     @Getter private final BlockColorCalculatorFactory.BlockColorCalculator blockColorCalculator;

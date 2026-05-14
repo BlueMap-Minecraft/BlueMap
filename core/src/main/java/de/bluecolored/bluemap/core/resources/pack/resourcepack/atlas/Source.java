@@ -60,7 +60,7 @@ public class Source {
 
     public void bake(ResourcePool<Texture> textures, Predicate<Key> textureFilter) throws IOException {}
 
-    protected @Nullable Texture loadTexture(ResourcePath<Texture> key, Path file) throws IOException {
+    protected @Nullable Texture loadTexture(Key key, Path file) throws IOException {
         BufferedImage image = loadImage(file);
         if (image == null) return null;
         AnimationMeta animation = loadAnimation(file);
@@ -82,7 +82,7 @@ public class Source {
         }
     }
 
-    protected Path getFile(Path root, ResourcePath<Texture> key) {
+    protected Path getFile(Path root, Key key) {
         return root
                 .resolve("assets")
                 .resolve(key.getNamespace())
