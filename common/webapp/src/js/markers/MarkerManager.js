@@ -37,7 +37,7 @@ export class MarkerManager {
      * @param fileUrl {string} - The marker file from which this manager updates its markers
      * @param events {EventTarget}
      */
-    constructor(root, fileUrl, events = null) {
+    constructor(root, fileUrl, events = null, paused = false) {
         Object.defineProperty(this, 'isMarkerManager', {value: true});
 
         this.root = root;
@@ -47,6 +47,8 @@ export class MarkerManager {
 
         /** @type {NodeJS.Timeout} */
         this._updateInterval = null;
+        this._updateIntervalMillis = 0;
+        this._paused = paused;
     }
 
     /**
@@ -55,26 +57,45 @@ export class MarkerManager {
      * @param ms - interval in milliseconds
      */
     setAutoUpdateInterval(ms) {
+        this._updateIntervalMillis = ms;
         if (this._updateInterval) clearTimeout(this._updateInterval);
-        if (ms > 0) {
+        if (!this._paused && ms > 0) {
             let autoUpdate = () => {
                 if (this.disposed) return;
                 this.update()
                     .then(success => {
-                        if (success) {
-                            this._updateInterval = setTimeout(autoUpdate, ms);
-                        } else {
-                            this._updateInterval = setTimeout(autoUpdate, Math.max(ms, 1000 * 15));
+                        if (!this._paused){
+                            if (success) {
+                                this._updateInterval = setTimeout(autoUpdate, ms);
+                            } else {
+                                this._updateInterval = setTimeout(autoUpdate, Math.max(ms, 1000 * 15));
+                            }
                         }
                     })
                     .catch(e => {
                         alert(this.events, e, "warning");
-                        this._updateInterval = setTimeout(autoUpdate, Math.max(ms, 1000 * 15));
+                        if (!this._paused) this._updateInterval = setTimeout(autoUpdate, Math.max(ms, 1000 * 15));
                     });
             };
 
-            this._updateInterval = setTimeout(autoUpdate, ms);
+            if (!this._paused) this._updateInterval = setTimeout(autoUpdate, ms);
         }
+    }
+
+    /**
+     * Pause auto-updates
+     */
+    pauseAutoUpdates() {
+        this._paused = true;
+        if (this._updateInterval) clearTimeout(this._updateInterval);
+    }
+
+    /**
+     * Resume auto-updates
+     */
+    resumeAutoUpdates(){
+        this._paused = false;
+        this.setAutoUpdateInterval(this._updateIntervalMillis)
     }
 
     /**
@@ -88,7 +109,6 @@ export class MarkerManager {
     }
 
     /**
-     * @protected
      * @param markerData
      */
     updateFromData(markerData) {}

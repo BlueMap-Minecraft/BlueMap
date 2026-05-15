@@ -24,12 +24,35 @@
  */
 package de.bluecolored.bluemap.common.web;
 
+import de.bluecolored.bluemap.common.web.http.HttpRequestHandler;
+import de.bluecolored.bluemap.common.web.http.HttpResponse;
+import de.bluecolored.bluemap.common.web.http.HttpStatusCode;
+import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.storage.MapStorage;
 import org.jetbrains.annotations.Nullable;
 
+import com.flowpowered.math.vector.Vector2i;
+
+import java.io.IOException;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class MapRequestHandler extends RoutingRequestHandler {
+
+    private final SseConnectionManager sseConnections = new SseConnectionManager();
+
+    public MapRequestHandler(
+            BmMap map,
+            @Nullable Supplier<String> livePlayersDataSupplier,
+            @Nullable Supplier<String> liveMarkerDataSupplier
+    ) {
+        this(map.getStorage(), livePlayersDataSupplier, liveMarkerDataSupplier);
+
+        // only register the handler for map updates if we're given the actual map
+        // instance from the plugin (ie. not running standalone)
+        map.getHiresModelManager().addTileUpdateListener(tile -> onTileUpdate(tile, 0));
+        map.getLowresTileManager().addTileUpdateListener((tile, lod) -> onTileUpdate(tile, lod));
+    }
 
     public MapRequestHandler(MapStorage mapStorage) {
         this(mapStorage, null, null);
@@ -42,17 +65,55 @@ public class MapRequestHandler extends RoutingRequestHandler {
     ) {
         register(".*", new MapStorageRequestHandler(mapStorage));
 
+        register("live/sse", "", (HttpRequestHandler) request -> {
+            HttpResponse response = new HttpResponse(HttpStatusCode.OK);
+            response.addHeader("Content-Type", "text/event-stream");
+            response.addHeader("Cache-Control", "no-cache");
+            try {
+                response.setBody(sseConnections.openConnection());
+            } catch (IOException e) {
+                return new HttpResponse(HttpStatusCode.INTERNAL_SERVER_ERROR);
+            }
+            return response;
+        });
+
         if (livePlayersDataSupplier != null) {
-            register("live/players\\.json", "", new JsonDataRequestHandler(
-                    new CachedRateLimitDataSupplier(livePlayersDataSupplier,1000)
-            ));
+            LiveDataSupplierBroadcaster<String> playerDataBroadcaster = new LiveDataSupplierBroadcaster<>(livePlayersDataSupplier, 1000);
+            registerSseCallback(playerDataBroadcaster, this::onPlayerUpdate);
+            register("live/players\\.json", "", new JsonDataRequestHandler(playerDataBroadcaster));
         }
 
         if (liveMarkerDataSupplier != null) {
-            register("live/markers\\.json", "", new JsonDataRequestHandler(
-                    new CachedRateLimitDataSupplier(liveMarkerDataSupplier,10000)
-            ));
+            LiveDataSupplierBroadcaster<String>markerDataBroadcaster = new LiveDataSupplierBroadcaster<>(liveMarkerDataSupplier, 10000);
+            registerSseCallback(markerDataBroadcaster, this::onMarkerUpdate);
+            register("live/markers\\.json", "", new JsonDataRequestHandler(markerDataBroadcaster));
         }
     }
 
+    /**
+     * Helper function to subscribe to updates from a broadcaster (forcing it to auto-refresh)
+     * only if the SSE manager has a connection.
+     */
+    private void registerSseCallback(LiveDataSupplierBroadcaster<String> broadcaster, Consumer<String> callback){
+        sseConnections.addHasConnectionsListener(hasConnections -> {
+            if (hasConnections) {
+                broadcaster.addUpdateListener(callback);
+            } else {
+                broadcaster.removeUpdateListener(callback);
+            }
+        });
+    }
+
+    private void onTileUpdate(Vector2i tile, int lod) {
+        // since the data is all ints there's no escaping issues so just build the JSON the hacky fast way
+        sseConnections.broadcast("tile", "{\"x\":" + tile.getX() + ",\"y\":" + tile.getY() + ",\"lod\":" + lod + "}");
+    }
+
+    private void onPlayerUpdate(String data) {
+        sseConnections.broadcast("player", data);
+    }
+
+    private void onMarkerUpdate(String data) {
+        sseConnections.broadcast("marker", data);
+    }
 }

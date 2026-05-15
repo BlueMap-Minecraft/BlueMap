@@ -39,9 +39,12 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiConsumer;
 
 public class LowresLayer {
 
@@ -61,6 +64,7 @@ public class LowresLayer {
     @Nullable private final LowresLayer nextLayer;
 
     private final Map<Vector2i, LowresTile> pendingChanges;
+    private final List<BiConsumer<Vector2i, Integer>> tileUpdateListeners = new CopyOnWriteArrayList<>();
 
     public LowresLayer(
             GridStorage storage, Grid tileGrid, int lodFactor,
@@ -87,6 +91,13 @@ public class LowresLayer {
                 .build(tileWeakInstanceCache::get);
 
         this.pendingChanges = new ConcurrentHashMap<>();
+    }
+
+    public void addTileUpdateListener(BiConsumer<Vector2i, Integer> listener) {
+        tileUpdateListeners.add(listener);
+    }
+    public void removeTileUpdateListener(BiConsumer<Vector2i, Integer> listener) {
+        tileUpdateListeners.remove(listener);
     }
 
     public void save() {
@@ -128,6 +139,11 @@ public class LowresLayer {
         } catch (IOException e) {
             Logger.global.logError("Failed to save tile " + tilePos + " (lod: " + lod + ")", e);
             return false;
+        }
+
+        // notify listeners that the tile changed
+        for (BiConsumer<Vector2i, Integer> listener : this.tileUpdateListeners) {
+            listener.accept(tilePos, lod);
         }
 
         if (this.nextLayer == null) return true;

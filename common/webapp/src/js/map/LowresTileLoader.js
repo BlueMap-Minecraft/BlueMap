@@ -62,11 +62,14 @@ export class LowresTileLoader {
         this.geometry.translate(tileSettings.tileSize.x / 2 + 1, 0, tileSettings.tileSize.x / 2 + 1);
     }
 
-    load = (tileX, tileZ, cancelCheck = () => false) => {
+    load = (tileX, tileZ, cancelCheck = () => false, force = false) => {
         let tileUrl = this.tilePath + this.lod + "/" + pathFromCoords(tileX, tileZ) + '.png';
 
         //await this.loadBlocker();
         return new Promise((resolve, reject) => {
+            if (force) {
+                this.revalidatedUrls.delete(tileUrl);
+            }
             this.textureLoader.setRevalidatedUrls(this.revalidatedUrls);
             this.textureLoader.load(tileUrl,
                 async texture => {
