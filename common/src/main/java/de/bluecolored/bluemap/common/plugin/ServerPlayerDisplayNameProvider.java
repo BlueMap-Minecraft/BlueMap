@@ -27,7 +27,9 @@ package de.bluecolored.bluemap.common.plugin;
 import de.bluecolored.bluemap.api.plugin.PlayerDisplayNameProvider;
 import de.bluecolored.bluemap.common.serverinterface.Player;
 import de.bluecolored.bluemap.common.serverinterface.Server;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.Map;
 import java.util.UUID;
 
 public class ServerPlayerDisplayNameProvider implements PlayerDisplayNameProvider {
@@ -39,13 +41,10 @@ public class ServerPlayerDisplayNameProvider implements PlayerDisplayNameProvide
 
     @Override
     public String get(UUID playerUUID) {
-        // TODO: I am not happy with needing to do this here.
-        //  The place that calls this function already loops over the online players, so this loops double!
-        //  I can't really think of a better way to do this right now, though.
-        for (Player onlinePlayer : this.server.getOnlinePlayers()) {
-            if (onlinePlayer.getUuid().equals(playerUUID)) {
-                return onlinePlayer.getName().toPlainString();
-            }
+        Map<UUID, Player> onlinePlayerMap = this.server.getOnlinePlayers();
+        @Nullable Player player = onlinePlayerMap.get(playerUUID);
+        if (player != null) {
+            return player.getName().toPlainString();
         }
 
         return playerUUID.toString();

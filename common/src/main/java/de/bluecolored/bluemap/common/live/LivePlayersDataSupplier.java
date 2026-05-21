@@ -36,6 +36,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -70,7 +71,9 @@ public class LivePlayersDataSupplier implements Supplier<String> {
             json.name("players").beginArray();
 
             if (config.isLivePlayerMarkers()) {
-                for (Player player : this.server.getOnlinePlayers()) {
+                for (Map.Entry<UUID, Player> playerEntry : this.server.getOnlinePlayers().entrySet()) {
+                    UUID playerUUID = playerEntry.getKey();
+                    Player player = playerEntry.getValue();
                     boolean isCorrectWorld = player.getWorld().equals(serverWorld);
 
                     if (config.isHideInvisible() && player.isInvisible()) continue;
@@ -82,11 +85,11 @@ public class LivePlayersDataSupplier implements Supplier<String> {
                             player.getSkyLight() < config.getHideBelowSkyLight() &&
                             player.getBlockLight() < config.getHideBelowBlockLight()
                     ) continue;
-                    if (!this.playerFilter.test(player.getUuid())) continue;
+                    if (!this.playerFilter.test(playerUUID)) continue;
 
                     json.beginObject();
-                    json.name("uuid").value(player.getUuid().toString());
-                    json.name("name").value(this.plugin.getPlayerDisplayNameProvider().get(player.getUuid()));
+                    json.name("uuid").value(playerUUID.toString());
+                    json.name("name").value(this.plugin.getPlayerDisplayNameProvider().get(playerUUID));
                     json.name("foreign").value(!isCorrectWorld);
 
                     json.name("position").beginObject();

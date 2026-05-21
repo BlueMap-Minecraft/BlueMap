@@ -223,8 +223,8 @@ public class FabricMod implements ModInitializer, Server {
     }
 
     @Override
-    public Collection<Player> getOnlinePlayers() {
-        return onlinePlayerMap.values();
+    public Map<UUID, Player> getOnlinePlayers() {
+        return onlinePlayerMap;
     }
 
     /**
