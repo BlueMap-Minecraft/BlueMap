@@ -208,7 +208,7 @@ public class Plugin implements ServerEventListener {
                         MapRequestHandler mapRequestHandler;
                         BmMap map = maps.get(id);
                         if (map != null) {
-                            mapRequestHandler = new MapRequestHandler(this, map, serverInterface, pluginConfig, Predicate.not(pluginState::isPlayerHidden));
+                            mapRequestHandler = new MapRequestHandler(playerDisplayNameProvider, map, serverInterface, pluginConfig, Predicate.not(pluginState::isPlayerHidden));
                         } else {
                             Storage storage = blueMap.getOrLoadStorage(mapConfig.getStorage());
                             mapRequestHandler = new MapRequestHandler(storage.map(id));
@@ -553,7 +553,7 @@ public class Plugin implements ServerEventListener {
         var maps = blueMap.getMaps();
         for (BmMap map : maps.values()) {
             var dataSupplier = new LivePlayersDataSupplier(
-                    this,
+                    playerDisplayNameProvider,
                     serverInterface,
                     getBlueMap().getConfig().getPluginConfig(),
                     map.getWorld(),

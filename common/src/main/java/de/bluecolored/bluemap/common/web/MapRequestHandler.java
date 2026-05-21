@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.common.web;
 
+import de.bluecolored.bluemap.api.plugin.PlayerDisplayNameProvider;
 import de.bluecolored.bluemap.common.config.PluginConfig;
 import de.bluecolored.bluemap.common.live.LiveMarkersDataSupplier;
 import de.bluecolored.bluemap.common.live.LivePlayersDataSupplier;
@@ -41,9 +42,9 @@ import java.util.function.Supplier;
 
 public class MapRequestHandler extends RoutingRequestHandler {
 
-    public MapRequestHandler(Plugin plugin, BmMap map, Server serverInterface, PluginConfig pluginConfig, Predicate<UUID> playerFilter) {
+    public MapRequestHandler(PlayerDisplayNameProvider playerDisplayNameProvider, BmMap map, Server serverInterface, PluginConfig pluginConfig, Predicate<UUID> playerFilter) {
         this(map.getStorage(),
-                new LivePlayersDataSupplier(plugin, serverInterface, pluginConfig, map.getWorld(), playerFilter),
+                new LivePlayersDataSupplier(playerDisplayNameProvider, serverInterface, pluginConfig, map.getWorld(), playerFilter),
                 new LiveMarkersDataSupplier(map.getMarkerSets()));
     }
 
