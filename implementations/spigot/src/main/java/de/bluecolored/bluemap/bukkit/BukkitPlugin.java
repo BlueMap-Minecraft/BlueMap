@@ -258,8 +258,8 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
     }
 
     @Override
-    public Collection<Player> getOnlinePlayers() {
-        return onlinePlayerMap.values();
+    public Map<UUID, Player> getOnlinePlayers() {
+        return onlinePlayerMap;
     }
 
     /**

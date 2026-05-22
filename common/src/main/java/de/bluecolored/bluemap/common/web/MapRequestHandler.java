@@ -24,25 +24,21 @@
  */
 package de.bluecolored.bluemap.common.web;
 
-import de.bluecolored.bluemap.common.config.PluginConfig;
 import de.bluecolored.bluemap.common.live.LiveMarkersDataSupplier;
+import de.bluecolored.bluemap.common.live.LivePlayerInfoTransformer;
 import de.bluecolored.bluemap.common.live.LivePlayersDataSupplier;
 import de.bluecolored.bluemap.common.serverinterface.Server;
-import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.storage.MapStorage;
-import de.bluecolored.bluemap.core.storage.Storage;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.UUID;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class MapRequestHandler extends RoutingRequestHandler {
 
-    public MapRequestHandler(BmMap map, Server serverInterface, PluginConfig pluginConfig, Predicate<UUID> playerFilter) {
+    public MapRequestHandler(BmMap map, Server serverInterface, LivePlayerInfoTransformer playerInfoTransformer, boolean hidePlayersOnDifferentWorld) {
         this(map.getStorage(),
-                new LivePlayersDataSupplier(serverInterface, pluginConfig, map.getWorld(), playerFilter),
+                new LivePlayersDataSupplier(serverInterface, map.getWorld(), playerInfoTransformer, hidePlayersOnDifferentWorld),
                 new LiveMarkersDataSupplier(map.getMarkerSets()));
     }
 

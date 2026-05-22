@@ -34,7 +34,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 
 public interface Server {
 
@@ -105,7 +107,7 @@ public interface Server {
      * Returns a collection of the states of players that are currently online
      */
     @DebugDump
-    Collection<Player> getOnlinePlayers();
+    Map<UUID, Player> getOnlinePlayers();
 
     /**
      * Registers a ServerEventListener, every method of this interface should be called on the specified events

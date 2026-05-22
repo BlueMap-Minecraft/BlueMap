@@ -33,6 +33,7 @@ import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.config.*;
 import de.bluecolored.bluemap.common.debug.StateDumper;
 import de.bluecolored.bluemap.common.live.LivePlayersDataSupplier;
+import de.bluecolored.bluemap.common.live.PluginLivePlayerInfoTransformer;
 import de.bluecolored.bluemap.common.metrics.Metrics;
 import de.bluecolored.bluemap.common.plugin.skins.PlayerSkinUpdater;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdatePreparationTask;
@@ -72,7 +73,6 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 @Getter
@@ -101,6 +101,7 @@ public class Plugin implements ServerEventListener {
     private Timer daemonTimer;
     private Map<String, MapUpdateService> mapUpdateServices;
     private PlayerSkinUpdater skinUpdater;
+    private PluginLivePlayerInfoTransformer livePlayerInfoTransformer;
 
     private boolean loaded = false;
 
@@ -188,6 +189,9 @@ public class Plugin implements ServerEventListener {
                 //load maps
                 Map<String, BmMap> maps = blueMap.getOrLoadMaps();
 
+                //init live data suppliers
+                livePlayerInfoTransformer = new PluginLivePlayerInfoTransformer(this);
+
                 //create and start webserver
                 if (webserverConfig.isEnabled()) {
                     Path webroot = webserverConfig.getWebroot();
@@ -206,7 +210,7 @@ public class Plugin implements ServerEventListener {
                         MapRequestHandler mapRequestHandler;
                         BmMap map = maps.get(id);
                         if (map != null) {
-                            mapRequestHandler = new MapRequestHandler(map, serverInterface, pluginConfig, Predicate.not(pluginState::isPlayerHidden));
+                            mapRequestHandler = new MapRequestHandler(map, serverInterface, livePlayerInfoTransformer, pluginConfig.isHideDifferentWorld());
                         } else {
                             Storage storage = blueMap.getOrLoadStorage(mapConfig.getStorage());
                             mapRequestHandler = new MapRequestHandler(storage.map(id));
@@ -550,9 +554,9 @@ public class Plugin implements ServerEventListener {
         for (BmMap map : maps.values()) {
             var dataSupplier = new LivePlayersDataSupplier(
                     serverInterface,
-                    getBlueMap().getConfig().getPluginConfig(),
                     map.getWorld(),
-                    Predicate.not(pluginState::isPlayerHidden)
+                    livePlayerInfoTransformer,
+                    blueMap.getConfig().getPluginConfig().isHideDifferentWorld()
             );
             try (
                     OutputStream out = map.getStorage().players().write();

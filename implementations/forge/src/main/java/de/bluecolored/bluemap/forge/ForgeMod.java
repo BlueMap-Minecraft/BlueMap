@@ -241,8 +241,8 @@ public class ForgeMod implements Server {
     }
 
     @Override
-    public Collection<Player> getOnlinePlayers() {
-        return onlinePlayerMap.values();
+    public Map<UUID, Player> getOnlinePlayers() {
+        return onlinePlayerMap;
     }
 
     /**
