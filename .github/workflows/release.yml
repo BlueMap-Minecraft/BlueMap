@@ -1,0 +1,139 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version (e.g. "5.2" or "6.13")'
+        required: true
+        type: string
+      highlights:
+        description: 'Highlights / Notes'
+        required: true
+        type: string
+      upgradeNotes:
+        description: 'Upgrade Notes'
+        required: true
+        type: string
+      changelog:
+        description: 'Changelog'
+        required: true
+        type: string
+
+jobs:
+
+  release:
+    name: "Release"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          fetch-depth: 0 # needed for versioning
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: 25
+          cache: 'gradle'
+
+      - name: Get previous version
+        id: previousVersion
+        run: |
+          # Get the last tag and extract version without 'v' prefix
+          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+          
+          if [ -z "$LAST_TAG" ]; then
+            PREVIOUS_VERSION="Unknown"
+          else
+            PREVIOUS_VERSION="${LAST_TAG#v}"
+          fi
+          
+          echo "previous_version=$PREVIOUS_VERSION" >> $GITHUB_OUTPUT
+          echo "Previous version: $PREVIOUS_VERSION"
+
+      - name: Create and push git tag
+        run: |
+          TAG="v${{ github.event.inputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$TAG"
+          git push origin "$TAG"
+          echo "Created and pushed tag: $TAG"
+
+      - name: Build with Gradle
+        run: ./gradlew release publish --stacktrace
+
+      - name: Create release.md
+        run: |
+          cat > release.md << 'EOF'
+          ### Highlights / Notes
+          ${{ github.event.inputs.highlights }}
+          
+          ### Upgrading from ${{ steps.previousVersion.outputs.previous_version }}
+          ${{ github.event.inputs.upgradeNotes }}
+          
+          ### Changelog since ${{ steps.previousVersion.outputs.previous_version }}
+          ${{ github.event.inputs.changelog }}
+          
+          ### Full Changelog
+          https://github.com/BlueMap-Minecraft/BlueMap/releases/tag/v${{ github.event.inputs.version }}
+          EOF
+
+      - name: Prepare release body
+        id: release_body
+        run: |
+          cat > /tmp/release_body.md << 'EOF'
+          ### Highlights / Notes
+          ${{ github.event.inputs.highlights }}
+
+          ### Upgrading from ${{ steps.previousVersion.outputs.previous_version }}
+          ${{ github.event.inputs.upgradeNotes }}
+
+          ### Changelog since ${{ steps.previousVersion.outputs.previous_version }}
+          ${{ github.event.inputs.changelog }}
+
+          ### Targets:
+          **Java**: 25
+          **[BlueMapAPI](https://github.com/BlueMap-Minecraft/BlueMapAPI)**: 2.7.8
+          File | Target Version
+          --- | ---
+          bluemap-${{ github.event.inputs.version }}-cli.jar | Minecraft 1.13.2 - 26.1.2
+          bluemap-${{ github.event.inputs.version }}-spigot.jar | Spigot/Paper 26.1 - 26.1.2
+          bluemap-${{ github.event.inputs.version }}-paper.jar | Paper/Folia 26.1.1 - 26.1.2
+          bluemap-${{ github.event.inputs.version }}-fabric.jar | Fabric 26.1 - 26.1.2
+          bluemap-${{ github.event.inputs.version }}-forge.jar | Forge 26.1 - 26.1.2
+          bluemap-${{ github.event.inputs.version }}-neoforge.jar | NeoForge 26.1 - 26.1.2
+          bluemap-${{ github.event.inputs.version }}-sponge.jar | SpongeAPI 17 - 19 *(with Java 25)*
+          EOF
+
+      - name: Create GitHub Release
+        run: |
+          gh release create v${{ github.event.inputs.version }} \
+            --title "Version ${{ github.event.inputs.version }}" \
+            --body-file /tmp/release_body.md \
+            build/release/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish to Modrinth
+        continue-on-error: true
+        run: ./gradlew modrinth
+
+      - name: Publish to CurseForge
+        continue-on-error: true
+        run: ./gradlew curseforge
+
+      - name: Publish to Hangar
+        continue-on-error: true
+        run: ./gradlew publishAllPublicationsToHangar
+
+      - name: Publish to Ore
+        continue-on-error: true
+        run: ./gradlew publishToOre
+
+

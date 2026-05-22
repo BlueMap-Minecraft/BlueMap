@@ -25,8 +25,6 @@
 package de.bluecolored.bluemap.common.live;
 
 import com.google.gson.stream.JsonWriter;
-import de.bluecolored.bluemap.api.plugin.PlayerDisplayNameProvider;
-import de.bluecolored.bluemap.common.config.PluginConfig;
 import de.bluecolored.bluemap.common.serverinterface.Player;
 import de.bluecolored.bluemap.common.serverinterface.Server;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
@@ -36,27 +34,22 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.util.Map;
-import java.util.UUID;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 public class LivePlayersDataSupplier implements Supplier<String> {
 
-    private final PlayerDisplayNameProvider playerDisplayNameProvider;
     private final Server server;
-    private final PluginConfig config;
     private final World world;
-    private final Predicate<UUID> playerFilter;
+    private final LivePlayerInfoTransformer playerInfoTransformer;
+    private final boolean hidePlayersOnDifferentWorld;
 
     private transient @Nullable ServerWorld serverWorld;
 
-    public LivePlayersDataSupplier(PlayerDisplayNameProvider playerDisplayNameProvider, Server server, PluginConfig config, World world, Predicate<UUID> playerFilter) {
-        this.playerDisplayNameProvider = playerDisplayNameProvider;
+    public LivePlayersDataSupplier(Server server, World world, LivePlayerInfoTransformer playerInfoTransformer, boolean hidePlayersOnDifferentWorld) {
         this.server = server;
-        this.config = config;
         this.world = world;
-        this.playerFilter = playerFilter;
+        this.playerInfoTransformer = playerInfoTransformer;
+        this.hidePlayersOnDifferentWorld = hidePlayersOnDifferentWorld;
     }
 
     @Override
@@ -70,42 +63,31 @@ public class LivePlayersDataSupplier implements Supplier<String> {
             json.beginObject();
             json.name("players").beginArray();
 
-            if (config.isLivePlayerMarkers()) {
-                for (Map.Entry<UUID, Player> playerEntry : this.server.getOnlinePlayers().entrySet()) {
-                    UUID playerUUID = playerEntry.getKey();
-                    Player player = playerEntry.getValue();
-                    boolean isCorrectWorld = player.getWorld().equals(serverWorld);
+            for (Player player : this.server.getOnlinePlayers().values()) {
+                boolean isCorrectWorld = player.getWorld().equals(serverWorld);
+                if (hidePlayersOnDifferentWorld && !isCorrectWorld) continue;
+                LivePlayerInfo playerInfo = this.playerInfoTransformer.apply(player);
+                if (playerInfo == null) continue;
 
-                    if (config.isHideInvisible() && player.isInvisible()) continue;
-                    if (config.isHideVanished() && player.isVanished()) continue;
-                    if (config.isHideSneaking() && player.isSneaking()) continue;
-                    if (config.getHiddenGameModes().contains(player.getGamemode().getId())) continue;
-                    if (config.isHideDifferentWorld() && !isCorrectWorld) continue;
-                    if (
-                            player.getSkyLight() < config.getHideBelowSkyLight() &&
-                            player.getBlockLight() < config.getHideBelowBlockLight()
-                    ) continue;
-                    if (!this.playerFilter.test(playerUUID)) continue;
+                json.beginObject();
 
-                    json.beginObject();
-                    json.name("uuid").value(playerUUID.toString());
-                    json.name("name").value(this.playerDisplayNameProvider.get(playerUUID));
-                    json.name("foreign").value(!isCorrectWorld);
+                json.name("uuid").value(playerInfo.getUuid().toString());
+                json.name("name").value(playerInfo.getName());
+                json.name("foreign").value(!isCorrectWorld);
 
-                    json.name("position").beginObject();
-                    json.name("x").value(player.getPosition().getX());
-                    json.name("y").value(player.getPosition().getY());
-                    json.name("z").value(player.getPosition().getZ());
-                    json.endObject();
+                json.name("position").beginObject();
+                json.name("x").value(playerInfo.getPosition().getX());
+                json.name("y").value(playerInfo.getPosition().getY());
+                json.name("z").value(playerInfo.getPosition().getZ());
+                json.endObject();
 
-                    json.name("rotation").beginObject();
-                    json.name("pitch").value(player.getRotation().getX());
-                    json.name("yaw").value(player.getRotation().getY());
-                    json.name("roll").value(player.getRotation().getZ());
-                    json.endObject();
+                json.name("rotation").beginObject();
+                json.name("pitch").value(playerInfo.getRotation().getX());
+                json.name("yaw").value(playerInfo.getRotation().getY());
+                json.name("roll").value(playerInfo.getRotation().getZ());
+                json.endObject();
 
-                    json.endObject();
-                }
+                json.endObject();
             }
 
             json.endArray();
