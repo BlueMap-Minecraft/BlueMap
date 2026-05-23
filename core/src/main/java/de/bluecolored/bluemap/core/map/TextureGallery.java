@@ -25,7 +25,6 @@
 package de.bluecolored.bluemap.core.map;
 
 import com.google.gson.*;
-import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
@@ -46,7 +45,7 @@ public class TextureGallery {
             .setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)
             .create();
 
-    private final Map<ResourcePath<Texture>, TextureMapping> textureMappings;
+    private final Map<Key, TextureMapping> textureMappings;
     private int nextId;
 
     public TextureGallery() {
@@ -59,34 +58,33 @@ public class TextureGallery {
         this.nextId = 0;
     }
 
-    public int get(@Nullable ResourcePath<Texture> textureResourcePath) {
+    public int get(@Nullable Key textureResourcePath) {
         if (textureResourcePath == null) textureResourcePath = ResourcePack.MISSING_TEXTURE;
         TextureMapping mapping = textureMappings.get(textureResourcePath);
         return mapping != null ? mapping.getId() : 0;
     }
 
-    public synchronized void put(ResourcePath<Texture> textureResourcePath) {
-        textureMappings.compute(textureResourcePath, (r, mapping) -> {
+    public synchronized void put(Key key, Texture texture) {
+        textureMappings.compute(key, (r, mapping) -> {
             if (mapping == null)
-                return new TextureMapping(nextId++, textureResourcePath.getResource());
-
-            Texture texture = textureResourcePath.getResource();
-            if (texture != null) mapping.setTexture(texture);
+                return new TextureMapping(nextId++, texture);
+            else if (texture != null) mapping.setTexture(texture);
             return mapping;
         });
     }
 
     public synchronized void put(ResourcePool<Texture> texturePool) {
-        this.put(ResourcePack.MISSING_TEXTURE); // put this first
-        texturePool.paths()
+        this.put(ResourcePack.MISSING_TEXTURE, ResourcePack.MISSING_TEXTURE.getResource()); // put this first
+        texturePool.entrySet()
                 .stream()
                 .sorted(Comparator
-                        .comparing((ResourcePath<Texture> r) ->  {
-                            Texture texture = r.getResource(texturePool::get);
+                        .comparing((Map.Entry<Key, Texture> entry) ->  {
+                            Texture texture = entry.getValue();
                             return texture != null && texture.getColorPremultiplied().a < 1f;
                         })
-                        .thenComparing(Key::getFormatted))
-                .forEach(this::put);
+                        .thenComparing(entry -> entry.getKey().getFormatted())
+                )
+                .forEach(entry -> put(entry.getKey(), entry.getValue()));
     }
 
     public void writeTexturesFile(OutputStream out) throws IOException {
@@ -115,8 +113,8 @@ public class TextureGallery {
             gallery.nextId = textures.length;
             for (int ordinal = 0; ordinal < textures.length; ordinal++) {
                 Texture texture = textures[ordinal];
-                if (texture != null) {
-                    gallery.textureMappings.put(texture.getKey(), new TextureMapping(ordinal, texture));
+                if (texture != null && texture.getKey() != null) {
+                    gallery.textureMappings.putIfAbsent(texture.getKey(), new TextureMapping(ordinal, texture));
                 }
             }
         } catch (JsonParseException ex) {
