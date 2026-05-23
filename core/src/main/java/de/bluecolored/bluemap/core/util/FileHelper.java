@@ -31,12 +31,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URL;
-import java.nio.file.WatchService;
 import java.nio.file.*;
+import java.nio.file.WatchService;
 import java.nio.file.attribute.FileAttribute;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -139,7 +138,10 @@ public class FileHelper {
                 long now = System.currentTimeMillis();
                 if (now >= endTime) return false;
                 WatchKey key = watchService.poll(endTime - now, TimeUnit.MILLISECONDS);
-                if (key != null) key.reset();
+                if (key != null) {
+                    key.pollEvents();
+                    key.reset();
+                }
             }
             return true;
         }

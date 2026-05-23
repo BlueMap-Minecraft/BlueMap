@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.sponge;
 
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
+import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.pack.datapack.DataPack;
 import de.bluecolored.bluemap.core.util.Key;
 import org.spongepowered.api.world.WorldTypes;
@@ -45,18 +46,26 @@ public class SpongeWorld implements ServerWorld {
     public SpongeWorld(org.spongepowered.api.world.server.ServerWorld delegate) {
         this.delegate = new WeakReference<>(delegate);
 
-        Path dimensionFolder = delegate.directory().normalize();
         this.dimension = WorldTypes.registry().findValueKey(delegate.worldType())
                 .map(k -> new Key(k.namespace(), k.value()))
                 .orElse(DataPack.DIMENSION_OVERWORLD);
 
         // resolve root world-folder from dimension-folder
-        if (DataPack.DIMENSION_OVERWORLD.equals(dimension))
-            this.worldFolder = dimensionFolder;
-        else if (DataPack.DIMENSION_THE_NETHER.equals(dimension) || DataPack.DIMENSION_THE_END.equals(dimension))
-            this.worldFolder = dimensionFolder.getParent();
-        else
-            this.worldFolder = dimensionFolder.getParent().getParent().getParent();
+        Path worldFolder;
+        try {
+            Path dimensionFolder = delegate.directory().normalize();
+            if (DataPack.DIMENSION_OVERWORLD.equals(dimension))
+                worldFolder = dimensionFolder;
+            else if (DataPack.DIMENSION_THE_NETHER.equals(dimension) || DataPack.DIMENSION_THE_END.equals(dimension))
+                worldFolder = dimensionFolder.getParent();
+            else
+                worldFolder = dimensionFolder.getParent().getParent().getParent();
+        } catch (Exception e) {
+            Logger.global.logWarning("There was an unexpected exception trying to resolve world-folder for dimension '%s': %s".formatted(this.dimension, e));
+            worldFolder = delegate.directory();
+            Logger.global.logDebug("Falling back to: %s".formatted(worldFolder));
+        }
+        this.worldFolder = worldFolder;
     }
 
     @Override

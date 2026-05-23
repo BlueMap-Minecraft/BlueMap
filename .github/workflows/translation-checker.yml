@@ -5,6 +5,10 @@ on:
     paths:
       - "common/webapp/public/lang/**"
       - ".github/translation-checker/**"
+  pull_request:
+    paths:
+      - "common/webapp/public/lang/**"
+      - ".github/translation-checker/**"
 
 permissions:
   contents: read

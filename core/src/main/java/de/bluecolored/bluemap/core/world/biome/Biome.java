@@ -41,6 +41,8 @@ public interface Biome extends Keyed {
 
     Color getOverlayFoliageColor();
 
+    Color getOverlayDryFoliageColor();
+
     Color getOverlayGrassColor();
 
     GrassColorModifier getGrassColorModifier();
@@ -53,6 +55,7 @@ public interface Biome extends Keyed {
         private final float temperature = 0.5f;
         private final Color waterColor = new Color().set(4159204 | 0xFF000000).premultiplied();
         private final Color overlayFoliageColor = new Color().premultiplied();
+        private final Color overlayDryFoliageColor = new Color().premultiplied();
         private final Color overlayGrassColor = new Color().premultiplied();
         private final GrassColorModifier grassColorModifier = GrassColorModifier.NONE;
 

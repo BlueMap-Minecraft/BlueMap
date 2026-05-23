@@ -33,6 +33,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @NoArgsConstructor
 public class Registry<T extends Keyed> {
 
+    public static final Set<Registry<?>> REGISTRIES = Collections.synchronizedSet(Collections.newSetFromMap(new WeakHashMap<>()));
+
     private final ConcurrentHashMap<Key, T> entries = new ConcurrentHashMap<>();
 
     private final Set<Key> keys = Collections.unmodifiableSet(entries.keySet());
@@ -40,6 +42,8 @@ public class Registry<T extends Keyed> {
 
     @SafeVarargs
     public Registry(T... defaultEntries) {
+        REGISTRIES.add(this);
+
         for (T entry : defaultEntries)
             register(entry);
     }

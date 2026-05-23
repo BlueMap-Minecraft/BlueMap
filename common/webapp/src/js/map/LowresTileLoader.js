@@ -24,7 +24,6 @@
  */
 import {pathFromCoords} from "../util/Utils";
 import {
-    TextureLoader,
     Mesh,
     PlaneGeometry,
     FrontSide,
@@ -34,23 +33,25 @@ import {
     NearestMipMapLinearFilter,
     Vector2
 } from "three";
+import {RevalidatingTextureLoader} from "../util/RevalidatingTextureLoader";
 
 export class LowresTileLoader {
 
-    constructor(tilePath, tileSettings, lod, vertexShader, fragmentShader, uniforms, loadBlocker = () => Promise.resolve(), tileCacheHash = 0) {
+    constructor(tilePath, tileSettings, lod, vertexShader, fragmentShader, uniforms, loadBlocker = () => Promise.resolve(), revalidatedUrls) {
         Object.defineProperty( this, 'isLowresTileLoader', { value: true } );
 
         this.tilePath = tilePath;
         this.tileSettings = tileSettings;
         this.lod = lod;
         this.loadBlocker = loadBlocker;
-        this.tileCacheHash = tileCacheHash;
+        this.revalidatedUrls = revalidatedUrls;
 
         this.vertexShader = vertexShader;
         this.fragmentShader = fragmentShader;
         this.uniforms = uniforms;
 
-        this.textureLoader = new TextureLoader();
+        this.textureLoader = new RevalidatingTextureLoader();
+        this.textureLoader.setRevalidatedUrls(this.revalidatedUrls);
         this.geometry = new PlaneGeometry(
             tileSettings.tileSize.x + 1, tileSettings.tileSize.z + 1,
             Math.ceil(100 / (lod * 2)), Math.ceil(100 / (lod * 2))
@@ -66,7 +67,8 @@ export class LowresTileLoader {
 
         //await this.loadBlocker();
         return new Promise((resolve, reject) => {
-            this.textureLoader.load(tileUrl + '?' + this.tileCacheHash,
+            this.textureLoader.setRevalidatedUrls(this.revalidatedUrls);
+            this.textureLoader.load(tileUrl,
                 async texture => {
                     texture.anisotropy = 1;
                     texture.generateMipmaps = false;

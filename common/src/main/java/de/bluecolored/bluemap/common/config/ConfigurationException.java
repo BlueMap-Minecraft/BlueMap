@@ -53,8 +53,8 @@ public class ConfigurationException extends Exception {
     }
 
     public Throwable getRootCause() {
-        Throwable cause;
-        do { cause = getCause(); }
+        Throwable cause = this;
+        do { cause = cause.getCause(); }
         while (cause instanceof ConfigurationException);
         return cause;
     }

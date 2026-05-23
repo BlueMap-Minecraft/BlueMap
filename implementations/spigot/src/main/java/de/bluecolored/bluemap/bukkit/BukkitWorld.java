@@ -50,7 +50,7 @@ public class BukkitWorld implements ServerWorld {
 
         // fix for hybrids
         Path dimensionFolder = MCAWorld.resolveDimensionFolder(worldFolder, dimension);
-        if (!Files.exists(worldFolder)) {
+        if (!Files.exists(dimensionFolder)) {
             Path dimensionSubPath = worldFolder.relativize(dimensionFolder);
 
             if (Files.exists(worldFolder) && worldFolder.endsWith(dimensionSubPath))

@@ -89,10 +89,6 @@ const splitNumberToPath = num => {
  */
 export const hashTile = (x, z) => `x${x}z${z}`;
 
-export const generateCacheHash = () => {
-    return Math.round(Math.random() * 1000000);
-}
-
 /**
  * Dispatches an event to the element of this map-viewer
  * @param element {EventTarget} the element on that the event is dispatched

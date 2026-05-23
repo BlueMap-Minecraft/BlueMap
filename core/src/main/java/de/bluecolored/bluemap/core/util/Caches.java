@@ -34,7 +34,7 @@ public class Caches {
     public static Caffeine<Object, Object> with() {
         return Caffeine.newBuilder()
                 .executor(BlueMap.THREAD_POOL)
-                .scheduler(Scheduler.systemScheduler())
+                .scheduler(Scheduler.forScheduledExecutorService(BlueMap.SCHEDULER))
                 .recordStats();
     }
 

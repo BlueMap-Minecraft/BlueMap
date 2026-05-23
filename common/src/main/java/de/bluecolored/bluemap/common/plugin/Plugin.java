@@ -33,6 +33,7 @@ import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.config.*;
 import de.bluecolored.bluemap.common.debug.StateDumper;
 import de.bluecolored.bluemap.common.live.LivePlayersDataSupplier;
+import de.bluecolored.bluemap.common.live.PluginLivePlayerInfoTransformer;
 import de.bluecolored.bluemap.common.metrics.Metrics;
 import de.bluecolored.bluemap.common.plugin.skins.PlayerSkinUpdater;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdatePreparationTask;
@@ -67,13 +68,11 @@ import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 @Getter
@@ -102,6 +101,7 @@ public class Plugin implements ServerEventListener {
     private Timer daemonTimer;
     private Map<String, MapUpdateService> mapUpdateServices;
     private PlayerSkinUpdater skinUpdater;
+    private PluginLivePlayerInfoTransformer livePlayerInfoTransformer;
 
     private boolean loaded = false;
 
@@ -189,6 +189,9 @@ public class Plugin implements ServerEventListener {
                 //load maps
                 Map<String, BmMap> maps = blueMap.getOrLoadMaps();
 
+                //init live data suppliers
+                livePlayerInfoTransformer = new PluginLivePlayerInfoTransformer(this);
+
                 //create and start webserver
                 if (webserverConfig.isEnabled()) {
                     Path webroot = webserverConfig.getWebroot();
@@ -207,7 +210,7 @@ public class Plugin implements ServerEventListener {
                         MapRequestHandler mapRequestHandler;
                         BmMap map = maps.get(id);
                         if (map != null) {
-                            mapRequestHandler = new MapRequestHandler(map, serverInterface, pluginConfig, Predicate.not(pluginState::isPlayerHidden));
+                            mapRequestHandler = new MapRequestHandler(map, serverInterface, livePlayerInfoTransformer, pluginConfig.isHideDifferentWorld());
                         } else {
                             Storage storage = blueMap.getOrLoadStorage(mapConfig.getStorage());
                             mapRequestHandler = new MapRequestHandler(storage.map(id));
@@ -232,11 +235,14 @@ public class Plugin implements ServerEventListener {
                     webLogger = Logger.combine(webLoggerList);
 
                     try {
-                        webServer = new HttpServer(new LoggingRequestHandler(
-                                webRequestHandler,
-                                webserverConfig.getLog().getFormat(),
-                                webLogger
-                        ));
+                        webServer = new HttpServer(
+                                "BlueMap-Webserver",
+                                new LoggingRequestHandler(
+                                        webRequestHandler,
+                                        webserverConfig.getLog().getFormat(),
+                                        webLogger
+                                )
+                        );
                         webServer.bind(new InetSocketAddress(
                                 webserverConfig.resolveIp(),
                                 webserverConfig.getPort()
@@ -329,7 +335,7 @@ public class Plugin implements ServerEventListener {
                 daemonTimer.schedule(fileWatcherRestartTask, TimeUnit.HOURS.toMillis(1), TimeUnit.HOURS.toMillis(1));
 
                 //periodically update all (non frozen) maps
-                long fullUpdateInterval = pluginConfig.getFullUpdateInterval().toMillis();
+                long fullUpdateInterval = coreConfig.getFullUpdateInterval().toMillis();
                 if (fullUpdateInterval > 0) {
                     TimerTask updateAllMapsTask = new TimerTask() {
                         @Override
@@ -419,7 +425,7 @@ public class Plugin implements ServerEventListener {
                 if (renderManager != null){
                     if (renderManager.getCurrentRenderTask() != null) {
                         renderManager.removeAllRenderTasks();
-                        if (!renderManager.isRunning()) renderManager.start(1);
+                        if (!renderManager.isRunning()) renderManager.start(1, Thread.NORM_PRIORITY);
                         try {
                             renderManager.awaitIdle(true);
                         } catch (InterruptedException ex) {
@@ -548,9 +554,9 @@ public class Plugin implements ServerEventListener {
         for (BmMap map : maps.values()) {
             var dataSupplier = new LivePlayersDataSupplier(
                     serverInterface,
-                    getBlueMap().getConfig().getPluginConfig(),
                     map.getWorld(),
-                    Predicate.not(pluginState::isPlayerHidden)
+                    livePlayerInfoTransformer,
+                    blueMap.getConfig().getPluginConfig().isHideDifferentWorld()
             );
             try (
                     OutputStream out = map.getStorage().players().write();
@@ -569,7 +575,7 @@ public class Plugin implements ServerEventListener {
         if (blueMap == null) return;
 
         try {
-            MapUpdateService watcher = new MapUpdateService(renderManager, map, blueMap.getConfig().getPluginConfig().getUpdateCooldown());
+            MapUpdateService watcher = new MapUpdateService(renderManager, map, blueMap.getConfig().getCoreConfig().getUpdateCooldown(), false);
             watcher.start();
             mapUpdateServices.put(map.getId(), watcher);
         } catch (IOException ex) {
@@ -630,7 +636,7 @@ public class Plugin implements ServerEventListener {
             return true;
         } else {
             if (!renderManager.isRunning() && getPluginState().isRenderThreadsEnabled())
-                renderManager.start(coreConfig.resolveRenderThreadCount());
+                renderManager.start(coreConfig.resolveRenderThreadCount(), coreConfig.getRenderThreadPriority());
             return false;
         }
     }

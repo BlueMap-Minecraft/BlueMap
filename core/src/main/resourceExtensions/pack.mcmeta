@@ -16,6 +16,10 @@
       {
         "formats": { "min_inclusive": 67 },
         "directory": "mc1_21_9"
+      },
+      {
+        "formats": { "min_inclusive": 77 },
+        "directory": "mc26_1"
       }
     ]
   }

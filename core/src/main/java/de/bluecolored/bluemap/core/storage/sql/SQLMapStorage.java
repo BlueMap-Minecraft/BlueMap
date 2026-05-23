@@ -53,11 +53,17 @@ public class SQLMapStorage extends KeyedMapStorage {
 
     @Override
     public ItemStorage item(Key key, Compression compression) {
+        ItemStorage item = itemStorages.getIfPresent(key);
+        if (item != null) return item;
+
         return itemStorages.get(key, k -> new SQLItemStorage(sql, mapId, key, compression));
     }
 
     @Override
     public GridStorage grid(Key key, Compression compression) {
+        GridStorage grid = gridStorages.getIfPresent(key);
+        if (grid != null) return grid;
+
         return gridStorages.get(key, k -> new SQLGridStorage(sql, mapId, key, compression));
     }
 

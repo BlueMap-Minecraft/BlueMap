@@ -27,7 +27,8 @@ package de.bluecolored.bluemap.core.resources.pack.resourcepack;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
-import de.bluecolored.bluemap.core.resources.BlockColorCalculatorFactory;
+import de.bluecolored.bluemap.core.map.hires.block.color.BlockColorCalculator;
+import de.bluecolored.bluemap.core.resources.BlockColorsConfig;
 import de.bluecolored.bluemap.core.resources.BlockPropertiesConfig;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
@@ -39,13 +40,13 @@ import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.BlockS
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.entitystate.EntityState;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.TextureVariable;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.ColorMap;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.*;
 import de.bluecolored.bluemap.core.world.BlockProperties;
 import lombok.Getter;
 
 import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -56,7 +57,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 public class ResourcePack extends Pack {
@@ -79,9 +79,9 @@ public class ResourcePack extends Pack {
     @Getter private final ResourcePool<EntityState> entityStates;
     @Getter private final ResourcePool<Model> models;
     @Getter private final ResourcePool<Texture> textures;
-    @Getter private final ResourcePool<BufferedImage> colormaps;
+    @Getter private final ResourcePool<ColorMap> colormaps;
 
-    @Getter private final BlockColorCalculatorFactory colorCalculatorFactory;
+    private final BlockColorsConfig blockColorsConfig;
     private final BlockPropertiesConfig blockPropertiesConfig;
 
     private final LoadingCache<de.bluecolored.bluemap.core.world.BlockState, BlockState> blockStateCache;
@@ -99,7 +99,7 @@ public class ResourcePack extends Pack {
         this.textures = new ResourcePool<>();
         this.colormaps = new ResourcePool<>();
 
-        this.colorCalculatorFactory = new BlockColorCalculatorFactory();
+        this.blockColorsConfig = new BlockColorsConfig();
         this.blockPropertiesConfig = new BlockPropertiesConfig();
 
         this.blockStateCache = Caches.build(this::loadBlockState);
@@ -235,14 +235,17 @@ public class ResourcePack extends Pack {
 
                     // load colormaps
                     CompletableFuture.runAsync(() -> {
-                        walk(root.resolve("assets").resolve("minecraft").resolve("textures").resolve("colormap"))
+                        list(root.resolve("assets"))
+                                .map(path -> path.resolve("textures").resolve("colormap"))
+                                .filter(Files::isDirectory)
+                                .flatMap(ResourcePack::walk)
                                 .filter(path -> path.getFileName().toString().endsWith(".png"))
                                 .filter(Files::isRegularFile)
                                 .forEach(file -> colormaps.load(
                                         new ResourcePath<>(root.relativize(file), 1, 3),
                                         key -> {
                                             try (InputStream in = Files.newInputStream(file)) {
-                                                return ImageIO.read(in);
+                                                return new ColorMap(ImageIO.read(in));
                                             }
                                         }
                                 ));
@@ -255,7 +258,7 @@ public class ResourcePack extends Pack {
                                 .filter(Files::isRegularFile)
                                 .forEach(file -> {
                                     try {
-                                        colorCalculatorFactory.load(file);
+                                        blockColorsConfig.load(file);
                                     } catch (Exception ex) {
                                         Logger.global.logDebug("Failed to parse resource-file '" + file + "': " + ex);
                                     }
@@ -312,18 +315,6 @@ public class ResourcePack extends Pack {
         for (Model model : models.values()) {
             model.calculateProperties(textures);
         }
-
-        BufferedImage foliage = new ResourcePath<BufferedImage>("minecraft:colormap/foliage").getResource(colormaps::get);
-        if (foliage != null)
-            this.colorCalculatorFactory.setFoliageMap(foliage);
-
-        BufferedImage dryFoliage = new ResourcePath<BufferedImage>("minecraft:colormap/dry_foliage").getResource(colormaps::get);
-        if (dryFoliage != null)
-            this.colorCalculatorFactory.setDryFoliageMap(dryFoliage);
-
-        BufferedImage grass = new ResourcePath<BufferedImage>("minecraft:colormap/grass").getResource(colormaps::get);
-        if (grass != null)
-            this.colorCalculatorFactory.setGrassMap(grass);
 
     }
 
@@ -392,6 +383,10 @@ public class ResourcePack extends Pack {
         }
 
         return props.build();
+    }
+
+    public BlockColorCalculator createBlockColorCalculator() {
+        return blockColorsConfig.createBlockColorCalculator(this);
     }
 
     @SuppressWarnings({"unchecked", "unused"})

@@ -28,11 +28,9 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 
+import javax.imageio.ImageIO;
 import java.io.IOException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinWorkerThread;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.*;
 
 public class BlueMap {
 
@@ -56,6 +54,9 @@ public class BlueMap {
 
         VERSION = version;
         GIT_HASH = gitHash;
+
+        // global Java config
+        ImageIO.setUseCache(false);
     }
 
     public static final ForkJoinPool THREAD_POOL = new ForkJoinPool(
@@ -70,5 +71,13 @@ public class BlueMap {
             null,
             false
     );
+
+    private static final Thread.Builder.OfPlatform schedulerThreadBuilder = Thread.ofPlatform().name("BlueMap-Scheduler-", 0);
+    public static final ScheduledExecutorService SCHEDULER = Executors.newScheduledThreadPool(1, runnable -> {
+        Thread thread = schedulerThreadBuilder.unstarted(runnable);
+        // use current classloader, this fixes ClassLoading issues with forge
+        thread.setContextClassLoader(BlueMap.class.getClassLoader());
+        return thread;
+    });
 
 }

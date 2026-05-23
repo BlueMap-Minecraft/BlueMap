@@ -134,7 +134,6 @@ public class DebugCommand {
                 item("world", text(world.getId()).color(HIGHLIGHT_COLOR)
                         .appendNewline()
                         .append(details(BASE_COLOR,
-                                item("name", world.getName()),
                                 item("min-y", world.getDimensionType().getMinY()),
                                 item("height", world.getDimensionType().getHeight())
                         ))

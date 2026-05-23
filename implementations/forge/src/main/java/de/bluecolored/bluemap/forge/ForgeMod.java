@@ -38,8 +38,8 @@ import de.bluecolored.bluemap.core.util.Caches;
 import net.minecraft.SharedConstants;
 import net.minecraft.commands.CommandSourceStack;
 import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -145,7 +145,11 @@ public class ForgeMod implements Server {
 
     @SubscribeEvent
     public void onTick(ServerTickEvent.Post evt) {
-        updateSomePlayers();
+        try {
+            updateSomePlayers();
+        } catch (RuntimeException e) {
+            Logger.global.logError("Exception trying to update players", e);
+        }
     }
 
     @Override
@@ -177,8 +181,8 @@ public class ForgeMod implements Server {
     public Optional<ServerWorld> getServerWorld(Object world) {
 
         if (world instanceof String) {
-            ResourceLocation resourceLocation = ResourceLocation.tryParse((String) world);
-            if (resourceLocation != null) world = serverInstance.getLevel(ResourceKey.create(Registries.DIMENSION, resourceLocation));
+            Identifier identifier = Identifier.tryParse((String) world);
+            if (identifier != null) world = serverInstance.getLevel(ResourceKey.create(Registries.DIMENSION, identifier));
         }
 
         if (world instanceof ResourceKey) {
@@ -237,8 +241,8 @@ public class ForgeMod implements Server {
     }
 
     @Override
-    public Collection<Player> getOnlinePlayers() {
-        return onlinePlayerMap.values();
+    public Map<UUID, Player> getOnlinePlayers() {
+        return onlinePlayerMap;
     }
 
     /**
@@ -246,18 +250,20 @@ public class ForgeMod implements Server {
      * Only call this method on the server-thread.
      */
     private void updateSomePlayers() {
-        int onlinePlayerCount = onlinePlayerList.size();
-        if (onlinePlayerCount == 0) return;
+        synchronized (onlinePlayerList) {
+            int onlinePlayerCount = onlinePlayerList.size();
+            if (onlinePlayerCount == 0) return;
 
-        int playersToBeUpdated = onlinePlayerCount / 20; //with 20 tps, each player is updated once a second
-        if (playersToBeUpdated == 0) playersToBeUpdated = 1;
+            int playersToBeUpdated = onlinePlayerCount / 20; //with 20 tps, each player is updated once a second
+            if (playersToBeUpdated == 0) playersToBeUpdated = 1;
 
-        for (int i = 0; i < playersToBeUpdated; i++) {
-            playerUpdateIndex++;
-            if (playerUpdateIndex >= 20 && playerUpdateIndex >= onlinePlayerCount) playerUpdateIndex = 0;
+            for (int i = 0; i < playersToBeUpdated; i++) {
+                playerUpdateIndex++;
+                if (playerUpdateIndex >= 20 && playerUpdateIndex >= onlinePlayerCount) playerUpdateIndex = 0;
 
-            if (playerUpdateIndex < onlinePlayerCount) {
-                onlinePlayerList.get(playerUpdateIndex).update();
+                if (playerUpdateIndex < onlinePlayerCount) {
+                    onlinePlayerList.get(playerUpdateIndex).update();
+                }
             }
         }
     }

@@ -25,7 +25,6 @@
 import {
 	ClampToEdgeWrapping,
 	Color,
-	FileLoader,
 	FrontSide,
 	NearestFilter,
 	NearestMipMapLinearFilter,
@@ -34,6 +33,7 @@ import {
 	Texture,
 	Vector3
 } from "three";
+import {RevalidatingFileLoader} from "../util/RevalidatingFileLoader";
 import {alert, dispatchEvent, getPixel, hashTile, stringToImage, vecArrToObj} from "../util/Utils";
 import {TileManager} from "./TileManager";
 import {TileLoader} from "./TileLoader";
@@ -110,14 +110,14 @@ export class Map {
 	 * @param lowresVertexShader {string}
 	 * @param lowresFragmentShader {string}
 	 * @param uniforms {object}
-	 * @param tileCacheHash {number}
+	 * @param revalidatedUrls {Set<string> | undefined}
 	 * @returns {Promise<void>}
 	 */
-	load(hiresVertexShader, hiresFragmentShader, lowresVertexShader, lowresFragmentShader, uniforms, tileCacheHash = 0) {
+	load(hiresVertexShader, hiresFragmentShader, lowresVertexShader, lowresFragmentShader, uniforms, revalidatedUrls) {
 		this.unload()
 
-		let settingsPromise = this.loadSettings(tileCacheHash);
-		let textureFilePromise = this.loadTexturesFile(tileCacheHash);
+		let settingsPromise = this.loadSettings(revalidatedUrls);
+		let textureFilePromise = this.loadTexturesFile(revalidatedUrls);
 
 		this.lowresMaterial = this.createLowresMaterial(lowresVertexShader, lowresFragmentShader, uniforms);
 
@@ -133,7 +133,7 @@ export class Map {
 					this.hiresMaterial,
 					this.data.hires,
 					this.loadBlocker,
-					tileCacheHash
+					revalidatedUrls
 				), this.onTileLoad("hires"), this.onTileUnload("hires"), this.events);
 				this.hiresTileManager.scene.matrixWorldAutoUpdate = false;
 
@@ -147,7 +147,7 @@ export class Map {
 						lowresFragmentShader,
 						uniforms,
 						async () => {},
-						tileCacheHash
+						revalidatedUrls
 					), this.onTileLoad("lowres"), this.onTileUnload("lowres"), this.events);
 					this.lowresTileManager[i].scene.matrixWorldAutoUpdate = false;
 				}
@@ -160,8 +160,8 @@ export class Map {
 	 * Loads the settings of this map
 	 * @returns {Promise<void>}
 	 */
-	loadSettings(tileCacheHash) {
-		return this.loadSettingsFile(tileCacheHash)
+	loadSettings(revalidatedUrls) {
+		return this.loadSettingsFile(revalidatedUrls)
 			.then(worldSettings => {
 				this.data.name = worldSettings.name ? worldSettings.name : this.data.name;
 
@@ -259,13 +259,14 @@ export class Map {
      * Loads the settings.json file for this map
      * @returns {Promise<Object>}
      */
-    loadSettingsFile(tileCacheHash) {
+    loadSettingsFile(revalidatedUrls) {
         return new Promise((resolve, reject) => {
             alert(this.events, `Loading settings for map '${this.data.id}'...`, "fine");
 
-            let loader = new FileLoader();
+            let loader = new RevalidatingFileLoader();
+			loader.setRevalidatedUrls(revalidatedUrls);
             loader.setResponseType("json");
-            loader.load(this.data.settingsUrl + "?" + tileCacheHash,
+            loader.load(this.data.settingsUrl,
                 resolve,
                 () => {},
                 () => reject(`Failed to load the settings.json for map: ${this.data.id}`)
@@ -277,13 +278,14 @@ export class Map {
 	 * Loads the textures.json file for this map
 	 * @returns {Promise<Object>}
 	 */
-	loadTexturesFile(tileCacheHash) {
+	loadTexturesFile(revalidatedUrls) {
 		return new Promise((resolve, reject) => {
 			alert(this.events, `Loading textures for map '${this.data.id}'...`, "fine");
 
-			let loader = new FileLoader();
+			let loader = new RevalidatingFileLoader();
+			loader.setRevalidatedUrls(revalidatedUrls);
 			loader.setResponseType("json");
-			loader.load(this.data.texturesUrl + "?" + tileCacheHash,
+			loader.load(this.data.texturesUrl,
 				resolve,
 				() => {},
 				() => reject(`Failed to load the textures.json for map: ${this.data.id}`)

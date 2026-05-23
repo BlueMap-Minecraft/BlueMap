@@ -79,14 +79,7 @@ public class LevelData {
 
     @Getter
     public static class WGSettings {
-        private Map<String, Dimension> dimensions = new HashMap<>();
-    }
-
-    @Getter
-    @NoArgsConstructor
-    @AllArgsConstructor
-    public static class Dimension {
-        private DimensionType type = DimensionType.OVERWORLD;
+        private Map<String, DimensionSettings> dimensions = new HashMap<>();
     }
 
     @Getter
@@ -95,12 +88,12 @@ public class LevelData {
     public static class Spawn {
 
         private Key dimension = DataPack.DIMENSION_OVERWORLD;
-        private Vector3i position = Vector3i.ZERO;
+        private Vector3i pos = Vector3i.ZERO;
         private float yaw = 0;
         private float pitch = 0;
 
-        public Spawn(Vector3i position) {
-            this.position = position;
+        public Spawn(Vector3i pos) {
+            this.pos = pos;
         }
 
     }

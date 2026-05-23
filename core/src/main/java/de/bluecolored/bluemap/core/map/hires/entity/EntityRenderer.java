@@ -32,7 +32,7 @@ import de.bluecolored.bluemap.core.world.block.BlockNeighborhood;
 public interface EntityRenderer {
 
     /**
-     * Renders the given entities part into the given model.
+     * Renders the given entities part into the given tileModel.
      * <p>
      *  <b>Implementation Note:</b><br>
      *  This method is guaranteed to be called only on <b>one thread per EntityRenderer instance</b>, so you can use this

@@ -41,13 +41,13 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.SharedConstants;
-import net.minecraft.registry.RegistryKey;
-import net.minecraft.registry.RegistryKeys;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.Identifier;
+import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.server.network.ServerPlayerEntity;
-import net.minecraft.util.Identifier;
-import net.minecraft.world.World;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.Level;
 import org.apache.logging.log4j.LogManager;
 
 import java.io.IOException;
@@ -62,7 +62,7 @@ public class FabricMod implements ModInitializer, Server {
 
     private final FabricEventForwarder eventForwarder;
 
-    private final LoadingCache<net.minecraft.server.world.ServerWorld, ServerWorld> worlds;
+    private final LoadingCache<net.minecraft.server.level.ServerLevel, ServerWorld> worlds;
 
     private int playerUpdateIndex = 0;
     private final Map<UUID, Player> onlinePlayerMap;
@@ -92,7 +92,7 @@ public class FabricMod implements ModInitializer, Server {
                 BrigadierBridge.createCommandNodes(
                         Commands.create(pluginInstance),
                         new BrigadierExecutionHandler(pluginInstance),
-                        (ServerCommandSource fabricSource) -> new FabricCommandSource(this, fabricSource)
+                        (CommandSourceStack fabricSource) -> new FabricCommandSource(this, fabricSource)
                 ).forEach(dispatcher.getRoot()::addChild)
         );
 
@@ -126,7 +126,11 @@ public class FabricMod implements ModInitializer, Server {
         });
 
         ServerTickEvents.END_SERVER_TICK.register((MinecraftServer server) -> {
-            if (server == this.serverInstance) this.updateSomePlayers();
+            try {
+                if (server == this.serverInstance) this.updateSomePlayers();
+            } catch (RuntimeException e) {
+                Logger.global.logError("Exception trying to update players", e);
+            }
         });
 
         this.eventForwarder.init();
@@ -135,7 +139,7 @@ public class FabricMod implements ModInitializer, Server {
 
     @Override
     public String getMinecraftVersion() {
-        return SharedConstants.getGameVersion().comp_4024();
+        return SharedConstants.getCurrentVersion().id();
     }
 
     @Override
@@ -151,7 +155,7 @@ public class FabricMod implements ModInitializer, Server {
     @Override
     public Collection<ServerWorld> getLoadedServerWorlds() {
         Collection<ServerWorld> loadedWorlds = new ArrayList<>(3);
-        for (net.minecraft.server.world.ServerWorld serverWorld : serverInstance.getWorlds()) {
+        for (net.minecraft.server.level.ServerLevel serverWorld : serverInstance.getAllLevels()) {
             loadedWorlds.add(worlds.get(serverWorld));
         }
         return loadedWorlds;
@@ -163,22 +167,22 @@ public class FabricMod implements ModInitializer, Server {
 
         if (world instanceof String) {
             Identifier identifier = Identifier.tryParse((String) world);
-            if (identifier != null) world = serverInstance.getWorld(RegistryKey.of(RegistryKeys.WORLD, identifier));
+            if (identifier != null) world = serverInstance.getLevel(ResourceKey.create(Registries.DIMENSION, identifier));
         }
 
-        if (world instanceof RegistryKey) {
+        if (world instanceof ResourceKey) {
             try {
-                world = serverInstance.getWorld((RegistryKey<World>) world);
+                world = serverInstance.getLevel((ResourceKey<Level>) world);
             } catch (ClassCastException ignored) {}
         }
 
-        if (world instanceof net.minecraft.server.world.ServerWorld)
-            return Optional.of(getServerWorld((net.minecraft.server.world.ServerWorld) world));
+        if (world instanceof net.minecraft.server.level.ServerLevel)
+            return Optional.of(getServerWorld((net.minecraft.server.level.ServerLevel) world));
 
         return Optional.empty();
     }
 
-    public ServerWorld getServerWorld(net.minecraft.server.world.ServerWorld serverWorld) {
+    public ServerWorld getServerWorld(net.minecraft.server.level.ServerLevel serverWorld) {
         return worlds.get(Objects.requireNonNull(serverWorld));
     }
 
@@ -192,7 +196,7 @@ public class FabricMod implements ModInitializer, Server {
         return Optional.of(Path.of("mods"));
     }
 
-    public void onPlayerJoin(MinecraftServer server, ServerPlayerEntity playerInstance) {
+    public void onPlayerJoin(MinecraftServer server, ServerPlayer playerInstance) {
         if (this.serverInstance != server) return;
 
         FabricPlayer player = new FabricPlayer(playerInstance, this);
@@ -200,10 +204,10 @@ public class FabricMod implements ModInitializer, Server {
         onlinePlayerList.add(player);
     }
 
-    public void onPlayerLeave(MinecraftServer server, ServerPlayerEntity player) {
+    public void onPlayerLeave(MinecraftServer server, ServerPlayer player) {
         if (this.serverInstance != server) return;
 
-        UUID playerUUID = player.getUuid();
+        UUID playerUUID = player.getUUID();
         onlinePlayerMap.remove(playerUUID);
         synchronized (onlinePlayerList) {
             onlinePlayerList.removeIf(p -> p.getUuid().equals(playerUUID));
@@ -219,8 +223,8 @@ public class FabricMod implements ModInitializer, Server {
     }
 
     @Override
-    public Collection<Player> getOnlinePlayers() {
-        return onlinePlayerMap.values();
+    public Map<UUID, Player> getOnlinePlayers() {
+        return onlinePlayerMap;
     }
 
     /**
@@ -228,18 +232,20 @@ public class FabricMod implements ModInitializer, Server {
      * Only call this method on the server-thread.
      */
     private void updateSomePlayers() {
-        int onlinePlayerCount = onlinePlayerList.size();
-        if (onlinePlayerCount == 0) return;
+        synchronized (onlinePlayerList) {
+            int onlinePlayerCount = onlinePlayerList.size();
+            if (onlinePlayerCount == 0) return;
 
-        int playersToBeUpdated = onlinePlayerCount / 20; //with 20 tps, each player is updated once a second
-        if (playersToBeUpdated == 0) playersToBeUpdated = 1;
+            int playersToBeUpdated = onlinePlayerCount / 20; //with 20 tps, each player is updated once a second
+            if (playersToBeUpdated == 0) playersToBeUpdated = 1;
 
-        for (int i = 0; i < playersToBeUpdated; i++) {
-            playerUpdateIndex++;
-            if (playerUpdateIndex >= 20 && playerUpdateIndex >= onlinePlayerCount) playerUpdateIndex = 0;
+            for (int i = 0; i < playersToBeUpdated; i++) {
+                playerUpdateIndex++;
+                if (playerUpdateIndex >= 20 && playerUpdateIndex >= onlinePlayerCount) playerUpdateIndex = 0;
 
-            if (playerUpdateIndex < onlinePlayerCount) {
-                onlinePlayerList.get(playerUpdateIndex).update();
+                if (playerUpdateIndex < onlinePlayerCount) {
+                    onlinePlayerList.get(playerUpdateIndex).update();
+                }
             }
         }
     }

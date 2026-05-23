@@ -29,6 +29,8 @@ import com.github.benmanes.caffeine.cache.stats.CacheStats;
 import com.google.gson.stream.JsonWriter;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluemap.core.util.Registry;
+import lombok.SneakyThrows;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -63,19 +65,26 @@ public class StateDumper {
 
         Set<Object> alreadyDumped = Collections.newSetFromMap(new IdentityHashMap<>());
 
-        writer.name("threads").beginArray();
-        for (Thread thread : Thread.getAllStackTraces().keySet()) {
-            dumpInstance(thread, writer, alreadyDumped);
+        writer.name("registries").beginArray();
+        for (Object instance : Registry.REGISTRIES) {
+            dumpInstance(instance, writer, alreadyDumped);
         }
         writer.endArray();
 
-        writer.name("dump").beginObject();
+        writer.name("dump").beginArray();
         for (Object instance : instances) {
-            Class<?> type = instance.getClass();
-            writer.name(type.getName());
             dumpInstance(instance, writer, alreadyDumped);
         }
-        writer.endObject();
+        writer.endArray();
+
+        writer.name("threads").beginArray();
+        Thread.getAllStackTraces().keySet().stream()
+                .sorted(Comparator.comparing(Thread::getName))
+                .forEach(thread -> {
+                        alreadyDumped.remove(thread);
+                        dumpInstance(thread, writer, alreadyDumped);
+                });
+        writer.endArray();
 
         writer.endObject();
 
@@ -83,7 +92,8 @@ public class StateDumper {
         writer.close();
     }
 
-    private void dumpInstance(Object instance, JsonWriter writer, Set<Object> alreadyDumped) throws IOException {
+    @SneakyThrows(IOException.class)
+    private void dumpInstance(Object instance, JsonWriter writer, Set<Object> alreadyDumped) {
 
         if (instance == null) {
             writer.nullValue();
@@ -254,6 +264,10 @@ public class StateDumper {
                     }
                     writer.endArray();
                 } catch (SecurityException ignore) {}
+
+                writer.name("instance").beginObject();
+                dumpAnnotatedInstance(instance.getClass(), instance, writer, alreadyDumped);
+                writer.endObject();
 
                 return;
             }

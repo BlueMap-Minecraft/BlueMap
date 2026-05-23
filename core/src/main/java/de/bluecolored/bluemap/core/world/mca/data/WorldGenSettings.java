@@ -22,9 +22,27 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.web.http;
+package de.bluecolored.bluemap.core.world.mca.data;
 
-import java.nio.channels.SelectionKey;
-import java.util.function.Consumer;
+import de.bluecolored.bluemap.core.world.DimensionType;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
-public interface SelectionConsumer extends Consumer<SelectionKey> {}
+import java.util.HashMap;
+import java.util.Map;
+
+@Getter
+@SuppressWarnings("FieldMayBeFinal")
+public class WorldGenSettings {
+
+    private Data data = new Data();
+
+    @Getter
+    public static class Data {
+
+        Map<String, DimensionSettings> dimensions = new HashMap<>();
+
+    }
+
+}

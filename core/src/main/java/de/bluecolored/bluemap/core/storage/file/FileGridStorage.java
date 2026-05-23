@@ -44,7 +44,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 @RequiredArgsConstructor
-class FileGridStorage implements GridStorage {
+public class FileGridStorage implements GridStorage {
 
     private static final Pattern ITEM_PATH_PATTERN = Pattern.compile("x(-?\\d+)z(-?\\d+)");
 

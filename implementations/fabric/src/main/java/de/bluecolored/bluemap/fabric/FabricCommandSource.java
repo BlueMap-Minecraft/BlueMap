@@ -30,22 +30,21 @@ import com.mojang.serialization.JsonOps;
 import de.bluecolored.bluemap.common.commands.TextFormat;
 import de.bluecolored.bluemap.common.serverinterface.CommandSource;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
-import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
-import net.minecraft.server.command.ServerCommandSource;
-import net.minecraft.text.Text;
-import net.minecraft.text.TextCodecs;
-import net.minecraft.util.math.Vec3d;
+import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.network.chat.ComponentSerialization;
+import me.lucko.fabric.api.permissions.v0.Permissions;
+import net.minecraft.server.permissions.PermissionLevel;
 
 import java.util.Optional;
 
 public class FabricCommandSource implements CommandSource {
 
     private final FabricMod mod;
-    private final ServerCommandSource delegate;
+    private final CommandSourceStack delegate;
 
-    public FabricCommandSource(FabricMod mod, ServerCommandSource delegate) {
+    public FabricCommandSource(FabricMod mod, CommandSourceStack delegate) {
         this.mod = mod;
         this.delegate = delegate;
     }
@@ -56,33 +55,28 @@ public class FabricCommandSource implements CommandSource {
             text = Component.newline().append(text).appendNewline();
 
         JsonElement textJson = GsonComponentSerializer.gson().serializeToTree(text.compact());
-        Text minecraftText = TextCodecs.CODEC.parse(JsonOps.INSTANCE, textJson).getOrThrow();
-        delegate.sendMessage(minecraftText);
+        net.minecraft.network.chat.Component minecraftText = ComponentSerialization.CODEC.parse(JsonOps.INSTANCE, textJson).getOrThrow();
+        delegate.sendSystemMessage(minecraftText);
     }
 
     @Override
     public boolean hasPermission(String permission) {
-        try {
-            Class.forName("me.lucko.fabric.api.permissions.v0.Permissions");
-            return Permissions.check(delegate, permission, 1);
-        } catch (ClassNotFoundException ex) {
-            return delegate.hasPermissionLevel(1);
-        }
+        return Permissions.check(delegate, permission, PermissionLevel.MODERATORS);
     }
 
     @Override
     public Optional<Vector3d> getPosition() {
-        if (!delegate.isExecutedByPlayer() && delegate.getName().equals("Server")) return Optional.empty();
+        if (!delegate.isPlayer() && delegate.getTextName().equals("Server")) return Optional.empty();
 
-        Vec3d pos = delegate.getPosition();
-        return Optional.of(new Vector3d(pos.x, pos.y, pos.z));
+        return Optional.ofNullable(delegate.getPosition())
+                .map(pos -> new Vector3d(pos.x, pos.y, pos.z));
     }
 
     @Override
     public Optional<ServerWorld> getWorld() {
-        if (!delegate.isExecutedByPlayer() && delegate.getName().equals("Server")) return Optional.empty();
+        if (!delegate.isPlayer() && delegate.getTextName().equals("Server")) return Optional.empty();
 
-        return Optional.of(delegate.getWorld())
+        return Optional.ofNullable(delegate.getLevel())
                 .map(mod::getServerWorld);
     }
 

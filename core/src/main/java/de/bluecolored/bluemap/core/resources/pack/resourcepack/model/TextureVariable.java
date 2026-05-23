@@ -27,13 +27,12 @@ package de.bluecolored.bluemap.core.resources.pack.resourcepack.model;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
-import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import lombok.Getter;
-import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
@@ -124,7 +123,32 @@ public class TextureVariable {
 
         @Override
         public TextureVariable read(JsonReader in) throws IOException {
-            String value = in.nextString();
+            TextureVariable result = null;
+
+            JsonToken token = in.peek();
+            switch (token) {
+                case JsonToken.STRING -> {
+                    result = fromString(in.nextString());
+                }
+                case JsonToken.BEGIN_OBJECT -> {
+                    in.beginObject();
+                    while (in.peek() != JsonToken.END_OBJECT) {
+                        String key = in.nextName();
+                        switch (key) {
+                            case "sprite" -> result = fromString(in.nextString());
+                            default -> in.skipValue();
+                        }
+                    }
+                    in.endObject();
+                }
+                default -> throw new IOException("Failed ot parse TextureVariable: Expected STRING or OBJECT but got " + token);
+            }
+
+            if (result == null) throw new IOException("Failed ot parse TextureVariable: No sprite provided");
+            return result;
+        }
+
+        private TextureVariable fromString(String value) throws IOException {
             if (value.isEmpty()) throw new IOException("Can't parse an empty String into a TextureVariable");
 
             if (value.charAt(0) == '#') {

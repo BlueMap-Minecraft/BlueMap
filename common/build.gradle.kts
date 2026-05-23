@@ -14,17 +14,6 @@ dependencies {
 
     compileOnly ( libs.bluecommands.brigadier )
     compileOnly ( libs.brigadier )
-
-    compileOnly ( libs.jetbrains.annotations )
-    compileOnly ( libs.lombok )
-
-    annotationProcessor ( libs.lombok )
-
-    // tests
-    testImplementation ( libs.junit.core )
-    testRuntimeOnly ( libs.junit.engine )
-    testRuntimeOnly ( libs.lombok )
-    testAnnotationProcessor ( libs.lombok )
 }
 
 node {

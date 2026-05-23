@@ -10,12 +10,10 @@ displayTest="IGNORE_SERVER_VERSION"
 [[dependencies.bluemap]]
     modId="neoforge"
     mandatory=true
-    versionRange="[${neo_version},)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.bluemap]]
     modId="minecraft"
     mandatory=true
-    versionRange="[${minecraft_version},)"
     ordering="NONE"
     side="BOTH"

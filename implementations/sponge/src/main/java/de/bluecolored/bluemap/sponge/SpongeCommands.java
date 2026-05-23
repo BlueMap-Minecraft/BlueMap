@@ -102,10 +102,6 @@ public class SpongeCommands {
             String input = label + " " + arguments.input();
             int position = input.lastIndexOf(' ') + 1;
 
-            //noinspection resource
-            InputReader inputReader = new InputReader(input);
-            inputReader.setPosition(position);
-
             SpongeCommandSource context = new SpongeCommandSource(cause.audience(), cause.subject());
             ParseResult<CommandSource, Object> result = commands.parse(context, input);
 

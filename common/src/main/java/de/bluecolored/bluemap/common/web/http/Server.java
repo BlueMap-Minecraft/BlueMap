@@ -31,26 +31,30 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.nio.channels.*;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Objects;
+import java.util.*;
+
+import static java.util.Collections.newSetFromMap;
+import static java.util.Collections.synchronizedSet;
 
 public abstract class Server extends Thread implements Closeable, Runnable {
 
     private final Selector selector;
     private final Collection<ServerSocketChannel> server;
 
-    public Server() throws IOException {
+    private final Set<SocketChannel> connections = synchronizedSet(newSetFromMap(new WeakHashMap<>()));
+
+    public Server(String name) throws IOException {
+        super(name);
         this.selector = Selector.open();
         this.server = new ArrayList<>();
     }
 
-    public abstract SelectionConsumer createConnectionHandler();
+    public abstract void handleConnection(SocketChannel connection) throws IOException;
 
     public void bind(SocketAddress address) throws IOException {
         final ServerSocketChannel server = ServerSocketChannel.open();
         server.configureBlocking(false);
-        server.register(selector, SelectionKey.OP_ACCEPT, (SelectionConsumer) this::accept);
+        server.register(selector, SelectionKey.OP_ACCEPT);
         server.bind(address);
         this.server.add(server);
 
@@ -62,8 +66,7 @@ public abstract class Server extends Thread implements Closeable, Runnable {
     }
 
     private boolean checkIfBoundToAllInterfaces(SocketAddress address) {
-        if (address instanceof InetSocketAddress) {
-            InetSocketAddress inetAddress = (InetSocketAddress) address;
+        if (address instanceof InetSocketAddress inetAddress) {
             return Objects.equals(inetAddress.getAddress(), new InetSocketAddress(0).getAddress());
         }
 
@@ -75,17 +78,10 @@ public abstract class Server extends Thread implements Closeable, Runnable {
         Logger.global.logInfo("WebServer started.");
         while (this.selector.isOpen()) {
             try {
-                this.selector.select(this::selection);
+                this.selector.select(this::accept);
             } catch (IOException e) {
                 Logger.global.logDebug("Failed to select channel: " + e);
             } catch (ClosedSelectorException ignore) {}
-        }
-    }
-
-    private void selection(SelectionKey selectionKey) {
-        Object attachment = selectionKey.attachment();
-        if (attachment instanceof SelectionConsumer) {
-            ((SelectionConsumer) attachment).accept(selectionKey);
         }
     }
 
@@ -95,8 +91,8 @@ public abstract class Server extends Thread implements Closeable, Runnable {
             ServerSocketChannel serverSocketChannel = (ServerSocketChannel) selectionKey.channel();
             SocketChannel channel = serverSocketChannel.accept();
             if (channel == null) return;
-            channel.configureBlocking(false);
-            channel.register(selector, SelectionKey.OP_READ | SelectionKey.OP_WRITE, createConnectionHandler());
+            connections.add(channel);
+            handleConnection(channel);
         } catch (IOException e) {
             Logger.global.logDebug("Failed to accept connection: " + e);
         }
@@ -119,6 +115,18 @@ public abstract class Server extends Thread implements Closeable, Runnable {
             } catch (IOException ex) {
                 if (exception == null) exception = ex;
                 else exception.addSuppressed(ex);
+            }
+        }
+
+        // close active connections
+        synchronized (this.connections) {
+            for (SocketChannel channel : this.connections) {
+                try {
+                    channel.close();
+                } catch (IOException ex) {
+                    if (exception == null) exception = ex;
+                    else exception.addSuppressed(ex);
+                }
             }
         }
 
