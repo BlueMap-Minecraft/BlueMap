@@ -32,7 +32,7 @@ import de.bluecolored.bluemap.core.map.TextureGallery;
 import de.bluecolored.bluemap.core.map.hires.RenderSettings;
 import de.bluecolored.bluemap.core.map.hires.TileModel;
 import de.bluecolored.bluemap.core.map.hires.TileModelView;
-import de.bluecolored.bluemap.core.resources.BlockColorCalculatorFactory;
+import de.bluecolored.bluemap.core.map.hires.block.color.BlockColorCalculator;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.Variant;
@@ -64,7 +64,7 @@ public class ResourceModelRenderer implements BlockRenderer {
     @Getter private final Function<ResourcePath<Texture>, Texture> textureProvider;
     @Getter private final TextureGallery textureGallery;
     @Getter private final RenderSettings renderSettings;
-    @Getter private final BlockColorCalculatorFactory.BlockColorCalculator blockColorCalculator;
+    @Getter private final BlockColorCalculator blockColorCalculator;
 
     private final VectorM3f[] corners = new VectorM3f[8];
     private final VectorM2f[] rawUvs = new VectorM2f[4];
@@ -84,7 +84,7 @@ public class ResourceModelRenderer implements BlockRenderer {
         this.textureProvider = resourcePack.getTextures()::get;
         this.textureGallery = textureGallery;
         this.renderSettings = renderSettings;
-        this.blockColorCalculator = resourcePack.getColorCalculatorFactory().createCalculator();
+        this.blockColorCalculator = resourcePack.createBlockColorCalculator();
 
         for (int i = 0; i < corners.length; i++) corners[i] = new VectorM3f(0, 0, 0);
         for (int i = 0; i < rawUvs.length; i++) rawUvs[i] = new VectorM2f(0, 0);

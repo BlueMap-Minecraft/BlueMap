@@ -34,11 +34,11 @@ import lombok.RequiredArgsConstructor;
 
 public interface GrassColorModifier extends Keyed, ColorModifier {
 
-    GrassColorModifier NONE = new Impl(Key.minecraft("none"), (BlockAccess block, Color color) -> {});
-    GrassColorModifier DARK_FOREST = new Impl(Key.minecraft("dark_forest"), (BlockAccess block, Color color) ->
+    GrassColorModifier NONE = new Impl(Key.minecraft("none"), (BlockAccess _, Color _) -> {});
+    GrassColorModifier DARK_FOREST = new Impl(Key.minecraft("dark_forest"), (BlockAccess _, Color color) ->
             color.set(((color.getInt() & 0xfefefe) + 0x28340a >> 1) | 0xff000000, true)
     );
-    GrassColorModifier SWAMP = new Impl(Key.minecraft("swamp"), (BlockAccess block, Color color) -> {
+    GrassColorModifier SWAMP = new Impl(Key.minecraft("swamp"), (BlockAccess _, Color color) -> {
         color.set(0xff6a7039, true);
 
         /* Vanilla code with noise:
