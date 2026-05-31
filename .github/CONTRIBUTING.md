@@ -66,6 +66,12 @@ when implementing your feature!
 For this reason I will only accept PR's for features that I deem to be useful, maintainable, in-scope of the project and
 worth it's maintenance-workload!**
 
+### Don't...
+- ... mainly use AI to generate your code changes. Using AI for development support is okay, but "vibecoded" contributions are not desired.
+- ... create PR with multiple features/fixes as one. Always create a separate for each individual feature/fix.
+- ... create PR's that only change formatting. PR's should actually add a feature or fix a bug.
+- ... use a bot to automate your PR's.
+
 Ofc the usual "good code quality..." stuff, i think that's common sense.  
 Try to match the existing code-style.  
 Don't add new libraries/dependencies without my ok.  
