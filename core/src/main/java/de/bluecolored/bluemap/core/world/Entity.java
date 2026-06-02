@@ -36,7 +36,7 @@ public interface Entity {
 
     UUID getUuid();
 
-    String getCustomName();
+    Object getCustomName();
 
     boolean isCustomNameVisible();
 
