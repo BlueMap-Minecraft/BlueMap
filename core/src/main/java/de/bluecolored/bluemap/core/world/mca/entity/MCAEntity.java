@@ -43,7 +43,7 @@ public class MCAEntity implements Entity {
 
     Key id;
     @NBTName("UUID") UUID uuid;
-    @NBTName("CustomName") String customName;
+    @NBTName("CustomName") Object customName;
     @NBTName("CustomNameVisible") boolean customNameVisible;
     @NBTName("Pos") Vector3d pos;
     @NBTName("Motion") Vector3d motion;
