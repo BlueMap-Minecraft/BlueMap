@@ -64,4 +64,6 @@ public interface Region<T> {
 
     T emptyChunk();
 
+    boolean exists();
+
 }

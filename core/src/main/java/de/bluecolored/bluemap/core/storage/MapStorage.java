@@ -50,6 +50,11 @@ public interface MapStorage {
     GridStorage chunkState();
 
     /**
+     * Returns a {@link GridStorage} for the region-state (meta-) data of this map
+     */
+    GridStorage regionState();
+
+    /**
      * Returns a {@link ItemStorage} for a map asset with the given name
      */
     ItemStorage asset(String name);

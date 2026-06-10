@@ -34,6 +34,7 @@ public abstract class KeyedMapStorage implements MapStorage {
     private static final Key HIRES_TILES_KEY = Key.bluemap("hires");
     private static final Key TILE_STATE_KEY = Key.bluemap("tile-state");
     private static final Key CHUNK_STATE_KEY = Key.bluemap("chunk-state");
+    private static final Key REGION_STATE_KEY = Key.bluemap("region-state");
     private static final Key SETTINGS_KEY = Key.bluemap("settings");
     private static final Key TEXTURES_KEY = Key.bluemap("textures");
     private static final Key MARKERS_KEY = Key.bluemap("markers");
@@ -59,6 +60,11 @@ public abstract class KeyedMapStorage implements MapStorage {
     @Override
     public GridStorage chunkState() {
         return grid(CHUNK_STATE_KEY, Compression.GZIP);
+    }
+
+    @Override
+    public GridStorage regionState() {
+        return grid(REGION_STATE_KEY, Compression.GZIP);
     }
 
     @Override

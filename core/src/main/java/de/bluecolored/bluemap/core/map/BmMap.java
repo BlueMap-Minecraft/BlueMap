@@ -34,6 +34,7 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.map.lowres.LowresTileManager;
 import de.bluecolored.bluemap.core.map.renderstate.MapChunkState;
+import de.bluecolored.bluemap.core.map.renderstate.MapRegionState;
 import de.bluecolored.bluemap.core.map.renderstate.MapTileState;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
@@ -73,6 +74,7 @@ public class BmMap {
 
     private final MapTileState mapTileState;
     private final MapChunkState mapChunkState;
+    private final MapRegionState mapRegionState;
 
     private final HiresModelManager hiresModelManager;
     private final LowresTileManager lowresTileManager;
@@ -96,6 +98,7 @@ public class BmMap {
         Logger.global.logDebug("Loading render-state for map '" + id + "'");
         this.mapTileState = new MapTileState(storage.tileState());
         this.mapChunkState = new MapChunkState(storage.chunkState());
+        this.mapRegionState = new MapRegionState(storage.regionState());
 
         if (Thread.interrupted()) throw new InterruptedException();
 
@@ -162,6 +165,7 @@ public class BmMap {
         lowresTileManager.save();
         mapTileState.save();
         mapChunkState.save();
+        mapRegionState.save();
         saveMarkerState();
         savePlayerState();
         saveMapSettings();

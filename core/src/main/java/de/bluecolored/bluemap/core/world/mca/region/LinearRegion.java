@@ -198,6 +198,11 @@ public class LinearRegion<T> implements Region<T> {
         return chunkLoader.emptyChunk();
     }
 
+    @Override
+    public boolean exists() {
+        return Files.exists(regionFile);
+    }
+
     public static String getRegionFileName(int regionX, int regionZ) {
         return "r." + regionX + "." + regionZ + FILE_SUFFIX;
     }

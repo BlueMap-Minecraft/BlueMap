@@ -27,11 +27,6 @@ package de.bluecolored.bluemap.common.rendermanager;
 import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
-import de.bluecolored.bluemap.core.map.renderstate.MapTileState;
-import de.bluecolored.bluemap.core.map.renderstate.TileInfoRegion;
-import de.bluecolored.bluemap.core.map.renderstate.TileState;
-import de.bluecolored.bluemap.core.storage.GridStorage;
-import de.bluecolored.bluemap.core.storage.compression.CompressedInputStream;
 import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.world.World;
 import lombok.Builder;
@@ -44,9 +39,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
-import java.util.stream.Stream;
 
 public class MapUpdatePreparationTask implements MapRenderTask {
 
@@ -112,8 +107,7 @@ public class MapUpdatePreparationTask implements MapRenderTask {
         ArrayList<WorldRegionRenderTask> regionTasks = new ArrayList<>(regions.size());
         regions.forEach(region -> regionTasks.add(new WorldRegionRenderTask(map, region, force)));
 
-        // sort tasks by distance to 0/0
-        regionTasks.sort(WorldRegionRenderTask.defaultComparator(Vector2i.ZERO));
+        regionTasks.sort(WorldRegionRenderTask.regionLastUpdatedComparator(WorldRegionRenderTask.defaultComparator(Vector2i.ZERO)));
 
         // save map before and after the whole update
         ArrayList<RenderTask> tasks = new ArrayList<>(regionTasks.size() + 2);
@@ -150,36 +144,12 @@ public class MapUpdatePreparationTask implements MapRenderTask {
                 .filter(regionRadiusFilter)
                 .forEach(regions::add);
 
-        // also update regions that are present as map-tile-state files (they might have been rendered before but deleted now)
-        // (a little hacky as we are operating on raw tile-state files -> maybe find a better way?)
         if (map.getMapSettings().isCheckForRemovedRegions()) {
-            Grid tileGrid = map.getHiresModelManager().getTileGrid();
-            Grid cellGrid = MapTileState.GRID.multiply(tileGrid);
-            try (Stream<GridStorage.Cell> stream = map.getStorage().tileState().stream()) {
-                stream
-                        .filter(c -> {
-                            // filter out files that are fully UNKNOWN/NOT_GENERATED
-                            // this avoids unnecessarily converting UNKNOWN tiles into NOT_GENERATED tiles on force-updates
-                            try (CompressedInputStream in = c.read()) {
-                                if (in == null) return false;
-                                TileState[] states = TileInfoRegion.loadPalette(in.decompress());
-                                for (TileState state : states) {
-                                    if (
-                                            state != TileState.UNKNOWN &&
-                                                    state != TileState.NOT_GENERATED
-                                    ) return true;
-                                }
-                                return false;
-                            } catch (IOException ignore) {
-                                return true;
-                            }
-                        })
-                        .map(c -> new Vector2i(c.getX(), c.getZ()))
-                        .flatMap(v -> cellGrid.getIntersecting(v, regionGrid).stream())
-                        .filter(regionRadiusFilter)
-                        .forEach(regions::add);
+            // also add regions that have a "lastUpdateTime" timestamp in the map-state data
+            try {
+                map.getMapRegionState().forEach((x, z, _) -> regions.add(new Vector2i(x, z)));
             } catch (IOException ex) {
-                Logger.global.logError("Failed to load map tile state!", ex);
+                Logger.global.logError("Failed to iterate over map region-state", ex);
             }
         }
 

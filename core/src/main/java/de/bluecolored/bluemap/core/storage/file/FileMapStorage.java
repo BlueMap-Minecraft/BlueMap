@@ -55,6 +55,7 @@ public class FileMapStorage implements MapStorage {
     private final LoadingCache<Integer, GridStorage> lowresGridStorages;
     private final GridStorage tileStateStorage;
     private final GridStorage chunkStateStorage;
+    private final GridStorage regionStateStorage;
 
     public FileMapStorage(Path root, Compression compression, boolean atomic) {
         this.root = root;
@@ -83,8 +84,15 @@ public class FileMapStorage implements MapStorage {
         );
 
         this.chunkStateStorage = new FileGridStorage(
-                root.resolve(RENDER_STATE_PATH).resolve(""),
+                root.resolve(RENDER_STATE_PATH),
                 ".chunks.dat",
+                Compression.GZIP,
+                atomic
+        );
+
+        this.regionStateStorage = new FileGridStorage(
+                root.resolve(RENDER_STATE_PATH).resolve("regions"),
+                ".regions.dat",
                 Compression.GZIP,
                 atomic
         );
@@ -109,6 +117,11 @@ public class FileMapStorage implements MapStorage {
     @Override
     public GridStorage chunkState() {
         return chunkStateStorage;
+    }
+
+    @Override
+    public GridStorage regionState() {
+        return regionStateStorage;
     }
 
     public Path getAssetPath(String name) {

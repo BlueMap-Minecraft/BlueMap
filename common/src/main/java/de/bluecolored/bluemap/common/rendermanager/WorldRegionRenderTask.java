@@ -36,10 +36,13 @@ import de.bluecolored.bluemap.core.map.renderstate.TileState;
 import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.ChunkConsumer;
+import de.bluecolored.bluemap.core.world.Region;
+import de.bluecolored.bluemap.core.world.mca.region.MCARegion;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
 
@@ -85,6 +88,8 @@ public class WorldRegionRenderTask implements MapRenderTask {
     }
 
     private synchronized void init() {
+
+        Logger.global.logInfo("Rendering region: " + regionPos);
 
         // calculate bounds
         this.regionGrid = map.getWorld().getRegionGrid();
@@ -231,6 +236,9 @@ public class WorldRegionRenderTask implements MapRenderTask {
     }
 
     private synchronized void complete() {
+
+        Logger.global.logInfo("Completed region: " + regionPos);
+
         // save chunk-hashes
         if (chunkHashes != null) {
             for (int x = 0; x < chunksSize.getX(); x++) {
@@ -240,6 +248,13 @@ public class WorldRegionRenderTask implements MapRenderTask {
                 }
             }
             chunkHashes = null;
+        }
+
+        // update region last updated time
+        if (map.getWorld().getRegion(regionPos.getX(), regionPos.getY()).exists()) {
+            map.getMapRegionState().set(regionPos.getX(), regionPos.getY(), (int) (System.currentTimeMillis() / 1000));
+        } else {
+            map.getMapRegionState().delete(regionPos.getX(), regionPos.getY());
         }
 
         // clear tile-actions
@@ -371,6 +386,21 @@ public class WorldRegionRenderTask implements MapRenderTask {
         }
 
         return chunksAreInhabited ? null : TileState.LOW_INHABITED_TIME;
+    }
+
+    public static Comparator<WorldRegionRenderTask> regionLastUpdatedComparator(final Comparator<WorldRegionRenderTask> fallbackComparator) {
+        return (task1, task2) -> {
+            long task1Modified = regionLastUpdated(task1);
+            long task2Modified = regionLastUpdated(task2);
+            return task1Modified != task2Modified ?
+                    Long.signum(task1Modified - task2Modified) :
+                    fallbackComparator.compare(task1, task2);
+        };
+    }
+
+    private static long regionLastUpdated(WorldRegionRenderTask task) {
+        Vector2i regionPos =  task.getRegionPos();
+        return task.map.getMapRegionState().get(regionPos.getX(), regionPos.getY());
     }
 
     public static Comparator<WorldRegionRenderTask> defaultComparator(final Vector2i centerRegion) {

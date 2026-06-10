@@ -86,6 +86,13 @@ abstract class CellStorage<T extends CellStorage.Cell> {
         return cells.computeIfAbsent(pos, this::loadCell);
     }
 
+    void forEach(CellConsumer<T> consumer) throws IOException {
+        storage.stream().forEach(sc -> {
+            Vector2i cellPos = new Vector2i(sc.getX(), sc.getZ());
+            consumer.accept(cellPos, cell(cellPos));
+        });
+    }
+
     private synchronized T loadCell(Vector2i pos) {
         try (CompressedInputStream in = storage.read(pos.getX(), pos.getY())) {
             if (in != null)
@@ -119,6 +126,11 @@ abstract class CellStorage<T extends CellStorage.Cell> {
 
     public interface Cell {
         boolean isModified();
+    }
+
+    @FunctionalInterface
+    interface CellConsumer<T extends Cell> {
+        void accept(Vector2i cellPos, T cell);
     }
 
 }

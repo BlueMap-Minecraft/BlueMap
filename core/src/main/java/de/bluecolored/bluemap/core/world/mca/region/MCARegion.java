@@ -173,6 +173,11 @@ public class MCARegion<T> implements Region<T> {
         return chunkLoader.emptyChunk();
     }
 
+    @Override
+    public boolean exists() {
+        return Files.exists(regionFile);
+    }
+
     private T loadChunk(int chunkX, int chunkZ, byte[] data, int size) throws IOException {
         int compressionTypeId = Byte.toUnsignedInt(data[4]);
         int offset = 5;
