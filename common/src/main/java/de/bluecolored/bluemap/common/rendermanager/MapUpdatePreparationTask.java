@@ -144,8 +144,9 @@ public class MapUpdatePreparationTask implements MapRenderTask {
                 .filter(regionRadiusFilter)
                 .forEach(regions::add);
 
+        // also add regions that have a "lastUpdateTime" timestamp in the map-state data
+        // (they might have been rendered before but deleted now)
         if (map.getMapSettings().isCheckForRemovedRegions()) {
-            // also add regions that have a "lastUpdateTime" timestamp in the map-state data
             try {
                 map.getMapRegionState().forEach((x, z, _) -> regions.add(new Vector2i(x, z)));
             } catch (IOException ex) {
