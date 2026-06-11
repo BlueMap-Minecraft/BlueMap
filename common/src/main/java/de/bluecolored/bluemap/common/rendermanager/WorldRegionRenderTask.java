@@ -235,8 +235,6 @@ public class WorldRegionRenderTask implements MapRenderTask {
 
     private synchronized void complete() {
 
-        Logger.global.logInfo("Completed region: " + regionPos);
-
         // save chunk-hashes
         if (chunkHashes != null) {
             for (int x = 0; x < chunksSize.getX(); x++) {
