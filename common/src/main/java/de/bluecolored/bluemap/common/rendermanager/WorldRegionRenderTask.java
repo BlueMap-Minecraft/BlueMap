@@ -89,8 +89,6 @@ public class WorldRegionRenderTask implements MapRenderTask {
 
     private synchronized void init() {
 
-        Logger.global.logInfo("Rendering region: " + regionPos);
-
         // calculate bounds
         this.regionGrid = map.getWorld().getRegionGrid();
         this.chunkGrid = map.getWorld().getChunkGrid();
