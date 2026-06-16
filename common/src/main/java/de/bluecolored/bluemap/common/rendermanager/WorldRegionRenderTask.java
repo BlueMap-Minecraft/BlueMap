@@ -36,13 +36,10 @@ import de.bluecolored.bluemap.core.map.renderstate.TileState;
 import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.ChunkConsumer;
-import de.bluecolored.bluemap.core.world.Region;
-import de.bluecolored.bluemap.core.world.mca.region.MCARegion;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.Comparator;
 import java.util.concurrent.TimeUnit;
 

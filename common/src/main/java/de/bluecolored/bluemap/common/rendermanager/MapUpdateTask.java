@@ -31,7 +31,7 @@ import lombok.Getter;
 import java.util.Collection;
 import java.util.stream.Stream;
 
-public class MapUpdateTask extends CombinedRenderTask<RenderTask> implements MapRenderTask {
+public class MapUpdateTask extends CombinedRenderTask implements MapRenderTask {
 
     @Getter private final BmMap map;
 
