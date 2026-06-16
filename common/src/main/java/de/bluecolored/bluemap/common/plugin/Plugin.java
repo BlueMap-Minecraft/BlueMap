@@ -50,6 +50,7 @@ import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.common.web.*;
 import de.bluecolored.bluemap.common.web.http.HttpServer;
+import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.map.hires.ArrayTileModel;
@@ -163,6 +164,13 @@ public class Plugin implements ServerEventListener {
                 } else {
                     Logger.global.remove(DEBUG_FILE_LOG_NAME);
                 }
+
+                Logger.global.logDebug("Loading BlueMap v%s (%s) on %s %s ...".formatted(
+                        BlueMap.VERSION,
+                        BlueMap.GIT_HASH,
+                        implementationType,
+                        serverInterface.getMinecraftVersion()
+                ));
 
                 //load plugin state
                 try {
