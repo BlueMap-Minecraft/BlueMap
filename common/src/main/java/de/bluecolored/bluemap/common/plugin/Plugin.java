@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.common.plugin;
 
+import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.common.BlueMapConfiguration;
 import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.InterruptableReentrantLock;
@@ -31,6 +32,7 @@ import de.bluecolored.bluemap.common.MissingResourcesException;
 import de.bluecolored.bluemap.common.addons.AddonLoader;
 import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.config.*;
+import de.bluecolored.bluemap.common.config.typeserializer.RegistryTypeSerializer;
 import de.bluecolored.bluemap.common.debug.StateDumper;
 import de.bluecolored.bluemap.common.live.LivePlayersDataSupplier;
 import de.bluecolored.bluemap.common.live.PluginLivePlayerInfoTransformer;
@@ -39,6 +41,10 @@ import de.bluecolored.bluemap.common.plugin.skins.PlayerSkinUpdater;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdatePreparationTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.rendermanager.RenderTask;
+import de.bluecolored.bluemap.common.rendermanager.TileUpdateStrategy;
+import de.bluecolored.bluemap.common.rendermanager.serialization.BmMapAdapter;
+import de.bluecolored.bluemap.common.rendermanager.serialization.RenderTaskAdapter;
+import de.bluecolored.bluemap.common.rendermanager.serialization.Vector2iAdapter;
 import de.bluecolored.bluemap.common.serverinterface.Server;
 import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
@@ -51,23 +57,27 @@ import de.bluecolored.bluemap.core.resources.MinecraftVersion;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.FileHelper;
+import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.Tristate;
+import de.bluecolored.bluemap.core.util.nbt.LenientListAdapter;
+import de.bluecolored.bluemap.core.util.nbt.RegistryAdapter;
 import de.bluecolored.bluemap.core.world.World;
+import de.bluecolored.bluenbt.BlueNBT;
+import de.bluecolored.bluenbt.NamingStrategy;
+import de.bluecolored.bluenbt.TypeToken;
 import lombok.AccessLevel;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 import org.spongepowered.configurate.gson.GsonConfigurationLoader;
 import org.spongepowered.configurate.serialize.SerializationException;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import java.io.*;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -335,11 +345,15 @@ public class Plugin implements ServerEventListener {
                 daemonTimer.schedule(fileWatcherRestartTask, TimeUnit.HOURS.toMillis(1), TimeUnit.HOURS.toMillis(1));
 
                 //periodically update all (non frozen) maps
-                long fullUpdateInterval = coreConfig.getFullUpdateInterval().toMillis();
-                if (fullUpdateInterval > 0) {
+                Duration fullUpdateInterval = coreConfig.getFullUpdateInterval();
+                Instant nextUpdate = pluginState.getLastFullUpdate().plus(fullUpdateInterval);
+                Duration delay = Instant.now().until(nextUpdate);
+                if (delay.isNegative()) delay = Duration.ZERO;
+                if (fullUpdateInterval.isPositive()) {
                     TimerTask updateAllMapsTask = new TimerTask() {
                         @Override
                         public void run() {
+                            pluginState.setLastFullUpdate(Instant.now());
                             renderManager.scheduleRenderTasksNext(maps.values().stream()
                                     .filter(map -> pluginState.getMapState(map).isUpdateEnabled())
                                     .sorted(Comparator.comparing(bmMap -> bmMap.getMapSettings().getSorting()))
@@ -347,7 +361,20 @@ public class Plugin implements ServerEventListener {
                                     .toArray(RenderTask[]::new));
                         }
                     };
-                    daemonTimer.scheduleAtFixedRate(updateAllMapsTask, 0, fullUpdateInterval);
+                    daemonTimer.scheduleAtFixedRate(updateAllMapsTask, delay.toMillis(), fullUpdateInterval.toMillis());
+                }
+
+                // load render-tasks
+                Path tasksFile = blueMap.getConfig().getCoreConfig().getData().resolve("tasks.dat");
+                if (Files.exists(tasksFile)) {
+                    try (InputStream in = Files.newInputStream(tasksFile)) {
+                        BlueNBT blueNBT = createRenderTaskBlueNBT();
+                        TasksData tasksData = blueNBT.read(in, new TypeToken<>() {});
+                        renderManager.scheduleRenderTasks(tasksData.getRenderTasks().toArray(RenderTask[]::new));
+                    } catch (Exception ex) {
+                        Logger.global.logError("Failed to load tasks.dat!", ex);
+                        Files.delete(tasksFile);
+                    }
                 }
 
                 //metrics
@@ -421,6 +448,9 @@ public class Plugin implements ServerEventListener {
                 }
                 mapUpdateServices = null;
 
+                //save
+                save();
+
                 // stop render-manager
                 if (renderManager != null){
                     if (renderManager.getCurrentRenderTask() != null) {
@@ -440,9 +470,6 @@ public class Plugin implements ServerEventListener {
                         Thread.currentThread().interrupt();
                     }
                 }
-
-                //save
-                save();
 
                 // stop webserver
                 if (webServer != null && !keepWebserver) {
@@ -520,6 +547,18 @@ public class Plugin implements ServerEventListener {
     public synchronized void save() {
         if (blueMap == null) return;
 
+        if (renderManager != null) {
+            BlueNBT blueNBT = createRenderTaskBlueNBT();
+            Path file = blueMap.getConfig().getCoreConfig().getData().resolve("tasks.dat");
+            TasksData tasksData = new TasksData();
+            tasksData.setRenderTasks(renderManager.getScheduledRenderTasks());
+            try (OutputStream out = FileHelper.createFilepartOutputStream(file)) {
+                blueNBT.write(tasksData, out, new TypeToken<>() {});
+            } catch (Exception ex) {
+                Logger.global.logError("Failed to save tasks.dat!", ex);
+            }
+        }
+
         if (pluginState != null) {
             try {
                 GsonConfigurationLoader loader = GsonConfigurationLoader.builder()
@@ -527,7 +566,7 @@ public class Plugin implements ServerEventListener {
                         .indent(0)
                         .build();
                 loader.save(loader.createNode().set(PluginState.class, pluginState));
-            } catch (IOException ex) {
+            } catch (Exception ex) {
                 Logger.global.logError("Failed to save pluginState.json!", ex);
             }
         }
@@ -536,6 +575,25 @@ public class Plugin implements ServerEventListener {
         for (BmMap map : maps.values()) {
             map.save();
         }
+    }
+
+    private BlueNBT createRenderTaskBlueNBT() {
+        BlueNBT blueNBT = new BlueNBT();
+        blueNBT.register(TypeToken.of(TileUpdateStrategy.class), new RegistryAdapter<>(TileUpdateStrategy.REGISTRY, Key.BLUEMAP_NAMESPACE, TileUpdateStrategy.FORCE_NONE));
+        blueNBT.register(TypeToken.of(Vector2i.class), new Vector2iAdapter());
+        blueNBT.register(TypeToken.of(BmMap.class), new BmMapAdapter(blueMap));
+
+        // a bit of trickery to allow the RenderTaskAdapter to use itself recursively through BlueNBT's default serialization
+        RenderTaskAdapter renderTaskAdapter = new RenderTaskAdapter();
+        blueNBT.register(TypeToken.of(RenderTask.class), renderTaskAdapter);
+        renderTaskAdapter.init(blueNBT);
+
+        blueNBT.register(
+                new TypeToken<>() {},
+                new LenientListAdapter<>(blueNBT, TypeToken.of(RenderTask.class), e -> Logger.global.logDebug("Exception trying to save Render-Task: " + e))
+        );
+
+        return blueNBT;
     }
 
     public void saveMarkerStates() {

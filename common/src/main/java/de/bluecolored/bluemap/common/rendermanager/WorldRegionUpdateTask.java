@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.common.rendermanager;
 import com.flowpowered.math.vector.Vector2i;
 import com.flowpowered.math.vector.Vector2l;
 import de.bluecolored.bluemap.common.debug.DebugDump;
+import de.bluecolored.bluemap.common.rendermanager.serialization.SerializableRenderTask;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.map.renderstate.TileActionResolver.ActionAndNextState;
@@ -36,6 +37,7 @@ import de.bluecolored.bluemap.core.map.renderstate.TileState;
 import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.ChunkConsumer;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import org.jetbrains.annotations.Nullable;
 
@@ -46,7 +48,7 @@ import java.util.concurrent.TimeUnit;
 import static de.bluecolored.bluemap.core.map.renderstate.TileActionResolver.Action.DELETE;
 import static de.bluecolored.bluemap.core.map.renderstate.TileActionResolver.Action.RENDER;
 
-public class WorldRegionRenderTask implements MapRenderTask {
+public final class WorldRegionUpdateTask implements MapRenderTask, SerializableRenderTask<WorldRegionUpdateTask, WorldRegionUpdateTask.Serialized> {
 
     @Getter private final BmMap map;
     @Getter private final Vector2i regionPos;
@@ -63,15 +65,15 @@ public class WorldRegionRenderTask implements MapRenderTask {
     private volatile int atWork;
     private volatile boolean completed, cancelled;
 
-    public WorldRegionRenderTask(BmMap map, Vector2i regionPos) {
+    public WorldRegionUpdateTask(BmMap map, Vector2i regionPos) {
         this(map, regionPos, false);
     }
 
-    public WorldRegionRenderTask(BmMap map, Vector2i regionPos, boolean force) {
+    public WorldRegionUpdateTask(BmMap map, Vector2i regionPos, boolean force) {
         this(map, regionPos, TileUpdateStrategy.fixed(force));
     }
 
-    public WorldRegionRenderTask(BmMap map, Vector2i regionPos, TileUpdateStrategy force) {
+    public WorldRegionUpdateTask(BmMap map, Vector2i regionPos, TileUpdateStrategy force) {
         this.map = map;
         this.regionPos = regionPos;
         this.force = force;
@@ -284,7 +286,7 @@ public class WorldRegionRenderTask implements MapRenderTask {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        WorldRegionRenderTask that = (WorldRegionRenderTask) o;
+        WorldRegionUpdateTask that = (WorldRegionUpdateTask) o;
         return force == that.force && map.getId().equals(that.map.getId()) && regionPos.equals(that.regionPos);
     }
 
@@ -381,7 +383,7 @@ public class WorldRegionRenderTask implements MapRenderTask {
         return chunksAreInhabited ? null : TileState.LOW_INHABITED_TIME;
     }
 
-    public static Comparator<WorldRegionRenderTask> regionLastUpdatedComparator(final Comparator<WorldRegionRenderTask> fallbackComparator) {
+    public static Comparator<WorldRegionUpdateTask> regionLastUpdatedComparator(final Comparator<WorldRegionUpdateTask> fallbackComparator) {
         return (task1, task2) -> {
             long task1Modified = regionLastUpdated(task1);
             long task2Modified = regionLastUpdated(task2);
@@ -391,12 +393,12 @@ public class WorldRegionRenderTask implements MapRenderTask {
         };
     }
 
-    private static long regionLastUpdated(WorldRegionRenderTask task) {
+    private static long regionLastUpdated(WorldRegionUpdateTask task) {
         Vector2i regionPos =  task.getRegionPos();
         return task.map.getMapRegionState().get(regionPos.getX(), regionPos.getY());
     }
 
-    public static Comparator<WorldRegionRenderTask> defaultComparator(final Vector2i centerRegion) {
+    public static Comparator<WorldRegionUpdateTask> defaultComparator(final Vector2i centerRegion) {
         return (task1, task2) -> {
             // use long to compare to avoid overflow (comparison uses distanceSquared)
             Vector2l task1Rel = new Vector2l(task1.regionPos.getX() - centerRegion.getX(), task1.regionPos.getY() - centerRegion.getY());
@@ -410,6 +412,24 @@ public class WorldRegionRenderTask implements MapRenderTask {
      */
     private static int compareVec2L(Vector2l v1, Vector2l v2) {
         return Long.signum(v1.lengthSquared() - v2.lengthSquared());
+    }
+
+    @Override
+    public Serialized serialize() {
+        return new Serialized(map, regionPos, force);
+    }
+
+    @AllArgsConstructor
+    public static class Serialized implements SerializableRenderTask.Serialized<WorldRegionUpdateTask> {
+
+        private BmMap map;
+        private Vector2i regionPos;
+        private TileUpdateStrategy force;
+
+        public WorldRegionUpdateTask deserialize() {
+            return new WorldRegionUpdateTask(map, regionPos, force);
+        }
+
     }
 
 }

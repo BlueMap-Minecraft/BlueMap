@@ -24,12 +24,14 @@
  */
 package de.bluecolored.bluemap.common.rendermanager;
 
+import de.bluecolored.bluemap.common.rendermanager.serialization.SerializableRenderTask;
 import de.bluecolored.bluemap.core.map.BmMap;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class MapSaveTask implements MapRenderTask {
+public final class MapSaveTask implements MapRenderTask, SerializableRenderTask<MapSaveTask, MapSaveTask.Serialized> {
 
     @Getter private final BmMap map;
     private final AtomicBoolean saved;
@@ -69,5 +71,22 @@ public class MapSaveTask implements MapRenderTask {
         MapSaveTask other = (MapSaveTask) task;
         return map.getId().equals(other.map.getId());
     }
+
+    @Override
+    public Serialized serialize() {
+        return new Serialized(map);
+    }
+
+    @AllArgsConstructor
+    public static class Serialized implements SerializableRenderTask.Serialized<MapSaveTask> {
+
+        private BmMap map;
+
+        public MapSaveTask deserialize() {
+            return new MapSaveTask(map);
+        }
+
+    }
+
 
 }
