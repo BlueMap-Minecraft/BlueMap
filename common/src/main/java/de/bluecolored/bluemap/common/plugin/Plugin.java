@@ -590,7 +590,7 @@ public class Plugin implements ServerEventListener {
 
         blueNBT.register(
                 new TypeToken<>() {},
-                new LenientListAdapter<>(blueNBT, TypeToken.of(RenderTask.class), e -> Logger.global.logDebug("Exception trying to save Render-Task: " + e))
+                new LenientListAdapter<>(blueNBT, TypeToken.of(RenderTask.class), e -> Logger.global.logDebug("Failed to load render-task: " + e))
         );
 
         return blueNBT;
