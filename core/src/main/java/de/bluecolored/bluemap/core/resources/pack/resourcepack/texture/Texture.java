@@ -24,9 +24,7 @@
  */
 package de.bluecolored.bluemap.core.resources.pack.resourcepack.texture;
 
-import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
-import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.util.BufferedImageUtil;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.Keyed;
