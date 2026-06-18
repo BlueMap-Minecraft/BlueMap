@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.common.plugin;
 import de.bluecolored.bluemap.core.map.BmMap;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
+import java.time.Instant;
 import java.util.*;
 
 @SuppressWarnings("FieldMayBeFinal")
@@ -36,6 +37,7 @@ public class PluginState {
     private boolean renderThreadsEnabled = true;
     private Map<String, MapState> maps = new HashMap<>();
     private Set<UUID> hiddenPlayers = new HashSet<>();
+    private long lastFullUpdate = 0;
 
     public boolean isRenderThreadsEnabled() {
         return renderThreadsEnabled;
@@ -59,6 +61,14 @@ public class PluginState {
 
     public boolean isPlayerHidden(UUID player) {
         return hiddenPlayers.contains(player);
+    }
+
+    public Instant getLastFullUpdate() {
+        return Instant.ofEpochSecond(lastFullUpdate);
+    }
+
+    public void setLastFullUpdate(Instant lastFullUpdate) {
+        this.lastFullUpdate = lastFullUpdate.getEpochSecond();
     }
 
     @ConfigSerializable

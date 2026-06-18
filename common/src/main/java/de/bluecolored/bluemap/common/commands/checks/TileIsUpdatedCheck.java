@@ -27,18 +27,11 @@ package de.bluecolored.bluemap.common.commands.checks;
 import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.rendermanager.RenderTask;
-import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
+import de.bluecolored.bluemap.common.rendermanager.WorldRegionUpdateTask;
 import de.bluecolored.bluemap.core.map.BmMap;
-import de.bluecolored.bluemap.core.map.renderstate.TileInfoRegion;
-import de.bluecolored.bluemap.core.map.renderstate.TileState;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.event.ClickEvent;
-
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 import static de.bluecolored.bluemap.common.commands.TextFormat.*;
 import static net.kyori.adventure.text.Component.empty;
@@ -62,7 +55,7 @@ public class TileIsUpdatedCheck implements Check {
 
     @Override
     public CheckResult getResult() {
-        WorldRegionRenderTask regionRenderTask = new WorldRegionRenderTask(map, region);
+        WorldRegionUpdateTask regionRenderTask = new WorldRegionUpdateTask(map, region);
 
         RenderTask current = plugin.getRenderManager().getCurrentRenderTask();
         if (current == null) return CheckResult.OK;

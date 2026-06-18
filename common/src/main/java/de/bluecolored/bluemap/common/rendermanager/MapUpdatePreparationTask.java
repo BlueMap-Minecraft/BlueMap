@@ -39,7 +39,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -104,10 +103,10 @@ public class MapUpdatePreparationTask implements MapRenderTask {
     }
 
     private Collection<RenderTask> createTasks(Collection<Vector2i> regions) {
-        ArrayList<WorldRegionRenderTask> regionTasks = new ArrayList<>(regions.size());
-        regions.forEach(region -> regionTasks.add(new WorldRegionRenderTask(map, region, force)));
+        ArrayList<WorldRegionUpdateTask> regionTasks = new ArrayList<>(regions.size());
+        regions.forEach(region -> regionTasks.add(new WorldRegionUpdateTask(map, region, force)));
 
-        regionTasks.sort(WorldRegionRenderTask.regionLastUpdatedComparator(WorldRegionRenderTask.defaultComparator(Vector2i.ZERO)));
+        regionTasks.sort(WorldRegionUpdateTask.regionLastUpdatedComparator(WorldRegionUpdateTask.defaultComparator(Vector2i.ZERO)));
 
         // save map before and after the whole update
         ArrayList<RenderTask> tasks = new ArrayList<>(regionTasks.size() + 2);

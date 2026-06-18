@@ -27,22 +27,17 @@ package de.bluecolored.bluemap.common.commands.commands;
 import de.bluecolored.bluecommands.annotations.Command;
 import de.bluecolored.bluemap.common.BlueMapService;
 import de.bluecolored.bluemap.common.commands.Permission;
-import de.bluecolored.bluemap.common.commands.TextFormat;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.rendermanager.*;
 import de.bluecolored.bluemap.core.map.BmMap;
 import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.JoinConfiguration;
-import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.event.HoverEvent;
-import net.kyori.adventure.text.format.TextDecoration;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.*;
 
 import static de.bluecolored.bluemap.common.commands.TextFormat.*;
@@ -156,7 +151,7 @@ public class StatusCommand {
                 case MapUpdateTask t -> format("⛏ map % is currently being updated",
                         formatMap(t.getMap()).color(HIGHLIGHT_COLOR)
                 ).color(INFO_COLOR);
-                case WorldRegionRenderTask t -> format("⛏ map % is currently being updated",
+                case WorldRegionUpdateTask t -> format("⛏ map % is currently being updated",
                         formatMap(t.getMap()).color(HIGHLIGHT_COLOR)
                 ).color(INFO_COLOR);
                 case MapPurgeTask t -> format("⛏ map % is currently being purged",

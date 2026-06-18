@@ -20,6 +20,14 @@
       {
         "formats": { "min_inclusive": 77 },
         "directory": "mc26_1"
+      },
+      {
+        "formats": { "max_inclusive": 85 },
+        "directory": "beds"
+      },
+      {
+        "formats": { "max_inclusive": 86 },
+        "directory": "signs"
       }
     ]
   }

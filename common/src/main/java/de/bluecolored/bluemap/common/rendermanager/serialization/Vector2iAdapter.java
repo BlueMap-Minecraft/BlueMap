@@ -22,41 +22,41 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.rendermanager;
+package de.bluecolored.bluemap.common.rendermanager.serialization;
 
-import de.bluecolored.bluemap.core.map.renderstate.TileState;
-import de.bluecolored.bluemap.core.util.Key;
-import de.bluecolored.bluemap.core.util.Keyed;
-import de.bluecolored.bluemap.core.util.Registry;
-import lombok.Getter;
+import com.flowpowered.math.vector.Vector2i;
+import de.bluecolored.bluemap.common.BlueMapService;
+import de.bluecolored.bluemap.core.map.BmMap;
+import de.bluecolored.bluenbt.NBTReader;
+import de.bluecolored.bluenbt.NBTWriter;
+import de.bluecolored.bluenbt.TagType;
+import de.bluecolored.bluenbt.TypeAdapter;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.Delegate;
 
-import java.util.function.Predicate;
+import java.io.IOException;
 
-public interface TileUpdateStrategy extends Predicate<TileState>, Keyed {
+public class Vector2iAdapter implements TypeAdapter<Vector2i> {
 
-    TileUpdateStrategy FORCE_ALL = new Impl(Key.bluemap("force_all"), tileState -> true);
-    TileUpdateStrategy FORCE_EDGE = new Impl(Key.bluemap("force_edge"), tileState -> tileState == TileState.RENDERED_EDGE);
-    TileUpdateStrategy FORCE_NONE = new Impl(Key.bluemap("force_none"), tileState -> false);
-
-    Registry<TileUpdateStrategy> REGISTRY = new Registry<>(
-            FORCE_ALL,
-            FORCE_EDGE,
-            FORCE_NONE
-    );
-
-    static TileUpdateStrategy fixed(boolean force) {
-        return force ? FORCE_ALL : FORCE_NONE;
+    @Override
+    public Vector2i read(NBTReader reader) throws IOException {
+        reader.beginList();
+        int x = reader.nextInt();
+        int y = reader.nextInt();
+        reader.endList();
+        return new Vector2i(x, y);
     }
 
-    @RequiredArgsConstructor
-    @Getter
-    class Impl implements TileUpdateStrategy {
+    @Override
+    public void write(Vector2i value, NBTWriter writer) throws IOException {
+        writer.beginList(2);
+        writer.value(value.getX());
+        writer.value(value.getY());
+        writer.endList();
+    }
 
-        private final Key key;
-        @Delegate private final Predicate<TileState> predicate;
-
+    @Override
+    public TagType type() {
+        return TagType.LIST;
     }
 
 }

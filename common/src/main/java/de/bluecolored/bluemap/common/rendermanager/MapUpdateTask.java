@@ -25,26 +25,51 @@
 package de.bluecolored.bluemap.common.rendermanager;
 
 import com.flowpowered.math.vector.Vector2i;
+import de.bluecolored.bluemap.common.rendermanager.serialization.SerializableRenderTask;
 import de.bluecolored.bluemap.core.map.BmMap;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Stream;
 
-public class MapUpdateTask extends CombinedRenderTask<RenderTask> implements MapRenderTask {
+public final class MapUpdateTask extends CombinedRenderTask implements MapRenderTask, SerializableRenderTask<MapUpdateTask, MapUpdateTask.Serialized> {
 
     @Getter private final BmMap map;
 
     public MapUpdateTask(BmMap map, Collection<Vector2i> regions, TileUpdateStrategy force) {
         this(map, Stream.concat(
-                regions.stream().<RenderTask>map(region -> new WorldRegionRenderTask(map, region, force)),
+                regions.stream().<RenderTask>map(region -> new WorldRegionUpdateTask(map, region, force)),
                 Stream.of(new MapSaveTask(map))
         ).toList());
     }
 
-    protected MapUpdateTask(BmMap map, Collection<RenderTask> tasks) {
-        super("updating map '%s'".formatted(map.getId()), tasks);
+    MapUpdateTask(BmMap map, Collection<RenderTask> tasks) {
+        this(map, tasks, 0);
+    }
+
+    private MapUpdateTask(BmMap map, Collection<RenderTask> tasks, int currentTaskIndex) {
+        super("updating map '%s'".formatted(map.getId()), tasks, currentTaskIndex);
         this.map = map;
+    }
+
+    @Override
+    public Serialized serialize() {
+        return new Serialized(map, getTasks(), getCurrentTaskIndex());
+    }
+
+    @AllArgsConstructor
+    public static class Serialized implements SerializableRenderTask.Serialized<MapUpdateTask> {
+
+        private BmMap map;
+        private List<RenderTask> tasks;
+        private int currentTaskIndex;
+
+        public MapUpdateTask deserialize() {
+            return new MapUpdateTask(map, tasks, currentTaskIndex);
+        }
+
     }
 
 }

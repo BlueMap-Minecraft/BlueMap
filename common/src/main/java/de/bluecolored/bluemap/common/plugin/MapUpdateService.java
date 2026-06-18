@@ -27,7 +27,7 @@ package de.bluecolored.bluemap.common.plugin;
 import com.flowpowered.math.vector.Vector2i;
 import com.github.benmanes.caffeine.cache.Cache;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
-import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
+import de.bluecolored.bluemap.common.rendermanager.WorldRegionUpdateTask;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.util.Caches;
@@ -108,7 +108,7 @@ public class MapUpdateService extends Thread {
             @Override
             public void run() {
                 synchronized (MapUpdateService.this) {
-                    WorldRegionRenderTask task = new WorldRegionRenderTask(map, regionPos);
+                    WorldRegionUpdateTask task = new WorldRegionUpdateTask(map, regionPos);
                     scheduledUpdates.remove(regionPos);
                     renderManager.scheduleRenderTask(task);
                     lastUpdateTimes.put(regionPos, System.currentTimeMillis());

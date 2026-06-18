@@ -32,7 +32,7 @@ import de.bluecolored.bluemap.api.markers.MarkerSet;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdatePreparationTask;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdateTask;
-import de.bluecolored.bluemap.common.rendermanager.WorldRegionRenderTask;
+import de.bluecolored.bluemap.common.rendermanager.WorldRegionUpdateTask;
 import de.bluecolored.bluemap.core.map.BmMap;
 import lombok.NonNull;
 import org.jetbrains.annotations.Nullable;
@@ -138,8 +138,8 @@ public class BlueMapMapImpl implements BlueMapMap {
             if (task instanceof MapUpdateTask)
                 return ((MapUpdateTask) task).getMap().equals(map);
 
-            if (task instanceof WorldRegionRenderTask)
-                return ((WorldRegionRenderTask) task).getMap().equals(map);
+            if (task instanceof WorldRegionUpdateTask)
+                return ((WorldRegionUpdateTask) task).getMap().equals(map);
 
             return false;
         });

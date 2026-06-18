@@ -32,7 +32,6 @@ import de.bluecolored.bluemap.core.map.BmMap;
 import lombok.RequiredArgsConstructor;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.HoverEvent;
-import net.kyori.adventure.text.format.TextDecoration;
 
 import java.util.Comparator;
 import java.util.LinkedList;
@@ -87,7 +86,7 @@ public class MapListCommand {
             icon = ICON_IN_PROGRESS;
             String format = switch (task) {
                 case MapUpdateTask ignored -> "is currently being updated: %";
-                case WorldRegionRenderTask ignored -> "is currently being updated: %";
+                case WorldRegionUpdateTask ignored -> "is currently being updated: %";
                 case MapPurgeTask ignored -> "is currently being purged: %";
                 default -> "has a running task: %";
             };

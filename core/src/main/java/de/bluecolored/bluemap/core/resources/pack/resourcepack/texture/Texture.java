@@ -24,7 +24,7 @@
  */
 package de.bluecolored.bluemap.core.resources.pack.resourcepack.texture;
 
-import de.bluecolored.bluemap.core.resources.ResourcePath;
+import com.google.gson.annotations.SerializedName;
 import de.bluecolored.bluemap.core.util.BufferedImageUtil;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.Keyed;
@@ -52,7 +52,9 @@ public class Texture implements Keyed {
             null
     );
 
+    @SerializedName("resourcePath")
     private Key key;
+
     private Color color;
     private boolean halfTransparent;
     private String texture;
@@ -72,7 +74,7 @@ public class Texture implements Keyed {
             Key key, Color color, boolean halfTransparent,
             String texture, @Nullable AnimationMeta animation, @Nullable BufferedImage textureImage
     ) {
-        this.key = new ResourcePath<>(key);
+        this.key = key;
         this.color = color.straight();
         this.halfTransparent = halfTransparent;
         this.texture = texture;
@@ -81,7 +83,7 @@ public class Texture implements Keyed {
     }
 
     private Texture(Key key) {
-        this.key = new ResourcePath<>(key);
+        this.key = key;
         this.color = MISSING.color;
         this.halfTransparent = MISSING.halfTransparent;
         this.texture = MISSING.texture;

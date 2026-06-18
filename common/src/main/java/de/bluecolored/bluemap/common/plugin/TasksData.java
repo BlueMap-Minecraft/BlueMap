@@ -22,41 +22,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.rendermanager;
+package de.bluecolored.bluemap.common.plugin;
 
-import de.bluecolored.bluemap.core.map.renderstate.TileState;
-import de.bluecolored.bluemap.core.util.Key;
-import de.bluecolored.bluemap.core.util.Keyed;
-import de.bluecolored.bluemap.core.util.Registry;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.experimental.Delegate;
+import de.bluecolored.bluemap.common.rendermanager.RenderTask;
+import lombok.Data;
 
-import java.util.function.Predicate;
+import java.util.ArrayList;
+import java.util.List;
 
-public interface TileUpdateStrategy extends Predicate<TileState>, Keyed {
+@Data
+public class TasksData {
 
-    TileUpdateStrategy FORCE_ALL = new Impl(Key.bluemap("force_all"), tileState -> true);
-    TileUpdateStrategy FORCE_EDGE = new Impl(Key.bluemap("force_edge"), tileState -> tileState == TileState.RENDERED_EDGE);
-    TileUpdateStrategy FORCE_NONE = new Impl(Key.bluemap("force_none"), tileState -> false);
-
-    Registry<TileUpdateStrategy> REGISTRY = new Registry<>(
-            FORCE_ALL,
-            FORCE_EDGE,
-            FORCE_NONE
-    );
-
-    static TileUpdateStrategy fixed(boolean force) {
-        return force ? FORCE_ALL : FORCE_NONE;
-    }
-
-    @RequiredArgsConstructor
-    @Getter
-    class Impl implements TileUpdateStrategy {
-
-        private final Key key;
-        @Delegate private final Predicate<TileState> predicate;
-
-    }
+    private List<RenderTask> renderTasks = new ArrayList<>();
 
 }

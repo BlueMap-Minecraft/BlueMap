@@ -24,24 +24,30 @@
  */
 package de.bluecolored.bluemap.common.rendermanager;
 
+import lombok.Getter;
+
 import java.util.*;
 
-public class CombinedRenderTask<T extends RenderTask> implements RenderTask {
+@Getter
+public class CombinedRenderTask implements RenderTask {
 
     private final String description;
-    private final List<T> tasks;
+    private final List<RenderTask> tasks;
     private int currentTaskIndex;
 
-    public CombinedRenderTask(String description, Collection<T> tasks) {
+    public CombinedRenderTask(String description, Collection<RenderTask> tasks) {
+        this(description, tasks, 0);
+    }
+
+    public CombinedRenderTask(String description, Collection<RenderTask> tasks, int currentTaskIndex) {
         this.description = description;
         this.tasks = Collections.unmodifiableList(new ArrayList<>(tasks));
-
-        this.currentTaskIndex = 0;
+        this.currentTaskIndex = currentTaskIndex;
     }
 
     @Override
     public void doWork() throws Exception {
-        T task;
+        RenderTask task;
 
         synchronized (this) {
             if (!hasMoreWork()) return;
@@ -74,14 +80,14 @@ public class CombinedRenderTask<T extends RenderTask> implements RenderTask {
 
     @Override
     public void cancel() {
-        for (T task : tasks) task.cancel();
+        for (RenderTask task : tasks) task.cancel();
     }
 
     @Override
     public boolean contains(RenderTask task) {
         if (this.equals(task)) return true;
 
-        if (task instanceof CombinedRenderTask<?> combinedTask) {
+        if (task instanceof CombinedRenderTask combinedTask) {
             for (RenderTask subTask : combinedTask.tasks) {
                 if (!this.contains(subTask)) return false;
             }
@@ -93,11 +99,6 @@ public class CombinedRenderTask<T extends RenderTask> implements RenderTask {
         }
 
         return false;
-    }
-
-    @Override
-    public String getDescription() {
-        return description;
     }
 
     @Override

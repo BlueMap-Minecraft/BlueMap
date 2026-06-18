@@ -86,6 +86,16 @@ public class TasksCommand {
         return paragraph("Tasks", lines(tasks));
     }
 
+    @Command("tasks cancel all")
+    @Permission("bluemap.tasks.cancel")
+    public Component cancelAllTasks() {
+        if (plugin.getRenderManager().getScheduledRenderTaskCount() == 0)
+            return text("There are no scheduled tasks").color(NEGATIVE_COLOR);
+
+        plugin.getRenderManager().removeAllRenderTasks();
+        return text("All tasks cancelled").color(POSITIVE_COLOR);
+    }
+
     @Command("tasks cancel <task-ref>")
     @Permission("bluemap.tasks.cancel")
     public Component cancelTask(@Argument("task-ref") RenderTask renderTask) {

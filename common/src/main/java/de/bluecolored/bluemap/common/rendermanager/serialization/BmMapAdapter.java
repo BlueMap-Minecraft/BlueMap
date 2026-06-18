@@ -22,41 +22,38 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.rendermanager;
+package de.bluecolored.bluemap.common.rendermanager.serialization;
 
-import de.bluecolored.bluemap.core.map.renderstate.TileState;
-import de.bluecolored.bluemap.core.util.Key;
-import de.bluecolored.bluemap.core.util.Keyed;
-import de.bluecolored.bluemap.core.util.Registry;
-import lombok.Getter;
+import de.bluecolored.bluemap.common.BlueMapService;
+import de.bluecolored.bluemap.core.map.BmMap;
+import de.bluecolored.bluenbt.NBTReader;
+import de.bluecolored.bluenbt.NBTWriter;
+import de.bluecolored.bluenbt.TagType;
+import de.bluecolored.bluenbt.TypeAdapter;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.Delegate;
 
-import java.util.function.Predicate;
+import java.io.IOException;
 
-public interface TileUpdateStrategy extends Predicate<TileState>, Keyed {
+@RequiredArgsConstructor
+public class BmMapAdapter implements TypeAdapter<BmMap> {
 
-    TileUpdateStrategy FORCE_ALL = new Impl(Key.bluemap("force_all"), tileState -> true);
-    TileUpdateStrategy FORCE_EDGE = new Impl(Key.bluemap("force_edge"), tileState -> tileState == TileState.RENDERED_EDGE);
-    TileUpdateStrategy FORCE_NONE = new Impl(Key.bluemap("force_none"), tileState -> false);
+    private final BlueMapService blueMap;
 
-    Registry<TileUpdateStrategy> REGISTRY = new Registry<>(
-            FORCE_ALL,
-            FORCE_EDGE,
-            FORCE_NONE
-    );
-
-    static TileUpdateStrategy fixed(boolean force) {
-        return force ? FORCE_ALL : FORCE_NONE;
+    @Override
+    public BmMap read(NBTReader reader) throws IOException {
+        BmMap map = blueMap.getMaps().get(reader.nextString());
+        if (map == null) throw new IOException("No map with id '" + reader.nextString() + "' loaded.");
+        return map;
     }
 
-    @RequiredArgsConstructor
-    @Getter
-    class Impl implements TileUpdateStrategy {
+    @Override
+    public void write(BmMap value, NBTWriter writer) throws IOException {
+        writer.value(value.getId());
+    }
 
-        private final Key key;
-        @Delegate private final Predicate<TileState> predicate;
-
+    @Override
+    public TagType type() {
+        return TagType.STRING;
     }
 
 }
