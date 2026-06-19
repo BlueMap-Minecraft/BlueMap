@@ -60,6 +60,9 @@ public abstract class Pack {
 
     public void loadResourcePath(Path root, Loader resourceLoader) throws IOException, InterruptedException {
         if (Thread.interrupted()) throw new InterruptedException();
+
+        root = root.toRealPath();
+
         if (!Files.isDirectory(root)) {
             try (FileSystem fileSystem = FileSystems.newFileSystem(root, (ClassLoader) null)) {
                 for (Path fsRoot : fileSystem.getRootDirectories()) {
