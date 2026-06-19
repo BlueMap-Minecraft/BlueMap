@@ -67,6 +67,7 @@ public final class MapPurgeTask implements MapRenderTask, SerializableRenderTask
         map.resetTextureGallery();
         map.getMapTileState().reset();
         map.getMapChunkState().reset();
+        map.getMapRegionState().reset();
     }
 
     @Override
