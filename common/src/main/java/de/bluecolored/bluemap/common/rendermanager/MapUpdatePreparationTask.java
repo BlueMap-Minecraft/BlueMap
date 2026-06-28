@@ -35,10 +35,7 @@ import lombok.NonNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -78,6 +75,8 @@ public class MapUpdatePreparationTask implements MapRenderTask {
 
         // do work
         Collection<Vector2i> regions = findRegions();
+        if (regions.isEmpty()) return;
+
         Collection<RenderTask> tasks = createTasks(regions);
         MapUpdateTask mapUpdateTask = new MapUpdateTask(map, tasks);
 
@@ -142,6 +141,13 @@ public class MapUpdatePreparationTask implements MapRenderTask {
                 .filter(regionBoundsFilter)
                 .filter(regionRadiusFilter)
                 .forEach(regions::add);
+
+        // no regions could mean the world might be configured incorrectly so we don't update anything to avoid accidentally deleting the entire map
+        if (regions.isEmpty()) {
+            Logger.global.logWarning("No regions found in world '%s', update-task for map '%s' will not be created."
+                    .formatted(map.getWorld().getId(), map.getId()));
+            return Collections.emptyList();
+        }
 
         // also add regions that have a "lastUpdateTime" timestamp in the map-state data
         // (they might have been rendered before but deleted now)
