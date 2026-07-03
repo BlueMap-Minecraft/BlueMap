@@ -117,7 +117,7 @@ public class HttpRequestInputStream implements Closeable {
 
         while (true) {
             String prefix = readLine();
-            int size = Integer.valueOf(prefix.formatted(), 16);
+            int size = Integer.valueOf(prefix.trim(), 16);
             if (size > byteBuffer.length) byteBuffer = new byte[size];
             size = in.readNBytes(byteBuffer, 0, size);
             body.write(byteBuffer, 0, size);
