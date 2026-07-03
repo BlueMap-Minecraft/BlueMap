@@ -24,11 +24,6 @@
  */
 package de.bluecolored.bluemap.common.web;
 
-import de.bluecolored.bluemap.common.live.LiveMarkersDataSupplier;
-import de.bluecolored.bluemap.common.live.LivePlayerInfoTransformer;
-import de.bluecolored.bluemap.common.live.LivePlayersDataSupplier;
-import de.bluecolored.bluemap.common.serverinterface.Server;
-import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.storage.MapStorage;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,20 +31,15 @@ import java.util.function.Supplier;
 
 public class MapRequestHandler extends RoutingRequestHandler {
 
-    public MapRequestHandler(BmMap map, Server serverInterface, LivePlayerInfoTransformer playerInfoTransformer, boolean hidePlayersOnDifferentWorld) {
-        this(map.getStorage(),
-                new LivePlayersDataSupplier(serverInterface, map.getWorld(), playerInfoTransformer, hidePlayersOnDifferentWorld),
-                new LiveMarkersDataSupplier(map.getMarkerSets()));
-    }
-
     public MapRequestHandler(MapStorage mapStorage) {
         this(mapStorage, null, null);
     }
 
-    public MapRequestHandler(MapStorage mapStorage,
-                             @Nullable Supplier<String> livePlayersDataSupplier,
-                             @Nullable Supplier<String> liveMarkerDataSupplier) {
-
+    public MapRequestHandler(
+            MapStorage mapStorage,
+            @Nullable Supplier<String> livePlayersDataSupplier,
+            @Nullable Supplier<String> liveMarkerDataSupplier
+    ) {
         register(".*", new MapStorageRequestHandler(mapStorage));
 
         if (livePlayersDataSupplier != null) {

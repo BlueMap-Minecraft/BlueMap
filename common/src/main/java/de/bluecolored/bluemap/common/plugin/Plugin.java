@@ -34,6 +34,7 @@ import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.config.*;
 import de.bluecolored.bluemap.common.config.typeserializer.RegistryTypeSerializer;
 import de.bluecolored.bluemap.common.debug.StateDumper;
+import de.bluecolored.bluemap.common.live.LiveMarkersDataSupplier;
 import de.bluecolored.bluemap.common.live.LivePlayersDataSupplier;
 import de.bluecolored.bluemap.common.live.PluginLivePlayerInfoTransformer;
 import de.bluecolored.bluemap.common.metrics.Metrics;
@@ -228,7 +229,12 @@ public class Plugin implements ServerEventListener {
                         MapRequestHandler mapRequestHandler;
                         BmMap map = maps.get(id);
                         if (map != null) {
-                            mapRequestHandler = new MapRequestHandler(map, serverInterface, livePlayerInfoTransformer, pluginConfig.isHideDifferentWorld());
+                            LivePlayersDataSupplier livePlayersDataSupplier = pluginConfig.isLivePlayerMarkers() ?
+                                    new LivePlayersDataSupplier(serverInterface, map.getWorld(), livePlayerInfoTransformer, pluginConfig.isHideDifferentWorld()) :
+                                    null;
+                            LiveMarkersDataSupplier liveMarkersDataSupplier = new LiveMarkersDataSupplier(map.getMarkerSets());
+
+                            mapRequestHandler = new MapRequestHandler(map.getStorage(), livePlayersDataSupplier, liveMarkersDataSupplier);
                         } else {
                             Storage storage = blueMap.getOrLoadStorage(mapConfig.getStorage());
                             mapRequestHandler = new MapRequestHandler(storage.map(id));
