@@ -303,7 +303,7 @@ public class Plugin implements ServerEventListener {
 
                 //start skin updater
                 this.skinUpdater = new PlayerSkinUpdater(this);
-                if (pluginConfig.isLivePlayerMarkers() && pluginConfig.isSkinDownload()) {
+                if (pluginConfig.isSkinDownload()) {
                     serverInterface.registerListener(skinUpdater);
                 }
 
