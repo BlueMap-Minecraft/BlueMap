@@ -83,7 +83,8 @@ export class Map {
 			perspectiveView: false,
 			flatView: false,
 			freeFlightView: false,
-			views: ["perspective", "flat", "free"]
+			views: ["perspective", "flat", "free"],
+			clientDecompression: clientDecompression
 		});
 
 		this.raycaster = new Raycaster();
