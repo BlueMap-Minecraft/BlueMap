@@ -49,8 +49,9 @@ export class Map {
 	 * @param liveDataRoot {string}
 	 * @param loadBlocker {function: Promise<void>}
 	 * @param events {EventTarget}
+	 * @param clientDecompression {boolean}
 	 */
-	constructor(id, mapDataRoot, liveDataRoot, loadBlocker, events = null) {
+	constructor(id, mapDataRoot, liveDataRoot, loadBlocker, events = null, clientDecompression) {
 		Object.defineProperty( this, 'isMap', { value: true } );
 
 		this.loadBlocker = loadBlocker;
@@ -62,7 +63,7 @@ export class Map {
 			mapDataRoot: mapDataRoot,
 			liveDataRoot: liveDataRoot,
 			settingsUrl: mapDataRoot + "/settings.json",
-			texturesUrl: mapDataRoot + "/textures.json",
+			texturesUrl: mapDataRoot + (clientDecompression ? "/textures.json.gz" : "/textures.json"),
 			name: id,
 			startPos: {x: 0, z: 0},
 			skyColor: new Color(),
@@ -82,7 +83,8 @@ export class Map {
 			perspectiveView: false,
 			flatView: false,
 			freeFlightView: false,
-			views: ["perspective", "flat", "free"]
+			views: ["perspective", "flat", "free"],
+			clientDecompression: clientDecompression
 		});
 
 		this.raycaster = new Raycaster();
@@ -129,28 +131,29 @@ export class Map {
                 this.hiresMaterial = this.createHiresMaterial(hiresVertexShader, hiresFragmentShader, uniforms, textures);
 
                 this.hiresTileManager = new TileManager(new TileLoader(
-					`${this.data.mapDataRoot}/tiles/0/`,
-					this.hiresMaterial,
-					this.data.hires,
-					this.loadBlocker,
-					revalidatedUrls
-				), this.onTileLoad("hires"), this.onTileUnload("hires"), this.events);
-				this.hiresTileManager.scene.matrixWorldAutoUpdate = false;
+									`${this.data.mapDataRoot}/tiles/0/`,
+									this.hiresMaterial,
+									this.data.hires,
+									this.loadBlocker,
+									revalidatedUrls,
+									this.data.clientDecompression
+								), this.onTileLoad("hires"), this.onTileUnload("hires"), this.events);
+								this.hiresTileManager.scene.matrixWorldAutoUpdate = false;
 
-                this.lowresTileManager = [];
-				for (let i = 0; i < this.data.lowres.lodCount; i++) {
-					this.lowresTileManager[i] = new TileManager(new LowresTileLoader(
-						`${this.data.mapDataRoot}/tiles/`,
-						this.data.lowres,
-						i + 1,
-						lowresVertexShader,
-						lowresFragmentShader,
-						uniforms,
-						async () => {},
-						revalidatedUrls
-					), this.onTileLoad("lowres"), this.onTileUnload("lowres"), this.events);
-					this.lowresTileManager[i].scene.matrixWorldAutoUpdate = false;
-				}
+								this.lowresTileManager = [];
+								for (let i = 0; i < this.data.lowres.lodCount; i++) {
+									this.lowresTileManager[i] = new TileManager(new LowresTileLoader(
+										`${this.data.mapDataRoot}/tiles/`,
+										this.data.lowres,
+										i + 1,
+										lowresVertexShader,
+										lowresFragmentShader,
+										uniforms,
+										async () => {},
+										revalidatedUrls
+									), this.onTileLoad("lowres"), this.onTileUnload("lowres"), this.events);
+									this.lowresTileManager[i].scene.matrixWorldAutoUpdate = false;
+								}
 
                 alert(this.events, `Map '${this.data.id}' is loaded.`, "fine");
             });
@@ -285,6 +288,7 @@ export class Map {
 			let loader = new RevalidatingFileLoader();
 			loader.setRevalidatedUrls(revalidatedUrls);
 			loader.setResponseType("json");
+			loader.setClientDecompression(this.data.clientDecompression);
 			loader.load(this.data.texturesUrl,
 				resolve,
 				() => {},
