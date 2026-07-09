@@ -49,8 +49,9 @@ export class Map {
 	 * @param liveDataRoot {string}
 	 * @param loadBlocker {function: Promise<void>}
 	 * @param events {EventTarget}
+	 * @param clientDecompression {boolean}
 	 */
-	constructor(id, mapDataRoot, liveDataRoot, loadBlocker, events = null) {
+	constructor(id, mapDataRoot, liveDataRoot, loadBlocker, events = null, clientDecompression) {
 		Object.defineProperty( this, 'isMap', { value: true } );
 
 		this.loadBlocker = loadBlocker;
@@ -62,7 +63,7 @@ export class Map {
 			mapDataRoot: mapDataRoot,
 			liveDataRoot: liveDataRoot,
 			settingsUrl: mapDataRoot + "/settings.json",
-			texturesUrl: mapDataRoot + "/textures.json",
+			texturesUrl: mapDataRoot + (clientDecompression ? "/textures.json.gz" : "/textures.json"),
 			name: id,
 			startPos: {x: 0, z: 0},
 			skyColor: new Color(),
@@ -133,7 +134,8 @@ export class Map {
 									this.hiresMaterial,
 									this.data.hires,
 									this.loadBlocker,
-									revalidatedUrls
+									revalidatedUrls,
+									this.data.clientDecompression
 								), this.onTileLoad("hires"), this.onTileUnload("hires"), this.events);
 								this.hiresTileManager.scene.matrixWorldAutoUpdate = false;
 
@@ -285,6 +287,7 @@ export class Map {
 			let loader = new RevalidatingFileLoader();
 			loader.setRevalidatedUrls(revalidatedUrls);
 			loader.setResponseType("json");
+			loader.setClientDecompression(this.data.clientDecompression);
 			loader.load(this.data.texturesUrl,
 				resolve,
 				() => {},

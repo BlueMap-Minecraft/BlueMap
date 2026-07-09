@@ -76,6 +76,7 @@ export class BlueMapApp {
          *      maps: string[],
          *      scripts: string[],
          *      styles: string[]
+         *      clientDecompression: boolean,
          *  }}
          **/
         this.settings = null;
@@ -308,7 +309,7 @@ export class BlueMapApp {
         // create maps
         if (settings.maps !== undefined){
             let loadingPromises = settings.maps.map(mapId => {
-                let map = new BlueMapMap(mapId, settings.mapDataRoot + "/" + mapId, settings.liveDataRoot + "/" + mapId, this.loadBlocker, this.mapViewer.events);
+                let map = new BlueMapMap(mapId, settings.mapDataRoot + "/" + mapId, settings.liveDataRoot + "/" + mapId, this.loadBlocker, this.mapViewer.events, this.settings.clientDecompression);
                 maps.push(map);
 
                 return map.loadSettings(this.mapViewer.revalidatedUrls)
@@ -355,6 +356,7 @@ export class BlueMapApp {
                 ],
                 scripts: [],
                 styles: [],
+                clientDecompression: false,
                 ...loaded
             };
         }
