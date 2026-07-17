@@ -41,10 +41,15 @@ public class StopCommand {
     @Command("stop")
     @Permission("bluemap.stop")
     public void stop(CommandSource source) {
+        String template = "% Render-Threads are now %";
+        if (!plugin.getPluginState().isRenderThreadsEnabled()) {
+            template = "% Render-Threads are already %";
+        }
+
         plugin.getPluginState().setRenderThreadsEnabled(false);
         plugin.getRenderManager().stop();
 
-        source.sendMessage(format("% Render-Threads are now %",
+        source.sendMessage(format(template,
                 ICON_STOPPED.color(NEGATIVE_COLOR),
                 text("stopped").color(NEGATIVE_COLOR)
         ).color(BASE_COLOR));
