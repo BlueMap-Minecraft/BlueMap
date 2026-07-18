@@ -54,8 +54,6 @@ export class Tile {
         if (this.loading) return Promise.reject("tile is already loading!");
         this.loading = true;
 
-        this.unload();
-
         this.unloaded = false;
         return tileLoader.load(this.x, this.z, () => this.unloaded, force)
             .then(model => {
@@ -63,6 +61,9 @@ export class Tile {
                     Tile.disposeModel(model);
                     return;
                 }
+
+                this.unload();
+                this.unloaded = false;
 
                 this.model = model;
                 this.onLoad(this);
