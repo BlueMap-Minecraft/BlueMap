@@ -38,10 +38,10 @@ import lombok.SneakyThrows;
 
 /**
  * Represents a single Server-Sent Events (SSE) connection.
- *
+ * <p>
  * Read the events from the {@link PipedInputStream} returned from {@link #getInputStream()}.
  * Reading from the stream will block until a new event is delivered to it.
- *
+ * <p>
  * Events are queued via {@link #enqueue(String, String)} and delivered via a virtual thread
  * owned by this connection so a slow client only blocks its own delivery.
  */
@@ -82,7 +82,7 @@ public class SseConnection implements Closeable {
 
     /**
      * Registers a callback that's called when this connection closes.
-     *
+     * <p>
      * Returns true if the regsitration suceeded, false if the connection was already closed.
      */
     public synchronized boolean setOnClose(Runnable onClose) {
@@ -93,14 +93,13 @@ public class SseConnection implements Closeable {
 
     /**
      * Queues an SSE event to be delivered to this connection.
-     *
+     * <p>
      * If this connection's queue is full (due to a slowly-reading client), the event is
      * silently dropped.
      */
-    public void enqueue(String eventType, String data) {
-        if (closed) return;
-        // TODO: close the connection if the queue is full to force a reconnect?
-        queue.offer(new String[]{eventType, data});
+    public boolean enqueue(String eventType, String data) {
+        if (closed) return false;
+        return queue.offer(new String[]{eventType, data});
     }
 
     private void sendLoop() {

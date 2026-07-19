@@ -96,6 +96,7 @@ public class LowresLayer {
     public void addTileUpdateListener(BiConsumer<Vector2i, Integer> listener) {
         tileUpdateListeners.add(listener);
     }
+
     public void removeTileUpdateListener(BiConsumer<Vector2i, Integer> listener) {
         tileUpdateListeners.remove(listener);
     }

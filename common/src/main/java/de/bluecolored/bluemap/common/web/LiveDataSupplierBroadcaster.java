@@ -37,10 +37,10 @@ import java.util.function.Supplier;
 /**
  * Polls a {@link Supplier} and notifies registered listeners whenever the
  * returned value changes.
- *
+ * <p>
  * Polling and updating the data is done by the {@link BlueMap#SCHEDULER} and
  * {@link BlueMap#THREAD_POOL}.
- *
+ * <p>
  * Call {@link #update()} to get the current value (rate-limited by the polling rate)
  * Call {@link #close()} to stop the background polling.
  */
@@ -85,7 +85,7 @@ public class LiveDataSupplierBroadcaster<T> implements Supplier<T>, Closeable {
 
     /**
      * Ensure the data is up to date and return it.
-     *
+     * <p>
      * Note that this will only get new data from the supplier if the current
      * cached data is stale (according to {@code pollIntervalMillis}).
      */

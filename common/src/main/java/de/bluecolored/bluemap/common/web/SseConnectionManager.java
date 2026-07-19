@@ -33,7 +33,7 @@ import java.util.function.Consumer;
 
 /**
  * Tracks active {@link SseConnection}s and provides broadcast delivery.
- *
+ * <p>
  * Broadcasting just queues events into each managed {@link SseConnection} without
  * blocking so a slow or stuck client only affects itself.
  */
@@ -45,8 +45,13 @@ public class SseConnectionManager implements Closeable {
     // allow objects to listen for when the connection count transitions between 0 and non-0
     private final Set<Consumer<Boolean>> hasConnectionsListeners = ConcurrentHashMap.newKeySet();
 
-    public void addHasConnectionsListener(Consumer<Boolean> listener) { hasConnectionsListeners.add(listener); }
-    public void removeHasConnectionsListener(Consumer<Boolean> listener) { hasConnectionsListeners.remove(listener); }
+    public void addHasConnectionsListener(Consumer<Boolean> listener) {
+        hasConnectionsListeners.add(listener);
+    }
+
+    public void removeHasConnectionsListener(Consumer<Boolean> listener) {
+        hasConnectionsListeners.remove(listener);
+    }
 
     /**
      * Creates a new {@link SseConnection}, registers it, and returns an {@link InputStream} suitable
@@ -64,15 +69,12 @@ public class SseConnectionManager implements Closeable {
         boolean fire;
         synchronized (this) {
             fire = connections.isEmpty();
-            if (connections.add(connection)){
+            if (connections.add(connection)) {
                 if (!connection.setOnClose(() -> remove(connection))){
                     // failed to register an onClose callback (connection is already closed?)
                     connections.remove(connection);
                     fire = false;
                 }
-            }
-            else {
-                fire = false;
             }
         }
         if (fire) notifyHasConnections(true);

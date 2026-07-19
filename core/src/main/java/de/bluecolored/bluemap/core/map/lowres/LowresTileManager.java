@@ -56,6 +56,7 @@ public class LowresTileManager implements TileMetaConsumer {
             layer.addTileUpdateListener(listener);
         }
     }
+
     public void removeTileUpdateListener(BiConsumer<Vector2i, Integer> listener) {
         for (LowresLayer layer : this.layers) {
             layer.removeTileUpdateListener(listener);

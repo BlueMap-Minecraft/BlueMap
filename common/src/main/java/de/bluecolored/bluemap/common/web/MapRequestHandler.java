@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.common.web;
 
-import de.bluecolored.bluemap.common.web.http.HttpRequestHandler;
 import de.bluecolored.bluemap.common.web.http.HttpResponse;
 import de.bluecolored.bluemap.common.web.http.HttpStatusCode;
 import de.bluecolored.bluemap.core.map.BmMap;
@@ -49,9 +48,9 @@ public class MapRequestHandler extends RoutingRequestHandler {
         this(map.getStorage(), livePlayersDataSupplier, liveMarkerDataSupplier);
 
         // only register the handler for map updates if we're given the actual map
-        // instance from the plugin (ie. not running standalone)
+        // instance from the plugin (i.e. not running standalone)
         map.getHiresModelManager().addTileUpdateListener(tile -> onTileUpdate(tile, 0));
-        map.getLowresTileManager().addTileUpdateListener((tile, lod) -> onTileUpdate(tile, lod));
+        map.getLowresTileManager().addTileUpdateListener(this::onTileUpdate);
     }
 
     public MapRequestHandler(MapStorage mapStorage) {
@@ -65,7 +64,7 @@ public class MapRequestHandler extends RoutingRequestHandler {
     ) {
         register(".*", new MapStorageRequestHandler(mapStorage));
 
-        register("live/sse", "", (HttpRequestHandler) request -> {
+        register("live/sse", "", _ -> {
             HttpResponse response = new HttpResponse(HttpStatusCode.OK);
             response.addHeader("Content-Type", "text/event-stream");
             response.addHeader("Cache-Control", "no-cache");

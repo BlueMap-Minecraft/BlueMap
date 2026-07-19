@@ -119,6 +119,7 @@ public class HiresModelManager {
     public void addTileUpdateListener(Consumer<Vector2i> listener) {
         tileUpdateListeners.add(listener);
     }
+
     public void removeTileUpdateListener(Consumer<Vector2i> listener) {
         tileUpdateListeners.remove(listener);
     }
