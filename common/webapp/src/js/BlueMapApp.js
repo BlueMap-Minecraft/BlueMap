@@ -434,7 +434,7 @@ export class BlueMapApp {
             const parsed = JSON.parse(data);
 
             const mgr = parsed.lod > 0 ? map.lowresTileManager[parsed.lod - 1] : map.hiresTileManager;
-            if (!mgr.unloaded) {
+            if (mgr && !mgr.unloaded) {
                 const tilehash = hashTile(parsed.x, parsed.y);
                 const tile = mgr.tiles.get(tilehash);
                 if (tile && !tile.loading) {
