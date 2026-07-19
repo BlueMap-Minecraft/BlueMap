@@ -25,11 +25,14 @@
 package de.bluecolored.bluemap.common.web;
 
 import java.io.Closeable;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 import lombok.SneakyThrows;
 
@@ -37,28 +40,85 @@ import lombok.SneakyThrows;
  * Represents a single Server-Sent Events (SSE) connection.
  *
  * Read the events from the {@link PipedInputStream} returned from {@link #getInputStream()}.
- * Reading from the stream will block until a new event is sent to it via {@link #send(String, String)}.
- * Sending an event will flush the stream, ensuring that all events can be read immediately.
+ * Reading from the stream will block until a new event is delivered to it.
+ *
+ * Events are queued via {@link #enqueue(String, String)} and delivered via a virtual thread
+ * owned by this connection so a slow client only blocks its own delivery.
  */
 public class SseConnection implements Closeable {
 
-    private static final int PIPE_BUFFER_SIZE = 4096;
+    private static final int PIPE_BUFFER_SIZE = 1024;
+
+    // how many messages can be queued up for sending (in addition to the above buffer)
+    // before being dropped
+    private static final int QUEUE_CAPACITY = 16;
 
     private final PipedOutputStream pipeOut;
-    private final PipedInputStream pipeIn;
+    private final InputStream pipeIn;
+    private final BlockingQueue<String[]> queue = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
+    private final Thread sendThread;
     private volatile boolean closed = false;
+    private volatile Runnable onClose;
 
     public SseConnection() throws IOException {
+        // add a hook to the pipe to close the conneciton if the stream is closed
         this.pipeOut = new PipedOutputStream();
-        this.pipeIn = new PipedInputStream(pipeOut, PIPE_BUFFER_SIZE);
+        this.pipeIn = new FilterInputStream(new PipedInputStream(pipeOut, PIPE_BUFFER_SIZE)) {
+            @Override
+            public void close() throws IOException {
+                try {
+                    super.close();
+                } finally {
+                    SseConnection.this.close();
+                }
+            }
+        };
+
+        this.sendThread = Thread.ofVirtual().name("bluemap-sse-send").start(this::sendLoop);
     }
 
+    /**
+     * Returns an {@link InputStream} to read events from.
+     * Closing it also closes this connection.
+     */
     public InputStream getInputStream() {
         return pipeIn;
     }
 
     public boolean isClosed() {
         return closed;
+    }
+
+    /**
+     * Registers a callback that's called when this connection closes.
+     *
+     * Returns true if the regsitration suceeded, false if the connection was already closed.
+     */
+    public synchronized boolean setOnClose(Runnable onClose) {
+        if (closed) return false;
+        this.onClose = onClose;
+        return true;
+    }
+
+    /**
+     * Queues an SSE event to be delivered to this connection.
+     *
+     * If this connection's queue is full (due to a slowly-reading client), the event is
+     * silently dropped.
+     */
+    public void enqueue(String eventType, String data) {
+        if (closed) return;
+        // TODO: close the connection if the queue is full to force a reconnect?
+        queue.offer(new String[]{eventType, data});
+    }
+
+    private void sendLoop() {
+        try {
+            while (!closed) {
+                String[] event = queue.take();
+                send(event[0], event[1]);
+            }
+        } catch (InterruptedException | IOException ignored) {}
     }
 
     @SneakyThrows(IOException.class)  // allows using this function in the forEach below
@@ -71,7 +131,7 @@ public class SseConnection implements Closeable {
      *
      * @throws IOException if the connection is closed or the client has disconnected
      */
-    public synchronized void send(String eventType, String data) throws IOException {
+    private synchronized void send(String eventType, String data) throws IOException {
         if (closed) throw new IOException("SSE connection is closed");
         try {
             writeLine("event: " + eventType);
@@ -88,7 +148,9 @@ public class SseConnection implements Closeable {
     public synchronized void close() {
         if (closed) return;
         closed = true;
+        sendThread.interrupt();
         try { pipeOut.close(); } catch (IOException ignored) {}
+        if (onClose != null) onClose.run();
     }
 
 }

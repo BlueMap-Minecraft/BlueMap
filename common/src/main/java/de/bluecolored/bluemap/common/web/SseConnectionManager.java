@@ -25,24 +25,21 @@
 package de.bluecolored.bluemap.common.web;
 
 import java.io.Closeable;
-import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Consumer;
 
 /**
- * Tracks active {@link SseConnection}s and provides queued broadcast delivery.
+ * Tracks active {@link SseConnection}s and provides broadcast delivery.
+ *
+ * Broadcasting just queues events into each managed {@link SseConnection} without
+ * blocking so a slow or stuck client only affects itself.
  */
 public class SseConnectionManager implements Closeable {
 
     private final Set<SseConnection> connections = ConcurrentHashMap.newKeySet();
-    private final LinkedBlockingQueue<String[]> broadcastQueue = new LinkedBlockingQueue<>();
-    private final Thread broadcastThread;
     private volatile boolean closed;
 
     // allow objects to listen for when the connection count transitions between 0 and non-0
@@ -50,12 +47,6 @@ public class SseConnectionManager implements Closeable {
 
     public void addHasConnectionsListener(Consumer<Boolean> listener) { hasConnectionsListeners.add(listener); }
     public void removeHasConnectionsListener(Consumer<Boolean> listener) { hasConnectionsListeners.remove(listener); }
-
-    public SseConnectionManager() {
-        this.broadcastThread = new Thread(this::broadcastLoop, "bluemap-sse-broadcast");
-        this.broadcastThread.setDaemon(true);
-        this.broadcastThread.start();
-    }
 
     /**
      * Creates a new {@link SseConnection}, registers it, and returns an {@link InputStream} suitable
@@ -66,24 +57,23 @@ public class SseConnectionManager implements Closeable {
     public InputStream openConnection() throws IOException {
         SseConnection connection = new SseConnection();
         add(connection);
-        return new FilterInputStream(connection.getInputStream()) {
-            @Override
-            public void close() throws IOException {
-                try {
-                    super.close();
-                } finally {
-                    connection.close();
-                    remove(connection);
-                }
-            }
-        };
+        return connection.getInputStream();
     }
 
     public void add(SseConnection connection) {
         boolean fire;
         synchronized (this) {
             fire = connections.isEmpty();
-            fire = connections.add(connection) && fire;
+            if (connections.add(connection)){
+                if (!connection.setOnClose(() -> remove(connection))){
+                    // failed to register an onClose callback (connection is already closed?)
+                    connections.remove(connection);
+                    fire = false;
+                }
+            }
+            else {
+                fire = false;
+            }
         }
         if (fire) notifyHasConnections(true);
     }
@@ -97,7 +87,7 @@ public class SseConnectionManager implements Closeable {
     }
 
     /**
-     * Queues an SSE event to be sent to all live connections on the background broadcast thread.
+     * Broadcast an SSE event to all live connections.
      * Returns immediately without blocking.
      *
      * @param eventType the SSE event type
@@ -105,58 +95,21 @@ public class SseConnectionManager implements Closeable {
      */
     public void broadcast(String eventType, String data) {
         if (closed) return;
-        broadcastQueue.offer(new String[]{eventType, data});
-    }
-
-    private void broadcastLoop() {
-        try {
-            while (!closed) {
-                String[] event = broadcastQueue.take();
-                broadcastSync(event[0], event[1]);
-            }
-        } catch (InterruptedException ignored) {}
-    }
-
-    /**
-     * Sends an SSE event to all live connections synchronously.
-     * Dead or broken connections are removed automatically.
-     */
-    private void broadcastSync(String eventType, String data) {
-        if (connections.isEmpty()) return;
-        List<SseConnection> toRemove = new ArrayList<>();
         for (SseConnection conn : connections) {
-            try {
-                conn.send(eventType, data);
-            } catch (IOException ignored) {}
-            if (conn.isClosed()) {
-                toRemove.add(conn);
-            }
-        }
-        if (!toRemove.isEmpty()) {
-            boolean fire;
-            synchronized (this) {
-                fire = connections.removeAll(toRemove) && connections.isEmpty();
-            }
-            if (fire) notifyHasConnections(false);
+            conn.enqueue(eventType, data);
         }
     }
 
     /**
-     * Closes all registered connections, clears the registry, and stops the broadcast thread.
+     * Closes all registered connections. Each connection removes itself from the registry
+     * (via {@link #remove(SseConnection)}) as it closes.
      */
     @Override
     public void close() {
         closed = true;
-        broadcastThread.interrupt();
-        boolean fire;
-        synchronized (this) {
-            fire = !connections.isEmpty();
-            for (SseConnection conn : connections) {
-                conn.close();
-            }
-            connections.clear();
+        for (SseConnection conn : connections) {
+            conn.close();
         }
-        if (fire) notifyHasConnections(false);
     }
 
     private void notifyHasConnections(boolean hasConnections) {
