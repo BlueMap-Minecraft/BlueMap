@@ -69,6 +69,10 @@ public class MapRequestHandler extends RoutingRequestHandler {
             HttpResponse response = new HttpResponse(HttpStatusCode.OK);
             response.addHeader("Content-Type", "text/event-stream");
             response.addHeader("Cache-Control", "no-cache");
+
+            // attempt to turn off buffering in upstream proxy
+            response.addHeader("X-Accel-Buffering", "no");
+
             try {
                 response.setBody(sseConnections.openConnection());
             } catch (IOException e) {
