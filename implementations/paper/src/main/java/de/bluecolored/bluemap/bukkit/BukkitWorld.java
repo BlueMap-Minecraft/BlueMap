@@ -45,19 +45,9 @@ public class BukkitWorld implements ServerWorld {
     public BukkitWorld(World delegate) {
         this.delegate = new WeakReference<>(delegate);
 
-        Path dimensionFolder = delegate.getWorldPath().toAbsolutePath().normalize();
-        int nameCount = dimensionFolder.getNameCount();
-        if (nameCount < 3 || !"dimensions".equals(dimensionFolder.getName(nameCount - 3).toString())) {
-            Logger.global.logWarning("Unexpected dimension folder path layout '" + dimensionFolder + "'.");
-            this.worldFolder = dimensionFolder;
-            this.dimension = DataPack.DIMENSION_OVERWORLD;
-        } else {
-            this.worldFolder = dimensionFolder.getParent().getParent().getParent();
-            this.dimension = new Key(
-                    dimensionFolder.getName(nameCount - 2).toString(),
-                    dimensionFolder.getName(nameCount - 1).toString()
-            );
-        }
+        //noinspection UnstableApiUsage
+        this.worldFolder = Bukkit.getServer().getLevelDirectory();
+        this.dimension = new Key(delegate.getKey().namespace(), delegate.getKey().value());
     }
 
     @Override
