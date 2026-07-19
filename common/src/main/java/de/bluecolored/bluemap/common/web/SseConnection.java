@@ -95,11 +95,13 @@ public class SseConnection implements Closeable {
      * Queues an SSE event to be delivered to this connection.
      * <p>
      * If this connection's queue is full (due to a slowly-reading client), the event is
-     * silently dropped.
+     * silently dropped and the connection will be closed.
      */
-    public boolean enqueue(String eventType, String data) {
-        if (closed) return false;
-        return queue.offer(new String[]{eventType, data});
+    public void enqueue(String eventType, String data) {
+        if (closed) return;
+        if (!queue.offer(new String[]{eventType, data})) {
+            close();
+        }
     }
 
     private void sendLoop() {
