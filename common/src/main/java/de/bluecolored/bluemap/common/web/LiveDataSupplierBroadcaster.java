@@ -24,66 +24,62 @@
  */
 package de.bluecolored.bluemap.common.web;
 
+import de.bluecolored.bluemap.core.BlueMap;
+
 import java.io.Closeable;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
- * Polls a {@link Supplier} on a background thread and notifies registered listeners
- * whenever the returned value changes.
+ * Polls a {@link Supplier} and notifies registered listeners whenever the
+ * returned value changes.
+ *
+ * Polling and updating the data is done by the {@link BlueMap#SCHEDULER} and
+ * {@link BlueMap#THREAD_POOL}.
  *
  * Call {@link #update()} to get the current value (rate-limited by the polling rate)
- * Call {@link #close()} to stop the background thread.
+ * Call {@link #close()} to stop the background polling.
  */
 public class LiveDataSupplierBroadcaster<T> implements Supplier<T>, Closeable {
 
     private final Supplier<T> dataSupplier;
     private final long pollIntervalMillis;
     private final Set<Consumer<T>> listeners = ConcurrentHashMap.newKeySet();
-    private final Thread pollThread;
-    private volatile boolean closed = false;
+    private ScheduledFuture<?> pollTask = null;
+    private boolean closed = false;
     private long lastUpdate = -1;
     private T data = null;
 
     public LiveDataSupplierBroadcaster(Supplier<T> dataSupplier, long pollIntervalMillis) {
         this.dataSupplier = dataSupplier;
         this.pollIntervalMillis = pollIntervalMillis;
-        this.pollThread = new Thread(this::pollLoop, String.format("%sPoller", dataSupplier.getClass().getName()));
-        this.pollThread.setDaemon(true);
-        this.pollThread.start();
     }
 
     public synchronized void addUpdateListener(Consumer<T> listener) {
         listeners.add(listener);
-        notifyAll();
+
+        // have a listener - ensure scheduled poll task is running
+        if (!closed && pollTask == null) {
+            pollTask = BlueMap.SCHEDULER.scheduleWithFixedDelay(
+                () -> BlueMap.THREAD_POOL.execute(this::update),
+                0,
+                pollIntervalMillis,
+                TimeUnit.MILLISECONDS
+            );
+        }
     }
 
-    public void removeUpdateListener(Consumer<T> listener) {
+    public synchronized void removeUpdateListener(Consumer<T> listener) {
         listeners.remove(listener);
-    }
 
-    private void pollLoop() {
-        while (!closed) {
-            // suspend polling until at least one listener is registered
-            synchronized (this) {
-                try {
-                    while (listeners.isEmpty() && !closed){
-                        wait();
-                    }
-                } catch (InterruptedException ignored){
-                    break;
-                }
-            }
-            if (closed) break;
-            update();
-
-            try {
-                Thread.sleep(pollIntervalMillis);
-            } catch (InterruptedException ignored) {
-                break;
-            }
+        // stop automatically updating if nothing is listening anymore
+        if (listeners.isEmpty() && pollTask != null) {
+            pollTask.cancel(false);
+            pollTask = null;
         }
     }
 
@@ -117,13 +113,15 @@ public class LiveDataSupplierBroadcaster<T> implements Supplier<T>, Closeable {
     }
 
     /**
-     * Stops the background polling thread.
+     * Stops the background polling.
      */
     @Override
     public synchronized void close() {
         closed = true;
-        notifyAll();
-        pollThread.interrupt();
+        if (pollTask != null) {
+            pollTask.cancel(false);
+            pollTask = null;
+        }
     }
 
 }
