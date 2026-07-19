@@ -25,7 +25,6 @@
 package de.bluecolored.bluemap.common.web;
 
 import java.io.Closeable;
-import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.PipedInputStream;
@@ -34,6 +33,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
+import de.bluecolored.bluemap.core.util.stream.OnCloseInputStream;
 import lombok.SneakyThrows;
 
 /**
@@ -63,18 +63,9 @@ public class SseConnection implements Closeable {
     public SseConnection() throws IOException {
         // add a hook to the pipe to close the conneciton if the stream is closed
         this.pipeOut = new PipedOutputStream();
-        this.pipeIn = new FilterInputStream(new PipedInputStream(pipeOut, PIPE_BUFFER_SIZE)) {
-            @Override
-            public void close() throws IOException {
-                try {
-                    super.close();
-                } finally {
-                    SseConnection.this.close();
-                }
-            }
-        };
+        this.pipeIn = new OnCloseInputStream(new PipedInputStream(pipeOut, PIPE_BUFFER_SIZE), SseConnection.this);
 
-        this.sendThread = Thread.ofVirtual().name("bluemap-sse-send").start(this::sendLoop);
+        this.sendThread = Thread.ofVirtual().name("BlueMap-SSE-send").start(this::sendLoop);
     }
 
     /**
