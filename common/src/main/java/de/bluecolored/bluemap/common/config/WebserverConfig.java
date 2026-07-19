@@ -24,6 +24,7 @@
  */
 package de.bluecolored.bluemap.common.config;
 
+import lombok.Getter;
 import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import java.net.InetAddress;
@@ -33,6 +34,7 @@ import java.nio.file.Path;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
 @ConfigSerializable
+@Getter
 public class WebserverConfig {
 
     private boolean enabled = true;
@@ -41,19 +43,9 @@ public class WebserverConfig {
     private String ip = "0.0.0.0";
     private int port = 8100;
 
+    private boolean sseEnabled = true;
+
     private LogConfig log = new LogConfig();
-
-    public boolean isEnabled() {
-        return enabled;
-    }
-
-    public Path getWebroot() {
-        return webroot;
-    }
-
-    public String getIp() {
-        return ip;
-    }
 
     public InetAddress resolveIp() throws UnknownHostException {
         if (ip.isEmpty() || ip.equals("0.0.0.0") || ip.equals("::0")) {
@@ -65,32 +57,13 @@ public class WebserverConfig {
         }
     }
 
-    public int getPort() {
-        return port;
-    }
-
-    public LogConfig getLog() {
-        return log;
-    }
-
     @ConfigSerializable
+    @Getter
     public static class LogConfig {
 
         private String file = null;
         private boolean append = false;
         private String format = "%1$s \"%3$s %4$s %5$s\" %6$s %7$s";
-
-        public String getFile() {
-            return file;
-        }
-
-        public boolean isAppend() {
-            return append;
-        }
-
-        public String getFormat() {
-            return format;
-        }
 
     }
 

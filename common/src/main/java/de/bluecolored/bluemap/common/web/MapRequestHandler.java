@@ -43,52 +43,56 @@ public class MapRequestHandler extends RoutingRequestHandler {
     public MapRequestHandler(
             BmMap map,
             @Nullable Supplier<String> livePlayersDataSupplier,
-            @Nullable Supplier<String> liveMarkerDataSupplier
+            @Nullable Supplier<String> liveMarkerDataSupplier,
+            boolean useSSE
     ) {
-        this(map.getStorage(), livePlayersDataSupplier, liveMarkerDataSupplier);
+        this(map.getStorage(), livePlayersDataSupplier, liveMarkerDataSupplier, useSSE);
 
-        // only register the handler for map updates if we're given the actual map
-        // instance from the plugin (i.e. not running standalone)
-        map.getHiresModelManager().addTileUpdateListener(tile -> onTileUpdate(tile, 0));
-        map.getLowresTileManager().addTileUpdateListener(this::onTileUpdate);
+        if (useSSE) {
+            map.getHiresModelManager().addTileUpdateListener(tile -> onTileUpdate(tile, 0));
+            map.getLowresTileManager().addTileUpdateListener(this::onTileUpdate);
+        }
     }
 
     public MapRequestHandler(MapStorage mapStorage) {
-        this(mapStorage, null, null);
+        this(mapStorage, null, null, false);
     }
 
     public MapRequestHandler(
             MapStorage mapStorage,
             @Nullable Supplier<String> livePlayersDataSupplier,
-            @Nullable Supplier<String> liveMarkerDataSupplier
+            @Nullable Supplier<String> liveMarkerDataSupplier,
+            boolean useSSE
     ) {
         register(".*", new MapStorageRequestHandler(mapStorage));
 
-        register("live/sse", "", _ -> {
-            HttpResponse response = new HttpResponse(HttpStatusCode.OK);
-            response.addHeader("Content-Type", "text/event-stream");
-            response.addHeader("Cache-Control", "no-cache");
+        if (useSSE) {
+            register("live/sse", "", _ -> {
+                HttpResponse response = new HttpResponse(HttpStatusCode.OK);
+                response.addHeader("Content-Type", "text/event-stream");
+                response.addHeader("Cache-Control", "no-cache");
 
-            // attempt to turn off buffering in upstream proxy
-            response.addHeader("X-Accel-Buffering", "no");
+                // attempt to turn off buffering in upstream proxy
+                response.addHeader("X-Accel-Buffering", "no");
 
-            try {
-                response.setBody(sseConnections.openConnection());
-            } catch (IOException e) {
-                return new HttpResponse(HttpStatusCode.INTERNAL_SERVER_ERROR);
-            }
-            return response;
-        });
+                try {
+                    response.setBody(sseConnections.openConnection());
+                } catch (IOException e) {
+                    return new HttpResponse(HttpStatusCode.INTERNAL_SERVER_ERROR);
+                }
+                return response;
+            });
+        }
 
         if (livePlayersDataSupplier != null) {
             LiveDataSupplierBroadcaster<String> playerDataBroadcaster = new LiveDataSupplierBroadcaster<>(livePlayersDataSupplier, 1000);
-            registerSseCallback(playerDataBroadcaster, this::onPlayerUpdate);
+            if (useSSE) registerSseCallback(playerDataBroadcaster, this::onPlayerUpdate);
             register("live/players\\.json", "", new JsonDataRequestHandler(playerDataBroadcaster));
         }
 
         if (liveMarkerDataSupplier != null) {
             LiveDataSupplierBroadcaster<String>markerDataBroadcaster = new LiveDataSupplierBroadcaster<>(liveMarkerDataSupplier, 10000);
-            registerSseCallback(markerDataBroadcaster, this::onMarkerUpdate);
+            if (useSSE) registerSseCallback(markerDataBroadcaster, this::onMarkerUpdate);
             register("live/markers\\.json", "", new JsonDataRequestHandler(markerDataBroadcaster));
         }
     }
@@ -119,4 +123,5 @@ public class MapRequestHandler extends RoutingRequestHandler {
     private void onMarkerUpdate(String data) {
         sseConnections.broadcast("marker", data);
     }
+
 }
