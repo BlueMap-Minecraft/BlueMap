@@ -94,6 +94,7 @@ export class MarkerManager {
      * Resume auto-updates
      */
     resumeAutoUpdates(){
+        if (this.disposed) return;
         this._paused = false;
         this.setAutoUpdateInterval(this._updateIntervalMillis)
     }
