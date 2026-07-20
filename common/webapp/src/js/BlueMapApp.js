@@ -28,7 +28,7 @@ import {MapControls} from "./controls/map/MapControls";
 import {FreeFlightControls} from "./controls/freeflight/FreeFlightControls";
 import {MathUtils, Vector3} from "three";
 import {Map as BlueMapMap} from "./map/Map";
-import {alert, animate, EasingFunctions} from "./util/Utils";
+import {alert, animate, EasingFunctions, hashTile} from "./util/Utils";
 import {MainMenu} from "./MainMenu";
 import {PopupMarker} from "./PopupMarker";
 import {MarkerSet} from "./markers/MarkerSet";
@@ -56,6 +56,9 @@ export class BlueMapApp {
         this.playerMarkerManager = null;
         /** @type {NormalMarkerManager} */
         this.markerFileManager = null;
+
+        /** @type {EventSource}  */
+        this.mapEventSource = null;
 
         /** @type {{
          *      version: string,
@@ -106,6 +109,11 @@ export class BlueMapApp {
                 clipboard: true
             },
             debug: false
+        });
+
+        // close SSE connection when the page is closed
+        window.addEventListener("beforeunload", () => {
+            if (this.mapEventSource) this.mapEventSource.close();
         });
 
         // init
@@ -265,7 +273,8 @@ export class BlueMapApp {
 
         await Promise.all([
             this.initPlayerMarkerManager(),
-            this.initMarkerFileManager()
+            this.initMarkerFileManager(),
+            this.initEventSource(),
         ]);
     }
 
@@ -400,6 +409,48 @@ export class BlueMapApp {
         });
     }
 
+    initEventSource(){
+        if (this.mapEventSource) {
+            this.mapEventSource.close();
+        }
+
+        const map = this.mapViewer.map;
+        if (!map) return;
+
+        this.mapEventSource = new EventSource(map.data.liveDataRoot + "/live/sse");
+        this.mapEventSource.addEventListener("error", () => {
+            alert(this.events, "SSE event source error - enabling polling", "debug");
+            this.playerMarkerManager.resumeAutoUpdates();
+            this.markerFileManager.resumeAutoUpdates();
+        });
+        this.mapEventSource.addEventListener("open", () => {
+            alert(this.events, "Connected to SSE event source - disabling polling", "debug");
+            this.playerMarkerManager.pauseAutoUpdates();
+            this.markerFileManager.pauseAutoUpdates();
+        });
+
+        this.mapEventSource.addEventListener("tile", ({ data }) => {
+            const parsed = JSON.parse(data);
+
+            const mgr = parsed.lod > 0 ? map.lowresTileManager[parsed.lod - 1] : map.hiresTileManager;
+            if (mgr && !mgr.unloaded) {
+                const tilehash = hashTile(parsed.x, parsed.y);
+                const tile = mgr.tiles.get(tilehash);
+                if (tile && !tile.loading) {
+                    tile.load(mgr.tileLoader, true);
+                }
+            }
+        });
+
+        this.mapEventSource.addEventListener("player", ({ data }) => {
+            this.playerMarkerManager.updateFromData(JSON.parse(data));
+        });
+
+        this.mapEventSource.addEventListener("marker", ({ data }) => {
+            this.markerFileManager.updateFromData(JSON.parse(data));
+        });
+    }
+
     initPlayerMarkerManager() {
         if (this.playerMarkerManager)
             this.playerMarkerManager.dispose()
@@ -411,7 +462,8 @@ export class BlueMapApp {
             this.mapViewer.markers,
             map.data.liveDataRoot + "/live/players.json",
             map.data.mapDataRoot + "/assets/playerheads/",
-            this.events
+            this.events,
+            true
         );
         this.playerMarkerManager.setAutoUpdateInterval(0);
         return this.playerMarkerManager.update()
@@ -431,7 +483,7 @@ export class BlueMapApp {
         const map = this.mapViewer.map;
         if (!map) return;
 
-        this.markerFileManager = new NormalMarkerManager(this.mapViewer.markers, map.data.liveDataRoot + "/live/markers.json", this.events);
+        this.markerFileManager = new NormalMarkerManager(this.mapViewer.markers, map.data.liveDataRoot + "/live/markers.json", this.events, true);
         return this.markerFileManager.update()
             .then(() => {
                 this.markerFileManager.setAutoUpdateInterval(1000 * 10);

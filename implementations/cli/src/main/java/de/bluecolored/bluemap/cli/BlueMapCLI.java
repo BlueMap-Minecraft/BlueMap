@@ -32,6 +32,7 @@ import de.bluecolored.bluemap.common.addons.AddonLoader;
 import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.commands.TextFormat;
 import de.bluecolored.bluemap.common.config.*;
+import de.bluecolored.bluemap.common.live.LiveMarkersDataSupplier;
 import de.bluecolored.bluemap.common.metrics.Metrics;
 import de.bluecolored.bluemap.common.plugin.MapUpdateService;
 import de.bluecolored.bluemap.common.rendermanager.MapUpdatePreparationTask;
@@ -238,15 +239,20 @@ public class BlueMapCLI {
         );
 
         // wait until done, then shutdown if not watching
-        renderManager.awaitIdle();
-        if (shutdownInProgress) return;
+        Thread.ofPlatform().name("BlueMap-CLI-Render").start(() -> {
+            try {
+                renderManager.awaitIdle();
+            } catch (InterruptedException ignore) {}
 
-        Logger.global.logInfo("Your maps are now all up-to-date!");
+            if (shutdownInProgress) return;
 
-        if (!watch) {
-            Runtime.getRuntime().removeShutdownHook(shutdownHook);
-            shutdown.run();
-        }
+            Logger.global.logInfo("Your maps are now all up-to-date!");
+
+            if (!watch) {
+                Runtime.getRuntime().removeShutdownHook(shutdownHook);
+                shutdown.run();
+            }
+        });
     }
 
     public void updateMarkers(BlueMapService blueMap, @Nullable String mapsToUpdate) {
@@ -292,11 +298,16 @@ public class BlueMapCLI {
         for (var mapConfigEntry : blueMap.getConfig().getMapConfigs().entrySet()) {
             MapStorage storage = blueMap.getOrLoadStorage(mapConfigEntry.getValue().getStorage())
                     .map(mapConfigEntry.getKey());
+            BmMap map = blueMap.getMaps().get(mapConfigEntry.getKey());
+
+            MapRequestHandler mapRequestHandler = map != null ?
+                    new MapRequestHandler(map, null, new LiveMarkersDataSupplier(map.getMarkerSets()), config.isSseEnabled()) :
+                    new MapRequestHandler(storage);
 
             routingRequestHandler.register(
                     "maps/" + Pattern.quote(mapConfigEntry.getKey()) + "/(.*)",
                     "$1",
-                    new MapRequestHandler(storage)
+                    mapRequestHandler
             );
         }
 
@@ -418,13 +429,6 @@ public class BlueMapCLI {
             blueMap = new BlueMapService(configs);
             boolean noActions = true;
 
-            if (cmd.hasOption("w")) {
-                noActions = false;
-
-                cli.startWebserver(blueMap, cmd.hasOption("b"));
-                Thread.sleep(1000); //wait a second to let the webserver start, looks nicer in the log if anything comes after that
-            }
-
             if (cmd.hasOption("r") || cmd.hasOption("f") || cmd.hasOption("u") || cmd.hasOption("e")) {
                 noActions = false;
 
@@ -449,6 +453,11 @@ public class BlueMapCLI {
                     noActions = false;
                     blueMap.createOrUpdateWebApp(false);
                 }
+            }
+
+            if (cmd.hasOption("w")) {
+                noActions = false;
+                cli.startWebserver(blueMap, cmd.hasOption("b"));
             }
 
             // if nothing has been defined to do

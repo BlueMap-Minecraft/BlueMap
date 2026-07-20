@@ -234,7 +234,7 @@ public class Plugin implements ServerEventListener {
                                     null;
                             LiveMarkersDataSupplier liveMarkersDataSupplier = new LiveMarkersDataSupplier(map.getMarkerSets());
 
-                            mapRequestHandler = new MapRequestHandler(map.getStorage(), livePlayersDataSupplier, liveMarkersDataSupplier);
+                            mapRequestHandler = new MapRequestHandler(map, livePlayersDataSupplier, liveMarkersDataSupplier, webserverConfig.isSseEnabled());
                         } else {
                             Storage storage = blueMap.getOrLoadStorage(mapConfig.getStorage());
                             mapRequestHandler = new MapRequestHandler(storage.map(id));

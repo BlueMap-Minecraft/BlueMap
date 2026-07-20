@@ -24,10 +24,13 @@
  */
 package de.bluecolored.bluemap.core.map.lowres;
 
+import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.core.map.TileMetaConsumer;
 import de.bluecolored.bluemap.core.storage.MapStorage;
 import de.bluecolored.bluemap.core.util.Grid;
 import de.bluecolored.bluemap.core.util.math.Color;
+
+import java.util.function.BiConsumer;
 
 public class LowresTileManager implements TileMetaConsumer {
 
@@ -45,6 +48,18 @@ public class LowresTileManager implements TileMetaConsumer {
         for (int i = lodCount - 1; i >= 0; i--) {
             this.layers[i] = new LowresLayer(storage.lowresTiles(i + 1), tileGrid, lodFactor, i + 1,
                     (i == lodCount - 1) ? null : layers[i + 1]);
+        }
+    }
+
+    public void addTileUpdateListener(BiConsumer<Vector2i, Integer> listener) {
+        for (LowresLayer layer : this.layers) {
+            layer.addTileUpdateListener(listener);
+        }
+    }
+
+    public void removeTileUpdateListener(BiConsumer<Vector2i, Integer> listener) {
+        for (LowresLayer layer : this.layers) {
+            layer.removeTileUpdateListener(listener);
         }
     }
 

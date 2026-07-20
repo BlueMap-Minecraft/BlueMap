@@ -68,6 +68,7 @@ public class HttpResponseOutputStream implements Closeable {
                 writeLine(Integer.toHexString(read));
                 outputStream.write(byteBuffer, 0, read);
                 writeLine();
+                outputStream.flush();  // prevent SSE from being buffered
             }
 
             writeLine(Integer.toHexString(0));
