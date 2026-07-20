@@ -38,17 +38,20 @@ public class HttpResponseOutputStream implements Closeable {
     private static final byte[] CRLF = "\r\n".getBytes(StandardCharsets.UTF_8);
 
     private final OutputStream outputStream;
-
     private final byte[] byteBuffer = new byte[1024];
 
     public void write(HttpResponse response) throws IOException {
         HttpStatusCode statusCode = response.getStatusCode();
         InputStream body = response.getBody();
+        HttpResponseStreamWriter streamWriter = response.getStreamWriter();
+        if (streamWriter == null && body != null) {
+            streamWriter = asStreamWriter(body);
+        }
 
         writeLine(response.getVersion() + " " + statusCode.getCode() + " " + statusCode.getMessage());
 
         // headers
-        if (body != null) {
+        if (streamWriter != null) {
             response.addHeader("Transfer-Encoding","chunked");
         } else {
             response.addHeader("Content-Length", "0");
@@ -57,25 +60,31 @@ public class HttpResponseOutputStream implements Closeable {
             writeLine(header.getKey() + ": " + header.getValue());
         }
         writeLine();
+        outputStream.flush();  // ensure headers are always immediately pushed to the client
 
         // body
-        if (body != null) {
+        if (streamWriter != null) {
+            try (ChunkedOutputStream chunkedOut = new ChunkedOutputStream(outputStream)){
+                streamWriter.write(chunkedOut);
+            }
+        }
 
+        outputStream.flush();
+    }
+
+    /**
+     * Adapt an {@link InputStream} body into a {@link HttpResponseStreamWriter}
+     * that writes the data to the client in chunks.
+     */
+    private HttpResponseStreamWriter asStreamWriter(InputStream body) {
+        return out -> {
             while (true) {
                 int read = body.read(byteBuffer);
                 if (read == -1) break;
                 if (read == 0) continue;
-                writeLine(Integer.toHexString(read));
-                outputStream.write(byteBuffer, 0, read);
-                writeLine();
-                outputStream.flush();  // prevent SSE from being buffered
+                out.writeChunk(byteBuffer, 0, read);
             }
-
-            writeLine(Integer.toHexString(0));
-            writeLine();
-        }
-
-        outputStream.flush();
+        };
     }
 
     private void writeLine() throws IOException {

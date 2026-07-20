@@ -42,6 +42,13 @@ public class HttpResponse implements Closeable, HttpHeaderCarrier {
     private @NonNull @Singular Map<String, HttpHeader> headers = new LinkedHashMap<>();
     private @Nullable InputStream body;
 
+    /**
+     * If set, takes over writing this response's body directly to the connection's output-stream
+     * instead of reading it from {@link #body}.
+     * Used for responses that push data over time like Server-Sent Events.
+     */
+    private @Nullable HttpResponseStreamWriter streamWriter;
+
     public void setBody(@Nullable InputStream body) {
         this.body = body;
     }

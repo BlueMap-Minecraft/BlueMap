@@ -26,7 +26,7 @@ package de.bluecolored.bluemap.common.web;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -54,15 +54,15 @@ public class SseConnectionManager implements Closeable {
     }
 
     /**
-     * Creates a new {@link SseConnection}, registers it, and returns an {@link InputStream} suitable
-     * for use as an HTTP response body. When the stream is closed (either because the client
-     * disconnected or the server closed the connection), the connection is automatically removed
-     * from this manager.
+     * Creates a new {@link SseConnection}, registers it, and delivers events to {@code out} until
+     * the connection closes (either because the client disconnected or the server closed the
+     * connection), blocking the calling thread for that whole time. The connection is
+     * automatically removed from this manager once it closes.
      */
-    public InputStream openConnection() throws IOException {
+    public void handleConnection(OutputStream out) throws IOException {
         SseConnection connection = new SseConnection();
         add(connection);
-        return connection.getInputStream();
+        connection.run(out);
     }
 
     public void add(SseConnection connection) {
