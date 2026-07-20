@@ -430,7 +430,6 @@ export class BlueMapApp {
         });
 
         this.mapEventSource.addEventListener("tile", ({ data }) => {
-            alert(this.events, `tile update: ${data}`, "debug");
             const parsed = JSON.parse(data);
 
             const mgr = parsed.lod > 0 ? map.lowresTileManager[parsed.lod - 1] : map.hiresTileManager;
@@ -444,12 +443,10 @@ export class BlueMapApp {
         });
 
         this.mapEventSource.addEventListener("player", ({ data }) => {
-            alert(this.events, `player update: ${data}`, "debug");
             this.playerMarkerManager.updateFromData(JSON.parse(data));
         });
 
         this.mapEventSource.addEventListener("marker", ({ data }) => {
-            alert(this.events, `marker update: ${data}`, "debug");
             this.markerFileManager.updateFromData(JSON.parse(data));
         });
     }
