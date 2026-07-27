@@ -28,6 +28,7 @@ import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.resources.pack.datapack.DataPack;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
+import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
 
@@ -40,8 +41,8 @@ import java.util.concurrent.ExecutionException;
 public class BukkitWorld implements ServerWorld {
 
     private final WeakReference<World> delegate;
-    private final Path worldFolder;
-    private final Key dimension;
+    @Getter private final Path worldFolder;
+    @Getter private final Key dimension;
 
     public BukkitWorld(World delegate) {
         this.delegate = new WeakReference<>(delegate);
@@ -61,9 +62,11 @@ public class BukkitWorld implements ServerWorld {
     }
 
     private Key resolveDimension(World world) {
-        if (world.getEnvironment().equals(World.Environment.NETHER)) return DataPack.DIMENSION_THE_NETHER;
-        if (world.getEnvironment().equals(World.Environment.THE_END)) return DataPack.DIMENSION_THE_END;
-        return DataPack.DIMENSION_OVERWORLD;
+        return switch (world.getEnvironment()) {
+            case NETHER -> DataPack.DIMENSION_THE_NETHER;
+            case THE_END -> DataPack.DIMENSION_THE_END;
+            default -> DataPack.DIMENSION_OVERWORLD;
+        };
     }
 
     @Override
@@ -85,16 +88,6 @@ public class BukkitWorld implements ServerWorld {
             if (t instanceof IllegalArgumentException) throw (IllegalArgumentException) t;
             throw new IOException(t);
         }
-    }
-
-    @Override
-    public Path getWorldFolder() {
-        return worldFolder;
-    }
-
-    @Override
-    public Key getDimension() {
-        return dimension;
     }
 
     @Override

@@ -86,15 +86,29 @@ public class MapHasCorrectWorldCheck implements Check {
     }
 
     private Component formatWorldConfig() {
-        return format("""
-                ┌
-                │ world: "%"
-                │ dimension: "%"
-                └
-                """.strip(),
-                BlueMapConfigManager.formatPath(expectedWorld.getWorldFolder()),
-                expectedWorld.getDimension().getFormatted()
-        );
+        if (expectedWorld.getDimension().equals(expectedWorld.getDimensionType().orElse(null))) {
+            return format("""
+                            ┌
+                            │ world: "%"
+                            │ dimension: "%"
+                            └
+                            """.strip(),
+                    BlueMapConfigManager.formatPath(expectedWorld.getWorldFolder()),
+                    expectedWorld.getDimension().getFormatted()
+            );
+        } else {
+            return format("""
+                            ┌
+                            │ world: "%"
+                            │ dimension: "%"
+                            │ dimension-type: "%"
+                            └
+                            """.strip(),
+                    BlueMapConfigManager.formatPath(expectedWorld.getWorldFolder()),
+                    expectedWorld.getDimension().getFormatted(),
+                    expectedWorld.getDimensionType().get()
+            );
+        }
     }
 
     private Component formatConfigFilePath(String name) {

@@ -33,7 +33,6 @@ public interface DimensionType {
 
     DimensionType OVERWORLD = new Builtin(
             true,
-            true,
             false,
             0f,
             -64,
@@ -44,7 +43,6 @@ public interface DimensionType {
     DimensionType OVERWORLD_CAVES = new Builtin(
             true,
             true,
-            true,
             0,
             -64,
             384,
@@ -52,7 +50,6 @@ public interface DimensionType {
             1.0
     );
     DimensionType NETHER = new Builtin(
-            false,
             false,
             true,
             0.1f,
@@ -62,8 +59,7 @@ public interface DimensionType {
             8.0
     );
     DimensionType END = new Builtin(
-            false,
-            false,
+            true,
             false,
             0,
             0,
@@ -71,8 +67,6 @@ public interface DimensionType {
             18000L,
             1.0
     );
-
-    boolean isNatural();
 
     boolean hasSkylight();
 
@@ -92,7 +86,6 @@ public interface DimensionType {
     @AllArgsConstructor(access = AccessLevel.PRIVATE)
     class Builtin implements DimensionType {
 
-        private final boolean natural;
         @Accessors(fluent = true) private final boolean hasSkylight;
         @Accessors(fluent = true) private final boolean hasCeiling;
         private final float ambientLight;

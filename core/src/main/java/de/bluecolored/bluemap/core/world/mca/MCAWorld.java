@@ -163,8 +163,10 @@ public class MCAWorld implements World {
         }
     }
 
-    public static MCAWorld load(Path worldFolder, Key dimension, DataPack dataPack) throws IOException, InterruptedException {
-        DimensionType dimensionType = loadDimensionType(worldFolder, dimension, dataPack);
+    public static MCAWorld load(Path worldFolder, Key dimension, @Nullable Key dimensionTypeKey, DataPack dataPack) throws IOException, InterruptedException {
+        DimensionType dimensionType = dimensionTypeKey == null ?
+                loadDimensionType(worldFolder, dimension, dataPack) :
+                dataPack.getDimensionType(dimensionTypeKey);
         Path dimensionFolder = resolveDimensionFolder(worldFolder, dimension);
         return new MCAWorld(worldFolder, dimension, dimensionType, dimensionFolder, dataPack);
     }

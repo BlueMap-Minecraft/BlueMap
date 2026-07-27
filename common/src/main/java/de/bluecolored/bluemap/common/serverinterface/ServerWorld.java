@@ -29,6 +29,7 @@ import de.bluecolored.bluemap.core.util.Key;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.Optional;
 
 public interface ServerWorld {
 
@@ -37,6 +38,11 @@ public interface ServerWorld {
 
     @DebugDump
     Key getDimension();
+
+    @DebugDump
+    default Optional<Key> getDimensionType() {
+        return Optional.empty();
+    }
 
     /**
      * Attempts to persist all changes that have been made in a world to disk.
