@@ -101,7 +101,7 @@ public class LowresLayer {
         tileUpdateListeners.remove(listener);
     }
 
-    public void save() {
+    public synchronized void save() {
         pendingChanges.entrySet().removeIf(entry -> saveTile(entry.getKey(), entry.getValue()));
         if (pendingChanges.size() >= DISCARD_THRESHOLD) {
             Logger.global.logDebug("Discarding changes of " + pendingChanges.size() + " lowres-tiles that failed to save!");
@@ -109,7 +109,7 @@ public class LowresLayer {
         }
     }
 
-    public void discard() {
+    public synchronized void discard() {
         pendingChanges.clear();
         tileCache.invalidateAll();
         tileWeakInstanceCache.invalidateAll();
