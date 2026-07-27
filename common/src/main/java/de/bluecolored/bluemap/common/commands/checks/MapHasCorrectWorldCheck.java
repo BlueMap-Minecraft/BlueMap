@@ -86,7 +86,7 @@ public class MapHasCorrectWorldCheck implements Check {
     }
 
     private Component formatWorldConfig() {
-        if (expectedWorld.getDimension().equals(expectedWorld.getDimensionType().orElse(null))) {
+        if (expectedWorld.getDimension().equals(expectedWorld.getDimensionType().orElse(expectedWorld.getDimension()))) {
             return format("""
                             ┌
                             │ world: "%"

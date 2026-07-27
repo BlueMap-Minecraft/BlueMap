@@ -80,7 +80,7 @@ public class WorldHasMapsCheck implements Check {
     }
 
     private Component formatWorldConfig() {
-        if (world.getDimension().equals(world.getDimensionType().orElse(null))) {
+        if (world.getDimension().equals(world.getDimensionType().orElse(world.getDimension()))) {
             return format("""
                             ┌
                             │ world: "%"
