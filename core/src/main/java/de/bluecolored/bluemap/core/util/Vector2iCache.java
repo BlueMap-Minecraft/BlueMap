@@ -37,7 +37,7 @@ public class Vector2iCache {
     }
 
     public Vector2i get(int x, int y) {
-        int cacheIndex = (x * 1456 ^ y * 948375892) & CACHE_MASK;
+        int cacheIndex = (x * 1457 ^ y * 948375893) & CACHE_MASK;
         Vector2i possibleMatch = cache[cacheIndex];
 
         if (possibleMatch != null && possibleMatch.getX() == x && possibleMatch.getY() == y) {
