@@ -89,14 +89,18 @@ public class WebFilesManager {
 
     public void setFrom(Map<String, MapConfig> mapConfigs) {
         this.settings.maps.clear();
-        mapConfigs.entrySet().stream()
-                .sorted(Map.Entry.comparingByValue(Comparator.comparing(MapConfig::getSorting)))
-                .map(Map.Entry::getKey)
-                .forEach(this.settings.maps::add);
+        addFrom(mapConfigs);
     }
 
     public void addFrom(WebappConfig webappConfig) {
         this.settings.addFrom(webappConfig);
+    }
+
+    public void addFrom(Map<String, MapConfig> mapConfigs) {
+        mapConfigs.entrySet().stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.comparing(MapConfig::getSorting)))
+                .map(Map.Entry::getKey)
+                .forEach(this.settings.maps::add);
     }
 
     public boolean filesNeedUpdate() {
