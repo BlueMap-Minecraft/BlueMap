@@ -102,9 +102,7 @@ public class BlueMapService implements Closeable {
                 webFilesManager.addFrom(config.getWebappConfig());
             } else {
                 webFilesManager.setFrom(config.getWebappConfig());
-            }
-            for (String mapId : config.getMapConfigs().keySet()) {
-                webFilesManager.addMap(mapId);
+                webFilesManager.setFrom(config.getMapConfigs());
             }
             webFilesManager.saveSettings();
 
