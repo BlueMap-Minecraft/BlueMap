@@ -32,28 +32,29 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-@Getter
-@Setter
 @RequiredArgsConstructor
 public class HttpResponse implements Closeable, HttpHeaderCarrier {
 
-    private @NonNull String version = "HTTP/1.1";
-    private @NonNull HttpStatusCode statusCode;
-    private @NonNull @Singular Map<String, HttpHeader> headers = new LinkedHashMap<>();
-    private @Nullable InputStream body;
+    private @Getter @Setter @NonNull String version = "HTTP/1.1";
+    private @Getter @Setter @NonNull HttpStatusCode statusCode;
+    private @Getter @Setter @NonNull @Singular Map<String, HttpHeader> headers = new LinkedHashMap<>();
 
     /**
-     * If set, takes over writing this response's body directly to the connection's output-stream
-     * instead of reading it from {@link #body}.
-     * Used for responses that push data over time like Server-Sent Events.
+     * The response body.
+     *
+     * Can be stored as either an {@link InputStream} or an {@link HttpResponseStreamWriter}.
+     * The {@link #streamWriter} is used for responses that push data over time (Server-Sent Events).
      */
+    private @Nullable InputStream body;
     private @Nullable HttpResponseStreamWriter streamWriter;
 
     public void setBody(@Nullable InputStream body) {
+        this.streamWriter = null;
         this.body = body;
     }
 
     public void setBody(byte[] data) {
+        this.streamWriter = null;
         if (data == null) {
             this.body = null;
             return;
@@ -63,6 +64,7 @@ public class HttpResponse implements Closeable, HttpHeaderCarrier {
     }
 
     public void setBody(String data) {
+        this.streamWriter = null;
         if (data == null) {
             this.body = null;
             return;
@@ -71,9 +73,38 @@ public class HttpResponse implements Closeable, HttpHeaderCarrier {
         setBody(data.getBytes(StandardCharsets.UTF_8));
     }
 
+    public void setBody(@Nullable HttpResponseStreamWriter streamWriter) {
+        this.body = null;
+        this.streamWriter = streamWriter;
+    }
+
+    public boolean hasBody() {
+        return body != null || streamWriter != null;
+    }
+
     @Override
     public void close() throws IOException {
         if (body != null) body.close();
+    }
+
+    /**
+     * Returns {@link #streamWriter} if set, otherwise adapts {@link #body} into a
+     * {@link HttpResponseStreamWriter} that writes data in chunks.
+     * Returns {@code null} if neither is set.
+     */
+    @Nullable HttpResponseStreamWriter resolveStreamWriter() {
+        if (streamWriter != null) return streamWriter;
+        if (body == null) return null;
+
+        byte[] byteBuffer = new byte[1024];
+        return out -> {
+            while (true) {
+                int read = body.read(byteBuffer);
+                if (read == -1) break;
+                if (read == 0) continue;
+                out.writeChunk(byteBuffer, 0, read);
+            }
+        };
     }
 
 }

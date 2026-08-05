@@ -28,7 +28,6 @@ import lombok.RequiredArgsConstructor;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
@@ -38,15 +37,10 @@ public class HttpResponseOutputStream implements Closeable {
     private static final byte[] CRLF = "\r\n".getBytes(StandardCharsets.UTF_8);
 
     private final OutputStream outputStream;
-    private final byte[] byteBuffer = new byte[1024];
 
     public void write(HttpResponse response) throws IOException {
         HttpStatusCode statusCode = response.getStatusCode();
-        InputStream body = response.getBody();
-        HttpResponseStreamWriter streamWriter = response.getStreamWriter();
-        if (streamWriter == null && body != null) {
-            streamWriter = asStreamWriter(body);
-        }
+        HttpResponseStreamWriter streamWriter = response.resolveStreamWriter();
 
         writeLine(response.getVersion() + " " + statusCode.getCode() + " " + statusCode.getMessage());
 
@@ -70,21 +64,6 @@ public class HttpResponseOutputStream implements Closeable {
         }
 
         outputStream.flush();
-    }
-
-    /**
-     * Adapt an {@link InputStream} body into a {@link HttpResponseStreamWriter}
-     * that writes the data to the client in chunks.
-     */
-    private HttpResponseStreamWriter asStreamWriter(InputStream body) {
-        return out -> {
-            while (true) {
-                int read = body.read(byteBuffer);
-                if (read == -1) break;
-                if (read == 0) continue;
-                out.writeChunk(byteBuffer, 0, read);
-            }
-        };
     }
 
     private void writeLine() throws IOException {

@@ -30,8 +30,8 @@ import java.io.IOException;
  * Writes a {@link HttpResponse}'s body directly to the connection's output-stream, taking over
  * writing to (and blocking) the calling thread until the body is fully written.
  * <p>
- * Used instead of {@link HttpResponse#getBody()} for responses that push data over time
- * (e.g. Server-Sent-Events) rather than producing it all up-front.
+ * Used for responses that push data over time (e.g. Server-Sent-Events) rather than producing
+ * it all up-front.
  */
 @FunctionalInterface
 public interface HttpResponseStreamWriter {
