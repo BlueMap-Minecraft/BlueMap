@@ -32,54 +32,30 @@ import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+@Getter
+@Setter
 @RequiredArgsConstructor
 public class HttpResponse implements Closeable, HttpHeaderCarrier {
 
-    private @Getter @Setter @NonNull String version = "HTTP/1.1";
-    private @Getter @Setter @NonNull HttpStatusCode statusCode;
-    private @Getter @Setter @NonNull @Singular Map<String, HttpHeader> headers = new LinkedHashMap<>();
-
-    /**
-     * The response body.
-     *
-     * Can be stored as either an {@link InputStream} or an {@link HttpResponseStreamWriter}.
-     * The {@link #streamWriter} is used for responses that push data over time (Server-Sent Events).
-     */
-    private @Nullable InputStream body;
-    private @Nullable HttpResponseStreamWriter streamWriter;
+    private @NonNull String version = "HTTP/1.1";
+    private @NonNull HttpStatusCode statusCode;
+    private @NonNull @Singular Map<String, HttpHeader> headers = new LinkedHashMap<>();
+    private @Nullable HttpResponseStreamWriter body;
 
     public void setBody(@Nullable InputStream body) {
-        this.streamWriter = null;
-        this.body = body;
+        this.body = body == null ? null : asStreamWriter(body);
     }
 
     public void setBody(byte[] data) {
-        this.streamWriter = null;
-        if (data == null) {
-            this.body = null;
-            return;
-        }
-
-        setBody(new ByteArrayInputStream(data));
+        setBody(data == null ? null : new ByteArrayInputStream(data));
     }
 
     public void setBody(String data) {
-        this.streamWriter = null;
-        if (data == null) {
-            this.body = null;
-            return;
-        }
-
-        setBody(data.getBytes(StandardCharsets.UTF_8));
+        setBody(data == null ? null : data.getBytes(StandardCharsets.UTF_8));
     }
 
     public void setBody(@Nullable HttpResponseStreamWriter streamWriter) {
-        this.body = null;
-        this.streamWriter = streamWriter;
-    }
-
-    public boolean hasBody() {
-        return body != null || streamWriter != null;
+        this.body = streamWriter;
     }
 
     @Override
@@ -88,21 +64,26 @@ public class HttpResponse implements Closeable, HttpHeaderCarrier {
     }
 
     /**
-     * Returns {@link #streamWriter} if set, otherwise adapts {@link #body} into a
-     * {@link HttpResponseStreamWriter} that writes data in chunks.
-     * Returns {@code null} if neither is set.
+     * Adapt an {@link InputStream} body into a {@link HttpResponseStreamWriter}
+     * that writes the data to the client in chunks.
      */
-    @Nullable HttpResponseStreamWriter resolveStreamWriter() {
-        if (streamWriter != null) return streamWriter;
-        if (body == null) return null;
+    private static HttpResponseStreamWriter asStreamWriter(InputStream body) {
+        return new HttpResponseStreamWriter() {
+            private final byte[] byteBuffer = new byte[1024];
 
-        byte[] byteBuffer = new byte[1024];
-        return out -> {
-            while (true) {
-                int read = body.read(byteBuffer);
-                if (read == -1) break;
-                if (read == 0) continue;
-                out.writeChunk(byteBuffer, 0, read);
+            @Override
+            public void write(ChunkedOutputStream out) throws IOException {
+                while (true) {
+                    int read = body.read(byteBuffer);
+                    if (read == -1) break;
+                    if (read == 0) continue;
+                    out.writeChunk(byteBuffer, 0, read);
+                }
+            }
+
+            @Override
+            public void close() throws IOException {
+                body.close();
             }
         };
     }

@@ -40,7 +40,7 @@ public class HttpResponseOutputStream implements Closeable {
 
     public void write(HttpResponse response) throws IOException {
         HttpStatusCode statusCode = response.getStatusCode();
-        HttpResponseStreamWriter streamWriter = response.resolveStreamWriter();
+        HttpResponseStreamWriter streamWriter = response.getBody();
 
         writeLine(response.getVersion() + " " + statusCode.getCode() + " " + statusCode.getMessage());
 
