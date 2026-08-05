@@ -35,6 +35,7 @@ import java.io.IOException;
 
 public class RenderTaskAdapter implements TypeAdapter<RenderTask> {
 
+    private static final Key UNKNOWN_TYPE = Key.bluemap("unknown");
     private SerializableRenderTaskAdapter<MapPurgeTask, ?> mapPurgeTaskAdapter;
     private SerializableRenderTaskAdapter<MapSaveTask, ?> mapSaveTaskAdapter;
     private SerializableRenderTaskAdapter<MapUpdateTask, ?> mapUpdateTaskAdapter;
@@ -60,8 +61,14 @@ public class RenderTaskAdapter implements TypeAdapter<RenderTask> {
             case MapSaveTask task -> writeWith(task, mapSaveTaskAdapter, writer);
             case MapUpdateTask task -> writeWith(task, mapUpdateTaskAdapter, writer);
             case WorldRegionUpdateTask task -> writeWith(task, worldRegionRenderTaskAdapter, writer);
-            default -> {} // write nothing, task is ignored
+            default -> writeUnknown(writer);
         }
+    }
+
+    private void writeUnknown(NBTWriter writer) throws IOException {
+        writer.beginCompound();
+        writer.name("type").value(UNKNOWN_TYPE.getFormatted());
+        writer.endCompound();
     }
 
     private <T extends SerializableRenderTask<T, ?>> void writeWith(T value, SerializableRenderTaskAdapter<T, ?> adapter, NBTWriter writer) throws IOException {
@@ -88,6 +95,8 @@ public class RenderTaskAdapter implements TypeAdapter<RenderTask> {
         reader.endCompound();
 
         if (type == null) throw new IOException("Missing type");
+        if (type == UNKNOWN_TYPE) return null;
+
         if (data == null) throw new IOException("Missing data");
 
         SerializableRenderTaskAdapter<?, ?> adapter = taskAdaperRegistry.get(type);

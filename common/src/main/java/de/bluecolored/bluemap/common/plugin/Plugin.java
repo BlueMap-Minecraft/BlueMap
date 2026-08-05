@@ -384,7 +384,10 @@ public class Plugin implements ServerEventListener {
                     try (InputStream in = Files.newInputStream(tasksFile)) {
                         BlueNBT blueNBT = createRenderTaskBlueNBT();
                         TasksData tasksData = blueNBT.read(in, new TypeToken<>() {});
-                        renderManager.scheduleRenderTasks(tasksData.getRenderTasks().toArray(RenderTask[]::new));
+                        renderManager.scheduleRenderTasks(tasksData.getRenderTasks().stream()
+                                .filter(Objects::nonNull)
+                                .toArray(RenderTask[]::new)
+                        );
                     } catch (Exception ex) {
                         Logger.global.logError("Failed to load tasks.dat!", ex);
                         Files.delete(tasksFile);

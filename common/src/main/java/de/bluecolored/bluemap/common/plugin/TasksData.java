@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.common.plugin;
 
 import de.bluecolored.bluemap.common.rendermanager.RenderTask;
 import lombok.Data;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,6 +34,6 @@ import java.util.List;
 @Data
 public class TasksData {
 
-    private List<RenderTask> renderTasks = new ArrayList<>();
+    private List<@Nullable RenderTask> renderTasks = new ArrayList<>();
 
 }
