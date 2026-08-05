@@ -67,9 +67,7 @@ export class LowresTileLoader {
 
         //await this.loadBlocker();
         return new Promise((resolve, reject) => {
-            if (force) {
-                this.revalidatedUrls.delete(tileUrl);
-            }
+            if (force) this.revalidatedUrls?.delete(tileUrl);
             this.textureLoader.setRevalidatedUrls(this.revalidatedUrls);
             this.textureLoader.load(tileUrl,
                 async texture => {

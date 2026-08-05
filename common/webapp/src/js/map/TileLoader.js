@@ -68,9 +68,7 @@ export class TileLoader {
         }
 
         return new Promise((resolve, reject) => {
-            if (force) {
-                this.revalidatedUrls.delete(tileUrl);
-            }
+            if (force) this.revalidatedUrls?.delete(tileUrl);
             this.fileLoader.setRevalidatedUrls(this.revalidatedUrls);
             this.fileLoader.load(tileUrl,
                 async data => {
