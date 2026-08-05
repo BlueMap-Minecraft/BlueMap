@@ -43,6 +43,7 @@ import java.nio.charset.StandardCharsets;
  */
 public class ChunkedOutputStream extends OutputStream {
 
+    private static final int AUTO_FLUSH_CHUNK_SIZE = 1024;
     private static final byte[] CRLF = "\r\n".getBytes(StandardCharsets.UTF_8);
 
     private final OutputStream out;
@@ -57,12 +58,14 @@ public class ChunkedOutputStream extends OutputStream {
     public void write(int b) throws IOException {
         ensureOpen();
         buffer.write(b);
+        if (buffer.size() >= AUTO_FLUSH_CHUNK_SIZE) endChunk();
     }
 
     @Override
     public void write(byte[] b, int off, int len) throws IOException {
         ensureOpen();
         buffer.write(b, off, len);
+        if (buffer.size() >= AUTO_FLUSH_CHUNK_SIZE) endChunk();
     }
 
     /**
