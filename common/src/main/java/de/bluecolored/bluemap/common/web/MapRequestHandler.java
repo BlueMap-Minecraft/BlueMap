@@ -32,7 +32,6 @@ import org.jetbrains.annotations.Nullable;
 
 import com.flowpowered.math.vector.Vector2i;
 
-import java.io.IOException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -75,11 +74,7 @@ public class MapRequestHandler extends RoutingRequestHandler {
                 // attempt to turn off buffering in upstream proxy
                 response.addHeader("X-Accel-Buffering", "no");
 
-                try {
-                    response.setBody(sseConnections.openConnection());
-                } catch (IOException e) {
-                    return new HttpResponse(HttpStatusCode.INTERNAL_SERVER_ERROR);
-                }
+                response.setBody(sseConnections::handleConnection);
                 return response;
             });
         }

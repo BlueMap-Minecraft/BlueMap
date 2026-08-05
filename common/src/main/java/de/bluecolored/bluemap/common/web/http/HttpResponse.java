@@ -40,33 +40,52 @@ public class HttpResponse implements Closeable, HttpHeaderCarrier {
     private @NonNull String version = "HTTP/1.1";
     private @NonNull HttpStatusCode statusCode;
     private @NonNull @Singular Map<String, HttpHeader> headers = new LinkedHashMap<>();
-    private @Nullable InputStream body;
+    private @Nullable HttpResponseStreamWriter body;
 
     public void setBody(@Nullable InputStream body) {
-        this.body = body;
+        this.body = body == null ? null : asStreamWriter(body);
     }
 
     public void setBody(byte[] data) {
-        if (data == null) {
-            this.body = null;
-            return;
-        }
-
-        setBody(new ByteArrayInputStream(data));
+        setBody(data == null ? null : new ByteArrayInputStream(data));
     }
 
     public void setBody(String data) {
-        if (data == null) {
-            this.body = null;
-            return;
-        }
+        setBody(data == null ? null : data.getBytes(StandardCharsets.UTF_8));
+    }
 
-        setBody(data.getBytes(StandardCharsets.UTF_8));
+    public void setBody(@Nullable HttpResponseStreamWriter streamWriter) {
+        this.body = streamWriter;
     }
 
     @Override
     public void close() throws IOException {
         if (body != null) body.close();
+    }
+
+    /**
+     * Adapt an {@link InputStream} body into a {@link HttpResponseStreamWriter}
+     * that writes the data to the client in chunks.
+     */
+    private static HttpResponseStreamWriter asStreamWriter(InputStream body) {
+        return new HttpResponseStreamWriter() {
+            private final byte[] byteBuffer = new byte[1024];
+
+            @Override
+            public void write(ChunkedOutputStream out) throws IOException {
+                while (true) {
+                    int read = body.read(byteBuffer);
+                    if (read == -1) break;
+                    if (read == 0) continue;
+                    out.writeChunk(byteBuffer, 0, read);
+                }
+            }
+
+            @Override
+            public void close() throws IOException {
+                body.close();
+            }
+        };
     }
 
 }
