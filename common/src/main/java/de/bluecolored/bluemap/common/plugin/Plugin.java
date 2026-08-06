@@ -32,7 +32,6 @@ import de.bluecolored.bluemap.common.MissingResourcesException;
 import de.bluecolored.bluemap.common.addons.AddonLoader;
 import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.config.*;
-import de.bluecolored.bluemap.common.config.typeserializer.RegistryTypeSerializer;
 import de.bluecolored.bluemap.common.debug.StateDumper;
 import de.bluecolored.bluemap.common.live.LiveMarkersDataSupplier;
 import de.bluecolored.bluemap.common.live.LivePlayersDataSupplier;
@@ -65,7 +64,6 @@ import de.bluecolored.bluemap.core.util.nbt.LenientListAdapter;
 import de.bluecolored.bluemap.core.util.nbt.RegistryAdapter;
 import de.bluecolored.bluemap.core.world.World;
 import de.bluecolored.bluenbt.BlueNBT;
-import de.bluecolored.bluenbt.NamingStrategy;
 import de.bluecolored.bluenbt.TypeToken;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -110,7 +108,7 @@ public class Plugin implements ServerEventListener {
     private RoutingRequestHandler webRequestHandler;
     private Logger webLogger;
 
-    private Timer daemonTimer;
+    private Timer timer;
     private Map<String, MapUpdateService> mapUpdateServices;
     private PlayerSkinUpdater skinUpdater;
     private PluginLivePlayerInfoTransformer livePlayerInfoTransformer;
@@ -308,7 +306,7 @@ public class Plugin implements ServerEventListener {
                 }
 
                 //init timer
-                daemonTimer = new Timer("BlueMap-Plugin-DaemonTimer", true);
+                timer = new Timer("BlueMap-Plugin-Timer", true);
 
                 //periodically save and release memory
                 TimerTask saveTask = new TimerTask() {
@@ -321,7 +319,7 @@ public class Plugin implements ServerEventListener {
                             ArrayTileModel.instancePool().clear();
                     }
                 };
-                daemonTimer.schedule(saveTask, TimeUnit.MINUTES.toMillis(10), TimeUnit.MINUTES.toMillis(10));
+                timer.schedule(saveTask, TimeUnit.MINUTES.toMillis(10), TimeUnit.MINUTES.toMillis(10));
 
                 //periodically save markers
                 int writeMarkersInterval = pluginConfig.getWriteMarkersInterval();
@@ -332,7 +330,7 @@ public class Plugin implements ServerEventListener {
                             saveMarkerStates();
                         }
                     };
-                    daemonTimer.schedule(saveMarkersTask, TimeUnit.SECONDS.toMillis(writeMarkersInterval), TimeUnit.SECONDS.toMillis(writeMarkersInterval));
+                    timer.schedule(saveMarkersTask, TimeUnit.SECONDS.toMillis(writeMarkersInterval), TimeUnit.SECONDS.toMillis(writeMarkersInterval));
                 }
 
                 //periodically save players
@@ -344,7 +342,7 @@ public class Plugin implements ServerEventListener {
                             savePlayerStates();
                         }
                     };
-                    daemonTimer.schedule(savePlayersTask, TimeUnit.SECONDS.toMillis(writePlayersInterval), TimeUnit.SECONDS.toMillis(writePlayersInterval));
+                    timer.schedule(savePlayersTask, TimeUnit.SECONDS.toMillis(writePlayersInterval), TimeUnit.SECONDS.toMillis(writePlayersInterval));
                 }
 
                 //periodically restart the file-watchers
@@ -353,29 +351,25 @@ public class Plugin implements ServerEventListener {
                     public void run() {
                         mapUpdateServices.values().forEach(MapUpdateService::close);
                         mapUpdateServices.clear();
-                        initFileWatcherTasks();
+                        initMapUpdateTasks();
                     }
                 };
-                daemonTimer.schedule(fileWatcherRestartTask, TimeUnit.HOURS.toMillis(1), TimeUnit.HOURS.toMillis(1));
+                timer.schedule(fileWatcherRestartTask, TimeUnit.HOURS.toMillis(1), TimeUnit.HOURS.toMillis(1));
 
-                //periodically update all (non frozen) maps
+                //update all (non frozen) maps
                 Duration fullUpdateInterval = coreConfig.getFullUpdateInterval();
-                Instant nextUpdate = pluginState.getLastFullUpdate().plus(fullUpdateInterval);
-                Duration delay = Instant.now().until(nextUpdate);
-                if (delay.isNegative()) delay = Duration.ZERO;
                 if (fullUpdateInterval.isPositive()) {
-                    TimerTask updateAllMapsTask = new TimerTask() {
-                        @Override
-                        public void run() {
-                            pluginState.setLastFullUpdate(Instant.now());
-                            renderManager.scheduleRenderTasksNext(maps.values().stream()
-                                    .filter(map -> pluginState.getMapState(map).isUpdateEnabled())
-                                    .sorted(Comparator.comparing(bmMap -> bmMap.getMapSettings().getSorting()))
-                                    .map(map -> MapUpdatePreparationTask.updateMap(map, renderManager))
-                                    .toArray(RenderTask[]::new));
-                        }
-                    };
-                    daemonTimer.scheduleAtFixedRate(updateAllMapsTask, delay.toMillis(), fullUpdateInterval.toMillis());
+                    renderManager.scheduleRenderTasksNext(maps.values().stream()
+                            .filter(map -> pluginState.getMapState(map).isUpdateEnabled())
+                            .filter(map -> {
+                                Instant nextUpdate = pluginState.getMapState(map).getLastFullUpdate().plus(fullUpdateInterval);
+                                Duration delay = Instant.now().until(nextUpdate);
+                                return !delay.isPositive();
+                            })
+                            .sorted(Comparator.comparing(bmMap -> bmMap.getMapSettings().getSorting()))
+                            .peek(map -> pluginState.getMapState(map).setLastFullUpdate(Instant.now()))
+                            .map(map -> MapUpdatePreparationTask.updateMap(map, renderManager))
+                            .toArray(RenderTask[]::new));
                 }
 
                 // load render-tasks
@@ -403,11 +397,11 @@ public class Plugin implements ServerEventListener {
                             Metrics.sendReport(implementationType, minecraftVersion.getId());
                     }
                 };
-                daemonTimer.scheduleAtFixedRate(metricsTask, TimeUnit.MINUTES.toMillis(1), TimeUnit.MINUTES.toMillis(30));
+                timer.scheduleAtFixedRate(metricsTask, TimeUnit.MINUTES.toMillis(1), TimeUnit.MINUTES.toMillis(30));
 
                 //watch map-changes
                 this.mapUpdateServices = new HashMap<>();
-                initFileWatcherTasks();
+                initMapUpdateTasks();
 
                 //register listener
                 serverInterface.registerListener(this);
@@ -455,8 +449,8 @@ public class Plugin implements ServerEventListener {
                 skinUpdater = null;
 
                 //stop scheduled threads
-                if (daemonTimer != null) daemonTimer.cancel();
-                daemonTimer = null;
+                if (timer != null) timer.cancel();
+                timer = null;
 
                 //stop file-watchers
                 if (mapUpdateServices != null) {
@@ -650,7 +644,14 @@ public class Plugin implements ServerEventListener {
         if (blueMap == null) return;
 
         try {
-            MapUpdateService watcher = new MapUpdateService(renderManager, map, blueMap.getConfig().getCoreConfig().getUpdateCooldown(), false);
+            MapUpdateService watcher = new MapUpdateService(
+                    renderManager,
+                    map,
+                    pluginState.getMapState(map).getLastFullUpdate(),
+                    blueMap.getConfig().getCoreConfig().getFullUpdateInterval(),
+                    blueMap.getConfig().getCoreConfig().getUpdateCooldown(),
+                    false
+            );
             watcher.start();
             mapUpdateServices.put(map.getId(), watcher);
         } catch (IOException ex) {
@@ -688,7 +689,7 @@ public class Plugin implements ServerEventListener {
     private void checkPausedByPlayerCountSoon() {
         // check is done a second later to make sure the player has actually joined/left and is no longer on the list
         try {
-            daemonTimer.schedule(new TimerTask() {
+            timer.schedule(new TimerTask() {
                 @Override
                 public void run() {
                     checkPausedByPlayerCount();
@@ -721,7 +722,7 @@ public class Plugin implements ServerEventListener {
         return getBlueMap().getWorlds().get(id);
     }
 
-    private void initFileWatcherTasks() {
+    private void initMapUpdateTasks() {
         var maps = blueMap.getMaps();
         if (maps != null) {
             for (BmMap map : maps.values()) {

@@ -29,15 +29,15 @@ import org.spongepowered.configurate.objectmapping.ConfigSerializable;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @SuppressWarnings("FieldMayBeFinal")
 @ConfigSerializable
 public class PluginState {
 
     private boolean renderThreadsEnabled = true;
-    private Map<String, MapState> maps = new HashMap<>();
-    private Set<UUID> hiddenPlayers = new HashSet<>();
-    private long lastFullUpdate = 0;
+    private Map<String, MapState> maps = new ConcurrentHashMap<>();
+    private Set<UUID> hiddenPlayers = Collections.newSetFromMap(new ConcurrentHashMap<>());
 
     public boolean isRenderThreadsEnabled() {
         return renderThreadsEnabled;
@@ -48,7 +48,7 @@ public class PluginState {
     }
 
     public MapState getMapState(BmMap map) {
-        return maps.computeIfAbsent(map.getId(), k -> new MapState());
+        return maps.computeIfAbsent(map.getId(), _ -> new MapState());
     }
 
     public void addHiddenPlayer(UUID player) {
@@ -63,18 +63,11 @@ public class PluginState {
         return hiddenPlayers.contains(player);
     }
 
-    public Instant getLastFullUpdate() {
-        return Instant.ofEpochSecond(lastFullUpdate);
-    }
-
-    public void setLastFullUpdate(Instant lastFullUpdate) {
-        this.lastFullUpdate = lastFullUpdate.getEpochSecond();
-    }
-
     @ConfigSerializable
     public static class MapState {
 
         private boolean updateEnabled = true;
+        private long lastFullUpdate = 0;
 
         public boolean isUpdateEnabled() {
             return updateEnabled;
@@ -82,6 +75,14 @@ public class PluginState {
 
         public void setUpdateEnabled(boolean update) {
             this.updateEnabled = update;
+        }
+
+        public Instant getLastFullUpdate() {
+            return Instant.ofEpochSecond(lastFullUpdate);
+        }
+
+        public void setLastFullUpdate(Instant lastFullUpdate) {
+            this.lastFullUpdate = lastFullUpdate.getEpochSecond();
         }
 
     }

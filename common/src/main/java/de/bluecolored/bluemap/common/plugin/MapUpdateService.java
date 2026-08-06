@@ -32,9 +32,11 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.util.Caches;
 import de.bluecolored.bluemap.core.util.WatchService;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Timer;
@@ -46,24 +48,35 @@ public class MapUpdateService extends Thread {
 
     private static final AtomicInteger NEXT_ID = new AtomicInteger(0);
 
+    private static @Nullable Timer timer;
+
     private final BmMap map;
     private final RenderManager renderManager;
+    private final Instant lastFullUpdate;
+    private final Duration fullUpdateInterval;
     private final Duration regionUpdateCooldown;
     private final WatchService<Vector2i> watchService;
 
     private volatile boolean closed;
-
-    private Timer delayTimer;
 
     private final Map<Vector2i, TimerTask> scheduledUpdates;
     private final Cache<Vector2i, Long> lastUpdateTimes;
 
     private final Consumer<String> verboseLog;
 
-    public MapUpdateService(RenderManager renderManager, BmMap map, Duration regionUpdateCooldown, boolean verbose) throws IOException {
+    public MapUpdateService(
+            RenderManager renderManager,
+            BmMap map,
+            Instant lastFullUpdate,
+            Duration fullUpdateInterval,
+            Duration regionUpdateCooldown,
+            boolean verbose
+    ) throws IOException {
         super("BlueMap-MapUpdateService-" + NEXT_ID.getAndIncrement());
         this.renderManager = renderManager;
         this.map = map;
+        this.lastFullUpdate = lastFullUpdate;
+        this.fullUpdateInterval = fullUpdateInterval;
         this.regionUpdateCooldown = regionUpdateCooldown;
         this.closed = false;
         this.scheduledUpdates = new HashMap<>();
@@ -76,9 +89,19 @@ public class MapUpdateService extends Thread {
 
     @Override
     public void run() {
-        if (delayTimer == null) delayTimer = new Timer("BlueMap-RegionFileWatchService-DelayTimer", true);
-
         verboseLog.accept("Started watching map '" + map.getId() + "' for updates...");
+
+        Duration delay = Instant.now().until(lastFullUpdate.plus(fullUpdateInterval));
+        if (delay.isNegative()) delay = Duration.ZERO;
+        synchronized (MapUpdateService.class) {
+            if (timer == null) timer = new Timer("BlueMap-MapUpdateService-Timer", true);
+            timer.scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run() {
+
+                }
+            }, delay.toMillis(), fullUpdateInterval.toMillis());
+        }
 
         try {
             while (!closed)
@@ -123,14 +146,19 @@ public class MapUpdateService extends Thread {
         long timeSinceLastUpdate = System.currentTimeMillis() - lastUpdateTime;
         long delay = Math.max(regionUpdateCooldown.toMillis() - timeSinceLastUpdate, 5000);
         scheduledUpdates.put(regionPos, task);
-        delayTimer.schedule(task, delay);
+
+        synchronized (MapUpdateService.class) {
+            if (timer == null) timer = new Timer("BlueMap-MapUpdateService-Timer", true);
+            timer.schedule(task, delay);
+        }
     }
 
     public synchronized void close() {
         this.closed = true;
         this.interrupt();
 
-        if (this.delayTimer != null) this.delayTimer.cancel();
+        this.scheduledUpdates.values().forEach(TimerTask::cancel);
+        this.scheduledUpdates.clear();
 
         try {
             this.watchService.close();
