@@ -56,14 +56,20 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
 
     private @NonNull MapStorage mapStorage;
 
-    @SuppressWarnings("resource")
     @Override
     public HttpResponse handle(HttpRequest request) {
         String path = request.getPath();
+        boolean requestGzipped = false;
 
         //normalize path
         if (path.startsWith("/")) path = path.substring(1);
         if (path.endsWith("/")) path = path.substring(0, path.length() - 1);
+
+        //provide compressed if requested
+        if (path.endsWith(".gz")) {
+            path = path.substring(0, path.length() - 3);
+            requestGzipped = true;
+        }
 
         try {
 
@@ -85,7 +91,7 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
                 if (lod == 0) response.addHeader("Content-Type", "application/octet-stream");
                 else response.addHeader("Content-Type", "image/png");
 
-                writeToResponse(in, response, request);
+                writeToResponse(in, response, request, requestGzipped);
                 return response;
             }
 
@@ -102,7 +108,7 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
                 response.addHeader("Cache-Control", "public");
                 response.addHeader("Cache-Control", "max-age=" + TimeUnit.DAYS.toSeconds(1));
                 response.addHeader("Content-Type", ContentTypeRegistry.fromFileName(path));
-                writeToResponse(in, response, request);
+                writeToResponse(in, response, request, requestGzipped);
                 return response;
             }
 
@@ -115,28 +121,41 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
         return new HttpResponse(HttpStatusCode.NOT_FOUND);
     }
 
-    private void writeToResponse(CompressedInputStream data, HttpResponse response, HttpRequest request) throws IOException {
+    private void writeToResponse(CompressedInputStream data, HttpResponse response, HttpRequest request, boolean requestGzipped) throws IOException {
         Compression compression = data.getCompression();
-        if (
-                compression != Compression.NONE &&
-                request.hasHeaderValue("Accept-Encoding", compression.getId())
-        ) {
-            response.addHeader("Content-Encoding", compression.getId());
-            response.setBody(data);
-        } else if (
-                compression != Compression.GZIP &&
-                !response.hasHeaderValue("Content-Type", "image/png") &&
-                request.hasHeaderValue("Accept-Encoding", Compression.GZIP.getId())
-        ) {
-            response.addHeader("Content-Encoding", Compression.GZIP.getId());
-            ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
-            try (data; OutputStream os = Compression.GZIP.compress(byteOut)) {
-                data.decompress().transferTo(os);
+        if (!requestGzipped) {
+            if (
+                    compression != Compression.NONE &&
+                            request.hasHeaderValue("Accept-Encoding", compression.getId())
+            ) {
+                response.addHeader("Content-Encoding", compression.getId());
+                response.setBody(data);
+            } else if (
+                    compression != Compression.GZIP &&
+                            !response.hasHeaderValue("Content-Type", "image/png") &&
+                            request.hasHeaderValue("Accept-Encoding", Compression.GZIP.getId())
+            ) {
+                response.addHeader("Content-Encoding", Compression.GZIP.getId());
+                ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+                try (data; OutputStream os = Compression.GZIP.compress(byteOut)) {
+                    data.decompress().transferTo(os);
+                }
+                byte[] compressedData = byteOut.toByteArray();
+                response.setBody(new ByteArrayInputStream(compressedData));
+            } else {
+                response.setBody(data.decompress());
             }
-            byte[] compressedData = byteOut.toByteArray();
-            response.setBody(new ByteArrayInputStream(compressedData));
         } else {
-            response.setBody(data.decompress());
+            if (compression == Compression.GZIP) {
+                response.setBody(data);
+            } else {
+                ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
+                try (data; OutputStream os = Compression.GZIP.compress(byteOut)) {
+                    data.decompress().transferTo(os);
+                }
+                byte[] compressedData = byteOut.toByteArray();
+                response.setBody(new ByteArrayInputStream(compressedData));
+            }
         }
     }
 

@@ -65,6 +65,8 @@ public class WebappConfig {
     private String mapDataRoot = "maps";
     private String liveDataRoot = "maps";
 
+    private boolean clientDecompression = false;
+
     private LinkedHashSet<String> scripts = new LinkedHashSet<>();
     private LinkedHashSet<String> styles = new LinkedHashSet<>();
 

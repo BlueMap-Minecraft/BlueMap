@@ -143,6 +143,8 @@ public class WebFilesManager {
         private String mapDataRoot = "maps";
         private String liveDataRoot = "maps";
 
+        private boolean clientDecompression = false;
+
         private Set<String> maps = new LinkedHashSet<>();
         private Set<String> scripts = new LinkedHashSet<>();
         private Set<String> styles = new LinkedHashSet<>();
@@ -169,6 +171,8 @@ public class WebFilesManager {
 
             this.styles.clear();
             this.scripts.clear();
+
+            this.clientDecompression = config.isClientDecompression();
 
             addFrom(config);
         }
