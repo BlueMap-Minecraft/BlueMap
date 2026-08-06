@@ -36,9 +36,9 @@ import java.util.function.Predicate;
 
 public interface TileUpdateStrategy extends Predicate<TileState>, Keyed {
 
-    TileUpdateStrategy FORCE_ALL = new Impl(Key.bluemap("force_all"), tileState -> true);
-    TileUpdateStrategy FORCE_EDGE = new Impl(Key.bluemap("force_edge"), tileState -> tileState == TileState.RENDERED_EDGE);
-    TileUpdateStrategy FORCE_NONE = new Impl(Key.bluemap("force_none"), tileState -> false);
+    TileUpdateStrategy FORCE_ALL = new Impl(Key.bluemap("force-all"), tileState -> true);
+    TileUpdateStrategy FORCE_EDGE = new Impl(Key.bluemap("force-edge"), tileState -> tileState == TileState.RENDERED_EDGE);
+    TileUpdateStrategy FORCE_NONE = new Impl(Key.bluemap("force-none"), tileState -> false);
 
     Registry<TileUpdateStrategy> REGISTRY = new Registry<>(
             FORCE_ALL,
