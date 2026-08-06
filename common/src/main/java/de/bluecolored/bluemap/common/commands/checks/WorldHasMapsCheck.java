@@ -80,15 +80,29 @@ public class WorldHasMapsCheck implements Check {
     }
 
     private Component formatWorldConfig() {
-        return format("""
-                ┌
-                │ world: "%"
-                │ dimension: "%"
-                └
-                """.strip(),
-                BlueMapConfigManager.formatPath(world.getWorldFolder()),
-                world.getDimension().getFormatted()
-        );
+        if (world.getDimension().equals(world.getDimensionType().orElse(world.getDimension()))) {
+            return format("""
+                            ┌
+                            │ world: "%"
+                            │ dimension: "%"
+                            └
+                            """.strip(),
+                    BlueMapConfigManager.formatPath(world.getWorldFolder()),
+                    world.getDimension().getFormatted()
+            );
+        } else {
+            return format("""
+                            ┌
+                            │ world: "%"
+                            │ dimension: "%"
+                            │ dimension-type: "%"
+                            └
+                            """.strip(),
+                    BlueMapConfigManager.formatPath(world.getWorldFolder()),
+                    world.getDimension().getFormatted(),
+                    world.getDimensionType().get()
+            );
+        }
     }
 
 }

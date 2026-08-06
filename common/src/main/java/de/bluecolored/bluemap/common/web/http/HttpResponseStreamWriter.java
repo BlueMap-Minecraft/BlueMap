@@ -22,43 +22,21 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.common.web;
+package de.bluecolored.bluemap.common.web.http;
 
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Supplier;
+import java.io.Closeable;
+import java.io.IOException;
 
-public class CachedRateLimitDataSupplier implements Supplier<String> {
+/**
+ * Writes a {@link HttpResponse}'s body directly to the connection's output-stream, taking over
+ * writing to (and blocking) the calling thread until the body is fully written.
+ */
+@FunctionalInterface
+public interface HttpResponseStreamWriter extends Closeable {
 
-    private final ReentrantLock lock = new ReentrantLock();
-
-    private final Supplier<String> delegate;
-    private final long rateLimitMillis;
-
-    private long updateTime = -1;
-    private String data = null;
-
-    public CachedRateLimitDataSupplier(Supplier<String> delegate, long rateLimitMillis) {
-        this.delegate = delegate;
-        this.rateLimitMillis = rateLimitMillis;
-    }
+    void write(ChunkedOutputStream out) throws IOException;
 
     @Override
-    public String get() {
-        update();
-        return data;
-    }
-
-    protected void update() {
-        if (lock.tryLock()) {
-            try {
-                long now = System.currentTimeMillis();
-                if (data != null && now < updateTime + this.rateLimitMillis) return;
-                this.data = delegate.get();
-                this.updateTime = now;
-            } finally {
-                lock.unlock();
-            }
-        }
-    }
+    default void close() throws IOException {}
 
 }

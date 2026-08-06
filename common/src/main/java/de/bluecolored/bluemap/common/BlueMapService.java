@@ -40,8 +40,6 @@ import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.World;
 import de.bluecolored.bluemap.core.world.WorldLoader;
-import de.bluecolored.bluemap.core.world.WorldLoaderType;
-import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Closeable;
@@ -102,11 +100,10 @@ public class BlueMapService implements Closeable {
             if (!config.getWebappConfig().isUpdateSettingsFile()) {
                 webFilesManager.loadSettings();
                 webFilesManager.addFrom(config.getWebappConfig());
+                webFilesManager.addFrom(config.getMapConfigs());
             } else {
                 webFilesManager.setFrom(config.getWebappConfig());
-            }
-            for (String mapId : config.getMapConfigs().keySet()) {
-                webFilesManager.addMap(mapId);
+                webFilesManager.setFrom(config.getMapConfigs());
             }
             webFilesManager.saveSettings();
 
@@ -208,13 +205,13 @@ public class BlueMapService implements Closeable {
         String worldId = World.id(worldFolder, dimension);
         World world = worlds.get(worldId);
         if (world == null) {
-            WorldLoader worldLoader = mapConfig.getLoader();
+            WorldLoader worldLoader = mapConfig.getLoader(); // TODO: the world-loader is not reflected in the world-id (-> separate world configs?)
 
             try {
                 Logger.global.logDebug("Loading world " + worldId + " ...");
                 List<Path> worldPacks = worldLoader.worldDataPacks(worldFolder, dimension);
                 DataPack dataPack = loadDataPack(worldPacks);
-                world = worldLoader.loadWorld(worldFolder, dimension, dataPack);
+                world = worldLoader.loadWorld(worldFolder, dimension, mapConfig.getDimensionType(), dataPack); // TODO: the dimension-type is not reflected in the world-id (-> separate world configs?)
                 worlds.put(worldId, world);
             } catch (IOException ex) {
                 throw new ConfigurationException("Failed to load world " + worldId + "!", ex);

@@ -73,6 +73,16 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
         Logger.global.clear();
         Logger.global.put(new JavaLogger(getLogger()));
 
+        //check for paper-api and warn
+        if (isPaper()) {
+            Logger.global.logWarning("""
+                This seems to be a PAPER-based server, but you are using the SPIGOT version of BlueMap.
+                Things will likely not work correctly!
+                Consider switching to BlueMap's paper version:
+                https://modrinth.com/plugin/bluemap/versions?l=paper
+                """.strip());
+        }
+
         //try to get best matching minecraft-version
         String version = null;
         try {
@@ -109,7 +119,7 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
     public void onEnable() {
 
         //save world so the level.dat is present on new worlds
-        Logger.global.logInfo("Saving all worlds once, to make sure the level.dat is present...");
+        Logger.global.logInfo("Saving all worlds once, to make sure all required world-properties are present...");
         for (World world : getServer().getWorlds()) {
             world.save();
         }
@@ -282,6 +292,15 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
                     onlinePlayerList.get(playerUpdateIndex).update();
                 }
             }
+        }
+    }
+
+    private static boolean isPaper() {
+        try {
+            Class.forName("io.papermc.paper.plugin.loader.PluginLoader");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
         }
     }
 

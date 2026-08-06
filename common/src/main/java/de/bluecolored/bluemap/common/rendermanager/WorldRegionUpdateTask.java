@@ -255,8 +255,8 @@ public final class WorldRegionUpdateTask implements MapRenderTask, SerializableR
         // clear tile-actions
         tileActions = null;
 
-        // save map (at most, every minute)
-        map.save(TimeUnit.MINUTES.toMillis(1));
+        // save map (at most, every 15 seconds)
+        map.save(TimeUnit.SECONDS.toMillis(15));
     }
 
     @Override

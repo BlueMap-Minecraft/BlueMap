@@ -41,10 +41,15 @@ public class StartCommand {
     @Command("start")
     @Permission("bluemap.start")
     public void start(CommandSource source) {
+        String template = "% Render-Threads are now %";
+        if (plugin.getPluginState().isRenderThreadsEnabled()) {
+            template = "% Render-Threads are already %";
+        }
+
         plugin.getPluginState().setRenderThreadsEnabled(true);
         plugin.checkPausedByPlayerCount();
 
-        source.sendMessage(format("% Render-Threads are now %",
+        source.sendMessage(format(template,
                 ICON_IN_PROGRESS.color(POSITIVE_COLOR),
                 text("running").color(POSITIVE_COLOR)
         ).color(BASE_COLOR));

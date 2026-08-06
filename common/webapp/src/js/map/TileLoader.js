@@ -39,8 +39,9 @@ export class TileLoader {
      * }}
      * @param loadBlocker {function: Promise}
      * @param revalidatedUrls {Set<string> | undefined}
+     * @param clientDecompression {boolean}
      */
-    constructor(tilePath, material, tileSettings, loadBlocker = () => Promise.resolve(), revalidatedUrls) {
+    constructor(tilePath, material, tileSettings, loadBlocker = () => Promise.resolve(), revalidatedUrls, clientDecompression) {
         Object.defineProperty( this, 'isTileLoader', { value: true } );
 
         this.tilePath = tilePath;
@@ -54,14 +55,20 @@ export class TileLoader {
         this.fileLoader = new RevalidatingFileLoader();
         this.fileLoader.setResponseType('arraybuffer');
         this.fileLoader.setRevalidatedUrls(this.revalidatedUrls);
+        this.fileLoader.setClientDecompression(clientDecompression);
+        this.clientDecompression = clientDecompression;
 
         this.bufferGeometryLoader = new PRBMLoader();
     }
 
-    load = (tileX, tileZ, cancelCheck = () => false) => {
+    load = (tileX, tileZ, cancelCheck = () => false, force = false) => {
         let tileUrl = this.tilePath + pathFromCoords(tileX, tileZ) + '.prbm';
+        if (this.clientDecompression) {
+            tileUrl += '.gz';
+        }
 
         return new Promise((resolve, reject) => {
+            if (force) this.revalidatedUrls?.delete(tileUrl);
             this.fileLoader.setRevalidatedUrls(this.revalidatedUrls);
             this.fileLoader.load(tileUrl,
                 async data => {

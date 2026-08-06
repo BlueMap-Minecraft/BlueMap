@@ -10,7 +10,7 @@ spongegradle = "2.2.0"
 adventure-api = { module = "net.kyori:adventure-api", version.ref = "adventure" }
 adventure-gson = { module = "net.kyori:adventure-text-serializer-gson", version.ref = "adventure" }
 adventure-ansi = { module = "net.kyori:adventure-text-serializer-ansi", version.ref = "adventure" }
-aircompressor = { module = "io.airlift:aircompressor", version = "0.27" }
+aircompressor = { module = "io.airlift:aircompressor", version = "2.0.3" }
 bluecommands-core = { module = "de.bluecolored:bluecommands-core", version.ref = "bluecommands" }
 bluecommands-brigadier = { module = "de.bluecolored:bluecommands-brigadier", version.ref = "bluecommands" }
 bluenbt = { module = "de.bluecolored:bluenbt", version = "3.5.1" }

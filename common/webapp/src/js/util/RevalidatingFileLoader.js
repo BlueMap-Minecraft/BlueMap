@@ -56,6 +56,14 @@ export class RevalidatingFileLoader extends Loader {
         this.responseType = "";
 
         /**
+         * Whether client-side decompression is required.
+         * 
+         * @type {boolean}
+         * @default false;
+         */
+        this.clientDecompression = false;
+
+        /**
          * Used for aborting requests.
          *
          * @private
@@ -246,6 +254,15 @@ export class RevalidatingFileLoader extends Loader {
                     );
                 }
             })
+            .then(async (response) => {
+                if (this.clientDecompression) {
+                    const ds = new DecompressionStream("gzip");
+                    const decompressedStream = (await response.blob()).stream().pipeThrough(ds);
+                    const decompressedResponse = new Response(decompressedStream);
+                    return decompressedResponse;
+                }
+                return response;
+            })
             .then((response) => {
                 switch (responseType) {
                     case "arraybuffer":
@@ -341,6 +358,16 @@ export class RevalidatingFileLoader extends Loader {
      */
     setMimeType(value) {
         this.mimeType = value;
+        return this;
+    }
+
+    /**
+     * Sets whether client-side decompression is required.
+     * @param {boolean} value - True if the client must decompress the loaded file
+     * @returns {FileLoader} A reference to this file loader.
+     */
+    setClientDecompression(value) {
+        this.clientDecompression = value;
         return this;
     }
 

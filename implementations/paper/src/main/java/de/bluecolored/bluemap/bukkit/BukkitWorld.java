@@ -25,39 +25,38 @@
 package de.bluecolored.bluemap.bukkit;
 
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
-import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.pack.datapack.DataPack;
 import de.bluecolored.bluemap.core.util.Key;
+import lombok.Getter;
 import org.bukkit.Bukkit;
 import org.bukkit.World;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.ref.WeakReference;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 public class BukkitWorld implements ServerWorld {
 
     private final WeakReference<World> delegate;
-    private final Path worldFolder;
-    private final Key dimension;
+    @Getter private final Path worldFolder;
+    @Getter private final Key dimension;
+    private final @Nullable Key dimensionType;
 
     public BukkitWorld(World delegate) {
         this.delegate = new WeakReference<>(delegate);
 
-        Path dimensionFolder = delegate.getWorldPath().toAbsolutePath().normalize();
-        int nameCount = dimensionFolder.getNameCount();
-        if (nameCount < 3 || !"dimensions".equals(dimensionFolder.getName(nameCount - 3).toString())) {
-            Logger.global.logWarning("Unexpected dimension folder path layout '" + dimensionFolder + "'.");
-            this.worldFolder = dimensionFolder;
-            this.dimension = DataPack.DIMENSION_OVERWORLD;
-        } else {
-            this.worldFolder = dimensionFolder.getParent().getParent().getParent();
-            this.dimension = new Key(
-                    dimensionFolder.getName(nameCount - 2).toString(),
-                    dimensionFolder.getName(nameCount - 1).toString()
-            );
-        }
+        //noinspection UnstableApiUsage
+        this.worldFolder = Bukkit.getServer().getLevelDirectory();
+        this.dimension = new Key(delegate.getKey().namespace(), delegate.getKey().value());
+        this.dimensionType = switch (delegate.getEnvironment()) {
+            case NORMAL -> DataPack.DIMENSION_TYPE_OVERWORLD;
+            case NETHER -> DataPack.DIMENSION_TYPE_THE_NETHER;
+            case THE_END -> DataPack.DIMENSION_TYPE_THE_END;
+            default -> null;
+        };
     }
 
     @Override
@@ -77,13 +76,8 @@ public class BukkitWorld implements ServerWorld {
     }
 
     @Override
-    public Path getWorldFolder() {
-        return worldFolder;
-    }
-
-    @Override
-    public Key getDimension() {
-        return dimension;
+    public Optional<Key> getDimensionType() {
+        return Optional.ofNullable(dimensionType);
     }
 
     @Override

@@ -57,6 +57,7 @@ public class MapConfig implements MapSettings {
     private WorldLoaderType loader = WorldLoaderType.ANVIL;
     @Nullable private Path world = null;
     @Nullable private Key dimension = null;
+    @Nullable private Key dimensionType = null;
 
     @Nullable private String name = null;
 

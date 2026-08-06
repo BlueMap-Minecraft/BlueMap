@@ -36,8 +36,8 @@ export class PlayerMarkerManager extends MarkerManager {
      * @param playerheadsUrl {string} - The url from which playerhead images should be loaded
      * @param events {EventTarget}
      */
-    constructor(root, fileUrl, playerheadsUrl, events = null) {
-        super(root, fileUrl, events);
+    constructor(root, fileUrl, playerheadsUrl, events = null, paused = false) {
+        super(root, fileUrl, events, paused);
 
         this.playerheadsUrl = playerheadsUrl;
     }

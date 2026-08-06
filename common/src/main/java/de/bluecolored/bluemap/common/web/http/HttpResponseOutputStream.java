@@ -28,7 +28,6 @@ import lombok.RequiredArgsConstructor;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 
@@ -39,16 +38,14 @@ public class HttpResponseOutputStream implements Closeable {
 
     private final OutputStream outputStream;
 
-    private final byte[] byteBuffer = new byte[1024];
-
     public void write(HttpResponse response) throws IOException {
         HttpStatusCode statusCode = response.getStatusCode();
-        InputStream body = response.getBody();
+        HttpResponseStreamWriter streamWriter = response.getBody();
 
         writeLine(response.getVersion() + " " + statusCode.getCode() + " " + statusCode.getMessage());
 
         // headers
-        if (body != null) {
+        if (streamWriter != null) {
             response.addHeader("Transfer-Encoding","chunked");
         } else {
             response.addHeader("Content-Length", "0");
@@ -57,21 +54,13 @@ public class HttpResponseOutputStream implements Closeable {
             writeLine(header.getKey() + ": " + header.getValue());
         }
         writeLine();
+        outputStream.flush();  // ensure headers are always immediately pushed to the client
 
         // body
-        if (body != null) {
-
-            while (true) {
-                int read = body.read(byteBuffer);
-                if (read == -1) break;
-                if (read == 0) continue;
-                writeLine(Integer.toHexString(read));
-                outputStream.write(byteBuffer, 0, read);
-                writeLine();
+        if (streamWriter != null) {
+            try (ChunkedOutputStream chunkedOut = new ChunkedOutputStream(outputStream)){
+                streamWriter.write(chunkedOut);
             }
-
-            writeLine(Integer.toHexString(0));
-            writeLine();
         }
 
         outputStream.flush();

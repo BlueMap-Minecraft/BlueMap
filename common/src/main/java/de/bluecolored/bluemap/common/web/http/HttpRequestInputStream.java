@@ -36,6 +36,7 @@ import java.util.regex.Pattern;
 public class HttpRequestInputStream implements Closeable {
 
     private static final Pattern REQUEST_PATTERN = Pattern.compile("^(\\w+) (\\S+) (.+)$");
+    private static final int MAX_CHUNK_SIZE = 0x100000;
 
     private final InetAddress source;
     private final DataInputStream in;
@@ -117,7 +118,8 @@ public class HttpRequestInputStream implements Closeable {
 
         while (true) {
             String prefix = readLine();
-            int size = Integer.valueOf(prefix.formatted(), 16);
+            int size = Integer.valueOf(prefix.trim(), 16);
+            if (size < 0 || size > MAX_CHUNK_SIZE) throw new IOException("Invalid HTTP Request: Chunked body size is out of range");
             if (size > byteBuffer.length) byteBuffer = new byte[size];
             size = in.readNBytes(byteBuffer, 0, size);
             body.write(byteBuffer, 0, size);

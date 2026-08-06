@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.common;
 import com.google.gson.FieldNamingPolicy;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import de.bluecolored.bluemap.common.config.MapConfig;
 import de.bluecolored.bluemap.common.config.WebappConfig;
 import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -39,8 +40,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.nio.file.StandardOpenOption;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class WebFilesManager {
 
@@ -75,18 +75,6 @@ public class WebFilesManager {
         }
     }
 
-    public void resetSettings() {
-        this.settings = new Settings();
-    }
-
-    public void addMap(String mapId) {
-        this.settings.maps.add(mapId);
-    }
-
-    public void removeMap(String mapId) {
-        this.settings.maps.remove(mapId);
-    }
-
     public Set<String> getScripts() {
         return this.settings.scripts;
     }
@@ -99,8 +87,20 @@ public class WebFilesManager {
         this.settings.setFrom(webappConfig);
     }
 
+    public void setFrom(Map<String, MapConfig> mapConfigs) {
+        this.settings.maps.clear();
+        addFrom(mapConfigs);
+    }
+
     public void addFrom(WebappConfig webappConfig) {
         this.settings.addFrom(webappConfig);
+    }
+
+    public void addFrom(Map<String, MapConfig> mapConfigs) {
+        mapConfigs.entrySet().stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.comparing(MapConfig::getSorting)))
+                .map(Map.Entry::getKey)
+                .forEach(this.settings.maps::add);
     }
 
     public boolean filesNeedUpdate() {
@@ -143,9 +143,9 @@ public class WebFilesManager {
         private String mapDataRoot = "maps";
         private String liveDataRoot = "maps";
 
-        private Set<String> maps = new HashSet<>();
-        private Set<String> scripts = new HashSet<>();
-        private Set<String> styles = new HashSet<>();
+        private Set<String> maps = new LinkedHashSet<>();
+        private Set<String> scripts = new LinkedHashSet<>();
+        private Set<String> styles = new LinkedHashSet<>();
 
         public void setFrom(WebappConfig config) {
             this.useCookies = config.isUseCookies();

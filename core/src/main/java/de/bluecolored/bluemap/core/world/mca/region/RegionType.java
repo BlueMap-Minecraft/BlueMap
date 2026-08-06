@@ -42,12 +42,10 @@ import java.util.regex.Pattern;
 public interface RegionType extends Keyed {
 
     RegionType MCA = new Impl(Key.bluemap("mca"), MCARegion::new, MCARegion::getRegionFileName, MCARegion.FILE_PATTERN);
-    RegionType LINEAR = new Impl(Key.bluemap("linear"), LinearRegion::new, LinearRegion::getRegionFileName, LinearRegion.FILE_PATTERN);
 
     RegionType DEFAULT = MCA;
     Registry<RegionType> REGISTRY = new Registry<>(
-            MCA,
-            LINEAR
+            MCA
     );
 
     /**

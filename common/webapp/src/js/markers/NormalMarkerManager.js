@@ -33,8 +33,8 @@ export class NormalMarkerManager extends MarkerManager {
      * @param fileUrl {string} - The marker file from which this manager updates its markers
      * @param events {EventTarget}
      */
-    constructor(root, fileUrl, events = null) {
-        super(root, fileUrl, events);
+    constructor(root, fileUrl, events = null, paused = false) {
+        super(root, fileUrl, events, paused);
     }
 
     /**

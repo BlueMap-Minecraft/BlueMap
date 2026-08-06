@@ -97,7 +97,7 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
 
         //save world so the level.dat is present on new worlds
         if (!FoliaSupport.IS_FOLIA) {
-            Logger.global.logInfo("Saving all worlds once, to make sure the level.dat is present...");
+            Logger.global.logInfo("Saving all worlds once, to make sure all required world-properties are present...");
             for (World world : getServer().getWorlds()) {
                 world.save();
             }

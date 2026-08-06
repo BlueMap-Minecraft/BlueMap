@@ -34,6 +34,7 @@ import de.bluecolored.bluemap.common.api.BlueMapAPIImpl;
 import de.bluecolored.bluemap.common.config.*;
 import de.bluecolored.bluemap.common.config.typeserializer.RegistryTypeSerializer;
 import de.bluecolored.bluemap.common.debug.StateDumper;
+import de.bluecolored.bluemap.common.live.LiveMarkersDataSupplier;
 import de.bluecolored.bluemap.common.live.LivePlayersDataSupplier;
 import de.bluecolored.bluemap.common.live.PluginLivePlayerInfoTransformer;
 import de.bluecolored.bluemap.common.metrics.Metrics;
@@ -228,7 +229,12 @@ public class Plugin implements ServerEventListener {
                         MapRequestHandler mapRequestHandler;
                         BmMap map = maps.get(id);
                         if (map != null) {
-                            mapRequestHandler = new MapRequestHandler(map, serverInterface, livePlayerInfoTransformer, pluginConfig.isHideDifferentWorld());
+                            LivePlayersDataSupplier livePlayersDataSupplier = pluginConfig.isLivePlayerMarkers() ?
+                                    new LivePlayersDataSupplier(serverInterface, map.getWorld(), livePlayerInfoTransformer, pluginConfig.isHideDifferentWorld()) :
+                                    null;
+                            LiveMarkersDataSupplier liveMarkersDataSupplier = new LiveMarkersDataSupplier(map.getMarkerSets());
+
+                            mapRequestHandler = new MapRequestHandler(map, livePlayersDataSupplier, liveMarkersDataSupplier, webserverConfig.isSseEnabled());
                         } else {
                             Storage storage = blueMap.getOrLoadStorage(mapConfig.getStorage());
                             mapRequestHandler = new MapRequestHandler(storage.map(id));
@@ -297,7 +303,7 @@ public class Plugin implements ServerEventListener {
 
                 //start skin updater
                 this.skinUpdater = new PlayerSkinUpdater(this);
-                if (pluginConfig.isLivePlayerMarkers() && pluginConfig.isSkinDownload()) {
+                if (pluginConfig.isSkinDownload()) {
                     serverInterface.registerListener(skinUpdater);
                 }
 
@@ -378,7 +384,10 @@ public class Plugin implements ServerEventListener {
                     try (InputStream in = Files.newInputStream(tasksFile)) {
                         BlueNBT blueNBT = createRenderTaskBlueNBT();
                         TasksData tasksData = blueNBT.read(in, new TypeToken<>() {});
-                        renderManager.scheduleRenderTasks(tasksData.getRenderTasks().toArray(RenderTask[]::new));
+                        renderManager.scheduleRenderTasks(tasksData.getRenderTasks().stream()
+                                .filter(Objects::nonNull)
+                                .toArray(RenderTask[]::new)
+                        );
                     } catch (Exception ex) {
                         Logger.global.logError("Failed to load tasks.dat!", ex);
                         Files.delete(tasksFile);
