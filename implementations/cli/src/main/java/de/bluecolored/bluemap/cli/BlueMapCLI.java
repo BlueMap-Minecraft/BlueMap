@@ -104,7 +104,14 @@ public class BlueMapCLI {
         if (watch) {
             for (BmMap map : maps.values()) {
                 try {
-                    MapUpdateService watcher = new MapUpdateService(renderManager, map, blueMap.getConfig().getCoreConfig().getUpdateCooldown(), true);
+                    MapUpdateService watcher = new MapUpdateService(
+                            renderManager,
+                            map,
+                            Instant.now(),
+                            blueMap.getConfig().getCoreConfig().getFullUpdateInterval(),
+                            blueMap.getConfig().getCoreConfig().getUpdateCooldown(),
+                            true
+                    );
                     watcher.start();
                     mapUpdateServices.add(watcher);
                 } catch (IOException ex) {
@@ -178,23 +185,6 @@ public class BlueMapCLI {
             }
         };
         timer.scheduleAtFixedRate(saveTask, TimeUnit.MINUTES.toMillis(2), TimeUnit.MINUTES.toMillis(2));
-
-        if (watch) {
-            long fullUpdateInterval = blueMap.getConfig().getCoreConfig().getFullUpdateInterval().toMillis();
-            if (fullUpdateInterval > 0) {
-                TimerTask updateAllMapsTask = new TimerTask() {
-                    @Override
-                    public void run() {
-                        Logger.global.logInfo("Start updating " + maps.size() + " maps ...");
-                        renderManager.scheduleRenderTasksNext(maps.values().stream()
-                                .sorted(Comparator.comparing(bmMap -> bmMap.getMapSettings().getSorting()))
-                                .map(map -> MapUpdatePreparationTask.updateMap(map, renderManager))
-                                .toArray(RenderTask[]::new));
-                    }
-                };
-                timer.scheduleAtFixedRate(updateAllMapsTask, fullUpdateInterval, fullUpdateInterval);
-            }
-        }
 
         Runnable shutdown = () -> {
             Logger.global.logInfo("Stopping...");

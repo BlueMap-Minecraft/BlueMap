@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.common.plugin;
 
 import com.flowpowered.math.vector.Vector2i;
 import com.github.benmanes.caffeine.cache.Cache;
+import de.bluecolored.bluemap.common.rendermanager.MapUpdatePreparationTask;
 import de.bluecolored.bluemap.common.rendermanager.RenderManager;
 import de.bluecolored.bluemap.common.rendermanager.WorldRegionUpdateTask;
 import de.bluecolored.bluemap.core.logger.Logger;
@@ -37,10 +38,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -98,7 +96,8 @@ public class MapUpdateService extends Thread {
             timer.scheduleAtFixedRate(new TimerTask() {
                 @Override
                 public void run() {
-
+                    verboseLog.accept("Start updating map '" + map.getId() + "'...");
+                    renderManager.scheduleRenderTaskNext(MapUpdatePreparationTask.updateMap(map, renderManager));
                 }
             }, delay.toMillis(), fullUpdateInterval.toMillis());
         }
