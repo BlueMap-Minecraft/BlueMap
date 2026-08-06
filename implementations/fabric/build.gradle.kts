@@ -1,5 +1,3 @@
-import com.matthewprenger.cursegradle.CurseRelation
-
 plugins {
     bluemap.implementation
     bluemap.modrinth
@@ -120,13 +118,13 @@ modrinth {
 }
 
 curseforgeBlueMap {
-    addGameVersion("Fabric")
-    addGameVersion("Java ${java.toolchain.languageVersion.get()}")
-    //addGameVersion("Server")
+    modLoaderGameVersion("fabric")
     supportedMinecraftVersions.forEach {
-        addGameVersion(it)
+        minecraftGameVersion(it)
     }
-    relations( closureOf<CurseRelation> {
-        requiredDependency("fabric-api")
-    })
+    artifacts.named("main") {
+        relations {
+            requiredDependency("fabric-api")
+        }
+    }
 }

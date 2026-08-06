@@ -15,7 +15,7 @@ dependencies {
     implementation ( plugin( libs.plugins.spotless ) )
     implementation ( plugin( libs.plugins.shadow ) )
     implementation ( plugin( libs.plugins.minotaur ) )
-    implementation ( plugin( libs.plugins.cursegradle ) )
+    implementation ( plugin( libs.plugins.curseforge.publish ) )
     implementation ( plugin( libs.plugins.hangar ) )
     implementation ( plugin( libs.plugins.sponge.ore ) )
 

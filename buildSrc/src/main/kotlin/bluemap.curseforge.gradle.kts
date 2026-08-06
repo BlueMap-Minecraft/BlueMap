@@ -1,20 +1,14 @@
-import com.matthewprenger.cursegradle.Options
+import io.github.themrmilchmann.gradle.publish.curseforge.tasks.PublishToCurseForgeRepository
 
 plugins {
     id ( "bluemap.implementation" )
-    id ( "com.matthewprenger.cursegradle" )
+    id ( "io.github.themrmilchmann.curseforge-publish" )
 }
 
 curseforge {
-    apiKey = System.getenv("CURSEFORGE_TOKEN") ?: ""
-    options(closureOf<Options> {
-        javaVersionAutoDetect = false
-        javaIntegration = false
-        forgeGradleIntegration = false
-    })
+    apiToken.set(System.getenv("CURSEFORGE_TOKEN") ?: "")
 }
 
-tasks.curseforge {
-    group = "publishing"
+tasks.withType(PublishToCurseForgeRepository::class).configureEach {
     dependsOn(tasks.getByName("release"))
 }

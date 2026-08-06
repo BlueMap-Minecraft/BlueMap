@@ -105,10 +105,8 @@ modrinth {
 }
 
 curseforgeBlueMap {
-    addGameVersion("NeoForge")
-    addGameVersion("Java ${java.toolchain.languageVersion.get()}")
-    //addGameVersion("Server")
+    modLoaderGameVersion("neoforge")
     supportedMinecraftVersions.forEach {
-        addGameVersion(it)
+        minecraftGameVersion(it)
     }
 }

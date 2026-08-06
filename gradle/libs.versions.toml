@@ -37,7 +37,7 @@ lombok = { module = "org.projectlombok:lombok", version = "1.18.42" }
 lz4 = { module = "at.yawk.lz4:lz4-java", version = "1.8.1" }
 
 [plugins]
-cursegradle = { id = "com.matthewprenger.cursegradle", version = "1.4.0" }
+curseforge-publish = { id = "io.github.themrmilchmann.curseforge-publish", version = "0.11.0" }
 forgegradle = { id = "net.minecraftforge.gradle", version = "[7.0.17,8)" }
 hangar = { id = "io.papermc.hangar-publish-plugin", version = "0.1.2" }
 jarjar = { id = "net.minecraftforge.jarjar", version = "0.2.3" }
