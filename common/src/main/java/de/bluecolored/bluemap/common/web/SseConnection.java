@@ -37,12 +37,14 @@ import lombok.SneakyThrows;
 /**
  * Represents a single Server-Sent Events (SSE) connection.
  * <p>
- * Events can be queued via {@link #enqueue(String, String)} without blocking.
+ * Events can be queued via {@link #enqueue(SseEvent)} without blocking.
  * Call {@link #run(OutputStream)} on the thread that owns the connection's output-stream (e.g.
  * the HTTP connection's thread) to deliver queued events to it. This will block the calling thread
  * until the connection is closed.
  */
 public class SseConnection implements Closeable {
+
+    public record SseEvent(String type, String data) {}
 
     // how many messages can be queued up for sending before being dropped
     private static final int QUEUE_CAPACITY = 64;
@@ -50,7 +52,7 @@ public class SseConnection implements Closeable {
     // how long to wait for an event before sending a keepalive
     private static final long KEEPALIVE_INTERVAL_SECONDS = 30;
 
-    private final BlockingQueue<String[]> queue = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
+    private final BlockingQueue<SseEvent> queue = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
     private volatile boolean closed = false;
     private volatile Runnable onClose;
     private volatile Thread runningThread;
@@ -76,9 +78,9 @@ public class SseConnection implements Closeable {
      * If this connection's queue is full (due to a slowly-reading client), the event is
      * silently dropped and the connection will be closed.
      */
-    public void enqueue(String eventType, String data) {
+    public void enqueue(SseEvent event) {
         if (closed) return;
-        if (!queue.offer(new String[]{eventType, data})) {
+        if (!queue.offer(event)) {
             close();
         }
     }
@@ -90,7 +92,7 @@ public class SseConnection implements Closeable {
      */
     public void run(OutputStream out) throws IOException {
         runningThread = Thread.currentThread();
-        String[] event;
+        SseEvent event;
         try {
             while (!closed) {
                 try {
@@ -103,11 +105,7 @@ public class SseConnection implements Closeable {
                     runningThread.interrupt();
                     break;
                 }
-                if (event == null) {
-                    sendKeepalive(out);
-                } else {
-                    send(out, event[0], event[1]);
-                }
+                send(out, event);
             }
         } finally {
             close();
@@ -121,23 +119,18 @@ public class SseConnection implements Closeable {
 
     /**
      * Write one SSE event with optional data to the stream and flush it.
+     * Will write a comment (:) as a keepalive if {@code event} is {@code null}.
      *
      * @throws IOException if the client has disconnected
      */
-    private void send(OutputStream out, String eventType, String data) throws IOException {
-        writeLine(out, "event: " + eventType);
-        data.lines().forEach(l -> writeLine(out, "data: " + l));
-        out.write('\n');
-        out.flush();
-    }
-
-    /**
-     * Write an SSE comment to the stream and flush it to keep the connection alive
-     *
-     * @throws IOException if the client has disconnected
-     */
-    private void sendKeepalive(OutputStream out) throws IOException {
-        writeLine(out, ":");
+    private void send(OutputStream out, SseEvent event) throws IOException {
+        if (event == null) {
+            writeLine(out, ":");
+        } else {
+            writeLine(out, "event: " + event.type());
+            event.data().lines().forEach(l -> writeLine(out, "data: " + l));
+            out.write('\n');
+        }
         out.flush();
     }
 
