@@ -24,7 +24,6 @@
  */
 package de.bluecolored.bluemap.core.resources.pack.resourcepack.texture;
 
-import com.google.gson.annotations.SerializedName;
 import de.bluecolored.bluemap.core.util.BufferedImageUtil;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.Keyed;
@@ -52,7 +51,6 @@ public class Texture implements Keyed {
             null
     );
 
-    @SerializedName("resourcePath")
     private Key key;
 
     private Color color;
