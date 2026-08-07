@@ -97,8 +97,9 @@ public class SseConnectionManager implements Closeable {
      */
     public void broadcast(String eventType, String data) {
         if (closed) return;
+        SseConnection.SseEvent event = new SseConnection.SseEvent(eventType, data);
         for (SseConnection conn : connections) {
-            conn.enqueue(eventType, data);
+            conn.enqueue(event);
         }
     }
 
