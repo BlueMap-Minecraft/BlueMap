@@ -30,6 +30,7 @@ import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import lombok.SneakyThrows;
 
@@ -45,6 +46,9 @@ public class SseConnection implements Closeable {
 
     // how many messages can be queued up for sending before being dropped
     private static final int QUEUE_CAPACITY = 64;
+
+    // how long to wait for an event before sending a keepalive
+    private static final long KEEPALIVE_INTERVAL_SECONDS = 30;
 
     private final BlockingQueue<String[]> queue = new LinkedBlockingQueue<>(QUEUE_CAPACITY);
     private volatile boolean closed = false;
@@ -90,12 +94,20 @@ public class SseConnection implements Closeable {
         try {
             while (!closed) {
                 try {
-                    event = queue.take();
+                    if (KEEPALIVE_INTERVAL_SECONDS > 0){
+                        event = queue.poll(KEEPALIVE_INTERVAL_SECONDS, TimeUnit.SECONDS);
+                    } else {
+                        event = queue.take();
+                    }
                 } catch (InterruptedException _) {
                     runningThread.interrupt();
                     break;
                 }
-                send(out, event[0], event[1]);
+                if (event == null) {
+                    sendKeepalive(out);
+                } else {
+                    send(out, event[0], event[1]);
+                }
             }
         } finally {
             close();
@@ -116,6 +128,16 @@ public class SseConnection implements Closeable {
         writeLine(out, "event: " + eventType);
         data.lines().forEach(l -> writeLine(out, "data: " + l));
         out.write('\n');
+        out.flush();
+    }
+
+    /**
+     * Write an SSE comment to the stream and flush it to keep the connection alive
+     *
+     * @throws IOException if the client has disconnected
+     */
+    private void sendKeepalive(OutputStream out) throws IOException {
+        writeLine(out, ":");
         out.flush();
     }
 
