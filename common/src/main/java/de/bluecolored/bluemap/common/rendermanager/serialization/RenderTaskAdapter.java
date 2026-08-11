@@ -95,7 +95,7 @@ public class RenderTaskAdapter implements TypeAdapter<RenderTask> {
         reader.endCompound();
 
         if (type == null) throw new IOException("Missing type");
-        if (type == UNKNOWN_TYPE) return null;
+        if (UNKNOWN_TYPE.equals(type)) return null;
 
         if (data == null) throw new IOException("Missing data");
 
