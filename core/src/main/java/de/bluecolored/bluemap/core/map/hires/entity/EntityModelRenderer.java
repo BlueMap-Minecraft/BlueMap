@@ -64,7 +64,7 @@ public class EntityModelRenderer {
         tileModel.initialize(modelStart);
 
         // apply entity rotation
-        tileModel.rotateYXZ(entity.getRotation().getY(), entity.getRotation().getX(), 0f);
+        tileModel.rotateYXZ(0f, 180f - entity.getRotation().getX(), 0f);
     }
 
 }
