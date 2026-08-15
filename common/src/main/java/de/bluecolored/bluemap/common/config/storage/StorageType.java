@@ -34,10 +34,12 @@ public interface StorageType extends Keyed {
 
     StorageType FILE = new Impl(Key.bluemap("file"), FileConfig.class);
     StorageType SQL = new Impl(Key.bluemap("sql"), SQLConfig.class);
+    StorageType SQLITE = new Impl(Key.bluemap("sqlite"), SQLiteConfig.class);
 
     Registry<StorageType> REGISTRY = new Registry<>(
             FILE,
-            SQL
+            SQL,
+            SQLITE
     );
 
     Class<? extends StorageConfig> getConfigType();
