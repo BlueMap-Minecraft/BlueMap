@@ -128,7 +128,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
                                 .setVariable("default-thread-priority", String.valueOf(Thread.NORM_PRIORITY))
                                 .setConditional("update-interval-u-flag", isCli)
                                 .setVariable("logfile", formatPath(defaultDataFolder.resolve("logs").resolve("debug.log")))
-                                .setVariable("logfile-with-time", formatPath(defaultDataFolder.resolve("logs").resolve("debug_%1$tF_%1$tT.log")))
+                                .setVariable("logfile-with-time", formatPath(defaultDataFolder.resolve("logs").resolve("debug_%1$tF_%<tH-%<tM-%<tS")))
                                 .build(),
                         StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                 );
@@ -167,7 +167,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
                         configManager.loadConfigTemplate(WEBSERVER_CONFIG_NAME)
                                 .setVariable("webroot", formatPath(defaultWebroot))
                                 .setVariable("logfile", formatPath(dataRoot.resolve("logs").resolve("webserver.log")))
-                                .setVariable("logfile-with-time", formatPath(dataRoot.resolve("logs").resolve("webserver_%1$tF_%1$tT.log")))
+                                .setVariable("logfile-with-time", formatPath(dataRoot.resolve("logs").resolve("webserver_%1$tF_%<tH-%<tM-%<tS.log")))
                                 .build(),
                         StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                 );
