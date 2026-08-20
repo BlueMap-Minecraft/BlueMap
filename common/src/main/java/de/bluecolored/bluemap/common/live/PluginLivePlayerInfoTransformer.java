@@ -51,7 +51,11 @@ public class PluginLivePlayerInfoTransformer implements LivePlayerInfoTransforme
 
     @Override
     public LivePlayerInfo apply(Player player) {
+        if (!plugin.isLoaded()) return null;
+
         PluginState pluginState = plugin.getPluginState();
+        if (pluginState == null) return null;
+
         if (pluginState.isPlayerHidden(player.getUuid())) return null;
 
         BlueMapService blueMapService = plugin.getBlueMap();
