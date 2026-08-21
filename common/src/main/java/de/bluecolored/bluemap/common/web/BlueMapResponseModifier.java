@@ -28,7 +28,6 @@ import de.bluecolored.bluemap.common.web.http.HttpRequest;
 import de.bluecolored.bluemap.common.web.http.HttpRequestHandler;
 import de.bluecolored.bluemap.common.web.http.HttpResponse;
 import de.bluecolored.bluemap.common.web.http.HttpStatusCode;
-import de.bluecolored.bluemap.core.BlueMap;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -41,7 +40,6 @@ public class BlueMapResponseModifier implements HttpRequestHandler {
 
     public BlueMapResponseModifier(HttpRequestHandler delegate) {
         this.delegate = delegate;
-        this.serverName = "BlueMap/" + BlueMap.VERSION;
     }
 
     @Override
@@ -53,7 +51,12 @@ public class BlueMapResponseModifier implements HttpRequestHandler {
             response.setBody(status.getCode() + " - " + status.getMessage() + "\n" + this.serverName);
         }
 
-        response.addHeader("Server", this.serverName);
+        response.addHeader("Server", "BlueMap");
+        response.addHeader("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; object-src 'none';");
+        response.addHeader("X-Frame-Options", "SAMEORIGIN");
+        response.addHeader("X-Content-Type-Options", "nosniff");
+        response.addHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+        response.addHeader("Permissions-Policy", "accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), cross-origin-isolated=(), display-capture=(), document-domain=(), encrypted-media=(), execution-while-not-rendered=(), execution-while-out-of-viewport=(), fullscreen=(self), geolocation=(), gyroscope=(), keyboard-map=(), magnetometer=(), microphone=(), midi=(), navigation-override=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(self), sync-xhr=(), usb=(), web-share=(), xr-spatial-tracking=()");
 
         return response;
     }
