@@ -77,6 +77,12 @@ public class Variants {
         // still here? do default
         if (defaultVariant != null) {
             defaultVariant.forEach(x, y, z, consumer);
+            return;
+        }
+
+        // fallback
+        if (variants.length != 0) {
+            variants[0].forEach(x, y, z, consumer);
         }
     }
 
