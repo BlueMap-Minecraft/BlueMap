@@ -142,8 +142,10 @@ public final class WorldRegionUpdateTask implements MapRenderTask, SerializableR
         if (tileRenderCount >= tileMaxCount * 0.75)
             map.getWorld().preloadRegionChunks(regionPos.getX(), regionPos.getY());
 
-        if (tileRenderCount + tileDeleteCount == 0)
+        if (tileRenderCount + tileDeleteCount == 0) {
             completed = true;
+            complete();
+        }
 
     }
 
