@@ -72,7 +72,9 @@ public class BlueMap {
             false
     );
 
-    private static final Thread.Builder.OfPlatform schedulerThreadBuilder = Thread.ofPlatform().name("BlueMap-Scheduler-", 0);
+    private static final Thread.Builder.OfPlatform schedulerThreadBuilder = Thread.ofPlatform()
+            .daemon()
+            .name("BlueMap-Scheduler-", 0);
     public static final ScheduledExecutorService SCHEDULER = Executors.newScheduledThreadPool(1, runnable -> {
         Thread thread = schedulerThreadBuilder.unstarted(runnable);
         // use current classloader, this fixes ClassLoading issues with forge
