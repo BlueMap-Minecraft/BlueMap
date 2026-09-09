@@ -58,4 +58,8 @@ public class BlueMapResponseModifier implements HttpRequestHandler {
         return response;
     }
 
+    @Override
+    public void close() {
+        delegate.close();
+    }
 }

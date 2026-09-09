@@ -24,9 +24,14 @@
  */
 package de.bluecolored.bluemap.common.web.http;
 
+import java.io.Closeable;
+
 @FunctionalInterface
-public interface HttpRequestHandler {
+public interface HttpRequestHandler extends Closeable {
 
     HttpResponse handle(HttpRequest request);
+
+    @Override
+    default void close() {}
 
 }

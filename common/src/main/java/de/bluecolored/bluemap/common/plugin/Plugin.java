@@ -484,22 +484,29 @@ public class Plugin implements ServerEventListener {
                 }
 
                 // stop webserver
-                if (webServer != null && !keepWebserver) {
-                    try {
-                        webServer.close();
-                    } catch (IOException ex) {
-                        Logger.global.logError("Failed to close the webserver!", ex);
+                if (!keepWebserver) {
+                    if (webServer != null) {
+                        try {
+                            webServer.close();
+                        } catch (IOException ex) {
+                            Logger.global.logError("Failed to close the webserver!", ex);
+                        }
+                        webServer = null;
                     }
-                    webServer = null;
-                }
 
-                if (webLogger != null && !keepWebserver) {
-                    try {
-                        webLogger.close();
-                    } catch (Exception ex) {
-                        Logger.global.logError("Failed to close the webserver-logger!", ex);
+                    if (webRequestHandler != null) {
+                        webRequestHandler.close();
+                        webRequestHandler = null;
                     }
-                    webLogger = null;
+
+                    if (webLogger != null) {
+                        try {
+                            webLogger.close();
+                        } catch (Exception ex) {
+                            Logger.global.logError("Failed to close the webserver-logger!", ex);
+                        }
+                        webLogger = null;
+                    }
                 }
 
                 //close bluemap

@@ -84,6 +84,13 @@ public class RoutingRequestHandler implements HttpRequestHandler {
         return new HttpResponse(HttpStatusCode.BAD_REQUEST);
     }
 
+    @Override
+    public void close() {
+        routes.stream()
+                .map(Route::getHandler)
+                .forEach(HttpRequestHandler::close);
+    }
+
     @AllArgsConstructor
     @Getter @Setter
     public static class Route {

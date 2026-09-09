@@ -32,12 +32,17 @@ import org.jetbrains.annotations.Nullable;
 
 import com.flowpowered.math.vector.Vector2i;
 
+import java.io.Closeable;
+import java.io.IOException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-public class MapRequestHandler extends RoutingRequestHandler {
+public class MapRequestHandler extends RoutingRequestHandler implements Closeable {
 
     private final SseConnectionManager sseConnections = new SseConnectionManager();
+
+    private @Nullable LiveDataSupplierBroadcaster<String> markerDataBroadcaster;
+    private @Nullable LiveDataSupplierBroadcaster<String> playerDataBroadcaster;
 
     public MapRequestHandler(
             BmMap map,
@@ -79,16 +84,16 @@ public class MapRequestHandler extends RoutingRequestHandler {
             });
         }
 
-        if (livePlayersDataSupplier != null) {
-            LiveDataSupplierBroadcaster<String> playerDataBroadcaster = new LiveDataSupplierBroadcaster<>(livePlayersDataSupplier, 1000);
-            if (useSSE) registerSseCallback(playerDataBroadcaster, this::onPlayerUpdate);
-            register("live/players\\.json", "", new JsonDataRequestHandler(playerDataBroadcaster));
+        if (liveMarkerDataSupplier != null) {
+            this.markerDataBroadcaster = new LiveDataSupplierBroadcaster<>(liveMarkerDataSupplier, 10000);
+            if (useSSE) registerSseCallback(this.markerDataBroadcaster, this::onMarkerUpdate);
+            register("live/markers\\.json", "", new JsonDataRequestHandler(this.markerDataBroadcaster));
         }
 
-        if (liveMarkerDataSupplier != null) {
-            LiveDataSupplierBroadcaster<String>markerDataBroadcaster = new LiveDataSupplierBroadcaster<>(liveMarkerDataSupplier, 10000);
-            if (useSSE) registerSseCallback(markerDataBroadcaster, this::onMarkerUpdate);
-            register("live/markers\\.json", "", new JsonDataRequestHandler(markerDataBroadcaster));
+        if (livePlayersDataSupplier != null) {
+            this.playerDataBroadcaster = new LiveDataSupplierBroadcaster<>(livePlayersDataSupplier, 1000);
+            if (useSSE) registerSseCallback(this.playerDataBroadcaster, this::onPlayerUpdate);
+            register("live/players\\.json", "", new JsonDataRequestHandler(this.playerDataBroadcaster));
         }
     }
 
@@ -117,6 +122,14 @@ public class MapRequestHandler extends RoutingRequestHandler {
 
     private void onMarkerUpdate(String data) {
         sseConnections.broadcast("marker", data);
+    }
+
+    @Override
+    public void close() {
+        sseConnections.close();
+        if (markerDataBroadcaster != null) markerDataBroadcaster.close();
+        if (playerDataBroadcaster != null) playerDataBroadcaster.close();
+        super.close();
     }
 
 }

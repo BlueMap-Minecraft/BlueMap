@@ -98,4 +98,9 @@ public class LoggingRequestHandler implements HttpRequestHandler {
         return response;
     }
 
+    @Override
+    public void close() {
+        delegate.close();
+    }
+
 }
