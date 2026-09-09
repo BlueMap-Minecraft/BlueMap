@@ -46,10 +46,7 @@ public class BlockStateTest {
 
         blockState = new BlockState(Key.parse("someblock"), mapOf("testProp", "testVal", "testProp2", "testVal2"));
         String toString = blockState.toString();
-        assertTrue(
-                toString.equals("minecraft:someblock[testProp=testVal,testProp2=testVal2]") ||
-                toString.equals("minecraft:someblock[testProp2=testVal2,testProp=testVal]")
-            );
+        assertEquals("minecraft:someblock[testProp=testVal,testProp2=testVal2]", toString);
     }
 
     @Test

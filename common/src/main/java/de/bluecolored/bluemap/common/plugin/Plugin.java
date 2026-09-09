@@ -145,6 +145,7 @@ public class Plugin implements ServerEventListener {
                         .configRoot(serverInterface.getConfigFolder())
                         .packsFolder(packsFolder)
                         .modsFolder(serverInterface.getModsFolder().orElse(null))
+                        .defaultBlockStates(serverInterface.getDefaultBlockstates())
                         .useMetricsConfig(serverInterface.isMetricsEnabled() == Tristate.UNDEFINED)
                         .autoConfigWorlds(serverInterface.getLoadedServerWorlds())
                         .build();

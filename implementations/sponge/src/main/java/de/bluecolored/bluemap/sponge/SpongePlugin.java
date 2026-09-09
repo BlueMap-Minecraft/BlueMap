@@ -36,9 +36,12 @@ import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.util.Caches;
+import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluemap.core.world.BlockState;
 import org.spongepowered.api.ResourceKey;
 import org.spongepowered.api.Sponge;
 import org.spongepowered.api.command.Command;
+import org.spongepowered.api.registry.RegistryTypes;
 import org.spongepowered.api.config.ConfigDir;
 import org.spongepowered.api.entity.living.player.server.ServerPlayer;
 import org.spongepowered.api.event.Listener;
@@ -248,6 +251,23 @@ public class SpongePlugin implements Server {
     @Override
     public Map<UUID, Player> getOnlinePlayers() {
         return onlinePlayerMap;
+    }
+
+    @Override
+    public Map<Key, BlockState> getDefaultBlockstates() {
+        Map<Key, BlockState> blockstates = new HashMap<>();
+        Sponge.game().registry(RegistryTypes.BLOCK_TYPE).streamEntries().forEach(entry -> {
+            ResourceKey id = entry.key();
+            try {
+                blockstates.put(
+                        new Key(id.namespace(), id.value()),
+                        BlockState.fromString(entry.value().defaultState().asString())
+                );
+            } catch (RuntimeException ex) {
+                Logger.global.logDebug("Failed to get the default blockstate for block '" + id + "': " + ex);
+            }
+        });
+        return blockstates;
     }
 
     @Override

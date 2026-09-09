@@ -34,9 +34,13 @@ import de.bluecolored.bluemap.core.logger.JavaLogger;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.util.Caches;
 import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluemap.core.world.BlockState;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.World;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.command.CommandMap;
 import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.event.EventHandler;
@@ -270,6 +274,26 @@ public class BukkitPlugin extends JavaPlugin implements Server, Listener {
     @Override
     public Map<UUID, Player> getOnlinePlayers() {
         return onlinePlayerMap;
+    }
+
+    @Override
+    public Map<Key, BlockState> getDefaultBlockstates() {
+        Map<Key, BlockState> blockstates = new HashMap<>();
+        for (Material material : Material.values()) {
+            if (material.isLegacy() || !material.isBlock()) continue;
+
+            try {
+                BlockData blockData = material.createBlockData();
+                NamespacedKey materialKey = material.getKey();
+                blockstates.put(
+                        new Key(materialKey.getNamespace(), materialKey.getKey()),
+                        BlockState.fromString(blockData.getAsString())
+                );
+            } catch (RuntimeException ex) {
+                Logger.global.logDebug("Failed to get the default blockstate for material '" + material + "': " + ex);
+            }
+        }
+        return blockstates;
     }
 
     /**

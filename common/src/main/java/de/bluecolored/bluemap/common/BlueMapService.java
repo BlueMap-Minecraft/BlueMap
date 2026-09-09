@@ -31,6 +31,7 @@ import de.bluecolored.bluemap.common.debug.StateDumper;
 import de.bluecolored.bluemap.common.plugin.Plugin;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
+import de.bluecolored.bluemap.core.resources.DefaultBlockstatesConfig;
 import de.bluecolored.bluemap.core.resources.MinecraftVersion;
 import de.bluecolored.bluemap.core.resources.VersionManifest;
 import de.bluecolored.bluemap.core.resources.pack.datapack.DataPack;
@@ -38,13 +39,17 @@ import de.bluecolored.bluemap.core.resources.pack.resourcepack.ResourcePack;
 import de.bluecolored.bluemap.core.storage.Storage;
 import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.World;
 import de.bluecolored.bluemap.core.world.WorldLoader;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.Closeable;
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.FileSystem;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -65,7 +70,6 @@ public class BlueMapService implements Closeable {
     private final Map<String, World> worlds;
     private final Map<String, BmMap> maps;
     private final Map<String, Storage> storages;
-
 
     public BlueMapService(BlueMapConfiguration configuration, @Nullable ResourcePack preloadedResourcePack) {
         this(configuration);
@@ -347,25 +351,9 @@ public class BlueMapService implements Closeable {
                     ex);
         }
 
-        Path resourceExtensionsFile = config.getCoreConfig().getData().resolve("resourceExtensions.zip");
-
         if (Thread.interrupted()) throw new InterruptedException();
 
-        try {
-            Files.deleteIfExists(resourceExtensionsFile);
-            FileHelper.createDirectories(resourceExtensionsFile.getParent());
-            URL resourceExtensionsUrl = Objects.requireNonNull(
-                    Plugin.class.getResource("/de/bluecolored/bluemap/resourceExtensions.zip")
-            );
-            FileHelper.copy(resourceExtensionsUrl, resourceExtensionsFile);
-        } catch (IOException ex) {
-            throw new ConfigurationException(
-                    "Failed to create resourceExtensions.zip!\n" +
-                            "Does BlueMap has sufficient write permissions?",
-                    ex);
-        }
-
-        Deque<Path> packRoots = new LinkedList<>();
+        Deque<@NotNull Path> packRoots = new LinkedList<>();
 
         // load from pack folder
         if (packsFolder != null && Files.isDirectory(packsFolder)) {
@@ -393,7 +381,11 @@ public class BlueMapService implements Closeable {
             }
         }
 
-        packRoots.add(resourceExtensionsFile);
+        Path defaultBlockstatesPack = updateDefaultBlockstatesPack();
+        if (defaultBlockstatesPack != null) packRoots.add(defaultBlockstatesPack);
+
+        packRoots.add(updateResourceExtensionsPack());
+
         return packRoots;
     }
 
@@ -418,6 +410,62 @@ public class BlueMapService implements Closeable {
         }
 
         return this.minecraftVersion;
+    }
+
+    private synchronized Path updateResourceExtensionsPack() throws ConfigurationException {
+        Path resourceExtensionsFile = config.getCoreConfig().getData().resolve("resourceExtensions.zip");
+
+        try {
+            Files.deleteIfExists(resourceExtensionsFile);
+            FileHelper.createDirectories(resourceExtensionsFile.getParent());
+            URL resourceExtensionsUrl = Objects.requireNonNull(
+                    Plugin.class.getResource("/de/bluecolored/bluemap/resourceExtensions.zip")
+            );
+            FileHelper.copy(resourceExtensionsUrl, resourceExtensionsFile);
+        } catch (IOException ex) {
+            throw new ConfigurationException(
+                    "Failed to create resourceExtensions.zip!\n" +
+                            "Does BlueMap has sufficient write permissions?",
+                    ex);
+        }
+
+        return resourceExtensionsFile;
+    }
+
+    private synchronized @Nullable Path updateDefaultBlockstatesPack() throws ConfigurationException {
+        Path defaultBlockstatesFile = config.getCoreConfig().getData().resolve("defaultBlockstates.zip");
+        Map<Key, BlockState> defaultBlockStates = config.getDefaultBlockStates();
+
+        if (defaultBlockStates != null) {
+            try {
+                Files.deleteIfExists(defaultBlockstatesFile);
+                FileHelper.createDirectories(defaultBlockstatesFile.getParent());
+
+                // group by namespace, so each namespace gets its own defaultBlockstates.json
+                Map<String, Map<Key, BlockState>> defaultBlockStatesByNamespace = new HashMap<>();
+                for (Map.Entry<Key, BlockState> entry : defaultBlockStates.entrySet()) {
+                    defaultBlockStatesByNamespace
+                            .computeIfAbsent(entry.getKey().getNamespace(), _ -> new HashMap<>())
+                            .put(entry.getKey(), entry.getValue());
+                }
+
+                try (FileSystem zipFs = FileSystems.newFileSystem(defaultBlockstatesFile, Map.of("create", "true"))) {
+                    for (Map.Entry<String, Map<Key, BlockState>> namespaceEntry : defaultBlockStatesByNamespace.entrySet()) {
+                        Path jsonFile = zipFs.getPath("data", namespaceEntry.getKey(), "defaultBlockstates.json");
+                        DefaultBlockstatesConfig blockstatesConfig = new DefaultBlockstatesConfig();
+                        blockstatesConfig.load(namespaceEntry.getValue());
+                        blockstatesConfig.save(jsonFile);
+                    }
+                }
+            } catch (IOException ex) {
+                throw new ConfigurationException(
+                        "Failed to create defaultBlockstates.zip!\n" +
+                                "Does BlueMap have sufficient write permissions?",
+                        ex);
+            }
+        }
+
+        return Files.exists(defaultBlockstatesFile) ? defaultBlockstatesFile : null;
     }
 
     public BlueMapConfiguration getConfig() {

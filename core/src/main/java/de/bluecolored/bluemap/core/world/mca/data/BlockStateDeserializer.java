@@ -24,11 +24,13 @@
  */
 package de.bluecolored.bluemap.core.world.mca.data;
 
+import de.bluecolored.bluemap.core.resources.pack.datapack.DataPack;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluenbt.NBTReader;
 import de.bluecolored.bluenbt.TagType;
 import de.bluecolored.bluenbt.TypeDeserializer;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
@@ -36,25 +38,40 @@ import java.util.Map;
 
 public class BlockStateDeserializer implements TypeDeserializer<BlockState> {
 
+    private final @Nullable DataPack dataPack;
+
+    public BlockStateDeserializer() {
+        this.dataPack = null;
+    }
+
+    public BlockStateDeserializer(@Nullable DataPack dataPack) {
+        this.dataPack = dataPack;
+    }
+
     @Override
     public BlockState read(NBTReader reader) throws IOException {
         if (reader.peek() == TagType.STRING)
-            return new BlockState(Key.parse(reader.nextString()));
+            return getDefaultBlockstate(reader.nextString());
 
         reader.beginCompound();
 
+        boolean defaultBlockState = false;
         String id = null;
         Map<String, String> properties = null;
 
         while (reader.hasNext()) {
             switch (reader.name()) {
-                case "id", "Name", "" -> id = reader.nextString();
+                case "id", "Name" -> id = reader.nextString();
                 case "properties", "Properties" -> {
                     properties = new LinkedHashMap<>();
                     reader.beginCompound();
                     while (reader.hasNext())
                         properties.put(reader.name(), reader.nextString());
                     reader.endCompound();
+                }
+                case "" -> {
+                    id = reader.nextString();
+                    defaultBlockState = true;
                 }
                 default -> reader.skip();
             }
@@ -63,9 +80,19 @@ public class BlockStateDeserializer implements TypeDeserializer<BlockState> {
         reader.endCompound();
 
         if (id == null) throw new IOException("Invalid BlockState, Name is missing!");
+        if (defaultBlockState && properties == null) return getDefaultBlockstate(id);
 
         Key key = Key.parse(id);
         return properties == null ? new BlockState(key) : new BlockState(key, properties);
+    }
+
+    private BlockState getDefaultBlockstate(String blockId) {
+        Key key = Key.parse(blockId, Key.MINECRAFT_NAMESPACE);
+        if (dataPack != null){
+            BlockState blockState = dataPack.getDefaultBlockState(key);
+            if (blockState != null) return blockState;
+        }
+        return new BlockState(key);
     }
 
 }

@@ -26,6 +26,8 @@ package de.bluecolored.bluemap.common;
 
 import de.bluecolored.bluemap.common.config.*;
 import de.bluecolored.bluemap.common.config.storage.StorageConfig;
+import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluemap.core.world.BlockState;
 import org.jetbrains.annotations.Nullable;
 
 import java.nio.file.Path;
@@ -50,5 +52,7 @@ public interface BlueMapConfiguration {
     @Nullable Path getPacksFolder();
 
     @Nullable Path getModsFolder();
+
+    @Nullable Map<Key, BlockState> getDefaultBlockStates();
 
 }

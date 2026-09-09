@@ -35,10 +35,14 @@ import de.bluecolored.bluemap.common.serverinterface.ServerEventListener;
 import de.bluecolored.bluemap.common.serverinterface.ServerWorld;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.util.Caches;
+import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluemap.core.world.BlockState;
 import net.minecraft.SharedConstants;
 import net.minecraft.commands.CommandSourceStack;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
@@ -243,6 +247,22 @@ public class ForgeMod implements Server {
     @Override
     public Map<UUID, Player> getOnlinePlayers() {
         return onlinePlayerMap;
+    }
+
+    @Override
+    public Map<Key, BlockState> getDefaultBlockstates() {
+        Map<Key, BlockState> blockstates = new HashMap<>();
+        for (Block block : BuiltInRegistries.BLOCK) {
+            Identifier id = BuiltInRegistries.BLOCK.getKey(block);
+            Key key = new Key(id.getNamespace(), id.getPath());
+
+            Map<String, String> properties = new HashMap<>();
+            block.defaultBlockState().getValues().forEach(value ->
+                    properties.put(value.property().getName(), value.valueName()));
+
+            blockstates.put(key, new BlockState(key, properties));
+        }
+        return blockstates;
     }
 
     /**

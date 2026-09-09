@@ -32,6 +32,7 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.resources.pack.datapack.DataPack;
 import de.bluecolored.bluemap.core.util.FileHelper;
 import de.bluecolored.bluemap.core.util.Key;
+import de.bluecolored.bluemap.core.world.BlockState;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NonNull;
@@ -72,6 +73,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
     private final Path packsFolder;
     private final @Nullable String minecraftVersion;
     private final @Nullable Path modsFolder;
+    private final @Nullable Map<Key, BlockState> defaultBlockStates;
 
     @Builder
     private BlueMapConfigManager(
@@ -84,7 +86,8 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
             @Nullable Boolean useMetricsConfig,
             @Nullable Boolean isCli,
             @Nullable Path packsFolder,
-            @Nullable Path modsFolder
+            @Nullable Path modsFolder,
+            @Nullable Map<Key, BlockState> defaultBlockStates
     ) throws ConfigurationException {
         // set defaults
         if (defaultDataFolder == null) defaultDataFolder = Path.of("bluemap");
@@ -106,6 +109,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
         this.packsFolder = packsFolder;
         this.minecraftVersion = minecraftVersion;
         this.modsFolder = modsFolder;
+        this.defaultBlockStates = defaultBlockStates;
     }
 
     private CoreConfig loadCoreConfig(Path defaultDataFolder, boolean useMetricsConfig, boolean isCli) throws ConfigurationException {

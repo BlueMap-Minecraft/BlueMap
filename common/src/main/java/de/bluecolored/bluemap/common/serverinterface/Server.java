@@ -27,7 +27,9 @@ package de.bluecolored.bluemap.common.serverinterface;
 import com.github.benmanes.caffeine.cache.Cache;
 import de.bluecolored.bluemap.common.debug.DebugDump;
 import de.bluecolored.bluemap.core.util.Caches;
+import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.Tristate;
+import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.World;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
 import org.jetbrains.annotations.Nullable;
@@ -108,6 +110,14 @@ public interface Server {
      */
     @DebugDump
     Map<UUID, Player> getOnlinePlayers();
+
+    /**
+     * Returns a map populated with all blocks that are loaded on this server.
+     * The keys are the block-ids, the values are the default BlockStates.
+     * Returns null if this information is not available.
+     */
+    @DebugDump
+    @Nullable Map<Key, BlockState> getDefaultBlockstates();
 
     /**
      * Registers a ServerEventListener, every method of this interface should be called on the specified events

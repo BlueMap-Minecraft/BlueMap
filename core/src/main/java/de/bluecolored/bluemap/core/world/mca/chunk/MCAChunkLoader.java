@@ -25,10 +25,14 @@
 package de.bluecolored.bluemap.core.world.mca.chunk;
 
 import de.bluecolored.bluemap.core.storage.compression.Compression;
+import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.Chunk;
 import de.bluecolored.bluemap.core.world.mca.ChunkLoader;
 import de.bluecolored.bluemap.core.world.mca.MCAUtil;
 import de.bluecolored.bluemap.core.world.mca.MCAWorld;
+import de.bluecolored.bluemap.core.world.mca.data.BlockStateDeserializer;
+import de.bluecolored.bluenbt.BlueNBT;
+import de.bluecolored.bluenbt.TypeToken;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Nullable;
@@ -42,9 +46,14 @@ import java.util.function.BiFunction;
 public class MCAChunkLoader implements ChunkLoader<Chunk> {
 
     private final MCAWorld world;
+    private final BlueNBT nbt;
 
     public MCAChunkLoader(MCAWorld world) {
         this.world = world;
+        this.nbt = new BlueNBT();
+
+        MCAUtil.addCommonNbtSettings(this.nbt);
+        this.nbt.register(TypeToken.of(BlockState.class), new BlockStateDeserializer(world.getDataPack()));
     }
 
     // sorted list of chunk-versions, loaders at the start of the list are preferred over loaders at the end
@@ -55,7 +64,7 @@ public class MCAChunkLoader implements ChunkLoader<Chunk> {
             new ChunkVersionLoader<>(Chunk_1_13.Data.class, Chunk_1_13::new, 0)
     );
 
-    private ChunkVersionLoader<?> lastUsedLoader = CHUNK_VERSION_LOADERS.get(0);
+    private ChunkVersionLoader<?> lastUsedLoader = CHUNK_VERSION_LOADERS.getFirst();
 
     @Override
     public MCAChunk load(byte[] data, int offset, int length, Compression compression) throws IOException {
@@ -66,7 +75,7 @@ public class MCAChunkLoader implements ChunkLoader<Chunk> {
         ChunkVersionLoader<?> usedLoader = lastUsedLoader;
         MCAChunk chunk;
         try (InputStream decompressedIn = compression.decompress(in)) {
-            chunk = usedLoader.load(world, decompressedIn);
+            chunk = usedLoader.load(world, this.nbt, decompressedIn);
         }
 
         // check version and reload chunk if the wrong loader has been used and a better one has been found
@@ -74,7 +83,7 @@ public class MCAChunkLoader implements ChunkLoader<Chunk> {
         if (actualLoader != null && usedLoader != actualLoader) {
             in.reset(); // reset read position
             try (InputStream decompressedIn = compression.decompress(in)) {
-                chunk = actualLoader.load(world, decompressedIn);
+                chunk = actualLoader.load(world, this.nbt, decompressedIn);
             }
             lastUsedLoader = actualLoader;
         }
@@ -107,9 +116,9 @@ public class MCAChunkLoader implements ChunkLoader<Chunk> {
         private final BiFunction<MCAWorld, D, MCAChunk> constructor;
         private final int dataVersion;
 
-        public MCAChunk load(MCAWorld world, InputStream in) throws IOException {
+        public MCAChunk load(MCAWorld world, BlueNBT nbt, InputStream in) throws IOException {
             try {
-                D data = MCAUtil.BLUENBT.read(in, dataType);
+                D data = nbt.read(in, dataType);
                 return mightSupport(data.getDataVersion()) ? constructor.apply(world, data) : new MCAChunk(world, data) {};
             } catch (Exception e) {
                 throw new IOException("Failed to parse chunk-data (%s): %s".formatted(dataType.getSimpleName(), e), e);

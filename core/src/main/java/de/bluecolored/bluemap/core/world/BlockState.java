@@ -28,7 +28,6 @@ import de.bluecolored.bluemap.core.util.Key;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
-import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -64,11 +63,11 @@ public class BlockState {
     private final boolean isAir, isWater, isWaterlogged;
     private int liquidLevel = -1, redstonePower = -1;
 
-    public BlockState(Key id) {
+    public BlockState(@NotNull Key id) {
         this(id, Collections.emptyMap());
     }
 
-    public BlockState(Key id, Map<String, String> properties) {
+    public BlockState(@NotNull Key id, @NotNull Map<String, String> properties) {
         this.id = id;
         this.hashed = false;
         this.hash = 0;
@@ -168,8 +167,8 @@ public class BlockState {
     @Override
     public String toString() {
         StringJoiner sj = new StringJoiner(",");
-        for (Entry<String, String> e : getProperties().entrySet()){
-            sj.add(e.getKey() + "=" + e.getValue());
+        for (Property p : propertiesArray){
+            sj.add(p.key + "=" + p.value);
         }
 
         return id.getFormatted() + "[" + sj + "]";

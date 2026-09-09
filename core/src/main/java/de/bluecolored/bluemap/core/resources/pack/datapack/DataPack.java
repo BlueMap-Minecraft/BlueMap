@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.core.resources.pack.datapack;
 
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.resources.DefaultBlockstatesConfig;
 import de.bluecolored.bluemap.core.resources.ResourcePath;
 import de.bluecolored.bluemap.core.resources.adapter.ResourcesGson;
 import de.bluecolored.bluemap.core.resources.pack.Pack;
@@ -33,8 +34,9 @@ import de.bluecolored.bluemap.core.resources.pack.ResourcePool;
 import de.bluecolored.bluemap.core.resources.pack.datapack.biome.DatapackBiome;
 import de.bluecolored.bluemap.core.resources.pack.datapack.dimension.DimensionTypeData;
 import de.bluecolored.bluemap.core.util.Key;
-import de.bluecolored.bluemap.core.world.biome.Biome;
+import de.bluecolored.bluemap.core.world.BlockState;
 import de.bluecolored.bluemap.core.world.DimensionType;
+import de.bluecolored.bluemap.core.world.biome.Biome;
 import de.bluecolored.bluemap.core.world.mca.chunk.LegacyBiomes;
 import org.jetbrains.annotations.Nullable;
 
@@ -42,8 +44,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.Map;
 
 public class DataPack extends Pack {
 
@@ -58,6 +58,8 @@ public class DataPack extends Pack {
 
     private final ResourcePool<DimensionType> dimensionTypes = new ResourcePool<>();
     private final ResourcePool<Biome> biomes = new ResourcePool<>();
+
+    private final DefaultBlockstatesConfig defaultBlockstatesConfig = new DefaultBlockstatesConfig();
 
     private LegacyBiomes legacyBiomes;
 
@@ -114,6 +116,17 @@ public class DataPack extends Pack {
                             }
                         }
                 ));
+
+        list(root.resolve("data"))
+                .map(path -> path.resolve("defaultBlockstates.json"))
+                .filter(Files::isRegularFile)
+                .forEach(file -> {
+                    try {
+                        defaultBlockstatesConfig.load(file);
+                    } catch (Exception ex) {
+                        Logger.global.logDebug("Failed to parse resource-file '" + file + "': " + ex);
+                    }
+                });
     }
 
     public void bake() {
@@ -125,16 +138,20 @@ public class DataPack extends Pack {
         legacyBiomes = new LegacyBiomes(this);
     }
 
-    public @Nullable DimensionType getDimensionType(Key key) {
-        return dimensionTypes.get(key);
+    public @Nullable DimensionType getDimensionType(Key dimensionTypeId) {
+        return dimensionTypes.get(dimensionTypeId);
     }
 
-    public @Nullable Biome getBiome(Key key) {
-        return biomes.get(key);
+    public @Nullable Biome getBiome(Key biomeId) {
+        return biomes.get(biomeId);
     }
 
     public @Nullable Biome getBiome(int legacyId) {
         return legacyBiomes.forId(legacyId);
+    }
+
+    public @Nullable BlockState getDefaultBlockState(Key blockId) {
+        return defaultBlockstatesConfig.get(blockId);
     }
 
 }
