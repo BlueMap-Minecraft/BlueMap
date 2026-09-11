@@ -242,7 +242,7 @@ public class Plugin implements ServerEventListener {
                         webRequestHandler.register(
                                 "maps/" + Pattern.quote(id) + "/(.*)",
                                 "$1",
-                                new BlueMapResponseModifier(mapRequestHandler)
+                                mapRequestHandler
                         );
                     }
 
@@ -261,7 +261,7 @@ public class Plugin implements ServerEventListener {
                         webServer = new HttpServer(
                                 "BlueMap-Webserver",
                                 new LoggingRequestHandler(
-                                        webRequestHandler,
+                                        new BlueMapResponseModifier(webRequestHandler),
                                         webserverConfig.getLog().getFormat(),
                                         webLogger
                                 )
