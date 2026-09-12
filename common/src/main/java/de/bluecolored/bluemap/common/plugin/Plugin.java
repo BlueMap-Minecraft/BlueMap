@@ -218,7 +218,7 @@ public class Plugin implements ServerEventListener {
                     this.webRequestHandler = new RoutingRequestHandler();
 
                     // default route
-                    webRequestHandler.register(".*", new FileRequestHandler(webroot));
+                    webRequestHandler.register(".*", new FileRequestHandler(webroot, webserverConfig.getAdditionalHeaders()));
 
                     // map route
                     for (var mapConfigEntry : configManager.getMapConfigs().entrySet()) {
@@ -233,10 +233,16 @@ public class Plugin implements ServerEventListener {
                                     null;
                             LiveMarkersDataSupplier liveMarkersDataSupplier = new LiveMarkersDataSupplier(map.getMarkerSets());
 
-                            mapRequestHandler = new MapRequestHandler(map, livePlayersDataSupplier, liveMarkersDataSupplier, webserverConfig.isSseEnabled());
+                            mapRequestHandler = new MapRequestHandler(
+                                    map,
+                                    livePlayersDataSupplier,
+                                    liveMarkersDataSupplier,
+                                    webserverConfig.isSseEnabled(),
+                                    webserverConfig.getAdditionalHeaders()
+                            );
                         } else {
                             Storage storage = blueMap.getOrLoadStorage(mapConfig.getStorage());
-                            mapRequestHandler = new MapRequestHandler(storage.map(id));
+                            mapRequestHandler = new MapRequestHandler(storage.map(id), webserverConfig.getAdditionalHeaders());
                         }
 
                         webRequestHandler.register(

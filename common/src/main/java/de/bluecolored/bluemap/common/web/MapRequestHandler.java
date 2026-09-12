@@ -28,6 +28,7 @@ import de.bluecolored.bluemap.common.web.http.HttpResponse;
 import de.bluecolored.bluemap.common.web.http.HttpStatusCode;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.storage.MapStorage;
+import java.util.Map;
 import org.jetbrains.annotations.Nullable;
 
 import com.flowpowered.math.vector.Vector2i;
@@ -48,9 +49,10 @@ public class MapRequestHandler extends RoutingRequestHandler implements Closeabl
             BmMap map,
             @Nullable Supplier<String> livePlayersDataSupplier,
             @Nullable Supplier<String> liveMarkerDataSupplier,
-            boolean useSSE
+            boolean useSSE,
+            Map<String, String> additionalHeaders
     ) {
-        this(map.getStorage(), livePlayersDataSupplier, liveMarkerDataSupplier, useSSE);
+        this(map.getStorage(), livePlayersDataSupplier, liveMarkerDataSupplier, useSSE, additionalHeaders);
 
         if (useSSE) {
             map.getHiresModelManager().addTileUpdateListener(tile -> onTileUpdate(tile, 0));
@@ -58,17 +60,18 @@ public class MapRequestHandler extends RoutingRequestHandler implements Closeabl
         }
     }
 
-    public MapRequestHandler(MapStorage mapStorage) {
-        this(mapStorage, null, null, false);
+    public MapRequestHandler(MapStorage mapStorage, Map<String, String> additionalHeaders) {
+        this(mapStorage, null, null, false, additionalHeaders);
     }
 
     public MapRequestHandler(
             MapStorage mapStorage,
             @Nullable Supplier<String> livePlayersDataSupplier,
             @Nullable Supplier<String> liveMarkerDataSupplier,
-            boolean useSSE
+            boolean useSSE,
+            Map<String, String> additionalHeaders
     ) {
-        register(".*", new MapStorageRequestHandler(mapStorage));
+        register(".*", new MapStorageRequestHandler(mapStorage, additionalHeaders));
 
         if (useSSE) {
             register("live/sse", "", _ -> {
