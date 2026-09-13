@@ -311,7 +311,7 @@ public class BlueMapCLI {
             ));
         }
 
-        HttpRequestHandler handler = new BlueMapResponseModifier(routingRequestHandler);
+        HttpRequestHandler handler = new BlueMapResponseModifier(routingRequestHandler, config.getAdditionalHeaders());
         handler = new LoggingRequestHandler(
                 handler,
                 config.getLog().getFormat(),

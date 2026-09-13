@@ -135,13 +135,12 @@ public class FileRequestHandler implements HttpRequestHandler {
 
         //create response
         HttpResponse response = new HttpResponse(HttpStatusCode.OK);
+
         response.addHeader("ETag", eTag);
         if (lastModified > 0) response.addHeader("Last-Modified", DateTimeFormatter.RFC_1123_DATE_TIME.format(Instant
                 .ofEpochMilli(lastModified)
                 .atOffset(ZoneOffset.UTC)
         ));
-        response.addHeader("Cache-Control", "public");
-        response.addHeader("Cache-Control", "max-age=" + TimeUnit.DAYS.toSeconds(1));
 
         //add content type header
         String filetype = filePath.getFileName().toString();

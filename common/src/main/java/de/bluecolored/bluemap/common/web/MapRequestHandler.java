@@ -33,7 +33,6 @@ import org.jetbrains.annotations.Nullable;
 import com.flowpowered.math.vector.Vector2i;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 

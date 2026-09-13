@@ -31,6 +31,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
+import java.util.Map;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
 @ConfigSerializable
@@ -46,6 +47,8 @@ public class WebserverConfig {
     private boolean sseEnabled = true;
 
     private LogConfig log = new LogConfig();
+
+    private Map<String, String> additionalHeaders = Map.of();
 
     public InetAddress resolveIp() throws UnknownHostException {
         if (ip.isEmpty() || ip.equals("0.0.0.0") || ip.equals("::0")) {

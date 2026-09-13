@@ -85,9 +85,6 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
                 if (in == null) return new HttpResponse(HttpStatusCode.NO_CONTENT);
 
                 HttpResponse response = new HttpResponse(HttpStatusCode.OK);
-                response.addHeader("Cache-Control", "public");
-                response.addHeader("Cache-Control", "max-age=" + TimeUnit.DAYS.toSeconds(1));
-
                 if (lod == 0) response.addHeader("Content-Type", "application/octet-stream");
                 else response.addHeader("Content-Type", "image/png");
 
@@ -105,8 +102,6 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
             };
             if (in != null){
                 HttpResponse response = new HttpResponse(HttpStatusCode.OK);
-                response.addHeader("Cache-Control", "public");
-                response.addHeader("Cache-Control", "max-age=" + TimeUnit.DAYS.toSeconds(1));
                 response.addHeader("Content-Type", ContentTypeRegistry.fromFileName(path));
                 writeToResponse(in, response, request, requestGzipped);
                 return response;

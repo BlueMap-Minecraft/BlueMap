@@ -35,6 +35,10 @@ public interface HttpHeaderCarrier {
         getHeaders().put(name.toLowerCase(Locale.ROOT), new HttpHeader(name, values));
     }
 
+    default void setHeader(String name, String... values) {
+        getHeaders().put(name.toLowerCase(Locale.ROOT), new HttpHeader(name, values));
+    }
+
     default HttpHeader getHeader(String key) {
         return getHeaders().get(key.toLowerCase(Locale.ROOT));
     }
