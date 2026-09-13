@@ -427,12 +427,12 @@ public class BlueMapCLI {
                 if (cmd.hasOption("f")) force = TileUpdateStrategy.FORCE_ALL;
                 else if (cmd.hasOption("e")) force = TileUpdateStrategy.FORCE_EDGE;
                 boolean generateWebappFiles = cmd.hasOption("g");
-                String mapsToRender = cmd.getOptionValue("m", null);
+                String mapsToRender = cmd.getOptionValue("m", (String) null);
                 cli.renderMaps(blueMap, watch, force, generateWebappFiles, mapsToRender);
             } else {
                 if (cmd.hasOption("markers")) {
                     noActions = false;
-                    String mapsToUpdate = cmd.getOptionValue("m", null);
+                    String mapsToUpdate = cmd.getOptionValue("m", (String) null);
                     cli.updateMarkers(blueMap, mapsToUpdate);
                 }
                 if (cmd.hasOption("g")) {
