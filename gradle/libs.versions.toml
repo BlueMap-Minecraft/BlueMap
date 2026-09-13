@@ -19,7 +19,7 @@ bstats-bukkit = { module = "org.bstats:bstats-bukkit", version.ref = "bstats" }
 bstats-sponge = { module = "org.bstats:bstats-sponge", version.ref = "bstats" }
 caffeine = { module = "com.github.ben-manes.caffeine:caffeine", version = "3.2.4" }
 commons-cli = { module = "commons-cli:commons-cli", version = "1.5.0" }
-commons-dbcp2 = { module = "org.apache.commons:commons-dbcp2", version = "2.9.0" }
+commons-dbcp2 = { module = "org.apache.commons:commons-dbcp2", version = "2.14.0" }
 configurate-hocon = { module = "org.spongepowered:configurate-hocon", version.ref = "configurate" }
 configurate-gson = { module = "org.spongepowered:configurate-gson", version.ref = "configurate" }
 fabric-permissions = { module = "me.lucko:fabric-permissions-api", version = "0.7.0" }
