@@ -86,7 +86,7 @@ public class FileRequestHandler implements HttpRequestHandler {
         // redirect to have correct relative paths
         if (Files.isDirectory(filePath) && !request.getPath().endsWith("/")) {
             HttpResponse response = new HttpResponse(HttpStatusCode.SEE_OTHER);
-            response.addHeader("Location", "/" + path + "/" + (request.getRawQueryString().isEmpty() ? "" : "?" + request.getRawQueryString()));
+            response.setHeader("Location", "/" + path + "/" + (request.getRawQueryString().isEmpty() ? "" : "?" + request.getRawQueryString()));
             return response;
         }
 
@@ -135,9 +135,8 @@ public class FileRequestHandler implements HttpRequestHandler {
 
         //create response
         HttpResponse response = new HttpResponse(HttpStatusCode.OK);
-
-        response.addHeader("ETag", eTag);
-        if (lastModified > 0) response.addHeader("Last-Modified", DateTimeFormatter.RFC_1123_DATE_TIME.format(Instant
+        response.setHeader("ETag", eTag);
+        if (lastModified > 0) response.setHeader("Last-Modified", DateTimeFormatter.RFC_1123_DATE_TIME.format(Instant
                 .ofEpochMilli(lastModified)
                 .atOffset(ZoneOffset.UTC)
         ));
@@ -147,7 +146,7 @@ public class FileRequestHandler implements HttpRequestHandler {
         int pointIndex = filetype.lastIndexOf('.');
         if (pointIndex >= 0) filetype = filetype.substring(pointIndex + 1);
         String contentType = toContentType(filetype);
-        response.addHeader("Content-Type", contentType);
+        response.setHeader("Content-Type", contentType);
 
         //send response
         try {

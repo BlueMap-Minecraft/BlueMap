@@ -72,11 +72,11 @@ public class MapRequestHandler extends RoutingRequestHandler implements Closeabl
         if (useSSE) {
             register("live/sse", "", _ -> {
                 HttpResponse response = new HttpResponse(HttpStatusCode.OK);
-                response.addHeader("Content-Type", "text/event-stream");
-                response.addHeader("Cache-Control", "no-cache");
+                response.setHeader("Content-Type", "text/event-stream");
+                response.setHeader("Cache-Control", "no-cache");
 
                 // attempt to turn off buffering in upstream proxy
-                response.addHeader("X-Accel-Buffering", "no");
+                response.setHeader("X-Accel-Buffering", "no");
 
                 response.setBody(sseConnections::handleConnection);
                 return response;

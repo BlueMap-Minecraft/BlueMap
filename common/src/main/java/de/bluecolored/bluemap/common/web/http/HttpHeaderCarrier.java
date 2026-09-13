@@ -31,12 +31,16 @@ public interface HttpHeaderCarrier {
 
     Map<String, HttpHeader> getHeaders();
 
-    default void addHeader(String name, String... values) {
+    default void setHeader(String name, String... values) {
         getHeaders().put(name.toLowerCase(Locale.ROOT), new HttpHeader(name, values));
     }
 
-    default void setHeader(String name, String... values) {
-        getHeaders().put(name.toLowerCase(Locale.ROOT), new HttpHeader(name, values));
+    default void addHeader(String name, String... values) {
+        getHeaders().computeIfAbsent(name, HttpHeader::new).add(values);
+    }
+
+    default void setHeaderIfAbsent(String name, String... values) {
+        getHeaders().putIfAbsent(name.toLowerCase(Locale.ROOT), new HttpHeader(name, values));
     }
 
     default HttpHeader getHeader(String key) {

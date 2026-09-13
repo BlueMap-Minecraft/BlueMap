@@ -218,7 +218,7 @@ public class Plugin implements ServerEventListener {
                     this.webRequestHandler = new RoutingRequestHandler();
 
                     // default route
-                    webRequestHandler.register(".*", new BlueMapResponseModifier(new FileRequestHandler(webroot), webserverConfig.getAdditionalHeaders()));
+                    webRequestHandler.register(".*", new FileRequestHandler(webroot));
 
                     // map route
                     for (var mapConfigEntry : configManager.getMapConfigs().entrySet()) {
@@ -242,7 +242,7 @@ public class Plugin implements ServerEventListener {
                         webRequestHandler.register(
                                 "maps/" + Pattern.quote(id) + "/(.*)",
                                 "$1",
-                                new BlueMapResponseModifier(mapRequestHandler, webserverConfig.getAdditionalHeaders())
+                                mapRequestHandler
                         );
                     }
 
@@ -261,7 +261,7 @@ public class Plugin implements ServerEventListener {
                         webServer = new HttpServer(
                                 "BlueMap-Webserver",
                                 new LoggingRequestHandler(
-                                        webRequestHandler,
+                                        new BlueMapResponseModifier(webRequestHandler, webserverConfig.getAdditionalHeaders()),
                                         webserverConfig.getLog().getFormat(),
                                         webLogger
                                 )

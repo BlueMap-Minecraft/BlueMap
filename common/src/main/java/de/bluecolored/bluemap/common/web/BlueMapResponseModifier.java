@@ -32,6 +32,7 @@ import de.bluecolored.bluemap.core.BlueMap;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
+
 import java.util.Map;
 
 @Getter @Setter
@@ -56,9 +57,9 @@ public class BlueMapResponseModifier implements HttpRequestHandler {
             response.setBody(status.getCode() + " - " + status.getMessage() + "\n" + this.serverName);
         }
 
-        response.addHeader("Server", this.serverName);
+        response.setHeader("Server", this.serverName);
 
-        additionalHeaders.forEach(response::setHeader);
+        additionalHeaders.forEach(response::setHeaderIfAbsent);
 
         return response;
     }

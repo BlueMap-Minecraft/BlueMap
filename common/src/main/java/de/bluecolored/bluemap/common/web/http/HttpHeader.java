@@ -35,6 +35,11 @@ public class HttpHeader {
     private List<String> values;
     private Set<String> valuesLC;
 
+    public HttpHeader(String key) {
+        this.key = key;
+        this.value = "";
+    }
+
     public HttpHeader(String key, String... values) {
         this.key = key;
         this.value = String.join(",", values);
@@ -60,8 +65,10 @@ public class HttpHeader {
     public synchronized List<String> getValues() {
         if (values == null) {
             List<String> vs = new ArrayList<>();
-            for (String v : value.split(",")) {
-                vs.add(v.trim());
+            if (!value.isEmpty()) {
+                for (String v : value.split(",")) {
+                    vs.add(v.trim());
+                }
             }
             values = Collections.unmodifiableList(vs);
         }

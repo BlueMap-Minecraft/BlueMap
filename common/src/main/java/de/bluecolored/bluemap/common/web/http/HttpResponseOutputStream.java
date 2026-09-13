@@ -46,9 +46,9 @@ public class HttpResponseOutputStream implements Closeable {
 
         // headers
         if (streamWriter != null) {
-            response.addHeader("Transfer-Encoding","chunked");
+            response.setHeader("Transfer-Encoding","chunked");
         } else {
-            response.addHeader("Content-Length", "0");
+            response.setHeader("Content-Length", "0");
         }
         for (HttpHeader header : response.getHeaders().values()) {
             writeLine(header.getKey() + ": " + header.getValue());

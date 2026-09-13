@@ -85,8 +85,8 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
                 if (in == null) return new HttpResponse(HttpStatusCode.NO_CONTENT);
 
                 HttpResponse response = new HttpResponse(HttpStatusCode.OK);
-                if (lod == 0) response.addHeader("Content-Type", "application/octet-stream");
-                else response.addHeader("Content-Type", "image/png");
+                if (lod == 0) response.setHeader("Content-Type", "application/octet-stream");
+                else response.setHeader("Content-Type", "image/png");
 
                 writeToResponse(in, response, request, requestGzipped);
                 return response;
@@ -102,7 +102,7 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
             };
             if (in != null){
                 HttpResponse response = new HttpResponse(HttpStatusCode.OK);
-                response.addHeader("Content-Type", ContentTypeRegistry.fromFileName(path));
+                response.setHeader("Content-Type", ContentTypeRegistry.fromFileName(path));
                 writeToResponse(in, response, request, requestGzipped);
                 return response;
             }
@@ -123,14 +123,14 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
                     compression != Compression.NONE &&
                             request.hasHeaderValue("Accept-Encoding", compression.getId())
             ) {
-                response.addHeader("Content-Encoding", compression.getId());
+                response.setHeader("Content-Encoding", compression.getId());
                 response.setBody(data);
             } else if (
                     compression != Compression.GZIP &&
                             !response.hasHeaderValue("Content-Type", "image/png") &&
                             request.hasHeaderValue("Accept-Encoding", Compression.GZIP.getId())
             ) {
-                response.addHeader("Content-Encoding", Compression.GZIP.getId());
+                response.setHeader("Content-Encoding", Compression.GZIP.getId());
                 ByteArrayOutputStream byteOut = new ByteArrayOutputStream();
                 try (data; OutputStream os = Compression.GZIP.compress(byteOut)) {
                     data.decompress().transferTo(os);
