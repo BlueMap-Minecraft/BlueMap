@@ -34,7 +34,7 @@ junit-jupiter-engine = { module = "org.junit.jupiter:junit-jupiter-engine" }
 junit-jupiter-api = { module = "org.junit.jupiter:junit-jupiter-api" }
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter" }
 lombok = { module = "org.projectlombok:lombok", version = "1.18.48" }
-lz4 = { module = "at.yawk.lz4:lz4-java", version = "1.8.1" }
+lz4 = { module = "at.yawk.lz4:lz4-java", version = "1.11.2" }
 
 [plugins]
 curseforge-publish = { id = "io.github.themrmilchmann.curseforge-publish", version = "0.11.0" }
