@@ -13,19 +13,16 @@ updates:
 
       # libraries
       - dependency-name: "net.kyori:adventure-*"
-        versions: ["4.26.x"] # depends on paper
       - dependency-name: "io.airlift:aircompressor"
       - dependency-name: "de.bluecolored:bluecommands-*"
       - dependency-name: "de.bluecolored:bluenbt"
       - dependency-name: "com.mojang:brigadier"
-        versions: ["1.3.x"] # depends on paper, fabric, forge, neoforge
       - dependency-name: "org.bstats:bstats-*"
       - dependency-name: "com.github.ben-manes.caffeine:caffeine"
       - dependency-name: "commons-cli:commons-cli"
       - dependency-name: "org.apache.commons:commons-dbcp2"
       - dependency-name: "org.spongepowered:configurate-*"
       - dependency-name: "com.google.code.gson:gson"
-        versions: ["2.8.x"] # depends on all implementations
       - dependency-name: "me.lucko:fabric-permissions-api"
       - dependency-name: "org.jetbrains:annotations"
       - dependency-name: "org.junit*"
@@ -45,6 +42,14 @@ updates:
       - dependency-name: "org.spongepowered.gradle.plugin"
       - dependency-name: "org.spongepowered.gradle.ore"
       - dependency-name: "com.diffplug.spotless"
+
+    ignore:
+      - dependency-name: "net.kyori:adventure-*"
+        versions: [">=4.27.0"] # depends on paper
+      - dependency-name: "com.mojang:brigadier"
+        versions: [">=1.4.0"] # depends on paper, fabric, forge, neoforge
+      - dependency-name: "com.google.code.gson:gson"
+        versions: [">=2.9.0"] # depends on all implementations
 
   - package-ecosystem: "npm"
     directory: "/common/webapp"
