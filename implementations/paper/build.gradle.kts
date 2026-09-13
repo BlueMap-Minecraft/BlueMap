@@ -16,6 +16,7 @@ dependencies {
     api ( project( ":common" ) ) {
         exclude( group = "com.google.code.gson", module = "gson" )
         exclude( group = "net.kyori", module = "adventure-api" )
+        exclude( group = "net.kyori", module = "option" )
     }
 
     shadow ("io.papermc.paper:paper-api:$paperVersion")
@@ -53,6 +54,11 @@ tasks.shadowJar {
 
     // bstats
     relocate ("org.bstats", "de.bluecolored.shadow.bstats")
+
+    // not correctly relocated and not needed -> exclude
+    exclude(
+        "META-INF/services/org.spongepowered.configurate*"
+    )
 
 }
 

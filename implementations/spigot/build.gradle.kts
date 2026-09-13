@@ -51,6 +51,12 @@ tasks.shadowJar {
     // bstats
     relocate ("org.bstats", "de.bluecolored.shadow.bstats")
 
+    // not correctly relocated and not needed -> exclude
+    exclude(
+        "META-INF/services/net.kyori.adventure*",
+        "META-INF/services/org.spongepowered.configurate*"
+    )
+
 }
 
 tasks.processResources {

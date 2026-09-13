@@ -7,10 +7,18 @@ dependencies {
 
     api ( libs.aircompressor )
     api ( libs.bluenbt )
-    api ( libs.caffeine )
-    api ( libs.commons.dbcp2 )
-    api ( libs.configurate.hocon )
-    api ( libs.configurate.gson )
+    api ( libs.caffeine ) {
+        exclude ( group = "org.jspecify", module = "jspecify" )
+    }
+    api ( libs.commons.dbcp2 ) {
+        exclude ( group = "jakarta.transaction", module = "jakarta.transaction-api" )
+    }
+    api ( libs.configurate.hocon ) {
+        exclude ( group = "org.jspecify", module = "jspecify" )
+    }
+    api ( libs.configurate.gson ) {
+        exclude ( group = "org.jspecify", module = "jspecify" )
+    }
     api ( libs.lz4 )
 }
 

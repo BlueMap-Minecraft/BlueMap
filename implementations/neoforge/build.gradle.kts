@@ -89,7 +89,9 @@ val mergeShadowAndJarJar = tasks.register<Jar>("mergeShadowAndJarJar") {
         zipTree( tasks.shadowJar.map { it.outputs.files.singleFile } ),
         tasks.jarJar.map { it.outputs.files }
     ).exclude(
-        "META-INF/services/net.kyori.adventure*" // not correctly relocated and not needed -> exclude
+        // not correctly relocated and not needed -> exclude
+        "META-INF/services/net.kyori.adventure*",
+        "META-INF/services/org.spongepowered.configurate*"
     )
     archiveFileName = "${project.name}-${project.version}-merged.jar"
 }

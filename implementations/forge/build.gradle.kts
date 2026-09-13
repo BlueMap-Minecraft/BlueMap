@@ -106,7 +106,9 @@ val mergeShadowAndJarJar = tasks.register<Jar>("mergeShadowAndJarJar") {
             include("META-INF/jarjar/**")
         }
     ).exclude(
-        "META-INF/services/net.kyori.adventure*" // not correctly relocated and not needed -> exclude
+        // not correctly relocated and not needed -> exclude
+        "META-INF/services/net.kyori.adventure*",
+        "META-INF/services/org.spongepowered.configurate*"
     )
     archiveFileName = "${project.name}-${project.version}-merged.jar"
 }
