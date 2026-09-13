@@ -56,9 +56,7 @@ updates:
     schedule:
       interval: "weekly"
     ignore:
-      - dependency-name: "vite"
-        update-types: ["version-update:semver-major"]
-      - dependency-name: "vue"
+      - dependency-name: "*"
         update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
