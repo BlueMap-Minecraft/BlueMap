@@ -48,7 +48,7 @@ neoforge-gradle = { id = "net.neoforged.moddev", version = "2.0.140" }
 shadow = { id = "com.gradleup.shadow", version = "9.6.1" }
 sponge-plugin = { id = "org.spongepowered.gradle.plugin", version.ref = "spongegradle" }
 sponge-ore = { id = "org.spongepowered.gradle.ore", version.ref = "spongegradle" }
-spotless = { id = "com.diffplug.spotless", version = "6.25.0" }
+spotless = { id = "com.diffplug.spotless", version = "8.10.2" }
 
 [bundles]
 junit-runtime = [ "junit-platform-launcher", "junit-vintage-engine", "junit-jupiter-engine" ]
