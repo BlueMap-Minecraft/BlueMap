@@ -45,7 +45,7 @@ loom = { id = "net.fabricmc.fabric-loom", version = "1.17-SNAPSHOT" }
 minotaur = { id = "com.modrinth.minotaur", version = "2.9.0" }
 node-gradle = { id = "com.github.node-gradle.node", version = "7.0.2" }
 neoforge-gradle = { id = "net.neoforged.moddev", version = "2.0.140" }
-shadow = { id = "com.gradleup.shadow", version = "9.1.0" }
+shadow = { id = "com.gradleup.shadow", version = "9.6.1" }
 sponge-plugin = { id = "org.spongepowered.gradle.plugin", version.ref = "spongegradle" }
 sponge-ore = { id = "org.spongepowered.gradle.ore", version.ref = "spongegradle" }
 spotless = { id = "com.diffplug.spotless", version = "6.25.0" }
