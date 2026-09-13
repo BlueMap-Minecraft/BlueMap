@@ -43,7 +43,7 @@ hangar = { id = "io.papermc.hangar-publish-plugin", version = "0.1.2" }
 jarjar = { id = "net.minecraftforge.jarjar", version = "0.2.3" }
 loom = { id = "net.fabricmc.fabric-loom", version = "1.17-SNAPSHOT" }
 minotaur = { id = "com.modrinth.minotaur", version = "2.9.0" }
-node-gradle = { id = "com.github.node-gradle.node", version = "7.0.2" }
+node-gradle = { id = "com.github.node-gradle.node", version = "7.1.0" }
 neoforge-gradle = { id = "net.neoforged.moddev", version = "2.0.140" }
 shadow = { id = "com.gradleup.shadow", version = "9.6.1" }
 sponge-plugin = { id = "org.spongepowered.gradle.plugin", version.ref = "spongegradle" }
