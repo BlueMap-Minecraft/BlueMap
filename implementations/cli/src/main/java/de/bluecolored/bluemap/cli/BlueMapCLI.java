@@ -282,7 +282,7 @@ public class BlueMapCLI {
         RoutingRequestHandler routingRequestHandler = new RoutingRequestHandler();
 
         // default route
-        routingRequestHandler.register(".*", new FileRequestHandler(config.getWebroot(), config.getAdditionalHeaders()));
+        routingRequestHandler.register(".*", new BlueMapResponseModifier(new FileRequestHandler(config.getWebroot()), config.getAdditionalHeaders()));
 
         // map route
         for (var mapConfigEntry : blueMap.getConfig().getMapConfigs().entrySet()) {
@@ -291,13 +291,13 @@ public class BlueMapCLI {
             BmMap map = blueMap.getMaps().get(mapConfigEntry.getKey());
 
             MapRequestHandler mapRequestHandler = map != null ?
-                    new MapRequestHandler(map, null, new LiveMarkersDataSupplier(map.getMarkerSets()), config.isSseEnabled(), config.getAdditionalHeaders()) :
-                    new MapRequestHandler(storage, config.getAdditionalHeaders());
+                    new MapRequestHandler(map, null, new LiveMarkersDataSupplier(map.getMarkerSets()), config.isSseEnabled()) :
+                    new MapRequestHandler(storage);
 
             routingRequestHandler.register(
                     "maps/" + Pattern.quote(mapConfigEntry.getKey()) + "/(.*)",
                     "$1",
-                    mapRequestHandler
+                    new BlueMapResponseModifier(mapRequestHandler, config.getAdditionalHeaders())
             );
         }
 
@@ -311,7 +311,7 @@ public class BlueMapCLI {
             ));
         }
 
-        HttpRequestHandler handler = new BlueMapResponseModifier(routingRequestHandler);
+        HttpRequestHandler handler = new BlueMapResponseModifier(routingRequestHandler, config.getAdditionalHeaders());
         handler = new LoggingRequestHandler(
                 handler,
                 config.getLog().getFormat(),

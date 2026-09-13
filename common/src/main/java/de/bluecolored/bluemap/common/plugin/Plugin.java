@@ -218,7 +218,7 @@ public class Plugin implements ServerEventListener {
                     this.webRequestHandler = new RoutingRequestHandler();
 
                     // default route
-                    webRequestHandler.register(".*", new FileRequestHandler(webroot, webserverConfig.getAdditionalHeaders()));
+                    webRequestHandler.register(".*", new BlueMapResponseModifier(new FileRequestHandler(webroot), webserverConfig.getAdditionalHeaders()));
 
                     // map route
                     for (var mapConfigEntry : configManager.getMapConfigs().entrySet()) {
@@ -233,22 +233,16 @@ public class Plugin implements ServerEventListener {
                                     null;
                             LiveMarkersDataSupplier liveMarkersDataSupplier = new LiveMarkersDataSupplier(map.getMarkerSets());
 
-                            mapRequestHandler = new MapRequestHandler(
-                                    map,
-                                    livePlayersDataSupplier,
-                                    liveMarkersDataSupplier,
-                                    webserverConfig.isSseEnabled(),
-                                    webserverConfig.getAdditionalHeaders()
-                            );
+                            mapRequestHandler = new MapRequestHandler(map, livePlayersDataSupplier, liveMarkersDataSupplier, webserverConfig.isSseEnabled());
                         } else {
                             Storage storage = blueMap.getOrLoadStorage(mapConfig.getStorage());
-                            mapRequestHandler = new MapRequestHandler(storage.map(id), webserverConfig.getAdditionalHeaders());
+                            mapRequestHandler = new MapRequestHandler(storage.map(id));
                         }
 
                         webRequestHandler.register(
                                 "maps/" + Pattern.quote(id) + "/(.*)",
                                 "$1",
-                                new BlueMapResponseModifier(mapRequestHandler)
+                                new BlueMapResponseModifier(mapRequestHandler, webserverConfig.getAdditionalHeaders())
                         );
                     }
 

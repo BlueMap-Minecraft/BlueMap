@@ -47,7 +47,6 @@ import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.Map;
 
 @RequiredArgsConstructor
 @Getter @Setter
@@ -56,7 +55,6 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
     private static final Pattern TILE_PATTERN = Pattern.compile("tiles/([\\d/]+)/x(-?[\\d/]+)z(-?[\\d/]+).*");
 
     private @NonNull MapStorage mapStorage;
-    private @NonNull Map<String, String> additionalHeaders;
 
     @Override
     public HttpResponse handle(HttpRequest request) {
@@ -87,12 +85,6 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
                 if (in == null) return new HttpResponse(HttpStatusCode.NO_CONTENT);
 
                 HttpResponse response = new HttpResponse(HttpStatusCode.OK);
-                response.addHeader("Cache-Control", "public");
-                response.addHeader("Cache-Control", "max-age=" + TimeUnit.DAYS.toSeconds(1));
-
-                additionalHeaders.forEach(response::addHeader);
-
-                //headers after here will not be overwritten by additional headers from config
                 if (lod == 0) response.addHeader("Content-Type", "application/octet-stream");
                 else response.addHeader("Content-Type", "image/png");
 
@@ -110,12 +102,6 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
             };
             if (in != null){
                 HttpResponse response = new HttpResponse(HttpStatusCode.OK);
-                response.addHeader("Cache-Control", "public");
-                response.addHeader("Cache-Control", "max-age=" + TimeUnit.DAYS.toSeconds(1));
-
-                additionalHeaders.forEach(response::addHeader);
-
-                //headers after here will not be overwritten by additional headers from config
                 response.addHeader("Content-Type", ContentTypeRegistry.fromFileName(path));
                 writeToResponse(in, response, request, requestGzipped);
                 return response;

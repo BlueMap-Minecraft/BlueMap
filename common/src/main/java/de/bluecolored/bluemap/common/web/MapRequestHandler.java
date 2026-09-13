@@ -49,10 +49,9 @@ public class MapRequestHandler extends RoutingRequestHandler implements Closeabl
             BmMap map,
             @Nullable Supplier<String> livePlayersDataSupplier,
             @Nullable Supplier<String> liveMarkerDataSupplier,
-            boolean useSSE,
-            Map<String, String> additionalHeaders
+            boolean useSSE
     ) {
-        this(map.getStorage(), livePlayersDataSupplier, liveMarkerDataSupplier, useSSE, additionalHeaders);
+        this(map.getStorage(), livePlayersDataSupplier, liveMarkerDataSupplier, useSSE);
 
         if (useSSE) {
             map.getHiresModelManager().addTileUpdateListener(tile -> onTileUpdate(tile, 0));
@@ -60,18 +59,17 @@ public class MapRequestHandler extends RoutingRequestHandler implements Closeabl
         }
     }
 
-    public MapRequestHandler(MapStorage mapStorage, Map<String, String> additionalHeaders) {
-        this(mapStorage, null, null, false, additionalHeaders);
+    public MapRequestHandler(MapStorage mapStorage) {
+        this(mapStorage, null, null, false);
     }
 
     public MapRequestHandler(
             MapStorage mapStorage,
             @Nullable Supplier<String> livePlayersDataSupplier,
             @Nullable Supplier<String> liveMarkerDataSupplier,
-            boolean useSSE,
-            Map<String, String> additionalHeaders
+            boolean useSSE
     ) {
-        register(".*", new MapStorageRequestHandler(mapStorage, additionalHeaders));
+        register(".*", new MapStorageRequestHandler(mapStorage));
 
         if (useSSE) {
             register("live/sse", "", _ -> {

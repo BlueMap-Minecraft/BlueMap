@@ -26,7 +26,6 @@ package de.bluecolored.bluemap.common.web;
 
 import de.bluecolored.bluemap.common.web.http.*;
 import de.bluecolored.bluemap.core.logger.Logger;
-import java.util.Map;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.Setter;
@@ -46,11 +45,9 @@ import java.util.concurrent.TimeUnit;
 public class FileRequestHandler implements HttpRequestHandler {
 
     private @NonNull Path webRoot;
-    private @NonNull Map<String, String> additionalHeaders;
 
-    public FileRequestHandler(Path webRoot, Map<String, String> additionalHeaders) {
+    public FileRequestHandler(Path webRoot) {
         this.webRoot = webRoot.normalize();
-        this.additionalHeaders = additionalHeaders;
     }
 
     @Override
@@ -139,12 +136,6 @@ public class FileRequestHandler implements HttpRequestHandler {
         //create response
         HttpResponse response = new HttpResponse(HttpStatusCode.OK);
 
-        response.addHeader("Cache-Control", "public");
-        response.addHeader("Cache-Control", "max-age=" + TimeUnit.DAYS.toSeconds(1));
-
-        additionalHeaders.forEach(response::addHeader);
-
-        //headers after here will not be overwritten by additional headers from config
         response.addHeader("ETag", eTag);
         if (lastModified > 0) response.addHeader("Last-Modified", DateTimeFormatter.RFC_1123_DATE_TIME.format(Instant
                 .ofEpochMilli(lastModified)
