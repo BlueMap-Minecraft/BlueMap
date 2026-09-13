@@ -49,6 +49,8 @@ updates:
         versions: [">=4.27.0"] # depends on paper
       - dependency-name: "com.mojang:brigadier"
         versions: [">=1.4.0"] # depends on paper, fabric, forge, neoforge
+      - dependency-name: "org.spongepowered:configurate-*"
+        versions: [">=4.3.0"] # depends on sponge
       - dependency-name: "com.flowpowered:flow-math"
         update-types: ["version-update:semver-major"] # no breaking api change
       - dependency-name: "com.google.code.gson:gson"
