@@ -28,7 +28,6 @@ updates:
       - dependency-name: "org.jetbrains:annotations"
       - dependency-name: "org.junit*"
       - dependency-name: "org.projectlombok:lombok"
-      - dependency-name: "at.yawk.lz4:lz4-java"
 
       # plugins
       - dependency-name: "io.github.themrmilchmann.curseforge-publish"
@@ -46,7 +45,7 @@ updates:
 
     ignore:
       - dependency-name: "net.kyori:adventure-*"
-        versions: [">=4.27.0"] # depends on paper
+        versions: [">=4.27.0"] # depends on paper and sponge
       - dependency-name: "com.mojang:brigadier"
         versions: [">=1.4.0"] # depends on paper, fabric, forge, neoforge
       - dependency-name: "org.spongepowered:configurate-*"
