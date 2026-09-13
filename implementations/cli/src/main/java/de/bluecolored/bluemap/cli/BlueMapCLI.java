@@ -282,7 +282,7 @@ public class BlueMapCLI {
         RoutingRequestHandler routingRequestHandler = new RoutingRequestHandler();
 
         // default route
-        routingRequestHandler.register(".*", new BlueMapResponseModifier(new FileRequestHandler(config.getWebroot()), config.getAdditionalHeaders()));
+        routingRequestHandler.register(".*", new FileRequestHandler(config.getWebroot()));
 
         // map route
         for (var mapConfigEntry : blueMap.getConfig().getMapConfigs().entrySet()) {
@@ -297,7 +297,7 @@ public class BlueMapCLI {
             routingRequestHandler.register(
                     "maps/" + Pattern.quote(mapConfigEntry.getKey()) + "/(.*)",
                     "$1",
-                    new BlueMapResponseModifier(mapRequestHandler, config.getAdditionalHeaders())
+                    mapRequestHandler
             );
         }
 

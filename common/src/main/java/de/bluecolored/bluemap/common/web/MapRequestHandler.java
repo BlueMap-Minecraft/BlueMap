@@ -28,13 +28,11 @@ import de.bluecolored.bluemap.common.web.http.HttpResponse;
 import de.bluecolored.bluemap.common.web.http.HttpStatusCode;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.storage.MapStorage;
-import java.util.Map;
 import org.jetbrains.annotations.Nullable;
 
 import com.flowpowered.math.vector.Vector2i;
 
 import java.io.Closeable;
-import java.io.IOException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
