@@ -14,7 +14,7 @@ val minecraftVersion = "26.1"
 val fabricLoaderVersion = "0.18.4"
 val fabricApiVersion = "0.144.0+26.1"
 
-val shadowInclude: Configuration by configurations.creating
+val shadowInclude: Configuration = configurations.create("shadowInclude")
 configurations.api.get().extendsFrom(shadowInclude)
 
 dependencies {

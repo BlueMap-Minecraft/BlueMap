@@ -14,7 +14,7 @@ val supportedMinecraftVersions = listOf(
 val minecraftVersion = supportedMinecraftVersions.first()
 val forgeVersion = "62.0.1"
 
-val shadowInclude: Configuration by configurations.creating
+val shadowInclude: Configuration = configurations.create("shadowInclude")
 configurations.api.get().extendsFrom(shadowInclude)
 jarJar.register();
 

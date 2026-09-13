@@ -13,7 +13,7 @@ val supportedMinecraftVersions = listOf(
 val minecraftVersion = supportedMinecraftVersions.first()
 val neoVersion = "26.1.0.0-alpha.15+pre-3"
 
-val shadowInclude: Configuration by configurations.creating
+val shadowInclude: Configuration = configurations.create("shadowInclude")
 configurations.api.get().extendsFrom(shadowInclude)
 
 neoForge {
