@@ -12,7 +12,7 @@
     "hammerjs": "^2.0.8",
     "three": "^0.147.0",
     "vue": "^3.2.45",
-    "vue-i18n": "^9.14.5",
+    "vue-i18n": "^11.4.10",
     "hocon-parser": "^1.0.1"
   },
   "devDependencies": {
