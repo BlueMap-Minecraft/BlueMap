@@ -28,25 +28,24 @@ import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.Keyed;
 import de.bluecolored.bluemap.core.util.Registry;
 import de.bluecolored.bluemap.core.util.math.Color;
+import de.bluecolored.bluemap.core.util.math.SimplexNoise;
 import de.bluecolored.bluemap.core.world.block.BlockAccess;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Random;
+
 public interface GrassColorModifier extends Keyed, ColorModifier {
+
+    SimplexNoise SWAMP_GRASS_NOISE = new SimplexNoise(new Random(2345L));
 
     GrassColorModifier NONE = new Impl(Key.minecraft("none"), (BlockAccess _, Color _) -> {});
     GrassColorModifier DARK_FOREST = new Impl(Key.minecraft("dark_forest"), (BlockAccess _, Color color) ->
             color.set(((color.getInt() & 0xfefefe) + 0x28340a >> 1) | 0xff000000, true)
     );
-    GrassColorModifier SWAMP = new Impl(Key.minecraft("swamp"), (BlockAccess _, Color color) -> {
-        color.set(0xff6a7039, true);
-
-        /* Vanilla code with noise:
-        double f = FOLIAGE_NOISE.sample(block.getX() * 0.0225, block.getZ() * 0.0225, false);
-
-        if (f < -0.1) color.set(5011004)
-        else color.set(6975545);
-        */
+    GrassColorModifier SWAMP = new Impl(Key.minecraft("swamp"), (BlockAccess block, Color color) -> {
+        double f = SWAMP_GRASS_NOISE.getValue(block.getX() * 0.0225, block.getZ() * 0.0225);
+        color.set(f < -0.1 ? 0xff4c763c : 0xff6a7039, true);
     });
 
     Registry<GrassColorModifier> REGISTRY = new Registry<>(
