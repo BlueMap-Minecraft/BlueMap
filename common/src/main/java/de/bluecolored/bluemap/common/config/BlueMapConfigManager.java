@@ -39,10 +39,7 @@ import lombok.NonNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
+import java.nio.file.*;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Stream;
@@ -115,6 +112,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
     private CoreConfig loadCoreConfig(Path defaultDataFolder, boolean useMetricsConfig, boolean isCli) throws ConfigurationException {
         Path configFile = configManager.resolveConfigFile(CORE_CONFIG_NAME);
         Path configFolder = configFile.getParent();
+        String separator = getSeparator(defaultDataFolder.getFileSystem());
 
         if (!Files.exists(configFile)) {
             try {
@@ -132,7 +130,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
                                 .setVariable("default-thread-priority", String.valueOf(Thread.NORM_PRIORITY))
                                 .setConditional("update-interval-u-flag", isCli)
                                 .setVariable("logfile", formatPath(defaultDataFolder.resolve("logs").resolve("debug.log")))
-                                .setVariable("logfile-with-time", formatPath(defaultDataFolder.resolve("logs")) + "/debug_%1$tF_%<tH-%<tM-%<tS.log")
+                                .setVariable("logfile-with-time", formatPath(defaultDataFolder.resolve("logs")) + separator + "debug_%1$tF_%<tH-%<tM-%<tS.log")
                                 .build(),
                         StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                 );
@@ -162,6 +160,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
     private WebserverConfig loadWebserverConfig(Path defaultWebroot, Path dataRoot) throws ConfigurationException {
         Path configFile = configManager.resolveConfigFile(WEBSERVER_CONFIG_NAME);
         Path configFolder = configFile.getParent();
+        String separator = getSeparator(defaultWebroot.getFileSystem());
 
         if (!Files.exists(configFile)) {
             try {
@@ -171,7 +170,7 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
                         configManager.loadConfigTemplate(WEBSERVER_CONFIG_NAME)
                                 .setVariable("webroot", formatPath(defaultWebroot))
                                 .setVariable("logfile", formatPath(dataRoot.resolve("logs").resolve("webserver.log")))
-                                .setVariable("logfile-with-time", formatPath(dataRoot.resolve("logs")) + "/webserver_%1$tF_%<tH-%<tM-%<tS.log")
+                                .setVariable("logfile-with-time", formatPath(dataRoot.resolve("logs")) + separator + "webserver_%1$tF_%<tH-%<tM-%<tS.log")
                                 .build(),
                         StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING
                 );
@@ -460,6 +459,17 @@ public class BlueMapConfigManager implements BlueMapConfiguration {
         formatted = formatted.replace("\\", "\\\\");
 
         return formatted;
+    }
+
+    public static String getSeparator(FileSystem fs) {
+        String separator = fs.getSeparator();
+        if (separator.equals("/")) return separator;
+
+        try {
+            if (fs.getPath("separator", "check").equals(fs.getPath("separator/check"))) return "/";
+        } catch (InvalidPathException ignore) {}
+
+        return separator;
     }
 
 }
