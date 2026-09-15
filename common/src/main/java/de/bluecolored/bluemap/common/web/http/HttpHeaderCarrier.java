@@ -36,11 +36,15 @@ public interface HttpHeaderCarrier {
     }
 
     default void addHeader(String name, String... values) {
-        getHeaders().computeIfAbsent(name, HttpHeader::new).add(values);
+        getHeaders().computeIfAbsent(name.toLowerCase(Locale.ROOT), HttpHeader::new).add(values);
     }
 
     default void setHeaderIfAbsent(String name, String... values) {
         getHeaders().putIfAbsent(name.toLowerCase(Locale.ROOT), new HttpHeader(name, values));
+    }
+
+    default void removeHeader(String name) {
+        getHeaders().remove(name.toLowerCase(Locale.ROOT));
     }
 
     default HttpHeader getHeader(String key) {

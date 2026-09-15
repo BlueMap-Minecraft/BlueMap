@@ -78,6 +78,11 @@ public class MapRequestHandler extends RoutingRequestHandler implements Closeabl
                 // attempt to turn off buffering in upstream proxy
                 response.setHeader("X-Accel-Buffering", "no");
 
+                // disallow other additional-headers that change cache-control
+                response.removeHeader("Cloudflare-CDN-Cache-Control");
+                response.removeHeader("CDN-Cache-Control");
+                response.removeHeader("Surrogate-Control");
+
                 response.setBody(sseConnections::handleConnection);
                 return response;
             });
