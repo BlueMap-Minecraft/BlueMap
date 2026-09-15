@@ -6,7 +6,8 @@ plugins {
 
 val supportedMinecraftVersions = listOf(
     "26.1.1", "26.1.2",
-    "26.2"
+    "26.2",
+    "26.3"
 )
 
 val apiVersion = "26.1.1" // paper-version but without minor
