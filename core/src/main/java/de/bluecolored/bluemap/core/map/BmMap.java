@@ -132,6 +132,7 @@ public class BmMap {
         this.lastSaveTime = -1;
 
         saveMapSettings();
+        savePlayerState();
     }
 
     public void renderTile(Vector2i tile) {
@@ -167,7 +168,6 @@ public class BmMap {
         mapChunkState.save();
         mapRegionState.save();
         saveMarkerState();
-        savePlayerState();
         saveMapSettings();
 
         // only save texture gallery if not present in storage
