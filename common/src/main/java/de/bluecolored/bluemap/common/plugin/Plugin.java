@@ -464,8 +464,10 @@ public class Plugin implements ServerEventListener {
                 save();
 
                 // specifically save empty (disabled) players to the loaded maps
-                for (BmMap map : blueMap.getMaps().values()) {
-                    map.savePlayerState();
+                if (blueMap != null) {
+                    for (BmMap map : blueMap.getMaps().values()) {
+                        map.savePlayerState();
+                    }
                 }
 
                 // stop render-manager
