@@ -15,7 +15,7 @@ node_modules/
 
 *.launch
 
-release.md
+release*.md
 
 # exclude generated resource
 common/src/main/resources/de/bluecolored/bluemap/webapp.zip
