@@ -73,15 +73,14 @@ public class MapRequestHandler extends RoutingRequestHandler implements Closeabl
             register("live/sse", "", _ -> {
                 HttpResponse response = new HttpResponse(HttpStatusCode.OK);
                 response.setHeader("Content-Type", "text/event-stream");
-                response.setHeader("Cache-Control", "no-cache");
+                response.setHeader("Cache-Control", "no-store");
+                response.setHeader("Cloudflare-CDN-Cache-Control", "no-store");
+                response.setHeader("CDN-Cache-Control", "no-store");
+                response.setHeader("Surrogate-Control", "no-store");
 
                 // attempt to turn off buffering in upstream proxy
                 response.setHeader("X-Accel-Buffering", "no");
 
-                // disallow other additional-headers that change cache-control
-                response.removeHeader("Cloudflare-CDN-Cache-Control");
-                response.removeHeader("CDN-Cache-Control");
-                response.removeHeader("Surrogate-Control");
 
                 response.setBody(sseConnections::handleConnection);
                 return response;
