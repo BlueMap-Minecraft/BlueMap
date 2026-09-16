@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-import {Color, UniformsUtils} from "three";
+import {Color, SRGBColorSpace, UniformsUtils} from "three";
 import {LineMaterial} from "three/examples/jsm/lines/LineMaterial";
 import {LineGeometry} from "three/examples/jsm/lines/LineGeometry";
 import {Line2} from "three/examples/jsm/lines/Line2";
@@ -114,7 +114,7 @@ export class LineMarker extends ObjectMarker {
 
         // update line-color
         let lc = markerData.lineColor || {};
-        this.line.color.setRGB((lc.r || 0) / 255, (lc.g || 0) / 255, (lc.b || 0) / 255);
+        this.line.color.setRGB((lc.r || 0) / 255, (lc.g || 0) / 255, (lc.b || 0) / 255, SRGBColorSpace);
         this.line.opacity = lc.a || 0;
 
         // update min/max distances

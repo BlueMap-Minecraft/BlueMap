@@ -22,7 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-import {Color, DoubleSide, Mesh, ShaderMaterial, Shape, ShapeGeometry, UniformsUtils, Vector2} from "three";
+import {Color, DoubleSide, Mesh, ShaderMaterial, Shape, ShapeGeometry, SRGBColorSpace, UniformsUtils, Vector2} from "three";
 import {LineMaterial} from "three/examples/jsm/lines/LineMaterial";
 import {MARKER_FILL_VERTEX_SHADER} from "./MarkerFillVertexShader";
 import {MARKER_FILL_FRAGMENT_SHADER} from "./MarkerFillFragmentShader";
@@ -118,7 +118,7 @@ export class ShapeMarker extends ObjectMarker {
 
         // update border-color
         let bc = markerData.lineColor || markerData.borderColor || {}; //"borderColor" for backwards compatibility
-        this.border.color.setRGB((bc.r || 0) / 255, (bc.g || 0) / 255, (bc.b || 0) / 255);
+        this.border.color.setRGB((bc.r || 0) / 255, (bc.g || 0) / 255, (bc.b || 0) / 255, SRGBColorSpace);
         this.border.opacity = bc.a || 0;
 
         // update fill-color
