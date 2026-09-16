@@ -83,6 +83,7 @@ public class VersionManifest {
     }
 
     private void validate() throws InvalidVersionException {
+        latest.validate();
         for (Version version : versions) version.validate();
     }
 
@@ -110,6 +111,11 @@ public class VersionManifest {
     public static class Latest {
         private String release;
         private String snapshot;
+
+        private void validate() throws InvalidVersionException {
+            validateId(release);
+            validateId(snapshot);
+        }
     }
 
     @Getter
@@ -139,7 +145,7 @@ public class VersionManifest {
 
         private void validate() throws InvalidVersionException {
             if (!url.startsWith(DOMAIN)) throw new InvalidVersionException("Invalid version manifest URL: " + url);
-            if (id.contains("/") || id.contains("..") || id.contains("\\")) throw new InvalidVersionException("Invalid version manifest ID: " + id);
+            validateId(id);
         }
 
         @Override
@@ -190,6 +196,10 @@ public class VersionManifest {
         private InvalidVersionException(String message) {
             super(message);
         }
+    }
+
+    private static void validateId(String id) {
+        if (id.contains("/") || id.contains("..") || id.contains("\\")) throw new InvalidVersionException("Invalid version manifest ID: " + id);
     }
 
 }
