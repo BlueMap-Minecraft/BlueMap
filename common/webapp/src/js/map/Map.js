@@ -138,7 +138,6 @@ export class Map {
 									revalidatedUrls,
 									this.data.clientDecompression
 								), this.onTileLoad("hires"), this.onTileUnload("hires"), this.events);
-								this.hiresTileManager.scene.matrixWorldAutoUpdate = false;
 
 								this.lowresTileManager = [];
 								for (let i = 0; i < this.data.lowres.lodCount; i++) {
@@ -152,7 +151,6 @@ export class Map {
 										async () => {},
 										revalidatedUrls
 									), this.onTileLoad("lowres"), this.onTileUnload("lowres"), this.events);
-									this.lowresTileManager[i].scene.matrixWorldAutoUpdate = false;
 								}
 
                 alert(this.events, `Map '${this.data.id}' is loaded.`, "fine");
