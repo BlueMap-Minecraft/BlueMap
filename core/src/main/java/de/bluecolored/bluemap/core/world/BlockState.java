@@ -28,8 +28,6 @@ import de.bluecolored.bluemap.core.util.Key;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import static de.bluecolored.bluemap.core.util.StringUtil.intern;
 
@@ -40,8 +38,6 @@ import static de.bluecolored.bluemap.core.util.StringUtil.intern;
  * <i>The implementation of this class has to be thread-save!</i><br>
  */
 public class BlockState {
-
-    private static final Pattern BLOCKSTATE_SERIALIZATION_PATTERN = Pattern.compile("^(.+?)(?:\\[(.*)])?$");
 
     private static final Key MISSING_ID = Key.bluemap("missing");
     private static final Key AIR_ID = Key.minecraft("air");
@@ -176,24 +172,25 @@ public class BlockState {
 
     public static BlockState fromString(String serializedBlockState) throws IllegalArgumentException {
         try {
-            Matcher m = BLOCKSTATE_SERIALIZATION_PATTERN.matcher(serializedBlockState);
+            String blockId = serializedBlockState;
+            String propertiesString = null;
 
-            if (!m.find())
-                throw new IllegalArgumentException("'" + serializedBlockState + "' could not be parsed to a BlockState!");
+            int bracketIndex = serializedBlockState.indexOf('[');
+            if (bracketIndex >= 0 && serializedBlockState.endsWith("]")) {
+                blockId = serializedBlockState.substring(0, bracketIndex);
+                propertiesString = serializedBlockState.substring(bracketIndex + 1, serializedBlockState.length() - 1);
+            }
 
             Map<String, String> pt = new HashMap<>();
-            String g2 = m.group(2);
-            if (g2 != null && !g2.isEmpty()){
-                String[] propertyStrings = g2.trim().split(",");
+            if (propertiesString != null && !propertiesString.isEmpty()){
+                String[] propertyStrings = propertiesString.trim().split(",");
                 for (String s : propertyStrings){
                     String[] kv = s.split("=", 2);
                     pt.put(kv[0], kv[1]);
                 }
             }
 
-            String blockId = m.group(1).trim();
-
-            return new BlockState(Key.parse(blockId), pt);
+            return new BlockState(Key.parse(blockId.trim()), pt);
         } catch (RuntimeException ex) {
             throw new IllegalArgumentException("'" + serializedBlockState + "' could not be parsed to a BlockState!");
         }
