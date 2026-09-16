@@ -1,4 +1,4 @@
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { readdirSync } from "node:fs";
 import path from "node:path";
 
@@ -6,7 +6,10 @@ import path from "node:path";
 process.env.TZ = "Europe/Berlin";
 
 function parse(str) {
-    const blame = execSync(`git blame --porcelain ${str}`).toString("utf8").trim().split("\n");
+    const blame = execFileSync("git", ["blame", "--porcelain", str])
+        .toString("utf8")
+        .trim()
+        .split("\n");
     const commitMap = new Map();
     const nodes = [];
     const path = [];
