@@ -102,8 +102,8 @@ public class MinecraftVersion {
             if (version.compareTo(resourcePackVersion) > 0) resourcePackVersion = version;
             if (version.compareTo(dataPackVersion) > 0) dataPackVersion = version;
 
-            resourcePack = dataRoot.resolve(getClientVersionFileName(resourcePackVersion.getId()));
-            dataPack = dataRoot.resolve(getClientVersionFileName(dataPackVersion.getId()));
+            resourcePack = getClientVersionFile(dataRoot, resourcePackVersion.getId());
+            dataPack = getClientVersionFile(dataRoot, dataPackVersion.getId());
 
             if (allowDownload) {
                 if (!Files.exists(resourcePack)) download(resourcePackVersion, resourcePack);
@@ -115,7 +115,7 @@ public class MinecraftVersion {
 
             Logger.global.logWarning("Failed to fetch version-info from mojang-servers: " + ex);
 
-            resourcePack = dataRoot.resolve(getClientVersionFileName(id));
+            resourcePack = getClientVersionFile(dataRoot, id);
             dataPack = resourcePack;
         }
 
@@ -182,8 +182,10 @@ public class MinecraftVersion {
 
     }
 
-    private static String getClientVersionFileName(String versionId) {
-        return "minecraft-client-" + versionId + ".jar";
+    private static Path getClientVersionFile(Path dataRoot, String versionId) {
+        Path file = dataRoot.resolve("minecraft-client-" + versionId + ".jar");
+        if (!file.normalize().startsWith(dataRoot)) throw new IllegalArgumentException("Invalid version-id: " + versionId);
+        return file;
     }
 
     public static byte[] hexStringToByteArray(String hexString) {
