@@ -89,17 +89,19 @@ public class MapUpdateService extends Thread {
     public void run() {
         verboseLog.accept("Started watching map '" + map.getId() + "' for updates...");
 
-        Duration delay = Instant.now().until(lastFullUpdate.plus(fullUpdateInterval));
-        if (delay.isNegative()) delay = Duration.ZERO;
-        synchronized (MapUpdateService.class) {
-            if (timer == null) timer = new Timer("BlueMap-MapUpdateService-Timer", true);
-            timer.scheduleAtFixedRate(new TimerTask() {
-                @Override
-                public void run() {
-                    verboseLog.accept("Start updating map '" + map.getId() + "'...");
-                    renderManager.scheduleRenderTaskNext(MapUpdatePreparationTask.updateMap(map, renderManager));
-                }
-            }, delay.toMillis(), fullUpdateInterval.toMillis());
+        if (fullUpdateInterval.isPositive()) {
+            Duration delay = Instant.now().until(lastFullUpdate.plus(fullUpdateInterval));
+            if (delay.isNegative()) delay = Duration.ZERO;
+            synchronized (MapUpdateService.class) {
+                if (timer == null) timer = new Timer("BlueMap-MapUpdateService-Timer", true);
+                timer.scheduleAtFixedRate(new TimerTask() {
+                    @Override
+                    public void run() {
+                        verboseLog.accept("Start updating map '" + map.getId() + "'...");
+                        renderManager.scheduleRenderTaskNext(MapUpdatePreparationTask.updateMap(map, renderManager));
+                    }
+                }, delay.toMillis(), fullUpdateInterval.toMillis());
+            }
         }
 
         try {
