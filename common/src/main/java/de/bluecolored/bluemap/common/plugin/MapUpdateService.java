@@ -33,12 +33,16 @@ import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.BmMap;
 import de.bluecolored.bluemap.core.util.Caches;
 import de.bluecolored.bluemap.core.util.WatchService;
+import lombok.NonNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -61,14 +65,17 @@ public class MapUpdateService extends Thread {
     private final Cache<Vector2i, Long> lastUpdateTimes;
 
     private final Consumer<String> verboseLog;
+    private final Consumer<Instant> onFullUpdate;
 
+    @lombok.Builder
     public MapUpdateService(
-            RenderManager renderManager,
-            BmMap map,
-            Instant lastFullUpdate,
-            Duration fullUpdateInterval,
-            Duration regionUpdateCooldown,
-            boolean verbose
+            @NonNull RenderManager renderManager,
+            @NonNull BmMap map,
+            @NonNull Instant lastFullUpdate,
+            @NonNull Duration fullUpdateInterval,
+            @NonNull Duration regionUpdateCooldown,
+            boolean verbose,
+            @Nullable Consumer<Instant> onFullUpdate
     ) throws IOException {
         super("BlueMap-MapUpdateService-" + NEXT_ID.getAndIncrement());
         this.renderManager = renderManager;
@@ -83,6 +90,7 @@ public class MapUpdateService extends Thread {
                 .build();
         this.watchService = map.getWorld().createRegionWatchService();
         this.verboseLog = verbose ? Logger.global::logInfo : Logger.global::logDebug;
+        this.onFullUpdate = onFullUpdate != null ? onFullUpdate : instant -> {};
     }
 
     @Override
@@ -98,6 +106,7 @@ public class MapUpdateService extends Thread {
                     @Override
                     public void run() {
                         verboseLog.accept("Start updating map '" + map.getId() + "'...");
+                        onFullUpdate.accept(Instant.now());
                         renderManager.scheduleRenderTaskNext(MapUpdatePreparationTask.updateMap(map, renderManager));
                     }
                 }, delay.toMillis(), fullUpdateInterval.toMillis());

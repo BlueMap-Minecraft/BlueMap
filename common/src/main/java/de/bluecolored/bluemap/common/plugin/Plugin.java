@@ -659,14 +659,14 @@ public class Plugin implements ServerEventListener {
         if (blueMap == null) return;
 
         try {
-            MapUpdateService watcher = new MapUpdateService(
-                    renderManager,
-                    map,
-                    pluginState.getMapState(map).getLastFullUpdate(),
-                    blueMap.getConfig().getCoreConfig().getFullUpdateInterval(),
-                    blueMap.getConfig().getCoreConfig().getUpdateCooldown(),
-                    false
-            );
+            MapUpdateService watcher = MapUpdateService.builder()
+                    .renderManager(renderManager)
+                    .map(map)
+                    .lastFullUpdate(pluginState.getMapState(map).getLastFullUpdate())
+                    .fullUpdateInterval(blueMap.getConfig().getCoreConfig().getFullUpdateInterval())
+                    .regionUpdateCooldown(blueMap.getConfig().getCoreConfig().getUpdateCooldown())
+                    .onFullUpdate(instant -> pluginState.getMapState(map).setLastFullUpdate(instant))
+                    .build();
             watcher.start();
             mapUpdateServices.put(map.getId(), watcher);
         } catch (IOException ex) {

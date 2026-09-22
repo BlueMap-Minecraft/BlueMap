@@ -104,14 +104,14 @@ public class BlueMapCLI {
         if (watch) {
             for (BmMap map : maps.values()) {
                 try {
-                    MapUpdateService watcher = new MapUpdateService(
-                            renderManager,
-                            map,
-                            Instant.now(),
-                            blueMap.getConfig().getCoreConfig().getFullUpdateInterval(),
-                            blueMap.getConfig().getCoreConfig().getUpdateCooldown(),
-                            true
-                    );
+                    MapUpdateService watcher = MapUpdateService.builder()
+                            .renderManager(renderManager)
+                            .map(map)
+                            .lastFullUpdate(Instant.now())
+                            .fullUpdateInterval(blueMap.getConfig().getCoreConfig().getFullUpdateInterval())
+                            .regionUpdateCooldown(blueMap.getConfig().getCoreConfig().getUpdateCooldown())
+                            .verbose(true)
+                            .build();
                     watcher.start();
                     mapUpdateServices.add(watcher);
                 } catch (IOException ex) {
