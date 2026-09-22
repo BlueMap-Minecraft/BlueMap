@@ -46,10 +46,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
@@ -182,9 +179,12 @@ public class BmMap {
     }
 
     private TextureGallery loadTextureGallery() throws IOException {
-        try (CompressedInputStream in = storage.textures().read()){
-            if (in != null)
-                return TextureGallery.readTexturesFile(in.decompress());
+        try (CompressedInputStream compressedIn = storage.textures().read()){
+            if (compressedIn != null) {
+                try (InputStream in = compressedIn.decompress()) {
+                    return TextureGallery.readTexturesFile(in);
+                }
+            }
         } catch (IOException ex) {
             Logger.global.logError("Failed to load textures for map '" + getId() + "'!", ex);
         }

@@ -36,6 +36,7 @@ import de.bluecolored.bluenbt.TypeToken;
 import lombok.Getter;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -94,9 +95,12 @@ abstract class CellStorage<T extends CellStorage.Cell> {
     }
 
     private synchronized T loadCell(Vector2i pos) {
-        try (CompressedInputStream in = storage.read(pos.getX(), pos.getY())) {
-            if (in != null)
-                return BLUE_NBT.read(in.decompress(), type);
+        try (CompressedInputStream compressedIn = storage.read(pos.getX(), pos.getY())) {
+            if (compressedIn != null) {
+                try (InputStream in = compressedIn.decompress()) {
+                    return BLUE_NBT.read(in, type);
+                }
+            }
         } catch (IOException ex) {
             Logger.global.logError("Failed to load render-state cell " + pos, ex);
         } catch (RuntimeException ex) { // E.g. NoSuchElementException thrown by BlueNBT if there is a format error
