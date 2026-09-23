@@ -40,6 +40,7 @@ import java.sql.Driver;
 import java.sql.SQLException;
 import java.sql.SQLRecoverableException;
 import java.time.Duration;
+import java.util.Collection;
 import java.util.Map;
 import java.util.Properties;
 
@@ -50,14 +51,14 @@ public class Database implements Closeable {
     private final DataSource dataSource;
     private boolean isClosed = false;
 
-    public Database(String url, Map<String, String> properties, int maxPoolSize) {
+    public Database(String url, Map<String, String> properties, int maxPoolSize, Collection<String> connectionInitSql) {
         Properties props = new Properties();
         props.putAll(properties);
 
-        this.dataSource = createDataSource(new DriverManagerConnectionFactory(url, props), maxPoolSize);
+        this.dataSource = createDataSource(new DriverManagerConnectionFactory(url, props), maxPoolSize, connectionInitSql);
     }
 
-    public Database(String url, Map<String, String> properties, int maxPoolSize, Driver driver) {
+    public Database(String url, Map<String, String> properties, int maxPoolSize, Collection<String> connectionInitSql, Driver driver) {
         Properties props = new Properties();
         props.putAll(properties);
 
@@ -67,7 +68,7 @@ public class Database implements Closeable {
                 props
         );
 
-        this.dataSource = createDataSource(connectionFactory, maxPoolSize);
+        this.dataSource = createDataSource(connectionFactory, maxPoolSize, connectionInitSql);
     }
 
     public void run(ConnectionConsumer action) throws IOException {
@@ -121,7 +122,7 @@ public class Database implements Closeable {
         }
     }
 
-    private DataSource createDataSource(ConnectionFactory connectionFactory, int maxPoolSize) {
+    private DataSource createDataSource(ConnectionFactory connectionFactory, int maxPoolSize, Collection<String> connectionInitSql) {
         PoolableConnectionFactory poolableConnectionFactory =
                 new PoolableConnectionFactory(() -> {
                     Logger.global.logDebug("Creating new SQL-Connection...");
@@ -133,6 +134,8 @@ public class Database implements Closeable {
         poolableConnectionFactory.setAutoCommitOnReturn(false);
         poolableConnectionFactory.setRollbackOnReturn(true);
         poolableConnectionFactory.setFastFailValidation(true);
+        if (!connectionInitSql.isEmpty())
+            poolableConnectionFactory.setConnectionInitSql(connectionInitSql);
 
         GenericObjectPoolConfig<PoolableConnection> objectPoolConfig = new GenericObjectPoolConfig<>();
         objectPoolConfig.setTestWhileIdle(true);
@@ -142,7 +145,7 @@ public class Database implements Closeable {
         objectPoolConfig.setMinIdle(1);
         objectPoolConfig.setMaxIdle(Runtime.getRuntime().availableProcessors());
         objectPoolConfig.setMaxTotal(maxPoolSize);
-        objectPoolConfig.setMaxWaitMillis(Duration.ofSeconds(30).toMillis());
+        objectPoolConfig.setMaxWait(Duration.ofSeconds(30));
 
         ObjectPool<PoolableConnection> connectionPool =
                 new GenericObjectPool<>(poolableConnectionFactory, objectPoolConfig);
