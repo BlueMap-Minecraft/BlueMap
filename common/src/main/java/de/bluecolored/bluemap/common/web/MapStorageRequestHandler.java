@@ -135,9 +135,7 @@ public class MapStorageRequestHandler implements HttpRequestHandler {
                 byte[] compressedData = byteOut.toByteArray();
                 response.setBody(new ByteArrayInputStream(compressedData));
             } else {
-                try (InputStream in = data.decompress()) {
-                    response.setBody(in);
-                }
+                response.setBody(data.decompress());
             }
         } else {
             if (compression == Compression.GZIP) {
