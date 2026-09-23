@@ -33,6 +33,7 @@ import de.bluecolored.bluemap.core.world.BlockState;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -72,26 +73,30 @@ public class DefaultBlockstatesConfig {
     }
 
     public void save(Path configFile) throws IOException {
-        // sort entries for a stable output
-        Map<Key, BlockState> sorted = new TreeMap<>(Comparator.comparing(Key::getFormatted));
-        sorted.putAll(mappings);
-
         Path folder = configFile.getParent();
         if (folder != null) Files.createDirectories(folder);
 
         try (BufferedWriter writer = Files.newBufferedWriter(configFile)) {
-            JsonWriter json = new JsonWriter(writer);
-            json.setIndent("  ");
-
-            json.beginObject();
-            for (Map.Entry<Key, BlockState> entry : sorted.entrySet()) {
-                json.name(entry.getKey().getFormatted());
-                json.value(entry.getValue().toString());
-            }
-            json.endObject();
-
-            json.flush();
+            save(writer);
         }
+    }
+
+    public void save(Writer writer) throws IOException {
+        // sort entries for a stable output
+        Map<Key, BlockState> sorted = new TreeMap<>(Comparator.comparing(Key::getFormatted));
+        sorted.putAll(mappings);
+
+        JsonWriter json = new JsonWriter(writer);
+        json.setIndent("  ");
+
+        json.beginObject();
+        for (Map.Entry<Key, BlockState> entry : sorted.entrySet()) {
+            json.name(entry.getKey().getFormatted());
+            json.value(entry.getValue().toString());
+        }
+        json.endObject();
+
+        json.flush();
     }
 
     public BlockState get(Key key) {

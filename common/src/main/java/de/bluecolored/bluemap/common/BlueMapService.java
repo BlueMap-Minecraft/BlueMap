@@ -45,17 +45,17 @@ import de.bluecolored.bluemap.core.world.WorldLoader;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.Closeable;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 /**
  * This is the attempt to generalize as many actions as possible to have CLI and Plugins run on the same general setup-code.
@@ -449,12 +449,16 @@ public class BlueMapService implements Closeable {
                             .put(entry.getKey(), entry.getValue());
                 }
 
-                try (FileSystem zipFs = FileSystems.newFileSystem(defaultBlockstatesFile, Map.of("create", "true"))) {
+                try (
+                        ZipOutputStream zipOut = new ZipOutputStream(new BufferedOutputStream(Files.newOutputStream(defaultBlockstatesFile)));
+                        Writer writer = new OutputStreamWriter(zipOut, StandardCharsets.UTF_8)
+                ) {
                     for (Map.Entry<String, Map<Key, BlockState>> namespaceEntry : defaultBlockStatesByNamespace.entrySet()) {
-                        Path jsonFile = zipFs.getPath("data", namespaceEntry.getKey(), "defaultBlockstates.json");
+                        zipOut.putNextEntry(new ZipEntry("data/" + namespaceEntry.getKey() + "/defaultBlockstates.json"));
                         DefaultBlockstatesConfig blockstatesConfig = new DefaultBlockstatesConfig();
                         blockstatesConfig.load(namespaceEntry.getValue());
-                        blockstatesConfig.save(jsonFile);
+                        blockstatesConfig.save(writer);
+                        zipOut.closeEntry();
                     }
                 }
             } catch (IOException ex) {
