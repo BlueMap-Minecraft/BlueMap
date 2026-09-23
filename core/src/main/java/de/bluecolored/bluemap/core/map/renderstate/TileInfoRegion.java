@@ -30,6 +30,7 @@ import de.bluecolored.bluenbt.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.Getter;
+import lombok.Setter;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -50,7 +51,7 @@ public class TileInfoRegion implements CellStorage.Cell {
     @NBTName("tile-states")
     private TileState[] tileStates;
 
-    @Getter
+    @Getter @Setter
     private transient boolean modified;
 
     private TileInfoRegion() {}

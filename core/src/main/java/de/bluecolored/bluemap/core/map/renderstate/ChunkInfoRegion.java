@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.core.map.renderstate;
 import de.bluecolored.bluenbt.NBTName;
 import de.bluecolored.bluenbt.NBTPostDeserialize;
 import lombok.Getter;
+import lombok.Setter;
 
 import static de.bluecolored.bluemap.core.map.renderstate.MapChunkState.SHIFT;
 
@@ -39,7 +40,7 @@ public class ChunkInfoRegion implements CellStorage.Cell {
     @NBTName("chunk-hashes")
     private int[] chunkHashes;
 
-    @Getter
+    @Getter @Setter
     private transient boolean modified;
 
     private ChunkInfoRegion() {}

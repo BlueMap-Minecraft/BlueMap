@@ -65,6 +65,9 @@ public final class WorldRegionUpdateTask implements MapRenderTask, SerializableR
     private volatile int atWork;
     private volatile boolean completed, cancelled;
 
+    // lazy cache of the last-updated timestamp for faster sorting
+    private long regionLastUpdated = -1;
+
     public WorldRegionUpdateTask(BmMap map, Vector2i regionPos) {
         this(map, regionPos, false);
     }
@@ -385,19 +388,23 @@ public final class WorldRegionUpdateTask implements MapRenderTask, SerializableR
         return chunksAreInhabited ? null : TileState.LOW_INHABITED_TIME;
     }
 
+    private long getRegionLastUpdated() {
+        if (regionLastUpdated == -1) {
+            Vector2i regionPos = getRegionPos();
+            regionLastUpdated = map.getMapRegionState().get(regionPos.getX(), regionPos.getY());
+        }
+
+        return regionLastUpdated;
+    }
+
     public static Comparator<WorldRegionUpdateTask> regionLastUpdatedComparator(final Comparator<WorldRegionUpdateTask> fallbackComparator) {
         return (task1, task2) -> {
-            long task1Modified = regionLastUpdated(task1);
-            long task2Modified = regionLastUpdated(task2);
+            long task1Modified = task1.getRegionLastUpdated();
+            long task2Modified = task2.getRegionLastUpdated();
             return task1Modified != task2Modified ?
                     Long.signum(task1Modified - task2Modified) :
                     fallbackComparator.compare(task1, task2);
         };
-    }
-
-    private static long regionLastUpdated(WorldRegionUpdateTask task) {
-        Vector2i regionPos =  task.getRegionPos();
-        return task.map.getMapRegionState().get(regionPos.getX(), regionPos.getY());
     }
 
     public static Comparator<WorldRegionUpdateTask> defaultComparator(final Vector2i centerRegion) {

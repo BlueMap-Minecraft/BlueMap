@@ -27,6 +27,7 @@ package de.bluecolored.bluemap.core.map.renderstate;
 import de.bluecolored.bluenbt.NBTName;
 import de.bluecolored.bluenbt.NBTPostDeserialize;
 import lombok.Getter;
+import lombok.Setter;
 
 import static de.bluecolored.bluemap.core.map.renderstate.MapRegionState.SHIFT;
 
@@ -39,7 +40,7 @@ public class RegionInfoRegion implements CellStorage.Cell {
     @NBTName("last-update-times")
     private int[] lastUpdateTimes;
 
-    @Getter
+    @Getter @Setter
     private transient boolean modified;
 
     private RegionInfoRegion() {}

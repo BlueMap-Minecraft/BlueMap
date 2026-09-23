@@ -25,9 +25,11 @@
 package de.bluecolored.bluemap.core.map.renderstate;
 
 import com.flowpowered.math.vector.Vector2i;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.storage.GridStorage;
 import de.bluecolored.bluemap.core.storage.compression.CompressedInputStream;
+import de.bluecolored.bluemap.core.util.Caches;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.nbt.PalettedArrayAdapter;
 import de.bluecolored.bluemap.core.util.nbt.RegistryAdapter;
@@ -38,8 +40,10 @@ import lombok.Getter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 abstract class CellStorage<T extends CellStorage.Cell> {
 
@@ -66,6 +70,13 @@ abstract class CellStorage<T extends CellStorage.Cell> {
         }
     };
 
+    private final LoadingCache<Vector2i, T> cellCache = Caches.with()
+            .softValues()
+            .maximumSize(10240)
+            .expireAfterWrite(10, TimeUnit.MINUTES)
+            .expireAfterAccess(1, TimeUnit.MINUTES)
+            .build(this::loadCell);
+
     public CellStorage(GridStorage storage, Class<T> type) {
         this.storage = storage;
         this.type = type;
@@ -77,6 +88,7 @@ abstract class CellStorage<T extends CellStorage.Cell> {
 
     public synchronized void reset() {
         cells.clear();
+        cellCache.invalidateAll();
     }
 
     T cell(int x, int z) {
@@ -84,7 +96,7 @@ abstract class CellStorage<T extends CellStorage.Cell> {
     }
 
     synchronized T cell(Vector2i pos) {
-        return cells.computeIfAbsent(pos, this::loadCell);
+        return cells.computeIfAbsent(pos, cellCache::get);
     }
 
     void forEach(CellConsumer<T> consumer) throws IOException {
@@ -121,6 +133,7 @@ abstract class CellStorage<T extends CellStorage.Cell> {
 
     private synchronized void saveCell(Vector2i pos, T cell) {
         if (!cell.isModified()) return;
+        cell.setModified(false);
         try (OutputStream in = storage.write(pos.getX(), pos.getY())) {
             BLUE_NBT.write(cell, in, type);
         } catch (IOException ex) {
@@ -129,7 +142,11 @@ abstract class CellStorage<T extends CellStorage.Cell> {
     }
 
     public interface Cell {
+
         boolean isModified();
+
+        void setModified(boolean modified);
+
     }
 
     @FunctionalInterface
