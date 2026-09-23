@@ -40,7 +40,6 @@ import lombok.Getter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -137,6 +136,7 @@ abstract class CellStorage<T extends CellStorage.Cell> {
         try (OutputStream in = storage.write(pos.getX(), pos.getY())) {
             BLUE_NBT.write(cell, in, type);
         } catch (IOException ex) {
+            cell.setModified(true);
             Logger.global.logError("Failed to save render-state cell " + pos, ex);
         }
     }
