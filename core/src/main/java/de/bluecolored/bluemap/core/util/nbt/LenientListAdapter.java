@@ -62,6 +62,8 @@ public class LenientListAdapter<E> implements TypeAdapter<List<E>> {
                 list.add(instance);
             } catch (IOException e) {
                 this.errorHandler.accept(e);
+            } catch (RuntimeException e) {
+                this.errorHandler.accept(new IOException("Failed to read list-entry", e));
             }
         }
         reader.endList();

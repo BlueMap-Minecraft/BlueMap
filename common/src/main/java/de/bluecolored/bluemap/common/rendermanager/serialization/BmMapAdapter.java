@@ -41,8 +41,9 @@ public class BmMapAdapter implements TypeAdapter<BmMap> {
 
     @Override
     public BmMap read(NBTReader reader) throws IOException {
-        BmMap map = blueMap.getMaps().get(reader.nextString());
-        if (map == null) throw new IOException("No map with id '" + reader.nextString() + "' loaded.");
+        String mapId = reader.nextString();
+        BmMap map = blueMap.getMaps().get(mapId);
+        if (map == null) throw new IOException("No map with id '" + mapId + "' loaded.");
         return map;
     }
 

@@ -612,12 +612,11 @@ public class Plugin implements ServerEventListener {
         // a bit of trickery to allow the RenderTaskAdapter to use itself recursively through BlueNBT's default serialization
         RenderTaskAdapter renderTaskAdapter = new RenderTaskAdapter();
         blueNBT.register(TypeToken.of(RenderTask.class), renderTaskAdapter);
-        renderTaskAdapter.init(blueNBT);
-
         blueNBT.register(
                 new TypeToken<>() {},
                 new LenientListAdapter<>(blueNBT, TypeToken.of(RenderTask.class), e -> Logger.global.logDebug("Failed to load render-task: " + e))
         );
+        renderTaskAdapter.init(blueNBT);
 
         return blueNBT;
     }
