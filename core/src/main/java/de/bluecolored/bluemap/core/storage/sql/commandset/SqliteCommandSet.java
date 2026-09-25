@@ -29,8 +29,8 @@ import org.intellij.lang.annotations.Language;
 
 public class SqliteCommandSet extends AbstractCommandSet {
 
-    public SqliteCommandSet(Database db) {
-        super(db);
+    public SqliteCommandSet(Database db, String tablePrefix) {
+        super(db, tablePrefix);
     }
 
     @Override
@@ -47,7 +47,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     @Language("sqlite")
     public String createMapTableStatement() {
         return """
-        CREATE TABLE IF NOT EXISTS `bluemap_map` (
+        CREATE TABLE IF NOT EXISTS `${prefix}map` (
          `id` INTEGER PRIMARY KEY AUTOINCREMENT,
          `map_id` TEXT UNIQUE NOT NULL
         ) STRICT
@@ -58,7 +58,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     @Language("sqlite")
     public String createCompressionTableStatement() {
         return """
-        CREATE TABLE IF NOT EXISTS `bluemap_compression` (
+        CREATE TABLE IF NOT EXISTS `${prefix}compression` (
          `id` INTEGER PRIMARY KEY AUTOINCREMENT,
          `key` TEXT UNIQUE NOT NULL
         ) STRICT
@@ -69,7 +69,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     @Language("sqlite")
     public String createItemStorageTableStatement() {
         return """
-        CREATE TABLE IF NOT EXISTS `bluemap_item_storage` (
+        CREATE TABLE IF NOT EXISTS `${prefix}item_storage` (
          `id` INTEGER PRIMARY KEY AUTOINCREMENT,
          `key` TEXT UNIQUE NOT NULL
         ) STRICT
@@ -80,25 +80,25 @@ public class SqliteCommandSet extends AbstractCommandSet {
     @Language("sqlite")
     public String createItemStorageDataTableStatement() {
         return """
-        CREATE TABLE IF NOT EXISTS `bluemap_item_storage_data` (
+        CREATE TABLE IF NOT EXISTS `${prefix}item_storage_data` (
          `map` INTEGER NOT NULL,
          `storage` INTEGER NOT NULL,
          `compression` INTEGER NOT NULL,
          `data` BLOB NOT NULL,
          PRIMARY KEY (`map`, `storage`),
-         CONSTRAINT `fk_bluemap_item_map`
+         CONSTRAINT `fk_${prefix}item_map`
           FOREIGN KEY (`map`)
-          REFERENCES `bluemap_map` (`id`)
+          REFERENCES `${prefix}map` (`id`)
           ON UPDATE RESTRICT
           ON DELETE CASCADE,
-         CONSTRAINT `fk_bluemap_item`
+         CONSTRAINT `fk_${prefix}item`
           FOREIGN KEY (`storage`)
-          REFERENCES `bluemap_item_storage` (`id`)
+          REFERENCES `${prefix}item_storage` (`id`)
           ON UPDATE RESTRICT
           ON DELETE CASCADE,
-         CONSTRAINT `fk_bluemap_item_compression`
+         CONSTRAINT `fk_${prefix}item_compression`
           FOREIGN KEY (`compression`)
-          REFERENCES `bluemap_compression` (`id`)
+          REFERENCES `${prefix}compression` (`id`)
           ON UPDATE RESTRICT
           ON DELETE CASCADE
         ) STRICT
@@ -109,7 +109,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     @Language("sqlite")
     public String createGridStorageTableStatement() {
         return """
-        CREATE TABLE IF NOT EXISTS `bluemap_grid_storage` (
+        CREATE TABLE IF NOT EXISTS `${prefix}grid_storage` (
          `id` INTEGER PRIMARY KEY AUTOINCREMENT,
          `key` TEXT UNIQUE NOT NULL
         ) STRICT
@@ -120,7 +120,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     @Language("sqlite")
     public String createGridStorageDataTableStatement() {
         return """
-        CREATE TABLE IF NOT EXISTS `bluemap_grid_storage_data` (
+        CREATE TABLE IF NOT EXISTS `${prefix}grid_storage_data` (
          `map` INTEGER NOT NULL,
          `storage` INTEGER NOT NULL,
          `x` INTEGER NOT NULL,
@@ -128,19 +128,19 @@ public class SqliteCommandSet extends AbstractCommandSet {
          `compression` INTEGER NOT NULL,
          `data` BLOB NOT NULL,
          PRIMARY KEY (`map`, `storage`, `x`, `z`),
-         CONSTRAINT `fk_bluemap_grid_map`
+         CONSTRAINT `fk_${prefix}grid_map`
           FOREIGN KEY (`map`)
-          REFERENCES `bluemap_map` (`id`)
+          REFERENCES `${prefix}map` (`id`)
           ON UPDATE RESTRICT
           ON DELETE CASCADE,
-         CONSTRAINT `fk_bluemap_grid`
+         CONSTRAINT `fk_${prefix}grid`
           FOREIGN KEY (`storage`)
-          REFERENCES `bluemap_grid_storage` (`id`)
+          REFERENCES `${prefix}grid_storage` (`id`)
           ON UPDATE RESTRICT
           ON DELETE CASCADE,
-         CONSTRAINT `fk_bluemap_grid_compression`
+         CONSTRAINT `fk_${prefix}grid_compression`
           FOREIGN KEY (`compression`)
-          REFERENCES `bluemap_compression` (`id`)
+          REFERENCES `${prefix}compression` (`id`)
           ON UPDATE RESTRICT
           ON DELETE CASCADE
         ) STRICT
@@ -152,7 +152,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String itemStorageWriteStatement() {
         return """
         REPLACE
-        INTO `bluemap_item_storage_data` (`map`, `storage`, `compression`, `data`)
+        INTO `${prefix}item_storage_data` (`map`, `storage`, `compression`, `data`)
         VALUES (?, ?, ?, ?)
         """;
     }
@@ -162,7 +162,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String itemStorageReadStatement() {
         return """
         SELECT `data`
-        FROM `bluemap_item_storage_data`
+        FROM `${prefix}item_storage_data`
         WHERE `map` = ?
         AND `storage` = ?
         AND `compression` = ?
@@ -174,7 +174,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String itemStorageDeleteStatement() {
         return """
         DELETE
-        FROM `bluemap_item_storage_data`
+        FROM `${prefix}item_storage_data`
         WHERE `map` = ?
         AND `storage` = ?
         """;
@@ -185,7 +185,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String itemStorageHasStatement() {
         return """
         SELECT COUNT(*) > 0
-        FROM `bluemap_item_storage_data`
+        FROM `${prefix}item_storage_data`
         WHERE `map` = ?
         AND `storage` = ?
         AND `compression` = ?
@@ -198,7 +198,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String gridStorageWriteStatement() {
         return """
         REPLACE
-        INTO `bluemap_grid_storage_data` (`map`, `storage`, `x`, `z`, `compression`, `data`)
+        INTO `${prefix}grid_storage_data` (`map`, `storage`, `x`, `z`, `compression`, `data`)
         VALUES (?, ?, ?, ?, ?, ?)
         """;
     }
@@ -208,7 +208,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String gridStorageReadStatement() {
         return """
         SELECT `data`
-        FROM `bluemap_grid_storage_data`
+        FROM `${prefix}grid_storage_data`
         WHERE `map` = ?
         AND `storage` = ?
         AND `x` = ?
@@ -222,7 +222,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String gridStorageDeleteStatement() {
         return """
         DELETE
-        FROM `bluemap_grid_storage_data`
+        FROM `${prefix}grid_storage_data`
         WHERE `map` = ?
         AND `storage` = ?
         AND `x` = ?
@@ -235,7 +235,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String gridStorageHasStatement() {
         return """
         SELECT COUNT(*) > 0
-        FROM `bluemap_grid_storage_data`
+        FROM `${prefix}grid_storage_data`
         WHERE `map` = ?
         AND `storage` = ?
         AND `x` = ?
@@ -249,7 +249,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String gridStorageListStatement() {
         return """
         SELECT `x`, `z`
-        FROM `bluemap_grid_storage_data`
+        FROM `${prefix}grid_storage_data`
         WHERE `map` = ?
         AND `storage` = ?
         AND `compression` = ?
@@ -262,7 +262,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String gridStorageCountMapItemsStatement() {
         return """
         SELECT COUNT(*)
-        FROM `bluemap_grid_storage_data`
+        FROM `${prefix}grid_storage_data`
         WHERE `map` = ?
         """;
     }
@@ -272,10 +272,10 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String gridStoragePurgeMapStatement() {
         return """
         DELETE
-        FROM `bluemap_grid_storage_data`
+        FROM `${prefix}grid_storage_data`
         WHERE ROWID IN (
          SELECT t.ROWID
-         FROM `bluemap_grid_storage_data` t
+         FROM `${prefix}grid_storage_data` t
          WHERE t.`map` = ?
          LIMIT ?
         )
@@ -287,7 +287,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String purgeMapStatement() {
         return """
         DELETE
-        FROM `bluemap_map`
+        FROM `${prefix}map`
         WHERE `id` = ?
         """;
     }
@@ -297,7 +297,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String hasMapStatement() {
         return """
         SELECT COUNT(*) > 0
-        FROM `bluemap_map` m
+        FROM `${prefix}map` m
         WHERE m.`map_id` = ?
         """;
     }
@@ -307,7 +307,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String listMapIdsStatement() {
         return """
         SELECT `map_id`
-        FROM `bluemap_map` m
+        FROM `${prefix}map` m
         LIMIT ? OFFSET ?
         """;
     }
@@ -317,7 +317,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String findMapKeyStatement() {
         return """
         SELECT `id`
-        FROM `bluemap_map`
+        FROM `${prefix}map`
         WHERE map_id = ?
         """;
     }
@@ -327,7 +327,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String createMapKeyStatement() {
         return """
         INSERT
-        INTO `bluemap_map` (`map_id`)
+        INTO `${prefix}map` (`map_id`)
         VALUES (?)
         """;
     }
@@ -337,7 +337,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String findCompressionKeyStatement() {
         return """
         SELECT `id`
-        FROM `bluemap_compression`
+        FROM `${prefix}compression`
         WHERE `key` = ?
         """;
     }
@@ -347,7 +347,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String createCompressionKeyStatement() {
         return """
         INSERT
-        INTO `bluemap_compression` (`key`)
+        INTO `${prefix}compression` (`key`)
         VALUES (?)
         """;
     }
@@ -357,7 +357,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String findItemStorageKeyStatement() {
         return """
         SELECT `id`
-        FROM `bluemap_item_storage`
+        FROM `${prefix}item_storage`
         WHERE `key` = ?
         """;
     }
@@ -367,7 +367,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String createItemStorageKeyStatement() {
         return """
         INSERT
-        INTO `bluemap_item_storage` (`key`)
+        INTO `${prefix}item_storage` (`key`)
         VALUES (?)
         """;
     }
@@ -377,7 +377,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String findGridStorageKeyStatement() {
         return """
         SELECT `id`
-        FROM `bluemap_grid_storage`
+        FROM `${prefix}grid_storage`
         WHERE `key` = ?
         """;
     }
@@ -387,7 +387,7 @@ public class SqliteCommandSet extends AbstractCommandSet {
     public String createGridStorageKeyStatement() {
         return """
         INSERT
-        INTO `bluemap_grid_storage` (`key`)
+        INTO `${prefix}grid_storage` (`key`)
         VALUES (?)
         """;
     }

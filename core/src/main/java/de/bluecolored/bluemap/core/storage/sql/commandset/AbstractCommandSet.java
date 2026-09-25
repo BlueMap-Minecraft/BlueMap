@@ -30,27 +30,38 @@ import de.bluecolored.bluemap.core.storage.compression.Compression;
 import de.bluecolored.bluemap.core.storage.sql.Database;
 import de.bluecolored.bluemap.core.util.Caches;
 import de.bluecolored.bluemap.core.util.Key;
-import lombok.RequiredArgsConstructor;
 import org.intellij.lang.annotations.Language;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.regex.Pattern;
 
 @SuppressWarnings("SqlSourceToSinkFlow")
-@RequiredArgsConstructor
 public abstract class AbstractCommandSet implements CommandSet {
 
+    private static final String TABLE_PREFIX_PLACEHOLDER = "${prefix}";
+    private static final Pattern VALID_TABLE_PREFIX = Pattern.compile("[a-z0-9_]{0,32}");
+
     protected final Database db;
+    protected final String tablePrefix;
+
+    private final Map<String, String> resolvedStatements = new ConcurrentHashMap<>();
 
     protected final LoadingCache<String, Integer> mapKeys = Caches.build(this::findOrCreateMapKey);
     protected final LoadingCache<Compression, Integer> compressionKeys = Caches.build(this::findOrCreateCompressionKey);
     protected final LoadingCache<Key, Integer> itemStorageKeys = Caches.build(this::findOrCreateItemStorageKey);
     protected final LoadingCache<Key, Integer> gridStorageKeys = Caches.build(this::findOrCreateGridStorageKey);
+
+    protected AbstractCommandSet(Database db, String tablePrefix) {
+        if (!isValidTablePrefix(tablePrefix))
+            throw new IllegalArgumentException("Invalid table-prefix '" + tablePrefix + "'");
+
+        this.db = db;
+        this.tablePrefix = tablePrefix;
+    }
 
     @Language("sql")
     public abstract String listExistingTablesStatement();
@@ -84,12 +95,12 @@ public abstract class AbstractCommandSet implements CommandSet {
                 }
 
                 if (tables.containsAll(Set.of(
-                        "bluemap_map",
-                        "bluemap_compression",
-                        "bluemap_item_storage",
-                        "bluemap_item_storage_data",
-                        "bluemap_grid_storage",
-                        "bluemap_grid_storage_data"
+                        tablePrefix + "map",
+                        tablePrefix + "compression",
+                        tablePrefix + "item_storage",
+                        tablePrefix + "item_storage_data",
+                        tablePrefix + "grid_storage",
+                        tablePrefix + "grid_storage_data"
                 ))) return;
             } catch (SQLException ex) {
                 Logger.global.logWarning("Failed to check for existing tables, will try to create them...");
@@ -380,9 +391,8 @@ public abstract class AbstractCommandSet implements CommandSet {
             if (result.next())
                 return result.getInt(1);
 
-            PreparedStatement statement = connection.prepareStatement(
-                    createMapKeyStatement(),
-                    Statement.RETURN_GENERATED_KEYS
+            PreparedStatement statement = prepareStatementReturningKeys(connection,
+                    createMapKeyStatement()
             );
             statement.setString(1, mapId);
             statement.executeUpdate();
@@ -415,9 +425,8 @@ public abstract class AbstractCommandSet implements CommandSet {
             if (result.next())
                 return result.getInt(1);
 
-            PreparedStatement statement = connection.prepareStatement(
-                    createCompressionKeyStatement(),
-                    Statement.RETURN_GENERATED_KEYS
+            PreparedStatement statement = prepareStatementReturningKeys(connection,
+                    createCompressionKeyStatement()
             );
             statement.setString(1, compression.getKey().getFormatted());
             statement.executeUpdate();
@@ -450,9 +459,8 @@ public abstract class AbstractCommandSet implements CommandSet {
             if (result.next())
                 return result.getInt(1);
 
-            PreparedStatement statement = connection.prepareStatement(
-                    createItemStorageKeyStatement(),
-                    Statement.RETURN_GENERATED_KEYS
+            PreparedStatement statement = prepareStatementReturningKeys(connection,
+                    createItemStorageKeyStatement()
             );
             statement.setString(1, key.getFormatted());
             statement.executeUpdate();
@@ -485,9 +493,8 @@ public abstract class AbstractCommandSet implements CommandSet {
             if (result.next())
                 return result.getInt(1);
 
-            PreparedStatement statement = connection.prepareStatement(
-                    createGridStorageKeyStatement(),
-                    Statement.RETURN_GENERATED_KEYS
+            PreparedStatement statement = prepareStatementReturningKeys(connection,
+                    createGridStorageKeyStatement()
             );
             statement.setString(1, key.getFormatted());
             statement.executeUpdate();
@@ -508,22 +515,35 @@ public abstract class AbstractCommandSet implements CommandSet {
         db.close();
     }
 
-    protected static ResultSet executeQuery(Connection connection, @Language("sql") String sql, Object... parameters) throws SQLException {
+    protected ResultSet executeQuery(Connection connection, @Language("sql") String sql, Object... parameters) throws SQLException {
         return prepareStatement(connection, sql, parameters).executeQuery();
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    protected static int executeUpdate(Connection connection, @Language("sql") String sql, Object... parameters) throws SQLException {
+    protected int executeUpdate(Connection connection, @Language("sql") String sql, Object... parameters) throws SQLException {
         return prepareStatement(connection, sql, parameters).executeUpdate();
     }
 
-    private static PreparedStatement prepareStatement(Connection connection, @Language("sql") String sql, Object... parameters) throws SQLException {
+    private PreparedStatement prepareStatement(Connection connection, @Language("sql") String sql, Object... parameters) throws SQLException {
         // we only use this prepared statement once, but the DB-Driver caches those and reuses them
-        PreparedStatement statement = connection.prepareStatement(sql);
+        PreparedStatement statement = connection.prepareStatement(resolveStatement(sql));
         for (int i = 0; i < parameters.length; i++) {
             statement.setObject(i + 1, parameters[i]);
         }
         return statement;
+    }
+
+    private PreparedStatement prepareStatementReturningKeys(Connection connection, @Language("sql") String sql) throws SQLException {
+        return connection.prepareStatement(resolveStatement(sql), Statement.RETURN_GENERATED_KEYS);
+    }
+
+    private String resolveStatement(@Language("sql") String sql) {
+        return resolvedStatements.computeIfAbsent(sql, s -> s.replace(TABLE_PREFIX_PLACEHOLDER, tablePrefix));
+    }
+
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    public static boolean isValidTablePrefix(@Nullable String tablePrefix) {
+        return tablePrefix != null && VALID_TABLE_PREFIX.matcher(tablePrefix).matches();
     }
 
 }

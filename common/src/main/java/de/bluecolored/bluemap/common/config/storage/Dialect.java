@@ -24,8 +24,6 @@
  */
 package de.bluecolored.bluemap.common.config.storage;
 
-import de.bluecolored.bluemap.core.storage.sql.Database;
-import de.bluecolored.bluemap.core.storage.sql.commandset.CommandSet;
 import de.bluecolored.bluemap.core.storage.sql.commandset.MySQLCommandSet;
 import de.bluecolored.bluemap.core.storage.sql.commandset.PostgreSQLCommandSet;
 import de.bluecolored.bluemap.core.storage.sql.commandset.SqliteCommandSet;
@@ -34,12 +32,12 @@ import de.bluecolored.bluemap.core.util.Keyed;
 import de.bluecolored.bluemap.core.util.Registry;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.Delegate;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
 
-public interface Dialect extends Keyed {
+public interface Dialect extends Keyed, CommandSetProvider {
 
     Dialect MYSQL = new Impl(Key.bluemap("mysql"), "jdbc:mysql:", MySQLCommandSet::new, List.of());
     Dialect MARIADB = new Impl(Key.bluemap("mariadb"), "jdbc:mariadb:", MySQLCommandSet::new, List.of());
@@ -62,8 +60,6 @@ public interface Dialect extends Keyed {
 
     boolean supports(String connectionUrl);
 
-    CommandSet createCommandSet(Database database);
-
     Collection<String> getConnectionInitSql();
 
     @RequiredArgsConstructor
@@ -72,17 +68,12 @@ public interface Dialect extends Keyed {
         @Getter private final Key key;
         private final String protocol;
 
-        private final Function<Database, CommandSet> commandSetProvider;
+        @Delegate private final CommandSetProvider commandSetProvider;
         @Getter private final Collection<String> connectionInitSql;
 
         @Override
         public boolean supports(String connectionUrl) {
             return connectionUrl.startsWith(protocol);
-        }
-
-        @Override
-        public CommandSet createCommandSet(Database database) {
-            return commandSetProvider.apply(database);
         }
 
     }

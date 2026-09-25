@@ -30,6 +30,7 @@ import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.storage.compression.Compression;
 import de.bluecolored.bluemap.core.storage.sql.Database;
 import de.bluecolored.bluemap.core.storage.sql.SQLStorage;
+import de.bluecolored.bluemap.core.storage.sql.commandset.AbstractCommandSet;
 import de.bluecolored.bluemap.core.storage.sql.commandset.CommandSet;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -62,6 +63,7 @@ public class SQLConfig extends StorageConfig {
     private String driverClass = null;
     private int maxConnections = -1;
     private List<String> connectionInitSql = null;
+    private String tablePrefix = "bluemap_";
 
     private String compression = Compression.GZIP.getKey().getFormatted();
 
@@ -120,6 +122,15 @@ public class SQLConfig extends StorageConfig {
         return getDialect().getConnectionInitSql();
     }
 
+    public String getTablePrefix() throws ConfigurationException {
+        if (!AbstractCommandSet.isValidTablePrefix(tablePrefix)) throw new ConfigurationException("""
+            The configured table-prefix '%s' is invalid!
+            Please check your 'table-prefix' setting in your configuration and make sure it only consists of
+            up to 32 lowercase letters (a-z), digits (0-9) and underscores (_).
+            """.formatted(tablePrefix).strip());
+        return tablePrefix;
+    }
+
     @Override
     public SQLStorage createStorage() throws ConfigurationException {
         Driver driver = createDriver();
@@ -129,7 +140,7 @@ public class SQLConfig extends StorageConfig {
         } else {
             database = new Database(getConnectionUrl(), getConnectionProperties(), getMaxConnections(), getConnectionInitSql());
         }
-        CommandSet commandSet = getDialect().createCommandSet(database);
+        CommandSet commandSet = getDialect().createCommandSet(database, getTablePrefix());
         return new SQLStorage(commandSet, getCompression());
     }
 
