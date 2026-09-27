@@ -4,6 +4,8 @@ updates:
 
   - package-ecosystem: "gradle"
     directory: "/"
+    exclude-paths:
+      - "api/**"
     schedule:
       interval: "weekly"
     allow:
