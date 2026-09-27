@@ -1,3 +1,4 @@
 [submodule "BlueMapAPI"]
 	path = api
 	url = https://github.com/BlueMap-Minecraft/BlueMapAPI
+	branch = master
