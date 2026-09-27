@@ -1,7 +1,7 @@
 # Normalize as LF in the repository, OS native locally
 * text=auto
 
-*.bat text eol=crlf
+*.bat -text
 gradlew text eol=lf
 *.sh text eol=lf
 *.conf text eol=lf
