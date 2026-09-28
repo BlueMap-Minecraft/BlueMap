@@ -68,8 +68,13 @@ export class TileLoader {
         }
 
         return new Promise((resolve, reject) => {
-            if (force) this.revalidatedUrls?.delete(tileUrl);
-            this.fileLoader.setRevalidatedUrls(this.revalidatedUrls);
+            let revalidatedUrls = this.revalidatedUrls;
+            if (force) {
+                // always revalidate forced loads, even if no revalidation is active (revalidatedUrls is undefined)
+                revalidatedUrls ??= new Set();
+                revalidatedUrls.delete(tileUrl);
+            }
+            this.fileLoader.setRevalidatedUrls(revalidatedUrls);
             this.fileLoader.load(tileUrl,
                 async data => {
 
