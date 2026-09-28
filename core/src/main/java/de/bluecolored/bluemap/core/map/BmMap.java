@@ -30,6 +30,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import de.bluecolored.bluemap.api.gson.MarkerGson;
 import de.bluecolored.bluemap.api.markers.MarkerSet;
+import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.map.hires.HiresModelManager;
 import de.bluecolored.bluemap.core.map.lowres.LowresTileManager;
@@ -45,15 +46,20 @@ import de.bluecolored.bluemap.core.world.World;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 @Getter
 public class BmMap {
+
+    private static final long SAVE_DEBOUNCE_MILLIS = 15_000;
 
     private static final Gson GSON = ResourcesGson.addAdapter(new GsonBuilder())
             .setFieldNamingPolicy(FieldNamingPolicy.IDENTITY)
@@ -82,7 +88,7 @@ public class BmMap {
 
     @Getter(AccessLevel.NONE) private long renderTimeSumNanos;
     @Getter(AccessLevel.NONE) private long tilesRendered;
-    @Getter(AccessLevel.NONE) private long lastSaveTime;
+    @Getter(AccessLevel.NONE) private @Nullable ScheduledFuture<?> scheduledSave;
 
     public BmMap(String id, String name, World world, MapStorage storage, ResourcePack resourcePack, MapSettings settings) throws IOException, InterruptedException {
         this.id = Objects.requireNonNull(id);
@@ -126,7 +132,7 @@ public class BmMap {
 
         this.renderTimeSumNanos = 0;
         this.tilesRendered = 0;
-        this.lastSaveTime = -1;
+        this.scheduledSave = null;
 
         saveMapSettings();
         savePlayerState();
@@ -150,16 +156,28 @@ public class BmMap {
         hiresModelManager.unrender(tile, lowresTileManager);
     }
 
-    public synchronized boolean save(long minTimeSinceLastSave) {
-        long now = System.currentTimeMillis();
-        if (now - lastSaveTime < minTimeSinceLastSave)
-            return false;
-
-        save();
-        return true;
+    public synchronized void saveDebounced() {
+        if (scheduledSave != null) return;
+        scheduledSave = BlueMap.SCHEDULER.schedule(() -> {
+            try {
+                synchronized (this) {
+                    scheduledSave = null;
+                    if (storage.isClosed()) return;
+                    save();
+                }
+            } catch (Exception ex) {
+                Logger.global.logError("Failed to save map '" + getId() + "'!", ex);
+            }
+        }, SAVE_DEBOUNCE_MILLIS, TimeUnit.MILLISECONDS);
     }
 
     public synchronized void save() {
+        // this save makes a pending debounced save obsolete
+        if (scheduledSave != null) {
+            scheduledSave.cancel(false);
+            scheduledSave = null;
+        }
+
         lowresTileManager.save();
         mapTileState.save();
         mapChunkState.save();
@@ -174,8 +192,6 @@ public class BmMap {
         } catch (IOException e) {
             Logger.global.logError("Failed to read texture gallery for map '" + getId() + "'!", e);
         }
-
-        lastSaveTime = System.currentTimeMillis();
     }
 
     private TextureGallery loadTextureGallery() throws IOException {

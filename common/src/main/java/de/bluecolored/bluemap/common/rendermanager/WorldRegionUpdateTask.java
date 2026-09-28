@@ -43,7 +43,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.util.Comparator;
-import java.util.concurrent.TimeUnit;
 
 import static de.bluecolored.bluemap.core.map.renderstate.TileActionResolver.Action.DELETE;
 import static de.bluecolored.bluemap.core.map.renderstate.TileActionResolver.Action.RENDER;
@@ -260,8 +259,8 @@ public final class WorldRegionUpdateTask implements MapRenderTask, SerializableR
         // clear tile-actions
         tileActions = null;
 
-        // save map (at most, every 15 seconds)
-        map.save(TimeUnit.SECONDS.toMillis(15));
+        // request a (debounced) map save
+        map.saveDebounced();
     }
 
     @Override
