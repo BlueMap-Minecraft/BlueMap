@@ -55,9 +55,14 @@ public class MCARegion<T> implements Region<T> {
         CHUNK_COMPRESSION_MAP[4] = Compression.LZ4;
     }
 
+    private static final long FINGERPRINT_CACHE_MILLIS = 10_000;
+
     private final Path regionFile;
     private final ChunkLoader<T> chunkLoader;
     private final Vector2i regionPos;
+
+    private transient long lastFingerprintUpdate;
+    private transient long lastFingerprint;
 
     public MCARegion(ChunkLoader<T> chunkLoader, Path regionFile) throws IllegalArgumentException {
         this.chunkLoader = chunkLoader;
@@ -165,6 +170,37 @@ public class MCARegion<T> implements Region<T> {
             }
         } catch (IOException | RuntimeException ex) {
             throw new IOException("Exception trying to iterate chunks in region '%s': %s".formatted(regionFile, ex), ex);
+        }
+    }
+
+    @Override
+    public long fingerprint() throws IOException {
+        long now = System.currentTimeMillis();
+        if (now - lastFingerprintUpdate > FINGERPRINT_CACHE_MILLIS) {
+            lastFingerprint = updateFingerprint();
+            lastFingerprintUpdate = now;
+        }
+
+        return lastFingerprint;
+    }
+
+    private long updateFingerprint() throws IOException {
+        if (Files.notExists(regionFile)) return 0;
+
+        long fileLength = Files.size(regionFile);
+        if (fileLength == 0) return 0;
+
+        try (FileChannel channel = FileChannel.open(regionFile, StandardOpenOption.READ)) {
+            ByteBuffer header = ByteBuffer.allocate(1024 * 8);
+            readFully(channel, header, 0, header.capacity());
+            header.flip();
+
+            long hash = 0;
+            while (header.remaining() >= Long.BYTES)
+                hash = 31 * hash + header.getLong();
+            return hash;
+        } catch (IOException | RuntimeException ex) {
+            throw new IOException("Exception trying to fingerprint region '%s': %s".formatted(regionFile, ex), ex);
         }
     }
 

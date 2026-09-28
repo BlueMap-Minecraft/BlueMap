@@ -664,6 +664,7 @@ public class Plugin implements ServerEventListener {
                     .lastFullUpdate(pluginState.getMapState(map).getLastFullUpdate())
                     .fullUpdateInterval(blueMap.getConfig().getCoreConfig().getFullUpdateInterval())
                     .regionUpdateCooldown(blueMap.getConfig().getCoreConfig().getUpdateCooldown())
+                    .regionCheckInterval(blueMap.getConfig().getCoreConfig().getRegionFileCheckInterval())
                     .onFullUpdate(instant -> pluginState.getMapState(map).setLastFullUpdate(instant))
                     .build();
             watcher.start();

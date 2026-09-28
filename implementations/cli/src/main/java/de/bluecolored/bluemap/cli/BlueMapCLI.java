@@ -110,6 +110,7 @@ public class BlueMapCLI {
                             .lastFullUpdate(Instant.now())
                             .fullUpdateInterval(blueMap.getConfig().getCoreConfig().getFullUpdateInterval())
                             .regionUpdateCooldown(blueMap.getConfig().getCoreConfig().getUpdateCooldown())
+                            .regionCheckInterval(blueMap.getConfig().getCoreConfig().getRegionFileCheckInterval())
                             .verbose(true)
                             .build();
                     watcher.start();

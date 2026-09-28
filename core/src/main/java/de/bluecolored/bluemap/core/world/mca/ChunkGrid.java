@@ -59,7 +59,6 @@ public class ChunkGrid<T> {
 
     private final LoadingCache<Vector2i, Region<T>> regionCache = Caches.with()
             .softValues()
-            .maximumSize(32)
             .expireAfterWrite(10, TimeUnit.MINUTES)
             .expireAfterAccess(1, TimeUnit.MINUTES)
             .build(this::loadRegion);

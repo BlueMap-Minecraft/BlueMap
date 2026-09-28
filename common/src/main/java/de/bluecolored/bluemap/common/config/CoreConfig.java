@@ -43,6 +43,7 @@ public class CoreConfig {
 
     private int updateCooldown = 60;
     private int fullUpdateInterval = 1440;
+    private int regionFileCheckInterval = 5;
 
     private boolean metrics = true;
 
@@ -57,6 +58,10 @@ public class CoreConfig {
 
     public Duration getFullUpdateInterval() {
         return Duration.ofMinutes(fullUpdateInterval);
+    }
+
+    public Duration getRegionFileCheckInterval() {
+        return Duration.ofMinutes(regionFileCheckInterval);
     }
 
     public int resolveRenderThreadCount() {
