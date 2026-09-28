@@ -64,16 +64,13 @@ public interface Region<T> {
 
     /**
      * Computes a fingerprint of the current state of this region, which can be used to detect changes to the region.<br>
-     * If the region changes, the fingerprint is expected to change as well. Otherwise, the fingerprint should stay the same.<br>
-     * (implementations should consider overriding this method for a faster implementation)
+     * If the region changes, the fingerprint is expected to change as well (but is not guaranteed).
+     * Otherwise, the fingerprint should stay the same.<br>
+     * The default implementation always returns 0.
      * @throws IOException if an IOException occurred trying to read the region
      */
     default long fingerprint() throws IOException {
-        long[] hash = { 0 };
-        iterateAllChunks((ChunkConsumer.ListOnly<T>) (x, z, lastModified) ->
-                hash[0] = 31 * (31 * (31 * hash[0] + x) + z) + lastModified
-        );
-        return hash[0];
+        return 0;
     }
 
     T emptyChunk();
