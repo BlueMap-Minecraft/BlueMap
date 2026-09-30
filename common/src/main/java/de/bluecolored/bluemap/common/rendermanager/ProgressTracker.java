@@ -29,14 +29,14 @@ import java.util.LinkedList;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Supplier;
+import java.util.function.DoubleSupplier;
 import java.util.stream.Collectors;
 
 public class ProgressTracker {
     private static final AtomicInteger ID = new AtomicInteger(0);
 
     private final Timer timer;
-    private Supplier<Double> progressSupplier;
+    private DoubleSupplier progressSupplier;
     private final int averagingCount;
 
     private long lastTime;
@@ -58,10 +58,10 @@ public class ProgressTracker {
         }, updateIntervall, updateIntervall);
     }
 
-    public synchronized void resetAndStart(Supplier<Double> progressSupplier) {
+    public synchronized void resetAndStart(DoubleSupplier progressSupplier) {
         this.progressSupplier = progressSupplier;
         this.lastTime = System.currentTimeMillis();
-        this.lastProgress = progressSupplier.get();
+        this.lastProgress = progressSupplier.getAsDouble();
         this.timesPerProgress.clear();
     }
 
@@ -73,7 +73,7 @@ public class ProgressTracker {
 
     private synchronized void update() {
         long now = System.currentTimeMillis();
-        double progress = progressSupplier.get();
+        double progress = progressSupplier.getAsDouble();
 
         long deltaTime = now - lastTime;
         double deltaProgress = progress - lastProgress;
