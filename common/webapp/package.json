@@ -19,7 +19,7 @@
     "@vitejs/plugin-vue": "^5.2.1",
     "eslint": "~8.22.0",
     "eslint-plugin-vue": "^9.3.0",
-    "sass": "^1.105.0",
+    "sass": "^1.105.1",
     "vite": "^6.4.2"
   }
 }
