@@ -80,11 +80,26 @@ public class HttpHeader {
         if (valuesLC == null) {
             valuesLC = new HashSet<>();
             for (String v : getValues()) {
-                valuesLC.add(v.toLowerCase(Locale.ROOT));
+                String[] parts = v.split(";");
+                if (hasZeroQuality(parts)) continue;
+                valuesLC.add(parts[0].trim().toLowerCase(Locale.ROOT));
             }
         }
 
         return valuesLC.contains(value);
+    }
+
+    private static boolean hasZeroQuality(String[] parts) {
+        for (int i = 1; i < parts.length; i++) {
+            String param = parts[i].trim();
+            if (!param.regionMatches(true, 0, "q=", 0, 2)) continue;
+            try {
+                return Double.parseDouble(param.substring(2)) == 0;
+            } catch (NumberFormatException ignore) {
+                return false;
+            }
+        }
+        return false;
     }
 
     @Override
