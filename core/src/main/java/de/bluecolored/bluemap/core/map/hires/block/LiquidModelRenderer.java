@@ -64,6 +64,7 @@ public class LiquidModelRenderer implements BlockRenderer {
 
     @Getter private final Function<Key, Model> modelProvider;
     @Getter private final Function<Key, Texture> textureProvider;
+    @Getter private final Function<String, TextureVariable> textureVariableProvider;
     @Getter private final TextureGallery textureGallery;
     @Getter private final RenderSettings renderSettings;
     @Getter private final BlockColorCalculator blockColorCalculator;
@@ -80,6 +81,7 @@ public class LiquidModelRenderer implements BlockRenderer {
     public LiquidModelRenderer(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
         this.modelProvider = resourcePack.getModels()::get;
         this.textureProvider = resourcePack.getTextures()::get;
+        this.textureVariableProvider = key -> this.modelResource.getTextures().get(key);
         this.textureGallery = textureGallery;
         this.renderSettings = renderSettings;
         this.blockColorCalculator = resourcePack.createBlockColorCalculator();
@@ -142,9 +144,9 @@ public class LiquidModelRenderer implements BlockRenderer {
         TextureVariable stillVariable = modelResource.getTextures().get("still");
         TextureVariable flowVariable = modelResource.getTextures().get("flow");
         ResourcePath<Texture> stillTexturePath = stillVariable == null ? null : stillVariable
-                .getTexturePath(modelResource.getTextures()::get);
+                .getTexturePath(textureVariableProvider);
         ResourcePath<Texture> flowTexturePath = flowVariable == null ? null : flowVariable
-                .getTexturePath(modelResource.getTextures()::get);
+                .getTexturePath(textureVariableProvider);
 
         int stillTextureId = textureGallery.get(stillTexturePath);
         int flowTextureId = textureGallery.get(flowTexturePath);

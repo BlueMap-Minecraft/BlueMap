@@ -39,6 +39,7 @@ import de.bluecolored.bluemap.core.resources.pack.resourcepack.blockstate.Varian
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Element;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Face;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.TextureVariable;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.util.Key;
@@ -63,6 +64,7 @@ public class ResourceModelRenderer implements BlockRenderer {
 
     @Getter private final Function<Key, Model> modelProvider;
     @Getter private final Function<Key, Texture> textureProvider;
+    @Getter private final Function<String, TextureVariable> textureVariableProvider;
     @Getter private final TextureGallery textureGallery;
     @Getter private final RenderSettings renderSettings;
     @Getter private final BlockColorCalculator blockColorCalculator;
@@ -83,6 +85,7 @@ public class ResourceModelRenderer implements BlockRenderer {
     public ResourceModelRenderer(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
         this.modelProvider = resourcePack.getModels()::get;
         this.textureProvider = resourcePack.getTextures()::get;
+        this.textureVariableProvider = key -> this.modelResource.getTextures().get(key);
         this.textureGallery = textureGallery;
         this.renderSettings = renderSettings;
         this.blockColorCalculator = resourcePack.createBlockColorCalculator();
@@ -233,7 +236,7 @@ public class ResourceModelRenderer implements BlockRenderer {
         );
 
         // ####### texture
-        ResourcePath<Texture> texturePath = face.getTexture().getTexturePath(modelResource.getTextures()::get);
+        ResourcePath<Texture> texturePath = face.getTexture().getTexturePath(textureVariableProvider);
         int textureId = textureGallery.get(texturePath);
         tileModel.setMaterialIndex(face1, textureId);
         tileModel.setMaterialIndex(face2, textureId);

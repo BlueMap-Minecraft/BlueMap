@@ -36,6 +36,7 @@ import de.bluecolored.bluemap.core.resources.pack.resourcepack.entitystate.Part;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Element;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Face;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.Model;
+import de.bluecolored.bluemap.core.resources.pack.resourcepack.model.TextureVariable;
 import de.bluecolored.bluemap.core.resources.pack.resourcepack.texture.Texture;
 import de.bluecolored.bluemap.core.util.Direction;
 import de.bluecolored.bluemap.core.util.Key;
@@ -58,6 +59,7 @@ public class ResourceModelRenderer implements EntityRenderer {
     private static final float SCALE = 1f / 16f;
 
     @Getter private final Function<Key, Model> modelProvider;
+    @Getter private final Function<String, TextureVariable> textureVariableProvider;
     @Getter private final TextureGallery textureGallery;
     @Getter private final RenderSettings renderSettings;
 
@@ -74,6 +76,7 @@ public class ResourceModelRenderer implements EntityRenderer {
     @SuppressWarnings("unused")
     public ResourceModelRenderer(ResourcePack resourcePack, TextureGallery textureGallery, RenderSettings renderSettings) {
         this.modelProvider = resourcePack.getModels()::get;
+        this.textureVariableProvider = key -> this.modelResource.getTextures().get(key);
         this.textureGallery = textureGallery;
         this.renderSettings = renderSettings;
 
@@ -192,7 +195,7 @@ public class ResourceModelRenderer implements EntityRenderer {
         );
 
         // ####### texture
-        ResourcePath<Texture> texturePath = face.getTexture().getTexturePath(modelResource.getTextures()::get);
+        ResourcePath<Texture> texturePath = face.getTexture().getTexturePath(textureVariableProvider);
         int textureId = textureGallery.get(texturePath);
         tileModel.setMaterialIndex(face1, textureId);
         tileModel.setMaterialIndex(face2, textureId);
