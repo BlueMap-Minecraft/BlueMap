@@ -47,12 +47,12 @@ public interface HttpHeaderCarrier {
         getHeaders().remove(name.toLowerCase(Locale.ROOT));
     }
 
-    default HttpHeader getHeader(String key) {
-        return getHeaders().get(key.toLowerCase(Locale.ROOT));
+    default HttpHeader getHeader(String name) {
+        return getHeaders().get(name.toLowerCase(Locale.ROOT));
     }
 
-    default boolean hasHeaderValue(String key, String value) {
-        HttpHeader header = getHeader(key);
+    default boolean hasHeaderValue(String name, String value) {
+        HttpHeader header = getHeader(name);
         if (header == null) return false;
         return header.contains(value);
     }

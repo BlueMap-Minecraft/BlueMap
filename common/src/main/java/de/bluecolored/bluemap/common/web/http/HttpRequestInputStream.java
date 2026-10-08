@@ -77,7 +77,7 @@ public class HttpRequestInputStream implements Closeable {
             String[] kv = line.split(":", 2);
             if (kv.length < 2) continue;
 
-            request.setHeader(kv[0], kv[1].trim());
+            request.addHeader(kv[0], kv[1].trim());
         }
 
         // body
