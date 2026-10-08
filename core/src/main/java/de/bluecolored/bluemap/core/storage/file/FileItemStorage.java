@@ -28,6 +28,8 @@ import de.bluecolored.bluemap.core.storage.ItemStorage;
 import de.bluecolored.bluemap.core.storage.compression.CompressedInputStream;
 import de.bluecolored.bluemap.core.storage.compression.Compression;
 import de.bluecolored.bluemap.core.util.FileHelper;
+import de.bluecolored.bluemap.core.util.stream.FilepartOutputStream;
+import de.bluecolored.bluemap.core.util.stream.StreamUtil;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 
@@ -49,12 +51,12 @@ public class FileItemStorage implements ItemStorage {
     @Override
     public OutputStream write() throws IOException {
         if (atomic)
-            return compression.compress(FileHelper.createFilepartOutputStream(file));
+            return StreamUtil.onError(FilepartOutputStream.create(file), compression::compress, FilepartOutputStream::abort);
 
         Path folder = file.toAbsolutePath().normalize().getParent();
         FileHelper.createDirectories(folder);
-        return compression.compress(Files.newOutputStream(file,
-                StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE));
+        return StreamUtil.closeOnError(Files.newOutputStream(file,
+                StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING, StandardOpenOption.CREATE), compression::compress);
     }
 
     @Override

@@ -50,46 +50,46 @@ public class StateDumper {
     private final Set<Object> instances = Collections.newSetFromMap(new WeakHashMap<>());
 
     public void dump(Path file) throws IOException {
-        JsonWriter writer = new JsonWriter(Files.newBufferedWriter(
+        try (JsonWriter writer = new JsonWriter(Files.newBufferedWriter(
                 file,
                 StandardCharsets.UTF_8,
                 StandardOpenOption.CREATE,
                 StandardOpenOption.TRUNCATE_EXISTING
-        ));
-        writer.setIndent(" ");
+        ))) {
+            writer.setIndent(" ");
 
-        writer.beginObject();
+            writer.beginObject();
 
-        writer.name("system-info");
-        collectSystemInfo(writer);
+            writer.name("system-info");
+            collectSystemInfo(writer);
 
-        Set<Object> alreadyDumped = Collections.newSetFromMap(new IdentityHashMap<>());
+            Set<Object> alreadyDumped = Collections.newSetFromMap(new IdentityHashMap<>());
 
-        writer.name("registries").beginArray();
-        for (Object instance : Registry.REGISTRIES) {
-            dumpInstance(instance, writer, alreadyDumped);
+            writer.name("registries").beginArray();
+            for (Object instance : Registry.REGISTRIES) {
+                dumpInstance(instance, writer, alreadyDumped);
+            }
+            writer.endArray();
+
+            writer.name("dump").beginArray();
+            for (Object instance : instances) {
+                dumpInstance(instance, writer, alreadyDumped);
+            }
+            writer.endArray();
+
+            writer.name("threads").beginArray();
+            Thread.getAllStackTraces().keySet().stream()
+                    .sorted(Comparator.comparing(Thread::getName))
+                    .forEach(thread -> {
+                            alreadyDumped.remove(thread);
+                            dumpInstance(thread, writer, alreadyDumped);
+                    });
+            writer.endArray();
+
+            writer.endObject();
+
+            writer.flush();
         }
-        writer.endArray();
-
-        writer.name("dump").beginArray();
-        for (Object instance : instances) {
-            dumpInstance(instance, writer, alreadyDumped);
-        }
-        writer.endArray();
-
-        writer.name("threads").beginArray();
-        Thread.getAllStackTraces().keySet().stream()
-                .sorted(Comparator.comparing(Thread::getName))
-                .forEach(thread -> {
-                        alreadyDumped.remove(thread);
-                        dumpInstance(thread, writer, alreadyDumped);
-                });
-        writer.endArray();
-
-        writer.endObject();
-
-        writer.flush();
-        writer.close();
     }
 
     @SneakyThrows(IOException.class)

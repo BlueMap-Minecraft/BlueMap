@@ -43,6 +43,7 @@ import java.io.OutputStream;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Stream;
 
 abstract class CellStorage<T extends CellStorage.Cell> {
 
@@ -99,10 +100,12 @@ abstract class CellStorage<T extends CellStorage.Cell> {
     }
 
     void forEach(CellConsumer<T> consumer) throws IOException {
-        storage.stream().forEach(sc -> {
-            Vector2i cellPos = new Vector2i(sc.getX(), sc.getZ());
-            consumer.accept(cellPos, cell(cellPos));
-        });
+        try (Stream<GridStorage.Cell> storageCells = storage.stream()) {
+            storageCells.forEach(sc -> {
+                Vector2i cellPos = new Vector2i(sc.getX(), sc.getZ());
+                consumer.accept(cellPos, cell(cellPos));
+            });
+        }
     }
 
     private synchronized T loadCell(Vector2i pos) {

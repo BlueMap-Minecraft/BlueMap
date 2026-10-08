@@ -24,10 +24,14 @@
  */
 package de.bluecolored.bluemap.common.web.http;
 
+import de.bluecolored.bluemap.core.logger.Logger;
 import lombok.*;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -43,7 +47,7 @@ public class HttpResponse implements Closeable, HttpHeaderCarrier {
     private @Nullable HttpResponseStreamWriter body;
 
     public void setBody(@Nullable InputStream body) {
-        this.body = body == null ? null : asStreamWriter(body);
+        setBody(body == null ? null : asStreamWriter(body));
     }
 
     public void setBody(byte[] data) {
@@ -55,6 +59,13 @@ public class HttpResponse implements Closeable, HttpHeaderCarrier {
     }
 
     public void setBody(@Nullable HttpResponseStreamWriter streamWriter) {
+        if (this.body != null) {
+            try {
+                this.body.close();
+            } catch (IOException | RuntimeException ex) {
+                Logger.global.logError("Error while closing response body", ex);
+            }
+        }
         this.body = streamWriter;
     }
 

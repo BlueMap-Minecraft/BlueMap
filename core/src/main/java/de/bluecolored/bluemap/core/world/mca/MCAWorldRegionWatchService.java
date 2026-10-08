@@ -63,7 +63,7 @@ public class MCAWorldRegionWatchService implements WatchService<Vector2i> {
     public @Nullable List<Vector2i> poll(long timeout, TimeUnit unit) throws IOException, InterruptedException {
         long endTime = System.currentTimeMillis() + unit.toMillis(timeout);
 
-        FileHelper.awaitExistence(regionFolder, timeout, unit);
+        FileHelper.awaitExistence(regionFolder, 1, TimeUnit.MINUTES, timeout, unit);
         if (!ensureInitialization()) return null;
 
         long now = System.currentTimeMillis();
@@ -81,7 +81,7 @@ public class MCAWorldRegionWatchService implements WatchService<Vector2i> {
     @Override
     public List<Vector2i> take() throws IOException, InterruptedException {
         while (!ensureInitialization())
-            FileHelper.awaitExistence(regionFolder, 1, TimeUnit.HOURS);
+            FileHelper.awaitExistence(regionFolder, 1, TimeUnit.MINUTES, 1, TimeUnit.HOURS);
 
         try {
             WatchKey key = watchService.take();

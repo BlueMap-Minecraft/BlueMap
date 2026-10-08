@@ -62,6 +62,7 @@ import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.Tristate;
 import de.bluecolored.bluemap.core.util.nbt.LenientListAdapter;
 import de.bluecolored.bluemap.core.util.nbt.RegistryAdapter;
+import de.bluecolored.bluemap.core.util.stream.FilepartOutputStream;
 import de.bluecolored.bluemap.core.world.World;
 import de.bluecolored.bluenbt.BlueNBT;
 import de.bluecolored.bluenbt.TypeToken;
@@ -578,7 +579,7 @@ public class Plugin implements ServerEventListener {
             Path file = blueMap.getConfig().getCoreConfig().getData().resolve("tasks.dat");
             TasksData tasksData = new TasksData();
             tasksData.setRenderTasks(renderManager.getScheduledRenderTasks());
-            try (OutputStream out = FileHelper.createFilepartOutputStream(file)) {
+            try (OutputStream out = FilepartOutputStream.create(file)) {
                 blueNBT.write(tasksData, out, new TypeToken<>() {});
             } catch (Exception ex) {
                 Logger.global.logError("Failed to save tasks.dat!", ex);

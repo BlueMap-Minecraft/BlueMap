@@ -45,7 +45,8 @@ public interface Storage extends Closeable {
     MapStorage map(String mapId);
 
     /**
-     * Fetches and returns a stream of all map-id's in this storage
+     * Fetches and returns a stream of all map-id's in this storage.<br>
+     * The returned stream might hold open resources and needs to be closed after use.
      */
     Stream<String> mapIds() throws IOException;
 

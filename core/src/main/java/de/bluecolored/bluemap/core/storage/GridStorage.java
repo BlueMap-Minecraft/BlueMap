@@ -68,7 +68,8 @@ public interface GridStorage {
     ItemStorage cell(int x, int z);
 
     /**
-     * Returns a stream over all <b>existing</b> items in this storage
+     * Returns a stream over all <b>existing</b> items in this storage.<br>
+     * The returned stream might hold open resources and needs to be closed after use.
      */
     Stream<Cell> stream() throws IOException;
 

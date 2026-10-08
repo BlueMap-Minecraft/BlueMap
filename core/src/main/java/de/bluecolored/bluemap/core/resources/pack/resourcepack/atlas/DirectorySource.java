@@ -36,6 +36,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Objects;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import static de.bluecolored.bluemap.core.resources.pack.Pack.list;
 import static de.bluecolored.bluemap.core.resources.pack.Pack.walk;
@@ -59,13 +60,14 @@ public class DirectorySource extends Source {
 
         String source = this.source.replace("/", root.getFileSystem().getSeparator());
 
-        list(root.resolve("assets"))
-                .forEach(namespacePath -> {
-                    String namespace = namespacePath.getFileName().toString();
-                    Path sourcePath = namespacePath
-                            .resolve("textures")
-                            .resolve(source);
-                    walk(sourcePath)
+        try (Stream<Path> namespaces = list(root.resolve("assets"))) {
+            namespaces.forEach(namespacePath -> {
+                String namespace = namespacePath.getFileName().toString();
+                Path sourcePath = namespacePath
+                        .resolve("textures")
+                        .resolve(source);
+                try (Stream<Path> files = walk(sourcePath)) {
+                    files
                             .filter(path -> path.getFileName().toString().endsWith(".png"))
                             .filter(Files::isRegularFile)
                             .forEach(file -> {
@@ -77,7 +79,9 @@ public class DirectorySource extends Source {
                                 if (textureFilter.test(resourcePath))
                                     textures.load(resourcePath, rp -> loadTexture(resourcePath, file));
                             });
-                });
+                }
+            });
+        }
     }
 
     @Override

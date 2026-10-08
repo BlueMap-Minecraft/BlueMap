@@ -123,17 +123,19 @@ public abstract class Pack {
         }
 
         // load nested datapacks
-        list(root.resolve("data"))
-                .map(namespaceRoot -> namespaceRoot.resolve("datapacks"))
-                .filter(Files::isDirectory)
-                .flatMap(Pack::list)
-                .forEach(nestedPack -> {
-                    try {
-                        loadResourcePath(nestedPack, resourceLoader);
-                    } catch (Exception ex) {
-                        Logger.global.logDebug("Failed to load nested datapack '" + nestedPack + "': " + ex);
-                    }
-                });
+        try (Stream<Path> namespaces = list(root.resolve("data"))) {
+            namespaces
+                    .map(namespaceRoot -> namespaceRoot.resolve("datapacks"))
+                    .filter(Files::isDirectory)
+                    .flatMap(Pack::list)
+                    .forEach(nestedPack -> {
+                        try {
+                            loadResourcePath(nestedPack, resourceLoader);
+                        } catch (Exception ex) {
+                            Logger.global.logDebug("Failed to load nested datapack '" + nestedPack + "': " + ex);
+                        }
+                    });
+        }
 
         // load overlays
         PackMeta.Overlay[] overlays = packMeta.getOverlays().getEntries();

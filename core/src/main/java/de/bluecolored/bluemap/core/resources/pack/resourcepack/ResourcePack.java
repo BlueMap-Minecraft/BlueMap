@@ -58,6 +58,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 public class ResourcePack extends Pack {
 
@@ -162,121 +163,135 @@ public class ResourcePack extends Pack {
 
                     // load atlases
                     CompletableFuture.runAsync(() -> {
-                    list(root.resolve("assets"))
-                            .map(path -> path.resolve("atlases"))
-                            .filter(Files::isDirectory)
-                            .flatMap(Pack::walk)
-                            .filter(path -> path.getFileName().toString().endsWith(".json"))
-                            .filter(Files::isRegularFile)
-                            .forEach(file -> atlases.load(
-                                    new ResourcePath<>(root.relativize(file), 1, 3),
-                                    key -> {
-                                        try (BufferedReader reader = Files.newBufferedReader(file)) {
-                                            return ResourcesGson.INSTANCE.fromJson(reader, Atlas.class);
-                                        }
-                                    },
-                                    Atlas::add
-                            ));
+                        try (Stream<Path> namespaces = list(root.resolve("assets"))) {
+                            namespaces
+                                    .map(path -> path.resolve("atlases"))
+                                    .filter(Files::isDirectory)
+                                    .flatMap(Pack::walk)
+                                    .filter(path -> path.getFileName().toString().endsWith(".json"))
+                                    .filter(Files::isRegularFile)
+                                    .forEach(file -> atlases.load(
+                                            new ResourcePath<>(root.relativize(file), 1, 3),
+                                            key -> {
+                                                try (BufferedReader reader = Files.newBufferedReader(file)) {
+                                                    return ResourcesGson.INSTANCE.fromJson(reader, Atlas.class);
+                                                }
+                                            },
+                                            Atlas::add
+                                    ));
+                        }
                     }, BlueMap.THREAD_POOL),
 
                     // load blockstates
                     CompletableFuture.runAsync(() -> {
-                        list(root.resolve("assets"))
-                                .map(path -> path.resolve("blockstates"))
-                                .filter(Files::isDirectory)
-                                .flatMap(ResourcePack::walk)
-                                .filter(path -> path.getFileName().toString().endsWith(".json"))
-                                .filter(Files::isRegularFile)
-                                .forEach(file -> blockStates.load(
-                                        new ResourcePath<>(root.relativize(file), 1, 3),
-                                        key -> {
-                                            try (BufferedReader reader = Files.newBufferedReader(file)) {
-                                                return ResourcesGson.INSTANCE.fromJson(reader, BlockState.class);
+                        try (Stream<Path> namespaces = list(root.resolve("assets"))) {
+                            namespaces
+                                    .map(path -> path.resolve("blockstates"))
+                                    .filter(Files::isDirectory)
+                                    .flatMap(ResourcePack::walk)
+                                    .filter(path -> path.getFileName().toString().endsWith(".json"))
+                                    .filter(Files::isRegularFile)
+                                    .forEach(file -> blockStates.load(
+                                            new ResourcePath<>(root.relativize(file), 1, 3),
+                                            key -> {
+                                                try (BufferedReader reader = Files.newBufferedReader(file)) {
+                                                    return ResourcesGson.INSTANCE.fromJson(reader, BlockState.class);
+                                                }
                                             }
-                                        }
-                                ));
+                                    ));
+                        }
                     }, BlueMap.THREAD_POOL),
 
                     // load entitystates
                     CompletableFuture.runAsync(() -> {
-                        list(root.resolve("assets"))
-                                .map(path -> path.resolve("entitystates"))
-                                .filter(Files::isDirectory)
-                                .flatMap(ResourcePack::walk)
-                                .filter(path -> path.getFileName().toString().endsWith(".json"))
-                                .filter(Files::isRegularFile)
-                                .forEach(file -> entityStates.load(
-                                        new ResourcePath<>(root.relativize(file), 1, 3),
-                                        key -> {
-                                            try (BufferedReader reader = Files.newBufferedReader(file)) {
-                                                return ResourcesGson.INSTANCE.fromJson(reader, EntityState.class);
+                        try (Stream<Path> namespaces = list(root.resolve("assets"))) {
+                            namespaces
+                                    .map(path -> path.resolve("entitystates"))
+                                    .filter(Files::isDirectory)
+                                    .flatMap(ResourcePack::walk)
+                                    .filter(path -> path.getFileName().toString().endsWith(".json"))
+                                    .filter(Files::isRegularFile)
+                                    .forEach(file -> entityStates.load(
+                                            new ResourcePath<>(root.relativize(file), 1, 3),
+                                            key -> {
+                                                try (BufferedReader reader = Files.newBufferedReader(file)) {
+                                                    return ResourcesGson.INSTANCE.fromJson(reader, EntityState.class);
+                                                }
                                             }
-                                        }
-                                ));
+                                    ));
+                        }
                     }, BlueMap.THREAD_POOL),
 
                     // load models
                     CompletableFuture.runAsync(() -> {
-                        list(root.resolve("assets"))
-                                .map(path -> path.resolve("models"))
-                                .filter(Files::isDirectory)
-                                .flatMap(ResourcePack::walk)
-                                .filter(path -> path.getFileName().toString().endsWith(".json"))
-                                .filter(Files::isRegularFile)
-                                .forEach(file -> models.load(
-                                        new ResourcePath<>(root.relativize(file), 1, 3),
-                                        key -> {
-                                            try (BufferedReader reader = Files.newBufferedReader(file)) {
-                                                return ResourcesGson.INSTANCE.fromJson(reader, Model.class);
+                        try (Stream<Path> namespaces = list(root.resolve("assets"))) {
+                            namespaces
+                                    .map(path -> path.resolve("models"))
+                                    .filter(Files::isDirectory)
+                                    .flatMap(ResourcePack::walk)
+                                    .filter(path -> path.getFileName().toString().endsWith(".json"))
+                                    .filter(Files::isRegularFile)
+                                    .forEach(file -> models.load(
+                                            new ResourcePath<>(root.relativize(file), 1, 3),
+                                            key -> {
+                                                try (BufferedReader reader = Files.newBufferedReader(file)) {
+                                                    return ResourcesGson.INSTANCE.fromJson(reader, Model.class);
+                                                }
                                             }
-                                        }
-                                ));
+                                    ));
+                        }
                     }, BlueMap.THREAD_POOL),
 
                     // load colormaps
                     CompletableFuture.runAsync(() -> {
-                        list(root.resolve("assets"))
-                                .map(path -> path.resolve("textures").resolve("colormap"))
-                                .filter(Files::isDirectory)
-                                .flatMap(ResourcePack::walk)
-                                .filter(path -> path.getFileName().toString().endsWith(".png"))
-                                .filter(Files::isRegularFile)
-                                .forEach(file -> colormaps.load(
-                                        new ResourcePath<>(root.relativize(file), 1, 3),
-                                        key -> {
-                                            try (InputStream in = Files.newInputStream(file)) {
-                                                return new ColorMap(ImageIO.read(in));
+                        try (Stream<Path> namespaces = list(root.resolve("assets"))) {
+                            namespaces
+                                    .map(path -> path.resolve("textures").resolve("colormap"))
+                                    .filter(Files::isDirectory)
+                                    .flatMap(ResourcePack::walk)
+                                    .filter(path -> path.getFileName().toString().endsWith(".png"))
+                                    .filter(Files::isRegularFile)
+                                    .forEach(file -> colormaps.load(
+                                            new ResourcePath<>(root.relativize(file), 1, 3),
+                                            key -> {
+                                                try (InputStream in = Files.newInputStream(file)) {
+                                                    return new ColorMap(ImageIO.read(in));
+                                                }
                                             }
-                                        }
-                                ));
+                                    ));
+                        }
                     }, BlueMap.THREAD_POOL),
 
                     // load block-color configs
                     CompletableFuture.runAsync(() -> {
-                        list(root.resolve("assets"))
-                                .map(path -> path.resolve("blockColors.json"))
-                                .filter(Files::isRegularFile)
-                                .forEach(file -> {
-                                    try {
-                                        blockColorsConfig.load(file);
-                                    } catch (Exception ex) {
-                                        Logger.global.logDebug("Failed to parse resource-file '" + file + "': " + ex);
-                                    }
-                                });
+                        try (Stream<Path> namespaces = list(root.resolve("assets"))) {
+                            namespaces
+                                    .map(path -> path.resolve("blockColors.json"))
+                                    .filter(Files::isRegularFile)
+                                    .forEach(file -> {
+                                        try {
+                                            blockColorsConfig.load(file);
+                                        } catch (Exception ex) {
+                                            Logger.global.logDebug("Failed to parse resource-file '" + file + "': " + ex);
+                                        }
+                                    });
+                        }
                     }, BlueMap.THREAD_POOL),
 
                     // load block-properties configs
                     CompletableFuture.runAsync(() -> {
-                        list(root.resolve("assets"))
-                                .map(path -> path.resolve("blockProperties.json"))
-                                .filter(Files::isRegularFile)
-                                .forEach(file -> {
-                                    try {
-                                        blockPropertiesConfig.load(file);
-                                    } catch (Exception ex) {
-                                        Logger.global.logDebug("Failed to parse resource-file '" + file + "': " + ex);
-                                    }
-                                });
+                        try (Stream<Path> namespaces = list(root.resolve("assets"))) {
+                            namespaces
+                                    .map(path -> path.resolve("blockProperties.json"))
+                                    .filter(Files::isRegularFile)
+                                    .forEach(file -> {
+                                        try {
+                                            blockPropertiesConfig.load(file);
+                                        } catch (Exception ex) {
+                                            Logger.global.logDebug("Failed to parse resource-file '" + file + "': " + ex);
+                                        }
+                                    });
+                        }
                     }, BlueMap.THREAD_POOL)
 
             ).join();

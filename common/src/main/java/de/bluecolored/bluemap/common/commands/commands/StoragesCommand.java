@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import static de.bluecolored.bluemap.common.commands.TextFormat.*;
 import static net.kyori.adventure.text.Component.empty;
@@ -114,10 +115,12 @@ public class StoragesCommand {
 
         lines.add(empty());
         lines.add(text("Maps:").color(BASE_COLOR));
-        storage.mapIds()
-                .limit(20)
-                .map(mapId -> formatMapEntry(mapId, storageId))
-                .forEach(lines::add);
+        try (Stream<String> mapIds = storage.mapIds()) {
+            mapIds
+                    .limit(20)
+                    .map(mapId -> formatMapEntry(mapId, storageId))
+                    .forEach(lines::add);
+        }
 
         return paragraph("Storage '%s'".formatted(storageId), lines(lines));
     }
