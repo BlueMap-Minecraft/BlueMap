@@ -39,6 +39,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -102,7 +103,17 @@ public class LowresLayer {
     }
 
     public synchronized void save() {
-        pendingChanges.entrySet().removeIf(entry -> saveTile(entry.getKey(), entry.getValue()));
+        Map<Vector2i, LowresTile> failed = new HashMap<>();
+        for (Map.Entry<Vector2i, LowresTile> entry : pendingChanges.entrySet()) {
+            Vector2i tilePos = entry.getKey();
+            LowresTile tile = entry.getValue();
+
+            // remove before saving, so changes that are made while saving mark the tile as pending again
+            if (!pendingChanges.remove(tilePos, tile)) continue;
+            if (!saveTile(tilePos, tile)) failed.put(tilePos, tile);
+        }
+        failed.forEach(pendingChanges::putIfAbsent);
+
         if (pendingChanges.size() >= DISCARD_THRESHOLD) {
             Logger.global.logDebug("Discarding changes of " + pendingChanges.size() + " lowres-tiles that failed to save!");
             pendingChanges.clear();
@@ -196,34 +207,31 @@ public class LowresLayer {
         return true;
     }
 
-    private LowresTile accessTile(int x, int z) {
-        Vector2i tilePos = VECTOR_2_I_CACHE.get(x, z);
+    private void setPixel(int cellX, int cellZ, int pixelX, int pixelZ, Color color, int height, int blockLight) {
+        Vector2i tilePos = VECTOR_2_I_CACHE.get(cellX, cellZ);
         LowresTile tile = tileCache.get(tilePos);
 
+        tile.set(pixelX, pixelZ, color, height, blockLight);
+
+        // mark as pending after the change, so a concurrent save can not miss it
         if (pendingChanges.size() >= MAX_PENDING) save();
         pendingChanges.put(tilePos, tile);
-
-        return tile;
     }
 
     void set(int cellX, int cellZ, int pixelX, int pixelZ, Color color, int height, int blockLight) {
-        accessTile(cellX, cellZ)
-                .set(pixelX, pixelZ, color, height, blockLight);
+        setPixel(cellX, cellZ, pixelX, pixelZ, color, height, blockLight);
 
         // for seamless edges
         if (pixelX == 0) {
-            accessTile(cellX - 1, cellZ)
-                    .set(tileGrid.getGridSize().getX(), pixelZ, color, height, blockLight);
+            setPixel(cellX - 1, cellZ, tileGrid.getGridSize().getX(), pixelZ, color, height, blockLight);
         }
 
         if (pixelZ == 0) {
-            accessTile(cellX, cellZ - 1)
-                    .set(pixelX, tileGrid.getGridSize().getY(), color, height, blockLight);
+            setPixel(cellX, cellZ - 1, pixelX, tileGrid.getGridSize().getY(), color, height, blockLight);
         }
 
         if (pixelX == 0 && pixelZ == 0) {
-            accessTile(cellX - 1, cellZ - 1)
-                    .set(tileGrid.getGridSize().getX(), tileGrid.getGridSize().getY(), color, height, blockLight);
+            setPixel(cellX - 1, cellZ - 1, tileGrid.getGridSize().getX(), tileGrid.getGridSize().getY(), color, height, blockLight);
         }
     }
 
