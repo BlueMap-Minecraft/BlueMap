@@ -77,22 +77,22 @@ public class FileMapStorage implements MapStorage {
         ));
 
         this.tileStateStorage = new FileGridStorage(
-                root.resolve(RENDER_STATE_PATH),
-                ".tiles.dat",
+                root.resolve(RENDER_STATE_PATH).resolve("tiles"),
+                ".dat",
                 Compression.GZIP,
                 atomic
         );
 
         this.chunkStateStorage = new FileGridStorage(
-                root.resolve(RENDER_STATE_PATH),
-                ".chunks.dat",
+                root.resolve(RENDER_STATE_PATH).resolve("chunks"),
+                ".dat",
                 Compression.GZIP,
                 atomic
         );
 
         this.regionStateStorage = new FileGridStorage(
                 root.resolve(RENDER_STATE_PATH).resolve("regions"),
-                ".regions.dat",
+                ".dat",
                 Compression.GZIP,
                 atomic
         );
