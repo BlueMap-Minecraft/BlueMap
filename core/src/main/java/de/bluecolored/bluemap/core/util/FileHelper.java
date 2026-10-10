@@ -43,11 +43,26 @@ import java.util.stream.StreamSupport;
 public class FileHelper {
 
     /**
-     * Tries to move the file atomically, but fallbacks to a normal move operation if moving atomically fails
+     * Tries to move the file atomically, but fallbacks to a normal move operation if moving atomically fails.
+     * If the atomic move operation fails, it is retried at most 5 times, before falling back to a normal move.
      */
     public static void atomicMove(Path from, Path to) throws IOException {
         try {
-            Files.move(from, to, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+            for (int attempt = 0; ; attempt++) {
+                try {
+                    Files.move(from, to, StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING);
+                    return;
+                } catch (AccessDeniedException ex) {
+                    if (attempt >= 5) throw ex;
+                    try {
+                        //noinspection BusyWait
+                        Thread.sleep(20L << attempt);
+                    } catch (InterruptedException interruptedEx) {
+                        Thread.currentThread().interrupt();
+                        throw ex;
+                    }
+                }
+            }
         } catch (FileNotFoundException | NoSuchFileException ignore) {
         } catch (IOException ex) {
             try {
