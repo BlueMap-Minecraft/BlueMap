@@ -26,6 +26,7 @@ package de.bluecolored.bluemap.core.map.lowres;
 
 import com.flowpowered.math.vector.Vector2i;
 import de.bluecolored.bluemap.core.util.math.Color;
+import lombok.Getter;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -36,21 +37,24 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class LowresTile {
 
-    public static final int HEIGHT_UNDEFINED = Integer.MIN_VALUE;
-
     private final ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
     private final BufferedImage texture;
     private final Vector2i size;
 
+    @Getter
+    private volatile boolean modified;
+
     public LowresTile(Vector2i tileSize) {
         this.size = tileSize.add(1, 1); // add 1 for seamless edges
         this.texture = new BufferedImage(this.size.getX(), this.size.getY() * 2, BufferedImage.TYPE_INT_ARGB);
+        this.modified = false; // technically true, but no need to save empty tiles
     }
 
     public LowresTile(Vector2i tileSize, InputStream in) throws IOException {
         this.size = tileSize.add(1, 1); // add 1 for seamless edges
         this.texture = ImageIO.read(in);
+        this.modified = false;
 
         if (this.texture == null) {
             throw new IOException("No registered ImageReader is able to read the image-stream");
@@ -64,6 +68,7 @@ public class LowresTile {
     public void set(int x, int z, Color color, int height, int blockLight) {
         lock.readLock().lock();
         try {
+            if (!modified) modified = true;
             texture.setRGB(x, z, color.straight().getInt());
             texture.setRGB(x, size.getY() + z,
                     (height & 0x0000FFFF) |
@@ -73,6 +78,10 @@ public class LowresTile {
         } finally {
             lock.readLock().unlock();
         }
+    }
+
+    public void markModified() {
+        modified = true;
     }
 
     public Color getColor(int x, int z, Color target) {
@@ -94,6 +103,7 @@ public class LowresTile {
         lock.writeLock().lock();
         try {
             ImageIO.write(texture, "png", out);
+            modified = false;
         } finally {
             lock.writeLock().unlock();
         }

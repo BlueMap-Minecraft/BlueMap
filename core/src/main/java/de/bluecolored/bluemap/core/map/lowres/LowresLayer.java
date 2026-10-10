@@ -36,6 +36,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -99,10 +100,22 @@ public class LowresLayer {
     }
 
     public synchronized void save() {
-        pendingChanges.entrySet().removeIf(entry -> saveTile(entry.getKey(), entry.getValue()));
-        if (pendingChanges.size() >= DISCARD_THRESHOLD) {
-            Logger.global.logDebug("Discarding changes of " + pendingChanges.size() + " lowres-tiles that failed to save!");
-            pendingChanges.clear();
+        Map<Vector2i, LowresTile> failed = new HashMap<>();
+
+        // save tiles and remember which tiles are not saved
+        pendingChanges.forEach((pos, tile) -> {
+            if (!saveTile(pos, tile)) failed.put(pos, tile);
+        });
+
+        // if there is more than DISCARD_THRESHOLD failed saves, drop them
+        if (failed.size() >= DISCARD_THRESHOLD) {
+            Logger.global.logDebug("Discarding changes of " + failed.size() + " lowres-tiles that failed to save!");
+            failed.forEach(pendingChanges::remove);
+        }
+
+        // atomically test every tile if it is modified and remove it if it is not
+        for (Vector2i pos : pendingChanges.keySet()) {
+            pendingChanges.computeIfPresent(pos, (_, tile) -> tile.isModified() ? tile : null);
         }
     }
 
@@ -124,6 +137,7 @@ public class LowresLayer {
     }
 
     private boolean saveTile(Vector2i tilePos, LowresTile tile) {
+        if (!tile.isModified()) return true;
 
         // check if storage is closed
         if (storage.isClosed()){
@@ -134,7 +148,8 @@ public class LowresLayer {
         // save the tile
         try {
             storage.write(tilePos.getX(), tilePos.getY(), tile::save);
-        } catch (IOException e) {
+        } catch (Exception e) {
+            tile.markModified();
             Logger.global.logError("Failed to save tile " + tilePos + " (lod: " + lod + ")", e);
             return false;
         }
@@ -193,35 +208,31 @@ public class LowresLayer {
         return true;
     }
 
-    private LowresTile accessTile(int x, int z) {
-        Vector2i tilePos = VECTOR_2_I_CACHE.get(x, z);
-        LowresTile tile = tileCache.get(tilePos);
-
-        if (pendingChanges.size() >= MAX_PENDING) save();
-        pendingChanges.put(tilePos, tile);
-
-        return tile;
-    }
-
     void set(int cellX, int cellZ, int pixelX, int pixelZ, Color color, int height, int blockLight) {
-        accessTile(cellX, cellZ)
-                .set(pixelX, pixelZ, color, height, blockLight);
+        setPixel(cellX, cellZ, pixelX, pixelZ, color, height, blockLight);
 
         // for seamless edges
         if (pixelX == 0) {
-            accessTile(cellX - 1, cellZ)
-                    .set(tileGrid.getGridSize().getX(), pixelZ, color, height, blockLight);
+            setPixel(cellX - 1, cellZ, tileGrid.getGridSize().getX(), pixelZ, color, height, blockLight);
         }
 
         if (pixelZ == 0) {
-            accessTile(cellX, cellZ - 1)
-                    .set(pixelX, tileGrid.getGridSize().getY(), color, height, blockLight);
+            setPixel(cellX, cellZ - 1, pixelX, tileGrid.getGridSize().getY(), color, height, blockLight);
         }
 
         if (pixelX == 0 && pixelZ == 0) {
-            accessTile(cellX - 1, cellZ - 1)
-                    .set(tileGrid.getGridSize().getX(), tileGrid.getGridSize().getY(), color, height, blockLight);
+            setPixel(cellX - 1, cellZ - 1, tileGrid.getGridSize().getX(), tileGrid.getGridSize().getY(), color, height, blockLight);
         }
+    }
+
+    private void setPixel(int cellX, int cellZ, int pixelX, int pixelZ, Color color, int height, int blockLight) {
+        Vector2i tilePos = VECTOR_2_I_CACHE.get(cellX, cellZ);
+        LowresTile tile = tileCache.get(tilePos);
+
+        tile.set(pixelX, pixelZ, color, height, blockLight);
+
+        pendingChanges.put(tilePos, tile);
+        if (pendingChanges.size() >= MAX_PENDING) save();
     }
 
 }
