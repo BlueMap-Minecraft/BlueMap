@@ -48,8 +48,9 @@ import lombok.Getter;
 import lombok.Setter;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.*;
-import java.nio.charset.StandardCharsets;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.Writer;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledFuture;
@@ -187,9 +188,8 @@ public class BmMap {
 
         // only save texture gallery if not present in storage
         try {
-            if (!storage.textures().exists())
-                saveTextureGallery();
-        } catch (IOException e) {
+            if (!storage.textures().exists()) saveTextureGallery();
+        } catch (Exception e) {
             Logger.global.logError("Failed to read texture gallery for map '" + getId() + "'!", e);
         }
     }
@@ -201,7 +201,7 @@ public class BmMap {
                     return TextureGallery.readTexturesFile(in);
                 }
             }
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             Logger.global.logError("Failed to load textures for map '" + getId() + "'!", ex);
         }
 
@@ -209,9 +209,9 @@ public class BmMap {
     }
 
     private void saveTextureGallery() {
-        try (OutputStream out = storage.textures().write()) {
-            this.textureGallery.writeTexturesFile(out);
-        } catch (IOException ex) {
+        try {
+            storage.textures().write(this.textureGallery::writeTexturesFile);
+        } catch (Exception ex) {
             Logger.global.logError("Failed to save textures for map '" + getId() + "'!", ex);
         }
     }
@@ -222,32 +222,26 @@ public class BmMap {
     }
 
     private void saveMapSettings() {
-        try (
-                OutputStream out = storage.settings().write();
-                Writer writer = new OutputStreamWriter(out, StandardCharsets.UTF_8)
-        ) {
-            GSON.toJson(this, writer);
+        try {
+            storage.settings().write((Writer writer) -> GSON.toJson(this, writer));
         } catch (Exception ex) {
             Logger.global.logError("Failed to save settings for map '" + getId() + "'!", ex);
         }
     }
 
     public synchronized void saveMarkerState() {
-        try (
-                OutputStream out = storage.markers().write();
-                Writer writer = new OutputStreamWriter(out, StandardCharsets.UTF_8)
-        ) {
-            MarkerGson.INSTANCE.toJson(this.markerSets, writer);
+        try {
+            storage.markers().write((Writer writer) -> MarkerGson.INSTANCE.toJson(this.markerSets, writer));
         } catch (Exception ex) {
             Logger.global.logError("Failed to save markers for map '" + getId() + "'!", ex);
         }
     }
 
     public synchronized void savePlayerState() {
-        try (OutputStream out = storage.players().write()) {
-            out.write("{}".getBytes(StandardCharsets.UTF_8));
+        try {
+            storage.players().write((Writer writer) -> writer.write("{}"));
         } catch (Exception ex) {
-            Logger.global.logError("Failed to save markers for map '" + getId() + "'!", ex);
+            Logger.global.logError("Failed to save player state for map '" + getId() + "'!", ex);
         }
     }
 

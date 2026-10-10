@@ -97,8 +97,9 @@ public class PlayerSkinUpdater implements ServerEventListener {
             BufferedImage playerHead = playerMarkerIconFactory.apply(playerUuid, skin.get());
 
             for (BmMap map : maps.values()) {
-                try (OutputStream out = map.getStorage().asset("playerheads/" + playerUuid + ".png").write()) {
-                    ImageIO.write(playerHead, "png", out);
+                try {
+                    map.getStorage().asset("playerheads/" + playerUuid + ".png")
+                            .write((OutputStream out) -> ImageIO.write(playerHead, "png", out));
                 } catch (IOException ex) {
                     Logger.global.logError("Failed to write player skin to storage: " + playerUuid, ex);
                 }

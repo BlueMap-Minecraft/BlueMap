@@ -24,17 +24,21 @@
  */
 package de.bluecolored.bluemap.core.storage.sql;
 
+import de.bluecolored.bluemap.core.storage.GridStorage;
 import de.bluecolored.bluemap.core.storage.ItemStorage;
+import de.bluecolored.bluemap.core.storage.OutputStreamAction;
 import de.bluecolored.bluemap.core.storage.compression.CompressedInputStream;
 import de.bluecolored.bluemap.core.storage.compression.Compression;
-import de.bluecolored.bluemap.core.storage.GridStorage;
 import de.bluecolored.bluemap.core.storage.sql.commandset.CommandSet;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.stream.OnCloseOutputStream;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -52,6 +56,15 @@ public class SQLGridStorage implements GridStorage {
         return new OnCloseOutputStream(compression.compress(bytes),
                 () -> sql.writeGridItem(map, storage, x, z, compression, bytes.toByteArray())
         );
+    }
+
+    @Override
+    public <T extends Throwable> void write(int x, int z, OutputStreamAction<T> action) throws T, IOException {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        try (OutputStream out = compression.compress(bytes)) {
+            action.act(out);
+        }
+        sql.writeGridItem(map, storage, x, z, compression, bytes.toByteArray());
     }
 
     @Override

@@ -27,8 +27,8 @@ package de.bluecolored.bluemap.core.storage;
 import de.bluecolored.bluemap.core.storage.compression.CompressedInputStream;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 
 public interface ItemStorage {
 
@@ -38,6 +38,34 @@ public interface ItemStorage {
      * The OutputStream is expected to be closed by the caller of this method.
      */
     OutputStream write() throws IOException;
+
+    /**
+     * Calls the provided action with an {@link OutputStream} that can be used to write the item-data of this storage
+     * (overwriting any existing item).
+     * The given write-action is performed in a safe manner, ensuring that the item is either fully written or not at all.
+     * This method closes the provided {@link OutputStream} after the action completes.
+     */
+    default <T extends Throwable> void write(OutputStreamAction<T> action) throws T, IOException {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        action.act(bytes);
+        try (OutputStream out = write()) {
+            bytes.writeTo(out);
+        }
+    }
+
+    /**
+     * Calls the provided action with an {@link Writer} that can be used to write the item-data of this storage
+     * (overwriting any existing item).
+     * The given write-action is performed in a safe manner, ensuring that the item is either fully written or not at all.
+     * This method closes the provided {@link Writer} after the action completes.
+     */
+    default <T extends Throwable> void write(WriterAction<T> action) throws T, IOException {
+        write((OutputStream out) -> {
+            try (Writer writer = new OutputStreamWriter(out, StandardCharsets.UTF_8)) {
+                action.act(writer);
+            }
+        });
+    }
 
     /**
      * Returns a {@link CompressedInputStream} that can be used to read the item-data from this storage

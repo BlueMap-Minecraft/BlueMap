@@ -125,11 +125,12 @@ public class HiresModelManager {
     }
 
     private void save(final ArrayTileModel model, Vector2i tile) {
-        try (
-                OutputStream out = storage.write(tile.getX(), tile.getY());
-                PRBMWriter modelWriter = new PRBMWriter(out)
-        ) {
-            modelWriter.write(model);
+        try {
+            storage.write(tile.getX(), tile.getY(), (OutputStream out) -> {
+                try (PRBMWriter modelWriter = new PRBMWriter(out)) {
+                    modelWriter.write(model);
+                }
+            });
         } catch (IOException e){
             Logger.global.logError("Failed to save hires model: " + tile, e);
             return;

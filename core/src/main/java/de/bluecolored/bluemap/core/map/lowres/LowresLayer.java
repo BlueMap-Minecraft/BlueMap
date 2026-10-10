@@ -25,9 +25,7 @@
 package de.bluecolored.bluemap.core.map.lowres;
 
 import com.flowpowered.math.vector.Vector2i;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
-import de.bluecolored.bluemap.core.BlueMap;
 import de.bluecolored.bluemap.core.logger.Logger;
 import de.bluecolored.bluemap.core.storage.GridStorage;
 import de.bluecolored.bluemap.core.util.Caches;
@@ -38,7 +36,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -135,8 +132,8 @@ public class LowresLayer {
         }
 
         // save the tile
-        try (OutputStream out = storage.write(tilePos.getX(), tilePos.getY())) {
-            tile.save(out);
+        try {
+            storage.write(tilePos.getX(), tilePos.getY(), tile::save);
         } catch (IOException e) {
             Logger.global.logError("Failed to save tile " + tilePos + " (lod: " + lod + ")", e);
             return false;

@@ -25,9 +25,11 @@
 package de.bluecolored.bluemap.core.util.stream;
 
 import de.bluecolored.bluemap.core.util.FileHelper;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.file.*;
@@ -35,34 +37,53 @@ import java.nio.file.attribute.FileTime;
 import java.util.concurrent.TimeUnit;
 
 /**
- * An {@link OutputStream} that writes to a temporary part-file first and then atomically moves (overwrites) it to the
- * final target once the stream gets closed.<br>
- * Use {@link #abort()} instead of {@link #close()} to discard the written data and leave the target untouched.
+ * Writes to a temporary part-file first and then atomically moves (overwrites)
+ * it to the final target once the transaction gets committed.<br>
+ * Closing the transaction without calling {@link #commit()} first discards the written data and leaves the target untouched.
  */
-public class FilepartOutputStream extends DelegateOutputStream {
+public class FilepartTransaction implements Closeable {
 
     private static final int MAX_SLOTS = 10;
     private static final long STALE_AFTER_MILLIS = TimeUnit.HOURS.toMillis(1);
 
     private final Path folder;
-    private final Path file;
-    private final Path partFile;
+    @Getter private final Path file;
+    @Getter private final Path partFile;
+    private final OutputStream out;
     private boolean closed = false;
 
-    private FilepartOutputStream(Path folder, Path file, Path partFile, OutputStream out) {
-        super(out);
+    private FilepartTransaction(Path folder, Path file, Path partFile, OutputStream out) {
+        this.out = out;
         this.folder = folder;
         this.file = file;
         this.partFile = partFile;
     }
 
-    @Override
-    public synchronized void close() throws IOException {
-        if (closed) return;
+    public OutputStream out() {
+        return out(false);
+    }
+
+    public OutputStream out(boolean commitOnClose) {
+        if (!commitOnClose) return out;
+
+        return new DelegateOutputStream(out) {
+            private boolean closed = false;
+
+            @Override
+            public void close() throws IOException {
+                if (closed) return;
+                closed = true;
+                commit();
+            }
+        };
+    }
+
+    public void commit() throws IOException {
+        if (closed) throw new IOException("Transaction is already closed");
         closed = true;
 
         try {
-            super.close();
+            out.close();
         } catch (IOException | RuntimeException ex) {
             try {
                 Files.deleteIfExists(partFile);
@@ -88,14 +109,15 @@ public class FilepartOutputStream extends DelegateOutputStream {
         }
     }
 
-    public synchronized void abort() throws IOException {
+    @Override
+    public void close() throws IOException {
         if (closed) return;
         closed = true;
 
         IOException ioException = null;
 
         try {
-            super.close();
+            out.close();
         } catch (IOException ex) {
             ioException = ex;
         }
@@ -110,7 +132,11 @@ public class FilepartOutputStream extends DelegateOutputStream {
         if (ioException != null) throw ioException;
     }
 
-    public static FilepartOutputStream create(@NotNull Path file) throws IOException {
+    public static FilepartTransaction create(@NotNull Path file) throws IOException {
+        return create(file, out -> out);
+    }
+
+    public static FilepartTransaction create(@NotNull Path file, @NotNull StreamTransformer<OutputStream> transformer) throws IOException {
         Path folder = file.toAbsolutePath().normalize().getParent();
         if (folder == null) throw new IOException("File has no parent!");
 
@@ -122,7 +148,16 @@ public class FilepartOutputStream extends DelegateOutputStream {
 
             OutputStream out = tryCreate(filepart);
             if (out == null && deleteIfStale(filepart)) out = tryCreate(filepart);
-            if (out != null) return new FilepartOutputStream(folder, file, filepart, out);
+            if (out != null) {
+                return StreamUtil.onError(
+                        out,
+                        o -> new FilepartTransaction(folder, file, filepart, transformer.apply(o)),
+                        o -> {
+                            o.close();
+                            Files.deleteIfExists(filepart);
+                        }
+                );
+            }
         }
 
         throw new IOException("No free part-file slot for '" + file + "' (" + MAX_SLOTS + " slots are in use)");
@@ -149,6 +184,11 @@ public class FilepartOutputStream extends DelegateOutputStream {
         } catch (IOException ex) {
             return false;
         }
+    }
+
+    @FunctionalInterface
+    public interface StreamTransformer<T> {
+        T apply(T original) throws IOException;
     }
 
 }

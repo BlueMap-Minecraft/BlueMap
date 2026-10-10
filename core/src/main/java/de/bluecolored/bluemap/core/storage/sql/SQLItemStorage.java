@@ -24,16 +24,20 @@
  */
 package de.bluecolored.bluemap.core.storage.sql;
 
+import de.bluecolored.bluemap.core.storage.ItemStorage;
+import de.bluecolored.bluemap.core.storage.OutputStreamAction;
 import de.bluecolored.bluemap.core.storage.compression.CompressedInputStream;
 import de.bluecolored.bluemap.core.storage.compression.Compression;
-import de.bluecolored.bluemap.core.storage.ItemStorage;
 import de.bluecolored.bluemap.core.storage.sql.commandset.CommandSet;
 import de.bluecolored.bluemap.core.util.Key;
 import de.bluecolored.bluemap.core.util.stream.OnCloseOutputStream;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
 
 @RequiredArgsConstructor
 public class SQLItemStorage implements ItemStorage {
@@ -49,6 +53,15 @@ public class SQLItemStorage implements ItemStorage {
         return new OnCloseOutputStream(compression.compress(bytes),
                 () -> sql.writeItem(map, storage, compression, bytes.toByteArray())
         );
+    }
+
+    @Override
+    public <T extends Throwable> void write(OutputStreamAction<T> action) throws T, IOException {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        try (OutputStream out = compression.compress(bytes)) {
+            action.act(out);
+        }
+        sql.writeItem(map, storage, compression, bytes.toByteArray());
     }
 
     @Override

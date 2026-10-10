@@ -33,6 +33,7 @@ import java.io.InputStream;
 public class OnCloseInputStream extends DelegateInputStream {
 
     private final AutoCloseable onClose;
+    private boolean closed = false;
 
     public OnCloseInputStream(InputStream in, AutoCloseable onClose) {
         super(in);
@@ -41,6 +42,9 @@ public class OnCloseInputStream extends DelegateInputStream {
 
     @Override
     public void close() throws IOException {
+        if (closed) return;
+        closed = true;
+
         IOException ioExcetion = null;
 
         try {

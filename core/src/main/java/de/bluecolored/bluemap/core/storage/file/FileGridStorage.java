@@ -26,6 +26,8 @@ package de.bluecolored.bluemap.core.storage.file;
 
 import de.bluecolored.bluemap.core.storage.GridStorage;
 import de.bluecolored.bluemap.core.storage.ItemStorage;
+import de.bluecolored.bluemap.core.storage.OutputStreamAction;
+import de.bluecolored.bluemap.core.storage.WriterAction;
 import de.bluecolored.bluemap.core.storage.compression.CompressedInputStream;
 import de.bluecolored.bluemap.core.storage.compression.Compression;
 import de.bluecolored.bluemap.core.util.FileHelper;
@@ -56,6 +58,16 @@ public class FileGridStorage implements GridStorage {
     @Override
     public OutputStream write(int x, int z) throws IOException {
         return cell(x, z).write();
+    }
+
+    @Override
+    public <T extends Throwable> void write(int x, int z, OutputStreamAction<T> action) throws T, IOException {
+        cell(x, z).write(action);
+    }
+
+    @Override
+    public <T extends Throwable> void write(int x, int z, WriterAction<T> action) throws T, IOException {
+        cell(x, z).write(action);
     }
 
     @Override

@@ -51,13 +51,10 @@ import org.apache.commons.cli.*;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -261,12 +258,7 @@ public class BlueMapCLI {
 
             try {
                 MapStorage storage = blueMap.getOrLoadStorage(mapConfig.getStorage()).map(mapId);
-                try (
-                        OutputStream out = storage.markers().write();
-                        Writer writer = new OutputStreamWriter(out, StandardCharsets.UTF_8)
-                ) {
-                    MarkerGson.INSTANCE.toJson(mapConfig.parseMarkerSets(), writer);
-                }
+                storage.markers().write((Writer writer) -> MarkerGson.INSTANCE.toJson(mapConfig.parseMarkerSets(), writer));
                 Logger.global.logInfo("Updated markers for map '" + mapId + "'");
             } catch (Exception ex) {
                 Logger.global.logError("Failed to save markers for map '" + mapId + "'!", ex);
@@ -320,7 +312,6 @@ public class BlueMapCLI {
         );
 
         try {
-            //noinspection resource
             HttpServer webServer = new HttpServer("BlueMap-Webserver", handler);
             webServer.bind(new InetSocketAddress(
                     config.resolveIp(),
@@ -502,7 +493,7 @@ public class BlueMapCLI {
                 .hasArg()
                 .argName("config-folder")
                 .desc("Sets path of the folder containing the configuration-files to use (configurations will be generated here if they don't exist)")
-                .build()
+                .get()
             );
 
         options.addOption(
@@ -511,7 +502,7 @@ public class BlueMapCLI {
                 .hasArg()
                 .argName("mods-folder")
                 .desc("Sets path of the folder containing the mods that contain extra resources for rendering.")
-                .build()
+                .get()
         );
 
         options.addOption(
@@ -520,7 +511,7 @@ public class BlueMapCLI {
                 .hasArg()
                 .argName("mc-version")
                 .desc("Sets the minecraft-version, used e.g. to load resource-packs correctly. Defaults to the latest compatible version.")
-                .build()
+                .get()
             );
 
         options.addOption(
@@ -529,7 +520,7 @@ public class BlueMapCLI {
                 .hasArg()
                 .argName("file-name")
                 .desc("Sets a file to save the log to. If not specified, no log will be saved.")
-                .build()
+                .get()
             );
         options.addOption("a", "append", false, "Causes log save file to be appended rather than replaced.");
 

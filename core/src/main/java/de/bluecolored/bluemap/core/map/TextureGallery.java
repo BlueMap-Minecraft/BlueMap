@@ -87,7 +87,7 @@ public class TextureGallery {
                 .forEach(entry -> put(entry.getKey(), entry.getValue()));
     }
 
-    public void writeTexturesFile(OutputStream out) throws IOException {
+    public void writeTexturesFile(Writer writer) throws IOException {
         Texture[] textures = new Texture[nextId];
         Arrays.fill(textures, Texture.MISSING);
 
@@ -98,7 +98,7 @@ public class TextureGallery {
             textures[ordinal] = texture;
         });
 
-        try (Writer writer = new OutputStreamWriter(out, StandardCharsets.UTF_8)) {
+        try {
             GSON.toJson(textures, Texture[].class, writer);
         } catch (JsonIOException ex) {
             throw new IOException(ex);

@@ -22,52 +22,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package de.bluecolored.bluemap.core.util.stream;
+package de.bluecolored.bluemap.core.storage;
 
 import java.io.IOException;
-import java.io.OutputStream;
+import java.io.Writer;
 
-/**
- * An {@link OutputStream} implementation that performs an additional action right <b>after</b> the base stream got closed.
- */
-public class OnCloseOutputStream extends DelegateOutputStream {
-
-    private final AutoCloseable onClose;
-    private boolean closed = false;
-
-    public OnCloseOutputStream(OutputStream out, AutoCloseable onClose) {
-        super(out);
-        this.onClose = onClose;
-    }
-
-    @Override
-    public void close() throws IOException {
-        if (closed) return;
-        closed = true;
-
-        IOException ioExcetion = null;
-
-        try {
-            super.close();
-        } catch (IOException ex) {
-            ioExcetion = ex;
-        }
-
-        try {
-            onClose.close();
-        } catch (Exception ex) {
-            if (ioExcetion == null) {
-                if (ex instanceof IOException ioEx) {
-                    ioExcetion = ioEx;
-                } else {
-                    ioExcetion = new IOException(ex);
-                }
-            } else {
-                ioExcetion.addSuppressed(ex);
-            }
-        }
-
-        if (ioExcetion != null) throw ioExcetion;
-    }
-
+@FunctionalInterface
+public interface WriterAction<T extends Throwable> {
+    void act(Writer writer) throws T, IOException;
 }

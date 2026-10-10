@@ -29,8 +29,8 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.stream.Stream;
 
 /**
@@ -44,6 +44,34 @@ public interface GridStorage {
      * The OutputStream is expected to be closed by the caller of this method.
      */
     OutputStream write(int x, int z) throws IOException;
+
+    /**
+     * Calls the provided action with an {@link OutputStream} that can be used to write an item into this storage at the given position
+     * (overwriting any existing item).
+     * The given write-action is performed in a safe manner, ensuring that the item is either fully written or not at all.
+     * This method closes the provided {@link OutputStream} after the action completes.
+     */
+    default <T extends Throwable> void write(int x, int z, OutputStreamAction<T> action) throws T, IOException {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        action.act(bytes);
+        try (OutputStream out = write(x, z)) {
+            bytes.writeTo(out);
+        }
+    }
+
+    /**
+     * Calls the provided action with an {@link Writer} that can be used to write an item into this storage at the given position
+     * (overwriting any existing item).
+     * The given write-action is performed in a safe manner, ensuring that the item is either fully written or not at all.
+     * This method closes the provided {@link Writer} after the action completes.
+     */
+    default <T extends Throwable> void write(int x, int z, WriterAction<T> action) throws T, IOException {
+        write(x, z, (OutputStream out) -> {
+            try (Writer writer = new OutputStreamWriter(out, StandardCharsets.UTF_8)) {
+                action.act(writer);
+            }
+        });
+    }
 
     /**
      * Returns a {@link CompressedInputStream} that can be used to read the item from this storage at the given position
@@ -103,6 +131,16 @@ public interface GridStorage {
         @Override
         public OutputStream write() throws IOException {
             return storage.write(x, z);
+        }
+
+        @Override
+        public <T extends Throwable> void write(OutputStreamAction<T> action) throws T, IOException {
+            storage.write(x, z, action);
+        }
+
+        @Override
+        public <T extends Throwable> void write(WriterAction<T> action) throws T, IOException {
+            storage.write(x, z, action);
         }
 
         @Override

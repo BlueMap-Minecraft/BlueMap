@@ -136,8 +136,8 @@ abstract class CellStorage<T extends CellStorage.Cell> {
     private synchronized void saveCell(Vector2i pos, T cell) {
         if (!cell.isModified()) return;
         cell.setModified(false);
-        try (OutputStream in = storage.write(pos.getX(), pos.getY())) {
-            BLUE_NBT.write(cell, in, type);
+        try {
+            storage.write(pos.getX(), pos.getY(), (OutputStream out) -> BLUE_NBT.write(cell, out, type));
         } catch (IOException ex) {
             cell.setModified(true);
             Logger.global.logError("Failed to save render-state cell " + pos, ex);
