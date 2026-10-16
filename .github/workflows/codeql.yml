@@ -5,6 +5,14 @@ on:
     branches: [ "master" ]
   pull_request:
     branches: [ "master" ]
+    paths-ignore:
+      - "gradle/libs.versions.toml"
+      - "gradle/wrapper/**"
+      - "gradlew"
+      - "gradlew.bat"
+      - "common/webapp/package.json"
+      - "common/webapp/package-lock.json"
+      - "api"
   schedule:
     - cron: '23 7 * * 5'
 
