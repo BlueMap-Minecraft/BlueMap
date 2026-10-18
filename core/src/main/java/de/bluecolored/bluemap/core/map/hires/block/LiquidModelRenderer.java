@@ -56,6 +56,7 @@ import java.util.function.Function;
 @SuppressWarnings("DuplicatedCode")
 public class LiquidModelRenderer implements BlockRenderer {
     private static final float BLOCK_SCALE = 1f / 16f;
+    private static final float FACE_INSET = 0.016f; // 0.001 blocks
     private static final MatrixM3f FLOWING_UV_SCALE = new MatrixM3f()
             .identity()
             .translate(-0.5f, -0.5f)
@@ -278,6 +279,13 @@ public class LiquidModelRenderer implements BlockRenderer {
                 c0.x, c0.y, c0.z,
                 c2.x, c2.y, c2.z,
                 c3.x, c3.y, c3.z
+        );
+
+        // move faces slightly inwards, so they don't z-fight with the faces of waterlogged blocks
+        blockModel.translate(
+                faceDirVector.getX() * -FACE_INSET,
+                faceDirVector.getY() * -FACE_INSET,
+                faceDirVector.getZ() * -FACE_INSET
         );
 
         //UV
