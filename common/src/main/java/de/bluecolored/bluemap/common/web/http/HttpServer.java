@@ -50,8 +50,8 @@ public class HttpServer extends Server {
 
     @Override
     public void handleConnection(SocketChannel connection) throws IOException {
-        connection.socket().setSoTimeout(600000); // set a 10 min max idle timeout
-        connection.socket().setTcpNoDelay(true); // headers and body are separate writes, nagle + delayed-ack would stall each response ~40ms
+        connection.socket().setSoTimeout(600000); // set a 10-min max idle timeout
+        connection.socket().setTcpNoDelay(true);
         executor.execute(new HttpConnection(connection.socket(), requestHandler));
     }
 

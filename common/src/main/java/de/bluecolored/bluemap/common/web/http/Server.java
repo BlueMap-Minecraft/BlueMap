@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.common.web.http;
 
 import de.bluecolored.bluemap.core.logger.Logger;
+import de.bluecolored.bluemap.core.util.stream.StreamUtil;
 
 import java.io.Closeable;
 import java.io.IOException;
@@ -87,13 +88,16 @@ public abstract class Server extends Thread implements Closeable, Runnable {
 
     private void accept(SelectionKey selectionKey) {
         try {
-            //noinspection resource
             ServerSocketChannel serverSocketChannel = (ServerSocketChannel) selectionKey.channel();
             SocketChannel channel = serverSocketChannel.accept();
             if (channel == null) return;
-            connections.add(channel);
-            handleConnection(channel);
-        } catch (IOException e) {
+
+            StreamUtil.closeOnError(channel, ch -> {
+                connections.add(ch);
+                handleConnection(ch);
+                return null;
+            });
+        } catch (IOException | RuntimeException e) {
             Logger.global.logDebug("Failed to accept connection: " + e);
         }
     }
