@@ -26,8 +26,6 @@ package de.bluecolored.bluemap.core.resources;
 
 import de.bluecolored.bluemap.core.world.BlockState;
 
-import java.util.Map.Entry;
-
 class BlockStateMapping<T> {
     private final BlockState blockState;
     private final T mapping;
@@ -43,8 +41,8 @@ class BlockStateMapping<T> {
      */
     public boolean fitsTo(BlockState blockState){
         if (!this.blockState.getId().equals(blockState.getId())) return false;
-        for (Entry<String, String> e : this.blockState.getProperties().entrySet()){
-            if (!e.getValue().equals(blockState.getProperties().get(e.getKey()))){
+        for (BlockState.Property property : this.blockState.getPropertiesArray()) {
+            if (!property.getValue().equals(blockState.getProperties().get(property.getKey()))){
                 return false;
             }
         }

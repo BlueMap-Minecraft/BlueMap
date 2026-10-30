@@ -95,9 +95,12 @@ public class BlockColorsConfig {
             }
 
             private BlockColorCalculator getCalculator(BlockState from){
-                for (BlockStateMapping<BlockColorCalculator> bm : mappings.getOrDefault(from.getId(), Collections.emptyList())){
-                    if (bm.fitsTo(from)){
-                        return bm.getMapping();
+                List<BlockStateMapping<BlockColorCalculator>> blockStateMappings = mappings.get(from.getId());
+                if (blockStateMappings != null) {
+                    for (BlockStateMapping<BlockColorCalculator> bm : blockStateMappings) {
+                        if (bm.fitsTo(from)){
+                            return bm.getMapping();
+                        }
                     }
                 }
 

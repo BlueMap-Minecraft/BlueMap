@@ -25,6 +25,7 @@
 package de.bluecolored.bluemap.core.world;
 
 import de.bluecolored.bluemap.core.util.Key;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
@@ -90,7 +91,8 @@ public class BlockState {
     }
 
     /**
-     * An immutable map of all properties of this block.<br>
+     * A map of all properties of this block.<br>
+     * The map <b>must not</b> be modified!<br>
      * <br>
      * For Example:<br>
      * <code>
@@ -100,6 +102,14 @@ public class BlockState {
      */
     public Map<String, String> getProperties() {
         return properties;
+    }
+
+    /**
+     * A sorted array of all properties of this block.<br>
+     * The array <b>must not</b> be modified!
+     */
+    public Property[] getPropertiesArray() {
+        return propertiesArray;
     }
 
     public boolean isAir() {
@@ -197,6 +207,8 @@ public class BlockState {
     }
 
     public static final class Property implements Comparable<Property> {
+
+        @Getter
         private final String key, value;
 
         public Property(String key, String value) {
