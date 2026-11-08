@@ -31,6 +31,7 @@ import {HtmlMarker} from "./HtmlMarker";
 import {PoiMarker} from "./PoiMarker";
 import {reactive} from "vue";
 import {getLocalStorage, setLocalStorage} from "../Utils";
+import {isBatchable, MarkerBatch} from "./MarkerBatch";
 
 export class MarkerSet extends Scene {
 
@@ -45,6 +46,9 @@ export class MarkerSet extends Scene {
         this.markerSets = new Map();
         /** @type {Map<string, Marker>} */
         this.markers = new Map();
+
+        this.markerBatch = new MarkerBatch(this);
+        this.markerBatchOutdated = false;
 
         this.data = reactive({
             id: id,
@@ -183,6 +187,16 @@ export class MarkerSet extends Scene {
         marker.updateFromData(data);
     }
 
+    invalidateMarkerBatch() {
+        if (this.markerBatchOutdated) return;
+        this.markerBatchOutdated = true;
+
+        queueMicrotask(() => {
+            this.markerBatchOutdated = false;
+            this.markerBatch.update();
+        });
+    }
+
     /**
      * Removes all markers and marker-sets
      */
@@ -201,6 +215,7 @@ export class MarkerSet extends Scene {
             if (o.isMarker && !this.markers.has(o.data.id)) {
                 this.markers.set(o.data.id, o);
                 this.data.markers.push(o.data);
+                if (isBatchable(o)) this.invalidateMarkerBatch();
             }
         }
 
@@ -221,6 +236,7 @@ export class MarkerSet extends Scene {
                 if (i > -1) this.data.markers.splice(i, 1);
                 this.markers.delete(o.data.id);
                 o.dispose();
+                if (isBatchable(o)) this.invalidateMarkerBatch();
             }
         }
 

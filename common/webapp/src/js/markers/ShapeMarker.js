@@ -30,6 +30,7 @@ import {Line2} from "three/examples/jsm/lines/Line2";
 import {deepEquals} from "../util/Utils";
 import {ObjectMarker} from "./ObjectMarker";
 import {lineShader} from "../util/LineShader";
+import {invalidateMarkerBatchOnChange} from "./MarkerBatch";
 import {LineSegmentsGeometry} from "three/examples/jsm/lines/LineSegmentsGeometry";
 
 export class ShapeMarker extends ObjectMarker {
@@ -133,6 +134,8 @@ export class ShapeMarker extends ObjectMarker {
         this.border.fadeDistanceMax = maxDist;
         this.fill.fadeDistanceMin = minDist;
         this.fill.fadeDistanceMax = maxDist;
+
+        invalidateMarkerBatchOnChange(this, this._markerData, markerData);
 
         // save used marker data for next update
         this._markerData = markerData;
