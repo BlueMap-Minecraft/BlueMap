@@ -22,13 +22,17 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-import {BufferAttribute, BufferGeometry, Matrix4, Mesh, Vector3} from "three";
+import {BufferAttribute, BufferGeometry, Matrix4, Mesh, Vector2, Vector3} from "three";
 import {Line2} from "three/examples/jsm/lines/Line2";
 import {LineSegmentsGeometry} from "three/examples/jsm/lines/LineSegmentsGeometry";
-import {deepEquals} from "../util/Utils";
-
 const MIN_BATCHABLE_MARKERS = 64;
 const HIDDEN_LAYER = 30;
+const CELL_SIZE = 4096;
+const DRAWN_FIELDS = [
+    "position", "shape", "holes", "line", "shapeY", "height", "shapeMinY", "shapeMaxY",
+    "depthTest", "lineWidth", "lineColor", "borderColor", "fillColor", "minDistance", "maxDistance",
+    "x", "y", "z", "r", "g", "b", "a"
+];
 
 export function isBatchable(marker) {
     return !!(marker.isShapeMarker || marker.isExtrudeMarker || marker.isLineMarker);
@@ -36,7 +40,7 @@ export function isBatchable(marker) {
 
 export function invalidateMarkerBatchOnChange(marker, oldData, newData) {
     if (!marker.parent || !marker.parent.isMarkerSet) return;
-    if (deepEquals(oldData, newData) && deepEquals(newData, oldData)) return;
+    if (JSON.stringify(oldData, DRAWN_FIELDS) === JSON.stringify(newData, DRAWN_FIELDS)) return;
     marker.parent.invalidateMarkerBatch();
 }
 
@@ -66,18 +70,25 @@ export class MarkerBatch {
         let toSet = new Matrix4().copy(this.markerSet.matrixWorld).invert();
 
         let groups = new Map();
+        let position = new Vector3();
         markers.forEach(marker => {
+            position.setFromMatrixPosition(marker.matrixWorld).applyMatrix4(toSet);
+            let cellX = Math.floor(position.x / CELL_SIZE);
+            let cellZ = Math.floor(position.z / CELL_SIZE);
             batchableParts(marker).forEach(part => {
                 if (!part.visible) return;
-                let key = batchKey(part);
+                let key = batchKey(part) + "|" + cellX + "|" + cellZ;
                 let group = groups.get(key);
-                if (group) group.push(part);
-                else groups.set(key, [part]);
+                if (group) group.parts.push(part);
+                else groups.set(key, {cellX, cellZ, parts: [part]});
             });
         });
 
-        groups.forEach(parts => {
-            let object = parts[0].isLine2 ? createLineBatch(parts, toSet) : createMeshBatch(parts, toSet);
+        groups.forEach(({cellX, cellZ, parts}) => {
+            let origin = new Vector3((cellX + 0.5) * CELL_SIZE, 0, (cellZ + 0.5) * CELL_SIZE);
+            let toBatch = new Matrix4().makeTranslation(-origin.x, -origin.y, -origin.z).multiply(toSet);
+            let object = parts[0].isLine2 ? createLineBatch(parts, toBatch) : createMeshBatch(parts, toBatch);
+            object.position.copy(origin);
             this.objects.push(object);
             this.markerSet.add(object);
             parts.forEach(part => {
@@ -149,7 +160,10 @@ function createMeshBatch(parts, toSet) {
     geometry.setAttribute("position", new BufferAttribute(positions, 3));
     geometry.setIndex(new BufferAttribute(indices, 1));
 
-    return createBatchObject(new Mesh(geometry, parts[0].material.clone()), parts[0]);
+    let material = parts[0].material.clone();
+    material.depthWrite = false;
+
+    return createBatchObject(new Mesh(geometry, material), parts[0]);
 }
 
 function createLineBatch(parts, toSet) {
@@ -173,10 +187,12 @@ function createLineBatch(parts, toSet) {
     geometry.setPositions(positions);
 
     let line = createBatchObject(new Line2(geometry, parts[0].material.clone()), parts[0]);
+    let partsResolution = new Vector2(-1, -1);
     line.onBeforeRender = renderer => {
         let resolution = line.material.resolution;
         renderer.getSize(resolution);
-        if (parts[0].material.resolution.equals(resolution)) return;
+        if (partsResolution.equals(resolution)) return;
+        partsResolution.copy(resolution);
         parts.forEach(part => part.material.resolution.copy(resolution));
     };
 
