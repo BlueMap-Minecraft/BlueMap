@@ -31,7 +31,7 @@ import {HtmlMarker} from "./HtmlMarker";
 import {PoiMarker} from "./PoiMarker";
 import {reactive} from "vue";
 import {getLocalStorage, setLocalStorage} from "../Utils";
-import {ShapeMarkerBatch} from "./ShapeMarkerBatch";
+import {isBatchable, MarkerBatch} from "./MarkerBatch";
 
 export class MarkerSet extends Scene {
 
@@ -47,8 +47,8 @@ export class MarkerSet extends Scene {
         /** @type {Map<string, Marker>} */
         this.markers = new Map();
 
-        this.shapeMarkerBatch = new ShapeMarkerBatch(this);
-        this.shapeMarkerBatchOutdated = false;
+        this.markerBatch = new MarkerBatch(this);
+        this.markerBatchOutdated = false;
 
         this.data = reactive({
             id: id,
@@ -187,13 +187,13 @@ export class MarkerSet extends Scene {
         marker.updateFromData(data);
     }
 
-    invalidateShapeMarkerBatch() {
-        if (this.shapeMarkerBatchOutdated) return;
-        this.shapeMarkerBatchOutdated = true;
+    invalidateMarkerBatch() {
+        if (this.markerBatchOutdated) return;
+        this.markerBatchOutdated = true;
 
         queueMicrotask(() => {
-            this.shapeMarkerBatchOutdated = false;
-            this.shapeMarkerBatch.update();
+            this.markerBatchOutdated = false;
+            this.markerBatch.update();
         });
     }
 
@@ -215,7 +215,7 @@ export class MarkerSet extends Scene {
             if (o.isMarker && !this.markers.has(o.data.id)) {
                 this.markers.set(o.data.id, o);
                 this.data.markers.push(o.data);
-                if (o.isShapeMarker) this.invalidateShapeMarkerBatch();
+                if (isBatchable(o)) this.invalidateMarkerBatch();
             }
         }
 
@@ -236,7 +236,7 @@ export class MarkerSet extends Scene {
                 if (i > -1) this.data.markers.splice(i, 1);
                 this.markers.delete(o.data.id);
                 o.dispose();
-                if (o.isShapeMarker) this.invalidateShapeMarkerBatch();
+                if (isBatchable(o)) this.invalidateMarkerBatch();
             }
         }
 

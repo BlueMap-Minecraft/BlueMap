@@ -25,11 +25,27 @@
 import {BufferAttribute, BufferGeometry, Matrix4, Mesh, Vector3} from "three";
 import {Line2} from "three/examples/jsm/lines/Line2";
 import {LineSegmentsGeometry} from "three/examples/jsm/lines/LineSegmentsGeometry";
+import {deepEquals} from "../util/Utils";
 
-const MIN_SHAPE_MARKERS = 64;
+const MIN_BATCHABLE_MARKERS = 64;
 const HIDDEN_LAYER = 30;
 
-export class ShapeMarkerBatch {
+export function isBatchable(marker) {
+    return !!(marker.isShapeMarker || marker.isExtrudeMarker || marker.isLineMarker);
+}
+
+export function invalidateMarkerBatchOnChange(marker, oldData, newData) {
+    if (!marker.parent || !marker.parent.isMarkerSet) return;
+    if (deepEquals(oldData, newData) && deepEquals(newData, oldData)) return;
+    marker.parent.invalidateMarkerBatch();
+}
+
+function batchableParts(marker) {
+    if (marker.isLineMarker) return [marker.line];
+    return [marker.fill, marker.border];
+}
+
+export class MarkerBatch {
 
     /**
      * @param markerSet {MarkerSet}
@@ -43,15 +59,15 @@ export class ShapeMarkerBatch {
     update() {
         this.clear();
 
-        let markers = [...this.markerSet.markers.values()].filter(marker => marker.isShapeMarker && marker.visible);
-        if (markers.length < MIN_SHAPE_MARKERS) return;
+        let markers = [...this.markerSet.markers.values()].filter(marker => isBatchable(marker) && marker.visible);
+        if (markers.length < MIN_BATCHABLE_MARKERS) return;
 
         this.markerSet.updateWorldMatrix(true, true);
         let toSet = new Matrix4().copy(this.markerSet.matrixWorld).invert();
 
         let groups = new Map();
         markers.forEach(marker => {
-            [marker.fill, marker.border].forEach(part => {
+            batchableParts(marker).forEach(part => {
                 if (!part.visible) return;
                 let key = batchKey(part);
                 let group = groups.get(key);
@@ -61,7 +77,7 @@ export class ShapeMarkerBatch {
         });
 
         groups.forEach(parts => {
-            let object = parts[0].isLine2 ? createBorderBatch(parts, toSet) : createFillBatch(parts, toSet);
+            let object = parts[0].isLine2 ? createLineBatch(parts, toSet) : createMeshBatch(parts, toSet);
             this.objects.push(object);
             this.markerSet.add(object);
             parts.forEach(part => {
@@ -86,7 +102,7 @@ export class ShapeMarkerBatch {
 function batchKey(part) {
     let color = part.color;
     return [
-        part.isLine2 ? "border" : "fill",
+        part.isLine2 ? "line" : "mesh",
         part.renderOrder,
         part.depthTest,
         color.r, color.g, color.b,
@@ -97,7 +113,7 @@ function batchKey(part) {
     ].join("|");
 }
 
-function createFillBatch(parts, toSet) {
+function createMeshBatch(parts, toSet) {
     let vertexCount = 0;
     let indexCount = 0;
     parts.forEach(part => {
@@ -136,7 +152,7 @@ function createFillBatch(parts, toSet) {
     return createBatchObject(new Mesh(geometry, parts[0].material.clone()), parts[0]);
 }
 
-function createBorderBatch(parts, toSet) {
+function createLineBatch(parts, toSet) {
     let segmentCount = parts.reduce((sum, part) => sum + part.geometry.attributes.instanceStart.count, 0);
 
     let positions = new Float32Array(segmentCount * 6);

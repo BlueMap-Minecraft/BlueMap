@@ -31,6 +31,7 @@ import {deepEquals} from "../util/Utils";
 import {LineSegmentsGeometry} from "three/examples/jsm/lines/LineSegmentsGeometry";
 import {ObjectMarker} from "./ObjectMarker";
 import {lineShader} from "../util/LineShader";
+import {invalidateMarkerBatchOnChange} from "./MarkerBatch";
 
 export class ExtrudeMarker extends ObjectMarker {
 
@@ -136,6 +137,8 @@ export class ExtrudeMarker extends ObjectMarker {
         this.border.fadeDistanceMax = maxDist;
         this.fill.fadeDistanceMin = minDist;
         this.fill.fadeDistanceMax = maxDist;
+
+        invalidateMarkerBatchOnChange(this, this._markerData, markerData);
 
         // save used marker data for next update
         this._markerData = markerData;
