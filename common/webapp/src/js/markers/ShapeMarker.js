@@ -95,6 +95,8 @@ export class ShapeMarker extends ObjectMarker {
      *      }}
      */
     updateFromData(markerData) {
+        let changed = !deepEquals(markerData, this._markerData) || !deepEquals(this._markerData, markerData);
+
         super.updateFromData(markerData);
 
         // update shape only if needed, based on last update-data
@@ -136,6 +138,8 @@ export class ShapeMarker extends ObjectMarker {
 
         // save used marker data for next update
         this._markerData = markerData;
+
+        if (changed && this.parent && this.parent.isMarkerSet) this.parent.invalidateShapeMarkerBatch();
     }
 
     dispose() {
