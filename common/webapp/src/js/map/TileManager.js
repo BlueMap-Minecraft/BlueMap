@@ -134,13 +134,13 @@ export class TileManager {
 
     loadCloseTiles = () => {
         if (this.unloaded) return;
-        if (!this.loadNextTile()) return;
 
         if (this.loadTimeout) clearTimeout(this.loadTimeout);
+        this.loadTimeout = null;
 
-        if (this.currentlyLoading < 8) {
-            this.loadTimeout = setTimeout(this.loadCloseTiles, 0);
-        } else {
+        while (this.currentlyLoading < 8 && this.loadNextTile());
+
+        if (this.currentlyLoading >= 8) {
             this.loadTimeout = setTimeout(this.loadCloseTiles, 1000);
         }
     }
