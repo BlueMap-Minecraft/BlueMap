@@ -132,6 +132,8 @@ public class WebFilesManager {
         private int minZoomDistance = 5;
         private int maxZoomDistance = 100000;
 
+        private boolean zoomToCursor = true;
+
         private int hiresSliderMax = 500;
         private int hiresSliderDefault = 200;
         private int hiresSliderMin = 50;
@@ -157,6 +159,8 @@ public class WebFilesManager {
 
             this.minZoomDistance = config.getMinZoomDistance();
             this.maxZoomDistance = config.getMaxZoomDistance();
+
+            this.zoomToCursor = config.isZoomToCursor();
 
             this.hiresSliderMax = config.getHiresSliderMax();
             this.hiresSliderDefault = config.getHiresSliderDefault();

@@ -31,6 +31,7 @@ export default {
       let mouseZoom = this.$bluemap.mapViewer.controlsManager.controls?.mouseZoom;
       if (mouseZoom) {
         mouseZoom.deltaZoom += delta;
+        mouseZoom.anchor = null; // zoom buttons always zoom to the center
       }
     }
   }

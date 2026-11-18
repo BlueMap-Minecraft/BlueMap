@@ -23,7 +23,7 @@
  * THE SOFTWARE.
  */
 
-import {MathUtils} from "three";
+import {MathUtils, Vector2} from "three";
 import {MapControls} from "../MapControls";
 
 export class MouseZoomControls {
@@ -41,6 +41,12 @@ export class MouseZoomControls {
         this.speed = speed;
 
         this.deltaZoom = 0;
+
+        /**
+         * The screen position (client coordinates) of the mouse while wheel-zooming, null if the zoom should be centered
+         * @type {Vector2 | null}
+         */
+        this.anchor = null;
     }
 
     /**
@@ -61,7 +67,10 @@ export class MouseZoomControls {
      * @param map {Map}
      */
     update(delta, map) {
-        if (this.deltaZoom === 0) return;
+        if (this.deltaZoom === 0) {
+            this.anchor = null;
+            return;
+        }
 
         let smoothing = this.stiffness / (16.666 / delta);
         smoothing = MathUtils.clamp(smoothing, 0, 1);
@@ -72,11 +81,13 @@ export class MouseZoomControls {
         this.deltaZoom *= 1 - smoothing;
         if (Math.abs(this.deltaZoom) < 0.0001) {
             this.deltaZoom = 0;
+            this.anchor = null;
         }
     }
 
     reset() {
         this.deltaZoom = 0;
+        this.anchor = null;
     }
 
     /**
@@ -90,7 +101,12 @@ export class MouseZoomControls {
         if (evt.deltaMode === WheelEvent.DOM_DELTA_PIXEL) delta *= 0.01;
         if (evt.deltaMode === WheelEvent.DOM_DELTA_LINE) delta *= 0.33;
 
+        if (delta === 0) return;
+
         this.deltaZoom += delta;
+
+        if (!this.anchor) this.anchor = new Vector2();
+        this.anchor.set(evt.clientX, evt.clientY);
     }
 
 }

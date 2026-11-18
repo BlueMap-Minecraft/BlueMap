@@ -67,6 +67,7 @@ export class BlueMapApp {
          *      resolutionDefault: number,
          *      minZoomDistance: number,
          *      maxZoomDistance: number,
+         *      zoomToCursor: boolean,
          *      hiresSliderMax: number,
          *      hiresSliderDefault: number,
          *      hiresSliderMin: number,
@@ -147,6 +148,7 @@ export class BlueMapApp {
         await this.getSettings();
         this.mapControls.minDistance = this.settings.minZoomDistance;
         this.mapControls.maxDistance = this.settings.maxZoomDistance;
+        this.mapControls.zoomToCursor = this.settings.zoomToCursor;
 
         // load settings-styles
         if (this.settings.styles) for (let styleUrl of this.settings.styles) {
@@ -350,6 +352,7 @@ export class BlueMapApp {
                 resolutionDefault: 1.0,
                 minZoomDistance: 5,
                 maxZoomDistance: 100000,
+                zoomToCursor: true,
                 hiresSliderMax: 500,
                 hiresSliderDefault: 100,
                 hiresSliderMin: 0,
