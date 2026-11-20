@@ -456,6 +456,19 @@ export class Map {
 			}
 		}
 
+		return this.lowresTerrainHeightAt(x, z);
+	}
+
+	/**
+	 * Returns the terrain-height at a specific location from the loaded lowres-tiles,
+	 * returns <code>false</code> if there is no lowres-tile loaded at that location
+	 * @param x {number}
+	 * @param z {number}
+	 * @returns {boolean|number}
+	 */
+	lowresTerrainHeightAt(x, z) {
+		if (!this.isLoaded) return false;
+
 		for (let i = 0; i < this.lowresTileManager.length; i++) {
 			const lod = i + 1;
 			const scale = Math.pow(this.data.lowres.lodFactor, lod - 1);
@@ -466,7 +479,7 @@ export class Map {
 			const tileX = Math.floor(x / scaledTileSize.x);
 			const tileZ = Math.floor(z / scaledTileSize.z);
 			let lowresTileHash = hashTile(tileX, tileZ);
-			tile = this.lowresTileManager[i].tiles.get(lowresTileHash);
+			const tile = this.lowresTileManager[i].tiles.get(lowresTileHash);
 
 			if (!tile || !tile.model) continue;
 
@@ -486,6 +499,75 @@ export class Map {
 		}
 
 		return false;
+	}
+
+	/**
+	 * Finds the first point where a ray hits the terrain, returns <code>null</code> if it doesn't hit any loaded map-tile.
+	 * The hires-tiles are ray-traced, the lowres-tiles are sampled along the ray (their heights only exist in the shader).
+	 * @param origin {Vector3}
+	 * @param direction {Vector3} - normalized
+	 * @param maxDistance {number}
+	 * @returns {Vector3 | null}
+	 */
+	raycastTerrain(origin, direction, maxDistance) {
+		if (!this.isLoaded) return null;
+
+		// make sure the hires-scene is at 0,0 (render() might have shifted it)
+		const scene = this.hiresTileManager.scene;
+		const shiftX = scene.position.x, shiftZ = scene.position.z;
+		scene.position.x = 0;
+		scene.position.z = 0;
+		scene.updateMatrixWorld();
+
+		this.raycaster.set(origin, direction);
+		this.raycaster.near = 0;
+		this.raycaster.far = maxDistance;
+		this.raycaster.layers.enableAll();
+
+		let hit = null;
+		try {
+			const intersects = this.raycaster.intersectObject(scene, true);
+			if (intersects.length > 0) hit = intersects[0].point;
+		} catch (ignore) {
+			//empty
+		}
+
+		scene.position.x = shiftX;
+		scene.position.z = shiftZ;
+		scene.updateMatrixWorld();
+
+		if (hit) return hit;
+
+		const point = new Vector3();
+		const isBelowTerrain = t => {
+			point.copy(direction).multiplyScalar(t).add(origin);
+			const height = this.lowresTerrainHeightAt(point.x, point.z);
+			return height !== false && point.y <= height;
+		};
+
+		if (isBelowTerrain(0)) return null;
+
+		// find the first sample below the terrain, then narrow it down
+		const steps = 64;
+		let above = 0;
+		for (let i = 1; i <= steps; i++) {
+			const t = maxDistance * i / steps;
+			if (!isBelowTerrain(t)) {
+				above = t;
+				continue;
+			}
+
+			let below = t;
+			for (let j = 0; j < 8; j++) {
+				const mid = (above + below) / 2;
+				if (isBelowTerrain(mid)) below = mid;
+				else above = mid;
+			}
+
+			return point.copy(direction).multiplyScalar(below).add(origin);
+		}
+
+		return null;
 	}
 
 	hasView(view) {

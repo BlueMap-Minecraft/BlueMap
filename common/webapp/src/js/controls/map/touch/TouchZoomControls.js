@@ -23,6 +23,7 @@
  * THE SOFTWARE.
  */
 
+import {Vector2} from "three";
 import {MapControls} from "../MapControls";
 
 export class TouchZoomControls {
@@ -37,6 +38,12 @@ export class TouchZoomControls {
         this.moving = false;
         this.deltaZoom = 1;
         this.lastZoom = 1;
+
+        /**
+         * The screen position (client coordinates) of the pinch center while zooming, null if not zooming
+         * @type {Vector2 | null}
+         */
+        this.anchor = null;
     }
 
     /**
@@ -63,14 +70,17 @@ export class TouchZoomControls {
      * @param map {Map}
      */
     update(delta, map) {
-        if (this.deltaZoom === 1) return;
+        if (this.deltaZoom !== 1) {
+            this.manager.distance /= this.deltaZoom;
+            this.deltaZoom = 1;
+        }
 
-        this.manager.distance /= this.deltaZoom;
-        this.deltaZoom = 1;
+        if (!this.moving) this.anchor = null;
     }
 
     reset() {
         this.deltaZoom = 1;
+        this.anchor = null;
     }
 
     /**
@@ -89,6 +99,10 @@ export class TouchZoomControls {
     onTouchMove = evt => {
         if(this.moving){
             this.deltaZoom *= evt.scale / this.lastZoom;
+
+            if (!this.anchor) this.anchor = new Vector2();
+            this.anchor.set(evt.center.x, evt.center.y);
+
             this.manager.angle = Math.min(this.manager.angle, MapControls.getMaxPerspectiveAngleForDistance(this.manager.distance));
         }
 
