@@ -171,7 +171,8 @@ export class MapControls {
         }
 
         // zoom
-        const zoomAnchorOffset = this.getZoomAnchorOffset();
+        const pinching = this.touchZoom.moving || this.touchZoom.deltaZoom !== 1;
+        const zoomAnchorOffset = this.getZoomAnchorOffset(pinching);
         const distanceBeforeZoom = this.manager.distance;
 
         this.mouseZoom.update(delta, map);
@@ -229,18 +230,27 @@ export class MapControls {
     /**
      * Calculates the horizontal offset from the camera-target to the point under the zoom-anchor (mouse cursor or pinch center),
      * on the horizontal plane at the height of the camera-target.
+     * Drops the mouse anchor while the camera is rotated with the mouse.
      * @private
+     * @param pinching {boolean}
      * @returns {Vector2 | null} - the offset (x, z), or null if the zoom should be centered.
      * The returned vector is reused and only valid until the next call.
      */
-    getZoomAnchorOffset() {
-        if (!this.zoomToCursor || this.data.followingPlayer) return null;
-
+    getZoomAnchorOffset(pinching) {
         // only anchor the zoom if the control that set the anchor is actually zooming
         let anchor = null;
-        if (this.touchZoom.moving || this.touchZoom.deltaZoom !== 1) anchor = this.touchZoom.anchor;
-        else if (this.mouseZoom.deltaZoom !== 0) anchor = this.mouseZoom.anchor;
-        if (!anchor) return null;
+        if (pinching) {
+            anchor = this.touchZoom.anchor;
+        } else if (this.mouseZoom.deltaZoom !== 0) {
+            // don't zoom towards the cursor while the camera is (still visibly) rotated or tilted with the mouse
+            const mouseTurning = this.mouseRotate.moving ||
+                Math.abs(this.mouseRotate.deltaRotation) > 1 ||
+                (this.manager.ortho === 0 && Math.abs(this.mouseAngle.deltaAngle) > 1);
+
+            if (mouseTurning) this.mouseZoom.anchor = null;
+            else anchor = this.mouseZoom.anchor;
+        }
+        if (!anchor || !this.zoomToCursor || this.data.followingPlayer) return null;
 
         const rect = this.rootElement.getBoundingClientRect();
         if (rect.width === 0 || rect.height === 0) return null;
