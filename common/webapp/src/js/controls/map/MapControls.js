@@ -49,6 +49,7 @@ export class MapControls {
     static _beforeMoveTemp = new Vector3();
     static _rayNearTemp = new Vector3();
     static _rayFarTemp = new Vector3();
+    static _rayDirectionTemp = new Vector3();
     static _zoomAnchorOffsetTemp = new Vector2();
 
     /**
@@ -94,6 +95,10 @@ export class MapControls {
         this.maxDistance = 100000;
 
         this.zoomToCursor = true;
+
+        this.zoomAnchorPicked = false;
+        this.zoomAnchorPickPosition = new Vector2();
+        this.zoomAnchorHeight = null;
     }
 
     /**
@@ -172,7 +177,7 @@ export class MapControls {
 
         // zoom
         const pinching = this.touchZoom.moving || this.touchZoom.deltaZoom !== 1;
-        const zoomAnchorOffset = this.getZoomAnchorOffset(pinching);
+        const zoomAnchorOffset = this.getZoomAnchorOffset(pinching, map);
         const distanceBeforeZoom = this.manager.distance;
 
         this.mouseZoom.update(delta, map);
@@ -216,6 +221,8 @@ export class MapControls {
     }
 
     reset() {
+        this.zoomAnchorPicked = false;
+
         this.mouseMove.reset();
         this.mouseRotate.reset();
         this.mouseAngle.reset();
@@ -229,14 +236,15 @@ export class MapControls {
 
     /**
      * Calculates the horizontal offset from the camera-target to the point under the zoom-anchor (mouse cursor or pinch center),
-     * on the horizontal plane at the height of the camera-target.
+     * on the horizontal plane at the height of the camera-target, or close up in perspective view at the height of the terrain under the anchor.
      * Drops the mouse anchor while the camera is rotated with the mouse.
      * @private
      * @param pinching {boolean}
+     * @param map {Map}
      * @returns {Vector2 | null} - the offset (x, z), or null if the zoom should be centered.
      * The returned vector is reused and only valid until the next call.
      */
-    getZoomAnchorOffset(pinching) {
+    getZoomAnchorOffset(pinching, map) {
         // only anchor the zoom if the control that set the anchor is actually zooming
         let anchor = null;
         if (pinching) {
@@ -250,7 +258,10 @@ export class MapControls {
             if (mouseTurning) this.mouseZoom.anchor = null;
             else anchor = this.mouseZoom.anchor;
         }
-        if (!anchor || !this.zoomToCursor || this.data.followingPlayer) return null;
+        if (!anchor || !this.zoomToCursor || this.data.followingPlayer) {
+            this.zoomAnchorPicked = false;
+            return null;
+        }
 
         const rect = this.rootElement.getBoundingClientRect();
         if (rect.width === 0 || rect.height === 0) return null;
@@ -272,7 +283,25 @@ export class MapControls {
         const rayY = far.y - near.y;
         if (Math.abs(rayY) < 0.000001) return null;
 
-        const t = (target.y - near.y) / rayY;
+        // close up in perspective view the target height follows the terrain, use the height of the terrain under
+        // the anchor there, so the zoom heads for e.g. a mountain and not for the point behind it at the target height.
+        // the lookup is expensive, so only redo it when the anchor moves
+        let height = target.y;
+        if (this.manager.ortho === 0 && this.manager.distance < 500) {
+            if (!this.zoomAnchorPicked || this.zoomAnchorPickPosition.distanceTo(anchor) > 10) {
+                const direction = MapControls._rayDirectionTemp.subVectors(far, near).normalize();
+                const hit = map.raycastTerrain(near, direction, 10 * Math.max(this.manager.distance, 100));
+
+                this.zoomAnchorPicked = true;
+                this.zoomAnchorPickPosition.copy(anchor);
+                this.zoomAnchorHeight = hit ? hit.y : null;
+            }
+            if (this.zoomAnchorHeight !== null) height = this.zoomAnchorHeight;
+        } else {
+            this.zoomAnchorPicked = false;
+        }
+
+        const t = (height - near.y) / rayY;
         if (!Number.isFinite(t) || t < 0) return null;
 
         const offset = MapControls._zoomAnchorOffsetTemp.set(
