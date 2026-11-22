@@ -24,6 +24,7 @@
  */
 import {MathUtils, Object3D, Vector3} from "three";
 import {reactive} from "vue";
+import {isBatchable} from "./MarkerBatch";
 
 export class Marker extends Object3D {
 
@@ -50,7 +51,11 @@ export class Marker extends Object3D {
         });
         Object.defineProperty(this, "visible", {
             get() { return this.data.visible },
-            set(value) { this.data.visible = value }
+            set(value) {
+                if (this.data.visible === value) return;
+                this.data.visible = value;
+                if (isBatchable(this) && this.parent && this.parent.isMarkerSet) this.parent.invalidateMarkerBatch();
+            }
         });
     }
 
