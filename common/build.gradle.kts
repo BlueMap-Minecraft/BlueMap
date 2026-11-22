@@ -17,7 +17,7 @@ dependencies {
 }
 
 node {
-    version = "20.14.0"
+    version = "26.13.1"
     download = true
     nodeProjectDir = file("webapp/")
     npmInstallCommand = "ci"
