@@ -54,6 +54,8 @@ public class WebappConfig {
     private int minZoomDistance = 5;
     private int maxZoomDistance = 100000;
 
+    private boolean zoomToCursor = true;
+
     private int hiresSliderMax = 500;
     private int hiresSliderDefault = 100;
     private int hiresSliderMin = 0;

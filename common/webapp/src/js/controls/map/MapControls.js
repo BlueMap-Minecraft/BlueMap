@@ -47,6 +47,10 @@ const HALF_PI_DIV = 1 / HALF_PI;
 export class MapControls {
 
     static _beforeMoveTemp = new Vector3();
+    static _rayNearTemp = new Vector3();
+    static _rayFarTemp = new Vector3();
+    static _rayDirectionTemp = new Vector3();
+    static _zoomAnchorOffsetTemp = new Vector2();
 
     /**
      * @param rootElement {Element}
@@ -89,6 +93,12 @@ export class MapControls {
 
         this.minDistance = 5;
         this.maxDistance = 100000;
+
+        this.zoomToCursor = true;
+
+        this.zoomAnchorPicked = false;
+        this.zoomAnchorPickPosition = new Vector2();
+        this.zoomAnchorHeight = null;
     }
 
     /**
@@ -166,11 +176,22 @@ export class MapControls {
         }
 
         // zoom
+        const pinching = this.touchZoom.moving || this.touchZoom.deltaZoom !== 1;
+        const zoomAnchorOffset = this.getZoomAnchorOffset(pinching, map);
+        const distanceBeforeZoom = this.manager.distance;
+
         this.mouseZoom.update(delta, map);
         this.keyZoom.update(delta, map);
         this.touchZoom.update(delta, map);
 
         this.manager.distance = softClamp(this.manager.distance, this.minDistance, this.maxDistance, 0.8);
+
+        // keep the point under the cursor in place by moving the target relative to the zoom
+        if (zoomAnchorOffset) {
+            const zoomFactor = this.manager.distance / distanceBeforeZoom;
+            this.manager.position.x += (1 - zoomFactor) * zoomAnchorOffset.x;
+            this.manager.position.z += (1 - zoomFactor) * zoomAnchorOffset.y;
+        }
 
         // rotation
         this.mouseRotate.update(delta, map);
@@ -200,6 +221,8 @@ export class MapControls {
     }
 
     reset() {
+        this.zoomAnchorPicked = false;
+
         this.mouseMove.reset();
         this.mouseRotate.reset();
         this.mouseAngle.reset();
@@ -209,6 +232,88 @@ export class MapControls {
         this.touchRotate.reset();
         this.touchAngle.reset();
         this.touchZoom.reset();
+    }
+
+    /**
+     * Calculates the horizontal offset from the camera-target to the point under the zoom-anchor (mouse cursor or pinch center),
+     * on the horizontal plane at the height of the camera-target, or close up in perspective view at the height of the terrain under the anchor.
+     * Drops the mouse anchor while the camera is rotated with the mouse.
+     * @private
+     * @param pinching {boolean}
+     * @param map {Map}
+     * @returns {Vector2 | null} - the offset (x, z), or null if the zoom should be centered.
+     * The returned vector is reused and only valid until the next call.
+     */
+    getZoomAnchorOffset(pinching, map) {
+        // only anchor the zoom if the control that set the anchor is actually zooming
+        let anchor = null;
+        if (pinching) {
+            anchor = this.touchZoom.anchor;
+        } else if (this.mouseZoom.deltaZoom !== 0) {
+            // don't zoom towards the cursor while the camera is (still visibly) rotated or tilted with the mouse
+            const mouseTurning = this.mouseRotate.moving ||
+                Math.abs(this.mouseRotate.deltaRotation) > 1 ||
+                (this.manager.ortho === 0 && Math.abs(this.mouseAngle.deltaAngle) > 1);
+
+            if (mouseTurning) this.mouseZoom.anchor = null;
+            else anchor = this.mouseZoom.anchor;
+        }
+        if (!anchor || !this.zoomToCursor || this.data.followingPlayer) {
+            this.zoomAnchorPicked = false;
+            return null;
+        }
+
+        const rect = this.rootElement.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return null;
+
+        const screenX = ((anchor.x - rect.left) / rect.width) * 2 - 1;
+        const screenY = -((anchor.y - rect.top) / rect.height) * 2 + 1;
+        if (Math.abs(screenX) > 1 || Math.abs(screenY) > 1) return null;
+
+        // updateCamera() moves the camera without updating its matrices, and render() might have been skipped
+        const camera = this.manager.camera;
+        camera.updateProjectionMatrix();
+        camera.updateMatrixWorld();
+
+        const near = MapControls._rayNearTemp.set(screenX, screenY, -1).unproject(camera);
+        const far = MapControls._rayFarTemp.set(screenX, screenY, 1).unproject(camera);
+
+        // the camera has been built from lastPosition, position.y has already been reset at this point
+        const target = this.manager.lastPosition;
+        const rayY = far.y - near.y;
+        if (Math.abs(rayY) < 0.000001) return null;
+
+        // close up in perspective view the target height follows the terrain, use the height of the terrain under
+        // the anchor there, so the zoom heads for e.g. a mountain and not for the point behind it at the target height.
+        // the lookup is expensive, so only redo it when the anchor moves
+        let height = target.y;
+        if (this.manager.ortho === 0 && this.manager.distance < 500) {
+            if (!this.zoomAnchorPicked || this.zoomAnchorPickPosition.distanceTo(anchor) > 10) {
+                const direction = MapControls._rayDirectionTemp.subVectors(far, near).normalize();
+                const hit = map.raycastTerrain(near, direction, 10 * Math.max(this.manager.distance, 100));
+
+                this.zoomAnchorPicked = true;
+                this.zoomAnchorPickPosition.copy(anchor);
+                this.zoomAnchorHeight = hit ? hit.y : null;
+            }
+            if (this.zoomAnchorHeight !== null) height = this.zoomAnchorHeight;
+        } else {
+            this.zoomAnchorPicked = false;
+        }
+
+        const t = (height - near.y) / rayY;
+        if (!Number.isFinite(t) || t < 0) return null;
+
+        const offset = MapControls._zoomAnchorOffsetTemp.set(
+            near.x + (far.x - near.x) * t - target.x,
+            near.z + (far.z - near.z) * t - target.z
+        );
+
+        // looking close to the horizon puts the point very far away, so limit the offset
+        const maxOffset = 8 * Math.max(this.manager.distance, 1);
+        if (offset.length() > maxOffset) offset.setLength(maxOffset);
+
+        return offset;
     }
 
     static getMaxPerspectiveAngleForDistance(distance) {
